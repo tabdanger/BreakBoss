@@ -69,7 +69,7 @@ jobs:
     runs-on: ${{ contains(fromJSON('["status", "check", "external", "tester"]'), inputs.mode) && 'ubuntu-latest' || 'macos-15' }}
     timeout-minutes: 60
     env:
-      BUNDLE_ID: com.tabdanger.breakboss
+      BUNDLE_ID: com.tabdanger.BreakBoss
     steps:
       - name: Get the code
         uses: actions/checkout@v5

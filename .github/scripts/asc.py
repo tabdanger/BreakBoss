@@ -3,7 +3,7 @@
 
     asc.py check                 test the API key; report the app record, bundle ID, certificates
     asc.py prepare <folder>      make a temporary Apple Distribution certificate and an App Store
-                                 profile for com.tabdanger.breakboss (files go in <folder>)
+                                 profile for com.tabdanger.BreakBoss (files go in <folder>)
     asc.py cleanup <folder>      revoke that certificate and delete that profile
 
 Environment: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH (the .p8 file), BUNDLE_ID (optional),
@@ -19,7 +19,7 @@ import urllib.error
 import urllib.request
 
 API = "https://api.appstoreconnect.apple.com"
-BUNDLE_ID = os.environ.get("BUNDLE_ID", "com.tabdanger.breakboss")
+BUNDLE_ID = os.environ.get("BUNDLE_ID", "com.tabdanger.BreakBoss")
 
 
 def say(level, title, message):
@@ -119,7 +119,7 @@ def check():
     else:
         names = ", ".join(f"{a['attributes'].get('name')} ({a['attributes'].get('bundleId')})" for a in apps) or "none"
         say("error", "App record", f"No app in App Store Connect uses {BUNDLE_ID} (apps this key sees: {names}). "
-            "Create it first: App Store Connect › Apps › + › New App, bundle ID com.tabdanger.breakboss.")
+            "Create it first: App Store Connect › Apps › + › New App, bundle ID com.tabdanger.BreakBoss.")
         if os.environ.get("ALLOW_MISSING_APP") != "1":
             blocking.append("app record")
 

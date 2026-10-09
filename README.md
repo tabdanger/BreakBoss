@@ -57,5 +57,5 @@ Secrets (Settings › Secrets and variables › Actions) are the same four as MS
 `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`.
 
 1. Every push to `main` runs **Build BreakBoss**, which compiles the app and the plug-in. Then it runs the self-test on an iPad simulator and draws all three faceplates to the `ci-screenshots` branch.
-2. The first time: run **Upload BreakBoss to App Store Connect** in **sign** mode. That registers `com.tabdanger.breakboss` and `com.tabdanger.breakboss.AUv3`. Then create the app in App Store Connect with that bundle ID.
+2. The first time: run **Upload BreakBoss to App Store Connect** in **sign** mode. That registers `com.tabdanger.BreakBoss` and `com.tabdanger.BreakBoss.AUv3`. Then create the app in App Store Connect with that bundle ID.
 3. After that, run it in **upload** mode for each TestFlight build.

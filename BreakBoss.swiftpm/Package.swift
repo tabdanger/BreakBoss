@@ -15,7 +15,7 @@ let package = Package(
         .iOSApplication(
             name: "BreakBoss",
             targets: ["AppModule"],
-            bundleIdentifier: "com.tabdanger.breakboss",
+            bundleIdentifier: "com.tabdanger.BreakBoss",
             displayVersion: "0.1.0",
             bundleVersion: "1",
             appIcon: .asset("AppIcon"),
