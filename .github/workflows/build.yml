@@ -1,0 +1,155 @@
+# Builds BreakBoss on one of GitHub's macOS machines (with Xcode 26) every time the app's code
+# changes, or when you tap "Run workflow" on the Actions tab. No Mac needed.
+#
+# 1. A Release compile of the Swift Playgrounds package, exactly as on the iPad.
+# 2. The same app plus the AUv3 plug-in, built from the Xcode project (xcode/).
+# 3. A Debug build on an iPad simulator: the self-test (sound engine, grooves, tempo sync,
+#    clipper, files) runs for real, and the faceplate is drawn in all three modes; those
+#    pictures are pushed to the ci-screenshots branch.
+# Signing and uploading to App Store Connect / TestFlight are in upload.yml.
+name: Build BreakBoss
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "BreakBoss.swiftpm/**"
+      - "AUv3/**"
+      - "xcode/**"
+      - ".github/workflows/build.yml"
+      - ".github/scripts/annotate.py"
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    permissions:
+      contents: write   # only to publish the simulator pictures to the ci-screenshots branch
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v5
+
+      - name: Use Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -vi beta | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; fi
+          xcodebuild -version
+          echo "::notice title=Xcode::$(xcodebuild -version | tr '\n' ' ')"
+
+      - name: Build the Swift Playgrounds package for iPad (Release, unsigned)
+        working-directory: BreakBoss.swiftpm
+        run: |
+          xcodebuild \
+            -scheme BreakBoss \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            -derivedDataPath "$RUNNER_TEMP/dd-release" \
+            CODE_SIGNING_ALLOWED=NO \
+            build > "$RUNNER_TEMP/build-release.log" 2>&1 || true
+          python3 "$GITHUB_WORKSPACE/.github/scripts/annotate.py" "$RUNNER_TEMP/build-release.log" "iPad Release build"
+          grep -q "BUILD SUCCEEDED" "$RUNNER_TEMP/build-release.log"
+
+      - name: Make the Xcode project (app + AUv3 plug-in) with XcodeGen
+        if: always()
+        run: |
+          brew install xcodegen > "$RUNNER_TEMP/brew.log" 2>&1 || { tail -20 "$RUNNER_TEMP/brew.log"; exit 1; }
+          python3 xcode/generate.py | tee -a "$GITHUB_ENV"
+          xcodegen generate --spec xcode/project.yml
+
+      - name: Build BreakBoss + AUv3 from the Xcode project (Release, unsigned)
+        if: always()
+        run: |
+          xcodebuild \
+            -project xcode/BreakBoss.xcodeproj \
+            -scheme BreakBoss \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            -derivedDataPath "$RUNNER_TEMP/dd-xcode" \
+            MARKETING_VERSION="$MARKETING_VERSION" CURRENT_PROJECT_VERSION="$CURRENT_PROJECT_VERSION" \
+            CODE_SIGNING_ALLOWED=NO \
+            build > "$RUNNER_TEMP/build-xcode.log" 2>&1 || true
+          python3 "$GITHUB_WORKSPACE/.github/scripts/annotate.py" "$RUNNER_TEMP/build-xcode.log" "Xcode build (app + AUv3)"
+          grep -q "BUILD SUCCEEDED" "$RUNNER_TEMP/build-xcode.log"
+          APP=$(find "$RUNNER_TEMP/dd-xcode/Build/Products" -maxdepth 2 -name "BreakBoss.app" | head -1)
+          if [ ! -d "$APP/PlugIns/BreakBossAU.appex" ]; then echo "::error title=AUv3::BreakBossAU.appex is not inside the app"; exit 1; fi
+          for f in Assets.car KnockLayout.json; do
+            [ -e "$APP/PlugIns/BreakBossAU.appex/$f" ] || echo "::error title=AUv3::$f is missing from the plug-in"
+          done
+          echo "::notice title=AUv3::$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionAttributes:AudioComponents:0:name' "$APP/PlugIns/BreakBossAU.appex/Info.plist")"
+
+      - name: Build for the iPad simulator (Debug)
+        if: always()
+        run: |
+          xcodebuild \
+            -project xcode/BreakBoss.xcodeproj \
+            -scheme BreakBoss \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            -derivedDataPath "$RUNNER_TEMP/dd-sim" \
+            MARKETING_VERSION="$MARKETING_VERSION" CURRENT_PROJECT_VERSION="$CURRENT_PROJECT_VERSION" \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
+            build > "$RUNNER_TEMP/build-sim.log" 2>&1 || true
+          python3 "$GITHUB_WORKSPACE/.github/scripts/annotate.py" "$RUNNER_TEMP/build-sim.log" "Simulator build"
+          grep -q "BUILD SUCCEEDED" "$RUNNER_TEMP/build-sim.log"
+
+      - name: Run the self-test and draw the faceplates on an iPad simulator
+        run: |
+          APP=$(find "$RUNNER_TEMP/dd-sim/Build/Products" -maxdepth 2 -name "*.app" -path "*iphonesimulator*" | head -1)
+          BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)['devices']
+          pads = [x for rt, devs in d.items() if 'iOS' in rt for x in devs if 'iPad' in x['name']]
+          print(pads[-1]['udid'] if pads else '')")
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          SIMCTL_CHILD_BREAKBOSS_SELFTEST=1 SIMCTL_CHILD_BREAKBOSS_SNAPSHOTS=1 \
+            xcrun simctl launch --console-pty --terminate-running-process "$UDID" "$BID" > "$RUNNER_TEMP/console.log" 2>&1 &
+          for i in $(seq 1 120); do
+            sleep 2
+            DATA=$(xcrun simctl get_app_container "$UDID" "$BID" data 2>/dev/null || true)
+            cat "$RUNNER_TEMP/console.log" > "$RUNNER_TEMP/selftest.log"
+            if [ -n "$DATA" ] && [ -f "$DATA/Library/Caches/BreakBoss-selftest.log" ]; then cat "$DATA/Library/Caches/BreakBoss-selftest.log" >> "$RUNNER_TEMP/selftest.log"; fi
+            if grep -q "self-test passed\|SELF-TEST FAILED" "$RUNNER_TEMP/selftest.log"; then sleep 6; break; fi
+          done
+          mkdir -p "$RUNNER_TEMP/shots"
+          DATA=$(xcrun simctl get_app_container "$UDID" "$BID" data 2>/dev/null || true)
+          if [ -n "$DATA" ]; then cp "$DATA"/Library/Caches/layout-*.png "$RUNNER_TEMP/shots/" 2>/dev/null || true; fi
+          xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/simulator.png" || true
+          xcrun simctl terminate "$UDID" "$BID" || true
+          tail -40 "$RUNNER_TEMP/selftest.log"
+          if grep -q "self-test passed" "$RUNNER_TEMP/selftest.log"; then
+            echo "::notice title=Self-test::$(grep -m1 'self-test passed' "$RUNNER_TEMP/selftest.log")"
+          elif grep -q "SELF-TEST FAILED" "$RUNNER_TEMP/selftest.log"; then
+            grep "SELF-TEST FAILED" "$RUNNER_TEMP/selftest.log" | awk '!seen[$0]++' | head -40 | while read -r line; do echo "::error title=Self-test::$line"; done
+            FAILED=1
+          else
+            echo "::warning title=Self-test::The app launched but printed no self-test result within 240 s"
+          fi
+          ls -la "$RUNNER_TEMP/shots"
+          cd "$RUNNER_TEMP/shots"
+          git init -q
+          git checkout -q -b ci-screenshots
+          git -c user.name="BreakBoss build machine" -c user.email="actions@github.com" add -A
+          git -c user.name="BreakBoss build machine" -c user.email="actions@github.com" commit -q -m "Simulator pictures for ${GITHUB_SHA::7}" || true
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screenshots || true
+          [ -z "$FAILED" ]
+
+      - name: Keep the full logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: build-logs
+          path: |
+            ${{ runner.temp }}/build-release.log
+            ${{ runner.temp }}/build-xcode.log
+            ${{ runner.temp }}/build-sim.log
+            ${{ runner.temp }}/selftest.log
+          retention-days: 14
+          if-no-files-found: ignore

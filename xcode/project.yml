@@ -1,0 +1,69 @@
+# The Xcode project GitHub builds BreakBoss from (app + AUv3 plug-in). Generated on the build
+# machine by xcode/generate.py and XcodeGen; nothing here is edited by hand on an iPad.
+# Both targets build from copies generate.py makes of BreakBoss.swiftpm.
+name: BreakBoss
+options:
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "2"
+    SUPPORTS_MACCATALYST: NO
+    SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+    SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+    GENERATE_INFOPLIST_FILE: NO
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    MARKETING_VERSION: "0.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  BreakBoss:
+    type: application
+    platform: iOS
+    sources:
+      - path: build/app/Sources
+      - path: build/app/Resources
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_NAME: BreakBoss
+        PRODUCT_BUNDLE_IDENTIFIER: com.tabdanger.breakboss
+        INFOPLIST_FILE: build/App-Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: __PresetAccentColor
+        TARGETED_DEVICE_FAMILY: "2"
+    dependencies:
+      - target: BreakBossAU
+        embed: true
+        codeSign: true
+  BreakBossAU:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: build/plugin/Sources
+      - path: ../AUv3
+        includes: ["*.swift"]
+      - path: build/plugin/Resources
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_NAME: BreakBossAU
+        PRODUCT_MODULE_NAME: BreakBossAU
+        PRODUCT_BUNDLE_IDENTIFIER: com.tabdanger.breakboss.AUv3
+        INFOPLIST_FILE: build/AU-Info.plist
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: __PresetAccentColor
+        TARGETED_DEVICE_FAMILY: "2"
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) BREAKBOSS_PLUGIN"
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+schemes:
+  BreakBoss:
+    build:
+      targets:
+        BreakBoss: all
+        BreakBossAU: all
+    archive:
+      config: Release
