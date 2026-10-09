@@ -45,6 +45,8 @@ enum LayoutSnapshots {
     static func write(_ controller: KnockController) {
         guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
         let start = controller.mode
+        FaceplateView.snapshotMode = true
+        defer { FaceplateView.snapshotMode = false }
         for mode in SoundMode.allCases {
             controller.selectMode(mode)
             for play in [PlayMode.loop, .oneShot] {

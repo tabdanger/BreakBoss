@@ -22,6 +22,7 @@ struct FaceplateLayout: Decodable {
     let knobs: [String: Knob]
     let scope: [Double]
     let bpmDigits: [Double]
+    let bpmLabelX: Double
     let bpmBox: [Double]
     let textColor: [Double]
     let kitBox: [Double]

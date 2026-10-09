@@ -13,6 +13,10 @@ import UniformTypeIdentifiers
 struct FaceplateView: View {
     @ObservedObject var controller: KnockController
 
+    /// Build machine only: the offscreen renderer can't draw drop-down menus, so snapshots leave
+    /// them out (they're invisible tap areas on the iPad anyway).
+    static var snapshotMode = false
+
     @State private var editor: EditorTarget?
     @State private var showExport = false
     @State private var showMenu = false
@@ -131,11 +135,11 @@ struct FaceplateView: View {
     private func windows(_ L: FaceplateLayout, s: CGFloat) -> some View {
         NameWindow(text: controller.loadingKit ? "LOADING..." : controller.kitDisplayName,
                    textRect: L.kitText, color: L.textColor, scale: s)
-        kitsMenu.place(L.kitBox, s)
+        if !FaceplateView.snapshotMode { kitsMenu.place(L.kitBox, s) }
         NameWindow(text: controller.state.presetName,
                    textRect: [L.presetText[0], L.kitText[1], L.presetText[2], L.kitText[3]],
                    color: L.textColor, scale: s)
-        presetsMenu.place(L.presetBox, s)
+        if !FaceplateView.snapshotMode { presetsMenu.place(L.presetBox, s) }
         hit(L.saveRect, s) {
             nameText = controller.state.presetName == "INIT" ? "" : controller.state.presetName.capitalized
             namePrompt = .preset
@@ -359,9 +363,12 @@ struct BPMDisplay: View {
         ZStack(alignment: .topLeading) {
             TimelineView(.periodic(from: .now, by: 0.2)) { _ in
                 let bpm = Int(controller.liveTempo.rounded())
+                // Right-aligned up to just before the printed "BPM".
+                let right = layout.bpmLabelX - 7
+                let left = box[0] + 12
                 SevenSegment(number: bpm, digits: 3, color: color)
-                    .frame(width: 37 * scale, height: (d[3] - d[1]) * scale)
-                    .position(x: (d[0] + 18.5) * scale, y: (d[1] + d[3]) / 2 * scale)
+                    .frame(width: (right - left) * scale, height: (d[3] - d[1]) * scale)
+                    .position(x: (left + right) / 2 * scale, y: (d[1] + d[3]) / 2 * scale)
             }
             .allowsHitTesting(false)
             Rectangle()
@@ -406,13 +413,14 @@ struct SevenSegment: View {
         Canvas { ctx, size in
             let n = max(0, min(number, Int(pow(10, Double(digits))) - 1))
             let chars = Array(String(n))
-            let cell = size.width / CGFloat(digits)
-            let w = cell * 0.78
             let h = size.height
+            let cell = min(size.width / CGFloat(digits), h * 0.58)
+            let w = cell * 0.78
             let t = max(1.2, h * 0.11)
+            let origin = size.width - cell * CGFloat(digits)
             for (i, ch) in chars.enumerated() {
                 guard let value = ch.wholeNumberValue else { continue }
-                let x0 = CGFloat(digits - chars.count + i) * cell + (cell - w) / 2
+                let x0 = origin + CGFloat(digits - chars.count + i) * cell + (cell - w) / 2
                 let segs = SevenSegment.map[value]
                 func bar(_ rect: CGRect) { ctx.fill(Path(roundedRect: rect, cornerRadius: t / 2), with: .color(color)) }
                 let mid = h / 2
