@@ -477,12 +477,19 @@ def bundle_id(identifier, name):
     if bundle is None:
         # Apple treats App IDs as the same whatever their capitals are: say which one exists.
         s2, all_ids = call("GET", "/v1/bundleIds?limit=200")
-        same = [d["attributes"].get("identifier") for d in all_ids.get("data", [])
+        same = [d for d in all_ids.get("data", [])
                 if d["attributes"].get("identifier", "").lower() == identifier.lower()] if s2 == 200 else []
-        if same:
-            say("error", "Bundle ID", f"{identifier} is already registered as {same[0]} (different capitals). "
-                "The project has to use exactly that ID.")
-            sys.exit(1)
+        for d in same:
+            # Left over from an earlier run with other capitals (an extension's ID has to start
+            # with the app's ID exactly). An App ID with no app behind it is safe to remove.
+            old_id = d["attributes"].get("identifier")
+            sd, jd = call("DELETE", f"/v1/bundleIds/{d['id']}")
+            if sd in (200, 204):
+                say("notice", "Bundle ID", f"Removed the unused App ID {old_id} so {identifier} can be registered.")
+            else:
+                say("error", "Bundle ID", f"{identifier} is already registered as {old_id} and it couldn't be removed: "
+                    f"HTTP {sd} {problem(jd)}")
+                sys.exit(1)
         related = [d["attributes"].get("identifier") for d in all_ids.get("data", [])
                    if BUNDLE_ID.lower().split(".")[-1] in d["attributes"].get("identifier", "").lower()] if s2 == 200 else []
         if related:
