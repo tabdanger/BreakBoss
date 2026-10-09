@@ -187,7 +187,11 @@ final class KnockEngine {
         switch st & 0xF0 {
         case 0x90 where data2 > 0:
             let e = noteEvent(note: Int(data1), velocity: data2)
-            addBlockEvent(BlockEvent(offset: offset, event: e))
+            if KnockEngine.isTransport(e.kind) {
+                apply(e, offset: 0)   // loop picks: before this block is scheduled
+            } else {
+                addBlockEvent(BlockEvent(offset: offset, event: e))
+            }
         case 0x80, 0x90:
             addBlockEvent(BlockEvent(offset: offset, event: KEvent(kind: .noteOff, a: Int32(data1))))
         case 0xB0 where data1 == 123 || data1 == 120:
@@ -224,8 +228,14 @@ final class KnockEngine {
         pickUpNewKitAndLoops(frames: frames)
 
         // Events from the faceplate and MIDI ports happen at the start of the block.
+        // Transport events (start, stop, loop picks, MIDI clock) are handled before the loop is
+        // scheduled, so a loop starts on this block's first sample, not one block late.
         queue.drain { e in
-            self.addBlockEvent(BlockEvent(offset: 0, event: e))
+            if KnockEngine.isTransport(e.kind) {
+                self.apply(e, offset: 0)
+            } else {
+                self.addBlockEvent(BlockEvent(offset: 0, event: e))
+            }
         }
         scheduleLoops(frames: frames, host: host)
         sortBlockEvents()
@@ -398,6 +408,14 @@ final class KnockEngine {
     }
 
     private var followingHost = false
+
+    @inline(__always)
+    static func isTransport(_ k: KEvent.Kind) -> Bool {
+        switch k {
+        case .loopPad, .play, .stop, .midiStart, .midiStop, .midiContinue, .midiClock, .songPosition: return true
+        default: return false
+        }
+    }
 
     private func startTransport(at b: Double) {
         playing = true
