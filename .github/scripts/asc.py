@@ -475,6 +475,18 @@ def bundle_id(identifier, name):
     status, js = call("GET", f"/v1/bundleIds?filter[identifier]={identifier}&limit=50")
     bundle = next((d for d in js.get("data", []) if d["attributes"].get("identifier") == identifier), None) if status == 200 else None
     if bundle is None:
+        # Apple treats App IDs as the same whatever their capitals are: say which one exists.
+        s2, all_ids = call("GET", "/v1/bundleIds?limit=200")
+        same = [d["attributes"].get("identifier") for d in all_ids.get("data", [])
+                if d["attributes"].get("identifier", "").lower() == identifier.lower()] if s2 == 200 else []
+        if same:
+            say("error", "Bundle ID", f"{identifier} is already registered as {same[0]} (different capitals). "
+                "The project has to use exactly that ID.")
+            sys.exit(1)
+        related = [d["attributes"].get("identifier") for d in all_ids.get("data", [])
+                   if BUNDLE_ID.lower().split(".")[-1] in d["attributes"].get("identifier", "").lower()] if s2 == 200 else []
+        if related:
+            say("notice", "Bundle ID", "App IDs on the account like this one: " + ", ".join(related))
         status, js = call("POST", "/v1/bundleIds", {"data": {"type": "bundleIds", "attributes": {
             "identifier": identifier, "name": name, "platform": "IOS"}}})
         if status != 201:
