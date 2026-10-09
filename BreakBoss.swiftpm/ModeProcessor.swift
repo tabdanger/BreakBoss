@@ -146,7 +146,7 @@ final class BusProcessor {
         let punchAmount = s.punch * 1.6
         let gritAmount = s.grit + (vintage ? 0.38 : 0) + (texture ? 0.12 : 0)
         let drive = 1 + gritAmount * 6
-        let gritMakeup = 1 / Shape.soft(drive) * 0.95
+        let gritMakeup = 1 / Saturate.soft(drive) * 0.95
         let gritMix = min(1, gritAmount * 2.2)
         let shineAmount = s.shine * 0.55
         let noiseLevel = s.noise * s.noise * 0.06
@@ -184,8 +184,8 @@ final class BusProcessor {
             // GRIT (+ Vintage tape drive), 2x oversampled
             if gritMix > 0.001 {
                 let tapeBias: Float = vintage ? 0.14 : 0.05
-                let wl = oversample[0].process(l) { Shape.tape($0 * drive, bias: tapeBias) * gritMakeup }
-                let wr = oversample[1].process(r) { Shape.tape($0 * drive, bias: tapeBias) * gritMakeup }
+                let wl = oversample[0].process(l) { Saturate.tape($0 * drive, bias: tapeBias) * gritMakeup }
+                let wr = oversample[1].process(r) { Saturate.tape($0 * drive, bias: tapeBias) * gritMakeup }
                 // The oversampler delays by 15 samples; the dry share is small and blends in.
                 l = l * (1 - gritMix) + wl * gritMix
                 r = r * (1 - gritMix) + wr * gritMix
@@ -198,8 +198,8 @@ final class BusProcessor {
             // SHINE
             if shineAmount > 0.001 {
                 let hl = shineHP[0].process(l), hr = shineHP[1].process(r)
-                l += Shape.soft(hl * 3) * shineAmount
-                r += Shape.soft(hr * 3) * shineAmount
+                l += Saturate.soft(hl * 3) * shineAmount
+                r += Saturate.soft(hr * 3) * shineAmount
                 l = shineShelf[0].process(l); r = shineShelf[1].process(r)
             }
 
@@ -432,8 +432,8 @@ final class MasterBus {
             }
             let g = drive.next()
             if s.clipperOn {
-                l = oversample[0].process(l * g) { Shape.clip($0, ceiling: ceiling, knee: 0.18) }
-                r = oversample[1].process(r * g) { Shape.clip($0, ceiling: ceiling, knee: 0.18) }
+                l = oversample[0].process(l * g) { Saturate.clip($0, ceiling: ceiling, knee: 0.18) }
+                r = oversample[1].process(r * g) { Saturate.clip($0, ceiling: ceiling, knee: 0.18) }
                 // The half-band filter can ring a hair over the ceiling; hold the line.
                 l = min(max(l, -ceiling), ceiling)
                 r = min(max(r, -ceiling), ceiling)

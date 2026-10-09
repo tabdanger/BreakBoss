@@ -121,8 +121,8 @@ enum DrumSynth {
         }
         if r.drive > 0.01 {
             let g = 1 + r.drive * 5
-            let comp = 1 / Shape.soft(g)
-            for i in 0..<mono.count { mono[i] = Shape.soft(mono[i] * g) * comp }
+            let comp = 1 / Saturate.soft(g)
+            for i in 0..<mono.count { mono[i] = Saturate.soft(mono[i] * g) * comp }
         }
         normalise(&mono, to: r.level)
         fadeTail(&mono, sr)
@@ -170,7 +170,7 @@ enum DrumSynth {
             var s = sinf(2 * .pi * phase) * env
             if i < Int(0.004 * sr) { s += click.highPass(rng.bipolar()) * (1 - t / 0.004) * 0.35 * r.snap }
             // Mild saturation gives the 808 harmonics that show up on small speakers.
-            out[i] = Shape.soft(s * (1.3 + r.tone))
+            out[i] = Saturate.soft(s * (1.3 + r.tone))
         }
         return out
     }
@@ -188,7 +188,7 @@ enum DrumSynth {
             let env = min(1, t * sr / 12) * expf(-t / (r.decay * 0.42))
             var s = sinf(2 * .pi * phase) * env
             if t < 0.006 { s += hp.process(rng.bipolar()) * (1 - t / 0.006) * (0.3 + 0.6 * r.snap) }
-            out[i] = Shape.soft(s * (1.5 + r.tone * 1.5))
+            out[i] = Saturate.soft(s * (1.5 + r.tone * 1.5))
         }
         return out
     }
@@ -207,7 +207,7 @@ enum DrumSynth {
             let env = min(1, t * sr / 30) * expf(-t / (r.decay * 0.4))
             var s = (sinf(2 * .pi * p1) + 0.18 * sinf(2 * .pi * p2) * expf(-t / 0.04)) * env
             if t < 0.005 { s += rng.bipolar() * (1 - t / 0.005) * 0.25 * r.snap }
-            out[i] = lp.lowPass(Shape.soft(s * 1.4))
+            out[i] = lp.lowPass(Saturate.soft(s * 1.4))
         }
         return out
     }

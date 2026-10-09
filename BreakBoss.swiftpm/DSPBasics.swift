@@ -146,7 +146,7 @@ struct Smoothed {
     }
 }
 
-enum Shape {
+enum Saturate {
     /// Smooth saturation that never exceeds ±1.
     @inline(__always) static func soft(_ x: Float) -> Float {
         if x > 3 { return 1 }
