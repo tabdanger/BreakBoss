@@ -67,6 +67,8 @@ final class Handoff<T: AnyObject> {
 /// Something for the engine to do, sent from the faceplate, a MIDI port or the host.
 struct KEvent {
     enum Kind: UInt8 {
+        case midiNoteOn   // a: channel * 128 + note
+        case loopGateOn, loopGateOff // a: channel/note token, or 2048 + touch pad
         case pad          // a: pad 0...11, value: velocity 0...1
         case bass         // a: semitones from the 808 tuning, value: velocity
         case noteOff      // a: MIDI note (808 notes release)
@@ -90,6 +92,7 @@ final class EventQueue {
     private let capacity: Int
     private var head = 0
     private var tail = 0
+    private var overflowed = false
 
     init(capacity: Int = 1024) {
         self.capacity = capacity
@@ -111,7 +114,7 @@ final class EventQueue {
         if next != head {
             buffer[tail] = e
             tail = next
-        }
+        } else { overflowed = true }
         os_unfair_lock_unlock(lock)
     }
 
@@ -119,11 +122,104 @@ final class EventQueue {
     @inline(__always)
     func drain(_ handle: (KEvent) -> Void) {
         guard os_unfair_lock_trylock(lock) else { return }
+        if overflowed {
+            head = tail
+            overflowed = false
+            handle(KEvent(kind: .allOff))
+        }
         while head != tail {
             let e = buffer[head]
             head = (head + 1) % capacity
             handle(e)
         }
         os_unfair_lock_unlock(lock)
+    }
+}
+
+/// Writers may wait; the render thread only tries once and uses its previous snapshot if busy.
+final class SharedControls {
+    private let lock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
+    private let values = UnsafeMutablePointer<Float>.allocate(capacity: KParam.count)
+    private var tempo: Double = 140
+    init() {
+        lock.initialize(to: os_unfair_lock())
+        for p in KParam.allCases { (values + p.rawValue).initialize(to: p.defaultValue) }
+    }
+    deinit { values.deallocate(); lock.deinitialize(count: 1); lock.deallocate() }
+    func set(_ p: KParam, _ value: Float) {
+        let finite = value.isFinite ? value : p.defaultValue
+        os_unfair_lock_lock(lock)
+        values[p.rawValue] = p.steps.map { finite.rounded().clamped(0, Float($0 - 1)) } ?? finite.clamped(0, 1)
+        os_unfair_lock_unlock(lock)
+    }
+    func get(_ p: KParam) -> Float {
+        os_unfair_lock_lock(lock)
+        let result = values[p.rawValue]
+        os_unfair_lock_unlock(lock)
+        return result
+    }
+    func setTempo(_ value: Double) {
+        os_unfair_lock_lock(lock)
+        tempo = value.isFinite ? value.clamped(30, 300) : 140
+        os_unfair_lock_unlock(lock)
+    }
+    /// Audio thread: merge the host's preallocated pending values and take one snapshot.
+    /// False leaves the host's dirty mask with its owner, to retry next callback. A busy UI
+    /// writer never delays rendering, and automation remains audible through the local copy.
+    @discardableResult
+    func copy(to output: UnsafeMutablePointer<Float>, tempo outputTempo: UnsafeMutablePointer<Double>,
+              hostValues: UnsafePointer<Float>? = nil, hostMask: UInt32 = 0) -> Bool {
+        guard os_unfair_lock_trylock(lock) else { return false }
+        if let hostValues {
+            var dirty = hostMask
+            while dirty != 0 {
+                let index = dirty.trailingZeroBitCount
+                values[index] = hostValues[index]
+                dirty &= dirty - 1
+            }
+        }
+        output.update(from: values, count: KParam.count)
+        outputTempo.pointee = tempo
+        os_unfair_lock_unlock(lock)
+        return true
+    }
+}
+
+struct MeterSnapshot {
+    var status = [Double](repeating: 0, count: 8)
+    var padHits = [UInt32](repeating: 0, count: Pad.count)
+    var scope = [Float](repeating: 0, count: MasterBus.scopeSize)
+    var scopeWrite = 0
+}
+
+/// Audio publishes into preallocated storage; UI copies it on the main thread.
+final class SharedMeters {
+    private let lock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
+    private let status = UnsafeMutablePointer<Double>.allocate(capacity: 8)
+    private let hits = UnsafeMutablePointer<UInt32>.allocate(capacity: Pad.count)
+    private let scope = UnsafeMutablePointer<Float>.allocate(capacity: MasterBus.scopeSize)
+    private var scopeWrite = 0
+    init() {
+        lock.initialize(to: os_unfair_lock())
+        status.initialize(repeating: 0, count: 8)
+        status[1] = -1; status[2] = -2
+        hits.initialize(repeating: 0, count: Pad.count)
+        scope.initialize(repeating: 0, count: MasterBus.scopeSize)
+    }
+    deinit { status.deallocate(); hits.deallocate(); scope.deallocate(); lock.deinitialize(count: 1); lock.deallocate() }
+    func publish(status source: UnsafeMutablePointer<Double>, hits sourceHits: UnsafeMutablePointer<UInt32>, master: MasterBus) {
+        guard os_unfair_lock_trylock(lock) else { return }
+        status.update(from: source, count: 8)
+        hits.update(from: sourceHits, count: Pad.count)
+        scope.update(from: master.scope, count: MasterBus.scopeSize)
+        scopeWrite = master.scopeWrite
+        os_unfair_lock_unlock(lock)
+    }
+    func snapshot() -> MeterSnapshot {
+        os_unfair_lock_lock(lock)
+        defer { os_unfair_lock_unlock(lock) }
+        return MeterSnapshot(status: Array(UnsafeBufferPointer(start: status, count: 8)),
+                             padHits: Array(UnsafeBufferPointer(start: hits, count: Pad.count)),
+                             scope: Array(UnsafeBufferPointer(start: scope, count: MasterBus.scopeSize)), scopeWrite: scopeWrite)
     }
 }

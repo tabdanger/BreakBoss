@@ -4,8 +4,8 @@
 import PackageDescription
 import AppleProductTypes
 
-// BreakBoss runs on iPad, iPadOS 16.0 and later. The same code is also built as an AUv3
-// instrument on GitHub (see xcode/ and AUv3/ at the top of the repository).
+// Universal standalone iPhone and iPad app for iOS 16 and later.
+// The repository's Xcode targets additionally build the existing AUv3 extension.
 let package = Package(
     name: "BreakBoss",
     platforms: [
@@ -16,11 +16,11 @@ let package = Package(
             name: "BreakBoss",
             targets: ["AppModule"],
             bundleIdentifier: "com.tabdanger.BreakBoss",
-            displayVersion: "0.1.0",
-            bundleVersion: "1",
+            displayVersion: "0.3.1",
+            bundleVersion: "4",
             appIcon: .asset("AppIcon"),
             accentColor: .presetColor(.red),
-            supportedDeviceFamilies: [.pad],
+            supportedDeviceFamilies: [.phone, .pad],
             supportedInterfaceOrientations: [
                 .landscapeRight,
                 .landscapeLeft,

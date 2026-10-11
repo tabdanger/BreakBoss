@@ -57,6 +57,50 @@ on:
         type: choice
         options: [internal, external]
         default: internal
+  workflow_call:
+    inputs:
+      mode:
+        type: string
+        default: upload
+      build_number:
+        type: string
+        default: ""
+      feedback_email:
+        type: string
+        default: ""
+      contact_first_name:
+        type: string
+        default: ""
+      contact_last_name:
+        type: string
+        default: ""
+      contact_phone:
+        type: string
+        default: ""
+      contact_email:
+        type: string
+        default: ""
+      tester_email:
+        type: string
+        default: ""
+      tester_name:
+        type: string
+        default: ""
+      tester_group:
+        type: string
+        default: internal
+    secrets:
+      ASC_KEY_ID:
+        required: true
+      ASC_ISSUER_ID:
+        required: true
+      ASC_KEY_P8:
+        required: true
+      APPLE_TEAM_ID:
+        required: true
+
+permissions:
+  contents: read
 
 concurrency:
   group: upload
@@ -73,6 +117,15 @@ jobs:
     steps:
       - name: Get the code
         uses: actions/checkout@v5
+
+      - name: Validate the requested mode
+        env:
+          MODE: ${{ inputs.mode }}
+        run: |
+          case "$MODE" in
+            upload|sign|check|status|external|tester) ;;
+            *) echo "::error title=Mode::Unknown release mode"; exit 1 ;;
+          esac
 
       - name: Use Xcode 26 (Apple only accepts apps built with the iOS 26 SDK or later)
         if: runner.os == 'macOS'
@@ -171,16 +224,15 @@ jobs:
         if: inputs.mode == 'upload' || inputs.mode == 'sign'
         working-directory: BreakBoss.swiftpm
         env:
-          INPUT_BUILD: ${{ github.event.inputs.build_number }}
+          INPUT_BUILD: ${{ inputs.build_number }}
+          ALLOW_MISSING_APP: ${{ inputs.mode == 'sign' && '1' || '0' }}
         run: |
           BASE=$(sed -n 's/.*bundleVersion: "\([0-9][0-9]*\)".*/\1/p' Package.swift)
           VERSION=$(sed -n 's/.*displayVersion: "\([^"]*\)".*/\1/p' Package.swift)
-          case "$INPUT_BUILD" in
-            ''|*[!0-9]*)
-              if [ -n "$INPUT_BUILD" ]; then echo "::warning title=Build number::'$INPUT_BUILD' isn't a whole number, so it was ignored."; fi
-              BUILD=$((BASE + GITHUB_RUN_NUMBER)) ;;
-            *) BUILD="$INPUT_BUILD" ;;
-          esac
+          # Reusable workflows have a separate run-number sequence. Consult all existing
+          # App Store Connect build pages so this never reuses an already uploaded number.
+          FLOOR=$((BASE + GITHUB_RUN_NUMBER))
+          BUILD=$(python3 "$GITHUB_WORKSPACE/.github/scripts/asc.py" next-build "$FLOOR" "$INPUT_BUILD")
           sed -i '' "s/bundleVersion: \"$BASE\"/bundleVersion: \"$BUILD\"/" Package.swift
           grep -n 'bundleVersion\|displayVersion' Package.swift
           echo "BUILD=$BUILD" >> "$GITHUB_ENV"
@@ -369,6 +421,23 @@ jobs:
         if: inputs.mode == 'upload'
         run: python3 .github/scripts/asc.py wait "$BUILD"
 
+      - name: Keep the signed universal app
+        if: always() && env.IPA != ''
+        uses: actions/upload-artifact@v5
+        with:
+          name: BreakBoss-${{ env.VERSION }}-build-${{ env.BUILD }}
+          path: ${{ env.IPA }}
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Preserve the signing and upload logs
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/upload-logs"
+          for file in "$RUNNER_TEMP/archive.log" "$RUNNER_TEMP/export.log" "$SIGNING/validate.log" "$SIGNING/upload.log"; do
+            [ ! -f "$file" ] || cp "$file" "$RUNNER_TEMP/upload-logs/"
+          done
+
       - name: Clean up
         if: always()
         env:
@@ -385,6 +454,6 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: upload-logs
-          path: ${{ runner.temp }}/archive.log
+          path: ${{ runner.temp }}/upload-logs/*.log
           retention-days: 14
           if-no-files-found: ignore

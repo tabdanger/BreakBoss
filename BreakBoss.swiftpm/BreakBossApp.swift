@@ -1,5 +1,6 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import SwiftUI
+import UIKit
 
 @main
 struct BreakBossApp: App {
@@ -21,7 +22,7 @@ struct ContentView: View {
 
     var body: some View {
         FaceplateView(controller: controller)
-            .ignoresSafeArea()
+            .ignoresSafeArea(.container, edges: UIDevice.current.userInterfaceIdiom == .phone ? [] : .all)
             .statusBarHidden(true)
             .persistentSystemOverlays(.hidden)
             .preferredColorScheme(.dark)
@@ -38,8 +39,7 @@ struct ContentView: View {
     }
 }
 
-/// Build-machine only (BREAKBOSS_SNAPSHOTS=1): draws the faceplate in each mode at its full
-/// landscape size into Library/Caches, so every build can be checked against the approved art.
+/// Build-machine only (BREAKBOSS_SNAPSHOTS=1): renders both approved device layouts.
 enum LayoutSnapshots {
     @MainActor
     static func write(_ controller: KnockController) {
@@ -47,17 +47,21 @@ enum LayoutSnapshots {
         let start = controller.mode
         FaceplateView.snapshotMode = true
         defer { FaceplateView.snapshotMode = false }
-        for mode in SoundMode.allCases {
-            controller.selectMode(mode)
-            for play in [PlayMode.loop, .oneShot] {
-                controller.selectPlayMode(play)
-                controller.readout = nil
-                let view = FaceplateView(controller: controller).frame(width: 1448, height: 1086)
-                let renderer = ImageRenderer(content: view)
-                renderer.scale = 1
-                if let image = renderer.uiImage, let data = image.pngData() {
-                    let name = "layout-\(mode.assetSuffix)-\(play == .loop ? "loop" : "oneshot").png"
-                    try? data.write(to: caches.appendingPathComponent(name))
+        for device in [FaceplateLayout.Device.tablet, .phone] {
+            let size = device == .phone ? CGSize(width: 590, height: 1280) : CGSize(width: 1448, height: 1086)
+            for mode in SoundMode.allCases {
+                controller.selectMode(mode)
+                for play in [PlayMode.loop, .oneShot] {
+                    controller.selectPlayMode(play)
+                    controller.readout = nil
+                    let view = FaceplateView(controller: controller, deviceOverride: device)
+                        .frame(width: size.width, height: size.height)
+                    let renderer = ImageRenderer(content: view)
+                    renderer.scale = 1
+                    if let image = renderer.uiImage, let data = image.pngData() {
+                        let name = "layout-\(device.rawValue)-\(mode.assetSuffix)-\(play == .loop ? "loop" : "oneshot").png"
+                        try? data.write(to: caches.appendingPathComponent(name))
+                    }
                 }
             }
         }

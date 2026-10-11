@@ -14,6 +14,7 @@ struct Readout: Equatable {
 final class KnockController: ObservableObject {
     let engine: KnockEngine
     let isPlugin: Bool
+    private(set) var meters = MeterSnapshot()
 
     @Published private(set) var state = KnockState()
     @Published var readout: Readout?
@@ -21,6 +22,8 @@ final class KnockController: ObservableObject {
     @Published private(set) var userPresets: [String] = []
     /// The 12 pad sounds as loaded (for the pad editor's waveform).
     @Published private(set) var kitSamples: [SampleBuffer] = []
+    /// Names for successfully loaded factory samples; these never become device-local imports.
+    @Published private(set) var stockSampleNames: [Int: String] = [:]
     @Published private(set) var loadingKit = false
     /// A short message for the screen (errors, "saved", ...).
     @Published var notice: String?
@@ -34,6 +37,7 @@ final class KnockController: ObservableObject {
     var onStateReplaced: (() -> Void)?
 
     private let kitQueue = DispatchQueue(label: "breakboss.kit", qos: .userInitiated)
+    private let stockLibrary = StockSampleLibrary.bundled
     private var kitGeneration = 0
     private var timers: [Timer] = []
     private var saveWork: DispatchWorkItem?
@@ -45,7 +49,7 @@ final class KnockController: ObservableObject {
         for p in KParam.allCases { s.values[p.id] = p.defaultValue }
         if !isPlugin, let data = UserDefaults.standard.data(forKey: KnockController.sessionKey),
            let saved = try? JSONDecoder().decode(KnockState.self, from: data) {
-            s = saved
+            s = saved.normalized()
         }
         state = s
         pushAllToEngine()
@@ -60,6 +64,12 @@ final class KnockController: ObservableObject {
         }
         RunLoop.main.add(collect, forMode: .common)
         timers.append(collect)
+        let metering = Timer(timeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.meters = self.engine.meters.snapshot()
+        }
+        RunLoop.main.add(metering, forMode: .common)
+        timers.append(metering)
         if isPlugin {
             let follow = Timer(timeInterval: 1.0 / 20, repeats: true) { [weak self] _ in self?.followEngineParams() }
             RunLoop.main.add(follow, forMode: .common)
@@ -81,13 +91,13 @@ final class KnockController: ObservableObject {
 
     /// Sets a control from the faceplate (or from the host when `fromHost`).
     func set(_ p: KParam, _ v: Float, fromHost: Bool = false, show: Bool = true) {
-        var v = v
+        var v = v.isFinite ? v : p.defaultValue
         if let steps = p.steps { v = Float(Int(v.rounded()).clamped(0, steps - 1)) } else { v = v.clamped(0, 1) }
         if state.values[p.id] == v { return }
         state.values[p.id] = v
         engine.setParam(p, v)
         if p == .soundMode { state.mode = mode }
-        if p == .playMode { state.playMode = playMode }
+        if p == .playMode { state.playMode = playMode; engine.send(KEvent(kind: .allOff)) }
         if !fromHost { onParameterChanged?(p, v) }
         if show && p.isKnob { readout = Readout(title: p.name.uppercased(), value: p.text(v), time: Date()) }
         scheduleSave()
@@ -112,7 +122,7 @@ final class KnockController: ObservableObject {
 
     private func pushAllToEngine() {
         for p in KParam.allCases { engine.setParam(p, value(p)) }
-        engine.displayBPM.pointee = state.bpm
+        engine.setTempo(state.bpm)
     }
 
     /// AUv3: host automation writes the engine directly; bring the faceplate along.
@@ -133,17 +143,17 @@ final class KnockController: ObservableObject {
 
     // MARK: Tempo
 
-    var liveTempo: Double { engine.status[4] > 0 ? engine.status[4] : state.bpm }
+    var liveTempo: Double { meters.status[4] > 0 ? meters.status[4] : state.bpm }
 
     /// True when the tempo comes from the DAW or MIDI clock (the display can't be dragged).
     var tempoIsExternal: Bool {
-        (value(.tempoSync) > 0.5 || value(.followDAW) > 0.5) && (engine.status[5] > 0 || engine.status[6] > 0)
+        (value(.tempoSync) > 0.5 || value(.followDAW) > 0.5) && (meters.status[5] > 0 || meters.status[6] > 0)
     }
 
     func setBPM(_ bpm: Double) {
         let b = (bpm * 10).rounded() / 10
         state.bpm = b.clamped(40, 240)
-        engine.displayBPM.pointee = state.bpm
+        engine.setTempo(state.bpm)
         scheduleSave()
     }
 
@@ -157,16 +167,32 @@ final class KnockController: ObservableObject {
             readout = Readout(title: "LOOP \(pad + 1)", value: title, time: Date())
         } else {
             engine.send(KEvent(kind: .pad, a: Int32(pad), value: Double(velocity)))
-            let name = state.pads[pad].sampleFile.map { ($0 as NSString).deletingPathExtension.uppercased() }
-                ?? kitDefinition.pads[pad].label
-            readout = Readout(title: "PAD \(pad + 1)", value: name, time: Date())
+            readout = Readout(title: "PAD \(pad + 1)", value: padName(pad).uppercased(), time: Date())
         }
     }
 
-    var isPlaying: Bool { engine.status[0] > 0.5 }
+    func gateDown(_ pad: Int, velocity: Float) {
+        guard (0..<Pad.count).contains(pad) else { return }
+        if playMode == .loop {
+            engine.send(KEvent(kind: .loopGateOn, a: Int32(2048 + pad), value: Double(velocity)))
+        } else { padDown(pad, velocity: velocity) }
+    }
+
+    func gateUp(_ pad: Int) {
+        engine.send(KEvent(kind: .loopGateOff, a: Int32(2048 + pad)))
+    }
+
+    func previewLoop(_ index: Int) {
+        guard loops.indices.contains(index) else { return }
+        engine.send(KEvent(kind: .loopPad, a: Int32(index)))
+    }
+
+    func panic() { engine.send(KEvent(kind: .allOff)) }
+
+    var isPlaying: Bool { meters.status[0] > 0.5 }
 
     func playPressed() {
-        if value(.followDAW) > 0.5 && engine.status[5] > 0 {
+        if value(.followDAW) > 0.5 && meters.status[5] > 0 {
             readout = Readout(title: "FOLLOW DAW", value: "START IT FROM THE DAW", time: Date())
             return
         }
@@ -184,6 +210,12 @@ final class KnockController: ObservableObject {
             readout = Readout(title: "DICE", value: "NEW GROOVES", time: Date())
         } else {
             state.soundSeed = seed
+            for i in state.pads.indices where state.pads[i].sampleFile != nil || stockLibrary.sample(kitID: state.kitID, pad: i) != nil {
+                var rng = KRandom(seed: seed &* 2_654_435_761 &+ UInt32(i * 977))
+                state.pads[i].tune = rng.range(-3, 3)
+                state.pads[i].pan = rng.range(-0.2, 0.2)
+                state.pads[i].decay = rng.range(0.65, 1)
+            }
             rebuildKit()
             readout = Readout(title: "DICE", value: "NEW SOUNDS", time: Date())
         }
@@ -216,7 +248,7 @@ final class KnockController: ObservableObject {
         state.kitName = kit.name.uppercased()
         state.userKit = kit.name
         state.soundSeed = kit.soundSeed
-        state.pads = kit.pads.count == Pad.count ? kit.pads : Array(repeating: PadSettings(), count: Pad.count)
+        state.pads = KnockState.normalizedPads(kit.pads)
         if value(.tempoSync) < 0.5 { setBPM(def.tempo) }
         rebuildKit()
         rebuildLoops()
@@ -232,6 +264,7 @@ final class KnockController: ObservableObject {
             state.kitName = clean.uppercased()
             state.userKit = clean
             refreshLists()
+            scheduleSave()
             readout = Readout(title: "KIT SAVED", value: clean.uppercased(), time: Date())
         } else {
             notice = "Couldn't save the kit."
@@ -254,11 +287,14 @@ final class KnockController: ObservableObject {
         let generation = kitGeneration
         let s = state
         let def = KitLibrary.kit(id: s.kitID)
+        let stock = stockLibrary
         let rate = engine.sampleRate > 0 ? engine.sampleRate : 48_000
         loadingKit = true
+        stockSampleNames = [:]
         kitQueue.async { [weak self] in
             var samples: [SampleBuffer] = []
             var failed: [String] = []
+            var stockNames: [Int: String] = [:]
             for pad in 0..<Pad.count {
                 if let file = s.pads[pad].sampleFile {
                     if let buffer = try? SampleLoader.load(SampleLoader.urlInSamples(file)) {
@@ -266,6 +302,13 @@ final class KnockController: ObservableObject {
                         continue
                     }
                     failed.append(file)
+                } else if let sample = stock.sample(kitID: def.id, pad: pad) {
+                    if let buffer = try? SampleLoader.load(sample.url) {
+                        samples.append(buffer)
+                        stockNames[pad] = sample.displayName
+                        continue
+                    }
+                    failed.append(sample.displayName)
                 }
                 var recipe = def.pads[pad]
                 if s.soundSeed > 1 {
@@ -274,13 +317,17 @@ final class KnockController: ObservableObject {
                 }
                 samples.append(DrumSynth.render(recipe, sampleRate: rate, seed: s.soundSeed &+ UInt32(pad)))
             }
-            let kit = KitBuffers(name: s.kitName, samples: samples, settings: s.pads, bassHz: def.bassHz)
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self, samples, failed, stockNames] in
                 guard let self, generation == self.kitGeneration else { return }
-                self.engine.kitHandoff.publish(kit)
                 self.kitSamples = samples
+                self.stockSampleNames = stockNames
+                self.republishKit() // Apply edits made while decoding the kit.
                 self.loadingKit = false
-                if !failed.isEmpty { self.notice = "Missing sample: \(failed.joined(separator: ", "))" }
+                if !failed.isEmpty {
+                    self.notice = "Samples unavailable: \(failed.joined(separator: ", ")). Using synthesized sounds."
+                } else if let failure = stock.failure {
+                    self.notice = "\(failure) Using synthesized sounds."
+                }
             }
         }
     }
@@ -305,13 +352,15 @@ final class KnockController: ObservableObject {
     /// Puts an audio file on a pad (it's copied into the Samples folder first).
     func importSample(_ url: URL, toPad pad: Int) {
         guard pad >= 0 && pad < Pad.count else { return }
+        let generation = kitGeneration
         kitQueue.async { [weak self] in
             do {
                 let name = try SampleLoader.copyIntoSamples(url)
                 let buffer = try SampleLoader.load(SampleLoader.urlInSamples(name))
-                DispatchQueue.main.async {
-                    guard let self else { return }
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, self.kitGeneration == generation else { return }
                     self.state.pads[pad].sampleFile = name
+                    self.stockSampleNames[pad] = nil
                     if self.kitSamples.count == Pad.count {
                         var samples = self.kitSamples
                         samples[pad] = buffer
@@ -324,7 +373,7 @@ final class KnockController: ObservableObject {
                     self.scheduleSave()
                 }
             } catch {
-                DispatchQueue.main.async { self?.notice = error.localizedDescription }
+                DispatchQueue.main.async { [weak self] in self?.notice = error.localizedDescription }
             }
         }
     }
@@ -337,7 +386,9 @@ final class KnockController: ObservableObject {
     }
 
     func padName(_ pad: Int) -> String {
+        guard (0..<Pad.count).contains(pad) else { return "" }
         if let f = state.pads[pad].sampleFile { return (f as NSString).deletingPathExtension }
+        if let name = stockSampleNames[pad] { return name }
         return kitDefinition.pads[pad].label
     }
 
@@ -430,6 +481,7 @@ final class KnockController: ObservableObject {
         if KnockStore.saveUserPreset(UserPreset(name: clean, state: s)) {
             state.presetName = clean.uppercased()
             refreshLists()
+            scheduleSave()
             readout = Readout(title: "PRESET SAVED", value: clean.uppercased(), time: Date())
         } else {
             notice = "Couldn't save the preset."
@@ -457,10 +509,8 @@ final class KnockController: ObservableObject {
     }
 
     func restore(_ s: KnockState) {
-        var s = s
-        for p in KParam.allCases where s.values[p.id] == nil { s.values[p.id] = p.defaultValue }
-        if s.pads.count != Pad.count { s.pads = Array(repeating: PadSettings(), count: Pad.count) }
-        if s.editedLoops.count != Pad.count { s.editedLoops = Array(repeating: nil, count: Pad.count) }
+        let s = s.normalized()
+        engine.send(KEvent(kind: .allOff))
         state = s
         pushAllToEngine()
         rebuildKit()
@@ -484,13 +534,13 @@ final class KnockController: ObservableObject {
 
     /// The loop export uses: the one playing, or the last one picked, or MAIN A.
     var exportLoopIndex: Int {
-        let current = Int(engine.status[1])
+        let current = Int(meters.status[1])
         return current >= 0 && current < loops.count ? current : 0
     }
 
     func export(loop: Int, bars: Int, midi: Bool, mix: Bool, stems: Bool,
                 completion: @escaping (Result<Exporter.Output, Error>) -> Void) {
-        guard kitSamples.count == Pad.count, loop >= 0, loop < loops.count else {
+        guard !loadingKit, kitSamples.count == Pad.count, loop >= 0, loop < loops.count else {
             completion(.failure(NSError(domain: "BreakBoss", code: 1, userInfo: [NSLocalizedDescriptionKey: "The kit is still loading."])))
             return
         }

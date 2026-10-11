@@ -22,8 +22,9 @@ public final class BreakBossAUViewController: AUViewController, AUAudioUnitFacto
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
-        // The faceplate is 1448 x 1086; hosts scale from about three quarters of that.
-        preferredContentSize = CGSize(width: 1086, height: 815)
+        preferredContentSize = UIDevice.current.userInterfaceIdiom == .phone
+            ? CGSize(width: 390, height: 846)
+            : CGSize(width: 1086, height: 815)
         showFaceplate()
     }
 

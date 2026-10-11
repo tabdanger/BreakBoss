@@ -13,12 +13,20 @@ import Foundation
 // (note 60 is the kit's 808 tuning).
 
 enum Pad: Int, CaseIterable {
-    case kick = 0, snare, clap, rim, hat, openHat, bass808, perc1, perc2, tomLow, tomHigh, cymbal
+    case kick = 0, snare, clap, rim, hat, openHat, bass808, perc1, perc2, tomLow, tomHigh, cymbal, shaker, tambourine, conga, fx
 
-    static let count = 12
+    static let count = 16
     static let firstNote = 36
     static let bassRootNote = 60
     static let bassNoteRange = 48...84
+
+    // Preserve the original chromatic 808 map and old exported MIDI.
+    var midiNote: Int { rawValue < 12 ? 36 + rawValue : 85 + rawValue - 12 }
+    static func index(forMIDINote note: Int) -> Int? {
+        if (36...47).contains(note) { return note - 36 }
+        if (85...88).contains(note) { return note - 85 + 12 }
+        return nil
+    }
 
     var label: String {
         switch self {
@@ -34,6 +42,10 @@ enum Pad: Int, CaseIterable {
         case .tomLow: return "TOM LO"
         case .tomHigh: return "TOM HI"
         case .cymbal: return "CYMBAL"
+        case .shaker: return "SHAKER"
+        case .tambourine: return "TAMB"
+        case .conga: return "CONGA"
+        case .fx: return "FX"
         }
     }
 
@@ -58,12 +70,70 @@ struct KitDefinition: Identifiable {
     /// 808 tuning in Hz (note 60 plays this).
     let bassHz: Float
     let pads: [DrumRecipe]
+
+    init(id: String, name: String, style: GrooveStyle, tempo: Double, bassHz: Float, pads: [DrumRecipe]) {
+        self.id = id; self.name = name; self.style = style; self.tempo = tempo; self.bassHz = bassHz
+        let extras = [
+            DrumRecipe(kind: .shaker, tune: 1.1, decay: 0.10, level: 0.65, label: "SHAKER"),
+            DrumRecipe(kind: .tambourine, tune: 0.9, decay: 0.22, level: 0.6, label: "TAMB"),
+            DrumRecipe(kind: .conga, tune: 280, decay: 0.28, level: 0.7, label: "CONGA"),
+            DrumRecipe(kind: .cowbell, tune: 730, decay: 0.55, drive: 0.3, level: 0.6, label: "FX BELL")
+        ]
+        self.pads = pads.count == 12 ? pads + extras : pads
+    }
 }
 
 enum KitLibrary {
-    static let factory: [KitDefinition] = [
+    static let legacy: [KitDefinition] = [
         drumMastery, modernTrap, westBounce, baySlap, west90s, neoSoul, gospelChops, funkBreak, looseBreak, heavyBreak
     ]
+
+    // Core genre kits and percussion/texture kits keep stable IDs and MIDI pad roles.
+    static let core: [KitDefinition] = [
+        variant("memphis-trap", "MEMPHIS TRAP", modernTrap, .trapMemphis, 145, 11, -0.1, 0.3),
+        variant("atl-trap", "ATL TRAP", modernTrap, .trapAtlanta, 138, 23, 0.12, 0.15),
+        variant("six-side", "6 SIDE", drumMastery, .trapToronto, 132, 37, -0.2, 0.1),
+        variant("toronto-weird", "TORONTO WEIRD", modernTrap, .trapToronto, 125, 41, -0.25, 0.35),
+        variant("cole-world", "COLE WORLD", neoSoul, .neoSoul, 90, 53, -0.12, 0.1),
+        variant("boom-bap", "BOOM BAP", funkBreak, .boomBap, 92, 67, -0.15, 0.25),
+        variant("west-end", "WEST END", west90s, .west90s, 96, 71, 0.08, 0.08),
+        variant("trap-soul", "TRAP SOUL", drumMastery, .trapSoul, 118, 83, -0.22, 0.06),
+        variant("modern-rnb", "MODERN R&B", westBounce, .rnb, 104, 97, -0.05, 0.03),
+        variant("vintage-rnb", "VINTAGE R&B", neoSoul, .neoSoul, 84, 109, -0.18, 0.2),
+        variant("2000s-rnb", "2000s R&B", westBounce, .rnb, 98, 127, 0.16, 0.04),
+        variant("dirty-soul", "DIRTY SOUL", looseBreak, .neoSoul, 82, 139, -0.2, 0.4),
+        variant("live-soul", "LIVE SOUL", gospelChops, .gospel, 86, 151, -0.08, 0.02),
+        variant("80s-pop", "80s POP", heavyBreak, .pop80s, 114, 163, 0.15, 0.16),
+        variant("90s-pop", "90s POP", funkBreak, .pop90s, 108, 173, 0.05, 0.08),
+        variant("live-pop", "LIVE POP", gospelChops, .pop, 120, 191, 0.12, 0.02),
+        variant("lo-fi", "LO-FI", neoSoul, .loFi, 78, 281, -0.22, 0.18)
+    ]
+    static let textures: [KitDefinition] = [
+        variant("afrobeats", "AFROBEATS", baySlap, .afrobeats, 106, 211, 0.08, 0.04),
+        variant("world-latin", "WORLD & LATIN", neoSoul, .latin, 112, 223, 0.1, 0.02),
+        variant("dark-experimental", "DARK EXPERIMENTAL", heavyBreak, .experimental, 100, 239, -0.3, 0.4),
+        variant("shakers", "SHAKERS", neoSoul, .afrobeats, 108, 251, 0.2, 0.02),
+        variant("perc-loops", "PERC LOOPS", baySlap, .latin, 115, 263, 0.06, 0.08),
+        variant("resampled-textures", "RESAMPLED TEXTURES", looseBreak, .experimental, 90, 277, -0.25, 0.5),
+        variant("amapiano", "AMAPIANO", modernTrap, .amapiano, 112, 293, -0.1, 0.04)
+    ]
+    static let factory = core + textures + legacy
+
+    private static func variant(_ id: String, _ name: String, _ base: KitDefinition, _ style: GrooveStyle,
+                                _ tempo: Double, _ seed: UInt32, _ tone: Float, _ drive: Float) -> KitDefinition {
+        var rng = KRandom(seed: seed)
+        var pads = base.pads.map { $0.varied(&rng, amount: 0.75) }
+        for i in pads.indices {
+            pads[i].tone = (pads[i].tone + tone).clamped(0, 1)
+            pads[i].drive = (pads[i].drive + drive).clamped(0, 1)
+        }
+        pads[Pad.bass808.rawValue].tune = base.bassHz
+        if style == .latin || style == .afrobeats {
+            pads[7] = DrumRecipe(kind: .conga, tune: 240, decay: 0.26, level: 0.8, label: "CONGA LOW")
+            pads[8] = DrumRecipe(kind: .bongo, tune: 410, decay: 0.18, level: 0.7, label: "BONGO")
+        }
+        return KitDefinition(id: id, name: name, style: style, tempo: tempo, bassHz: base.bassHz, pads: pads)
+    }
 
     static func kit(id: String) -> KitDefinition { factory.first { $0.id == id } ?? drumMastery }
 

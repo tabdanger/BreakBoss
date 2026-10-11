@@ -23,7 +23,8 @@ APP_ONLY = {"BreakBossApp.swift", "AppAudioHost.swift", "KnockSelfTest.swift"}
 
 
 def package_value(name):
-    text = open(PACKAGE).read()
+    with open(PACKAGE, encoding="utf-8") as handle:
+        text = handle.read()
     match = re.search(name + r':\s*"([^"]*)"', text)
     if not match:
         sys.exit(f"Package.swift has no {name}")
@@ -33,9 +34,13 @@ def package_value(name):
 def main():
     version = package_value("displayVersion")
     build = os.environ.get("BREAKBOSS_BUILD") or package_value("bundleVersion")
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        sys.exit("BreakBoss displayVersion must have three numeric components")
+    if not re.fullmatch(r"[1-9]\d*", build):
+        sys.exit("BreakBoss bundleVersion must be a positive integer")
     os.makedirs(OUT, exist_ok=True)
 
-    orientations = [
+    ipad_orientations = [
         "UIInterfaceOrientationLandscapeRight",
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationPortrait",
@@ -54,8 +59,13 @@ def main():
         "LSRequiresIPhoneOS": True,
         "UIApplicationSceneManifest": {"UIApplicationSupportsMultipleScenes": True, "UISceneConfigurations": {}},
         "UIApplicationSupportsIndirectInputEvents": True,
-        "UILaunchScreen": {"UILaunchScreen": {}},
-        "UISupportedInterfaceOrientations~ipad": orientations,
+        "UILaunchScreen": {},
+        "UISupportedInterfaceOrientations": [
+            "UIInterfaceOrientationPortrait",
+            "UIInterfaceOrientationLandscapeLeft",
+            "UIInterfaceOrientationLandscapeRight",
+        ],
+        "UISupportedInterfaceOrientations~ipad": ipad_orientations,
     }
     with open(EXTRA, "rb") as handle:
         app.update(plistlib.load(handle))

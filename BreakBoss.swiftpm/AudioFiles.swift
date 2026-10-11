@@ -24,6 +24,10 @@ enum SampleLoader {
         let file: AVAudioFile
         do { file = try AVAudioFile(forReading: url) } catch { throw LoadError.unreadable(url.lastPathComponent) }
         let format = file.processingFormat
+        guard file.length > 0, file.length <= Int64(UInt32.max), format.sampleRate.isFinite,
+              format.sampleRate > 0, format.channelCount > 0,
+              file.length <= 16_000_000 / Int64(format.channelCount) else { throw LoadError.unreadable(url.lastPathComponent) }
+        guard Double(file.length) / format.sampleRate <= 30 else { throw LoadError.tooLong }
         let frames = AVAudioFrameCount(file.length)
         guard frames > 0 else { throw LoadError.unreadable(url.lastPathComponent) }
         guard Double(frames) / format.sampleRate <= 30 else { throw LoadError.tooLong }
@@ -44,7 +48,7 @@ enum SampleLoader {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
         let folder = KnockFolders.samples
-        if url.deletingLastPathComponent().standardizedFileURL.path.hasPrefix(folder.standardizedFileURL.path) {
+        if url.deletingLastPathComponent().standardizedFileURL.path.hasPrefix(folder.standardizedFileURL.path + "/") || url.deletingLastPathComponent().standardizedFileURL == folder.standardizedFileURL {
             return url.path.replacingOccurrences(of: folder.standardizedFileURL.path + "/", with: "")
         }
         var dest = folder.appendingPathComponent(url.lastPathComponent)
@@ -97,7 +101,7 @@ enum MIDIFile {
     static func write(_ pattern: PatternData, tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
         let ppq = Int(PatternData.ppq)
         var events: [(tick: Int, bytes: [UInt8])] = []
-        let loopLen = Int(pattern.lengthTicks)
+        let loopLen = max(1, Int(pattern.lengthTicks))
         let repeats = max(1, Int(ceil(Double(bars * ppq * 4) / Double(loopLen))))
         let total = bars * ppq * 4
         for r in 0..<repeats {
@@ -106,7 +110,7 @@ enum MIDIFile {
                 t = max(0, t)
                 guard t < total else { continue }
                 let isBass = Int(e.pad) == Pad.bass808.rawValue
-                let note = isBass ? UInt8(clamping: Pad.bassRootNote + Int(e.semis.rounded())) : UInt8(Pad.firstNote + Int(e.pad))
+                let note = isBass ? UInt8(clamping: Pad.bassRootNote + Int(e.semis.rounded())) : UInt8(Pad(rawValue: Int(e.pad))?.midiNote ?? 36)
                 let vel = UInt8(clamping: max(1, Int((e.velocity * 127).rounded())))
                 var len = isBass ? Int(e.length) : 12
                 if len <= 0 { len = ppq }
@@ -138,7 +142,9 @@ enum MIDIFile {
     static func read(_ url: URL) -> PatternData? {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
-        guard let d = try? Data(contentsOf: url), d.count > 14 else { return nil }
+        guard let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+              size <= 4 * 1024 * 1024,
+              let d = try? Data(contentsOf: url), d.count > 14 else { return nil }
         let bytes = [UInt8](d)
         guard String(bytes: bytes[0..<4], encoding: .ascii) == "MThd" else { return nil }
         let division = Int(bytes[12]) << 8 | Int(bytes[13])
@@ -146,6 +152,7 @@ enum MIDIFile {
         var pos = 8 + (Int(bytes[4]) << 24 | Int(bytes[5]) << 16 | Int(bytes[6]) << 8 | Int(bytes[7]))
         var ons: [(tick: Int, note: Int, vel: Int)] = []
         var offs: [(tick: Int, note: Int)] = []
+        var trackEndTick = 0
         while pos + 8 <= bytes.count {
             let id = String(bytes: bytes[pos..<pos + 4], encoding: .ascii)
             let len = Int(bytes[pos + 4]) << 24 | Int(bytes[pos + 5]) << 16 | Int(bytes[pos + 6]) << 8 | Int(bytes[pos + 7])
@@ -155,8 +162,14 @@ enum MIDIFile {
                 var p = pos, tick = 0, running: UInt8 = 0
                 while p < end {
                     var delta = 0
-                    while p < end { let b = bytes[p]; p += 1; delta = delta << 7 | Int(b & 0x7F); if b & 0x80 == 0 { break } }
+                    var deltaBytes = 0
+                    while p < end {
+                        deltaBytes += 1; guard deltaBytes <= 4 else { return nil }
+                        let b = bytes[p]; p += 1; delta = delta << 7 | Int(b & 0x7F)
+                        if b & 0x80 == 0 { break }
+                    }
                     tick += delta
+                    guard tick <= 100_000_000 else { return nil }
                     guard p < end else { break }
                     var st = bytes[p]
                     if st & 0x80 != 0 { p += 1; if st < 0xF0 { running = st } } else { st = running }
@@ -164,22 +177,39 @@ enum MIDIFile {
                         guard p + 1 < end else { break }
                         p += 1
                         var l = 0
-                        while p < end { let b = bytes[p]; p += 1; l = l << 7 | Int(b & 0x7F); if b & 0x80 == 0 { break } }
+                        var lengthBytes = 0
+                        while p < end {
+                            lengthBytes += 1; guard lengthBytes <= 4 else { return nil }
+                            let b = bytes[p]; p += 1; l = l << 7 | Int(b & 0x7F)
+                            if b & 0x80 == 0 { break }
+                        }
+                        guard l <= end - p else { return nil }
                         p += l
                     } else if st == 0xF0 || st == 0xF7 {
                         var l = 0
-                        while p < end { let b = bytes[p]; p += 1; l = l << 7 | Int(b & 0x7F); if b & 0x80 == 0 { break } }
+                        var lengthBytes = 0
+                        while p < end {
+                            lengthBytes += 1; guard lengthBytes <= 4 else { return nil }
+                            let b = bytes[p]; p += 1; l = l << 7 | Int(b & 0x7F)
+                            if b & 0x80 == 0 { break }
+                        }
+                        guard l <= end - p else { return nil }
                         p += l
                     } else {
+                        guard st >= 0x80 && st < 0xF0 else { return nil }
                         let kind = st & 0xF0
                         let size = (kind == 0xC0 || kind == 0xD0) ? 1 : 2
                         guard p + size <= end else { break }
                         let d1 = Int(bytes[p]), d2 = size > 1 ? Int(bytes[p + 1]) : 0
                         p += size
+                        guard ons.count + offs.count < 32768, d1 < 128, d2 < 128 else { return nil }
                         if kind == 0x90 && d2 > 0 { ons.append((tick, d1, d2)) }
                         else if kind == 0x80 || kind == 0x90 { offs.append((tick, d1)) }
                     }
                 }
+                // Keep the declared timeline, including note releases and a silent tail
+                // before End of Track. The last note-on alone can shorten an authored loop.
+                trackEndTick = max(trackEndTick, tick)
             }
             pos = end
         }
@@ -189,19 +219,21 @@ enum MIDIFile {
         var lastTick = 0
         for on in ons {
             let t = Int((Double(on.tick) * scale).rounded())
+            guard t >= 0 && t < 8 * Int(PatternData.ppq) * 4 else { continue }
             lastTick = max(lastTick, t)
-            if on.note >= Pad.firstNote && on.note < Pad.firstNote + Pad.count {
-                events.append(GrooveEvent(tick: Int32(t), pad: Int8(on.note - Pad.firstNote), velocity: Float(on.vel) / 127))
+            if let pad = Pad.index(forMIDINote: on.note) {
+                events.append(GrooveEvent(tick: Int32(t), pad: Int8(pad), velocity: Float(on.vel) / 127))
             } else if Pad.bassNoteRange.contains(on.note) {
                 let off = offs.first { $0.note == on.note && $0.tick > on.tick }
                 let len = off.map { Int((Double($0.tick - on.tick) * scale).rounded()) } ?? Int(PatternData.ppq)
                 events.append(GrooveEvent(tick: Int32(t), pad: Int8(Pad.bass808.rawValue), velocity: Float(on.vel) / 127,
-                                          semis: Float(on.note - Pad.bassRootNote), length: Int32(len)))
+                                          semis: Float(on.note - Pad.bassRootNote), length: Int32(len.clamped(0, 3072))))
             }
         }
         guard !events.isEmpty else { return nil }
         let bar = Int(PatternData.ppq) * 4
-        let bars = min(8, max(1, Int(ceil(Double(lastTick + 1) / Double(bar)))))
+        let endTick = max(lastTick + 1, Int((Double(trackEndTick) * scale).rounded()))
+        let bars = min(8, max(1, Int(ceil(Double(endTick) / Double(bar)))))
         var p = PatternData(name: url.deletingPathExtension().lastPathComponent.uppercased(), lengthTicks: Int32(bars * bar), events: events)
         let limit = p.lengthTicks
         p.events.removeAll { $0.tick >= limit }

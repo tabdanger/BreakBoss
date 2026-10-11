@@ -151,7 +151,8 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             guard list.count > 0, let l = list[0].mData?.assumingMemoryBound(to: Float.self) else { return noErr }
             let r = list.count > 1 ? (list[1].mData?.assumingMemoryBound(to: Float.self) ?? l) : l
 
-            // Host MIDI and automation for this buffer.
+            // MIDI keeps sample offsets. Control automation takes one bounded snapshot per
+            // render callback; the processing chain smooths continuous gain/filter controls.
             let start = timestamp.pointee.mSampleTime
             var event = events
             while let e = event {
@@ -163,7 +164,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
                     engine.hostMIDI(offset: offset, status: bytes.0, data1: bytes.1, data2: bytes.2)
                 case .parameter, .parameterRamp:
                     let p = e.pointee.parameter
-                    if let k = KParam(rawValue: Int(p.parameterAddress)) { engine.setParam(k, p.value) }
+                    if let k = KParam(rawValue: Int(p.parameterAddress)) { engine.hostParameter(k, p.value) }
                 default:
                     break
                 }
@@ -211,7 +212,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             return AUParameterTree.createParameter(
                 withIdentifier: p.id, name: p.name, address: address,
                 min: 0, max: 1, unit: .generic, unitName: nil,
-                flags: [.flag_IsReadable, .flag_IsWritable, .flag_CanRamp], valueStrings: nil, dependentParameters: nil)
+                flags: [.flag_IsReadable, .flag_IsWritable], valueStrings: nil, dependentParameters: nil)
         }
         let tree = AUParameterTree.createTree(withChildren: parameters)
         for p in KParam.allCases { tree.parameter(withAddress: AUParameterAddress(p.rawValue))?.value = p.defaultValue }

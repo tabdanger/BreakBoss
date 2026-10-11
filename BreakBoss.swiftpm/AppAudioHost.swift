@@ -30,6 +30,8 @@ final class AppAudioHost {
     }
 
     private var started = false
+    private var restarting = false
+    private var connectedSources: Set<MIDIEndpointRef> = []
 
     func start() {
         guard !started else { return }
@@ -42,9 +44,12 @@ final class AppAudioHost {
             self?.restart()
         })
         observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
-            guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-                  AVAudioSession.InterruptionType(rawValue: raw) == .ended else { return }
-            self?.restart()
+            guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt else { return }
+            if AVAudioSession.InterruptionType(rawValue: raw) == .began {
+                self?.engine.send(KEvent(kind: .allOff))
+            } else if AVAudioSession.InterruptionType(rawValue: raw) == .ended {
+                self?.restart()
+            }
         })
         observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { [weak self] _ in
             self?.configureSession()
@@ -80,12 +85,16 @@ final class AppAudioHost {
         audio.connect(node, to: audio.mainMixerNode, format: format)
         source = node
         audio.prepare()
-        try? audio.start()
+        do { try audio.start() }
+        catch { controller.notice = "Audio could not start: " + error.localizedDescription }
         // Kits are made at the engine's rate; remake them if the hardware rate changed.
         controller.rebuildKit()
     }
 
     private func restart() {
+        guard !restarting else { return }
+        restarting = true
+        defer { restarting = false }
         audio.stop()
         configureSession()
         buildGraph()
@@ -125,8 +134,14 @@ final class AppAudioHost {
 
     private func connectSources() {
         guard midiPort != 0 else { return }
+        let available = Set((0..<MIDIGetNumberOfSources()).map { MIDIGetSource($0) })
+        if !connectedSources.subtracting(available).isEmpty { engine.send(KEvent(kind: .allOff)) }
+        connectedSources.formIntersection(available)
         for i in 0..<MIDIGetNumberOfSources() {
-            MIDIPortConnectSource(midiPort, MIDIGetSource(i), nil)
+            let endpoint = MIDIGetSource(i)
+            if !connectedSources.contains(endpoint), MIDIPortConnectSource(midiPort, endpoint, nil) == noErr {
+                connectedSources.insert(endpoint)
+            }
         }
     }
 }

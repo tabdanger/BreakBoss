@@ -1,0 +1,105 @@
+{
+  "method": "Derived from saved real-source waveform measurements (10ms RMS envelope onset detector);90BPM from filenames,96PPQ. Envelope rises are approximate, not an exact note transcription.",
+  "files": [
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] EBK Roll 2.0 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "a8161473be352a5b5769701d7d9e382718119b2b6c7ed1bc0ce6eafb334ae666",
+      "durationSeconds": 1.3333333333333333,
+      "lastActiveSeconds": 1.0395208333333332,
+      "energy95Seconds": 0.6316458333333334,
+      "riseCount": 11,
+      "medianRiseIntervalSeconds": 0.055,
+      "approximateMedianIntervalTicksAt90BPM": 7.92
+    },
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] EBK Roll 3.0 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "1efc3bbacb6cc6c93946c27fa61aebe753049bcff39dbcb70a8c0866afe1d4e7",
+      "durationSeconds": 0.6666666666666666,
+      "lastActiveSeconds": 0.49785416666666665,
+      "energy95Seconds": 0.32154166666666667,
+      "riseCount": 6,
+      "medianRiseIntervalSeconds": 0.06,
+      "approximateMedianIntervalTicksAt90BPM": 8.64
+    },
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] EBK Roll 4.0 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "875a48d62340238ad732aa186acbae9e9a87cf1efd964745233fdcb8e15bccdd",
+      "durationSeconds": 1.3333333333333333,
+      "lastActiveSeconds": 1.0873958333333333,
+      "energy95Seconds": 0.636125,
+      "riseCount": 9,
+      "medianRiseIntervalSeconds": 0.08,
+      "approximateMedianIntervalTicksAt90BPM": 11.52
+    },
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] EBK Roll 5.0 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "b0774b49f15c31694fe0a165b47e3a01e2188edfb7c11b86d7f005509200e94f",
+      "durationSeconds": 2.6666666666666665,
+      "lastActiveSeconds": 1.4012083333333334,
+      "energy95Seconds": 1.2636875,
+      "riseCount": 16,
+      "medianRiseIntervalSeconds": 0.08000000000000007,
+      "approximateMedianIntervalTicksAt90BPM": 11.52000000000001
+    },
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] Options 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "3ba39816fdb03b9aa6ea6afdfa8f7dec411b79b35f9c1a3fa9c66c82ef0df047",
+      "durationSeconds": 1.3333333333333333,
+      "lastActiveSeconds": 0.666625,
+      "energy95Seconds": 0.4657291666666667,
+      "riseCount": 0,
+      "medianRiseIntervalSeconds": null,
+      "approximateMedianIntervalTicksAt90BPM": null
+    },
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] Recoil 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "299212bc971605272f65f6314fbb7653e639952efd03314397fc2770526e09ab",
+      "durationSeconds": 0.6,
+      "lastActiveSeconds": 0.5999791666666666,
+      "energy95Seconds": 0.3725625,
+      "riseCount": 0,
+      "medianRiseIntervalSeconds": null,
+      "approximateMedianIntervalTicksAt90BPM": null
+    },
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] Redeye 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "38837d3293b9c7792184249e75cceb513329957f21e7e1cca804a8fe8c264acb",
+      "durationSeconds": 1.3333333333333333,
+      "lastActiveSeconds": 0.6469375,
+      "energy95Seconds": 0.32458333333333333,
+      "riseCount": 0,
+      "medianRiseIntervalSeconds": null,
+      "approximateMedianIntervalTicksAt90BPM": null
+    },
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] Tradeoff 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "eb864b77eaaa1b68b814fa0203b62a16c6e06d29526eea5c9a35a33cf53f0381",
+      "durationSeconds": 1.3333333333333333,
+      "lastActiveSeconds": 0.9266875,
+      "energy95Seconds": 0.664375,
+      "riseCount": 6,
+      "medianRiseIntervalSeconds": 0.09999999999999998,
+      "approximateMedianIntervalTicksAt90BPM": 14.399999999999997
+    },
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] Training 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "0a414bb7df66461276ad1befdd22b111fad05936628a4929adacb8544063ce05",
+      "durationSeconds": 1.3333333333333333,
+      "lastActiveSeconds": 1.3248541666666667,
+      "energy95Seconds": 0.5211041666666667,
+      "riseCount": 2,
+      "medianRiseIntervalSeconds": 0.17,
+      "approximateMedianIntervalTicksAt90BPM": 24.48
+    },
+    {
+      "source": "Hi Hat Rolls/[Hi Hat Roll] Wild 90 bpm - @prod.by.iiinfinite.wav",
+      "sourceSHA256": "9b450e70389a014d35cec809b1d6427d94588cedbd79a979714f8cb2443ecd2e",
+      "durationSeconds": 1.3333333333333333,
+      "lastActiveSeconds": 0.668625,
+      "energy95Seconds": 0.3201041666666667,
+      "riseCount": 0,
+      "medianRiseIntervalSeconds": null,
+      "approximateMedianIntervalTicksAt90BPM": null
+    }
+  ]
+}

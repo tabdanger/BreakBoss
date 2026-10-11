@@ -68,7 +68,7 @@ enum Exporter {
         for p in KParam.allCases where p.rawValue < job.params.count { engine.setParam(p, job.params[p.rawValue]) }
         engine.setParam(.followDAW, 0)
         engine.setParam(.tempoSync, 0)
-        engine.displayBPM.pointee = job.tempo
+        engine.setTempo(job.tempo)
         engine.padMask = mask
         engine.kitHandoff.publish(job.kit)
         engine.patternHandoff.publish(job.patterns)

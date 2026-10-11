@@ -50,7 +50,7 @@ struct PadEditorView: View {
                         }
                     }
                     Text("You can also drag an audio file from Files straight onto a pad. Imported sounds are copied to "
-                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › On My iPad › BreakBoss › Samples."))
+                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreakBoss › Samples on this device."))
                         .font(.footnote).foregroundColor(.secondary)
                 }
 
@@ -156,14 +156,19 @@ struct LoopEditorView: View {
         let steps = max(16, Int(p.lengthTicks / PatternData.stepTicks))
         let edited = loop < controller.state.editedLoops.count && controller.state.editedLoops[loop] != nil
         NavigationView {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 10) {
-                    Text("LOOP \(loop + 1) · \(p.name)").font(.system(.title3, design: .monospaced))
-                    if edited { Text("EDITED").font(.system(.caption, design: .monospaced)).foregroundColor(accent) }
-                    Spacer()
-                    Button { controller.padDown(loop, velocity: 1) } label: { Label("Play / Stop", systemImage: "playpause.fill") }
-                        .buttonStyle(.borderedProminent).tint(accent)
-                }
+            ScrollView(.vertical) {
+                VStack(alignment: .leading, spacing: 12) {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 10) {
+                            loopHeading(p, edited: edited)
+                            Spacer()
+                            previewButton
+                        }.fixedSize(horizontal: true, vertical: false)
+                        VStack(alignment: .leading, spacing: 8) {
+                            loopHeading(p, edited: edited)
+                            previewButton
+                        }
+                    }
                 ScrollView(.horizontal, showsIndicators: true) {
                     VStack(alignment: .leading, spacing: 3) {
                         ForEach((0..<Pad.count).reversed(), id: \.self) { row in
@@ -186,20 +191,15 @@ struct LoopEditorView: View {
                     }
                     .padding(.vertical, 4)
                 }
-                Text("Tap a square to add or remove a hit. Micro-timing and velocity from the generated groove are kept on hits you don't touch. Drop a MIDI file on the pad (or import one below) to use your own groove: notes C1-B1 play pads 1-12, C2 and up play the 808.")
+                Text("Tap a square to add or remove a hit. Micro-timing and velocity from the generated groove are kept on hits you don't touch. Drop a MIDI file on the pad (or import one below) to use your own groove: notes 36–47 play pads 1–12, 85–88 play pads 13–16, and 48–84 play the 808.")
                     .font(.footnote).foregroundColor(.secondary)
-                HStack {
-                    Button { controller.regenerateLoop(loop) } label: { Label("New groove", systemImage: "dice") }
-                    Button { importingMIDI = true } label: { Label("Import MIDI…", systemImage: "pianokeys") }
-                    Button(role: .destructive) { controller.clearLoop(loop) } label: { Label("Clear", systemImage: "trash") }
-                    if edited {
-                        Button { controller.useGeneratedLoop(loop) } label: { Label("Back to generated", systemImage: "arrow.uturn.backward") }
+                ViewThatFits(in: .horizontal) {
+                    HStack { loopActions(edited: edited) }.fixedSize(horizontal: true, vertical: false)
+                    VStack(alignment: .leading, spacing: 8) { loopActions(edited: edited) }
                     }
-                }
                 .buttonStyle(.bordered)
-                Spacer()
+                }.padding()
             }
-            .padding()
             .navigationTitle("Loop \(loop + 1)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
@@ -208,6 +208,27 @@ struct LoopEditorView: View {
         .preferredColorScheme(.dark)
         .fileImporter(isPresented: $importingMIDI, allowedContentTypes: [.midi], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first { controller.importMIDI(url, toLoop: loop) }
+        }
+    }
+
+    private func loopHeading(_ pattern: PatternData, edited: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("LOOP \(loop + 1) · \(pattern.name)").font(.system(.title3, design: .monospaced))
+            if edited { Text("EDITED").font(.system(.caption, design: .monospaced)).foregroundColor(accent) }
+        }
+    }
+
+    private var previewButton: some View {
+        Button { controller.previewLoop(loop) } label: { Label("Play / Stop", systemImage: "playpause.fill") }
+            .buttonStyle(.borderedProminent).tint(accent)
+    }
+
+    @ViewBuilder private func loopActions(edited: Bool) -> some View {
+        Button { controller.regenerateLoop(loop) } label: { Label("New groove", systemImage: "dice") }
+        Button { importingMIDI = true } label: { Label("Import MIDI…", systemImage: "pianokeys") }
+        Button(role: .destructive) { controller.clearLoop(loop) } label: { Label("Clear", systemImage: "trash") }
+        if edited {
+            Button { controller.useGeneratedLoop(loop) } label: { Label("Back to generated", systemImage: "arrow.uturn.backward") }
         }
     }
 
@@ -270,6 +291,8 @@ struct ExportView: View {
                     } header: { Text("Exported") }
                     if !out.stems.isEmpty {
                         Section("Stems") {
+                            Text("Each stem includes processing independently. Nonlinear saturation and clipping mean these stems may not sum exactly to the stereo mix.")
+                                .font(.footnote).foregroundColor(.secondary)
                             ForEach(out.stems, id: \.url) { stem in
                                 DragTile(title: stem.name, subtitle: stem.url.lastPathComponent, icon: "waveform.path", url: stem.url)
                             }
@@ -278,7 +301,7 @@ struct ExportView: View {
                     Section {
                         ShareLink(items: allURLs(out)) { Label("Share or save everything…", systemImage: "square.and.arrow.up") }
                         if !controller.isPlugin {
-                            Text("Also in Files › On My iPad › BreakBoss › Exports.").font(.footnote).foregroundColor(.secondary)
+                            Text("Also in Files › BreakBoss › Exports on this device.").font(.footnote).foregroundColor(.secondary)
                         }
                     }
                 }

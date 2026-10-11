@@ -48,12 +48,19 @@ struct HostTiming {
 /// wait, no Objective-C.
 final class KnockEngine {
     static let maxVoices = 40
+    /// Short fades for stolen voices. The render cost stays bounded even during MIDI bursts.
+    static let maxStealTails = 8
     static let maxBlockEvents = 512
 
     // Controls: the faceplate and host write, the audio thread reads.
-    let params: UnsafeMutablePointer<Float>
+    private let controls = SharedControls()
+    private let params: UnsafeMutablePointer<Float>
+    /// AU render events write here, never through the control-plane lock. Publication to the
+    /// faceplate retries on subsequent callbacks if the control-plane writer is busy.
+    private let hostParams: UnsafeMutablePointer<Float>
+    private var hostParamMask: UInt32 = 0
     /// Tempo of the BPM display (the engine reads it; the controller sets it).
-    let displayBPM: UnsafeMutablePointer<Double>
+    private let displayBPM: UnsafeMutablePointer<Double>
 
     // What the faceplate shows (written by the audio thread).
     /// 0 playing, 1 current loop (-1 none), 2 queued loop, 3 beat, 4 tempo, 5 host connected,
@@ -62,6 +69,8 @@ final class KnockEngine {
     /// Incremented every time a pad sounds (the faceplate flashes it).
     let padHits: UnsafeMutablePointer<UInt32>
 
+    let meters = SharedMeters()
+    private var meterFrames = 0
     let queue = EventQueue()
     let kitHandoff = Handoff<KitBuffers>()
     let patternHandoff = Handoff<PatternSet>()
@@ -78,6 +87,7 @@ final class KnockEngine {
     private var retiringPatterns: PatternSet?
 
     private let voices: UnsafeMutablePointer<Voice>
+    private let stealTails: UnsafeMutablePointer<Voice>
     private var voiceAge: UInt32 = 0
     private let mixL: UnsafeMutablePointer<Float>
     private let mixR: UnsafeMutablePointer<Float>
@@ -88,6 +98,11 @@ final class KnockEngine {
     let master = MasterBus()
 
     // Transport
+    // Fixed storage: last-held note wins, releasing it returns to the previous held note.
+    private let heldLoops = UnsafeMutablePointer<UInt64>.allocate(capacity: 2064)
+    private var heldOrder: UInt64 = 0
+    private var gatedToken = -1
+    private var lastPlayMode: Float = -1
     private var playing = false
     private var beat: Double = 0
     private var currentLoop = -1
@@ -104,8 +119,12 @@ final class KnockEngine {
     var padMask: UInt16 = 0xFFFF
 
     init() {
+        precondition(KParam.count <= UInt32.bitWidth)
+        heldLoops.initialize(repeating: 0, count: 2064)
         params = .allocate(capacity: KParam.count)
+        hostParams = .allocate(capacity: KParam.count)
         for p in KParam.allCases { (params + p.rawValue).initialize(to: p.defaultValue) }
+        for p in KParam.allCases { (hostParams + p.rawValue).initialize(to: p.defaultValue) }
         displayBPM = .allocate(capacity: 1)
         displayBPM.initialize(to: 140)
         status = .allocate(capacity: 8)
@@ -116,6 +135,8 @@ final class KnockEngine {
         padHits.initialize(repeating: 0, count: Pad.count)
         voices = .allocate(capacity: KnockEngine.maxVoices)
         voices.initialize(repeating: Voice(), count: KnockEngine.maxVoices)
+        stealTails = .allocate(capacity: KnockEngine.maxStealTails)
+        stealTails.initialize(repeating: Voice(), count: KnockEngine.maxStealTails)
         mixL = .allocate(capacity: 8_192)
         mixR = .allocate(capacity: 8_192)
         mixL.initialize(repeating: 0, count: 8_192)
@@ -125,11 +146,14 @@ final class KnockEngine {
     }
 
     deinit {
+        heldLoops.deallocate()
         params.deallocate()
+        hostParams.deallocate()
         displayBPM.deallocate()
         status.deallocate()
         padHits.deallocate()
         voices.deallocate()
+        stealTails.deallocate()
         mixL.deallocate()
         mixR.deallocate()
         blockEvents.deallocate()
@@ -139,13 +163,31 @@ final class KnockEngine {
     func prepare(sampleRate: Double, maxFrames: Int) {
         self.sampleRate = sampleRate
         self.maxFrames = min(maxFrames, 8_192)
+        // The FIR coefficients are a lazy static array. Build them before the first callback.
+        _ = HalfBandOversampler.oddTaps
         bus.prepare(sampleRate: sampleRate)
         master.prepare(sampleRate: sampleRate)
         for i in 0..<KnockEngine.maxVoices { voices[i].active = false }
+        for i in 0..<KnockEngine.maxStealTails { stealTails[i].active = false }
     }
 
-    func param(_ p: KParam) -> Float { params[p.rawValue] }
-    func setParam(_ p: KParam, _ v: Float) { params[p.rawValue] = v }
+    func param(_ p: KParam) -> Float { controls.get(p) }
+    func setParam(_ p: KParam, _ v: Float) { controls.set(p, v) }
+    func setTempo(_ bpm: Double) { controls.setTempo(bpm) }
+
+    /// AU render thread only, before render(). Automation is normalized into fixed storage;
+    /// render() applies it even if publishing the value to the faceplate cannot try-lock yet.
+    /// Control-plane writers keep using setParam(). Parameter addresses stay append-only.
+    @inline(__always)
+    func hostParameter(_ p: KParam, _ value: Float) {
+        let finite = value.isFinite ? value : p.defaultValue
+        if let steps = p.steps {
+            hostParams[p.rawValue] = finite.rounded().clamped(0, Float(steps - 1))
+        } else {
+            hostParams[p.rawValue] = finite.clamped(0, 1)
+        }
+        hostParamMask |= UInt32(1) << p.rawValue
+    }
 
     // MARK: Events from outside the audio thread
 
@@ -154,8 +196,8 @@ final class KnockEngine {
     /// MIDI from a hardware port (standalone app). Runs on the MIDI thread.
     func receiveMIDI(status st: UInt8, data1: UInt8, data2: UInt8, time: Double) {
         switch st & 0xF0 {
-        case 0x90 where data2 > 0: queue.push(noteEvent(note: Int(data1), velocity: data2))
-        case 0x80, 0x90: queue.push(KEvent(kind: .noteOff, a: Int32(data1)))
+        case 0x90 where data2 > 0: queue.push(KEvent(kind: .midiNoteOn, a: Int32(Int(st & 0x0F) * 128 + Int(data1)), value: Double(data2) / 127))
+        case 0x80, 0x90: queue.push(KEvent(kind: .noteOff, a: Int32(Int(st & 0x0F) * 128 + Int(data1))))
         case 0xB0 where data1 == 123 || data1 == 120: queue.push(KEvent(kind: .allOff))
         default:
             switch st {
@@ -171,8 +213,7 @@ final class KnockEngine {
 
     private func noteEvent(note: Int, velocity: UInt8) -> KEvent {
         let v = Double(velocity) / 127
-        if note >= Pad.firstNote && note < Pad.firstNote + Pad.count {
-            let pad = note - Pad.firstNote
+        if let pad = Pad.index(forMIDINote: note) {
             if params[KParam.playMode.rawValue] > 0.5 { return KEvent(kind: .loopPad, a: Int32(pad), value: v) }
             return KEvent(kind: .pad, a: Int32(pad), value: v)
         }
@@ -186,16 +227,13 @@ final class KnockEngine {
     func hostMIDI(offset: Int, status st: UInt8, data1: UInt8, data2: UInt8) {
         switch st & 0xF0 {
         case 0x90 where data2 > 0:
-            let e = noteEvent(note: Int(data1), velocity: data2)
-            if KnockEngine.isTransport(e.kind) {
-                apply(e, offset: 0)   // loop picks: before this block is scheduled
-            } else {
-                addBlockEvent(BlockEvent(offset: offset, event: e))
-            }
+            let e = KEvent(kind: .midiNoteOn, a: Int32(Int(st & 0x0F) * 128 + Int(data1)), value: Double(data2) / 127)
+            addBlockEvent(BlockEvent(offset: max(0, offset), event: e))
         case 0x80, 0x90:
-            addBlockEvent(BlockEvent(offset: offset, event: KEvent(kind: .noteOff, a: Int32(data1))))
+            addBlockEvent(BlockEvent(offset: max(0, offset),
+                                     event: KEvent(kind: .noteOff, a: Int32(Int(st & 0x0F) * 128 + Int(data1)))))
         case 0xB0 where data1 == 123 || data1 == 120:
-            addBlockEvent(BlockEvent(offset: offset, event: KEvent(kind: .allOff)))
+            addBlockEvent(BlockEvent(offset: max(0, offset), event: KEvent(kind: .allOff)))
         default: break
         }
     }
@@ -210,9 +248,24 @@ final class KnockEngine {
     /// Renders `frames` stereo samples. `host` is nil in the standalone app. Host MIDI added
     /// with hostMIDI() beforehand uses offsets from the start of this call.
     func render(frames total: Int, left: UnsafeMutablePointer<Float>, right: UnsafeMutablePointer<Float>, host: HostTiming?) {
+        // One bounded try-lock, including publication of any pending AU automation. If the
+        // lock is busy, retain the previous UI snapshot and apply pending host values locally.
+        if controls.copy(to: params, tempo: displayBPM, hostValues: hostParams, hostMask: hostParamMask) {
+            hostParamMask = 0
+        } else {
+            var dirty = hostParamMask
+            while dirty != 0 {
+                let index = dirty.trailingZeroBitCount
+                params[index] = hostParams[index]
+                dirty &= dirty - 1
+            }
+        }
         var done = 0
         while done < total {
-            let n = min(total - done, 8_192)
+            // A loop gate must change transport before its part of the block is scheduled.
+            // Splitting at that exact boundary also keeps stop/release fades at the correct
+            // sample. Ordinary pad and bass notes remain inexpensive segmented BlockEvents.
+            let n = nextHostTransportBoundary(before: min(total - done, 8_192))
             renderBlock(frames: n, left: left + done, right: right + done,
                         host: done == 0 ? host : advanced(host, by: done))
             done += n
@@ -220,12 +273,62 @@ final class KnockEngine {
         status[7] += 1
     }
 
+    @inline(__always)
+    private func isHostTransport(_ event: KEvent) -> Bool {
+        switch event.kind {
+        case .midiNoteOn, .noteOff:
+            return params[KParam.playMode.rawValue] > 0.5 && event.a >= 0 &&
+                Pad.index(forMIDINote: Int(event.a) % 128) != nil
+        case .allOff:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func nextHostTransportBoundary(before limit: Int) -> Int {
+        var result = limit
+        for i in 0..<blockEventCount {
+            let b = blockEvents[i]
+            if !b.fromLoop && b.offset > 0 && b.offset < result && isHostTransport(b.event) {
+                result = b.offset
+            }
+        }
+        return result
+    }
+
+    /// Transport events at this segment's first sample precede loop scheduling. Future
+    /// events remain in fixed storage, with their offsets reduced as each segment renders.
+    private func applyHostTransportAtBlockStart() {
+        var keep = 0
+        for i in 0..<blockEventCount {
+            let b = blockEvents[i]
+            if !b.fromLoop && b.offset <= 0 && isHostTransport(b.event) {
+                apply(b.event, offset: 0)
+            } else {
+                blockEvents[keep] = b
+                keep += 1
+            }
+        }
+        blockEventCount = keep
+    }
+
     /// Samples rendered with nothing playing (after a few seconds the chain is skipped).
     private var idleSamples = 0
 
     private func renderBlock(frames: Int, left: UnsafeMutablePointer<Float>, right: UnsafeMutablePointer<Float>,
                              host: HostTiming?) {
+        defer {
+            meterFrames += frames
+            if meterFrames >= Int(sampleRate / 30) {
+                meterFrames = 0
+                meters.publish(status: status, hits: padHits, master: master)
+            }
+        }
         pickUpNewKitAndLoops(frames: frames)
+        let playMode = params[KParam.playMode.rawValue]
+        if lastPlayMode >= 0 && playMode != lastPlayMode { clearGates(); playing = false; queuedLoop = -2; releaseAll() }
+        lastPlayMode = playMode
 
         // Events from the faceplate and MIDI ports happen at the start of the block.
         // Transport events (start, stop, loop picks, MIDI clock) are handled before the loop is
@@ -237,6 +340,7 @@ final class KnockEngine {
                 self.addBlockEvent(BlockEvent(offset: 0, event: e))
             }
         }
+        applyHostTransportAtBlockStart()
         scheduleLoops(frames: frames, host: host)
         sortBlockEvents()
 
@@ -266,6 +370,9 @@ final class KnockEngine {
         // Nothing sounding for 4 s and stopped: skip the chain (tails have long died away).
         var anyVoice = false
         for v in 0..<KnockEngine.maxVoices where voices[v].active { anyVoice = true; break }
+        if !anyVoice {
+            for v in 0..<KnockEngine.maxStealTails where stealTails[v].active { anyVoice = true; break }
+        }
         if anyVoice || playing { idleSamples = 0 } else { idleSamples += frames }
         if idleSamples > Int(sampleRate * 4) {
             left.update(repeating: 0, count: frames)
@@ -283,6 +390,11 @@ final class KnockEngine {
         bs.shine = params[KParam.shine.rawValue]
         bs.noise = params[KParam.noise.rawValue]
         bs.tempo = status[4] > 0 ? status[4] : 120
+        bs.resample = params[KParam.resample.rawValue]
+        bs.instability = params[KParam.instability.rawValue]
+        bs.delay = params[KParam.textureDelay.rawValue]
+        bs.reverb = params[KParam.gatedReverb.rawValue]
+        bs.drive = params[KParam.drive.rawValue]
         bus.process(mixL, mixR, count: frames, bs)
 
         var ms = MasterBus.Settings()
@@ -317,6 +429,7 @@ final class KnockEngine {
         if oldKit == nil, retiringKit == nil, let newKit = kitHandoff.take() {
             // Fade out what's playing from the old kit, keep its memory until the fade is done.
             for v in 0..<KnockEngine.maxVoices where voices[v].active { voices[v].startFade(samples: Int(sampleRate * 0.005)) }
+            for v in 0..<KnockEngine.maxStealTails where stealTails[v].active { stealTails[v].startFade(samples: Int(sampleRate * 0.005)) }
             oldKit = kit
             kit = newKit
             oldKitCountdown = Int(sampleRate * 0.015)
@@ -345,15 +458,30 @@ final class KnockEngine {
 
     private func apply(_ e: KEvent, offset: Int) {
         switch e.kind {
+        case .midiNoteOn:
+            let note = Int(e.a) % 128
+            if params[KParam.playMode.rawValue] > 0.5, Pad.index(forMIDINote: note) != nil {
+                beginGate(Int(e.a))
+            } else {
+                let event = noteEvent(note: note, velocity: UInt8(clamping: Int(e.value * 127)))
+                apply(event, offset: offset)
+            }
+        case .loopGateOn:
+            beginGate(Int(e.a))
+        case .loopGateOff:
+            endGate(Int(e.a))
         case .pad:
             trigger(pad: Int(e.a), velocity: Float(e.value), semis: 0, lengthSamples: 0, glide: false)
         case .bass:
             trigger(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), lengthSamples: 0, glide: false, heldNote: Int(e.a) + Pad.bassRootNote)
         case .noteOff:
-            for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].heldNote == Int(e.a) && e.a >= 0 {
+            if e.a >= 0 { endGate(Int(e.a)) }
+            let note = Int(e.a) % 128
+            for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].heldNote == note && e.a >= 0 {
                 voices[v].release(samples: Int(sampleRate * 0.06))
             }
         case .loopPad:
+            clearGates()
             let pad = Int(e.a)
             let following = followingHost
             if pad < 0 || (pad == currentLoop && (playing || following)) {
@@ -372,9 +500,11 @@ final class KnockEngine {
                 queuedLoop = pad
             }
         case .play:
+            clearGates()
             if currentLoop < 0 { currentLoop = 0 }
             startTransport(at: 0)
         case .stop:
+            clearGates()
             playing = false
             queuedLoop = -2
             releaseAll()
@@ -403,6 +533,51 @@ final class KnockEngine {
             midiClockBeat = Double(e.a) / 4
             if params[KParam.followDAW.rawValue] > 0.5 { beat = midiClockBeat }
         case .allOff:
+            clearGates()
+            playing = false
+            currentLoop = -1
+            queuedLoop = -2
+            releaseAll()
+        }
+    }
+
+    private func loopForToken(_ token: Int) -> Int? {
+        if token >= 2048 && token < 2064 { return token - 2048 }
+        guard token >= 0 && token < 2048 else { return nil }
+        return Pad.index(forMIDINote: token % 128)
+    }
+
+    private func clearGates() {
+        heldLoops.update(repeating: 0, count: 2064)
+        gatedToken = -1
+    }
+
+    private func beginGate(_ token: Int) {
+        guard let loop = loopForToken(token) else { return }
+        heldOrder &+= 1
+        heldLoops[token] = heldOrder
+        gatedToken = token
+        currentLoop = loop
+        queuedLoop = -2
+        startTransport(at: 0)
+    }
+
+    private func endGate(_ token: Int) {
+        guard token >= 0 && token < 2064 else { return }
+        heldLoops[token] = 0
+        guard gatedToken == token else { return }
+        var newest: UInt64 = 0
+        var next = -1
+        for i in 0..<2064 where heldLoops[i] > newest { newest = heldLoops[i]; next = i }
+        gatedToken = next
+        if next >= 0, let loop = loopForToken(next) {
+            currentLoop = loop
+            queuedLoop = -2
+            startTransport(at: 0)
+        } else {
+            currentLoop = -1
+            queuedLoop = -2
+            playing = false
             releaseAll()
         }
     }
@@ -412,7 +587,7 @@ final class KnockEngine {
     @inline(__always)
     static func isTransport(_ k: KEvent.Kind) -> Bool {
         switch k {
-        case .loopPad, .play, .stop, .midiStart, .midiStop, .midiContinue, .midiClock, .songPosition: return true
+        case .midiNoteOn, .noteOff, .loopGateOn, .loopGateOff, .allOff, .loopPad, .play, .stop, .midiStart, .midiStop, .midiContinue, .midiClock, .songPosition: return true
         default: return false
         }
     }
@@ -448,6 +623,9 @@ final class KnockEngine {
             }
         }
 
+        // Decide before choking anything: an overload rejection leaves sounding notes alone.
+        guard let slot = freeVoice() else { return }
+
         // Choke group (closed hat stops open hat; the 808 is mono).
         let group = Pad(rawValue: pad)?.chokeGroup ?? 0
         if group != 0 {
@@ -472,28 +650,40 @@ final class KnockEngine {
         if ps.decay < 0.999 { tau = min(tau, 0.03 + Double(ps.decay) * Double(ps.decay) * 2.5) }
         let coef: Float = tau.isFinite ? Float(exp(-1 / (tau * sampleRate))) : 1
 
-        let slot = freeVoice()
         voiceAge &+= 1
         voices[slot] = Voice(sample: sample, pad: pad, rate: rate, reverse: ps.reverse, gainL: gl, gainR: gr,
                              decayCoef: coef, holdSamples: Int(sampleRate * 0.012), chokeGroup: group,
-                             age: voiceAge, remaining: lengthSamples > 0 ? lengthSamples : Int.max, heldNote: heldNote)
+                             age: voiceAge, remaining: lengthSamples > 0 ? lengthSamples : Int.max, heldNote: heldNote,
+                             attackSamples: max(1, Int(sampleRate * 0.0005)))
         padHits[pad] &+= 1
     }
 
-    private func freeVoice() -> Int {
+    private func freeVoice() -> Int? {
         var oldest = 0
         var oldestAge = UInt32.max
         for v in 0..<KnockEngine.maxVoices {
             if !voices[v].active { return v }
             if voices[v].age < oldestAge { oldestAge = voices[v].age; oldest = v }
         }
-        return oldest
+        // Keep playing the stolen waveform during its release. Raw sample pointers remain
+        // owned by kit / oldKit; this fade is shorter than oldKit's 15 ms retention window.
+        for tail in 0..<KnockEngine.maxStealTails where !stealTails[tail].active {
+            stealTails[tail] = voices[oldest]
+            stealTails[tail].startFade(samples: max(1, Int(sampleRate * 0.004)))
+            return oldest
+        }
+        // An extreme burst uses all 48 slots. Drop the excess hit instead of allocating or
+        // abruptly cutting a sounding waveform. Tail slots become available within 4 ms.
+        return nil
     }
 
     private func renderVoices(from start: Int, to end: Int) {
         guard end > start else { return }
         for v in 0..<KnockEngine.maxVoices where voices[v].active {
             voices[v].render(into: mixL + start, mixR + start, frames: end - start, releaseSamples: Int(sampleRate * 0.03))
+        }
+        for v in 0..<KnockEngine.maxStealTails where stealTails[v].active {
+            stealTails[v].render(into: mixL + start, mixR + start, frames: end - start, releaseSamples: Int(sampleRate * 0.03))
         }
     }
 
@@ -582,13 +772,22 @@ final class KnockEngine {
         let tBlock = (blockStart - start) * ppq
         let len = Double(loop.lengthTicks)
         let samplesPerTick = 60 / tempo / ppq * sampleRate
+        // The BOUNCE control can move a hit between -3 and +12 ticks at maximum. Search
+        // only that small neighbourhood, then retain the exact swing and interval checks.
+        let loose = bounce > 0.001 ? bounce * bounce : 0
+        let maxSwing = bounce > 0.001 ? bounce * 8 + loose * 4 : 0
+        let minSwing = -loose * 3
         // One cycle either side, so swung hits near the loop's edges aren't missed.
         var cycle = max(0, (t0 / len).rounded(.down) - 1)
         let lastCycle = (t1 / len).rounded(.down) + 1
         while cycle <= lastCycle {
             let base = cycle * len
-            for k in 0..<loop.count {
+            let lower = t0 - base - maxSwing - 1e-7
+            let upper = t1 - base - minSwing + 1e-7
+            var k = firstEvent(loop, atOrAfter: lower)
+            while k < loop.count && Double(loop.events[k].tick) < upper {
                 let ev = loop.events[k]
+                k += 1
                 let t = base + Double(ev.tick) + swingOffset(tick: Int(ev.tick), pad: Int(ev.pad), bounce: bounce)
                 guard t >= t0 && t < t1 && t >= 0 else { continue }
                 let offset = Int(((t - tBlock) * samplesPerTick).rounded(.down))
@@ -600,6 +799,19 @@ final class KnockEngine {
             }
             cycle += 1
         }
+    }
+
+    /// PatternSet sorts and wraps ticks before publication, outside the render callback.
+    @inline(__always)
+    private func firstEvent(_ loop: PatternSet.Loop, atOrAfter tick: Double) -> Int {
+        var low = 0
+        var high = loop.count
+        while low < high {
+            let mid = low + (high - low) / 2
+            if Double(loop.events[mid].tick) < tick { low = mid + 1 }
+            else { high = mid }
+        }
+        return low
     }
 
     /// BOUNCE: swing on the off 16ths, and at the top of the knob a loose "late kick, early
@@ -660,6 +872,8 @@ struct Voice {
     var env: Float = 1
     var decayCoef: Float = 1
     var hold = 0
+    var attack: Float = 1
+    var attackStep: Float = 0
     var fade: Float = 1
     var fadeStep: Float = 0
     var releasing = false
@@ -671,7 +885,8 @@ struct Voice {
     init() {}
 
     init(sample: SampleBuffer, pad: Int, rate: Double, reverse: Bool, gainL: Float, gainR: Float,
-         decayCoef: Float, holdSamples: Int, chokeGroup: Int, age: UInt32, remaining: Int, heldNote: Int) {
+         decayCoef: Float, holdSamples: Int, chokeGroup: Int, age: UInt32, remaining: Int, heldNote: Int,
+         attackSamples: Int = 0) {
         active = true
         self.pad = pad
         left = sample.left
@@ -685,6 +900,10 @@ struct Voice {
         self.gainR = gainR
         self.decayCoef = decayCoef
         hold = holdSamples
+        if attackSamples > 0 {
+            attack = 0
+            attackStep = 1 / Float(attackSamples)
+        }
         self.chokeGroup = chokeGroup
         self.age = age
         self.remaining = remaining
@@ -728,6 +947,10 @@ struct Voice {
                 fade -= fadeStep
                 if fade <= 0 { active = false; return }
                 g = env * fade
+            }
+            if attack < 1 {
+                g *= attack
+                attack = min(1, attack + attackStep)
             }
             if g < 0.000_05 && env < 0.000_05 { active = false; return }
             outL[i] += l * g * gainL

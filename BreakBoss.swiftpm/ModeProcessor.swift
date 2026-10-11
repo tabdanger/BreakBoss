@@ -132,6 +132,11 @@ final class BusProcessor {
         var shine: Float = 0
         var noise: Float = 0
         var tempo: Double = 120
+        var resample: Float = 0.5
+        var instability: Float = 0.5
+        var delay: Float = 0.32
+        var reverb: Float = 0.5
+        var drive: Float = 0
     }
 
     /// Processes `count` stereo samples in place.
@@ -144,7 +149,7 @@ final class BusProcessor {
         // Gains
         let boostGain = 1 + s.boost * 0.6 + (vintage ? 0.35 : 0)
         let punchAmount = s.punch * 1.6
-        let gritAmount = s.grit + (vintage ? 0.38 : 0) + (texture ? 0.12 : 0)
+        let gritAmount = s.grit + ((vintage || texture) ? s.drive * 0.8 : 0) + (vintage ? 0.38 : 0) + (texture ? 0.12 : 0)
         let drive = 1 + gritAmount * 6
         let gritMakeup = 1 / Saturate.soft(drive) * 0.95
         let gritMix = min(1, gritAmount * 2.2)
@@ -153,8 +158,9 @@ final class BusProcessor {
         // Texture delay: dotted 1/8 at the current tempo
         let beat = 60.0 / max(s.tempo, 40)
         delaySamples.set(Float(min(Double(delaySize - 4), beat * 0.75 * Double(sr))))
-        let dsStep = texture ? Float(18_900) / sr : 1   // hold-and-sample down to ~19 kHz
-        let wowDepth: Float = sr * 0.0011, flutterDepth: Float = sr * 0.00012
+        let dsStep = texture ? min(1, (sr * powf(18_900 / sr, s.resample * 2)) / sr) : 1   // hold-and-sample down to ~19 kHz
+        let wowDepth: Float = sr * 0.0022 * s.instability, flutterDepth: Float = sr * 0.00024 * s.instability
+        let quantization = powf(2, 15 - s.resample * 8)
 
         for i in 0..<count {
             var l = left[i] * boostGain, r = right[i] * boostGain
@@ -210,9 +216,9 @@ final class BusProcessor {
                 holdPhase += dsStep
                 if holdPhase >= 1 {
                     holdPhase -= 1
-                    held = ((dl * 2048).rounded() / 2048, (dr * 2048).rounded() / 2048)
+                    held = ((dl * quantization).rounded() / quantization, (dr * quantization).rounded() / quantization)
                 }
-                l = held.0; r = held.1
+                if s.resample > 0.001 { l = held.0; r = held.1 }
                 // Instability: wow and flutter on a short delay.
                 wowPhase += 0.55 / sr; if wowPhase > 1 { wowPhase -= 1 }
                 flutterPhase += 6.8 / sr; if flutterPhase > 1 { flutterPhase -= 1 }
@@ -225,7 +231,7 @@ final class BusProcessor {
                 let side = (l - r) * 0.5
                 let readPos = Float(wowIndex) - (sr * 0.004 + mod)
                 let mid = readInterpolated(wow, wowSize, readPos)
-                l = mid + side; r = mid - side
+                if s.instability > 0.001 { l = mid + side; r = mid - side }
                 // Gated reverb (send, then gate on the drums' envelope).
                 let (vl, vr) = verb.process(l, r)
                 // Delay: dotted 1/8, filtered feedback.
@@ -236,8 +242,8 @@ final class BusProcessor {
                 delayL[delayIndex] = l + delayLP[0].lowPass(er) * 0.34   // ping-pong
                 delayR[delayIndex] = r + delayLP[1].lowPass(el) * 0.34
                 delayIndex += 1; if delayIndex == delaySize { delayIndex = 0 }
-                l += el * 0.16 + vl * 0.3
-                r += er * 0.16 + vr * 0.3
+                l += el * s.delay * 0.5 + vl * s.reverb * 0.6
+                r += er * s.delay * 0.5 + vr * s.reverb * 0.6
             }
 
             // NOISE, following the drums

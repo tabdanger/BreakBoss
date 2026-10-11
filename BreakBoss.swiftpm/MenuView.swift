@@ -4,28 +4,38 @@ import UniformTypeIdentifiers
 
 // MARK: - The menu button (top right, next to export)
 //
-// Your samples on all 12 pads in one place, saving kits, the MIDI note map and a short guide.
+// Your samples on all 16 pads in one place, saving kits, the MIDI note map and a short guide.
 
 struct MenuView: View {
     @ObservedObject var controller: KnockController
     @Environment(\.dismiss) private var dismiss
     @State private var importPad: Int?
+    @State private var showingSampleImporter = false
     @State private var editPad: Int?
     @State private var savingKit = false
     @State private var kitName = ""
+    @State private var performance = false
+    @State private var portable = false
+    @State private var engineControls = false
 
     private let accent = Color(red: 1, green: 0.30, blue: 0.20)
 
     var body: some View {
         NavigationView {
             Form {
+                Section("Performance") {
+                    Button("Open 4 × 4 performance pads") { performance = true }
+                    Button("Engine controls") { engineControls = true }
+                    Button("Share / import a complete preset") { portable = true }
+                    Button("All notes and loops off") { controller.panic() }
+                }
                 Section {
                     ForEach(0..<Pad.count, id: \.self) { pad in padRow(pad) }
                 } header: {
                     Text("Your samples on the pads")
                 } footer: {
                     Text("Tap Import to put an audio file (WAV, AIFF, MP3, M4A, FLAC) on a pad. You can also drag a file from Files straight onto a pad, or hold a pad for its editor. Imported files are copied to "
-                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › On My iPad › BreakBoss › Samples."))
+                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreakBoss › Samples on this device."))
                 }
 
                 Section("Kits") {
@@ -45,7 +55,8 @@ struct MenuView: View {
                 }
 
                 Section {
-                    mapRow("C1 – B1  (36 – 47)", "Pads 1 – 12. In LOOP mode they start loops 1 – 12.")
+                    mapRow("C1 – B1  (36 – 47)", "Pads 1 – 12. In LOOP mode hold a MIDI note to play its loop; release to stop. Last-held note takes priority.")
+                    mapRow("85 – 88", "Pads / loops 13 – 16; keeps the original 808 note map compatible.")
                     mapRow("C2 – C5  (48 – 84)", "The 808, chromatic. C3 (60) is the kit's tuning.")
                     mapRow("MIDI clock", "TEMPO SYNC follows its tempo, FOLLOW DAW its start / stop.")
                 } header: { Text("MIDI") }
@@ -74,7 +85,10 @@ struct MenuView: View {
         }
         .navigationViewStyle(.stack)
         .preferredColorScheme(.dark)
-        .fileImporter(isPresented: Binding(get: { importPad != nil }, set: { if !$0 { importPad = nil } }),
+        .fullScreenCover(isPresented: $performance) { PerformanceView(controller: controller) }
+        .sheet(isPresented: $portable) { PortablePresetView(controller: controller) }
+        .sheet(isPresented: $engineControls) { EngineControlsView(controller: controller) }
+        .fileImporter(isPresented: $showingSampleImporter,
                       allowedContentTypes: [.audio], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first, let pad = importPad {
                 controller.importSample(url, toPad: pad)
@@ -89,7 +103,7 @@ struct MenuView: View {
             Button("Save") { controller.saveKit(as: kitName) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Saves the 12 pads (your samples and pad settings) as a kit.")
+            Text("Saves the 16 pads (your samples and pad settings) as a kit.")
         }
     }
 
@@ -103,7 +117,28 @@ struct MenuView: View {
 
     private func padRow(_ pad: Int) -> some View {
         let own = controller.state.pads[pad].sampleFile != nil
-        return HStack(spacing: 12) {
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                padDescription(pad, own: own).frame(minWidth: 140)
+                Spacer(minLength: 8)
+                padActions(pad, own: own).fixedSize(horizontal: true, vertical: false)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                padDescription(pad, own: own)
+                padActions(pad, own: own).frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        }
+        .onDrop(of: [UTType.fileURL], isTargeted: nil) { providers in
+            guard let provider = providers.first else { return false }
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                if let url { DispatchQueue.main.async { controller.importSample(url, toPad: pad) } }
+            }
+            return true
+        }
+    }
+
+    private func padDescription(_ pad: Int, own: Bool) -> some View {
+        HStack(spacing: 12) {
             Text("\(pad + 1)")
                 .font(.system(.body, design: .monospaced))
                 .frame(width: 26)
@@ -113,22 +148,25 @@ struct MenuView: View {
                 Text(own ? "YOUR SAMPLE" : Pad(rawValue: pad)?.label ?? "")
                     .font(.caption).foregroundColor(own ? accent : .secondary)
             }
-            Spacer()
+        }
+    }
+
+    private func padActions(_ pad: Int, own: Bool) -> some View {
+        HStack(spacing: 12) {
             Button { controller.padDown(pad, velocity: 1) } label: { Image(systemName: "play.fill") }
                 .buttonStyle(.borderless)
+                .accessibilityLabel("Play pad \(pad + 1)")
+                .frame(minWidth: 44, minHeight: 44)
             Button("Edit") { editPad = pad }.buttonStyle(.borderless)
-            Button("Import") { importPad = pad }.buttonStyle(.borderless).foregroundColor(accent)
+                .frame(minHeight: 44)
+            Button("Import") { importPad = pad; showingSampleImporter = true }.buttonStyle(.borderless).foregroundColor(accent)
+                .frame(minHeight: 44)
             if own {
                 Button(role: .destructive) { controller.revertPad(pad) } label: { Image(systemName: "arrow.uturn.backward") }
                     .buttonStyle(.borderless)
+                    .accessibilityLabel("Restore kit sound on pad \(pad + 1)")
+                    .frame(minWidth: 44, minHeight: 44)
             }
-        }
-        .onDrop(of: [UTType.fileURL], isTargeted: nil) { providers in
-            guard let provider = providers.first else { return false }
-            _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                if let url { DispatchQueue.main.async { controller.importSample(url, toPad: pad) } }
-            }
-            return true
         }
     }
 

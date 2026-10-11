@@ -44,6 +44,9 @@ enum KParam: Int, CaseIterable {
     // Switches
     case soundMode, playMode, tempoSync, followDAW
 
+    // Append-only addresses keep existing preset / host parameter IDs stable.
+    case resample, instability, textureDelay, gatedReverb, drive
+
     static let count = KParam.allCases.count
 
     /// Identifier for the host and for saved state.
@@ -68,6 +71,11 @@ enum KParam: Int, CaseIterable {
         case .playMode: return "playMode"
         case .tempoSync: return "tempoSync"
         case .followDAW: return "followDAW"
+        case .resample: return "resample"
+        case .instability: return "instability"
+        case .textureDelay: return "textureDelay"
+        case .gatedReverb: return "gatedReverb"
+        case .drive: return "drive"
         }
     }
 
@@ -92,11 +100,16 @@ enum KParam: Int, CaseIterable {
         case .playMode: return "One-Shot / Loop"
         case .tempoSync: return "Tempo Sync"
         case .followDAW: return "Follow DAW"
+        case .resample: return "Resample"
+        case .instability: return "Instability"
+        case .textureDelay: return "Delay"
+        case .gatedReverb: return "Gated Reverb"
+        case .drive: return "Drive"
         }
     }
 
     /// Knobs are 0...1. Switches hold whole numbers.
-    var isKnob: Bool { rawValue <= KParam.noise.rawValue && self != .clipper }
+    var isKnob: Bool { (rawValue <= KParam.noise.rawValue && self != .clipper) || rawValue >= KParam.resample.rawValue }
 
     /// Number of positions for switches (nil for knobs).
     var steps: Int? {
@@ -130,6 +143,11 @@ enum KParam: Int, CaseIterable {
         case .playMode: return 1
         case .tempoSync: return 1
         case .followDAW: return 1
+        case .resample: return 0.5
+        case .instability: return 0.5
+        case .textureDelay: return 0.32
+        case .gatedReverb: return 0.5
+        case .drive: return 0
         }
     }
 

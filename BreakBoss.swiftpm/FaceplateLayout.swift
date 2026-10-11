@@ -2,15 +2,18 @@
 import CoreGraphics
 import Foundation
 
-/// Where everything sits on each of the three faceplates, in the artwork's own pixels
-/// (1448 x 1086). Measured from the approved faceplate images (Resources/KnockLayout.json).
+/// Control positions in the original artwork's own pixels. Tablet and phone layouts use
+/// the same controller, parameters and pad IDs; only the artwork and coordinates differ.
 struct FaceplateLayout: Decodable {
+    enum Device: String, Decodable { case tablet, phone }
+
     struct Knob: Decodable {
         let x: Double
         let y: Double
         let r: Double
         let pointerInner: Double
         let pointerOuter: Double
+        let bakedAngle: Double?
     }
 
     struct LEDs: Decodable {
@@ -19,6 +22,7 @@ struct FaceplateLayout: Decodable {
     }
 
     let size: [Double]
+    let device: Device?
     let knobs: [String: Knob]
     let scope: [Double]
     let bpmDigits: [Double]
@@ -39,11 +43,17 @@ struct FaceplateLayout: Decodable {
     let exportRect: [Double]
     let menuRect: [Double]
     let modeButtons: [String: [Double]]
-    /// 12 pads: the top row left to right, then the bottom row.
+    /// Artwork positions in reading order. Pad IDs are independent of the device layout.
     let pads: [[Double]]
+    let padOrder: [Int]?
 
     var width: Double { size[0] }
     var height: Double { size[1] }
+    var isPhone: Bool { device == .phone }
+
+    func plateImageName(for mode: SoundMode) -> String {
+        "\(isPhone ? "PhonePlate" : "Plate")_\(mode.assetSuffix)"
+    }
 
     static func rect(_ r: [Double]) -> CGRect {
         guard r.count == 4 else { return .zero }
@@ -53,14 +63,29 @@ struct FaceplateLayout: Decodable {
     /// Pad index (0 = pad 1 bottom-left) for a layout position (0 = top-left).
     static func padIndex(forLayoutPosition i: Int) -> Int { i < 6 ? i + 6 : i - 6 }
 
+    func padIndex(forLayoutPosition i: Int) -> Int {
+        if let order = padOrder, order.indices.contains(i) { return order[i] }
+        return Self.padIndex(forLayoutPosition: i)
+    }
+
     static let all: [String: FaceplateLayout] = {
-        guard let url = knockResourceURL("KnockLayout", "json"),
+        load("KnockLayout")
+    }()
+
+    static let phone: [String: FaceplateLayout] = {
+        load("PhoneKnockLayout")
+    }()
+
+    private static func load(_ name: String) -> [String: FaceplateLayout] {
+        guard let url = knockResourceURL(name, "json"),
               let data = try? Data(contentsOf: url),
               let decoded = try? JSONDecoder().decode([String: FaceplateLayout].self, from: data) else { return [:] }
         return decoded
-    }()
+    }
 
-    static func forMode(_ mode: SoundMode) -> FaceplateLayout? { all[mode.assetSuffix] }
+    static func forMode(_ mode: SoundMode, device: Device = .tablet) -> FaceplateLayout? {
+        (device == .phone ? phone : all)[mode.assetSuffix]
+    }
 }
 
 /// Swift Playgrounds doesn't always make SwiftPM's resource accessor for app packages, and

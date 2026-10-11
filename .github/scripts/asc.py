@@ -12,11 +12,13 @@ ASC_TOKEN_STYLE ("team" or "individual", set by `check`). Nothing secret is ever
 import base64
 import json
 import os
+import re
 import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 
 API = "https://api.appstoreconnect.apple.com"
 BUNDLE_ID = os.environ.get("BUNDLE_ID", "com.tabdanger.BreakBoss")
@@ -85,6 +87,52 @@ def problem(js):
         e = errors[0]
         return f"{e.get('title', '')}: {e.get('detail', '')}".strip(": ")
     return js.get("raw", "")
+
+
+def build_pages(app_id):
+    """Read every build page. Keep authorization restricted to Apple's API origin."""
+    path = f"/v1/builds?filter[app]={app_id}&limit=200"
+    visited = set()
+    while path:
+        if path in visited:
+            raise RuntimeError("App Store Connect returned a repeated build pagination link")
+        visited.add(path)
+        status, js = call("GET", path)
+        if status != 200:
+            raise RuntimeError(f"Couldn't select a new build number: HTTP {status} {problem(js)}")
+        yield from js.get("data", [])
+        next_url = (js.get("links") or {}).get("next")
+        if not next_url:
+            break
+        parsed = urllib.parse.urlsplit(next_url)
+        if parsed.scheme or parsed.netloc:
+            if parsed.scheme != "https" or parsed.netloc != "api.appstoreconnect.apple.com":
+                raise RuntimeError("App Store Connect returned a pagination link outside its API")
+            path = parsed.path + ("?" + parsed.query if parsed.query else "")
+        elif next_url.startswith("/v1/"):
+            path = next_url
+        else:
+            raise RuntimeError("App Store Connect returned an invalid build pagination link")
+
+
+def next_build_number(minimum, requested=""):
+    """Use an integer above all existing uploaded numbers, with a monotonic CI floor."""
+    if not re.fullmatch(r"[0-9]+", str(minimum)) or int(minimum) < 1:
+        raise ValueError("The minimum build number must be a positive whole number")
+    app_id = os.environ.get("ASC_APP_ID")
+    if app_id:
+        existing = [int(version) for build in build_pages(app_id)
+                    if re.fullmatch(r"[0-9]+", version := str(build.get("attributes", {}).get("version", "")))]
+    elif os.environ.get("ALLOW_MISSING_APP") == "1":
+        existing = []  # The existing manual sign-only mode permits an app without a store record.
+    else:
+        raise RuntimeError("No App Store Connect app record available to select the build number")
+    highest = max(existing, default=0)
+    if requested:
+        if not re.fullmatch(r"[0-9]+", requested) or int(requested) <= highest:
+            raise ValueError(f"Requested build number must be a whole number greater than {highest}")
+        return int(requested)
+    return max(int(minimum), highest + 1)
 
 
 def check():
@@ -590,5 +638,10 @@ if __name__ == "__main__":
         prepare(sys.argv[2])
     elif command == "cleanup":
         cleanup(sys.argv[2])
+    elif command == "next-build":
+        try:
+            print(next_build_number(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else ""))
+        except (ValueError, RuntimeError) as error:
+            sys.exit(str(error))
     else:
         sys.exit(f"unknown command {command}")

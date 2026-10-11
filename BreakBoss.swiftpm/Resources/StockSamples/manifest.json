@@ -1,0 +1,3269 @@
+{
+  "version": 1,
+  "assignments": [
+    {
+      "kitID": "2000s-rnb",
+      "pad": 0,
+      "file": "bb_2000s-rnb_p00.wav",
+      "displayName": "2000S RNB KICK"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 1,
+      "file": "bb_2000s-rnb_p01.wav",
+      "displayName": "2000S RNB SNARE"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 2,
+      "file": "bb_2000s-rnb_p02.wav",
+      "displayName": "2000S RNB CLAP"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 3,
+      "file": "bb_2000s-rnb_p03.wav",
+      "displayName": "2000S RNB RIM"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 4,
+      "file": "bb_2000s-rnb_p04.wav",
+      "displayName": "2000S RNB HAT"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 5,
+      "file": "bb_2000s-rnb_p05.wav",
+      "displayName": "2000S RNB OPEN HAT"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 6,
+      "file": "bb_2000s-rnb_p06.wav",
+      "displayName": "2000S RNB BASS"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 7,
+      "file": "bb_2000s-rnb_p07.wav",
+      "displayName": "2000S RNB PERC A"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 8,
+      "file": "bb_2000s-rnb_p08.wav",
+      "displayName": "2000S RNB PERC B"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 9,
+      "file": "bb_2000s-rnb_p09.wav",
+      "displayName": "2000S RNB LOW TOM"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 10,
+      "file": "bb_2000s-rnb_p10.wav",
+      "displayName": "2000S RNB HIGH TOM"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 11,
+      "file": "bb_2000s-rnb_p11.wav",
+      "displayName": "2000S RNB AIR CYMBAL"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 12,
+      "file": "bb_2000s-rnb_p12.wav",
+      "displayName": "2000S RNB SHAKER"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 13,
+      "file": "bb_2000s-rnb_p13.wav",
+      "displayName": "2000S RNB TAMB"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "2000S RNB PALM TOM"
+    },
+    {
+      "kitID": "2000s-rnb",
+      "pad": 15,
+      "file": "bb_2000s-rnb_p15.wav",
+      "displayName": "2000S RNB FX"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 0,
+      "file": "bb_80s-pop_p00.wav",
+      "displayName": "80S POP KICK"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 1,
+      "file": "bb_80s-pop_p01.wav",
+      "displayName": "80S POP SNARE"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 2,
+      "file": "bb_80s-pop_p02.wav",
+      "displayName": "80S POP CLAP"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 3,
+      "file": "bb_80s-pop_p03.wav",
+      "displayName": "80S POP RIM"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 4,
+      "file": "bb_80s-pop_p04.wav",
+      "displayName": "80S POP HAT"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 5,
+      "file": "bb_80s-pop_p05.wav",
+      "displayName": "80S POP OPEN HAT"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 6,
+      "file": "bb_80s-pop_p06.wav",
+      "displayName": "80S POP BASS"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 7,
+      "file": "bb_80s-pop_p07.wav",
+      "displayName": "80S POP PERC A"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 8,
+      "file": "bb_80s-pop_p08.wav",
+      "displayName": "80S POP PERC B"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 9,
+      "file": "bb_80s-pop_p09.wav",
+      "displayName": "80S POP LOW TOM"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 10,
+      "file": "bb_80s-pop_p10.wav",
+      "displayName": "80S POP HIGH TOM"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 11,
+      "file": "bb_80s-pop_p11.wav",
+      "displayName": "80S POP AIR CYMBAL"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 12,
+      "file": "bb_80s-pop_p12.wav",
+      "displayName": "80S POP SHAKER"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 13,
+      "file": "bb_80s-pop_p13.wav",
+      "displayName": "80S POP TAMB"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "80S POP PALM TOM"
+    },
+    {
+      "kitID": "80s-pop",
+      "pad": 15,
+      "file": "bb_80s-pop_p15.wav",
+      "displayName": "80S POP FX"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 0,
+      "file": "bb_2000s-rnb_p00.wav",
+      "displayName": "90S POP KICK"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 1,
+      "file": "bb_90s-pop_p01.wav",
+      "displayName": "90S POP SNARE"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 2,
+      "file": "bb_90s-pop_p02.wav",
+      "displayName": "90S POP CLAP"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 3,
+      "file": "bb_90s-pop_p03.wav",
+      "displayName": "90S POP RIM"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 4,
+      "file": "bb_90s-pop_p04.wav",
+      "displayName": "90S POP HAT"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 5,
+      "file": "bb_90s-pop_p05.wav",
+      "displayName": "90S POP OPEN HAT"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 6,
+      "file": "bb_90s-pop_p06.wav",
+      "displayName": "90S POP BASS"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 7,
+      "file": "bb_90s-pop_p07.wav",
+      "displayName": "90S POP PERC A"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 8,
+      "file": "bb_90s-pop_p08.wav",
+      "displayName": "90S POP PERC B"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 9,
+      "file": "bb_2000s-rnb_p09.wav",
+      "displayName": "90S POP LOW TOM"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 10,
+      "file": "bb_2000s-rnb_p10.wav",
+      "displayName": "90S POP HIGH TOM"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 11,
+      "file": "bb_80s-pop_p11.wav",
+      "displayName": "90S POP AIR CYMBAL"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 12,
+      "file": "bb_90s-pop_p12.wav",
+      "displayName": "90S POP SHAKER"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 13,
+      "file": "bb_90s-pop_p13.wav",
+      "displayName": "90S POP TAMB"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "90S POP PALM TOM"
+    },
+    {
+      "kitID": "90s-pop",
+      "pad": 15,
+      "file": "bb_90s-pop_p15.wav",
+      "displayName": "90S POP FX"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 0,
+      "file": "bb_80s-pop_p00.wav",
+      "displayName": "AFROBEATS KICK"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 1,
+      "file": "bb_afrobeats_p01.wav",
+      "displayName": "AFROBEATS SNARE"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 2,
+      "file": "bb_afrobeats_p02.wav",
+      "displayName": "AFROBEATS CLAP"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 3,
+      "file": "bb_afrobeats_p03.wav",
+      "displayName": "AFROBEATS RIM"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 4,
+      "file": "bb_afrobeats_p04.wav",
+      "displayName": "AFROBEATS HAT"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 5,
+      "file": "bb_afrobeats_p05.wav",
+      "displayName": "AFROBEATS OPEN HAT"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 6,
+      "file": "bb_afrobeats_p06.wav",
+      "displayName": "AFROBEATS BASS"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 7,
+      "file": "bb_afrobeats_p07.wav",
+      "displayName": "AFROBEATS PERC A"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 8,
+      "file": "bb_afrobeats_p08.wav",
+      "displayName": "AFROBEATS PERC B"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 9,
+      "file": "bb_80s-pop_p09.wav",
+      "displayName": "AFROBEATS LOW TOM"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 10,
+      "file": "bb_80s-pop_p10.wav",
+      "displayName": "AFROBEATS HIGH TOM"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 11,
+      "file": "bb_2000s-rnb_p11.wav",
+      "displayName": "AFROBEATS AIR CYMBAL"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 12,
+      "file": "bb_afrobeats_p12.wav",
+      "displayName": "AFROBEATS SHAKER"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 13,
+      "file": "bb_afrobeats_p13.wav",
+      "displayName": "AFROBEATS TAMB"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "AFROBEATS PALM TOM"
+    },
+    {
+      "kitID": "afrobeats",
+      "pad": 15,
+      "file": "bb_afrobeats_p15.wav",
+      "displayName": "AFROBEATS FX"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 0,
+      "file": "bb_amapiano_p00.wav",
+      "displayName": "AMAPIANO KICK"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 1,
+      "file": "bb_amapiano_p01.wav",
+      "displayName": "AMAPIANO SNARE"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 2,
+      "file": "bb_amapiano_p02.wav",
+      "displayName": "AMAPIANO CLAP"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 3,
+      "file": "bb_amapiano_p03.wav",
+      "displayName": "AMAPIANO RIM"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 4,
+      "file": "bb_amapiano_p04.wav",
+      "displayName": "AMAPIANO HAT"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 5,
+      "file": "bb_amapiano_p05.wav",
+      "displayName": "AMAPIANO OPEN HAT"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 6,
+      "file": "bb_amapiano_p06.wav",
+      "displayName": "AMAPIANO LOG BASS"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 7,
+      "file": "bb_amapiano_p07.wav",
+      "displayName": "AMAPIANO PERC A"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 8,
+      "file": "bb_amapiano_p08.wav",
+      "displayName": "AMAPIANO PERC B"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 9,
+      "file": "bb_amapiano_p09.wav",
+      "displayName": "AMAPIANO LOW TOM"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 10,
+      "file": "bb_80s-pop_p10.wav",
+      "displayName": "AMAPIANO HIGH TOM"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 11,
+      "file": "bb_amapiano_p11.wav",
+      "displayName": "AMAPIANO AIR CYMBAL"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 12,
+      "file": "bb_amapiano_p12.wav",
+      "displayName": "AMAPIANO SHAKER"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 13,
+      "file": "bb_amapiano_p13.wav",
+      "displayName": "AMAPIANO TAMB"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "AMAPIANO PALM TOM"
+    },
+    {
+      "kitID": "amapiano",
+      "pad": 15,
+      "file": "bb_amapiano_p15.wav",
+      "displayName": "AMAPIANO FX"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 0,
+      "file": "bb_atl-trap_p00.wav",
+      "displayName": "ATL TRAP KICK"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 1,
+      "file": "bb_atl-trap_p01.wav",
+      "displayName": "ATL TRAP SNARE"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 2,
+      "file": "bb_atl-trap_p02.wav",
+      "displayName": "ATL TRAP CLAP"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 3,
+      "file": "bb_atl-trap_p03.wav",
+      "displayName": "ATL TRAP RIM"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 4,
+      "file": "bb_atl-trap_p04.wav",
+      "displayName": "ATL TRAP HAT"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 5,
+      "file": "bb_atl-trap_p05.wav",
+      "displayName": "ATL TRAP OPEN HAT"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 6,
+      "file": "bb_atl-trap_p06.wav",
+      "displayName": "ATL TRAP BASS"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 7,
+      "file": "bb_atl-trap_p07.wav",
+      "displayName": "ATL TRAP PERC A"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 8,
+      "file": "bb_atl-trap_p08.wav",
+      "displayName": "ATL TRAP PERC B"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 9,
+      "file": "bb_atl-trap_p09.wav",
+      "displayName": "ATL TRAP LOW TOM"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 10,
+      "file": "bb_atl-trap_p10.wav",
+      "displayName": "ATL TRAP HIGH TOM"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 11,
+      "file": "bb_atl-trap_p11.wav",
+      "displayName": "ATL TRAP AIR CYMBAL"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 12,
+      "file": "bb_atl-trap_p12.wav",
+      "displayName": "ATL TRAP SHAKER"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 13,
+      "file": "bb_atl-trap_p13.wav",
+      "displayName": "ATL TRAP TAMB"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 14,
+      "file": "bb_atl-trap_p14.wav",
+      "displayName": "ATL TRAP PALM TOM"
+    },
+    {
+      "kitID": "atl-trap",
+      "pad": 15,
+      "file": "bb_atl-trap_p15.wav",
+      "displayName": "ATL TRAP FX"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 0,
+      "file": "bb_atl-trap_p00.wav",
+      "displayName": "BAY SLAP KICK"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 1,
+      "file": "bb_atl-trap_p01.wav",
+      "displayName": "BAY SLAP SNARE"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 2,
+      "file": "bb_atl-trap_p02.wav",
+      "displayName": "BAY SLAP CLAP"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 3,
+      "file": "bb_atl-trap_p03.wav",
+      "displayName": "BAY SLAP RIM"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 4,
+      "file": "bb_atl-trap_p04.wav",
+      "displayName": "BAY SLAP HAT"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 5,
+      "file": "bb_atl-trap_p05.wav",
+      "displayName": "BAY SLAP OPEN HAT"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 6,
+      "file": "bb_bay-slap_p06.wav",
+      "displayName": "BAY SLAP BASS"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 7,
+      "file": "bb_atl-trap_p07.wav",
+      "displayName": "BAY SLAP PERC A"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 8,
+      "file": "bb_atl-trap_p08.wav",
+      "displayName": "BAY SLAP PERC B"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 9,
+      "file": "bb_atl-trap_p09.wav",
+      "displayName": "BAY SLAP LOW TOM"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 10,
+      "file": "bb_atl-trap_p10.wav",
+      "displayName": "BAY SLAP HIGH TOM"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 11,
+      "file": "bb_atl-trap_p11.wav",
+      "displayName": "BAY SLAP AIR CYMBAL"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 12,
+      "file": "bb_atl-trap_p12.wav",
+      "displayName": "BAY SLAP SHAKER"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 13,
+      "file": "bb_atl-trap_p13.wav",
+      "displayName": "BAY SLAP TAMB"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 14,
+      "file": "bb_atl-trap_p14.wav",
+      "displayName": "BAY SLAP PALM TOM"
+    },
+    {
+      "kitID": "bay-slap",
+      "pad": 15,
+      "file": "bb_atl-trap_p15.wav",
+      "displayName": "BAY SLAP FX"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 0,
+      "file": "bb_boom-bap_p00.wav",
+      "displayName": "BOOM BAP KICK"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 1,
+      "file": "bb_boom-bap_p01.wav",
+      "displayName": "BOOM BAP SNARE"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 2,
+      "file": "bb_boom-bap_p02.wav",
+      "displayName": "BOOM BAP CLAP"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 3,
+      "file": "bb_boom-bap_p03.wav",
+      "displayName": "BOOM BAP RIM"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 4,
+      "file": "bb_boom-bap_p04.wav",
+      "displayName": "BOOM BAP HAT"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 5,
+      "file": "bb_boom-bap_p05.wav",
+      "displayName": "BOOM BAP OPEN HAT"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 6,
+      "file": "bb_boom-bap_p06.wav",
+      "displayName": "BOOM BAP BASS"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 7,
+      "file": "bb_boom-bap_p07.wav",
+      "displayName": "BOOM BAP PERC A"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 8,
+      "file": "bb_boom-bap_p08.wav",
+      "displayName": "BOOM BAP PERC B"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 9,
+      "file": "bb_boom-bap_p09.wav",
+      "displayName": "BOOM BAP LOW TOM"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 10,
+      "file": "bb_boom-bap_p10.wav",
+      "displayName": "BOOM BAP HIGH TOM"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 11,
+      "file": "bb_boom-bap_p11.wav",
+      "displayName": "BOOM BAP AIR CYMBAL"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 12,
+      "file": "bb_boom-bap_p12.wav",
+      "displayName": "BOOM BAP SHAKER"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 13,
+      "file": "bb_boom-bap_p13.wav",
+      "displayName": "BOOM BAP TAMB"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 14,
+      "file": "bb_boom-bap_p14.wav",
+      "displayName": "BOOM BAP PALM TOM"
+    },
+    {
+      "kitID": "boom-bap",
+      "pad": 15,
+      "file": "bb_boom-bap_p15.wav",
+      "displayName": "BOOM BAP FX"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 0,
+      "file": "bb_cole-world_p00.wav",
+      "displayName": "COLE WORLD KICK"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 1,
+      "file": "bb_cole-world_p01.wav",
+      "displayName": "COLE WORLD SNARE"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 2,
+      "file": "bb_cole-world_p02.wav",
+      "displayName": "COLE WORLD CLAP"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 3,
+      "file": "bb_cole-world_p03.wav",
+      "displayName": "COLE WORLD RIM"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 4,
+      "file": "bb_cole-world_p04.wav",
+      "displayName": "COLE WORLD HAT"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 5,
+      "file": "bb_cole-world_p05.wav",
+      "displayName": "COLE WORLD OPEN HAT"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 6,
+      "file": "bb_cole-world_p06.wav",
+      "displayName": "COLE WORLD BASS"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 7,
+      "file": "bb_cole-world_p07.wav",
+      "displayName": "COLE WORLD PERC A"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 8,
+      "file": "bb_cole-world_p08.wav",
+      "displayName": "COLE WORLD PERC B"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 9,
+      "file": "bb_cole-world_p09.wav",
+      "displayName": "COLE WORLD LOW TOM"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 10,
+      "file": "bb_cole-world_p10.wav",
+      "displayName": "COLE WORLD HIGH TOM"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 11,
+      "file": "bb_cole-world_p11.wav",
+      "displayName": "COLE WORLD AIR CYMBAL"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 12,
+      "file": "bb_cole-world_p12.wav",
+      "displayName": "COLE WORLD SHAKER"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 13,
+      "file": "bb_cole-world_p13.wav",
+      "displayName": "COLE WORLD TAMB"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "COLE WORLD PALM TOM"
+    },
+    {
+      "kitID": "cole-world",
+      "pad": 15,
+      "file": "bb_cole-world_p15.wav",
+      "displayName": "COLE WORLD FX"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 0,
+      "file": "bb_dark-experimental_p00.wav",
+      "displayName": "DARK EXPERIMENTAL KICK"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 1,
+      "file": "bb_dark-experimental_p01.wav",
+      "displayName": "DARK EXPERIMENTAL SNARE"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 2,
+      "file": "bb_dark-experimental_p02.wav",
+      "displayName": "DARK EXPERIMENTAL CLAP"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 3,
+      "file": "bb_dark-experimental_p03.wav",
+      "displayName": "DARK EXPERIMENTAL RIM"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 4,
+      "file": "bb_dark-experimental_p04.wav",
+      "displayName": "DARK EXPERIMENTAL HAT"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 5,
+      "file": "bb_dark-experimental_p05.wav",
+      "displayName": "DARK EXPERIMENTAL OPEN HAT"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 6,
+      "file": "bb_dark-experimental_p06.wav",
+      "displayName": "DARK EXPERIMENTAL BASS"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 7,
+      "file": "bb_dark-experimental_p07.wav",
+      "displayName": "DARK EXPERIMENTAL PERC A"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 8,
+      "file": "bb_dark-experimental_p08.wav",
+      "displayName": "DARK EXPERIMENTAL PERC B"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 9,
+      "file": "bb_dark-experimental_p09.wav",
+      "displayName": "DARK EXPERIMENTAL LOW TOM"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 10,
+      "file": "bb_dark-experimental_p10.wav",
+      "displayName": "DARK EXPERIMENTAL HIGH TOM"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 11,
+      "file": "bb_dark-experimental_p11.wav",
+      "displayName": "DARK EXPERIMENTAL AIR CYMBAL"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 12,
+      "file": "bb_dark-experimental_p12.wav",
+      "displayName": "DARK EXPERIMENTAL SHAKER"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 13,
+      "file": "bb_dark-experimental_p13.wav",
+      "displayName": "DARK EXPERIMENTAL TAMB"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 14,
+      "file": "bb_dark-experimental_p14.wav",
+      "displayName": "DARK EXPERIMENTAL PALM TOM"
+    },
+    {
+      "kitID": "dark-experimental",
+      "pad": 15,
+      "file": "bb_dark-experimental_p15.wav",
+      "displayName": "DARK EXPERIMENTAL FX"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 0,
+      "file": "bb_dirty-soul_p00.wav",
+      "displayName": "DIRTY SOUL KICK"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 1,
+      "file": "bb_dirty-soul_p01.wav",
+      "displayName": "DIRTY SOUL SNARE"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 2,
+      "file": "bb_dirty-soul_p02.wav",
+      "displayName": "DIRTY SOUL CLAP"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 3,
+      "file": "bb_dirty-soul_p03.wav",
+      "displayName": "DIRTY SOUL RIM"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 4,
+      "file": "bb_dirty-soul_p04.wav",
+      "displayName": "DIRTY SOUL HAT"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 5,
+      "file": "bb_dirty-soul_p05.wav",
+      "displayName": "DIRTY SOUL OPEN HAT"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 6,
+      "file": "bb_dirty-soul_p06.wav",
+      "displayName": "DIRTY SOUL BASS"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 7,
+      "file": "bb_dirty-soul_p07.wav",
+      "displayName": "DIRTY SOUL PERC A"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 8,
+      "file": "bb_dirty-soul_p08.wav",
+      "displayName": "DIRTY SOUL PERC B"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 9,
+      "file": "bb_dirty-soul_p09.wav",
+      "displayName": "DIRTY SOUL LOW TOM"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 10,
+      "file": "bb_dirty-soul_p10.wav",
+      "displayName": "DIRTY SOUL HIGH TOM"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 11,
+      "file": "bb_dirty-soul_p11.wav",
+      "displayName": "DIRTY SOUL AIR CYMBAL"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 12,
+      "file": "bb_dirty-soul_p12.wav",
+      "displayName": "DIRTY SOUL SHAKER"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 13,
+      "file": "bb_dirty-soul_p13.wav",
+      "displayName": "DIRTY SOUL TAMB"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 14,
+      "file": "bb_dirty-soul_p14.wav",
+      "displayName": "DIRTY SOUL PALM TOM"
+    },
+    {
+      "kitID": "dirty-soul",
+      "pad": 15,
+      "file": "bb_dirty-soul_p15.wav",
+      "displayName": "DIRTY SOUL FX"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 0,
+      "file": "bb_drum-mastery_p00.wav",
+      "displayName": "DRUM MASTERY KICK"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 1,
+      "file": "bb_drum-mastery_p01.wav",
+      "displayName": "DRUM MASTERY SNARE"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 2,
+      "file": "bb_drum-mastery_p02.wav",
+      "displayName": "DRUM MASTERY CLAP"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 3,
+      "file": "bb_drum-mastery_p03.wav",
+      "displayName": "DRUM MASTERY RIM"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 4,
+      "file": "bb_drum-mastery_p04.wav",
+      "displayName": "DRUM MASTERY HAT"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 5,
+      "file": "bb_drum-mastery_p05.wav",
+      "displayName": "DRUM MASTERY OPEN HAT"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 6,
+      "file": "bb_drum-mastery_p06.wav",
+      "displayName": "DRUM MASTERY BASS"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 7,
+      "file": "bb_drum-mastery_p07.wav",
+      "displayName": "DRUM MASTERY PERC A"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 8,
+      "file": "bb_drum-mastery_p08.wav",
+      "displayName": "DRUM MASTERY PERC B"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 9,
+      "file": "bb_drum-mastery_p09.wav",
+      "displayName": "DRUM MASTERY LOW TOM"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 10,
+      "file": "bb_drum-mastery_p10.wav",
+      "displayName": "DRUM MASTERY HIGH TOM"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 11,
+      "file": "bb_atl-trap_p11.wav",
+      "displayName": "DRUM MASTERY AIR CYMBAL"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 12,
+      "file": "bb_drum-mastery_p12.wav",
+      "displayName": "DRUM MASTERY SHAKER"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 13,
+      "file": "bb_drum-mastery_p13.wav",
+      "displayName": "DRUM MASTERY TAMB"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 14,
+      "file": "bb_atl-trap_p14.wav",
+      "displayName": "DRUM MASTERY PALM TOM"
+    },
+    {
+      "kitID": "drum-mastery",
+      "pad": 15,
+      "file": "bb_drum-mastery_p15.wav",
+      "displayName": "DRUM MASTERY FX"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 0,
+      "file": "bb_boom-bap_p00.wav",
+      "displayName": "FUNK BREAK KICK"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 1,
+      "file": "bb_boom-bap_p01.wav",
+      "displayName": "FUNK BREAK SNARE"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 2,
+      "file": "bb_boom-bap_p02.wav",
+      "displayName": "FUNK BREAK CLAP"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 3,
+      "file": "bb_boom-bap_p03.wav",
+      "displayName": "FUNK BREAK RIM"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 4,
+      "file": "bb_boom-bap_p04.wav",
+      "displayName": "FUNK BREAK HAT"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 5,
+      "file": "bb_boom-bap_p05.wav",
+      "displayName": "FUNK BREAK OPEN HAT"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 6,
+      "file": "bb_boom-bap_p06.wav",
+      "displayName": "FUNK BREAK BASS"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 7,
+      "file": "bb_boom-bap_p07.wav",
+      "displayName": "FUNK BREAK PERC A"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 8,
+      "file": "bb_boom-bap_p08.wav",
+      "displayName": "FUNK BREAK PERC B"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 9,
+      "file": "bb_boom-bap_p09.wav",
+      "displayName": "FUNK BREAK LOW TOM"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 10,
+      "file": "bb_boom-bap_p10.wav",
+      "displayName": "FUNK BREAK HIGH TOM"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 11,
+      "file": "bb_boom-bap_p11.wav",
+      "displayName": "FUNK BREAK AIR CYMBAL"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 12,
+      "file": "bb_boom-bap_p12.wav",
+      "displayName": "FUNK BREAK SHAKER"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 13,
+      "file": "bb_boom-bap_p13.wav",
+      "displayName": "FUNK BREAK TAMB"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 14,
+      "file": "bb_boom-bap_p14.wav",
+      "displayName": "FUNK BREAK PALM TOM"
+    },
+    {
+      "kitID": "funk-break",
+      "pad": 15,
+      "file": "bb_boom-bap_p15.wav",
+      "displayName": "FUNK BREAK FX"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 0,
+      "file": "bb_cole-world_p00.wav",
+      "displayName": "GOSPEL CHOPS KICK"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 1,
+      "file": "bb_cole-world_p01.wav",
+      "displayName": "GOSPEL CHOPS SNARE"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 2,
+      "file": "bb_cole-world_p02.wav",
+      "displayName": "GOSPEL CHOPS CLAP"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 3,
+      "file": "bb_cole-world_p03.wav",
+      "displayName": "GOSPEL CHOPS RIM"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 4,
+      "file": "bb_cole-world_p04.wav",
+      "displayName": "GOSPEL CHOPS HAT"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 5,
+      "file": "bb_cole-world_p05.wav",
+      "displayName": "GOSPEL CHOPS OPEN HAT"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 6,
+      "file": "bb_gospel-chops_p06.wav",
+      "displayName": "GOSPEL CHOPS BASS"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 7,
+      "file": "bb_cole-world_p07.wav",
+      "displayName": "GOSPEL CHOPS PERC A"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 8,
+      "file": "bb_cole-world_p08.wav",
+      "displayName": "GOSPEL CHOPS PERC B"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 9,
+      "file": "bb_cole-world_p09.wav",
+      "displayName": "GOSPEL CHOPS LOW TOM"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 10,
+      "file": "bb_cole-world_p10.wav",
+      "displayName": "GOSPEL CHOPS HIGH TOM"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 11,
+      "file": "bb_cole-world_p11.wav",
+      "displayName": "GOSPEL CHOPS AIR CYMBAL"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 12,
+      "file": "bb_cole-world_p12.wav",
+      "displayName": "GOSPEL CHOPS SHAKER"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 13,
+      "file": "bb_cole-world_p13.wav",
+      "displayName": "GOSPEL CHOPS TAMB"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "GOSPEL CHOPS PALM TOM"
+    },
+    {
+      "kitID": "gospel-chops",
+      "pad": 15,
+      "file": "bb_cole-world_p15.wav",
+      "displayName": "GOSPEL CHOPS FX"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 0,
+      "file": "bb_heavy-break_p00.wav",
+      "displayName": "HEAVY BREAK KICK"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 1,
+      "file": "bb_heavy-break_p01.wav",
+      "displayName": "HEAVY BREAK SNARE"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 2,
+      "file": "bb_heavy-break_p02.wav",
+      "displayName": "HEAVY BREAK CLAP"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 3,
+      "file": "bb_heavy-break_p03.wav",
+      "displayName": "HEAVY BREAK RIM"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 4,
+      "file": "bb_heavy-break_p04.wav",
+      "displayName": "HEAVY BREAK HAT"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 5,
+      "file": "bb_heavy-break_p05.wav",
+      "displayName": "HEAVY BREAK OPEN HAT"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 6,
+      "file": "bb_heavy-break_p06.wav",
+      "displayName": "HEAVY BREAK BASS"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 7,
+      "file": "bb_heavy-break_p07.wav",
+      "displayName": "HEAVY BREAK PERC A"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 8,
+      "file": "bb_heavy-break_p08.wav",
+      "displayName": "HEAVY BREAK PERC B"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 9,
+      "file": "bb_heavy-break_p09.wav",
+      "displayName": "HEAVY BREAK LOW TOM"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 10,
+      "file": "bb_boom-bap_p10.wav",
+      "displayName": "HEAVY BREAK HIGH TOM"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 11,
+      "file": "bb_boom-bap_p11.wav",
+      "displayName": "HEAVY BREAK AIR CYMBAL"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 12,
+      "file": "bb_heavy-break_p12.wav",
+      "displayName": "HEAVY BREAK SHAKER"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 13,
+      "file": "bb_heavy-break_p13.wav",
+      "displayName": "HEAVY BREAK TAMB"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 14,
+      "file": "bb_boom-bap_p14.wav",
+      "displayName": "HEAVY BREAK PALM TOM"
+    },
+    {
+      "kitID": "heavy-break",
+      "pad": 15,
+      "file": "bb_heavy-break_p15.wav",
+      "displayName": "HEAVY BREAK FX"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 0,
+      "file": "bb_amapiano_p00.wav",
+      "displayName": "LIVE POP KICK"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 1,
+      "file": "bb_live-pop_p01.wav",
+      "displayName": "LIVE POP SNARE"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 2,
+      "file": "bb_live-pop_p02.wav",
+      "displayName": "LIVE POP CLAP"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 3,
+      "file": "bb_live-pop_p03.wav",
+      "displayName": "LIVE POP RIM"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 4,
+      "file": "bb_live-pop_p04.wav",
+      "displayName": "LIVE POP HAT"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 5,
+      "file": "bb_live-pop_p05.wav",
+      "displayName": "LIVE POP OPEN HAT"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 6,
+      "file": "bb_live-pop_p06.wav",
+      "displayName": "LIVE POP BASS"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 7,
+      "file": "bb_live-pop_p07.wav",
+      "displayName": "LIVE POP PERC A"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 8,
+      "file": "bb_live-pop_p08.wav",
+      "displayName": "LIVE POP PERC B"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 9,
+      "file": "bb_amapiano_p09.wav",
+      "displayName": "LIVE POP LOW TOM"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 10,
+      "file": "bb_80s-pop_p10.wav",
+      "displayName": "LIVE POP HIGH TOM"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 11,
+      "file": "bb_80s-pop_p11.wav",
+      "displayName": "LIVE POP AIR CYMBAL"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 12,
+      "file": "bb_live-pop_p12.wav",
+      "displayName": "LIVE POP SHAKER"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 13,
+      "file": "bb_live-pop_p13.wav",
+      "displayName": "LIVE POP TAMB"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "LIVE POP PALM TOM"
+    },
+    {
+      "kitID": "live-pop",
+      "pad": 15,
+      "file": "bb_live-pop_p15.wav",
+      "displayName": "LIVE POP FX"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 0,
+      "file": "bb_cole-world_p00.wav",
+      "displayName": "LIVE SOUL KICK"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 1,
+      "file": "bb_cole-world_p01.wav",
+      "displayName": "LIVE SOUL SNARE"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 2,
+      "file": "bb_cole-world_p02.wav",
+      "displayName": "LIVE SOUL CLAP"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 3,
+      "file": "bb_cole-world_p03.wav",
+      "displayName": "LIVE SOUL RIM"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 4,
+      "file": "bb_cole-world_p04.wav",
+      "displayName": "LIVE SOUL HAT"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 5,
+      "file": "bb_cole-world_p05.wav",
+      "displayName": "LIVE SOUL OPEN HAT"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 6,
+      "file": "bb_gospel-chops_p06.wav",
+      "displayName": "LIVE SOUL BASS"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 7,
+      "file": "bb_cole-world_p07.wav",
+      "displayName": "LIVE SOUL PERC A"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 8,
+      "file": "bb_cole-world_p08.wav",
+      "displayName": "LIVE SOUL PERC B"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 9,
+      "file": "bb_cole-world_p09.wav",
+      "displayName": "LIVE SOUL LOW TOM"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 10,
+      "file": "bb_cole-world_p10.wav",
+      "displayName": "LIVE SOUL HIGH TOM"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 11,
+      "file": "bb_cole-world_p11.wav",
+      "displayName": "LIVE SOUL AIR CYMBAL"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 12,
+      "file": "bb_cole-world_p12.wav",
+      "displayName": "LIVE SOUL SHAKER"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 13,
+      "file": "bb_cole-world_p13.wav",
+      "displayName": "LIVE SOUL TAMB"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "LIVE SOUL PALM TOM"
+    },
+    {
+      "kitID": "live-soul",
+      "pad": 15,
+      "file": "bb_cole-world_p15.wav",
+      "displayName": "LIVE SOUL FX"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 0,
+      "file": "bb_lo-fi_p00.wav",
+      "displayName": "LO FI KICK"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 1,
+      "file": "bb_lo-fi_p01.wav",
+      "displayName": "LO FI SNARE"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 2,
+      "file": "bb_lo-fi_p02.wav",
+      "displayName": "LO FI CLAP"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 3,
+      "file": "bb_lo-fi_p03.wav",
+      "displayName": "LO FI RIM"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 4,
+      "file": "bb_lo-fi_p04.wav",
+      "displayName": "LO FI HAT"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 5,
+      "file": "bb_lo-fi_p05.wav",
+      "displayName": "LO FI OPEN HAT"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 6,
+      "file": "bb_lo-fi_p06.wav",
+      "displayName": "LO FI BASS"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 7,
+      "file": "bb_lo-fi_p07.wav",
+      "displayName": "LO FI PERC A"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 8,
+      "file": "bb_lo-fi_p08.wav",
+      "displayName": "LO FI PERC B"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 9,
+      "file": "bb_lo-fi_p09.wav",
+      "displayName": "LO FI LOW TOM"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 10,
+      "file": "bb_lo-fi_p10.wav",
+      "displayName": "LO FI HIGH TOM"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 11,
+      "file": "bb_dirty-soul_p11.wav",
+      "displayName": "LO FI AIR CYMBAL"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 12,
+      "file": "bb_lo-fi_p12.wav",
+      "displayName": "LO FI SHAKER"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 13,
+      "file": "bb_lo-fi_p13.wav",
+      "displayName": "LO FI TAMB"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 14,
+      "file": "bb_dirty-soul_p14.wav",
+      "displayName": "LO FI PALM TOM"
+    },
+    {
+      "kitID": "lo-fi",
+      "pad": 15,
+      "file": "bb_lo-fi_p15.wav",
+      "displayName": "LO FI FX"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 0,
+      "file": "bb_loose-break_p00.wav",
+      "displayName": "LOOSE BREAK KICK"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 1,
+      "file": "bb_loose-break_p01.wav",
+      "displayName": "LOOSE BREAK SNARE"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 2,
+      "file": "bb_loose-break_p02.wav",
+      "displayName": "LOOSE BREAK CLAP"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 3,
+      "file": "bb_loose-break_p03.wav",
+      "displayName": "LOOSE BREAK RIM"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 4,
+      "file": "bb_loose-break_p04.wav",
+      "displayName": "LOOSE BREAK HAT"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 5,
+      "file": "bb_loose-break_p05.wav",
+      "displayName": "LOOSE BREAK OPEN HAT"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 6,
+      "file": "bb_loose-break_p06.wav",
+      "displayName": "LOOSE BREAK BASS"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 7,
+      "file": "bb_loose-break_p07.wav",
+      "displayName": "LOOSE BREAK PERC A"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 8,
+      "file": "bb_loose-break_p08.wav",
+      "displayName": "LOOSE BREAK PERC B"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 9,
+      "file": "bb_loose-break_p09.wav",
+      "displayName": "LOOSE BREAK LOW TOM"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 10,
+      "file": "bb_loose-break_p10.wav",
+      "displayName": "LOOSE BREAK HIGH TOM"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 11,
+      "file": "bb_boom-bap_p11.wav",
+      "displayName": "LOOSE BREAK AIR CYMBAL"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 12,
+      "file": "bb_loose-break_p12.wav",
+      "displayName": "LOOSE BREAK SHAKER"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 13,
+      "file": "bb_loose-break_p13.wav",
+      "displayName": "LOOSE BREAK TAMB"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 14,
+      "file": "bb_boom-bap_p14.wav",
+      "displayName": "LOOSE BREAK PALM TOM"
+    },
+    {
+      "kitID": "loose-break",
+      "pad": 15,
+      "file": "bb_loose-break_p15.wav",
+      "displayName": "LOOSE BREAK FX"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 0,
+      "file": "bb_memphis-trap_p00.wav",
+      "displayName": "MEMPHIS TRAP KICK"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 1,
+      "file": "bb_memphis-trap_p01.wav",
+      "displayName": "MEMPHIS TRAP SNARE"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 2,
+      "file": "bb_memphis-trap_p02.wav",
+      "displayName": "MEMPHIS TRAP CLAP"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 3,
+      "file": "bb_memphis-trap_p03.wav",
+      "displayName": "MEMPHIS TRAP RIM"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 4,
+      "file": "bb_memphis-trap_p04.wav",
+      "displayName": "MEMPHIS TRAP HAT"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 5,
+      "file": "bb_memphis-trap_p05.wav",
+      "displayName": "MEMPHIS TRAP OPEN HAT"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 6,
+      "file": "bb_atl-trap_p06.wav",
+      "displayName": "MEMPHIS TRAP BASS"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 7,
+      "file": "bb_memphis-trap_p07.wav",
+      "displayName": "MEMPHIS TRAP PERC A"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 8,
+      "file": "bb_memphis-trap_p08.wav",
+      "displayName": "MEMPHIS TRAP PERC B"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 9,
+      "file": "bb_memphis-trap_p09.wav",
+      "displayName": "MEMPHIS TRAP LOW TOM"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 10,
+      "file": "bb_memphis-trap_p10.wav",
+      "displayName": "MEMPHIS TRAP HIGH TOM"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 11,
+      "file": "bb_atl-trap_p11.wav",
+      "displayName": "MEMPHIS TRAP AIR CYMBAL"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 12,
+      "file": "bb_memphis-trap_p12.wav",
+      "displayName": "MEMPHIS TRAP SHAKER"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 13,
+      "file": "bb_memphis-trap_p13.wav",
+      "displayName": "MEMPHIS TRAP TAMB"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 14,
+      "file": "bb_atl-trap_p14.wav",
+      "displayName": "MEMPHIS TRAP PALM TOM"
+    },
+    {
+      "kitID": "memphis-trap",
+      "pad": 15,
+      "file": "bb_memphis-trap_p15.wav",
+      "displayName": "MEMPHIS TRAP FX"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 0,
+      "file": "bb_cole-world_p00.wav",
+      "displayName": "MODERN RNB KICK"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 1,
+      "file": "bb_modern-rnb_p01.wav",
+      "displayName": "MODERN RNB SNARE"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 2,
+      "file": "bb_modern-rnb_p02.wav",
+      "displayName": "MODERN RNB CLAP"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 3,
+      "file": "bb_modern-rnb_p03.wav",
+      "displayName": "MODERN RNB RIM"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 4,
+      "file": "bb_modern-rnb_p04.wav",
+      "displayName": "MODERN RNB HAT"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 5,
+      "file": "bb_modern-rnb_p05.wav",
+      "displayName": "MODERN RNB OPEN HAT"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 6,
+      "file": "bb_2000s-rnb_p06.wav",
+      "displayName": "MODERN RNB BASS"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 7,
+      "file": "bb_modern-rnb_p07.wav",
+      "displayName": "MODERN RNB PERC A"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 8,
+      "file": "bb_modern-rnb_p08.wav",
+      "displayName": "MODERN RNB PERC B"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 9,
+      "file": "bb_cole-world_p09.wav",
+      "displayName": "MODERN RNB LOW TOM"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 10,
+      "file": "bb_cole-world_p10.wav",
+      "displayName": "MODERN RNB HIGH TOM"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 11,
+      "file": "bb_2000s-rnb_p11.wav",
+      "displayName": "MODERN RNB AIR CYMBAL"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 12,
+      "file": "bb_modern-rnb_p12.wav",
+      "displayName": "MODERN RNB SHAKER"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 13,
+      "file": "bb_modern-rnb_p13.wav",
+      "displayName": "MODERN RNB TAMB"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "MODERN RNB PALM TOM"
+    },
+    {
+      "kitID": "modern-rnb",
+      "pad": 15,
+      "file": "bb_modern-rnb_p15.wav",
+      "displayName": "MODERN RNB FX"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 0,
+      "file": "bb_modern-trap_p00.wav",
+      "displayName": "MODERN TRAP KICK"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 1,
+      "file": "bb_modern-trap_p01.wav",
+      "displayName": "MODERN TRAP SNARE"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 2,
+      "file": "bb_modern-trap_p02.wav",
+      "displayName": "MODERN TRAP CLAP"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 3,
+      "file": "bb_modern-trap_p03.wav",
+      "displayName": "MODERN TRAP RIM"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 4,
+      "file": "bb_modern-trap_p04.wav",
+      "displayName": "MODERN TRAP HAT"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 5,
+      "file": "bb_modern-trap_p05.wav",
+      "displayName": "MODERN TRAP OPEN HAT"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 6,
+      "file": "bb_atl-trap_p06.wav",
+      "displayName": "MODERN TRAP BASS"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 7,
+      "file": "bb_modern-trap_p07.wav",
+      "displayName": "MODERN TRAP PERC A"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 8,
+      "file": "bb_modern-trap_p08.wav",
+      "displayName": "MODERN TRAP PERC B"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 9,
+      "file": "bb_modern-trap_p09.wav",
+      "displayName": "MODERN TRAP LOW TOM"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 10,
+      "file": "bb_atl-trap_p10.wav",
+      "displayName": "MODERN TRAP HIGH TOM"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 11,
+      "file": "bb_atl-trap_p11.wav",
+      "displayName": "MODERN TRAP AIR CYMBAL"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 12,
+      "file": "bb_modern-trap_p12.wav",
+      "displayName": "MODERN TRAP SHAKER"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 13,
+      "file": "bb_modern-trap_p13.wav",
+      "displayName": "MODERN TRAP TAMB"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 14,
+      "file": "bb_atl-trap_p14.wav",
+      "displayName": "MODERN TRAP PALM TOM"
+    },
+    {
+      "kitID": "modern-trap",
+      "pad": 15,
+      "file": "bb_modern-trap_p15.wav",
+      "displayName": "MODERN TRAP FX"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 0,
+      "file": "bb_amapiano_p00.wav",
+      "displayName": "NEO SOUL KICK"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 1,
+      "file": "bb_neo-soul_p01.wav",
+      "displayName": "NEO SOUL SNARE"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 2,
+      "file": "bb_neo-soul_p02.wav",
+      "displayName": "NEO SOUL CLAP"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 3,
+      "file": "bb_neo-soul_p03.wav",
+      "displayName": "NEO SOUL RIM"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 4,
+      "file": "bb_neo-soul_p04.wav",
+      "displayName": "NEO SOUL HAT"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 5,
+      "file": "bb_neo-soul_p05.wav",
+      "displayName": "NEO SOUL OPEN HAT"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 6,
+      "file": "bb_cole-world_p06.wav",
+      "displayName": "NEO SOUL BASS"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 7,
+      "file": "bb_neo-soul_p07.wav",
+      "displayName": "NEO SOUL PERC A"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 8,
+      "file": "bb_neo-soul_p08.wav",
+      "displayName": "NEO SOUL PERC B"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 9,
+      "file": "bb_amapiano_p09.wav",
+      "displayName": "NEO SOUL LOW TOM"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 10,
+      "file": "bb_80s-pop_p10.wav",
+      "displayName": "NEO SOUL HIGH TOM"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 11,
+      "file": "bb_cole-world_p11.wav",
+      "displayName": "NEO SOUL AIR CYMBAL"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 12,
+      "file": "bb_neo-soul_p12.wav",
+      "displayName": "NEO SOUL SHAKER"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 13,
+      "file": "bb_neo-soul_p13.wav",
+      "displayName": "NEO SOUL TAMB"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "NEO SOUL PALM TOM"
+    },
+    {
+      "kitID": "neo-soul",
+      "pad": 15,
+      "file": "bb_neo-soul_p15.wav",
+      "displayName": "NEO SOUL FX"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 0,
+      "file": "bb_80s-pop_p00.wav",
+      "displayName": "PERC LOOPS KICK"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 1,
+      "file": "bb_afrobeats_p01.wav",
+      "displayName": "PERC LOOPS SNARE"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 2,
+      "file": "bb_afrobeats_p02.wav",
+      "displayName": "PERC LOOPS CLAP"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 3,
+      "file": "bb_afrobeats_p03.wav",
+      "displayName": "PERC LOOPS RIM"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 4,
+      "file": "bb_afrobeats_p04.wav",
+      "displayName": "PERC LOOPS HAT"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 5,
+      "file": "bb_afrobeats_p05.wav",
+      "displayName": "PERC LOOPS OPEN HAT"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 6,
+      "file": "bb_afrobeats_p06.wav",
+      "displayName": "PERC LOOPS BASS"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 7,
+      "file": "bb_afrobeats_p07.wav",
+      "displayName": "PERC LOOPS PERC A"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 8,
+      "file": "bb_afrobeats_p08.wav",
+      "displayName": "PERC LOOPS PERC B"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 9,
+      "file": "bb_80s-pop_p09.wav",
+      "displayName": "PERC LOOPS LOW TOM"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 10,
+      "file": "bb_80s-pop_p10.wav",
+      "displayName": "PERC LOOPS HIGH TOM"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 11,
+      "file": "bb_2000s-rnb_p11.wav",
+      "displayName": "PERC LOOPS AIR CYMBAL"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 12,
+      "file": "bb_afrobeats_p12.wav",
+      "displayName": "PERC LOOPS SHAKER"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 13,
+      "file": "bb_afrobeats_p13.wav",
+      "displayName": "PERC LOOPS TAMB"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "PERC LOOPS PALM TOM"
+    },
+    {
+      "kitID": "perc-loops",
+      "pad": 15,
+      "file": "bb_afrobeats_p15.wav",
+      "displayName": "PERC LOOPS FX"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 0,
+      "file": "bb_resampled-textures_p00.wav",
+      "displayName": "RESAMPLED TEXTURES KICK"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 1,
+      "file": "bb_resampled-textures_p01.wav",
+      "displayName": "RESAMPLED TEXTURES SNARE"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 2,
+      "file": "bb_resampled-textures_p02.wav",
+      "displayName": "RESAMPLED TEXTURES CLAP"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 3,
+      "file": "bb_resampled-textures_p03.wav",
+      "displayName": "RESAMPLED TEXTURES RIM"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 4,
+      "file": "bb_resampled-textures_p04.wav",
+      "displayName": "RESAMPLED TEXTURES HAT"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 5,
+      "file": "bb_resampled-textures_p05.wav",
+      "displayName": "RESAMPLED TEXTURES OPEN HAT"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 6,
+      "file": "bb_resampled-textures_p06.wav",
+      "displayName": "RESAMPLED TEXTURES BASS"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 7,
+      "file": "bb_resampled-textures_p07.wav",
+      "displayName": "RESAMPLED TEXTURES PERC A"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 8,
+      "file": "bb_resampled-textures_p08.wav",
+      "displayName": "RESAMPLED TEXTURES PERC B"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 9,
+      "file": "bb_resampled-textures_p09.wav",
+      "displayName": "RESAMPLED TEXTURES LOW TOM"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 10,
+      "file": "bb_resampled-textures_p10.wav",
+      "displayName": "RESAMPLED TEXTURES HIGH TOM"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 11,
+      "file": "bb_dark-experimental_p11.wav",
+      "displayName": "RESAMPLED TEXTURES AIR CYMBAL"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 12,
+      "file": "bb_resampled-textures_p12.wav",
+      "displayName": "RESAMPLED TEXTURES SHAKER"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 13,
+      "file": "bb_resampled-textures_p13.wav",
+      "displayName": "RESAMPLED TEXTURES TAMB"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 14,
+      "file": "bb_dark-experimental_p14.wav",
+      "displayName": "RESAMPLED TEXTURES PALM TOM"
+    },
+    {
+      "kitID": "resampled-textures",
+      "pad": 15,
+      "file": "bb_resampled-textures_p15.wav",
+      "displayName": "RESAMPLED TEXTURES FX"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 0,
+      "file": "bb_cole-world_p00.wav",
+      "displayName": "SHAKERS KICK"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 1,
+      "file": "bb_shakers_p01.wav",
+      "displayName": "SHAKERS SNARE"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 2,
+      "file": "bb_shakers_p02.wav",
+      "displayName": "SHAKERS CLAP"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 3,
+      "file": "bb_shakers_p03.wav",
+      "displayName": "SHAKERS RIM"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 4,
+      "file": "bb_shakers_p04.wav",
+      "displayName": "SHAKERS HAT"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 5,
+      "file": "bb_shakers_p05.wav",
+      "displayName": "SHAKERS OPEN HAT"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 6,
+      "file": "bb_80s-pop_p06.wav",
+      "displayName": "SHAKERS BASS"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 7,
+      "file": "bb_shakers_p07.wav",
+      "displayName": "SHAKERS PERC A"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 8,
+      "file": "bb_shakers_p08.wav",
+      "displayName": "SHAKERS PERC B"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 9,
+      "file": "bb_cole-world_p09.wav",
+      "displayName": "SHAKERS LOW TOM"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 10,
+      "file": "bb_cole-world_p10.wav",
+      "displayName": "SHAKERS HIGH TOM"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 11,
+      "file": "bb_2000s-rnb_p11.wav",
+      "displayName": "SHAKERS AIR CYMBAL"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 12,
+      "file": "bb_modern-rnb_p12.wav",
+      "displayName": "SHAKERS SHAKER"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 13,
+      "file": "bb_modern-rnb_p13.wav",
+      "displayName": "SHAKERS TAMB"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "SHAKERS PALM TOM"
+    },
+    {
+      "kitID": "shakers",
+      "pad": 15,
+      "file": "bb_modern-rnb_p15.wav",
+      "displayName": "SHAKERS FX"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 0,
+      "file": "bb_drum-mastery_p00.wav",
+      "displayName": "SIX SIDE KICK"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 1,
+      "file": "bb_drum-mastery_p01.wav",
+      "displayName": "SIX SIDE SNARE"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 2,
+      "file": "bb_drum-mastery_p02.wav",
+      "displayName": "SIX SIDE CLAP"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 3,
+      "file": "bb_drum-mastery_p03.wav",
+      "displayName": "SIX SIDE RIM"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 4,
+      "file": "bb_drum-mastery_p04.wav",
+      "displayName": "SIX SIDE HAT"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 5,
+      "file": "bb_drum-mastery_p05.wav",
+      "displayName": "SIX SIDE OPEN HAT"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 6,
+      "file": "bb_drum-mastery_p06.wav",
+      "displayName": "SIX SIDE BASS"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 7,
+      "file": "bb_drum-mastery_p07.wav",
+      "displayName": "SIX SIDE PERC A"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 8,
+      "file": "bb_drum-mastery_p08.wav",
+      "displayName": "SIX SIDE PERC B"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 9,
+      "file": "bb_drum-mastery_p09.wav",
+      "displayName": "SIX SIDE LOW TOM"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 10,
+      "file": "bb_drum-mastery_p10.wav",
+      "displayName": "SIX SIDE HIGH TOM"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 11,
+      "file": "bb_atl-trap_p11.wav",
+      "displayName": "SIX SIDE AIR CYMBAL"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 12,
+      "file": "bb_drum-mastery_p12.wav",
+      "displayName": "SIX SIDE SHAKER"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 13,
+      "file": "bb_drum-mastery_p13.wav",
+      "displayName": "SIX SIDE TAMB"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 14,
+      "file": "bb_atl-trap_p14.wav",
+      "displayName": "SIX SIDE PALM TOM"
+    },
+    {
+      "kitID": "six-side",
+      "pad": 15,
+      "file": "bb_drum-mastery_p15.wav",
+      "displayName": "SIX SIDE FX"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 0,
+      "file": "bb_modern-trap_p00.wav",
+      "displayName": "TORONTO WEIRD KICK"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 1,
+      "file": "bb_modern-trap_p01.wav",
+      "displayName": "TORONTO WEIRD SNARE"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 2,
+      "file": "bb_modern-trap_p02.wav",
+      "displayName": "TORONTO WEIRD CLAP"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 3,
+      "file": "bb_modern-trap_p03.wav",
+      "displayName": "TORONTO WEIRD RIM"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 4,
+      "file": "bb_modern-trap_p04.wav",
+      "displayName": "TORONTO WEIRD HAT"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 5,
+      "file": "bb_modern-trap_p05.wav",
+      "displayName": "TORONTO WEIRD OPEN HAT"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 6,
+      "file": "bb_atl-trap_p06.wav",
+      "displayName": "TORONTO WEIRD BASS"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 7,
+      "file": "bb_modern-trap_p07.wav",
+      "displayName": "TORONTO WEIRD PERC A"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 8,
+      "file": "bb_modern-trap_p08.wav",
+      "displayName": "TORONTO WEIRD PERC B"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 9,
+      "file": "bb_modern-trap_p09.wav",
+      "displayName": "TORONTO WEIRD LOW TOM"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 10,
+      "file": "bb_atl-trap_p10.wav",
+      "displayName": "TORONTO WEIRD HIGH TOM"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 11,
+      "file": "bb_atl-trap_p11.wav",
+      "displayName": "TORONTO WEIRD AIR CYMBAL"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 12,
+      "file": "bb_modern-trap_p12.wav",
+      "displayName": "TORONTO WEIRD SHAKER"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 13,
+      "file": "bb_modern-trap_p13.wav",
+      "displayName": "TORONTO WEIRD TAMB"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 14,
+      "file": "bb_atl-trap_p14.wav",
+      "displayName": "TORONTO WEIRD PALM TOM"
+    },
+    {
+      "kitID": "toronto-weird",
+      "pad": 15,
+      "file": "bb_modern-trap_p15.wav",
+      "displayName": "TORONTO WEIRD FX"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 0,
+      "file": "bb_amapiano_p00.wav",
+      "displayName": "TRAP SOUL KICK"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 1,
+      "file": "bb_trap-soul_p01.wav",
+      "displayName": "TRAP SOUL SNARE"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 2,
+      "file": "bb_trap-soul_p02.wav",
+      "displayName": "TRAP SOUL CLAP"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 3,
+      "file": "bb_trap-soul_p03.wav",
+      "displayName": "TRAP SOUL RIM"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 4,
+      "file": "bb_trap-soul_p04.wav",
+      "displayName": "TRAP SOUL HAT"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 5,
+      "file": "bb_trap-soul_p05.wav",
+      "displayName": "TRAP SOUL OPEN HAT"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 6,
+      "file": "bb_live-pop_p06.wav",
+      "displayName": "TRAP SOUL BASS"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 7,
+      "file": "bb_trap-soul_p07.wav",
+      "displayName": "TRAP SOUL PERC A"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 8,
+      "file": "bb_trap-soul_p08.wav",
+      "displayName": "TRAP SOUL PERC B"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 9,
+      "file": "bb_amapiano_p09.wav",
+      "displayName": "TRAP SOUL LOW TOM"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 10,
+      "file": "bb_80s-pop_p10.wav",
+      "displayName": "TRAP SOUL HIGH TOM"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 11,
+      "file": "bb_2000s-rnb_p11.wav",
+      "displayName": "TRAP SOUL AIR CYMBAL"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 12,
+      "file": "bb_trap-soul_p12.wav",
+      "displayName": "TRAP SOUL SHAKER"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 13,
+      "file": "bb_trap-soul_p13.wav",
+      "displayName": "TRAP SOUL TAMB"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "TRAP SOUL PALM TOM"
+    },
+    {
+      "kitID": "trap-soul",
+      "pad": 15,
+      "file": "bb_trap-soul_p15.wav",
+      "displayName": "TRAP SOUL FX"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 0,
+      "file": "bb_80s-pop_p00.wav",
+      "displayName": "VINTAGE RNB KICK"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 1,
+      "file": "bb_vintage-rnb_p01.wav",
+      "displayName": "VINTAGE RNB SNARE"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 2,
+      "file": "bb_vintage-rnb_p02.wav",
+      "displayName": "VINTAGE RNB CLAP"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 3,
+      "file": "bb_vintage-rnb_p03.wav",
+      "displayName": "VINTAGE RNB RIM"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 4,
+      "file": "bb_vintage-rnb_p04.wav",
+      "displayName": "VINTAGE RNB HAT"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 5,
+      "file": "bb_vintage-rnb_p05.wav",
+      "displayName": "VINTAGE RNB OPEN HAT"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 6,
+      "file": "bb_cole-world_p06.wav",
+      "displayName": "VINTAGE RNB BASS"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 7,
+      "file": "bb_vintage-rnb_p07.wav",
+      "displayName": "VINTAGE RNB PERC A"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 8,
+      "file": "bb_vintage-rnb_p08.wav",
+      "displayName": "VINTAGE RNB PERC B"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 9,
+      "file": "bb_80s-pop_p09.wav",
+      "displayName": "VINTAGE RNB LOW TOM"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 10,
+      "file": "bb_80s-pop_p10.wav",
+      "displayName": "VINTAGE RNB HIGH TOM"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 11,
+      "file": "bb_cole-world_p11.wav",
+      "displayName": "VINTAGE RNB AIR CYMBAL"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 12,
+      "file": "bb_vintage-rnb_p12.wav",
+      "displayName": "VINTAGE RNB SHAKER"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 13,
+      "file": "bb_vintage-rnb_p13.wav",
+      "displayName": "VINTAGE RNB TAMB"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "VINTAGE RNB PALM TOM"
+    },
+    {
+      "kitID": "vintage-rnb",
+      "pad": 15,
+      "file": "bb_vintage-rnb_p15.wav",
+      "displayName": "VINTAGE RNB FX"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 0,
+      "file": "bb_loose-break_p00.wav",
+      "displayName": "WEST 90S KICK"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 1,
+      "file": "bb_loose-break_p01.wav",
+      "displayName": "WEST 90S SNARE"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 2,
+      "file": "bb_loose-break_p02.wav",
+      "displayName": "WEST 90S CLAP"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 3,
+      "file": "bb_loose-break_p03.wav",
+      "displayName": "WEST 90S RIM"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 4,
+      "file": "bb_loose-break_p04.wav",
+      "displayName": "WEST 90S HAT"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 5,
+      "file": "bb_loose-break_p05.wav",
+      "displayName": "WEST 90S OPEN HAT"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 6,
+      "file": "bb_west-90s_p06.wav",
+      "displayName": "WEST 90S BASS"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 7,
+      "file": "bb_loose-break_p07.wav",
+      "displayName": "WEST 90S PERC A"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 8,
+      "file": "bb_loose-break_p08.wav",
+      "displayName": "WEST 90S PERC B"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 9,
+      "file": "bb_loose-break_p09.wav",
+      "displayName": "WEST 90S LOW TOM"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 10,
+      "file": "bb_loose-break_p10.wav",
+      "displayName": "WEST 90S HIGH TOM"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 11,
+      "file": "bb_boom-bap_p11.wav",
+      "displayName": "WEST 90S AIR CYMBAL"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 12,
+      "file": "bb_loose-break_p12.wav",
+      "displayName": "WEST 90S SHAKER"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 13,
+      "file": "bb_loose-break_p13.wav",
+      "displayName": "WEST 90S TAMB"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 14,
+      "file": "bb_boom-bap_p14.wav",
+      "displayName": "WEST 90S PALM TOM"
+    },
+    {
+      "kitID": "west-90s",
+      "pad": 15,
+      "file": "bb_loose-break_p15.wav",
+      "displayName": "WEST 90S FX"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 0,
+      "file": "bb_cole-world_p00.wav",
+      "displayName": "WEST BOUNCE KICK"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 1,
+      "file": "bb_modern-rnb_p01.wav",
+      "displayName": "WEST BOUNCE SNARE"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 2,
+      "file": "bb_modern-rnb_p02.wav",
+      "displayName": "WEST BOUNCE CLAP"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 3,
+      "file": "bb_modern-rnb_p03.wav",
+      "displayName": "WEST BOUNCE RIM"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 4,
+      "file": "bb_modern-rnb_p04.wav",
+      "displayName": "WEST BOUNCE HAT"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 5,
+      "file": "bb_modern-rnb_p05.wav",
+      "displayName": "WEST BOUNCE OPEN HAT"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 6,
+      "file": "bb_2000s-rnb_p06.wav",
+      "displayName": "WEST BOUNCE BASS"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 7,
+      "file": "bb_modern-rnb_p07.wav",
+      "displayName": "WEST BOUNCE PERC A"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 8,
+      "file": "bb_modern-rnb_p08.wav",
+      "displayName": "WEST BOUNCE PERC B"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 9,
+      "file": "bb_cole-world_p09.wav",
+      "displayName": "WEST BOUNCE LOW TOM"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 10,
+      "file": "bb_cole-world_p10.wav",
+      "displayName": "WEST BOUNCE HIGH TOM"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 11,
+      "file": "bb_2000s-rnb_p11.wav",
+      "displayName": "WEST BOUNCE AIR CYMBAL"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 12,
+      "file": "bb_modern-rnb_p12.wav",
+      "displayName": "WEST BOUNCE SHAKER"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 13,
+      "file": "bb_modern-rnb_p13.wav",
+      "displayName": "WEST BOUNCE TAMB"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "WEST BOUNCE PALM TOM"
+    },
+    {
+      "kitID": "west-bounce",
+      "pad": 15,
+      "file": "bb_modern-rnb_p15.wav",
+      "displayName": "WEST BOUNCE FX"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 0,
+      "file": "bb_loose-break_p00.wav",
+      "displayName": "WEST END KICK"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 1,
+      "file": "bb_loose-break_p01.wav",
+      "displayName": "WEST END SNARE"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 2,
+      "file": "bb_loose-break_p02.wav",
+      "displayName": "WEST END CLAP"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 3,
+      "file": "bb_loose-break_p03.wav",
+      "displayName": "WEST END RIM"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 4,
+      "file": "bb_loose-break_p04.wav",
+      "displayName": "WEST END HAT"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 5,
+      "file": "bb_loose-break_p05.wav",
+      "displayName": "WEST END OPEN HAT"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 6,
+      "file": "bb_west-90s_p06.wav",
+      "displayName": "WEST END BASS"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 7,
+      "file": "bb_loose-break_p07.wav",
+      "displayName": "WEST END PERC A"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 8,
+      "file": "bb_loose-break_p08.wav",
+      "displayName": "WEST END PERC B"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 9,
+      "file": "bb_loose-break_p09.wav",
+      "displayName": "WEST END LOW TOM"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 10,
+      "file": "bb_loose-break_p10.wav",
+      "displayName": "WEST END HIGH TOM"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 11,
+      "file": "bb_boom-bap_p11.wav",
+      "displayName": "WEST END AIR CYMBAL"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 12,
+      "file": "bb_loose-break_p12.wav",
+      "displayName": "WEST END SHAKER"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 13,
+      "file": "bb_loose-break_p13.wav",
+      "displayName": "WEST END TAMB"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 14,
+      "file": "bb_boom-bap_p14.wav",
+      "displayName": "WEST END PALM TOM"
+    },
+    {
+      "kitID": "west-end",
+      "pad": 15,
+      "file": "bb_loose-break_p15.wav",
+      "displayName": "WEST END FX"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 0,
+      "file": "bb_2000s-rnb_p00.wav",
+      "displayName": "WORLD LATIN KICK"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 1,
+      "file": "bb_world-latin_p01.wav",
+      "displayName": "WORLD LATIN SNARE"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 2,
+      "file": "bb_world-latin_p02.wav",
+      "displayName": "WORLD LATIN CLAP"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 3,
+      "file": "bb_world-latin_p03.wav",
+      "displayName": "WORLD LATIN RIM"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 4,
+      "file": "bb_world-latin_p04.wav",
+      "displayName": "WORLD LATIN HAT"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 5,
+      "file": "bb_world-latin_p05.wav",
+      "displayName": "WORLD LATIN OPEN HAT"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 6,
+      "file": "bb_80s-pop_p06.wav",
+      "displayName": "WORLD LATIN BASS"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 7,
+      "file": "bb_world-latin_p07.wav",
+      "displayName": "WORLD LATIN PERC A"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 8,
+      "file": "bb_world-latin_p08.wav",
+      "displayName": "WORLD LATIN PERC B"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 9,
+      "file": "bb_2000s-rnb_p09.wav",
+      "displayName": "WORLD LATIN LOW TOM"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 10,
+      "file": "bb_2000s-rnb_p10.wav",
+      "displayName": "WORLD LATIN HIGH TOM"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 11,
+      "file": "bb_2000s-rnb_p11.wav",
+      "displayName": "WORLD LATIN AIR CYMBAL"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 12,
+      "file": "bb_2000s-rnb_p12.wav",
+      "displayName": "WORLD LATIN SHAKER"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 13,
+      "file": "bb_2000s-rnb_p13.wav",
+      "displayName": "WORLD LATIN TAMB"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 14,
+      "file": "bb_2000s-rnb_p14.wav",
+      "displayName": "WORLD LATIN PALM TOM"
+    },
+    {
+      "kitID": "world-latin",
+      "pad": 15,
+      "file": "bb_2000s-rnb_p15.wav",
+      "displayName": "WORLD LATIN FX"
+    }
+  ]
+}

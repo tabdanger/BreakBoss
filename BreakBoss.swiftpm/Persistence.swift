@@ -3,12 +3,12 @@ import Foundation
 
 // MARK: - Folders
 //
-// In the app these are in Files › On My iPad › BreakBoss:
+// In the app these are in Files › On My iPhone/iPad › BreakBoss:
 //   Samples   your own sounds (anything you put here shows up in the pad editor)
 //   Kits      saved kits (.bbkit)
 //   Presets   saved presets (.bbpreset)
 //   Exports   rendered MIDI, mixes and stems
-// The plug-in has its own private copy of these folders (iPadOS keeps plug-ins separate).
+// The plug-in has its own private copy of these folders (iOS keeps plug-ins separate).
 
 enum KnockFolders {
     static var documents: URL {
@@ -62,6 +62,51 @@ struct KnockState: Codable, Equatable {
     /// Loops you edited or imported (nil = the generated one).
     var editedLoops: [PatternData?] = Array(repeating: nil, count: Pad.count)
     var presetName: String = "INIT"
+
+    static func normalizedPads(_ source: [PadSettings]) -> [PadSettings] {
+        var pads = Array(source.prefix(Pad.count))
+        while pads.count < Pad.count { pads.append(PadSettings()) }
+        for i in pads.indices {
+            pads[i].level = pads[i].level.isFinite ? pads[i].level.clamped(0, 1) : 0.8
+            pads[i].pan = pads[i].pan.isFinite ? pads[i].pan.clamped(-1, 1) : 0
+            pads[i].tune = pads[i].tune.isFinite ? pads[i].tune.clamped(-24, 24) : 0
+            pads[i].decay = pads[i].decay.isFinite ? pads[i].decay.clamped(0.05, 1) : 1
+            if let file = pads[i].sampleFile,
+               file.hasPrefix("/") || file.split(separator: "/").contains("..") { pads[i].sampleFile = nil }
+        }
+        return pads
+    }
+
+    func normalized() -> KnockState {
+        var s = self
+        s.version = 2
+        s.bpm = s.bpm.isFinite ? s.bpm.clamped(40, 240) : 140
+        s.pads = Self.normalizedPads(s.pads)
+        s.editedLoops = Array(s.editedLoops.prefix(Pad.count))
+        while s.editedLoops.count < Pad.count { s.editedLoops.append(nil) }
+        for i in s.editedLoops.indices {
+            guard var loop = s.editedLoops[i] else { continue }
+            loop.lengthTicks = loop.lengthTicks.clamped(384, 3072)
+            loop.events = Array(loop.events.prefix(4096)).filter {
+                $0.pad >= 0 && Int($0.pad) < Pad.count && $0.tick >= 0 && $0.tick < loop.lengthTicks &&
+                $0.velocity.isFinite && $0.semis.isFinite
+            }
+            for j in loop.events.indices {
+                loop.events[j].velocity = loop.events[j].velocity.clamped(0, 1)
+                loop.events[j].semis = loop.events[j].semis.clamped(-12, 24)
+                loop.events[j].length = loop.events[j].length.clamped(0, 3072)
+            }
+            loop.sort(); s.editedLoops[i] = loop
+        }
+        for p in KParam.allCases {
+            let value = s.values[p.id] ?? p.defaultValue
+            let finite = value.isFinite ? value : p.defaultValue
+            s.values[p.id] = p.steps.map { finite.rounded().clamped(0, Float($0 - 1)) } ?? finite.clamped(0, 1)
+        }
+        s.mode = SoundMode(rawValue: Int(s.values[KParam.soundMode.id] ?? 0)) ?? .modern
+        s.playMode = (s.values[KParam.playMode.id] ?? 1) > 0.5 ? .loop : .oneShot
+        return s
+    }
 }
 
 /// A saved kit: which factory kit it started from, its sound variation, and your pads.

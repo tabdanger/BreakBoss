@@ -17,10 +17,10 @@ struct ScopeView: View {
             let now = context.date
             ZStack(alignment: .topLeading) {
                 Canvas { ctx, size in
-                    let scope = controller.engine.master.scope
+                    let scope = controller.meters.scope
                     let n = MasterBus.scopeSize
                     let count = 300
-                    let end = controller.engine.master.scopeWrite
+                    let end = controller.meters.scopeWrite
                     var path = Path()
                     let mid = size.height / 2
                     for i in 0..<count {
@@ -61,7 +61,7 @@ struct ScopeView: View {
     }
 
     private var statusLine: some View {
-        let e = controller.engine
+        let e = controller.meters
         let playing = e.status[0] > 0.5
         let loop = Int(e.status[1])
         let queued = Int(e.status[2])
@@ -92,6 +92,7 @@ struct PadView: View {
     let pad: Int
     let rect: [Double]
     let scale: CGFloat
+    var holdToPlay = false
     let openEditor: (Bool) -> Void
 
     @State private var pressed = false
@@ -107,12 +108,12 @@ struct PadView: View {
     var body: some View {
         let r = FaceplateLayout.rect(rect)
         TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
-            let hits = controller.engine.padHits[pad]
+            let hits = controller.meters.padHits[pad]
             let now = context.date
             let flash = flashAmount(hits: hits, now: now)
             let loopMode = controller.playMode == .loop
-            let current = Int(controller.engine.status[1]) == pad && controller.engine.status[0] > 0.5
-            let queued = Int(controller.engine.status[2]) == pad
+            let current = Int(controller.meters.status[1]) == pad && controller.meters.status[0] > 0.5
+            let queued = Int(controller.meters.status[2]) == pad
             let blink = queued && Int(now.timeIntervalSinceReferenceDate * 4) % 2 == 0
             ZStack {
                 Rectangle().fill(Color.black.opacity(pressed ? 0.12 : 0))
@@ -135,13 +136,21 @@ struct PadView: View {
                     guard !pressed else { return }
                     pressed = true
                     let y = Float(g.startLocation.y / max(1, r.height * scale))
-                    controller.padDown(pad, velocity: 0.55 + 0.45 * y.clamped(0, 1))
-                    let work = DispatchWorkItem { if pressed { openEditor(controller.playMode == .loop) } }
+                    let velocity = 0.55 + 0.45 * y.clamped(0, 1)
+                    if holdToPlay { controller.gateDown(pad, velocity: velocity) }
+                    else { controller.padDown(pad, velocity: velocity) }
+                    let work = DispatchWorkItem {
+                        if pressed {
+                            if holdToPlay { controller.gateUp(pad) }
+                            openEditor(controller.playMode == .loop)
+                        }
+                    }
                     hold = work
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: work)
                 }
                 .onEnded { _ in
                     pressed = false
+                    if holdToPlay { controller.gateUp(pad) }
                     hold?.cancel()
                     hold = nil
                 }
@@ -151,6 +160,11 @@ struct PadView: View {
         }
         .position(x: r.midX * scale, y: r.midY * scale)
         .accessibilityLabel("Pad \(pad + 1)")
+        .onDisappear {
+            hold?.cancel()
+            if pressed && holdToPlay { controller.gateUp(pad) }
+            pressed = false
+        }
     }
 
     private func flashAmount(hits: UInt32, now: Date) -> Float {
@@ -185,7 +199,7 @@ struct PadView: View {
         for type in [UTType.midi, UTType.audio] where provider.hasItemConformingToTypeIdentifier(type.identifier) {
             provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { url, _ in
                 guard let url else { return }
-                let copy = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+                let copy = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "-" + url.lastPathComponent)
                 try? FileManager.default.removeItem(at: copy)
                 if (try? FileManager.default.copyItem(at: url, to: copy)) != nil { use(copy) }
             }
