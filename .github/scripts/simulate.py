@@ -53,12 +53,12 @@ def expected_layout_names(family):
             for mode in ("modern", "vintage", "texture") for play in ("loop", "oneshot")}
 
 
-def missing_layout_names(family, cache):
+def missing_layout_names(family, cache, started=None):
     expected_size = {"iphone": (590, 1280), "ipad": (1448, 1086)}[family]
     missing = []
     for name in sorted(expected_layout_names(family)):
         path = cache / name if cache else None
-        if not path or not path.is_file():
+        if not path or not path.is_file() or (started is not None and path.stat().st_mtime < started):
             missing.append(name)
             continue
         with path.open("rb") as file:
@@ -97,17 +97,75 @@ def verify_bundle(app):
     print("::notice title=Universal app::App and AUv3 support iPhone and iPad", flush=True)
 
 
+def local_data_container(udid, bundle_id):
+    # The standard runner device set contains the installer's identifier metadata. Reading
+    # it avoids a cold CoreSimulator/containermanagerd RPC blocking app launch altogether.
+    containers = Path.home() / "Library/Developer/CoreSimulator/Devices" / udid / "data/Containers/Data/Application"
+    for metadata in containers.glob("*/.com.apple.mobile_container_manager.metadata.plist"):
+        try:
+            with metadata.open("rb") as file:
+                info = plistlib.load(file)
+            if info.get("MCMMetadataIdentifier") == bundle_id:
+                return metadata.parent
+        except (OSError, ValueError, plistlib.InvalidFileException):
+            continue
+    return None
+
+
 def data_container(udid, bundle_id):
-    result = simctl("get_app_container", udid, bundle_id, "data", check=False,
-                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=30)
-    return Path(result.stdout.strip()) if result.returncode == 0 and result.stdout.strip() else None
+    local = local_data_container(udid, bundle_id)
+    if local:
+        return local
+    try:
+        result = simctl("get_app_container", udid, bundle_id, "data", check=False,
+                        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=5)
+        return Path(result.stdout.strip()) if result.returncode == 0 and result.stdout.strip() else None
+    except subprocess.TimeoutExpired:
+        # Container creation/indexing can lag behind installation on the first boot. The
+        # console still reports the result, and subsequent polls retry finding PNGs/cache logs.
+        return None
 
 
-def combined_log(console, data):
+def capture_diagnostics(family, udid, output, started):
+    predicate = 'process == "BreakBoss" OR ((process == "SpringBoard" OR process == "runningboardd" OR process == "containermanagerd") AND eventMessage CONTAINS[c] "com.tabdanger.BreakBoss")'
+    path = output / f"simulator-diagnostics-{family}.log"
+    try:
+        result = simctl("spawn", udid, "log", "show", "--style", "compact", "--last", "10m",
+                        "--predicate", predicate, check=False, timeout=20,
+                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        path.write_text(result.stdout)
+        print(f"::group::{family} startup diagnostics (last 40 lines)", flush=True)
+        print("\n".join(result.stdout.splitlines()[-40:]) or "No matching system log entries.", flush=True)
+        print("::endgroup::", flush=True)
+    except subprocess.TimeoutExpired:
+        path.write_text("Simulator system-log query timed out after 20 seconds.\n")
+    reports = output / "crash-reports"
+    reports.mkdir(exist_ok=True)
+    roots = [Path.home() / "Library/Logs/DiagnosticReports",
+             Path.home() / "Library/Developer/CoreSimulator/Devices" / udid / "data/Library/Logs"]
+    candidates = []
+    for root in roots:
+        if root.is_dir():
+            candidates.extend(p for p in root.rglob("*.ips")
+                              if ("BreakBoss" in p.name or "JetsamEvent" in p.name) and p.stat().st_mtime >= started)
+    for source in sorted(candidates, key=lambda p: p.stat().st_mtime, reverse=True)[:3]:
+        shutil.copy2(source, reports / f"{family}-{source.name}")
+        try:
+            raw = source.read_text(errors="replace")
+            # Apple .ips files have a metadata JSON line followed by the report JSON.
+            header, _, body = raw.partition("\n")
+            report = json.loads(body or header)
+            summary = {key: report.get(key) for key in ("procName", "exception", "termination", "faultingThread", "asi")}
+            print(f"{family} crash summary: {json.dumps(summary, ensure_ascii=True)[:6000]}", flush=True)
+        except (ValueError, OSError):
+            print(f"{family} crash report retained: {source.name}", flush=True)
+
+
+def combined_log(console, data, started=None):
     text = console.read_text(errors="replace") if console.exists() else ""
     if data:
         cached = data / "Library" / "Caches" / "BreakBoss-selftest.log"
-        if cached.exists():
+        if cached.exists() and (started is None or cached.stat().st_mtime >= started):
             text += "\n" + cached.read_text(errors="replace")
     return text
 
@@ -115,15 +173,6 @@ def combined_log(console, data):
 def run_device(family, device, app, bundle_id, output, timeout):
     udid = device["udid"]
     print(f"::notice title=Simulator::{family}: {device['name']}", flush=True)
-    simctl("boot", udid, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    simctl("bootstatus", udid, "-b")
-    simctl("install", udid, str(app))
-    # A clean install/data container prevents prior successful self-test logs from masking a crash.
-    data = data_container(udid, bundle_id)
-    if data:
-        for old in (data / "Library" / "Caches").glob("layout-*.png"):
-            old.unlink()
-        (data / "Library" / "Caches" / "BreakBoss-selftest.log").unlink(missing_ok=True)
     console = output / f"console-{family}.log"
     selftest = output / f"selftest-{family}.log"
     environment = dict(os.environ, SIMCTL_CHILD_BREAKBOSS_SELFTEST="1",
@@ -133,15 +182,31 @@ def run_device(family, device, app, bundle_id, output, timeout):
     launch = None
     state = None
     failure = None
+    data = None
+    installed = False
+    started = time.time()
+    launch_started = started
     try:
+        simctl("boot", udid, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        simctl("bootstatus", udid, "-b")
+        simctl("install", udid, str(app))
+        installed = True
+        # Read existing cache files locally when available. Do not issue a container-manager
+        # RPC before launch: it stalled first-boot iPhone startup on the hosted Mac runner.
+        data = local_data_container(udid, bundle_id)
+        if data:
+            for old in (data / "Library" / "Caches").glob("layout-*.png"):
+                old.unlink()
+            (data / "Library" / "Caches" / "BreakBoss-selftest.log").unlink(missing_ok=True)
         with console.open("w") as file:
+            launch_started = time.time()
             launch = subprocess.Popen(
                 ["xcrun", "simctl", "launch", "--console-pty", "--terminate-running-process", udid, bundle_id],
                 stdout=file, stderr=subprocess.STDOUT, env=environment)
             deadline = time.monotonic() + timeout
             while time.monotonic() < deadline:
                 data = data or data_container(udid, bundle_id)
-                text = combined_log(console, data)
+                text = combined_log(console, data, launch_started)
                 selftest.write_text(text)
                 state = result_state(text)
                 if state:
@@ -156,7 +221,8 @@ def run_device(family, device, app, bundle_id, output, timeout):
                 deadline = time.monotonic() + 30
                 missing = sorted(expected_layout_names(family))
                 while time.monotonic() < deadline:
-                    missing = missing_layout_names(family, data / "Library" / "Caches" if data else None)
+                    data = data or data_container(udid, bundle_id)
+                    missing = missing_layout_names(family, data / "Library" / "Caches" if data else None, launch_started)
                     if not missing:
                         break
                     time.sleep(1)
@@ -169,22 +235,28 @@ def run_device(family, device, app, bundle_id, output, timeout):
             elif failure is None:
                 failure = f"{family} app produced no self-test result within {timeout} seconds"
     finally:
+        if state != "passed" or failure:
+            try:
+                capture_diagnostics(family, udid, output, started)
+            except (OSError, subprocess.SubprocessError) as error:
+                print(f"::warning title=Simulator diagnostics::{family}: {error}", flush=True)
         if data:
             for source in (data / "Library" / "Caches").glob("layout-*.png"):
-                if source.name in expected_layout_names(family):
+                if source.name in expected_layout_names(family) and source.stat().st_mtime >= launch_started:
                     shutil.copy2(source, shots / f"{source.stem}-{family}{source.suffix}")
         # This is the actual displayed app inside the simulated device, including its safe area,
         # home-indicator inset and the device's screen proportions; ImageRenderer PNGs are separate.
         screenshot = shots / f"simulator-{family}.png"
-        try:
-            result = simctl("io", udid, "screenshot", str(screenshot), check=False, timeout=30)
-            if result.returncode != 0 or not screenshot.is_file():
-                failure = failure or f"{family} actual simulator screenshot could not be captured"
-        except subprocess.TimeoutExpired:
-            failure = failure or f"{family} simulator screenshot timed out after 30 seconds"
+        if installed:
+            try:
+                result = simctl("io", udid, "screenshot", str(screenshot), check=False, timeout=30)
+                if result.returncode != 0 or not screenshot.is_file():
+                    failure = failure or f"{family} actual simulator screenshot could not be captured"
+            except subprocess.TimeoutExpired:
+                failure = failure or f"{family} simulator screenshot timed out after 30 seconds"
         # Copy a bounded tail to job stdout so result counts, phase timings and failures remain
         # inspectable through the GitHub logs connector even when artifact downloads are unavailable.
-        text = combined_log(console, data)
+        text = combined_log(console, data, launch_started)
         selftest.write_text(text)
         print(f"::group::{family} self-test log (last 40 lines)", flush=True)
         print("\n".join(text.splitlines()[-40:]) or "No self-test output was captured.", flush=True)
@@ -201,7 +273,7 @@ def run_device(family, device, app, bundle_id, output, timeout):
             except subprocess.TimeoutExpired:
                 launch.kill()
         if data:
-            selftest.write_text(combined_log(console, data))
+            selftest.write_text(combined_log(console, data, launch_started))
         # Shut down between families to reduce simulator memory/CPU use on the runner.
         try:
             simctl("shutdown", udid, check=False, stdout=subprocess.PIPE,

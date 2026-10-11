@@ -132,5 +132,8 @@ jobs:
             ${{ runner.temp }}/selftest.log
             ${{ runner.temp }}/selftest-*.log
             ${{ runner.temp }}/console-*.log
+            ${{ runner.temp }}/simulator-diagnostics-*.log
+            ${{ runner.temp }}/crash-reports/*.ips
           retention-days: 14
           if-no-files-found: ignore
+

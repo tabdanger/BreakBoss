@@ -2,7 +2,11 @@
 """Read-only release-helper checks; never contact Apple or boot simulators."""
 import importlib.util
 import os
+import io
+import contextlib
+import plistlib
 import struct
+import subprocess
 import tempfile
 from pathlib import Path
 import unittest
@@ -74,6 +78,75 @@ class BuildNumberTests(unittest.TestCase):
 
 
 class SimulatorTests(unittest.TestCase):
+    def test_container_timeout_is_retryable(self):
+        with patch.object(simulate, "local_data_container", return_value=None), \
+             patch.object(simulate, "simctl", side_effect=subprocess.TimeoutExpired("simctl", 5)) as command:
+            self.assertIsNone(simulate.data_container("phone", "com.tabdanger.BreakBoss"))
+            self.assertEqual(command.call_args.kwargs["timeout"], 5)
+
+    def test_local_identifier_metadata_resolves_without_a_simctl_rpc(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            container = root / "Library/Developer/CoreSimulator/Devices/phone/data/Containers/Data/Application/example"
+            container.mkdir(parents=True)
+            with (container / ".com.apple.mobile_container_manager.metadata.plist").open("wb") as file:
+                plistlib.dump({"MCMMetadataIdentifier": "com.tabdanger.BreakBoss"}, file)
+            with patch.object(Path, "home", return_value=root), patch.object(simulate, "simctl") as command:
+                self.assertEqual(simulate.data_container("phone", "com.tabdanger.BreakBoss"), container)
+                command.assert_not_called()
+
+    def test_stale_success_log_and_pngs_do_not_count_for_a_new_launch(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            cache = root / "Library/Caches"
+            cache.mkdir(parents=True)
+            console = root / "console.log"
+            console.write_text("")
+            old = cache / "BreakBoss-selftest.log"
+            old.write_text("self-test passed")
+            os.utime(old, (100, 100))
+            self.assertNotIn("self-test passed", simulate.combined_log(console, root, started=101))
+            for name in simulate.expected_layout_names("iphone"):
+                path = cache / name
+                path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", 590, 1280)
+                                 + b"\0\0\0\0IEND\xaeB`\x82")
+                os.utime(path, (100, 100))
+            self.assertEqual(len(simulate.missing_layout_names("iphone", cache, started=101)), 6)
+
+    def test_launch_precedes_rpc_and_survives_its_first_timeout(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder)
+            cache = output / "container"
+            (cache / "Library/Caches").mkdir(parents=True)
+            events = []
+            class Process:
+                ended = False
+                def poll(self): return 0 if self.ended else None
+                def terminate(self): self.ended = True
+                def wait(self, **kwargs): return 0
+            def launch(*args, **kwargs):
+                events.append("launch")
+                return Process()
+            def command(*args, **kwargs):
+                events.append(args[0])
+                if args[0] == "get_app_container":
+                    if events.count("get_app_container") == 1:
+                        raise subprocess.TimeoutExpired("simctl", 5)
+                    return subprocess.CompletedProcess(args, 0, stdout=str(cache))
+                if args[0] == "io":
+                    Path(args[-1]).write_bytes(b"screen")
+                return subprocess.CompletedProcess(args, 0, stdout="")
+            with patch.object(simulate, "local_data_container", return_value=None), \
+                 patch.object(simulate, "simctl", side_effect=command), \
+                 patch.object(simulate.subprocess, "Popen", side_effect=launch), \
+                 patch.object(simulate, "combined_log", return_value="self-test passed"), \
+                 patch.object(simulate, "missing_layout_names", return_value=[]), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                simulate.run_device("iphone", {"udid": "phone", "name": "iPhone"}, output / "app", "com.tabdanger.BreakBoss", output, 240)
+            self.assertLess(events.index("launch"), events.index("get_app_container"))
+            self.assertEqual(events.count("get_app_container"), 2)
+            self.assertIn("shutdown", events)
+
     def test_layouts_require_the_actual_family_and_all_six_combinations(self):
         with tempfile.TemporaryDirectory() as folder:
             cache = Path(folder)
