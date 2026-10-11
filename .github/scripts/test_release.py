@@ -78,7 +78,8 @@ class SimulatorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             cache = Path(folder)
             def write(name, width, height):
-                (cache / name).write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", width, height))
+                (cache / name).write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", width, height)
+                                          + b"\0\0\0\0IEND\xaeB`\x82")
             for name in simulate.expected_layout_names("ipad"):
                 write(name, 1448, 1086)
             self.assertEqual(simulate.missing_layout_names("ipad", cache), [])

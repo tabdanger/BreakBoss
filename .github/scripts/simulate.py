@@ -63,9 +63,14 @@ def missing_layout_names(family, cache):
             continue
         with path.open("rb") as file:
             header = file.read(24)
+            if path.stat().st_size >= 12:
+                file.seek(-12, 2)
+            trailer = file.read(12)
         if len(header) < 24 or header[:8] != b"\x89PNG\r\n\x1a\n" or header[12:16] != b"IHDR":
             missing.append(name)
         elif struct.unpack(">II", header[16:24]) != expected_size:
+            missing.append(name)
+        elif trailer != b"\0\0\0\0IEND\xaeB`\x82":
             missing.append(name)
     return missing
 
@@ -171,10 +176,24 @@ def run_device(family, device, app, bundle_id, output, timeout):
         # This is the actual displayed app inside the simulated device, including its safe area,
         # home-indicator inset and the device's screen proportions; ImageRenderer PNGs are separate.
         screenshot = shots / f"simulator-{family}.png"
-        result = simctl("io", udid, "screenshot", str(screenshot), check=False)
-        if result.returncode != 0 or not screenshot.is_file():
-            failure = failure or f"{family} actual simulator screenshot could not be captured"
-        simctl("terminate", udid, bundle_id, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            result = simctl("io", udid, "screenshot", str(screenshot), check=False, timeout=30)
+            if result.returncode != 0 or not screenshot.is_file():
+                failure = failure or f"{family} actual simulator screenshot could not be captured"
+        except subprocess.TimeoutExpired:
+            failure = failure or f"{family} simulator screenshot timed out after 30 seconds"
+        # Copy a bounded tail to job stdout so result counts, phase timings and failures remain
+        # inspectable through the GitHub logs connector even when artifact downloads are unavailable.
+        text = combined_log(console, data)
+        selftest.write_text(text)
+        print(f"::group::{family} self-test log (last 40 lines)", flush=True)
+        print("\n".join(text.splitlines()[-40:]) or "No self-test output was captured.", flush=True)
+        print("::endgroup::", flush=True)
+        try:
+            simctl("terminate", udid, bundle_id, check=False, stdout=subprocess.PIPE,
+                   stderr=subprocess.PIPE, timeout=30)
+        except subprocess.TimeoutExpired:
+            print(f"::warning title=Simulator cleanup::{family} termination timed out", flush=True)
         if launch and launch.poll() is None:
             launch.terminate()
             try:
@@ -184,7 +203,11 @@ def run_device(family, device, app, bundle_id, output, timeout):
         if data:
             selftest.write_text(combined_log(console, data))
         # Shut down between families to reduce simulator memory/CPU use on the runner.
-        simctl("shutdown", udid, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            simctl("shutdown", udid, check=False, stdout=subprocess.PIPE,
+                   stderr=subprocess.PIPE, timeout=30)
+        except subprocess.TimeoutExpired:
+            print(f"::warning title=Simulator cleanup::{family} shutdown timed out", flush=True)
     if failure:
         raise RuntimeError(failure)
 

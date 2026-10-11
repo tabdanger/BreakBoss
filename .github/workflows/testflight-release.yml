@@ -1,0 +1,25 @@
+# Creating or updating this dedicated branch explicitly starts one verified TestFlight update.
+# Reuse the existing bundle IDs, signing secrets and internal tester groups.
+name: Verify and upload BreakBoss to TestFlight
+
+on:
+  push:
+    branches: [codex/breakboss-testflight-upload]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: breakboss-testflight-release
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/build.yml
+  upload:
+    needs: verify
+    uses: ./.github/workflows/upload.yml
+    with:
+      mode: upload
+    secrets: inherit

@@ -3,7 +3,7 @@
 #
 # 1. A Release compile of the Swift Playgrounds package, exactly as on the iPad.
 # 2. The same app plus the AUv3 plug-in, built from the Xcode project (xcode/).
-# 3. A Debug build runs on iPhone and iPad simulators. Each must pass the actual app self-test
+# 3. An optimized Release build runs on iPhone and iPad simulators. Each must pass the actual app self-test
 #    and draw the faceplates. Logs and screenshots are retained as downloadable artifacts.
 # Signing and uploading to App Store Connect / TestFlight are in upload.yml.
 name: Build BreakBoss
@@ -90,14 +90,14 @@ jobs:
           python3 .github/scripts/simulate.py --verify-bundle "$APP"
           echo "::notice title=AUv3::$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionAttributes:AudioComponents:0:name' "$APP/PlugIns/BreakBossAU.appex/Info.plist")"
 
-      - name: Build for iPhone and iPad simulators (Debug)
+      - name: Build for iPhone and iPad simulators (optimized Release)
         if: always()
         run: |
           xcodebuild \
             -project xcode/BreakBoss.xcodeproj \
             -scheme BreakBoss \
             -destination 'generic/platform=iOS Simulator' \
-            -configuration Debug \
+            -configuration Release \
             -derivedDataPath "$RUNNER_TEMP/dd-sim" \
             MARKETING_VERSION="$MARKETING_VERSION" CURRENT_PROJECT_VERSION="$CURRENT_PROJECT_VERSION" \
             CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \

@@ -17,18 +17,19 @@ enum KnockSelfTest {
         failures = []
         lines = []
         let started = Date()
-        checkKits()
-        checkGrooves()
-        checkSmallBuffersAndVoiceStealing()
-        checkHostMIDIAndAutomation()
-        checkModesAndClipper()
-        checkTempoSync()
-        checkHostTransport()
-        checkSilence()
-        checkFiles()
-        checkHeldLoops()
-        checkMigration()
-        checkTextureControls()
+        phase("checkKits", checkKits)
+        phase("checkStockSamples", checkStockSamples)
+        phase("checkGrooves", checkGrooves)
+        phase("checkSmallBuffersAndVoiceStealing", checkSmallBuffersAndVoiceStealing)
+        phase("checkHostMIDIAndAutomation", checkHostMIDIAndAutomation)
+        phase("checkModesAndClipper", checkModesAndClipper)
+        phase("checkTempoSync", checkTempoSync)
+        phase("checkHostTransport", checkHostTransport)
+        phase("checkSilence", checkSilence)
+        phase("checkFiles", checkFiles)
+        phase("checkHeldLoops", checkHeldLoops)
+        phase("checkMigration", checkMigration)
+        phase("checkTextureControls", checkTextureControls)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -36,6 +37,17 @@ enum KnockSelfTest {
             for f in failures { log("BreakBoss SELF-TEST FAILED: \(f)") }
         }
         return failures.isEmpty
+    }
+
+    /// Persist progress before entering each phase so simulator timeouts distinguish a slow
+    /// stage from a crash. The normal app never calls this optional self-test entry point.
+    private static func phase(_ name: String, _ work: () -> Void) {
+        log("BreakBoss self-test phase START: \(name)")
+        let started = Date()
+        let previousChecks = lines.count
+        work()
+        let seconds = Date().timeIntervalSince(started)
+        log("BreakBoss self-test phase END: \(name) (\(lines.count - previousChecks) checks, \(String(format: "%.2f", seconds)) s)")
     }
 
     private static func check(_ ok: Bool, _ what: String) {
@@ -82,6 +94,55 @@ enum KnockSelfTest {
             let b = DrumSynth.render(v, sampleRate: 44_100, seed: 3)
             check(b.length > 100, "varied \(r.label) renders")
         }
+    }
+
+    /// Validate the shipped audio through the same AVAudioFile decoder as the normal kit
+    /// loader. This optional off-callback suite retains URLs only, and releases each decoded
+    /// buffer before opening the next file instead of keeping the whole sound bank in RAM.
+    static func checkStockSamples() {
+        #if canImport(AVFoundation)
+        let manifestExists = knockResourceURL("manifest", "json") != nil
+        check(manifestExists, "stock audio manifest is bundled")
+        guard manifestExists else { return }
+        let library = StockSampleLibrary.bundled
+        check(library.failure == nil, "stock audio manifest loads: \(library.failure ?? "OK")")
+        guard library.failure == nil else { return }
+
+        var urls = Set<URL>()
+        var assignments = 0
+        for kit in KitLibrary.factory {
+            for pad in Pad.allCases {
+                let sample = library.sample(kitID: kit.id, pad: pad.rawValue)
+                check(sample != nil, "\(kit.name) pad \(pad.rawValue + 1) has bundled stock audio")
+                if let sample {
+                    assignments += 1
+                    urls.insert(sample.url)
+                }
+            }
+        }
+        check(assignments == 544, "stock audio covers all 544 factory pad assignments")
+        check(urls.count == 308, "stock audio contains 308 distinct assigned WAV files")
+        for url in urls.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            autoreleasepool {
+                do {
+                    let buffer = try SampleLoader.load(url)
+                    check(abs(buffer.sampleRate - 48_000) < 1, "\(url.lastPathComponent): decodes at 48 kHz")
+                    check(buffer.length > 0 && buffer.seconds <= 4, "\(url.lastPathComponent): bounded stock duration")
+                    var peak: Float = 0
+                    var finite = true
+                    for frame in 0..<buffer.length {
+                        let left = buffer.left[frame], right = buffer.right[frame]
+                        if !left.isFinite || !right.isFinite { finite = false; break }
+                        peak = max(peak, max(abs(left), abs(right)))
+                    }
+                    check(finite, "\(url.lastPathComponent): decoded stereo audio is finite")
+                    check(peak > 0.005 && peak <= 1.000_01, "\(url.lastPathComponent): decoded stock audio is audible and bounded")
+                } catch {
+                    check(false, "\(url.lastPathComponent): stock audio decodes (\(error.localizedDescription))")
+                }
+            }
+        }
+        #endif
     }
 
     static func checkGrooves() {
