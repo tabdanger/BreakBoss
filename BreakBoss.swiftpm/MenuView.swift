@@ -55,19 +55,20 @@ struct MenuView: View {
                 }
 
                 Section {
-                    mapRow("C1 – B1  (36 – 47)", "Pads 1 – 12. In LOOP mode hold a MIDI note to play its loop; release to stop. Last-held note takes priority.")
-                    mapRow("85 – 88", "Pads / loops 13 – 16; keeps the original 808 note map compatible.")
-                    mapRow("C2 – C5  (48 – 84)", "The 808, chromatic. C3 (60) is the kit's tuning.")
+                    mapRow("36 – 51", "Pads 1 – 16, sequentially. ONE-SHOT plays a full strike regardless of note length. LOOP plays a rhythm while the key is held; release stops it. Last-held note takes priority.")
+                    mapRow("85 – 88", "Alternate notes for pads / loops 13 – 16 from older BreakBoss versions.")
+                    mapRow("52 – 84", "The 808, chromatic. Note 60 is the kit's tuning. Note numbers stay the same when a DAW uses different octave names.")
                     mapRow("MIDI clock", "TEMPO SYNC follows its tempo, FOLLOW DAW its start / stop.")
                 } header: { Text("MIDI") }
 
                 Section("How it works") {
                     guide("ONE-SHOT / LOOP", "ONE-SHOT: the pads play drums. LOOP: the pads play grooves made from the kit; a new pick starts on the next bar, tap the same pad again to stop at the end of the bar.")
-                    guide("MODERN / VINTAGE / TEXTURE", "Each mode is its own faceplate and sound. Vintage adds drive and boost. Texture adds a downsampled, unstable sound with a synced delay and gated reverb.")
+                    guide("MODERN / VINTAGE / TEXTURE", "Modern is clean and punchy. Vintage is home to soul, boom bap and break grooves, with tape drive, low-end warmth and a rolled-off top. Texture adds resampling, instability, synced delay and gated reverb. You can play any kit or imported acoustic sample in every mode.")
+                    guide("KITS / PRESETS", "KITS changes the raw pad sounds while keeping your current processing controls. Factory PRESETS loads a matching kit, mode, effect settings, clipper and per-pad tuning, decay and filters. Save your complete settings with SAVE.")
                     guide("DICE", "LOOP: new grooves in the kit's style. ONE-SHOT: new variations of the kit's sounds.")
                     guide("KNOBS", "Drag up or right to turn up. Double-tap to reset.")
                     guide("BPM", "Drag up or down on the display. Double-tap for the kit's tempo. With TEMPO SYNC on, the DAW or MIDI clock sets it.")
-                    guide("HOLD A PAD", "ONE-SHOT: pad editor (level, pan, tune, decay, reverse, your sample). LOOP: step editor for that loop, or drop in a MIDI file.")
+                    guide("HOLD A PAD", "ONE-SHOT: pad editor (level, pan, tune, decay, filter, reverse, your sample). LOOP: step editor for that loop, or drop in a MIDI file.")
                     guide("EXPORT", "The arrow button renders MIDI, a stereo mix and stems you can drag into a DAW or share.")
                 }
 

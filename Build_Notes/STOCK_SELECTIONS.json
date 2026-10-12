@@ -1294,24 +1294,28 @@
     {
       "kitID": "funk-break",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Waves - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "FUNK BREAK KICK",
-      "tuneSemitones": 0.75,
-      "tailSeconds": 0.28,
-      "lowpassHz": 6500,
-      "drive": 0.08,
-      "peak": 0.8
+      "tuneSemitones": 0.25,
+      "tailSeconds": 0.24,
+      "lowpassHz": 6800,
+      "drive": 0.03,
+      "peak": 0.8,
+      "startSeconds": 0,
+      "decaySeconds": 0.27
     },
     {
       "kitID": "funk-break",
       "pad": 1,
-      "source": "10-Snares/Snares/[Snare] Lunar - (@prod.by.iiinfinite).wav",
+      "source": "10-Snares/Snares/[Snare] Gravity - (@prod.by.iiinfinite).wav",
       "name": "FUNK BREAK SNARE",
-      "tuneSemitones": 0.75,
-      "tailSeconds": 0.25,
-      "lowpassHz": 11500,
-      "drive": 0.08,
-      "peak": 0.74
+      "tuneSemitones": 0.25,
+      "tailSeconds": 0.18,
+      "lowpassHz": 12500,
+      "drive": 0.025,
+      "peak": 0.74,
+      "startSeconds": 0,
+      "decaySeconds": 0.24
     },
     {
       "kitID": "funk-break",
@@ -1329,11 +1333,12 @@
       "pad": 3,
       "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "FUNK BREAK RIM",
-      "tuneSemitones": 0.75,
-      "tailSeconds": 0.16,
-      "lowpassHz": 11500,
-      "drive": 0.032,
-      "peak": 0.6
+      "tuneSemitones": 0.25,
+      "tailSeconds": 0.105,
+      "lowpassHz": 12000,
+      "drive": 0.012,
+      "peak": 0.6,
+      "startSeconds": 0
     },
     {
       "kitID": "funk-break",
@@ -1478,24 +1483,28 @@
     {
       "kitID": "loose-break",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Astronomy - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "LOOSE BREAK KICK",
-      "tuneSemitones": -0.75,
-      "tailSeconds": 0.28,
+      "tuneSemitones": 0.0,
+      "tailSeconds": 0.24,
       "lowpassHz": 6500,
-      "drive": 0.08,
-      "peak": 0.8
+      "drive": 0.022,
+      "peak": 0.8,
+      "startSeconds": 0,
+      "decaySeconds": 0.28
     },
     {
       "kitID": "loose-break",
       "pad": 1,
       "source": "10-Snares/Snares/[Snare] Agency - (@prod.by.iiinfinite).wav",
       "name": "LOOSE BREAK SNARE",
-      "tuneSemitones": -0.75,
-      "tailSeconds": 0.25,
-      "lowpassHz": 11500,
-      "drive": 0.08,
-      "peak": 0.74
+      "tuneSemitones": 0.0,
+      "tailSeconds": 0.2,
+      "lowpassHz": 12000,
+      "drive": 0.02,
+      "peak": 0.74,
+      "startSeconds": 0,
+      "decaySeconds": 0.27
     },
     {
       "kitID": "loose-break",
@@ -1511,13 +1520,14 @@
     {
       "kitID": "loose-break",
       "pad": 3,
-      "source": "1-Rims/Rims/[Rim] Laws - (@prod.by.iiinfinite).wav",
+      "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "LOOSE BREAK RIM",
-      "tuneSemitones": -0.75,
-      "tailSeconds": 0.16,
-      "lowpassHz": 11500,
-      "drive": 0.032,
-      "peak": 0.6
+      "tuneSemitones": 0.0,
+      "tailSeconds": 0.105,
+      "lowpassHz": 11000,
+      "drive": 0.008,
+      "peak": 0.6,
+      "startSeconds": 0
     },
     {
       "kitID": "loose-break",
@@ -2761,24 +2771,28 @@
     {
       "kitID": "boom-bap",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Waves - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "BOOM BAP KICK",
-      "tuneSemitones": 0.75,
-      "tailSeconds": 0.28,
-      "lowpassHz": 6500,
-      "drive": 0.08,
-      "peak": 0.8
+      "tuneSemitones": -0.5,
+      "tailSeconds": 0.24,
+      "lowpassHz": 5500,
+      "drive": 0.06,
+      "peak": 0.8,
+      "startSeconds": 0,
+      "decaySeconds": 0.22
     },
     {
       "kitID": "boom-bap",
       "pad": 1,
-      "source": "10-Snares/Snares/[Snare] Lunar - (@prod.by.iiinfinite).wav",
+      "source": "10-Snares/Snares/[Snare] Gravity - (@prod.by.iiinfinite).wav",
       "name": "BOOM BAP SNARE",
-      "tuneSemitones": 0.75,
-      "tailSeconds": 0.25,
-      "lowpassHz": 11500,
-      "drive": 0.08,
-      "peak": 0.74
+      "tuneSemitones": -0.35,
+      "tailSeconds": 0.18,
+      "lowpassHz": 10500,
+      "drive": 0.06,
+      "peak": 0.74,
+      "startSeconds": 0,
+      "decaySeconds": 0.2
     },
     {
       "kitID": "boom-bap",
@@ -2796,11 +2810,12 @@
       "pad": 3,
       "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "BOOM BAP RIM",
-      "tuneSemitones": 0.75,
-      "tailSeconds": 0.16,
-      "lowpassHz": 11500,
-      "drive": 0.032,
-      "peak": 0.6
+      "tuneSemitones": -0.5,
+      "tailSeconds": 0.105,
+      "lowpassHz": 10000,
+      "drive": 0.025,
+      "peak": 0.6,
+      "startSeconds": 0
     },
     {
       "kitID": "boom-bap",
@@ -3503,25 +3518,28 @@
     {
       "kitID": "vintage-rnb",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Waves - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "VINTAGE RNB KICK",
-      "tuneSemitones": 0.75,
-      "tailSeconds": 0.28,
-      "lowpassHz": 6500,
-      "drive": 0.01,
-      "peak": 0.8
+      "tuneSemitones": -0.5,
+      "tailSeconds": 0.24,
+      "lowpassHz": 6000,
+      "drive": 0.02,
+      "peak": 0.8,
+      "startSeconds": 0,
+      "decaySeconds": 0.26
     },
     {
       "kitID": "vintage-rnb",
       "pad": 1,
-      "source": "10-Snares/Snares/[Snare] Lunar - (@prod.by.iiinfinite).wav",
+      "source": "10-Snares/Snares/[Snare] Agency - (@prod.by.iiinfinite).wav",
       "name": "VINTAGE RNB SNARE",
-      "tuneSemitones": 0.75,
-      "tailSeconds": 0.25,
-      "lowpassHz": 10500,
-      "drive": 0.01,
+      "tuneSemitones": -0.75,
+      "tailSeconds": 0.2,
+      "lowpassHz": 10000,
+      "drive": 0.02,
       "peak": 0.74,
-      "decaySeconds": 0.2
+      "decaySeconds": 0.22,
+      "startSeconds": 0
     },
     {
       "kitID": "vintage-rnb",
@@ -3538,13 +3556,14 @@
     {
       "kitID": "vintage-rnb",
       "pad": 3,
-      "source": "5-Snaps/Snaps/[Snap] Flights - (@prod.by.iiinfinite).wav",
+      "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "VINTAGE RNB RIM",
-      "tuneSemitones": 0.75,
-      "tailSeconds": 0.16,
+      "tuneSemitones": -0.5,
+      "tailSeconds": 0.105,
       "lowpassHz": 10500,
-      "drive": 0.004,
-      "peak": 0.6
+      "drive": 0.008,
+      "peak": 0.6,
+      "startSeconds": 0
     },
     {
       "kitID": "vintage-rnb",
@@ -3877,26 +3896,28 @@
     {
       "kitID": "dirty-soul",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Mechanics - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "DIRTY SOUL KICK",
-      "tuneSemitones": -0.25,
-      "tailSeconds": 0.28,
-      "lowpassHz": 6500,
-      "drive": 0.12,
+      "tuneSemitones": -0.75,
+      "tailSeconds": 0.23,
+      "lowpassHz": 5000,
+      "drive": 0.085,
       "peak": 0.8,
-      "decaySeconds": 0.2
+      "decaySeconds": 0.18,
+      "startSeconds": 0
     },
     {
       "kitID": "dirty-soul",
       "pad": 1,
       "source": "10-Snares/Snares/[Snare] Gravity - (@prod.by.iiinfinite).wav",
       "name": "DIRTY SOUL SNARE",
-      "tuneSemitones": -0.25,
-      "tailSeconds": 0.25,
-      "lowpassHz": 6500,
-      "drive": 0.12,
+      "tuneSemitones": -0.75,
+      "tailSeconds": 0.18,
+      "lowpassHz": 7500,
+      "drive": 0.08,
       "peak": 0.74,
-      "decaySeconds": 0.2
+      "decaySeconds": 0.15,
+      "startSeconds": 0
     },
     {
       "kitID": "dirty-soul",
@@ -3913,14 +3934,14 @@
     {
       "kitID": "dirty-soul",
       "pad": 3,
-      "source": "5-Snaps/Snaps/[Snap] Elevate - (@prod.by.iiinfinite).wav",
+      "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "DIRTY SOUL RIM",
-      "tuneSemitones": -0.25,
-      "tailSeconds": 0.16,
-      "lowpassHz": 6500,
-      "drive": 0.048,
+      "tuneSemitones": -0.75,
+      "tailSeconds": 0.105,
+      "lowpassHz": 8000,
+      "drive": 0.032,
       "peak": 0.6,
-      "decaySeconds": 0.2
+      "startSeconds": 0
     },
     {
       "kitID": "dirty-soul",
@@ -4074,23 +4095,26 @@
       "pad": 0,
       "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "LIVE SOUL KICK",
-      "tuneSemitones": 0.25,
-      "tailSeconds": 0.28,
+      "tuneSemitones": -0.25,
+      "tailSeconds": 0.24,
       "lowpassHz": 6500,
-      "drive": 0.01,
-      "peak": 0.8
+      "drive": 0.015,
+      "peak": 0.8,
+      "startSeconds": 0,
+      "decaySeconds": 0.26
     },
     {
       "kitID": "live-soul",
       "pad": 1,
-      "source": "10-Snares/Snares/[Snare] Cryo - (@prod.by.iiinfinite).wav",
+      "source": "10-Snares/Snares/[Snare] Agency - (@prod.by.iiinfinite).wav",
       "name": "LIVE SOUL SNARE",
-      "tuneSemitones": 0.25,
-      "tailSeconds": 0.25,
-      "lowpassHz": 10500,
-      "drive": 0.01,
+      "tuneSemitones": -0.4,
+      "tailSeconds": 0.2,
+      "lowpassHz": 11000,
+      "drive": 0.012,
       "peak": 0.74,
-      "decaySeconds": 0.2
+      "decaySeconds": 0.24,
+      "startSeconds": 0
     },
     {
       "kitID": "live-soul",
@@ -4107,13 +4131,14 @@
     {
       "kitID": "live-soul",
       "pad": 3,
-      "source": "5-Snaps/Snaps/[Snap] Galactic - (@prod.by.iiinfinite).wav",
+      "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "LIVE SOUL RIM",
-      "tuneSemitones": 0.25,
-      "tailSeconds": 0.16,
-      "lowpassHz": 10500,
+      "tuneSemitones": -0.25,
+      "tailSeconds": 0.105,
+      "lowpassHz": 11500,
       "drive": 0.004,
-      "peak": 0.6
+      "peak": 0.6,
+      "startSeconds": 0
     },
     {
       "kitID": "live-soul",

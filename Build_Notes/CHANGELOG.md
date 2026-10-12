@@ -1,3 +1,7 @@
+# 0.3.2
+
+61 authored kit-linked factory presets with complete pad/FX snapshots; independent kit auditioning; per-pad filters; sequential 36–51 MIDI pads with full One-Shot tails; six leading Vintage kit categories and 18 offline body/rim refinements; clean photographic phone knob caps. Stock bank now has 318 WAVs for all 544 slots. Tutorial-specific loops await accessible rhythm evidence from the four supplied videos.
+
 # 0.3.1 (universal)
 
 - Added supplied iPhone faceplates and adaptive phone editors/menu/performance controls.

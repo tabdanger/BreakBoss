@@ -1,10 +1,10 @@
-# BreakBoss 0.3.1 · Build 4
+# BreakBoss 0.3.2 · Build 9
 
 Universal iPhone and iPad app for iOS 16 and later. The existing Xcode pipeline also builds its AUv3 extension.
 
 ## Open
 
-The app-only download `BreakBoss-v0.3.1.swiftpm.zip` contains `Package.swift` directly at the ZIP root. Unzip it in Files, open the resulting `BreakBoss-v0.3.1.swiftpm` in Swift Playgrounds on iPad, and press Run. Keep your previous project as a backup. If opening the older archive, open its inner `BreakBoss.swiftpm` folder; its outer folder contains documentation and is not the app. Install the compiled universal app through the existing TestFlight app on iPhone or iPad.
+The app-only download `BreakBoss-v0.3.2.swiftpm.zip` contains `Package.swift` directly at the ZIP root. Unzip it in Files, open the resulting `BreakBoss-v0.3.2.swiftpm` in Swift Playgrounds on iPad, and press Run. Keep your previous project as a backup. If opening the older archive, open its inner `BreakBoss.swiftpm` folder; its outer folder contains documentation and is not the app. Install the compiled universal app through the existing TestFlight app on iPhone or iPad.
 
 ## Play
 
@@ -20,15 +20,19 @@ The app-only download `BreakBoss-v0.3.1.swiftpm.zip` contains `Package.swift` di
 
 | MIDI notes | Meaning |
 | --- | --- |
-| 36–47 | Pads / loops 1–12 |
-| 85–88 | Pads / loops 13–16 |
-| 48–84 | Chromatic 808; note 60 is the kit's bass tuning |
+| 36–51 | Pads / loops 1–16, sequentially |
+| 85–88 | Legacy alternate notes for pads / loops 13–16 |
+| 52–84 | Chromatic 808; note 60 is the kit's bass tuning |
 
-Configure the final four pads on a MIDI controller to send 85–88. This preserves earlier BreakBoss MIDI files and the existing chromatic bass range. MIDI clock controls tempo with TEMPO SYNC; FOLLOW DAW follows MIDI start/stop in the standalone app. Numbered notes are authoritative because octave naming differs between DAWs.
+Configure a MIDI pad controller to send 36–51. These are sequential pad assignments. Legacy pad notes 85–88 remain supported. Notes 48–51 now play pads 13–16; old bass MIDI in that range needs transposition or editing. MIDI bass export clamps to 52–84 to avoid overlapping those pads. One-Shot note length never truncates a strike; velocity and per-pad decay still shape it. MIDI clock controls tempo with TEMPO SYNC; FOLLOW DAW follows MIDI start/stop in the standalone app. Numbered notes are authoritative because octave naming differs between DAWs.
 
 ## Sounds and effects
 
-KITS contains 34 kits covering Atlanta/Memphis/Toronto Trap, Neo Soul, Boom Bap, Lo-fi, R&B, 80s/90s Pop, Amapiano, and world/experimental percussion. All 544 factory pad slots use processed audio from the uploaded Multiverse folders. The bank uses 42 selected source hits with tuning, shorter envelopes, tone filtering, restrained saturation, and faded edges. Each 808 is calibrated to the kit's bass tuning. The Amapiano bass is a short, pitched sample derivative with a log-drum-like envelope. Palm percussion and air cymbals are sample derivatives; the bank does not claim acoustic instrument recordings or measured hardware emulations.
+KITS groups 34 kits by their primary Modern, Vintage or Texture home, covering Atlanta/Memphis/Toronto Trap, Neo Soul, Boom Bap, Lo-fi, R&B, 80s/90s Pop, Amapiano, and world/experimental percussion. All 544 factory pad slots use processed audio from the uploaded Multiverse folders. The bank uses 42 selected source hits with tuning, shorter envelopes, tone filtering, restrained saturation, and faded edges. Each 808 is calibrated to the kit's bass tuning. The Amapiano bass is a short, pitched sample derivative with a log-drum-like envelope. Palm percussion and air cymbals are sample derivatives; the bank does not claim acoustic instrument recordings or measured hardware emulations.
+
+Vintage is the primary browser home for Boom Bap, 70s Soul, Vintage R&B, dusty soul and live-feel break patterns. Any kit or imported acoustic WAV can run through any mode. The uploaded bank does not establish microphone-recorded acoustic drums, recorded live breaks, or real ride/crash cymbals; those need suitable source recordings.
+
+PRESETS contains 61 authored factory snapshots: 20 Modern, 21 Vintage and 20 Texture. Each loads a matching kit and restores mode, FX, clipper and all 16 pad tuning, decay, filter, level and pan controls. Choosing a kit alone keeps the current global and per-pad processing controls while replacing the raw sample identities. INIT resets processing and pad controls while retaining your loaded samples.
 
 The uploaded samples identify @prod.by.iiinfinite. Source archive entries, original/processed hashes, and exact processing settings are recorded in `Build_Notes/STOCK_SAMPLE_PROVENANCE.json`. The synthesis engine remains available only as a recovery path for unavailable audio. Imported pad audio takes priority over the bundled bank.
 

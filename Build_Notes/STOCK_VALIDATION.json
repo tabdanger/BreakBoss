@@ -4,10 +4,10 @@
   "factoryKitCount": 34,
   "padCount": 16,
   "assignmentCount": 544,
-  "uniqueWavCount": 308,
-  "totalWavBytes": 13593118,
+  "uniqueWavCount": 318,
+  "totalWavBytes": 14004926,
   "perKitDecodedBudgetMiB": 32,
-  "maxKitDecodedMiB": 1.789,
+  "maxKitDecodedMiB": 1.831,
   "allFactoryKitsAssigned": true,
   "allFactoryPadsAssigned": true,
   "bassRootProvenanceCount": 34,
@@ -288,78 +288,78 @@
       "relativeSpectralPeak": 1.0
     }
   },
-  "provenanceSHA256": "2a9738aaaef3735f5506c45fff8b471d40ee797d0837f07d8ee9b578aba65a72",
+  "provenanceSHA256": "b2359b14de10839bc8dd9ea3c84a41ed3c3977b8dbdc40200f3a97913c6c53d4",
   "assignmentsPerKit": {
-    "resampled-textures": 16,
-    "modern-rnb": 16,
-    "90s-pop": 16,
-    "six-side": 16,
-    "shakers": 16,
-    "2000s-rnb": 16,
-    "dirty-soul": 16,
-    "drum-mastery": 16,
-    "boom-bap": 16,
-    "vintage-rnb": 16,
-    "live-soul": 16,
-    "perc-loops": 16,
-    "world-latin": 16,
-    "live-pop": 16,
-    "afrobeats": 16,
-    "heavy-break": 16,
-    "trap-soul": 16,
-    "west-90s": 16,
-    "atl-trap": 16,
-    "80s-pop": 16,
-    "neo-soul": 16,
-    "bay-slap": 16,
-    "amapiano": 16,
-    "lo-fi": 16,
-    "dark-experimental": 16,
-    "funk-break": 16,
-    "modern-trap": 16,
-    "loose-break": 16,
-    "gospel-chops": 16,
-    "west-bounce": 16,
     "memphis-trap": 16,
+    "drum-mastery": 16,
+    "resampled-textures": 16,
+    "shakers": 16,
+    "heavy-break": 16,
+    "live-soul": 16,
+    "modern-trap": 16,
+    "dark-experimental": 16,
+    "six-side": 16,
+    "cole-world": 16,
+    "afrobeats": 16,
+    "boom-bap": 16,
+    "neo-soul": 16,
+    "90s-pop": 16,
+    "atl-trap": 16,
+    "modern-rnb": 16,
+    "dirty-soul": 16,
+    "lo-fi": 16,
+    "amapiano": 16,
+    "live-pop": 16,
     "toronto-weird": 16,
+    "west-bounce": 16,
+    "2000s-rnb": 16,
+    "world-latin": 16,
     "west-end": 16,
-    "cole-world": 16
+    "80s-pop": 16,
+    "bay-slap": 16,
+    "west-90s": 16,
+    "trap-soul": 16,
+    "perc-loops": 16,
+    "gospel-chops": 16,
+    "funk-break": 16,
+    "loose-break": 16,
+    "vintage-rnb": 16
   },
   "decodedBytesPerKit": {
-    "resampled-textures": 1736768,
-    "modern-rnb": 1506424,
-    "90s-pop": 1605872,
-    "six-side": 1684128,
-    "shakers": 1464608,
-    "2000s-rnb": 1607920,
-    "dirty-soul": 1552688,
-    "drum-mastery": 1684128,
-    "boom-bap": 1572304,
-    "vintage-rnb": 1875808,
-    "live-soul": 1676696,
-    "perc-loops": 1556808,
-    "world-latin": 1589832,
-    "live-pop": 1555496,
-    "afrobeats": 1556808,
-    "heavy-break": 1551984,
-    "trap-soul": 1556200,
-    "west-90s": 1602368,
-    "atl-trap": 1650784,
-    "80s-pop": 1575840,
-    "neo-soul": 1836552,
-    "bay-slap": 1650784,
-    "amapiano": 1294728,
-    "lo-fi": 1502896,
-    "dark-experimental": 1686384,
-    "funk-break": 1572304,
-    "modern-trap": 1632616,
-    "loose-break": 1602368,
-    "gospel-chops": 1676696,
-    "west-bounce": 1506424,
     "memphis-trap": 1563136,
+    "drum-mastery": 1684128,
+    "resampled-textures": 1736768,
+    "shakers": 1464608,
+    "heavy-break": 1551984,
+    "live-soul": 1715976,
+    "modern-trap": 1632616,
+    "dark-experimental": 1686384,
+    "six-side": 1684128,
+    "cole-world": 1772696,
+    "afrobeats": 1556808,
+    "boom-bap": 1621480,
+    "neo-soul": 1836552,
+    "90s-pop": 1605872,
+    "atl-trap": 1650784,
+    "modern-rnb": 1506424,
+    "dirty-soul": 1593080,
+    "lo-fi": 1502896,
+    "amapiano": 1294728,
+    "live-pop": 1555496,
     "toronto-weird": 1632616,
+    "west-bounce": 1506424,
+    "2000s-rnb": 1607920,
+    "world-latin": 1589832,
     "west-end": 1602368,
-    "cole-world": 1772696
+    "80s-pop": 1575840,
+    "bay-slap": 1650784,
+    "west-90s": 1602368,
+    "trap-soul": 1556200,
+    "perc-loops": 1556808,
+    "gospel-chops": 1676696,
+    "funk-break": 1616504,
+    "loose-break": 1644608,
+    "vintage-rnb": 1919640
   },
   "files": {
     "bb_2000s-rnb_p00.wav": {
@@ -1286,27 +1286,27 @@
       "decodedBytes": 519456,
       "sha256": "df7d918c12dd66d954f36e78ad94616ecea622a3a275e0310281c9f2e5135cf6"
     },
-    "bb_boom-bap_p00.wav": {
-      "frames": 6699,
-      "channels": 1,
+    "bb_vintage32-boom-bap_p00.wav": {
+      "frames": 11520,
+      "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.139563,
+      "durationSeconds": 0.24,
       "peak": 0.799988,
-      "rms": 0.59075,
-      "fileBytes": 13442,
-      "decodedBytes": 54648,
-      "sha256": "65d01bf10072abe8ed8fae6f709832c531138aa7a1b8f293cc96b2c692045fd9"
+      "rms": 0.243277,
+      "fileBytes": 46124,
+      "decodedBytes": 93216,
+      "sha256": "4b23c3d1bd37c358ca2d89b4b513972670a3599f5a95819798524e98fe9dc46f"
     },
-    "bb_boom-bap_p01.wav": {
-      "frames": 4368,
-      "channels": 1,
+    "bb_vintage32-boom-bap_p01.wav": {
+      "frames": 5391,
+      "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.091,
+      "durationSeconds": 0.112312,
       "peak": 0.73999,
-      "rms": 0.173119,
-      "fileBytes": 8780,
-      "decodedBytes": 36000,
-      "sha256": "e18b23ffa74496b5817b8e6ea80055bfb298d5676b22a092bbdef71ac856997c"
+      "rms": 0.167587,
+      "fileBytes": 21608,
+      "decodedBytes": 44184,
+      "sha256": "558ac3e87f1e8ac434ad324355d2c93af8825295ca6a3a2dfb69edf9692a4dde"
     },
     "bb_boom-bap_p02.wav": {
       "frames": 3945,
@@ -1319,16 +1319,16 @@
       "decodedBytes": 32616,
       "sha256": "64cc9332602a11f693efd0baeac0d118fd8d09bb5866cd86d0e71bcbf656c817"
     },
-    "bb_boom-bap_p03.wav": {
-      "frames": 4037,
+    "bb_vintage32-boom-bap_p03.wav": {
+      "frames": 4340,
       "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.084104,
+      "durationSeconds": 0.090417,
       "peak": 0.599976,
-      "rms": 0.132535,
-      "fileBytes": 16192,
-      "decodedBytes": 33352,
-      "sha256": "e68bf1ca25ba0462976c086b35f0f7c4beacf9760e02e994e21af2e60f2544aa"
+      "rms": 0.131558,
+      "fileBytes": 17404,
+      "decodedBytes": 35776,
+      "sha256": "8a7db4fb51231cfd7e125a94d2541243ca4f8c43232724d1a0d780d4017945b6"
     },
     "bb_boom-bap_p04.wav": {
       "frames": 1376,
@@ -1803,27 +1803,27 @@
       "decodedBytes": 93216,
       "sha256": "f673f4b51267fb9f75aee1446033248ba97368d18d09280cf8159fe75c3e8cf1"
     },
-    "bb_dirty-soul_p00.wav": {
-      "frames": 6939,
-      "channels": 1,
-      "rate": 48000,
-      "durationSeconds": 0.144563,
-      "peak": 0.799988,
-      "rms": 0.537428,
-      "fileBytes": 13922,
-      "decodedBytes": 56568,
-      "sha256": "b5e4449235b47dc9d3a6136d0dea0868ebd3d5f0e91145131bfb031c2b28b4f0"
-    },
-    "bb_dirty-soul_p01.wav": {
-      "frames": 5360,
+    "bb_vintage32-dirty-soul_p00.wav": {
+      "frames": 11040,
       "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.111667,
+      "durationSeconds": 0.23,
+      "peak": 0.799988,
+      "rms": 0.251728,
+      "fileBytes": 44204,
+      "decodedBytes": 89376,
+      "sha256": "f776bc5d7c7770933141aef415eea6b9ea7d2fdc2d7b23f279040fee12e4c54a"
+    },
+    "bb_vintage32-dirty-soul_p01.wav": {
+      "frames": 5517,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.114937,
       "peak": 0.73999,
-      "rms": 0.175857,
-      "fileBytes": 21484,
-      "decodedBytes": 43936,
-      "sha256": "7c01f4583171edd1787389c98b1498f4dbd51e2b2a90624359b6d28da3700b65"
+      "rms": 0.166692,
+      "fileBytes": 22112,
+      "decodedBytes": 45192,
+      "sha256": "b44a23204a4aab8537f8ec241937403d50c3b21339148ec347093f3d477db09a"
     },
     "bb_dirty-soul_p02.wav": {
       "frames": 6251,
@@ -1836,16 +1836,16 @@
       "decodedBytes": 51064,
       "sha256": "ed5472a2ce62b47782532def528f4c174d5e6efca48f7abc625e356519b8a723"
     },
-    "bb_dirty-soul_p03.wav": {
-      "frames": 3612,
+    "bb_vintage32-dirty-soul_p03.wav": {
+      "frames": 4403,
       "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.07525,
+      "durationSeconds": 0.091729,
       "peak": 0.599976,
-      "rms": 0.156545,
-      "fileBytes": 14492,
-      "decodedBytes": 29952,
-      "sha256": "68f136cb0386dafc4d09a8f7470eb4ee989be12a966ce6681610cd07804d4231"
+      "rms": 0.132977,
+      "fileBytes": 17656,
+      "decodedBytes": 36280,
+      "sha256": "9ff491eba06912fd420662f484484252945f65f043f325511a2335e364329799"
     },
     "bb_dirty-soul_p04.wav": {
       "frames": 2595,
@@ -2133,6 +2133,39 @@
       "decodedBytes": 40576,
       "sha256": "fe4a4aedf9bf80acefca8f776e218ce44b9ea1bd0aa18a63d3898cc271ac8480"
     },
+    "bb_vintage32-funk-break_p00.wav": {
+      "frames": 11265,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.234687,
+      "peak": 0.799988,
+      "rms": 0.238205,
+      "fileBytes": 45104,
+      "decodedBytes": 91176,
+      "sha256": "75a3494a8dfbc41e7b4b03b40e8d20f3bdb62599fcf1678cdf5f2989b8dd2eb5"
+    },
+    "bb_vintage32-funk-break_p01.wav": {
+      "frames": 5208,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.1085,
+      "peak": 0.73999,
+      "rms": 0.162584,
+      "fileBytes": 20876,
+      "decodedBytes": 42720,
+      "sha256": "ce3807011356ab36793983b0eebaf2ca73fdce2284c02968c6a807879ccf2654"
+    },
+    "bb_vintage32-funk-break_p03.wav": {
+      "frames": 4156,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.086583,
+      "peak": 0.599976,
+      "rms": 0.130663,
+      "fileBytes": 16668,
+      "decodedBytes": 34304,
+      "sha256": "4b2bce14d4aef4f5fd4210283a2cdf7917e2e057882c4c867d577aec2b6ad7d9"
+    },
     "bb_gospel-chops_p06.wav": {
       "frames": 64800,
       "channels": 2,
@@ -2408,6 +2441,39 @@
       "decodedBytes": 39448,
       "sha256": "9b1cd764646b9a8630e2c859eeeda4c596cec03fc230cc1c9ddd3afe0791ae2b"
     },
+    "bb_vintage32-live-soul_p00.wav": {
+      "frames": 11520,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.24,
+      "peak": 0.799988,
+      "rms": 0.234424,
+      "fileBytes": 46124,
+      "decodedBytes": 93216,
+      "sha256": "99fa45d5938a7ebd73fba0ade9d80b3e929784597ee54f879a2556964844a4ac"
+    },
+    "bb_vintage32-live-soul_p01.wav": {
+      "frames": 8199,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.170813,
+      "peak": 0.73999,
+      "rms": 0.132454,
+      "fileBytes": 32840,
+      "decodedBytes": 66648,
+      "sha256": "2d29c22a21a9a52e0b76b9f7abe0a7a951c362bbc10d3f4f608772e072d05fef"
+    },
+    "bb_vintage32-live-soul_p03.wav": {
+      "frames": 4278,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.089125,
+      "peak": 0.599976,
+      "rms": 0.128922,
+      "fileBytes": 17156,
+      "decodedBytes": 35280,
+      "sha256": "02dd4f90e3a93a1f2b33204e0bc71e9cb03d825e7b8b3724da00947fd3d8b89b"
+    },
     "bb_lo-fi_p00.wav": {
       "frames": 11265,
       "channels": 2,
@@ -2562,27 +2628,27 @@
       "decodedBytes": 93216,
       "sha256": "e28af153c2e76771c5c218019d7663848d21d86114ddbd60bea1b64d54c971aa"
     },
-    "bb_loose-break_p00.wav": {
-      "frames": 6098,
+    "bb_vintage32-loose-break_p00.wav": {
+      "frames": 11428,
       "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.127042,
+      "durationSeconds": 0.238083,
       "peak": 0.799988,
-      "rms": 0.567156,
-      "fileBytes": 24436,
-      "decodedBytes": 49840,
-      "sha256": "12a39e15123d8d26147e9d5ee1e61e019231ecd8c50f0b58659d0734cd0c4152"
+      "rms": 0.236597,
+      "fileBytes": 45756,
+      "decodedBytes": 92480,
+      "sha256": "d711810d9485b92e50f83e2d927a1da378a30d856d2f3bbd048a26ba34203231"
     },
-    "bb_loose-break_p01.wav": {
-      "frames": 8366,
+    "bb_vintage32-loose-break_p01.wav": {
+      "frames": 8011,
       "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.174292,
+      "durationSeconds": 0.166896,
       "peak": 0.73999,
-      "rms": 0.144761,
-      "fileBytes": 33508,
-      "decodedBytes": 67984,
-      "sha256": "2adc62a41219c660c92260001d49dd448710dc3ad729c8b6f11f9a915c5b06a9"
+      "rms": 0.130908,
+      "fileBytes": 32088,
+      "decodedBytes": 65144,
+      "sha256": "9e34624262dec0ca9f73d72d464cb21a2b543315f2abac2e5be3ecee43e3ad5f"
     },
     "bb_loose-break_p02.wav": {
       "frames": 4986,
@@ -2595,16 +2661,16 @@
       "decodedBytes": 40944,
       "sha256": "38f816877cc3ddf0b7a910e1902d5a1b4559bb1eebac9a672611bfc289dc2753"
     },
-    "bb_loose-break_p03.wav": {
-      "frames": 3911,
-      "channels": 1,
+    "bb_vintage32-loose-break_p03.wav": {
+      "frames": 4216,
+      "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.081479,
+      "durationSeconds": 0.087833,
       "peak": 0.599976,
-      "rms": 0.086928,
-      "fileBytes": 7866,
-      "decodedBytes": 32344,
-      "sha256": "0f08dec6eb5863a2593be8bb74f3e4b8246a4692038a549ff3a9cc036e2740a0"
+      "rms": 0.129373,
+      "fileBytes": 16908,
+      "decodedBytes": 34784,
+      "sha256": "fec6549f26a889e3c177f4257065218d992885cc65cd7a61de32f9a3400c2e15"
     },
     "bb_loose-break_p04.wav": {
       "frames": 2898,
@@ -3552,16 +3618,27 @@
       "decodedBytes": 39448,
       "sha256": "c3ee5e3cdb6a3946a6d3b6f3d3ac92c2a1b04a2290f0aa72671038961e41fd4b"
     },
-    "bb_vintage-rnb_p01.wav": {
-      "frames": 4368,
-      "channels": 1,
+    "bb_vintage32-vintage-rnb_p00.wav": {
+      "frames": 11520,
+      "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.091,
+      "durationSeconds": 0.24,
+      "peak": 0.799988,
+      "rms": 0.236931,
+      "fileBytes": 46124,
+      "decodedBytes": 93216,
+      "sha256": "0ec0b0bd35be2969248d85a09b1ac1bb36ef732fa4223fa1b697872aae93eed4"
+    },
+    "bb_vintage32-vintage-rnb_p01.wav": {
+      "frames": 8366,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.174292,
       "peak": 0.73999,
-      "rms": 0.159264,
-      "fileBytes": 8780,
-      "decodedBytes": 36000,
-      "sha256": "59b395f9cb8d6b03999eca30c8895b42b3375428a822694a29894162957c95bd"
+      "rms": 0.130196,
+      "fileBytes": 33508,
+      "decodedBytes": 67984,
+      "sha256": "dfd78346bb3065897db6a54be74028a722b8d5dc7ee142a07f053d4530e5faf3"
     },
     "bb_vintage-rnb_p02.wav": {
       "frames": 3945,
@@ -3574,16 +3651,16 @@
       "decodedBytes": 32616,
       "sha256": "69b3070e9bec3ff8ecf3e99ef2c7fe770b43a7180af3cf8c158c33dc03bd7871"
     },
-    "bb_vintage-rnb_p03.wav": {
-      "frames": 7680,
+    "bb_vintage32-vintage-rnb_p03.wav": {
+      "frames": 4340,
       "channels": 2,
       "rate": 48000,
-      "durationSeconds": 0.16,
+      "durationSeconds": 0.090417,
       "peak": 0.599976,
-      "rms": 0.104441,
-      "fileBytes": 30764,
-      "decodedBytes": 62496,
-      "sha256": "14bf55f4b20b15dcd47cf7ce54ff4de97cf200d19330ef538e1c28136520a2be"
+      "rms": 0.129478,
+      "fileBytes": 17404,
+      "decodedBytes": 35776,
+      "sha256": "94455ef2eb30c9d8116746c6434eaf46d4ccfc02953f563f6fce19fc23099337"
     },
     "bb_vintage-rnb_p04.wav": {
       "frames": 1376,
@@ -3661,6 +3738,39 @@
       "fileBytes": 18164,
       "decodedBytes": 37296,
       "sha256": "d4173a763530ca021425668cdfa7fa8083a1fab7c8ab8fd72b9fe3a2ae2ecfee"
+    },
+    "bb_loose-break_p00.wav": {
+      "frames": 6098,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.127042,
+      "peak": 0.799988,
+      "rms": 0.567156,
+      "fileBytes": 24436,
+      "decodedBytes": 49840,
+      "sha256": "12a39e15123d8d26147e9d5ee1e61e019231ecd8c50f0b58659d0734cd0c4152"
+    },
+    "bb_loose-break_p01.wav": {
+      "frames": 8366,
+      "channels": 2,
+      "rate": 48000,
+      "durationSeconds": 0.174292,
+      "peak": 0.73999,
+      "rms": 0.144761,
+      "fileBytes": 33508,
+      "decodedBytes": 67984,
+      "sha256": "2adc62a41219c660c92260001d49dd448710dc3ad729c8b6f11f9a915c5b06a9"
+    },
+    "bb_loose-break_p03.wav": {
+      "frames": 3911,
+      "channels": 1,
+      "rate": 48000,
+      "durationSeconds": 0.081479,
+      "peak": 0.599976,
+      "rms": 0.086928,
+      "fileBytes": 7866,
+      "decodedBytes": 32344,
+      "sha256": "0f08dec6eb5863a2593be8bb74f3e4b8246a4692038a549ff3a9cc036e2740a0"
     },
     "bb_west-90s_p06.wav": {
       "frames": 48000,
@@ -3750,5 +3860,6 @@
       "decodedBytes": 40912,
       "sha256": "6a277b5f8c4da077f7fb2e72a38ff5e4eb57918d22126356486864df47336d4b"
     }
-  }
+  },
+  "bassRootMeasurementStatus": "Prior FFT results reused only for 34 byte-identical bass assets with unchanged source/target roots."
 }

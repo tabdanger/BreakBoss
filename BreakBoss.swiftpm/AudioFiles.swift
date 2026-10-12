@@ -96,8 +96,9 @@ enum WavWriter {
 // MARK: - MIDI files
 
 enum MIDIFile {
-    /// One track, channel 10. Pads are notes 36-47; the 808 plays notes 48-84 (60 = its tuning),
-    /// so a file dragged back onto a BreakBoss loop pad plays the same.
+    /// One track, channel 10. Pads are notes 36...51; chromatic 808 notes are 52...84
+    /// (60 = its tuning). MIDI export bounds bass pitches to that chromatic range so they
+    /// cannot be mistaken for drum pads on import; audio rendering keeps the full pitch.
     static func write(_ pattern: PatternData, tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
         let ppq = Int(PatternData.ppq)
         var events: [(tick: Int, bytes: [UInt8])] = []
@@ -110,7 +111,8 @@ enum MIDIFile {
                 t = max(0, t)
                 guard t < total else { continue }
                 let isBass = Int(e.pad) == Pad.bass808.rawValue
-                let note = isBass ? UInt8(clamping: Pad.bassRootNote + Int(e.semis.rounded())) : UInt8(Pad(rawValue: Int(e.pad))?.midiNote ?? 36)
+                let bassNote = (Pad.bassRootNote + Int(e.semis.rounded())).clamped(Pad.bassNoteRange.lowerBound, Pad.bassNoteRange.upperBound)
+                let note = isBass ? UInt8(bassNote) : UInt8(Pad(rawValue: Int(e.pad))?.midiNote ?? 36)
                 let vel = UInt8(clamping: max(1, Int((e.velocity * 127).rounded())))
                 var len = isBass ? Int(e.length) : 12
                 if len <= 0 { len = ppq }
@@ -138,7 +140,7 @@ enum MIDIFile {
         try Data(data).write(to: url, options: .atomic)
     }
 
-    /// Reads a MIDI file into a loop. Notes 36-47 land on the pads, 48-84 on the 808.
+    /// Reads a MIDI file into a loop. Notes 36...51 land on the pads, 52...84 on the 808.
     static func read(_ url: URL) -> PatternData? {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }

@@ -133,8 +133,9 @@ struct FaceplateView: View {
     private func knobs(_ L: FaceplateLayout, sfx: String, s: CGFloat) -> some View {
         ForEach(KnobControl.order, id: \.rawValue) { p in
             if let k = L.knobs[p.id] {
-                if L.isPhone {
-                    PhoneKnobRepair(image: "PhonePlate_\(sfx)", layout: L, knob: k, scale: s)
+                if L.isPhone, let cleanLayout = FaceplateLayout.all[sfx], let cleanKnob = cleanLayout.knobs[p.id] {
+                    PhoneKnobRepair(image: "Plate_\(sfx)", layout: cleanLayout,
+                                    sourceKnob: cleanKnob, knob: k, scale: s)
                 }
                 KnobControl(controller: controller, param: p, knob: k, scale: s)
             }
@@ -237,21 +238,13 @@ struct FaceplateView: View {
 
     private var kitsMenu: some View {
         Menu {
-            Section("\(KitLibrary.core.count) core kits") {
-                ForEach(KitLibrary.core) { def in
-                    Button { controller.selectKit(def) } label: {
-                        Text("\(def.name)   \(Int(def.tempo)) BPM")
+            ForEach(SoundMode.allCases, id: \.rawValue) { mode in
+                Section("\(mode.title) · \(KitLibrary.kits(for: mode).count) kits") {
+                    ForEach(KitLibrary.kits(for: mode)) { def in
+                        Button { controller.selectKit(def) } label: {
+                            Text("\(def.name)   \(Int(def.tempo)) BPM")
+                        }
                     }
-                }
-            }
-            Section("World & textures") {
-                ForEach(KitLibrary.textures) { def in
-                    Button { controller.selectKit(def) } label: { Text("\(def.name)   \(Int(def.tempo)) BPM") }
-                }
-            }
-            Section("Original BreakBoss kits") {
-                ForEach(KitLibrary.legacy) { def in
-                    Button { controller.selectKit(def) } label: { Text("\(def.name)   \(Int(def.tempo)) BPM") }
                 }
             }
             if !controller.userKits.isEmpty {
@@ -282,9 +275,11 @@ struct FaceplateView: View {
     private var presetsMenu: some View {
         Menu {
             Button("INIT") { controller.loadInit() }
-            Section("Factory presets") {
-                ForEach(FactoryPresets.all, id: \.name) { fp in
-                    Button("\(fp.name)  ·  \(fp.mode.title)") { controller.loadFactoryPreset(fp) }
+            ForEach(SoundMode.allCases, id: \.rawValue) { mode in
+                Section("\(mode.title) presets") {
+                    ForEach(FactoryPresets.all.filter { $0.mode == mode }, id: \.name) { fp in
+                        Button(fp.name) { controller.loadFactoryPreset(fp) }
+                    }
                 }
             }
             if !controller.userPresets.isEmpty {
@@ -402,26 +397,28 @@ struct KnobPointer: Shape {
     }
 }
 
-/// The supplied phone photos include static pointer notches. Replace only that small
-/// sector with a neighboring clean sector from the same metal cap, then draw the live
-/// pointer above it. The original JPEGs remain unchanged in the asset catalog.
+/// The supplied phone photos include static pointer notches. Cover the metal-cap circle
+/// with the corresponding clean photographic cap already present in the approved tablet
+/// artwork, then draw the live pointer above it. Rings, shadows and labels stay on the
+/// original phone photograph; all bundled artwork files remain unchanged.
 private struct PhoneKnobRepair: View {
     let image: String
     let layout: FaceplateLayout
+    let sourceKnob: FaceplateLayout.Knob
     let knob: FaceplateLayout.Knob
     let scale: CGFloat
 
     var body: some View {
         let diameter = knob.r * 2 * scale
+        let sourceScale = knob.r / sourceKnob.r * scale
         Image(image)
             .resizable()
             .interpolation(.high)
-            .frame(width: layout.width * scale, height: layout.height * scale)
-            .offset(x: -(knob.x - knob.r) * scale, y: -(knob.y - knob.r) * scale)
+            .frame(width: layout.width * sourceScale, height: layout.height * sourceScale)
+            .offset(x: -(sourceKnob.x - sourceKnob.r) * sourceScale,
+                    y: -(sourceKnob.y - sourceKnob.r) * sourceScale)
             .frame(width: diameter, height: diameter, alignment: .topLeading)
-            .clipped()
-            .rotationEffect(.degrees(32))
-            .mask(KnobPointer(angle: knob.bakedAngle ?? 0, inner: 0.26, outer: 0.96, width: 0.32))
+            .clipShape(Circle())
             .position(x: knob.x * scale, y: knob.y * scale)
             .allowsHitTesting(false)
     }

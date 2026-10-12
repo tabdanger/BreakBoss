@@ -84,6 +84,9 @@ struct PadEditorView: View {
                     slider("Decay", settings.decay, 0.05...1, text: settings.decay >= 0.999 ? "FULL" : String(format: "%.0f%%", settings.decay * 100)) { v in
                         var s = settings; s.decay = v; controller.setPadSettings(pad, s)
                     }
+                    slider("Filter", settings.filter, 0...1, text: settings.filter >= 0.999_999 ? "OPEN" : String(format: "%.0f Hz", 40 * powf(450, settings.filter))) { v in
+                        var s = settings; s.filter = v; controller.setPadSettings(pad, s)
+                    }
                     Toggle("Reverse", isOn: Binding(get: { settings.reverse }, set: { v in
                         var s = settings; s.reverse = v; controller.setPadSettings(pad, s)
                     }))

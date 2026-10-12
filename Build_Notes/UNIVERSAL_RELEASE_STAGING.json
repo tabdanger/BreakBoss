@@ -3,15 +3,15 @@
   "targets": {
     "app": {
       "swiftFiles": 24,
-      "resourceFiles": 358,
-      "resourceBytes": 19184552,
+      "resourceFiles": 368,
+      "resourceBytes": 19596547,
       "stockAssignments": 544,
       "stockKits": 34
     },
     "plugin": {
       "swiftFiles": 21,
-      "resourceFiles": 356,
-      "resourceBytes": 19033565,
+      "resourceFiles": 366,
+      "resourceBytes": 19445560,
       "stockAssignments": 544,
       "stockKits": 34
     }
@@ -31,5 +31,5 @@
     "UIInterfaceOrientationLandscapeLeft",
     "UIInterfaceOrientationLandscapeRight"
   ],
-  "audioComponentVersion": 769
+  "audioComponentVersion": 770
 }

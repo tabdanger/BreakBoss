@@ -27,7 +27,7 @@ enum SoundMode: Int, CaseIterable, Codable {
     }
 }
 
-/// ONE-SHOT: the 12 pads play single drum sounds. LOOP: the 12 pads start tempo-synced grooves.
+/// ONE-SHOT: all 16 pads play single drum sounds. LOOP: they start tempo-synced grooves.
 enum PlayMode: Int, CaseIterable, Codable {
     case oneShot = 0, loop = 1
 }

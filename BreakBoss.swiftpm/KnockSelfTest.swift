@@ -22,6 +22,7 @@ enum KnockSelfTest {
         phase("checkGrooves", checkGrooves)
         phase("checkSmallBuffersAndVoiceStealing", checkSmallBuffersAndVoiceStealing)
         phase("checkHostMIDIAndAutomation", checkHostMIDIAndAutomation)
+        phase("checkOneShotMIDIAndPadFilters", checkOneShotMIDIAndPadFilters)
         phase("checkModesAndClipper", checkModesAndClipper)
         phase("checkTempoSync", checkTempoSync)
         phase("checkHostTransport", checkHostTransport)
@@ -29,6 +30,7 @@ enum KnockSelfTest {
         phase("checkFiles", checkFiles)
         phase("checkHeldLoops", checkHeldLoops)
         phase("checkMigration", checkMigration)
+        phase("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence)
         phase("checkTextureControls", checkTextureControls)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
@@ -67,7 +69,8 @@ enum KnockSelfTest {
 
     private static func kitBuffers(_ def: KitDefinition, rate: Double = 48_000) -> KitBuffers {
         let samples = def.pads.enumerated().map { DrumSynth.render($0.element, sampleRate: rate, seed: UInt32($0.offset + 1)) }
-        return KitBuffers(name: def.name, samples: samples, settings: Array(repeating: PadSettings(), count: Pad.count), bassHz: def.bassHz)
+        return KitBuffers(name: def.name, samples: samples, settings: Array(repeating: PadSettings(), count: Pad.count), bassHz: def.bassHz,
+                          renderSampleRate: rate)
     }
 
     static func checkKits() {
@@ -121,7 +124,7 @@ enum KnockSelfTest {
             }
         }
         check(assignments == 544, "stock audio covers all 544 factory pad assignments")
-        check(urls.count == 308, "stock audio contains 308 distinct assigned WAV files")
+        check(urls.count == 318, "stock audio contains 318 distinct assigned WAV files")
         for url in urls.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             autoreleasepool {
                 do {
@@ -322,7 +325,7 @@ enum KnockSelfTest {
             for i in a.indices { difference = max(difference, abs(a[i] - b[i])) }
             return difference
         }
-        for note: UInt8 in [36, 48, 85] {
+        for note: UInt8 in [36, 48, 51, 52, 60, 85] {
             let e = engine()
             e.hostMIDI(offset: 73, status: 0x90, data1: note, data2: 127)
             let actual = block(e, 128)
@@ -337,7 +340,7 @@ enum KnockSelfTest {
         check(carriedOutput.prefix(63).allSatisfy { abs($0) < 0.000_001 } &&
               carriedOutput.dropFirst(63).contains { abs($0) > 0.001 }, "host MIDI: offset carries across 128-frame boundary")
 
-        let actualBass = engine(), expectedBass = engine()
+        let actualBass = engine(loop: true), expectedBass = engine(loop: true)
         for e in [actualBass, expectedBass] {
             e.hostMIDI(offset: 0, status: 0x90, data1: 60, data2: 127)
             _ = block(e, 128)
@@ -347,7 +350,7 @@ enum KnockSelfTest {
         var expectedRelease = block(expectedBass, 77)
         expectedBass.hostMIDI(offset: 0, status: 0x80, data1: 60, data2: 0)
         expectedRelease += block(expectedBass, 51)
-        check(maxDifference(actualRelease, expectedRelease) < 0.000_001, "host bass release begins at its sample offset")
+        check(maxDifference(actualRelease, expectedRelease) < 0.000_001, "host Loop-mode bass release begins at its sample offset")
 
         let actualLoop = engine(loop: true), expectedLoop = engine(loop: true)
         actualLoop.hostMIDI(offset: 73, status: 0x90, data1: 36, data2: 127)
@@ -396,6 +399,122 @@ enum KnockSelfTest {
         contended.hostParameter(.pitch, 0.75)
         _ = block(contended, 128)
         check(finite && contended.param(.pitch) == 0.75, "host automation survives concurrent UI control updates")
+    }
+
+    /// A one-shot's tail is independent of note length. Exercise every sequential pad,
+    /// the chromatic bass extension, dynamics, and the new per-pad filter at 128 frames.
+    static func checkOneShotMIDIAndPadFilters() {
+        let rate = 48_000.0
+        let sample = SampleBuffer(left: Array(repeating: Float(0.025), count: 12_000), sampleRate: rate)
+        let kit = KitBuffers(name: "ONE-SHOT MIDI", samples: Array(repeating: sample, count: Pad.count),
+                             settings: Array(repeating: PadSettings(), count: Pad.count), bassHz: 110)
+        func engine(using sounds: KitBuffers? = nil) -> KnockEngine {
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            e.setParam(.playMode, 0)
+            e.setParam(.followDAW, 0)
+            e.setParam(.tempoSync, 0)
+            e.setParam(.velocity, 1)
+            e.setParam(.boost, 0)
+            e.setParam(.clipper, 0)
+            e.setParam(.clipDrive, 0)
+            e.kitHandoff.publish(sounds ?? kit)
+            return e
+        }
+        func block(_ e: KnockEngine) -> [Float] {
+            var left = [Float](repeating: 0, count: 128), right = left
+            left.withUnsafeMutableBufferPointer { l in
+                right.withUnsafeMutableBufferPointer { r in
+                    e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil)
+                }
+            }
+            return left
+        }
+        func energy(_ values: [Float]) -> Float { values.reduce(0) { $0 + $1 * $1 } }
+        for note in (36...51).map({ UInt8($0) }) + [52, 60, 84] {
+            let short = engine(), held = engine()
+            for e in [short, held] { e.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 127) }
+            // An immediate key release must leave the first sample, attack and entire tail
+            // identical to a key held through all 32 callbacks, including the 808.
+            short.hostMIDI(offset: 1, status: 0x80, data1: note, data2: 0)
+            var identical = true
+            var audible = false
+            for _ in 0..<32 {
+                let a = block(short), b = block(held)
+                identical = identical && zip(a, b).allSatisfy { abs($0.0 - $0.1) < 0.000_001 }
+                audible = audible || a.contains { abs($0) > 0.001 }
+            }
+            let pad = Pad.index(forMIDINote: Int(note)) ?? Pad.bass808.rawValue
+            check(identical && audible, "One-Shot MIDI \(note): immediate release preserves the complete tail")
+            check(short.padHits[pad] == 1 && short.status[0] == 0, "One-Shot MIDI \(note): one note creates one strike without sequencing")
+            short.hostMIDI(offset: 7, status: 0x90, data1: note, data2: 0)
+            _ = block(short)
+            check(short.padHits[pad] == 1, "One-Shot MIDI \(note): zero velocity releases without retriggering")
+            short.hostMIDI(offset: 7, status: 0x90, data1: note, data2: 100)
+            _ = block(short)
+            check(short.padHits[pad] == 2, "One-Shot MIDI \(note): another programmed note creates the next strike")
+        }
+        for note: UInt8 in [36, 37, 42, 48, 51, 60] {
+            let soft = engine(), hard = engine()
+            soft.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 32)
+            hard.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 127)
+            let softEnergy = energy(block(soft)), hardEnergy = energy(block(hard))
+            check(softEnergy > 0 && softEnergy < hardEnergy * 0.1, "One-Shot MIDI \(note): velocity controls strike volume")
+        }
+
+        var filteredSettings = Array(repeating: PadSettings(), count: Pad.count)
+        filteredSettings[0].filter = 0.35
+        let highFrequency = SampleBuffer(left: (0..<2_048).map { $0 % 4 == 0 ? 0.1 : $0 % 4 == 2 ? -0.1 : 0 },
+                                         right: (0..<2_048).map { $0 % 4 == 0 ? -0.1 : $0 % 4 == 2 ? 0.1 : 0 }, sampleRate: rate)
+        let filteredKit = KitBuffers(name: "PAD FILTER", samples: Array(repeating: highFrequency, count: Pad.count),
+                                     settings: filteredSettings, bassHz: 110)
+        check(filteredKit.filterCoefficients[0] > 0 && filteredKit.filterCoefficients[0] < 1 &&
+              filteredKit.filterCoefficients.dropFirst().allSatisfy { $0 == 1 }, "per-pad filter coefficients prepare only the selected pad")
+        func voice(_ coefficient: Float) -> Voice {
+            Voice(sample: highFrequency, pad: 0, rate: 1, reverse: false, gainL: 1, gainR: 1,
+                  decayCoef: 1, holdSamples: 0, chokeGroup: 0, age: 0, remaining: Int.max, heldNote: -1,
+                  filterCoefficient: coefficient)
+        }
+        var open = voice(1), filtered = voice(filteredKit.filterCoefficients[0])
+        var openEnergy: Float = 0, filteredEnergy: Float = 0
+        var finite = true, stereo = true, bypassExact = true
+        for _ in 0..<12 {
+            var a = [Float](repeating: 0, count: 128), ar = a, b = a, br = a
+            a.withUnsafeMutableBufferPointer { l in ar.withUnsafeMutableBufferPointer { r in
+                open.render(into: l.baseAddress!, r.baseAddress!, frames: 128, releaseSamples: 128)
+            } }
+            b.withUnsafeMutableBufferPointer { l in br.withUnsafeMutableBufferPointer { r in
+                filtered.render(into: l.baseAddress!, r.baseAddress!, frames: 128, releaseSamples: 128)
+            } }
+            openEnergy += energy(a)
+            filteredEnergy += energy(b)
+            finite = finite && b.allSatisfy { $0.isFinite } && br.allSatisfy { $0.isFinite }
+            stereo = stereo && zip(b, br).allSatisfy { abs($0.0 + $0.1) < 0.000_001 }
+            bypassExact = bypassExact && a.enumerated().allSatisfy {
+                $0.element == ($0.offset % 4 == 0 ? 0.1 : $0.offset % 4 == 2 ? -0.1 : 0)
+            }
+        }
+        check(finite && filteredEnergy > 0 && filteredEnergy < openEnergy * 0.05, "per-pad filter attenuates high frequencies across 128-frame boundaries")
+        check(stereo, "per-pad filter preserves independent stereo channels")
+        check(bypassExact, "open per-pad filter bypass preserves original samples exactly")
+        let openKit = KitBuffers(name: "OPEN PAD FILTER", samples: Array(repeating: highFrequency, count: Pad.count),
+                                 settings: Array(repeating: PadSettings(), count: Pad.count), bassHz: 110)
+        let openEngine = engine(using: openKit), filteredEngine = engine(using: filteredKit)
+        for e in [openEngine, filteredEngine] { e.hostMIDI(offset: 0, status: 0x90, data1: 36, data2: 127) }
+        var engineOpenEnergy: Float = 0, engineFilteredEnergy: Float = 0
+        for _ in 0..<12 {
+            engineOpenEnergy += energy(block(openEngine))
+            engineFilteredEnergy += energy(block(filteredEngine))
+        }
+        check(engineFilteredEnergy > 0 && engineFilteredEnergy < engineOpenEnergy * 0.1,
+              "note-on applies the selected pad filter in the production engine")
+        let oldPadJSON = Data(#"{"level":0.6,"pan":-0.2,"tune":7,"decay":0.4,"reverse":true}"#.utf8)
+        let oldPad = try? JSONDecoder().decode(PadSettings.self, from: oldPadJSON)
+        check(oldPad?.filter == 1 && oldPad?.tune == 7 && oldPad?.reverse == true,
+              "older pad presets decode with the filter open and original controls intact")
+        let filteredData = try? JSONEncoder().encode(filteredSettings[0])
+        let filteredBack = filteredData.flatMap { try? JSONDecoder().decode(PadSettings.self, from: $0) }
+        check(filteredBack == filteredSettings[0], "per-pad filter round-trips in presets")
     }
 
     /// Renders a loop through a fresh engine and returns the output.
@@ -544,6 +663,24 @@ enum KnockSelfTest {
                 check(back.events.count == loops[0].events.count, "MIDI round trip keeps every hit (\(back.events.count)/\(loops[0].events.count))")
                 check(back.lengthTicks == loops[0].lengthTicks, "MIDI round trip keeps the length")
             }
+            let allPads = PatternData(name: "ALL 16 MIDI PADS", lengthTicks: PatternData.ppq * 4,
+                                      events: Pad.allCases.map { pad in
+                GrooveEvent(tick: Int32(pad.rawValue * 12), pad: Int8(pad.rawValue), velocity: 0.75,
+                            length: pad == .bass808 ? 12 : 0)
+            })
+            try MIDIFile.write(allPads, tempo: 95, bounce: 0, bars: 1, to: url)
+            let allPadsBack = MIDIFile.read(url)
+            check(allPadsBack?.events.count == Pad.count &&
+                  Set(allPadsBack?.events.map { Int($0.pad) } ?? []) == Set(Pad.allCases.map { $0.rawValue }),
+                  "MIDI export and import preserve all 16 sequential drum pads")
+            let lowBass = PatternData(name: "LOW 808 MIDI", lengthTicks: PatternData.ppq * 4,
+                                      events: [GrooveEvent(tick: 0, pad: Int8(Pad.bass808.rawValue), velocity: 1,
+                                                           semis: -12, length: 96)])
+            try MIDIFile.write(lowBass, tempo: 95, bounce: 0, bars: 1, to: url)
+            let bassBack = MIDIFile.read(url)?.events.first
+            check(bassBack?.pad == Int8(Pad.bass808.rawValue) && bassBack?.semis == -8 && bassBack?.length == 96,
+                  "MIDI export bounds low 808 pitch to note 52 instead of colliding with pad 13")
+            check(lowBass.events[0].semis == -12, "MIDI pitch bounding leaves authored and audio-export bass pitch unchanged")
         } catch {
             check(false, "MIDI file writes: \(error)")
         }
@@ -590,6 +727,14 @@ enum KnockSelfTest {
         e.receiveMIDI(status: 0x90, data1: 36, data2: 0, time: 0)
         renderBlock(e)
         check(e.status[0] == 0 && e.status[1] == -1, "zero velocity note-on releases final loop")
+        for note in 36...51 {
+            e.receiveMIDI(status: 0x90, data1: UInt8(note), data2: 100, time: 0)
+            renderBlock(e)
+            check(e.status[0] == 1 && e.status[1] == Double(note - 36), "MIDI note \(note) holds full loop \(note - 35)")
+            e.receiveMIDI(status: 0x80, data1: UInt8(note), data2: 0, time: 0)
+            renderBlock(e)
+            check(e.status[0] == 0 && e.status[1] == -1, "releasing MIDI note \(note) stops its held loop")
+        }
         e.receiveMIDI(status: 0x90, data1: 88, data2: 127, time: 0)
         renderBlock(e)
         check(e.status[1] == 15, "MIDI reaches loop 16")
@@ -603,10 +748,14 @@ enum KnockSelfTest {
             renderBlock(e)
             check(e.padHits[pad.rawValue] > before, "MIDI plays pad \(pad.rawValue + 1)")
         }
-        let bassBefore = e.padHits[Pad.bass808.rawValue]
+        let shakerBefore = e.padHits[Pad.shaker.rawValue]
         e.receiveMIDI(status: 0x90, data1: 48, data2: 100, time: 0)
         renderBlock(e)
-        check(e.padHits[Pad.bass808.rawValue] > bassBefore, "legacy note 48 still plays chromatic 808")
+        check(e.padHits[Pad.shaker.rawValue] > shakerBefore, "MIDI note 48 plays sequential pad 13")
+        let bassBefore = e.padHits[Pad.bass808.rawValue]
+        e.receiveMIDI(status: 0x90, data1: 52, data2: 100, time: 0)
+        renderBlock(e)
+        check(e.padHits[Pad.bass808.rawValue] > bassBefore, "MIDI note 52 plays the lowest chromatic 808 without overlapping pads")
         e.setParam(.playMode, 1)
         for _ in 0..<1200 { e.receiveMIDI(status: 0x90, data1: 36, data2: 100, time: 0) }
         renderBlock(e)
@@ -633,6 +782,89 @@ enum KnockSelfTest {
               "34 factory kits include 17 core, seven textures, and ten original kits")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")
         check(Pad.allCases.allSatisfy { Pad.index(forMIDINote: $0.midiNote) == $0.rawValue }, "all pad MIDI mappings round trip")
+        check(Pad.allCases.map { $0.midiNote } == Array(36...51), "16 factory pads use consecutive MIDI notes 36 through 51")
+        check((36...51).allSatisfy { !Pad.bassNoteRange.contains($0) } &&
+              Pad.bassNoteRange.allSatisfy { Pad.index(forMIDINote: $0) == nil }, "drum pad and chromatic 808 MIDI ranges do not overlap")
+    }
+
+    static func checkFactoryPresetsAndKitIndependence() {
+        let presets = FactoryPresets.all
+        check(presets.count >= 50 && Set(presets.map { $0.name }).count == presets.count,
+              "50+ factory presets have unique browser names")
+        for mode in SoundMode.allCases {
+            check(presets.filter { $0.mode == mode }.count >= 16, "\(mode.title) has a complete bank of factory presets")
+        }
+        check(KitLibrary.kits(for: .modern).count >= 6 && KitLibrary.kits(for: .vintage).count >= 6 &&
+              KitLibrary.kits(for: .texture).count >= 4, "mode browsers cover six Modern, six Vintage, and four Texture factory kits")
+        var source = KnockState()
+        source.mode = .texture
+        source.playMode = .oneShot
+        source.userKit = "USER DRUMS"
+        source.presetName = "USER FX"
+        source.values[KParam.soundMode.id] = 2
+        source.values[KParam.playMode.id] = 0
+        source.values[KParam.tempoSync.id] = 1
+        source.values[KParam.followDAW.id] = 0
+        for p in KParam.allCases where p.isKnob || p == .clipper { source.values[p.id] = p == .clipper ? 0 : 0.91 }
+        for i in source.pads.indices {
+            source.pads[i].tune = Float(i % 5) - 2
+            source.pads[i].decay = 0.4
+            source.pads[i].filter = 0.65
+            source.pads[i].pan = i % 2 == 0 ? -0.2 : 0.2
+            source.pads[i].sampleFile = "custom-\(i).wav"
+        }
+        source.editedLoops[0] = PatternData(name: "CUSTOM LOOP", lengthTicks: 384, events: [])
+        source = source.normalized()
+        let changedKit = source.selectingKit(KitLibrary.west90s)
+        var expectedPads = source.pads
+        for i in expectedPads.indices { expectedPads[i].sampleFile = nil }
+        check(changedKit.kitID == KitLibrary.west90s.id && changedKit.kitName == KitLibrary.west90s.name &&
+              changedKit.userKit == nil, "switching kits replaces the raw audio identity")
+        check(changedKit.values == source.values && changedKit.mode == source.mode &&
+              changedKit.playMode == source.playMode && changedKit.presetName == source.presetName,
+              "switching kits preserves active mode, FX knobs, clipper, transport and preset identity")
+        check(changedKit.pads == expectedPads, "switching kits preserves per-pad pitch, decay, filter, level and pan")
+        check(changedKit.editedLoops.allSatisfy { $0 == nil }, "switching kits regenerates the kit's factory patterns")
+
+        var distinctSnapshots = Set<Data>()
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        for preset in presets {
+            let kit = KitLibrary.kit(id: preset.kitID)
+            let state = preset.applying(to: source)
+            check(kit.id == preset.kitID && state.kitID == preset.kitID,
+                  "\(preset.name): loads its matching factory kit")
+            check(state.mode == preset.mode && state.values[KParam.soundMode.id] == Float(preset.mode.rawValue) &&
+                  state.presetName == preset.name, "\(preset.name): restores the preset mode and name")
+            check(state.pads.count == Pad.count && state.pads == preset.pads && state.pads.allSatisfy { $0.sampleFile == nil },
+                  "\(preset.name): restores all 16 pad settings and stock sample identities")
+            check(state.values[KParam.playMode.id] == 0 && state.values[KParam.tempoSync.id] == 1 &&
+                  state.values[KParam.followDAW.id] == 0, "\(preset.name): preserves player and host transport choices")
+            for p in KParam.allCases where p.isKnob || p == .clipper {
+                check(state.values[p.id] == (preset.values[p] ?? p.defaultValue),
+                      "\(preset.name): restores \(p.name) without inheriting previous FX")
+            }
+            check(state.pads.allSatisfy {
+                $0.tune.isFinite && (-24...24).contains($0.tune) && $0.decay.isFinite && (0.05...1).contains($0.decay) &&
+                $0.filter.isFinite && (0...1).contains($0.filter) && $0.level.isFinite && (0...1).contains($0.level) &&
+                $0.pan.isFinite && (-1...1).contains($0.pan)
+            }, "\(preset.name): pad controls are finite and bounded")
+            let data = try? encoder.encode(state)
+            let restored = data.flatMap { try? JSONDecoder().decode(KnockState.self, from: $0) }
+            check(restored == state, "\(preset.name): full mode, kit, FX and pad snapshot round-trips")
+            // Changing a name alone does not create another sound. Exclude the name when
+            // counting authored audio snapshots, while retaining kit and processing choices.
+            var sound = state
+            sound.presetName = ""
+            if let soundData = try? encoder.encode(sound) { distinctSnapshots.insert(soundData) }
+            let sameKitSource = source.selectingKit(kit)
+            check(preset.applying(to: sameKitSource) == state, "\(preset.name): applying the current kit still restores all FX and pad controls")
+        }
+        check(distinctSnapshots.count >= 50, "50+ factory presets contain distinct authored audio snapshots")
+        let crossMode = presets.first { $0.name == "GATED DREAM" }?.applying(to: source)
+        check(crossMode?.mode == .texture && crossMode?.kitID == KitLibrary.heavyBreak.id &&
+              KitLibrary.heavyBreak.preferredMode == .vintage,
+              "a Vintage-home break kit can play through a Texture preset")
     }
 
     static func checkTextureControls() {

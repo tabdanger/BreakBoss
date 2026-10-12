@@ -2,8 +2,8 @@
   "version": 1,
   "tool": "prepare_stock_samples.py",
   "deduplicate": true,
-  "uniqueOutputFiles": 308,
-  "totalOutputBytes": 13593118,
+  "uniqueOutputFiles": 318,
+  "totalOutputBytes": 14004926,
   "numpyVersion": "2.3.5",
   "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
   "sampleRate": 48000,
@@ -12,7 +12,7 @@
     "attack": 0.5,
     "release": 6
   },
-  "selectionsSHA256": "72cf02c7042ca5a7d965c5074282d53c4cf6cca10a75a1de378a1503688860de",
+  "selectionsSHA256": "7ffb4a09792c9d5a3e1c5d0da7a57c3e1c334d13b651e852bc47cd056037f906",
   "assignments": [
     {
       "kitID": "2000s-rnb",
@@ -2831,52 +2831,52 @@
     {
       "kitID": "boom-bap",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Waves - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "BOOM BAP KICK",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.75,
-        "tailSeconds": 0.28,
-        "decaySeconds": null,
-        "lowpassHz": 6500.0,
-        "drive": 0.08,
+        "tuneSemitones": -0.5,
+        "tailSeconds": 0.24,
+        "decaySeconds": 0.22,
+        "lowpassHz": 5500.0,
+        "drive": 0.06,
         "peak": 0.8
       },
-      "sourceSHA256": "ce5279c0694f355741a46cdd44d00edb382ad8041704d1cb12819022b7aa6fac",
+      "sourceSHA256": "5afe41ccdeb5ff9f4498465fc39b5bed68adf645a2889570d20d944774105911",
       "sourceInfo": {
-        "durationSeconds": 0.14572916666666666,
-        "channels": 1,
+        "durationSeconds": 0.23808333333333334,
+        "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9998580813407898
+        "peak": 1.2320821285247803
       },
-      "outputFile": "bb_boom-bap_p00.wav",
-      "outputSHA256": "65d01bf10072abe8ed8fae6f709832c531138aa7a1b8f293cc96b2c692045fd9",
-      "outputBytes": 13442
+      "outputFile": "bb_vintage32-boom-bap_p00.wav",
+      "outputSHA256": "4b23c3d1bd37c358ca2d89b4b513972670a3599f5a95819798524e98fe9dc46f",
+      "outputBytes": 46124
     },
     {
       "kitID": "boom-bap",
       "pad": 1,
-      "source": "10-Snares/Snares/[Snare] Lunar - (@prod.by.iiinfinite).wav",
+      "source": "10-Snares/Snares/[Snare] Gravity - (@prod.by.iiinfinite).wav",
       "name": "BOOM BAP SNARE",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.75,
-        "tailSeconds": 0.25,
-        "decaySeconds": null,
-        "lowpassHz": 11500.0,
-        "drive": 0.08,
+        "tuneSemitones": -0.35,
+        "tailSeconds": 0.18,
+        "decaySeconds": 0.2,
+        "lowpassHz": 10500.0,
+        "drive": 0.06,
         "peak": 0.74
       },
-      "sourceSHA256": "a7b18610bf78c2ee3f6378afbeda1b23ee119cdd3d51223d3a392facc0005e96",
+      "sourceSHA256": "88ced9e1705bd39965bff4e1f7abc622e93217e917798c54d7f3bfe19568c83f",
       "sourceInfo": {
-        "durationSeconds": 0.09502083333333333,
-        "channels": 1,
+        "durationSeconds": 0.1100625,
+        "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9921368360519409
+        "peak": 0.9875342845916748
       },
-      "outputFile": "bb_boom-bap_p01.wav",
-      "outputSHA256": "e18b23ffa74496b5817b8e6ea80055bfb298d5676b22a092bbdef71ac856997c",
-      "outputBytes": 8780
+      "outputFile": "bb_vintage32-boom-bap_p01.wav",
+      "outputSHA256": "558ac3e87f1e8ac434ad324355d2c93af8825295ca6a3a2dfb69edf9692a4dde",
+      "outputBytes": 21608
     },
     {
       "kitID": "boom-bap",
@@ -2910,11 +2910,11 @@
       "name": "BOOM BAP RIM",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.75,
-        "tailSeconds": 0.16,
+        "tuneSemitones": -0.5,
+        "tailSeconds": 0.105,
         "decaySeconds": null,
-        "lowpassHz": 11500.0,
-        "drive": 0.032,
+        "lowpassHz": 10000.0,
+        "drive": 0.025,
         "peak": 0.6
       },
       "sourceSHA256": "f224b32bc8e22396d8fae8608de3ed63add1919709d6d4a271e0adc2020fb213",
@@ -2924,9 +2924,9 @@
         "sourceSampleRate": 44100,
         "peak": 0.9935294389724731
       },
-      "outputFile": "bb_boom-bap_p03.wav",
-      "outputSHA256": "e68bf1ca25ba0462976c086b35f0f7c4beacf9760e02e994e21af2e60f2544aa",
-      "outputBytes": 16192
+      "outputFile": "bb_vintage32-boom-bap_p03.wav",
+      "outputSHA256": "8a7db4fb51231cfd7e125a94d2541243ca4f8c43232724d1a0d780d4017945b6",
+      "outputBytes": 17404
     },
     {
       "kitID": "boom-bap",
@@ -4037,27 +4037,27 @@
     {
       "kitID": "dirty-soul",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Mechanics - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "DIRTY SOUL KICK",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": -0.25,
-        "tailSeconds": 0.28,
-        "decaySeconds": 0.2,
-        "lowpassHz": 6500.0,
-        "drive": 0.12,
+        "tuneSemitones": -0.75,
+        "tailSeconds": 0.23,
+        "decaySeconds": 0.18,
+        "lowpassHz": 5000.0,
+        "drive": 0.085,
         "peak": 0.8
       },
-      "sourceSHA256": "faaa235129a800b50ff5d87e5d58fdb305207f1347ba6d7a11b8529d257db032",
+      "sourceSHA256": "5afe41ccdeb5ff9f4498465fc39b5bed68adf645a2889570d20d944774105911",
       "sourceInfo": {
-        "durationSeconds": 0.14247916666666666,
-        "channels": 1,
+        "durationSeconds": 0.23808333333333334,
+        "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9998040795326233
+        "peak": 1.2320821285247803
       },
-      "outputFile": "bb_dirty-soul_p00.wav",
-      "outputSHA256": "b5e4449235b47dc9d3a6136d0dea0868ebd3d5f0e91145131bfb031c2b28b4f0",
-      "outputBytes": 13922
+      "outputFile": "bb_vintage32-dirty-soul_p00.wav",
+      "outputSHA256": "f776bc5d7c7770933141aef415eea6b9ea7d2fdc2d7b23f279040fee12e4c54a",
+      "outputBytes": 44204
     },
     {
       "kitID": "dirty-soul",
@@ -4066,11 +4066,11 @@
       "name": "DIRTY SOUL SNARE",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": -0.25,
-        "tailSeconds": 0.25,
-        "decaySeconds": 0.2,
-        "lowpassHz": 6500.0,
-        "drive": 0.12,
+        "tuneSemitones": -0.75,
+        "tailSeconds": 0.18,
+        "decaySeconds": 0.15,
+        "lowpassHz": 7500.0,
+        "drive": 0.08,
         "peak": 0.74
       },
       "sourceSHA256": "88ced9e1705bd39965bff4e1f7abc622e93217e917798c54d7f3bfe19568c83f",
@@ -4080,9 +4080,9 @@
         "sourceSampleRate": 44100,
         "peak": 0.9875342845916748
       },
-      "outputFile": "bb_dirty-soul_p01.wav",
-      "outputSHA256": "7c01f4583171edd1787389c98b1498f4dbd51e2b2a90624359b6d28da3700b65",
-      "outputBytes": 21484
+      "outputFile": "bb_vintage32-dirty-soul_p01.wav",
+      "outputSHA256": "b44a23204a4aab8537f8ec241937403d50c3b21339148ec347093f3d477db09a",
+      "outputBytes": 22112
     },
     {
       "kitID": "dirty-soul",
@@ -4112,27 +4112,27 @@
     {
       "kitID": "dirty-soul",
       "pad": 3,
-      "source": "5-Snaps/Snaps/[Snap] Elevate - (@prod.by.iiinfinite).wav",
+      "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "DIRTY SOUL RIM",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": -0.25,
-        "tailSeconds": 0.16,
-        "decaySeconds": 0.2,
-        "lowpassHz": 6500.0,
-        "drive": 0.048,
+        "tuneSemitones": -0.75,
+        "tailSeconds": 0.105,
+        "decaySeconds": null,
+        "lowpassHz": 8000.0,
+        "drive": 0.032,
         "peak": 0.6
       },
-      "sourceSHA256": "08a4f89837579b81291632dfa7772c345499b71666f1c6a9e671a42853fa62d8",
+      "sourceSHA256": "f224b32bc8e22396d8fae8608de3ed63add1919709d6d4a271e0adc2020fb213",
       "sourceInfo": {
-        "durationSeconds": 0.07416666666666667,
+        "durationSeconds": 0.08783333333333333,
         "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9696598649024963
+        "peak": 0.9935294389724731
       },
-      "outputFile": "bb_dirty-soul_p03.wav",
-      "outputSHA256": "68f136cb0386dafc4d09a8f7470eb4ee989be12a966ce6681610cd07804d4231",
-      "outputBytes": 14492
+      "outputFile": "bb_vintage32-dirty-soul_p03.wav",
+      "outputSHA256": "9ff491eba06912fd420662f484484252945f65f043f325511a2335e364329799",
+      "outputBytes": 17656
     },
     {
       "kitID": "dirty-soul",
@@ -4841,52 +4841,52 @@
     {
       "kitID": "funk-break",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Waves - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "FUNK BREAK KICK",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.75,
-        "tailSeconds": 0.28,
-        "decaySeconds": null,
-        "lowpassHz": 6500.0,
-        "drive": 0.08,
+        "tuneSemitones": 0.25,
+        "tailSeconds": 0.24,
+        "decaySeconds": 0.27,
+        "lowpassHz": 6800.0,
+        "drive": 0.03,
         "peak": 0.8
       },
-      "sourceSHA256": "ce5279c0694f355741a46cdd44d00edb382ad8041704d1cb12819022b7aa6fac",
+      "sourceSHA256": "5afe41ccdeb5ff9f4498465fc39b5bed68adf645a2889570d20d944774105911",
       "sourceInfo": {
-        "durationSeconds": 0.14572916666666666,
-        "channels": 1,
+        "durationSeconds": 0.23808333333333334,
+        "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9998580813407898
+        "peak": 1.2320821285247803
       },
-      "outputFile": "bb_boom-bap_p00.wav",
-      "outputSHA256": "65d01bf10072abe8ed8fae6f709832c531138aa7a1b8f293cc96b2c692045fd9",
-      "outputBytes": 13442
+      "outputFile": "bb_vintage32-funk-break_p00.wav",
+      "outputSHA256": "75a3494a8dfbc41e7b4b03b40e8d20f3bdb62599fcf1678cdf5f2989b8dd2eb5",
+      "outputBytes": 45104
     },
     {
       "kitID": "funk-break",
       "pad": 1,
-      "source": "10-Snares/Snares/[Snare] Lunar - (@prod.by.iiinfinite).wav",
+      "source": "10-Snares/Snares/[Snare] Gravity - (@prod.by.iiinfinite).wav",
       "name": "FUNK BREAK SNARE",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.75,
-        "tailSeconds": 0.25,
-        "decaySeconds": null,
-        "lowpassHz": 11500.0,
-        "drive": 0.08,
+        "tuneSemitones": 0.25,
+        "tailSeconds": 0.18,
+        "decaySeconds": 0.24,
+        "lowpassHz": 12500.0,
+        "drive": 0.025,
         "peak": 0.74
       },
-      "sourceSHA256": "a7b18610bf78c2ee3f6378afbeda1b23ee119cdd3d51223d3a392facc0005e96",
+      "sourceSHA256": "88ced9e1705bd39965bff4e1f7abc622e93217e917798c54d7f3bfe19568c83f",
       "sourceInfo": {
-        "durationSeconds": 0.09502083333333333,
-        "channels": 1,
+        "durationSeconds": 0.1100625,
+        "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9921368360519409
+        "peak": 0.9875342845916748
       },
-      "outputFile": "bb_boom-bap_p01.wav",
-      "outputSHA256": "e18b23ffa74496b5817b8e6ea80055bfb298d5676b22a092bbdef71ac856997c",
-      "outputBytes": 8780
+      "outputFile": "bb_vintage32-funk-break_p01.wav",
+      "outputSHA256": "ce3807011356ab36793983b0eebaf2ca73fdce2284c02968c6a807879ccf2654",
+      "outputBytes": 20876
     },
     {
       "kitID": "funk-break",
@@ -4920,11 +4920,11 @@
       "name": "FUNK BREAK RIM",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.75,
-        "tailSeconds": 0.16,
+        "tuneSemitones": 0.25,
+        "tailSeconds": 0.105,
         "decaySeconds": null,
-        "lowpassHz": 11500.0,
-        "drive": 0.032,
+        "lowpassHz": 12000.0,
+        "drive": 0.012,
         "peak": 0.6
       },
       "sourceSHA256": "f224b32bc8e22396d8fae8608de3ed63add1919709d6d4a271e0adc2020fb213",
@@ -4934,9 +4934,9 @@
         "sourceSampleRate": 44100,
         "peak": 0.9935294389724731
       },
-      "outputFile": "bb_boom-bap_p03.wav",
-      "outputSHA256": "e68bf1ca25ba0462976c086b35f0f7c4beacf9760e02e994e21af2e60f2544aa",
-      "outputBytes": 16192
+      "outputFile": "bb_vintage32-funk-break_p03.wav",
+      "outputSHA256": "4b2bce14d4aef4f5fd4210283a2cdf7917e2e057882c4c867d577aec2b6ad7d9",
+      "outputBytes": 16668
     },
     {
       "kitID": "funk-break",
@@ -6453,11 +6453,11 @@
       "name": "LIVE SOUL KICK",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.25,
-        "tailSeconds": 0.28,
-        "decaySeconds": null,
+        "tuneSemitones": -0.25,
+        "tailSeconds": 0.24,
+        "decaySeconds": 0.26,
         "lowpassHz": 6500.0,
-        "drive": 0.01,
+        "drive": 0.015,
         "peak": 0.8
       },
       "sourceSHA256": "5afe41ccdeb5ff9f4498465fc39b5bed68adf645a2889570d20d944774105911",
@@ -6467,34 +6467,34 @@
         "sourceSampleRate": 44100,
         "peak": 1.2320821285247803
       },
-      "outputFile": "bb_cole-world_p00.wav",
-      "outputSHA256": "8339013ad8af287cb9c1a6fdd290b3531bdeec3946c24dd3e749f51215952c31",
-      "outputBytes": 45104
+      "outputFile": "bb_vintage32-live-soul_p00.wav",
+      "outputSHA256": "99fa45d5938a7ebd73fba0ade9d80b3e929784597ee54f879a2556964844a4ac",
+      "outputBytes": 46124
     },
     {
       "kitID": "live-soul",
       "pad": 1,
-      "source": "10-Snares/Snares/[Snare] Cryo - (@prod.by.iiinfinite).wav",
+      "source": "10-Snares/Snares/[Snare] Agency - (@prod.by.iiinfinite).wav",
       "name": "LIVE SOUL SNARE",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.25,
-        "tailSeconds": 0.25,
-        "decaySeconds": 0.2,
-        "lowpassHz": 10500.0,
-        "drive": 0.01,
+        "tuneSemitones": -0.4,
+        "tailSeconds": 0.2,
+        "decaySeconds": 0.24,
+        "lowpassHz": 11000.0,
+        "drive": 0.012,
         "peak": 0.74
       },
-      "sourceSHA256": "078fe75d1a85f5b365e5a689dcd8609de9da3483e87eab2971d83be67b95d425",
+      "sourceSHA256": "230f63412df5333e03f0673de7e6910e22a46f5a8ba0af00bc8303ba5ba01a20",
       "sourceInfo": {
-        "durationSeconds": 0.06510416666666667,
+        "durationSeconds": 0.16689583333333333,
         "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.8622032403945923
+        "peak": 0.9928014278411865
       },
-      "outputFile": "bb_cole-world_p01.wav",
-      "outputSHA256": "bde7b517f9f394fe56bc3467c7fa62d51d651475ced6662cd93c3486de6703b1",
-      "outputBytes": 12368
+      "outputFile": "bb_vintage32-live-soul_p01.wav",
+      "outputSHA256": "2d29c22a21a9a52e0b76b9f7abe0a7a951c362bbc10d3f4f608772e072d05fef",
+      "outputBytes": 32840
     },
     {
       "kitID": "live-soul",
@@ -6524,27 +6524,27 @@
     {
       "kitID": "live-soul",
       "pad": 3,
-      "source": "5-Snaps/Snaps/[Snap] Galactic - (@prod.by.iiinfinite).wav",
+      "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "LIVE SOUL RIM",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.25,
-        "tailSeconds": 0.16,
+        "tuneSemitones": -0.25,
+        "tailSeconds": 0.105,
         "decaySeconds": null,
-        "lowpassHz": 10500.0,
+        "lowpassHz": 11500.0,
         "drive": 0.004,
         "peak": 0.6
       },
-      "sourceSHA256": "7f0963a152de7e7bc72edcd064f9935db212aba3c6de54774f956287f8693844",
+      "sourceSHA256": "f224b32bc8e22396d8fae8608de3ed63add1919709d6d4a271e0adc2020fb213",
       "sourceInfo": {
-        "durationSeconds": 0.1001875,
+        "durationSeconds": 0.08783333333333333,
         "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9938150644302368
+        "peak": 0.9935294389724731
       },
-      "outputFile": "bb_cole-world_p03.wav",
-      "outputSHA256": "389b390495bcad269cf96c967848f37f7c8f383e54cd88b9da980b7f82306033",
-      "outputBytes": 19008
+      "outputFile": "bb_vintage32-live-soul_p03.wav",
+      "outputSHA256": "02dd4f90e3a93a1f2b33204e0bc71e9cb03d825e7b8b3724da00947fd3d8b89b",
+      "outputBytes": 17156
     },
     {
       "kitID": "live-soul",
@@ -7253,27 +7253,27 @@
     {
       "kitID": "loose-break",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Astronomy - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "LOOSE BREAK KICK",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": -0.75,
-        "tailSeconds": 0.28,
-        "decaySeconds": null,
+        "tuneSemitones": 0.0,
+        "tailSeconds": 0.24,
+        "decaySeconds": 0.28,
         "lowpassHz": 6500.0,
-        "drive": 0.08,
+        "drive": 0.022,
         "peak": 0.8
       },
-      "sourceSHA256": "11308320efe50efd4655cd86ac480da2f90cb539670708666aa1eedbf16c99e7",
+      "sourceSHA256": "5afe41ccdeb5ff9f4498465fc39b5bed68adf645a2889570d20d944774105911",
       "sourceInfo": {
-        "durationSeconds": 0.12164583333333333,
+        "durationSeconds": 0.23808333333333334,
         "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9999966025352478
+        "peak": 1.2320821285247803
       },
-      "outputFile": "bb_loose-break_p00.wav",
-      "outputSHA256": "12a39e15123d8d26147e9d5ee1e61e019231ecd8c50f0b58659d0734cd0c4152",
-      "outputBytes": 24436
+      "outputFile": "bb_vintage32-loose-break_p00.wav",
+      "outputSHA256": "d711810d9485b92e50f83e2d927a1da378a30d856d2f3bbd048a26ba34203231",
+      "outputBytes": 45756
     },
     {
       "kitID": "loose-break",
@@ -7282,11 +7282,11 @@
       "name": "LOOSE BREAK SNARE",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": -0.75,
-        "tailSeconds": 0.25,
-        "decaySeconds": null,
-        "lowpassHz": 11500.0,
-        "drive": 0.08,
+        "tuneSemitones": 0.0,
+        "tailSeconds": 0.2,
+        "decaySeconds": 0.27,
+        "lowpassHz": 12000.0,
+        "drive": 0.02,
         "peak": 0.74
       },
       "sourceSHA256": "230f63412df5333e03f0673de7e6910e22a46f5a8ba0af00bc8303ba5ba01a20",
@@ -7296,9 +7296,9 @@
         "sourceSampleRate": 44100,
         "peak": 0.9928014278411865
       },
-      "outputFile": "bb_loose-break_p01.wav",
-      "outputSHA256": "2adc62a41219c660c92260001d49dd448710dc3ad729c8b6f11f9a915c5b06a9",
-      "outputBytes": 33508
+      "outputFile": "bb_vintage32-loose-break_p01.wav",
+      "outputSHA256": "9e34624262dec0ca9f73d72d464cb21a2b543315f2abac2e5be3ecee43e3ad5f",
+      "outputBytes": 32088
     },
     {
       "kitID": "loose-break",
@@ -7328,27 +7328,27 @@
     {
       "kitID": "loose-break",
       "pad": 3,
-      "source": "1-Rims/Rims/[Rim] Laws - (@prod.by.iiinfinite).wav",
+      "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "LOOSE BREAK RIM",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": -0.75,
-        "tailSeconds": 0.16,
+        "tuneSemitones": 0.0,
+        "tailSeconds": 0.105,
         "decaySeconds": null,
-        "lowpassHz": 11500.0,
-        "drive": 0.032,
+        "lowpassHz": 11000.0,
+        "drive": 0.008,
         "peak": 0.6
       },
-      "sourceSHA256": "bdf225b8c2e6131b09c8c084a76c137b70adb38e72c9c5f4188e151aa44b5a54",
+      "sourceSHA256": "f224b32bc8e22396d8fae8608de3ed63add1919709d6d4a271e0adc2020fb213",
       "sourceInfo": {
-        "durationSeconds": 0.07802083333333333,
-        "channels": 1,
+        "durationSeconds": 0.08783333333333333,
+        "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.995965838432312
+        "peak": 0.9935294389724731
       },
-      "outputFile": "bb_loose-break_p03.wav",
-      "outputSHA256": "0f08dec6eb5863a2593be8bb74f3e4b8246a4692038a549ff3a9cc036e2740a0",
-      "outputBytes": 7866
+      "outputFile": "bb_vintage32-loose-break_p03.wav",
+      "outputSHA256": "fec6549f26a889e3c177f4257065218d992885cc65cd7a61de32f9a3400c2e15",
+      "outputBytes": 16908
     },
     {
       "kitID": "loose-break",
@@ -11675,52 +11675,52 @@
     {
       "kitID": "vintage-rnb",
       "pad": 0,
-      "source": "7-Kicks/Kicks/[Kick] Waves - (@prod.by.iiinfinite).wav",
+      "source": "7-Kicks/Kicks/[Kick] Spheres - (@prod.by.iiinfinite).wav",
       "name": "VINTAGE RNB KICK",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.75,
-        "tailSeconds": 0.28,
-        "decaySeconds": null,
-        "lowpassHz": 6500.0,
-        "drive": 0.01,
+        "tuneSemitones": -0.5,
+        "tailSeconds": 0.24,
+        "decaySeconds": 0.26,
+        "lowpassHz": 6000.0,
+        "drive": 0.02,
         "peak": 0.8
       },
-      "sourceSHA256": "ce5279c0694f355741a46cdd44d00edb382ad8041704d1cb12819022b7aa6fac",
+      "sourceSHA256": "5afe41ccdeb5ff9f4498465fc39b5bed68adf645a2889570d20d944774105911",
       "sourceInfo": {
-        "durationSeconds": 0.14572916666666666,
-        "channels": 1,
+        "durationSeconds": 0.23808333333333334,
+        "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9998580813407898
+        "peak": 1.2320821285247803
       },
-      "outputFile": "bb_80s-pop_p00.wav",
-      "outputSHA256": "5b50e6fa82ce076a0b6acea4d555ce2a12d1445e5539d0939ba3526d27b27c89",
-      "outputBytes": 13442
+      "outputFile": "bb_vintage32-vintage-rnb_p00.wav",
+      "outputSHA256": "0ec0b0bd35be2969248d85a09b1ac1bb36ef732fa4223fa1b697872aae93eed4",
+      "outputBytes": 46124
     },
     {
       "kitID": "vintage-rnb",
       "pad": 1,
-      "source": "10-Snares/Snares/[Snare] Lunar - (@prod.by.iiinfinite).wav",
+      "source": "10-Snares/Snares/[Snare] Agency - (@prod.by.iiinfinite).wav",
       "name": "VINTAGE RNB SNARE",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.75,
-        "tailSeconds": 0.25,
-        "decaySeconds": 0.2,
-        "lowpassHz": 10500.0,
-        "drive": 0.01,
+        "tuneSemitones": -0.75,
+        "tailSeconds": 0.2,
+        "decaySeconds": 0.22,
+        "lowpassHz": 10000.0,
+        "drive": 0.02,
         "peak": 0.74
       },
-      "sourceSHA256": "a7b18610bf78c2ee3f6378afbeda1b23ee119cdd3d51223d3a392facc0005e96",
+      "sourceSHA256": "230f63412df5333e03f0673de7e6910e22a46f5a8ba0af00bc8303ba5ba01a20",
       "sourceInfo": {
-        "durationSeconds": 0.09502083333333333,
-        "channels": 1,
+        "durationSeconds": 0.16689583333333333,
+        "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9921368360519409
+        "peak": 0.9928014278411865
       },
-      "outputFile": "bb_vintage-rnb_p01.wav",
-      "outputSHA256": "59b395f9cb8d6b03999eca30c8895b42b3375428a822694a29894162957c95bd",
-      "outputBytes": 8780
+      "outputFile": "bb_vintage32-vintage-rnb_p01.wav",
+      "outputSHA256": "dfd78346bb3065897db6a54be74028a722b8d5dc7ee142a07f053d4530e5faf3",
+      "outputBytes": 33508
     },
     {
       "kitID": "vintage-rnb",
@@ -11750,27 +11750,27 @@
     {
       "kitID": "vintage-rnb",
       "pad": 3,
-      "source": "5-Snaps/Snaps/[Snap] Flights - (@prod.by.iiinfinite).wav",
+      "source": "1-Rims/Rims/[Rim] Flights - (@prod.by.iiinfinite).wav",
       "name": "VINTAGE RNB RIM",
       "processing": {
         "startSeconds": 0.0,
-        "tuneSemitones": 0.75,
-        "tailSeconds": 0.16,
+        "tuneSemitones": -0.5,
+        "tailSeconds": 0.105,
         "decaySeconds": null,
         "lowpassHz": 10500.0,
-        "drive": 0.004,
+        "drive": 0.008,
         "peak": 0.6
       },
-      "sourceSHA256": "a36b28c34ada7f1f4bd5824bf60941dbc2f5269b18a8f72899fc06300b98c878",
+      "sourceSHA256": "f224b32bc8e22396d8fae8608de3ed63add1919709d6d4a271e0adc2020fb213",
       "sourceInfo": {
-        "durationSeconds": 0.238875,
+        "durationSeconds": 0.08783333333333333,
         "channels": 2,
         "sourceSampleRate": 44100,
-        "peak": 0.9632648825645447
+        "peak": 0.9935294389724731
       },
-      "outputFile": "bb_vintage-rnb_p03.wav",
-      "outputSHA256": "14bf55f4b20b15dcd47cf7ce54ff4de97cf200d19330ef538e1c28136520a2be",
-      "outputBytes": 30764
+      "outputFile": "bb_vintage32-vintage-rnb_p03.wav",
+      "outputSHA256": "94455ef2eb30c9d8116746c6434eaf46d4ccfc02953f563f6fce19fc23099337",
+      "outputBytes": 17404
     },
     {
       "kitID": "vintage-rnb",
@@ -13681,6 +13681,89 @@
       "outputFile": "bb_2000s-rnb_p15.wav",
       "outputSHA256": "248507e975b18b35a15ca97689c7ede9b1ecb9d8edbee69bd2a020beac016d7e",
       "outputBytes": 19804
+    }
+  ],
+  "refinements": [
+    {
+      "id": "vintage-body-2026-10-12",
+      "tool": "refine_vintage_stock.py",
+      "numpyVersion": "2.3.5",
+      "sourceScope": "Retained uploaded hits; acoustic origin unverified",
+      "changedAssignments": [
+        {
+          "kitID": "boom-bap",
+          "pad": 0
+        },
+        {
+          "kitID": "boom-bap",
+          "pad": 1
+        },
+        {
+          "kitID": "boom-bap",
+          "pad": 3
+        },
+        {
+          "kitID": "dirty-soul",
+          "pad": 0
+        },
+        {
+          "kitID": "dirty-soul",
+          "pad": 1
+        },
+        {
+          "kitID": "dirty-soul",
+          "pad": 3
+        },
+        {
+          "kitID": "funk-break",
+          "pad": 0
+        },
+        {
+          "kitID": "funk-break",
+          "pad": 1
+        },
+        {
+          "kitID": "funk-break",
+          "pad": 3
+        },
+        {
+          "kitID": "live-soul",
+          "pad": 0
+        },
+        {
+          "kitID": "live-soul",
+          "pad": 1
+        },
+        {
+          "kitID": "live-soul",
+          "pad": 3
+        },
+        {
+          "kitID": "loose-break",
+          "pad": 0
+        },
+        {
+          "kitID": "loose-break",
+          "pad": 1
+        },
+        {
+          "kitID": "loose-break",
+          "pad": 3
+        },
+        {
+          "kitID": "vintage-rnb",
+          "pad": 0
+        },
+        {
+          "kitID": "vintage-rnb",
+          "pad": 1
+        },
+        {
+          "kitID": "vintage-rnb",
+          "pad": 3
+        }
+      ],
+      "untouchedBassCalibrations": 34
     }
   ]
 }

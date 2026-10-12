@@ -227,14 +227,8 @@ final class KnockController: ObservableObject {
     var kitDisplayName: String { "\(state.kitName) - \(mode.title)" }
 
     func selectKit(_ def: KitDefinition) {
-        state.kitID = def.id
-        state.kitName = def.name
-        state.userKit = nil
-        state.soundSeed = 1
-        state.grooveSeed = 1
-        state.pads = Array(repeating: PadSettings(), count: Pad.count)
-        state.editedLoops = Array(repeating: nil, count: Pad.count)
-        if value(.tempoSync) < 0.5 { setBPM(def.tempo) }
+        state = state.selectingKit(def)
+        engine.setTempo(state.bpm)
         rebuildKit()
         rebuildLoops()
         readout = Readout(title: "KIT", value: def.name, time: Date())
@@ -332,10 +326,11 @@ final class KnockController: ObservableObject {
         }
     }
 
-    /// Same sounds, new pad settings (level, pan, tune, decay, reverse): instant.
+    /// Same sounds, new pad settings (level, pan, tune, decay, filter, reverse): instant.
     private func republishKit() {
         guard kitSamples.count == Pad.count else { rebuildKit(); return }
-        let kit = KitBuffers(name: state.kitName, samples: kitSamples, settings: state.pads, bassHz: kitDefinition.bassHz)
+        let kit = KitBuffers(name: state.kitName, samples: kitSamples, settings: state.pads,
+                             bassHz: kitDefinition.bassHz, renderSampleRate: engine.sampleRate)
         engine.kitHandoff.publish(kit)
     }
 
@@ -458,19 +453,22 @@ final class KnockController: ObservableObject {
         let keepMode = mode
         for p in KParam.allCases where p != .soundMode { set(p, p.defaultValue, show: false) }
         set(.soundMode, Float(keepMode.rawValue), show: false)
+        for i in state.pads.indices {
+            let file = state.pads[i].sampleFile
+            state.pads[i] = PadSettings()
+            state.pads[i].sampleFile = file
+        }
+        republishKit()
         state.presetName = "INIT"
         onStateReplaced?()
         readout = Readout(title: "PRESET", value: "INIT", time: Date())
     }
 
     func loadFactoryPreset(_ fp: FactoryPreset) {
-        for p in KParam.allCases where p.isKnob || p == .clipper { set(p, fp.values[p] ?? p.defaultValue, show: false) }
-        set(.soundMode, Float(fp.mode.rawValue), show: false)
-        if state.kitID != fp.kitID || state.userKit != nil { selectKit(KitLibrary.kit(id: fp.kitID)) }
-        state.presetName = fp.name
-        onStateReplaced?()
+        // Always apply the complete snapshot, even when the matching kit is already loaded.
+        // This resets pad edits/imports as well as FX, rather than depending on the previous kit.
+        restore(fp.applying(to: state))
         readout = Readout(title: "PRESET", value: fp.name, time: Date())
-        scheduleSave()
     }
 
     func savePreset(as name: String) {
@@ -544,13 +542,16 @@ final class KnockController: ObservableObject {
             completion(.failure(NSError(domain: "BreakBoss", code: 1, userInfo: [NSLocalizedDescriptionKey: "The kit is still loading."])))
             return
         }
-        let kit = KitBuffers(name: state.kitName, samples: kitSamples, settings: state.pads, bassHz: kitDefinition.bassHz)
+        let exportRate: Double = 48_000
+        let kit = KitBuffers(name: state.kitName, samples: kitSamples, settings: state.pads,
+                             bassHz: kitDefinition.bassHz, renderSampleRate: exportRate)
         let patterns = PatternSet(loops)
         var params = [Float](repeating: 0, count: KParam.count)
         for p in KParam.allCases { params[p.rawValue] = value(p) }
         let tempo = liveTempo
         let name = "BreakBoss \(state.kitName) \(loops[loop].name) \(Int(tempo.rounded()))BPM"
-        let job = Exporter.Job(kit: kit, patterns: patterns, loop: loop, params: params, tempo: tempo, bars: bars, baseName: name)
+        let job = Exporter.Job(kit: kit, patterns: patterns, loop: loop, params: params,
+                               tempo: tempo, bars: bars, sampleRate: exportRate, baseName: name)
         DispatchQueue.global(qos: .userInitiated).async {
             let result = Result { try Exporter.run(job, midi: midi, mix: mix, stems: stems) }
             DispatchQueue.main.async { completion(result) }

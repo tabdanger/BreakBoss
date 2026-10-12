@@ -9,8 +9,8 @@ import Foundation
 //   top row:     7 808     8 PERC 1   9 PERC 2   10 TOM LO   11 TOM HI   12 CYMBAL
 //   bottom row:  1 KICK    2 SNARE    3 CLAP     4 RIM/SNAP  5 HAT       6 OPEN HAT
 //
-// MIDI notes 36...47 (C1...B1) play pads 1...12. Notes 48...84 play the 808 pad chromatically
-// (note 60 is the kit's 808 tuning).
+// MIDI notes 36...51 play pads 1...16 sequentially. Notes 52...84 play the 808 chromatically
+// (note 60 is the kit's 808 tuning). Notes 85...88 remain aliases for older pad controllers.
 
 enum Pad: Int, CaseIterable {
     case kick = 0, snare, clap, rim, hat, openHat, bass808, perc1, perc2, tomLow, tomHigh, cymbal, shaker, tambourine, conga, fx
@@ -18,12 +18,11 @@ enum Pad: Int, CaseIterable {
     static let count = 16
     static let firstNote = 36
     static let bassRootNote = 60
-    static let bassNoteRange = 48...84
+    static let bassNoteRange = 52...84
 
-    // Preserve the original chromatic 808 map and old exported MIDI.
-    var midiNote: Int { rawValue < 12 ? 36 + rawValue : 85 + rawValue - 12 }
+    var midiNote: Int { Self.firstNote + rawValue }
     static func index(forMIDINote note: Int) -> Int? {
-        if (36...47).contains(note) { return note - 36 }
+        if (36...51).contains(note) { return note - 36 }
         if (85...88).contains(note) { return note - 85 + 12 }
         return nil
     }
@@ -71,6 +70,16 @@ struct KitDefinition: Identifiable {
     let bassHz: Float
     let pads: [DrumRecipe]
 
+    /// Browser home only: every kit and imported sample works through all three modes.
+    var preferredMode: SoundMode {
+        switch style {
+        case .afrobeats, .latin, .experimental, .amapiano: return .texture
+        case .neoSoul, .gospel, .funkBreak, .looseBreak, .heavyBreak, .west90s,
+             .boomBap, .loFi, .pop80s, .pop90s, .pop: return .vintage
+        default: return .modern
+        }
+    }
+
     init(id: String, name: String, style: GrooveStyle, tempo: Double, bassHz: Float, pads: [DrumRecipe]) {
         self.id = id; self.name = name; self.style = style; self.tempo = tempo; self.bassHz = bassHz
         let extras = [
@@ -102,7 +111,7 @@ enum KitLibrary {
         variant("vintage-rnb", "VINTAGE R&B", neoSoul, .neoSoul, 84, 109, -0.18, 0.2),
         variant("2000s-rnb", "2000s R&B", westBounce, .rnb, 98, 127, 0.16, 0.04),
         variant("dirty-soul", "DIRTY SOUL", looseBreak, .neoSoul, 82, 139, -0.2, 0.4),
-        variant("live-soul", "LIVE SOUL", gospelChops, .gospel, 86, 151, -0.08, 0.02),
+        variant("live-soul", "70s SOUL", gospelChops, .gospel, 86, 151, -0.08, 0.02),
         variant("80s-pop", "80s POP", heavyBreak, .pop80s, 114, 163, 0.15, 0.16),
         variant("90s-pop", "90s POP", funkBreak, .pop90s, 108, 173, 0.05, 0.08),
         variant("live-pop", "LIVE POP", gospelChops, .pop, 120, 191, 0.12, 0.02),
@@ -118,6 +127,14 @@ enum KitLibrary {
         variant("amapiano", "AMAPIANO", modernTrap, .amapiano, 112, 293, -0.1, 0.04)
     ]
     static let factory = core + textures + legacy
+
+    static func kits(for mode: SoundMode) -> [KitDefinition] {
+        let kits = factory.filter { $0.preferredMode == mode }
+        guard mode == .vintage else { return kits }
+        let primary = ["boom-bap", "live-soul", "vintage-rnb", "dirty-soul", "funk-break", "loose-break"]
+        return primary.compactMap { id in kits.first { $0.id == id } }
+            + kits.filter { !primary.contains($0.id) }
+    }
 
     private static func variant(_ id: String, _ name: String, _ base: KitDefinition, _ style: GrooveStyle,
                                 _ tempo: Double, _ seed: UInt32, _ tone: Float, _ drive: Float) -> KitDefinition {

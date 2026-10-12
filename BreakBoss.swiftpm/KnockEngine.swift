@@ -12,25 +12,55 @@ struct PadSettings: Codable, Equatable {
     var tune: Float = 0
     /// 0.05 ... 1 (1 = the sound's own length).
     var decay: Float = 1
+    /// 0...1 logarithmic low-pass cutoff; 1 bypasses the per-pad filter.
+    var filter: Float = 1
     var reverse = false
     /// File name in the Samples folder when the pad holds your own sample.
     var sampleFile: String?
 
+    private enum CodingKeys: String, CodingKey {
+        case level, pan, tune, decay, filter, reverse, sampleFile
+    }
+
     var gain: Float { level <= 0.001 ? 0 : KnockMath.dbToGain(40 * log10f(level / 0.8)) }
 }
 
-/// The sounds on the 12 pads, ready for the audio thread (read-only once published).
+extension PadSettings {
+    /// Older presets have no per-pad filter, so their original tone remains open.
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        level = try values.decodeIfPresent(Float.self, forKey: .level) ?? 0.8
+        pan = try values.decodeIfPresent(Float.self, forKey: .pan) ?? 0
+        tune = try values.decodeIfPresent(Float.self, forKey: .tune) ?? 0
+        decay = try values.decodeIfPresent(Float.self, forKey: .decay) ?? 1
+        filter = try values.decodeIfPresent(Float.self, forKey: .filter) ?? 1
+        reverse = try values.decodeIfPresent(Bool.self, forKey: .reverse) ?? false
+        sampleFile = try values.decodeIfPresent(String.self, forKey: .sampleFile)
+    }
+}
+
+/// The sounds on the 16 pads, ready for the audio thread (read-only once published).
 final class KitBuffers {
     let name: String
     let samples: [SampleBuffer]
     let settings: [PadSettings]
     let bassHz: Float
+    /// One-pole coefficients prepared on the control plane, never at note-on or render time.
+    let filterCoefficients: [Float]
 
-    init(name: String, samples: [SampleBuffer], settings: [PadSettings], bassHz: Float) {
+    init(name: String, samples: [SampleBuffer], settings: [PadSettings], bassHz: Float,
+         renderSampleRate: Double = 48_000) {
         self.name = name
         self.samples = samples
         self.settings = settings
         self.bassHz = bassHz
+        let rate = renderSampleRate.isFinite && renderSampleRate > 0 ? renderSampleRate : 48_000
+        filterCoefficients = settings.map { pad in
+            let amount = pad.filter.isFinite ? pad.filter.clamped(0, 1) : 1
+            guard amount < 0.999_999 else { return 1 }
+            let cutoff = min(40 * pow(450, Double(amount)), rate * 0.45)
+            return Float(1 - exp(-2 * Double.pi * cutoff / rate))
+        }
     }
 }
 
@@ -475,6 +505,9 @@ final class KnockEngine {
         case .bass:
             trigger(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), lengthSamples: 0, glide: false, heldNote: Int(e.a) + Pad.bassRootNote)
         case .noteOff:
+            // One-shot duration belongs to the sample and DECAY control, even for a
+            // chromatic 808. Only Loop mode treats MIDI note length as a gate.
+            guard params[KParam.playMode.rawValue] > 0.5 else { break }
             if e.a >= 0 { endGate(Int(e.a)) }
             let note = Int(e.a) % 128
             for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].heldNote == note && e.a >= 0 {
@@ -654,7 +687,7 @@ final class KnockEngine {
         voices[slot] = Voice(sample: sample, pad: pad, rate: rate, reverse: ps.reverse, gainL: gl, gainR: gr,
                              decayCoef: coef, holdSamples: Int(sampleRate * 0.012), chokeGroup: group,
                              age: voiceAge, remaining: lengthSamples > 0 ? lengthSamples : Int.max, heldNote: heldNote,
-                             attackSamples: max(1, Int(sampleRate * 0.0005)))
+                             attackSamples: max(1, Int(sampleRate * 0.0005)), filterCoefficient: kit.filterCoefficients[pad])
         padHits[pad] &+= 1
     }
 
@@ -881,12 +914,15 @@ struct Voice {
     var age: UInt32 = 0
     var remaining = Int.max
     var heldNote = -1
+    var filterCoefficient: Float = 1
+    var filterL: Float = 0
+    var filterR: Float = 0
 
     init() {}
 
     init(sample: SampleBuffer, pad: Int, rate: Double, reverse: Bool, gainL: Float, gainR: Float,
          decayCoef: Float, holdSamples: Int, chokeGroup: Int, age: UInt32, remaining: Int, heldNote: Int,
-         attackSamples: Int = 0) {
+         attackSamples: Int = 0, filterCoefficient: Float = 1) {
         active = true
         self.pad = pad
         left = sample.left
@@ -908,6 +944,7 @@ struct Voice {
         self.age = age
         self.remaining = remaining
         self.heldNote = heldNote
+        self.filterCoefficient = filterCoefficient
     }
 
     mutating func startFade(samples: Int) {
@@ -939,8 +976,14 @@ struct Voice {
             if position < 0 || position >= last { active = false; return }
             let idx = Int(position)
             let frac = Float(position - Double(idx))
-            let l = left[idx] + (left[idx + 1] - left[idx]) * frac
-            let r = right[idx] + (right[idx + 1] - right[idx]) * frac
+            var l = left[idx] + (left[idx + 1] - left[idx]) * frac
+            var r = right[idx] + (right[idx + 1] - right[idx]) * frac
+            if filterCoefficient < 1 {
+                filterL += filterCoefficient * (l - filterL)
+                filterR += filterCoefficient * (r - filterR)
+                l = filterL
+                r = filterR
+            }
             var g = env * fade
             if hold > 0 { hold -= 1 } else { env *= decayCoef }
             if releasing {

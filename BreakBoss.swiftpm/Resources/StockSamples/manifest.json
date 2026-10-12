@@ -676,13 +676,13 @@
     {
       "kitID": "boom-bap",
       "pad": 0,
-      "file": "bb_boom-bap_p00.wav",
+      "file": "bb_vintage32-boom-bap_p00.wav",
       "displayName": "BOOM BAP KICK"
     },
     {
       "kitID": "boom-bap",
       "pad": 1,
-      "file": "bb_boom-bap_p01.wav",
+      "file": "bb_vintage32-boom-bap_p01.wav",
       "displayName": "BOOM BAP SNARE"
     },
     {
@@ -694,7 +694,7 @@
     {
       "kitID": "boom-bap",
       "pad": 3,
-      "file": "bb_boom-bap_p03.wav",
+      "file": "bb_vintage32-boom-bap_p03.wav",
       "displayName": "BOOM BAP RIM"
     },
     {
@@ -964,13 +964,13 @@
     {
       "kitID": "dirty-soul",
       "pad": 0,
-      "file": "bb_dirty-soul_p00.wav",
+      "file": "bb_vintage32-dirty-soul_p00.wav",
       "displayName": "DIRTY SOUL KICK"
     },
     {
       "kitID": "dirty-soul",
       "pad": 1,
-      "file": "bb_dirty-soul_p01.wav",
+      "file": "bb_vintage32-dirty-soul_p01.wav",
       "displayName": "DIRTY SOUL SNARE"
     },
     {
@@ -982,7 +982,7 @@
     {
       "kitID": "dirty-soul",
       "pad": 3,
-      "file": "bb_dirty-soul_p03.wav",
+      "file": "bb_vintage32-dirty-soul_p03.wav",
       "displayName": "DIRTY SOUL RIM"
     },
     {
@@ -1156,13 +1156,13 @@
     {
       "kitID": "funk-break",
       "pad": 0,
-      "file": "bb_boom-bap_p00.wav",
+      "file": "bb_vintage32-funk-break_p00.wav",
       "displayName": "FUNK BREAK KICK"
     },
     {
       "kitID": "funk-break",
       "pad": 1,
-      "file": "bb_boom-bap_p01.wav",
+      "file": "bb_vintage32-funk-break_p01.wav",
       "displayName": "FUNK BREAK SNARE"
     },
     {
@@ -1174,7 +1174,7 @@
     {
       "kitID": "funk-break",
       "pad": 3,
-      "file": "bb_boom-bap_p03.wav",
+      "file": "bb_vintage32-funk-break_p03.wav",
       "displayName": "FUNK BREAK RIM"
     },
     {
@@ -1540,13 +1540,13 @@
     {
       "kitID": "live-soul",
       "pad": 0,
-      "file": "bb_cole-world_p00.wav",
+      "file": "bb_vintage32-live-soul_p00.wav",
       "displayName": "LIVE SOUL KICK"
     },
     {
       "kitID": "live-soul",
       "pad": 1,
-      "file": "bb_cole-world_p01.wav",
+      "file": "bb_vintage32-live-soul_p01.wav",
       "displayName": "LIVE SOUL SNARE"
     },
     {
@@ -1558,7 +1558,7 @@
     {
       "kitID": "live-soul",
       "pad": 3,
-      "file": "bb_cole-world_p03.wav",
+      "file": "bb_vintage32-live-soul_p03.wav",
       "displayName": "LIVE SOUL RIM"
     },
     {
@@ -1732,13 +1732,13 @@
     {
       "kitID": "loose-break",
       "pad": 0,
-      "file": "bb_loose-break_p00.wav",
+      "file": "bb_vintage32-loose-break_p00.wav",
       "displayName": "LOOSE BREAK KICK"
     },
     {
       "kitID": "loose-break",
       "pad": 1,
-      "file": "bb_loose-break_p01.wav",
+      "file": "bb_vintage32-loose-break_p01.wav",
       "displayName": "LOOSE BREAK SNARE"
     },
     {
@@ -1750,7 +1750,7 @@
     {
       "kitID": "loose-break",
       "pad": 3,
-      "file": "bb_loose-break_p03.wav",
+      "file": "bb_vintage32-loose-break_p03.wav",
       "displayName": "LOOSE BREAK RIM"
     },
     {
@@ -2788,13 +2788,13 @@
     {
       "kitID": "vintage-rnb",
       "pad": 0,
-      "file": "bb_80s-pop_p00.wav",
+      "file": "bb_vintage32-vintage-rnb_p00.wav",
       "displayName": "VINTAGE RNB KICK"
     },
     {
       "kitID": "vintage-rnb",
       "pad": 1,
-      "file": "bb_vintage-rnb_p01.wav",
+      "file": "bb_vintage32-vintage-rnb_p01.wav",
       "displayName": "VINTAGE RNB SNARE"
     },
     {
@@ -2806,7 +2806,7 @@
     {
       "kitID": "vintage-rnb",
       "pad": 3,
-      "file": "bb_vintage-rnb_p03.wav",
+      "file": "bb_vintage32-vintage-rnb_p03.wav",
       "displayName": "VINTAGE RNB RIM"
     },
     {
