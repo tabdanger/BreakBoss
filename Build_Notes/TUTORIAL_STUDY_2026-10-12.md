@@ -55,3 +55,17 @@ To reproduce the tutorial rhythms, obtain a playable video/audio excerpt coverin
 ## Implementation status
 
 This note records research only. No Swift source or pattern data is changed by this study. Until source evidence becomes available, the requested tutorial-specific rhythms remain pending.
+
+
+## Additional FilMot caption-index attempt
+
+A further public caption-index route was tested while Apple processed the release. The same connected web tool was used; no shell network permissions, login or captcha bypass was attempted.
+
+- `https://filmot.com/video/<ID>` for each of `sEYE7_QtZAE`, `PI_7fcEddUI`, `OrvVfDgyjXQ` and `LHRHtQmgpOw`: all returned `not accessible via this tool`.
+- Exact title/ID searches restricted to `filmot.com`: no indexed results.
+- `https://filmot.com/sidebyside/sEYE7_QtZAE/en/en`, corresponding `OrvVfDgyjXQ` and `LHRHtQmgpOw` pages: all returned `not accessible via this tool`.
+- `https://filmot.com/search/KXVI/1` and a title-filtered Travis Scott search: `not accessible via this tool`.
+- [FilMot’s publicly indexed front page](https://apiv1.filmot.com/) was readable, but exposes a generic input form and a requirement to complete a captcha. It contains no target-video captions. Its `/video/sEYE7_QtZAE` and `/search/KXVI/1` pages were also inaccessible. The captcha requirement was respected.
+- Searches for creator-provided MIDI/project templates tied to these exact titles surfaced only the previously recorded general catalog description and unrelated products; no tutorial-linked MIDI, piano-roll image or downloadable project was recovered.
+
+**Result remains:** zero playable videos, zero usable target transcripts, zero verified BPM or hit grids. These access results do not prove that a transcript or project does not exist; they show that it was not obtained through the available public reader.

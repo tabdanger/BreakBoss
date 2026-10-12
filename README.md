@@ -1,5 +1,7 @@
 # BreakBoss 0.3.2
 
+**TestFlight: 0.3.2 (build 13), VALID and IN_BETA_TESTING.** Both devices passed 23,903 checks. [Verified release](https://github.com/tabdanger/BreakBoss/actions/runs/38289954939).
+
 Universal iPhone/iPad drum machine and AUv3 instrument. Both use the same sound engine, stock kits, genre patterns, MIDI mapping, presets and exports. iPhone uses the supplied portrait faceplates; iPad retains its original artwork.
 
 All 544 factory pad slots across 34 kits use processed audio from the uploaded Multiverse folders. The bank contains 318 WAVs derived from 42 selected hits; exact processing and hashes are in `Build_Notes/STOCK_SAMPLE_PROVENANCE.json`. Imported audio takes priority. Genre patterns cover Atlanta/Memphis/Toronto Trap, Neo Soul, Boom Bap, Lo-fi, R&B, 80s/90s Pop, Amapiano and experimental/world percussion.
