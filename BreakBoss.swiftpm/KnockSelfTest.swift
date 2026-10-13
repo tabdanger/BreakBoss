@@ -36,6 +36,7 @@ enum KnockSelfTest {
         phase("checkPatternEditor", checkPatternEditor)
         phase("checkMIDIPadMap", checkMIDIPadMap)
         phase("checkRecordingTrim", checkRecordingTrim)
+        phase("checkDrumRoll", checkDrumRoll)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -889,6 +890,89 @@ enum KnockSelfTest {
         #endif
     }
 
+    static func checkDrumRoll() {
+        let bar = PatternEdit.barTicks, step = PatternData.stepTicks
+        // Note operations.
+        var p = PatternData(name: "D", lengthTicks: bar * 2, events: [])
+        p = PatternEdit.addNote(p, pad: Pad.kick.rawValue, tick: 0, velocity: 0.9)
+        p = PatternEdit.addNote(p, pad: Pad.kick.rawValue, tick: 1, velocity: 0.5)
+        check(p.events.count == 1 && p.events[0].velocity == 0.5, "drum roll: drawing on an existing hit replaces it")
+        p = PatternEdit.addNote(p, pad: Pad.bass808.rawValue, tick: step * 4, length: step * 6, velocity: 1, semis: 5)
+        check(p.events.contains { Int($0.pad) == Pad.bass808.rawValue && $0.length == step * 6 && $0.semis == 5 }, "drum roll: long 808 note with pitch")
+        let drums = PatternEdit.addNote(p, pad: Pad.snare.rawValue, tick: step * 4, length: 99, velocity: 1)
+        check(drums.events.first { Int($0.pad) == Pad.snare.rawValue }?.length == 0, "drum roll: drum hits have no length")
+        let kickKey = NoteKey(p.events.first { Int($0.pad) == Pad.kick.rawValue }!)
+        let (moved, movedKeys) = PatternEdit.move(p, [kickKey], by: step * 2)
+        check(moved.events.contains { Int($0.pad) == Pad.kick.rawValue && $0.tick == step * 2 } && movedKeys.count == 1, "drum roll: move")
+        let (clampedMove, _) = PatternEdit.move(p, [kickKey], by: -500)
+        check(clampedMove.events.contains { Int($0.pad) == Pad.kick.rawValue && $0.tick == 0 }, "drum roll: notes can't move before the start")
+        let bassKey = NoteKey(p.events.first { Int($0.pad) == Pad.bass808.rawValue }!)
+        let (resized, _) = PatternEdit.resize(p, bassKey, length: bar * 4)
+        check(resized.events.first { Int($0.pad) == Pad.bass808.rawValue }.map { $0.tick + $0.length <= bar * 2 } == true, "drum roll: 808 stretch stays inside")
+        let vel = PatternEdit.setVelocity(p, [kickKey], 0.2)
+        check(vel.events.first { NoteKey($0) == kickKey }?.velocity == 0.2, "drum roll: velocity lane")
+        let (pitched, pitchedKeys) = PatternEdit.setPitch(p, [kickKey], 30)
+        check(pitched.events.first { Int($0.pad) == Pad.kick.rawValue }?.semis == 12 && pitchedKeys.count == 1, "drum roll: drum pitch limited to +12")
+        let (dup, dupKeys) = PatternEdit.duplicate(p, [kickKey, bassKey])
+        check(dupKeys.count == 2 && dup.events.count == p.events.count + 2, "drum roll: DUPLICATE copies the selection")
+        let removed = PatternEdit.remove(p, [kickKey])
+        check(!removed.events.contains { NoteKey($0) == kickKey } && removed.events.count == p.events.count - 1, "drum roll: erase")
+        var loose = PatternData(name: "Q", lengthTicks: bar, events: [GrooveEvent(tick: 29, pad: 0, velocity: 1), GrooveEvent(tick: 383, pad: 1, velocity: 1)])
+        loose = PatternEdit.quantize(loose, nil, grid: step)
+        check(loose.events.map { $0.tick }.sorted() == [0, 24], "drum roll: quantize (and wrap at the end)")
+        let rec = PatternEdit.addRecorded(PatternData(name: "R", lengthTicks: bar, events: []), pad: 2, tick: 47, velocity: 0.6, semis: 0, snap: step)
+        check(rec.events.first?.tick == 48, "drum roll: recorded hits snap to the grid")
+        // Mute / solo.
+        var muted = Array(repeating: false, count: Pad.count), solo = muted
+        check(KnockController.padMask(muted: muted, solo: solo) == 0x0FFF, "mute/solo: everything plays by default")
+        muted[1] = true
+        check(KnockController.padMask(muted: muted, solo: solo) == 0x0FFD, "mute/solo: mute silences one channel")
+        solo[0] = true; solo[1] = true
+        check(KnockController.padMask(muted: muted, solo: solo) == 0x0001, "mute/solo: solo plays only soloed channels, mutes still win")
+        // Humanize is repeatable and doesn't touch the notes you see.
+        var h = PatternData(name: "H", lengthTicks: bar, events: (0..<16).map { GrooveEvent(tick: Int32($0) * step, pad: 4, velocity: 0.7) })
+        h.humanize = 0.8
+        let h1 = PatternSet.humanized(h), h2 = PatternSet.humanized(h)
+        check(h1 == h2 && h1.events != h.events, "humanize: same pattern, same feel")
+        check(h1.events.allSatisfy { abs($0.velocity - 0.7) < 0.2 } && zip(h1.events, h.events).allSatisfy { abs($0.0.tick - $0.1.tick) <= 6 },
+              "humanize: small timing and velocity changes")
+        // Engine: per-hit pitch, mute mask, record ring, playhead.
+        let e = KnockEngine()
+        e.prepare(sampleRate: 48_000, maxFrames: 256)
+        e.setParam(.playMode, 1)
+        e.setParam(.followDAW, 0)
+        e.setParam(.tempoSync, 0)
+        e.setTempo(120)
+        e.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        var rp = PatternData(name: "REC", lengthTicks: bar, events: [GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1)])
+        e.patternHandoff.publish(PatternSet([rp] + Array(repeating: rp, count: Pad.count - 1)))
+        renderBlock(e)
+        e.send(KEvent(kind: .loopPad, a: 0))
+        for _ in 0..<20 { renderBlock(e) }
+        check(e.playheadTick.pointee > 0 && e.playheadTick.pointee < Double(bar), "drum roll: playhead follows the pattern")
+        e.send(KEvent(kind: .recordArm, a: 1))
+        e.send(KEvent(kind: .pad, a: Int32(Pad.snare.rawValue), value: 0.8))
+        renderBlock(e)
+        let hits = e.collectRecorded()
+        check(hits.count == 1 && Int(hits[0].pad) == Pad.snare.rawValue && hits[0].tick > 0 && hits[0].loop == 0,
+              "drum roll: RECORD captures a live hit at its place in the pattern")
+        e.receiveMIDI(status: 0x90, data1: 38, data2: 100, time: 0)
+        renderBlock(e)
+        check(Int(e.status[1]) == 0 && e.collectRecorded().count == 1, "drum roll: while recording, MIDI notes play drums instead of switching loops")
+        e.send(KEvent(kind: .recordArm, a: 0))
+        let kickBefore = e.padHits[Pad.kick.rawValue]
+        e.send(KEvent(kind: .padMask, a: Int32(0x0FFF & ~1)))
+        e.send(KEvent(kind: .pad, a: Int32(Pad.kick.rawValue), value: 1))
+        renderBlock(e)
+        check(e.padHits[Pad.kick.rawValue] == kickBefore, "mute: a muted channel doesn't sound")
+        e.send(KEvent(kind: .padMask, a: 0x0FFF))
+        renderBlock(e)
+        rp.events = [GrooveEvent(tick: 0, pad: Int8(Pad.snare.rawValue), velocity: 1, semis: 7)]
+        let set = PatternSet([rp])
+        check(set.loops[0].events[0].semis == 7, "drum roll: drum hits keep their own pitch for the engine")
+        _ = rp
+    }
+
     static func checkMigration() {
         var old = KnockState()
         old.pads = Array(repeating: PadSettings(), count: 16)
@@ -935,56 +1019,53 @@ enum KnockSelfTest {
         }
         source.editedLoops[0] = PatternData(name: "CUSTOM LOOP", lengthTicks: 384, events: [])
         source = source.normalized()
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        source.grooveSeed = 777
+        source.bpm = 101
         let changedKit = source.selectingKit(KitLibrary.west90s)
         var expectedPads = source.pads
         for i in expectedPads.indices { expectedPads[i].sampleFile = nil }
         check(changedKit.kitID == KitLibrary.west90s.id && changedKit.kitName == KitLibrary.west90s.name &&
-              changedKit.userKit == nil, "switching kits replaces the raw audio identity")
+              changedKit.userKit == nil, "switching kits replaces the drum sounds")
         check(changedKit.values == source.values && changedKit.mode == source.mode &&
               changedKit.playMode == source.playMode && changedKit.presetName == source.presetName,
               "switching kits preserves active mode, FX knobs, clipper, transport and preset identity")
         check(changedKit.pads == expectedPads, "switching kits preserves per-pad pitch, decay, filter, level and pan")
-        check(changedKit.editedLoops.allSatisfy { $0 == nil }, "switching kits regenerates the kit's factory patterns")
+        check(changedKit.editedLoops == source.editedLoops && changedKit.grooveSeed == 777 && changedKit.bpm == 101 &&
+              changedKit.patternStyle == KitLibrary.kit(id: source.kitID).style,
+              "switching kits keeps the pattern, its edits and the tempo")
+        let twice = changedKit.selectingKit(KitLibrary.neoSoul)
+        check(twice.patternStyle == changedKit.patternStyle, "cycling kits never changes the pattern")
 
-        var distinctSnapshots = Set<Data>()
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys]
+        var styles = Set<GrooveStyle>()
         for preset in presets {
-            let kit = KitLibrary.kit(id: preset.kitID)
             let state = preset.applying(to: source)
-            check(kit.id == preset.kitID && state.kitID == preset.kitID,
-                  "\(preset.name): loads its matching factory kit")
-            check(state.mode == preset.mode && state.values[KParam.soundMode.id] == Float(preset.mode.rawValue) &&
-                  state.presetName == preset.name, "\(preset.name): restores the preset mode and name")
-            check(state.pads.count == Pad.count && state.pads == preset.pads && state.pads.allSatisfy { $0.sampleFile == nil },
-                  "\(preset.name): restores all 12 pad settings and stock sample identities")
-            check(state.values[KParam.playMode.id] == 0 && state.values[KParam.tempoSync.id] == 1 &&
-                  state.values[KParam.followDAW.id] == 0, "\(preset.name): preserves player and host transport choices")
+            check(state.kitID == source.kitID && state.mode == source.mode && state.pads == source.pads,
+                  "\(preset.name): keeps the current kit, mode and pad sounds")
             for p in KParam.allCases where p.isKnob || p == .clipper {
-                check(state.values[p.id] == (preset.values[p] ?? p.defaultValue),
-                      "\(preset.name): restores \(p.name) without inheriting previous FX")
+                check(state.values[p.id] == source.values[p.id], "\(preset.name): keeps \(p.name)")
             }
-            check(state.pads.allSatisfy {
-                $0.tune.isFinite && (-24...24).contains($0.tune) && $0.decay.isFinite && (0.05...1).contains($0.decay) &&
-                $0.filter.isFinite && (0...1).contains($0.filter) && $0.level.isFinite && (0...1).contains($0.level) &&
-                $0.pan.isFinite && (-1...1).contains($0.pan)
-            }, "\(preset.name): pad controls are finite and bounded")
+            check(state.patternStyle == KitLibrary.kit(id: preset.kitID).style && state.grooveSeed == FactoryPreset.seed(preset.name) &&
+                  state.editedLoops.allSatisfy { $0 == nil } && state.presetName == preset.name,
+                  "\(preset.name): loads its own pattern")
+            check(state.values[KParam.playMode.id] == 0 && state.values[KParam.tempoSync.id] == 1 &&
+                  state.values[KParam.followDAW.id] == 0 && state.bpm == source.bpm,
+                  "\(preset.name): preserves player and host transport choices (tempo sync keeps the tempo)")
             let data = try? encoder.encode(state)
             let restored = data.flatMap { try? JSONDecoder().decode(KnockState.self, from: $0) }
-            check(restored == state, "\(preset.name): full mode, kit, FX and pad snapshot round-trips")
-            // Changing a name alone does not create another sound. Exclude the name when
-            // counting authored audio snapshots, while retaining kit and processing choices.
-            var sound = state
-            sound.presetName = ""
-            if let soundData = try? encoder.encode(sound) { distinctSnapshots.insert(soundData) }
-            let sameKitSource = source.selectingKit(kit)
-            check(preset.applying(to: sameKitSource) == state, "\(preset.name): applying the current kit still restores all FX and pad controls")
+            check(restored == state, "\(preset.name): pattern choice round-trips")
+            if let st = state.patternStyle { styles.insert(st) }
         }
-        check(distinctSnapshots.count >= 50, "50+ factory presets contain distinct authored audio snapshots")
-        let crossMode = presets.first { $0.name == "GATED DREAM" }?.applying(to: source)
-        check(crossMode?.mode == .texture && crossMode?.kitID == KitLibrary.heavyBreak.id &&
-              KitLibrary.heavyBreak.preferredMode == .vintage,
-              "a Vintage-home break kit can play through a Texture preset")
+        check(Set(presets.map { FactoryPreset.seed($0.name) }).count == presets.count, "every preset is its own pattern variation")
+        check(styles.count >= 8, "presets cover many groove families (\(styles.count))")
+        var unsynced = source
+        unsynced.values[KParam.tempoSync.id] = 0
+        if let first = presets.first {
+            check(first.applying(to: unsynced).bpm == KitLibrary.kit(id: first.kitID).tempo, "a preset sets its tempo when not synced")
+        }
+        let old = try? JSONDecoder().decode(KnockState.self, from: encoder.encode(KnockState()))
+        check(old?.patternStyle == nil && old?.mutedPads == nil, "older saves load and follow their kit's patterns")
     }
 
     static func checkTextureControls() {

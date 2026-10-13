@@ -77,12 +77,12 @@ struct MenuView: View {
                 Section("How it works") {
                     guide("ONE-SHOT / LOOP", "ONE-SHOT: the pads play drums. LOOP: the pads play grooves made from the kit; a new pick starts on the next bar, tap the same pad again to stop at the end of the bar.")
                     guide("MODERN / VINTAGE / TEXTURE", "Modern is clean and punchy. Vintage is home to soul, boom bap and break grooves, with tape drive, low-end warmth and a rolled-off top. Texture adds resampling, instability, synced delay and gated reverb. You can play any kit or imported acoustic sample in every mode.")
-                    guide("KITS / PRESETS", "KITS changes the raw pad sounds while keeping your current processing controls. Factory PRESETS loads a matching kit, mode, effect settings, clipper and per-pad tuning, decay and filters. Save your complete settings with SAVE.")
+                    guide("KITS / PRESETS", "KITS change the drum sounds only; the pattern keeps playing. PRESETS change the pattern only (groove, variation and tempo); the sounds and knobs stay. Mix any pattern with any kit. SAVE stores everything as your own preset.")
                     guide("DICE", "LOOP: new grooves in the kit's style. ONE-SHOT: new variations of the kit's sounds.")
                     guide("KNOBS", "Drag up or right to turn up. Double-tap to reset.")
                     guide("BPM", "Drag up or down on the display. Double-tap for the kit's tempo. With TEMPO SYNC on, the DAW or MIDI clock sets it.")
                     guide("HOLD A PAD", "ONE-SHOT: pad editor (level, pan, tune, decay, filter, reverse, your sample). LOOP: step editor for that loop, or drop in a MIDI file.")
-                    guide("PATTERN EDITOR", "The piano-keys button next to EXPORT opens the step editor for the loop that's playing: pick a pattern, grid and length, tap squares, drag a long 808, COPY NEXT, BLANK PATTERN, undo and redo.")
+                    guide("DRUM ROLL", "The piano-keys button opens the drum roll for the pattern that's playing. DRAW: tap to add, tap a note to delete, drag a note to move, drag along a row to paint, drag on the 808 row for a long note. SELECT: box notes, then move, DUPLICATE or CLEAR. ERASE: wipe over notes. The lane underneath sets velocity or pitch. Tap a channel name to load or record a sample onto it, or open its piano roll. M / S mute and solo. RECORD writes what you play on the ▶ buttons or a MIDI controller into the pattern. Space bar plays and stops.")
                     guide("EXPORT", "The arrow button renders MIDI, a stereo mix and stems you can drag into a DAW or share.")
                 }
 

@@ -80,6 +80,8 @@ struct KEvent {
         case songPosition // a: MIDI beats (16ths)
         case allOff
         case mapNote      // a: MIDI note (-1 = clear the whole map), value: pad 0...11 or -1
+        case padMask      // a: bit per pad that may sound (drum roll mute / solo)
+        case recordArm    // a: 1 = record pad / MIDI hits into the playing pattern, 0 = off
     }
     var kind: Kind
     var a: Int32 = 0

@@ -50,6 +50,9 @@ struct PatternData: Codable, Equatable {
     var name: String
     var lengthTicks: Int32
     var events: [GrooveEvent]
+    /// Drum roll HUMANIZE, 0...1: small timing and velocity changes added when the pattern is
+    /// handed to the engine. The notes you see and export stay exactly where you put them.
+    var humanize: Float? = nil
 
     static let ppq: Int32 = 96
     static let stepTicks: Int32 = 24  // one 16th
@@ -68,7 +71,7 @@ final class PatternSet {
         let events: UnsafeMutableBufferPointer<GrooveEvent>
         let lengthTicks: Int
         init(_ data: PatternData) {
-            var sorted = data
+            var sorted = PatternSet.humanized(data)
             sorted.sort()
             // Keep every hit inside the loop (micro-timing can push one past an edge).
             let len = Int(max(sorted.lengthTicks, PatternData.ppq))
@@ -90,6 +93,19 @@ final class PatternSet {
 
     let loops: [Loop]
     let data: [PatternData]
+
+    /// Same pattern, same result: the jitter comes from each note's own position.
+    static func humanized(_ data: PatternData) -> PatternData {
+        guard let amount = data.humanize, amount > 0.001 else { return data }
+        var p = data
+        for i in p.events.indices {
+            var rng = KRandom(seed: UInt32(truncatingIfNeeded: Int(p.events[i].tick) &* 31 &+ Int(p.events[i].pad) &* 7919 &+ 17))
+            let shift = Int32((rng.range(-1, 1) * amount * 6).rounded())
+            p.events[i].tick = max(0, p.events[i].tick + shift)
+            p.events[i].velocity = (p.events[i].velocity * (1 + rng.range(-1, 1) * amount * 0.18)).clamped(0.05, 1)
+        }
+        return p
+    }
 
     init(_ data: [PatternData]) {
         self.data = data

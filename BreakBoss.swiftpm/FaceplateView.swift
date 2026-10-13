@@ -70,6 +70,7 @@ struct FaceplateView: View {
             }
         }
         .background(Color.black.ignoresSafeArea())
+        .background(spaceBar)
         .sheet(item: $editor) { target in
             if target.loop {
                 LoopEditorView(controller: controller, loop: target.pad)
@@ -79,7 +80,7 @@ struct FaceplateView: View {
         }
         .sheet(isPresented: $showExport) { ExportView(controller: controller) }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
-        .sheet(item: $patternEditor) { target in PatternEditorView(controller: controller, loop: target.loop) }
+        .fullScreenCover(item: $patternEditor) { target in DrumRollView(controller: controller, loop: target.loop) }
         .alert(namePrompt == .kit ? "Save Kit" : "Save Preset", isPresented: Binding(
             get: { namePrompt != nil }, set: { if !$0 { namePrompt = nil } })) {
             TextField("Name", text: $nameText)
@@ -91,6 +92,16 @@ struct FaceplateView: View {
         } message: {
             Text(namePrompt == .kit ? "Saves the 12 pads (your samples and pad settings) as a kit."
                                     : "Saves the whole faceplate: mode, knobs, kit and loops.")
+        }
+    }
+
+    /// Space bar (hardware keyboard) = PLAY / STOP in the standalone app. In a DAW the space
+    /// bar belongs to the DAW, so the plug-in leaves it alone.
+    @ViewBuilder private var spaceBar: some View {
+        if !controller.isPlugin && patternEditor == nil {
+            Button("") { controller.playPressed() }
+                .keyboardShortcut(.space, modifiers: [])
+                .opacity(0).frame(width: 0, height: 0).accessibilityHidden(true)
         }
     }
 
@@ -245,7 +256,7 @@ struct FaceplateView: View {
         Menu {
             Button("INIT") { controller.loadInit() }
             ForEach(SoundMode.allCases, id: \.rawValue) { mode in
-                Section("\(mode.title) presets") {
+                Section("\(mode.title) patterns") {
                     ForEach(FactoryPresets.all.filter { $0.mode == mode }, id: \.name) { fp in
                         Button(fp.name) { controller.loadFactoryPreset(fp) }
                     }

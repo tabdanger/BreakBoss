@@ -58,6 +58,12 @@ struct KnockState: Codable, Equatable {
     var userKit: String?
     var soundSeed: UInt32 = 1
     var grooveSeed: UInt32 = 1
+    /// The groove family the patterns come from. Set by PRESETS (patterns); KITS never change it.
+    /// nil (older saves) = the kit's own style.
+    var patternStyle: GrooveStyle? = nil
+    /// Drum roll channel MUTE / SOLO (index = pad).
+    var mutedPads: [Bool]? = nil
+    var soloPads: [Bool]? = nil
     var pads: [PadSettings] = Array(repeating: PadSettings(), count: Pad.count)
     /// Loops you edited or imported (nil = the generated one).
     var editedLoops: [PatternData?] = Array(repeating: nil, count: Pad.count)
@@ -90,14 +96,13 @@ struct KnockState: Codable, Equatable {
         s.kitName = kit.name
         s.userKit = nil
         s.soundSeed = 1
-        s.grooveSeed = 1
         s.pads = Self.normalizedPads(s.pads)
         if let custom = s.midiCustomNotes { s.midiCustomNotes = MIDIPadMap.clean(custom) }
+        s.mutedPads = s.mutedPads.map { Array(($0 + Array(repeating: false, count: Pad.count)).prefix(Pad.count)) }
+        s.soloPads = s.soloPads.map { Array(($0 + Array(repeating: false, count: Pad.count)).prefix(Pad.count)) }
         for i in s.pads.indices { s.pads[i].sampleFile = nil }
-        s.editedLoops = Array(repeating: nil, count: Pad.count)
-        if (s.values[KParam.tempoSync.id] ?? KParam.tempoSync.defaultValue) < 0.5 {
-            s.bpm = kit.tempo
-        }
+        // KITS change the drum sounds only: the pattern, its edits and the tempo stay put.
+        if s.patternStyle == nil { s.patternStyle = KitLibrary.kit(id: kitID).style }
         return s
     }
 
@@ -225,18 +230,26 @@ struct FactoryPreset {
         self.pads = KnockState.normalizedPads(pads)
     }
 
-    /// Factory presets choose a matching kit, mode, FX, master clipper and every pad control.
-    /// Transport selection and host sync remain as set by the player/DAW.
+    /// PRESETS change the pattern only: its groove family, its variation and its tempo. The
+    /// kit (sounds), mode, knobs and pad settings stay as they are, so any pattern can play
+    /// through any kit. (The FX values and pad shapes are kept for the preset rework.)
     func applying(to source: KnockState) -> KnockState {
-        var s = source.selectingKit(KitLibrary.kit(id: kitID))
-        for p in KParam.allCases where p.isKnob || p == .clipper {
-            s.values[p.id] = values[p] ?? p.defaultValue
+        var s = source
+        s.patternStyle = KitLibrary.kit(id: kitID).style
+        s.grooveSeed = FactoryPreset.seed(name)
+        s.editedLoops = Array(repeating: nil, count: Pad.count)
+        if (s.values[KParam.tempoSync.id] ?? KParam.tempoSync.defaultValue) < 0.5 {
+            s.bpm = KitLibrary.kit(id: kitID).tempo
         }
-        s.mode = mode
-        s.values[KParam.soundMode.id] = Float(mode.rawValue)
-        s.pads = pads
         s.presetName = name
         return s.normalized()
+    }
+
+    /// A stable seed from the preset's name, so each preset is its own variation.
+    static func seed(_ name: String) -> UInt32 {
+        var h: UInt32 = 2_166_136_261
+        for b in name.utf8 { h = (h ^ UInt32(b)) &* 16_777_619 }
+        return max(2, h)
     }
 }
 

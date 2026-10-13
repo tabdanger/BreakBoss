@@ -134,6 +134,7 @@ final class KnockController: ObservableObject {
         for p in KParam.allCases { engine.setParam(p, value(p)) }
         engine.setTempo(state.bpm)
         pushMIDIMap()
+        pushPadMask()
     }
 
     // MARK: MIDI pad map (hardware controllers such as an MPC)
@@ -215,6 +216,99 @@ final class KnockController: ObservableObject {
         }
     }
 
+    // MARK: Drum roll
+
+    /// Plays a pad's sound in any mode (drum roll ▶ buttons, previews). While RECORD is armed
+    /// and the pattern runs, the engine also writes the hit into the pattern.
+    func auditionPad(_ pad: Int, velocity: Float = 0.85, semis: Float = 0) {
+        guard pad >= 0 && pad < Pad.count else { return }
+        if pad == Pad.bass808.rawValue {
+            engine.send(KEvent(kind: .bass, a: Int32(semis.rounded()), value: Double(velocity)))
+        } else {
+            engine.send(KEvent(kind: .pad, a: Int32(pad), value: Double(velocity)))
+        }
+    }
+
+    var mutedPads: [Bool] { state.mutedPads ?? Array(repeating: false, count: Pad.count) }
+    var soloPads: [Bool] { state.soloPads ?? Array(repeating: false, count: Pad.count) }
+
+    func toggleMute(_ pad: Int) {
+        guard (0..<Pad.count).contains(pad) else { return }
+        var m = mutedPads; m[pad].toggle(); state.mutedPads = m
+        pushPadMask(); scheduleSave()
+    }
+
+    func toggleSolo(_ pad: Int) {
+        guard (0..<Pad.count).contains(pad) else { return }
+        var m = soloPads; m[pad].toggle(); state.soloPads = m
+        pushPadMask(); scheduleSave()
+    }
+
+    /// FL-style: with any solo on, only soloed channels sound; mutes always silence.
+    static func padMask(muted: [Bool], solo: [Bool]) -> UInt16 {
+        let anySolo = solo.contains(true)
+        var mask: UInt16 = 0
+        for pad in 0..<Pad.count {
+            let audible = (anySolo ? (pad < solo.count && solo[pad]) : true) && !(pad < muted.count && muted[pad])
+            if audible { mask |= 1 << UInt16(pad) }
+        }
+        return mask
+    }
+
+    private func pushPadMask() {
+        engine.send(KEvent(kind: .padMask, a: Int32(KnockController.padMask(muted: mutedPads, solo: soloPads))))
+    }
+
+    @Published private(set) var recording = false
+
+    func setRecording(_ on: Bool) {
+        recording = on
+        engine.send(KEvent(kind: .recordArm, a: on ? 1 : 0))
+        _ = engine.collectRecorded()   // drop anything older
+    }
+
+    /// Plays the given pattern from its start (or keeps it going if it's already the one playing).
+    func playPattern(_ loop: Int) {
+        guard loops.indices.contains(loop) else { return }
+        if value(.followDAW) > 0.5 && meters.status[5] > 0 {
+            readout = Readout(title: "FOLLOW DAW", value: "START IT FROM THE DAW", time: Date())
+            return
+        }
+        if isPlaying && Int(meters.status[1]) == loop { return }
+        if isPlaying { engine.send(KEvent(kind: .stop)) }
+        engine.send(KEvent(kind: .loopPad, a: Int32(loop)))
+    }
+
+    func stopPlayback() { engine.send(KEvent(kind: .stop)) }
+
+    /// Space bar / play button: start the pattern on screen, or stop.
+    func togglePlayback(pattern: Int) {
+        if isPlaying { stopPlayback() } else { playPattern(pattern) }
+    }
+
+    /// Where the playing pattern is, in ticks (nil when stopped).
+    var playheadTick: Double? {
+        let t = engine.playheadTick.pointee
+        return t >= 0 ? t : nil
+    }
+
+    /// Moves recorded hits into their patterns (snapped when `snap` > 0). Returns how many.
+    @discardableResult
+    func mergeRecorded(snap: Int32) -> Int {
+        let hits = engine.collectRecorded()
+        guard !hits.isEmpty else { return 0 }
+        var touched: [Int: PatternData] = [:]
+        for h in hits {
+            let loop = Int(h.loop)
+            guard loops.indices.contains(loop) else { continue }
+            var p = touched[loop] ?? loops[loop]
+            p = PatternEdit.addRecorded(p, pad: Int(h.pad), tick: h.tick, velocity: h.velocity, semis: h.semis, snap: snap)
+            touched[loop] = p
+        }
+        for (loop, p) in touched { setLoop(loop, p) }
+        return hits.count
+    }
+
     func gateDown(_ pad: Int, velocity: Float) {
         guard (0..<Pad.count).contains(pad) else { return }
         if playMode == .loop {
@@ -281,13 +375,13 @@ final class KnockController: ObservableObject {
 
     func selectUserKit(_ name: String) {
         guard let kit = KnockStore.loadUserKit(name) else { notice = "Couldn't open the kit \(name)."; return }
+        if state.patternStyle == nil { state.patternStyle = kitDefinition.style }   // sounds change, the pattern stays
         let def = KitLibrary.kit(id: kit.baseKitID)
         state.kitID = def.id
         state.kitName = kit.name.uppercased()
         state.userKit = kit.name
         state.soundSeed = kit.soundSeed
         state.pads = KnockState.normalizedPads(kit.pads)
-        if value(.tempoSync) < 0.5 { setBPM(def.tempo) }
         rebuildKit()
         rebuildLoops()
         readout = Readout(title: "KIT", value: state.kitName, time: Date())
@@ -433,8 +527,11 @@ final class KnockController: ObservableObject {
 
     // MARK: Loops
 
+    /// The groove family the patterns come from (PRESETS set it; KITS don't).
+    var patternStyle: GrooveStyle { state.patternStyle ?? kitDefinition.style }
+
     func rebuildLoops() {
-        let generated = GrooveGenerator.loops(style: kitDefinition.style, seed: state.grooveSeed)
+        let generated = GrooveGenerator.loops(style: patternStyle, seed: state.grooveSeed)
         var merged = generated
         for i in 0..<min(merged.count, state.editedLoops.count) {
             if let edit = state.editedLoops[i] { merged[i] = edit }
@@ -478,7 +575,7 @@ final class KnockController: ObservableObject {
     }
 
     func regenerateLoop(_ index: Int) {
-        let fresh = GrooveGenerator.loops(style: kitDefinition.style, seed: UInt32.random(in: 2...UInt32.max))
+        let fresh = GrooveGenerator.loops(style: patternStyle, seed: UInt32.random(in: 2...UInt32.max))
         guard index >= 0 && index < fresh.count else { return }
         setLoop(index, fresh[index])
     }

@@ -151,6 +151,18 @@ final class KnockEngine {
     /// The last live note-on: (count << 8) | note, so the MIDI learn screen can see it.
     let lastNoteOn = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
 
+    /// Drum roll RECORD: hits played while the pattern runs are written here (audio thread)
+    /// and collected by the main thread. Single writer, single reader, fixed size.
+    struct RecordedHit { var loop: Int16 = 0; var pad: Int8 = 0; var tick: Int32 = 0; var velocity: Float = 0; var semis: Float = 0 }
+    static let recordCapacity = 512
+    let recordRing = UnsafeMutablePointer<RecordedHit>.allocate(capacity: KnockEngine.recordCapacity)
+    let recordWrite = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+    private var recordRead = 0
+    private var recordArmed = false
+    /// Where the playing pattern is, in ticks from its start (for the drum roll's playhead).
+    let playheadTick = UnsafeMutablePointer<Double>.allocate(capacity: 1)
+    private var lastBeatsPerSample: Double = 0
+
     /// Pads that sound (bit per pad). The export renderer uses it for stems.
     var padMask: UInt16 = 0xFFFF
 
@@ -160,6 +172,9 @@ final class KnockEngine {
         midiPadTable.initialize(repeating: -1, count: 128)
         for pad in 0..<Pad.count { midiPadTable[MIDIPadMap.standardNotes[pad]] = Int8(pad) }
         lastNoteOn.initialize(to: 0)
+        recordRing.initialize(repeating: RecordedHit(), count: KnockEngine.recordCapacity)
+        recordWrite.initialize(to: 0)
+        playheadTick.initialize(to: -1)
         params = .allocate(capacity: KParam.count)
         hostParams = .allocate(capacity: KParam.count)
         for p in KParam.allCases { (params + p.rawValue).initialize(to: p.defaultValue) }
@@ -188,6 +203,9 @@ final class KnockEngine {
         heldLoops.deallocate()
         midiPadTable.deallocate()
         lastNoteOn.deallocate()
+        recordRing.deallocate()
+        recordWrite.deallocate()
+        playheadTick.deallocate()
         params.deallocate()
         hostParams.deallocate()
         displayBPM.deallocate()
@@ -262,7 +280,7 @@ final class KnockEngine {
     private func noteEvent(note: Int, velocity: UInt8) -> KEvent {
         let v = Double(velocity) / 127
         if let pad = livePad(note) {
-            if params[KParam.playMode.rawValue] > 0.5 { return KEvent(kind: .loopPad, a: Int32(pad), value: v) }
+            if params[KParam.playMode.rawValue] > 0.5 && !recordArmed { return KEvent(kind: .loopPad, a: Int32(pad), value: v) }
             return KEvent(kind: .pad, a: Int32(pad), value: v)
         }
         if Pad.bassNoteRange.contains(note) { return KEvent(kind: .bass, a: Int32(note - Pad.bassRootNote), value: v) }
@@ -325,7 +343,7 @@ final class KnockEngine {
     private func isHostTransport(_ event: KEvent) -> Bool {
         switch event.kind {
         case .midiNoteOn, .noteOff:
-            return params[KParam.playMode.rawValue] > 0.5 && event.a >= 0 &&
+            return params[KParam.playMode.rawValue] > 0.5 && !recordArmed && event.a >= 0 &&
                 livePad(Int(event.a) % 128) != nil
         case .allOff:
             return true
@@ -515,7 +533,7 @@ final class KnockEngine {
         case .midiNoteOn:
             let note = Int(e.a) % 128
             lastNoteOn.pointee = (lastNoteOn.pointee &+ 256) & ~0xFF | Int32(note)
-            if params[KParam.playMode.rawValue] > 0.5, livePad(note) != nil {
+            if params[KParam.playMode.rawValue] > 0.5, !recordArmed, livePad(note) != nil {
                 beginGate(Int(e.a))
             } else {
                 let event = noteEvent(note: note, velocity: UInt8(clamping: Int(e.value * 127)))
@@ -527,8 +545,14 @@ final class KnockEngine {
             endGate(Int(e.a))
         case .pad:
             trigger(pad: Int(e.a), velocity: Float(e.value), semis: 0, lengthSamples: 0, glide: false)
+            record(pad: Int(e.a), velocity: Float(e.value), semis: 0, offset: offset)
         case .bass:
             trigger(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), lengthSamples: 0, glide: false, heldNote: Int(e.a) + Pad.bassRootNote)
+            record(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), offset: offset)
+        case .padMask:
+            padMask = UInt16(truncatingIfNeeded: e.a)
+        case .recordArm:
+            recordArmed = e.a != 0
         case .noteOff:
             // One-shot duration belongs to the sample and DECAY control, even for a
             // chromatic 808. Only Loop mode treats MIDI note length as a gate.
@@ -660,6 +684,32 @@ final class KnockEngine {
         for v in 0..<KnockEngine.maxVoices where voices[v].active { voices[v].release(samples: Int(sampleRate * 0.03)) }
     }
 
+    /// Drum roll RECORD: note a live hit at its place in the playing pattern.
+    @inline(__always)
+    private func record(pad: Int, velocity: Float, semis: Float, offset: Int) {
+        guard recordArmed, playing, let patterns, currentLoop >= 0, currentLoop < patterns.loops.count else { return }
+        let len = Double(max(patterns.loops[currentLoop].lengthTicks, 1))
+        let b = beat + Double(offset) * lastBeatsPerSample
+        var t = ((b - loopStartBeat) * Double(PatternData.ppq)).truncatingRemainder(dividingBy: len)
+        if t < 0 { t += len }
+        let w = recordWrite.pointee
+        recordRing[w % KnockEngine.recordCapacity] = RecordedHit(loop: Int16(currentLoop), pad: Int8(pad), tick: Int32(t),
+                                                                  velocity: velocity, semis: semis)
+        recordWrite.pointee = w &+ 1
+    }
+
+    /// Main thread: the hits recorded since the last call.
+    func collectRecorded() -> [RecordedHit] {
+        let w = recordWrite.pointee
+        var out: [RecordedHit] = []
+        if w &- recordRead > KnockEngine.recordCapacity { recordRead = w &- KnockEngine.recordCapacity }
+        while recordRead != w {
+            out.append(recordRing[recordRead % KnockEngine.recordCapacity])
+            recordRead &+= 1
+        }
+        return out
+    }
+
     // MARK: Pads
 
     private func trigger(pad: Int, velocity: Float, semis: Float, lengthSamples: Int, glide: Bool, heldNote: Int = -1) {
@@ -766,6 +816,7 @@ final class KnockEngine {
         status[4] = tempo
 
         let beatsPerSample = tempo / 60 / sampleRate
+        lastBeatsPerSample = beatsPerSample
         var b0: Double
         if follow, hostHasTransport, let hb = host?.beat, let hp = host?.playing {
             if hp && !wasHostPlaying {
@@ -789,6 +840,13 @@ final class KnockEngine {
             status[1] = Double(currentLoop)
             status[2] = Double(queuedLoop)
             status[3] = b1
+            if playing, let patterns, currentLoop >= 0, currentLoop < patterns.loops.count {
+                let len = Double(max(patterns.loops[currentLoop].lengthTicks, 1))
+                let t = ((b1 - loopStartBeat) * Double(PatternData.ppq)).truncatingRemainder(dividingBy: len)
+                playheadTick.pointee = t < 0 ? t + len : t
+            } else {
+                playheadTick.pointee = -1
+            }
         }
         guard playing, let patterns, currentLoop >= 0 else { return }
 
@@ -853,7 +911,7 @@ final class KnockEngine {
                 if e.kind == .bass { e.a = Int32(ev.semis.rounded()) }
                 let lengthSamples = ev.length > 0 ? Int(Double(ev.length) * samplesPerTick) : 0
                 addBlockEvent(BlockEvent(offset: min(max(offset, 0), frames - 1), event: e, length: lengthSamples,
-                                         glide: ev.glide, fromLoop: true, pad: Int(ev.pad)))
+                                         glide: ev.glide, fromLoop: true, pad: Int(ev.pad), semis: ev.semis))
             }
             cycle += 1
         }
@@ -894,6 +952,8 @@ final class KnockEngine {
         var glide = false
         var fromLoop = false
         var pad: Int = 0
+        /// Per-hit pitch from the drum roll (0 for generated drum hits).
+        var semis: Float = 0
     }
 
     // Loop hits use the same trigger with length and glide.
@@ -903,7 +963,7 @@ final class KnockEngine {
                 trigger(pad: Pad.bass808.rawValue, velocity: Float(b.event.value), semis: Float(b.event.a),
                         lengthSamples: b.length, glide: b.glide)
             } else {
-                trigger(pad: b.pad, velocity: Float(b.event.value), semis: 0, lengthSamples: 0, glide: false)
+                trigger(pad: b.pad, velocity: Float(b.event.value), semis: b.semis, lengthSamples: 0, glide: false)
             }
         } else {
             apply(b.event, offset: offset)
