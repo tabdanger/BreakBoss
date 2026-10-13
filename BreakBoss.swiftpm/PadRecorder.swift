@@ -21,7 +21,7 @@ final class PadRecorder: ObservableObject {
     private var fileURL: URL?
 
     func start() {
-        let handler: (Bool) -> Void = { [weak self] granted in
+        let handler: @Sendable (Bool) -> Void = { [weak self] granted in
             Task { @MainActor in
                 guard let self else { return }
                 guard granted else {
