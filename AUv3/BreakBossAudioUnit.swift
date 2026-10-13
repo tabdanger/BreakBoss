@@ -57,7 +57,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             guard let p = KParam(rawValue: Int(parameter.address)) else { return "" }
             return p.text(valuePointer?.pointee ?? parameter.value)
         }
-        factory = FactoryPresets.all.enumerated().map { index, preset in
+        factory = PatternBank.all.enumerated().map { index, preset in
             let item = AUAudioUnitPreset()
             item.number = index
             item.name = preset.name
@@ -98,8 +98,8 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             let controller = self.controller
             if preset.number >= 0 {
                 Self.onMain {
-                    guard FactoryPresets.all.indices.contains(preset.number) else { return }
-                    controller.loadFactoryPreset(FactoryPresets.all[preset.number])
+                    guard PatternBank.all.indices.contains(preset.number) else { return }
+                    controller.loadPatternPreset(PatternBank.all[preset.number])
                 }
             } else if let state = try? presetState(for: preset), let data = state[Self.stateKey] as? Data {
                 Self.onMain { controller.restore(data) }

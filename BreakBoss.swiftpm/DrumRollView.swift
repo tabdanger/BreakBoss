@@ -234,14 +234,14 @@ struct DrumRollView: View {
     private var barsMenu: some View {
         chip("\(bars) BAR\(bars == 1 ? "" : "S")", width: 104)
             .bbMenu(title: "Pattern length") {
-                [4, 8, 16].map { b in .item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
+                [4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
             }
     }
 
     private var patternMenu: some View {
         chip(controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", width: 132)
             .bbMenu(title: "Loop") {
-                controller.loops.indices.map { i in .item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
+                controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
             }
     }
 
@@ -279,7 +279,7 @@ struct DrumRollView: View {
                 chip("SNAP  \(snapLabel)", width: 190)
                     .bbMenu(title: "Snap", width: 300) {
                         Self.snapChoices.flatMap { group -> [BBMenuItem] in
-                            [.header(group.section)] + group.items.map { item in .item(item.0, checked: item.1 == snap && item.0.hasPrefix(snapLabel)) { snap = item.1 } }
+                            [.header(group.section)] + group.items.map { item in BBMenuItem.item(item.0, checked: item.1 == snap && item.0.hasPrefix(snapLabel)) { snap = item.1 } }
                         }
                     }
                 divider
@@ -313,7 +313,7 @@ struct DrumRollView: View {
             .frame(width: 22, height: 30)
             .bbMenu(title: "Swing", width: 220) {
                 [0, 54, 56, 58, 62, 66, 72].map { pct in
-                    .item(pct == 0 ? "Off" : "\(pct)%") { controller.set(.bounce, pct == 0 ? 0 : Float(pct - 50) / 22) }
+                    BBMenuItem.item(pct == 0 ? "Off" : "\(pct)%") { controller.set(.bounce, pct == 0 ? 0 : Float(pct - 50) / 22) }
                 }
             }
     }
@@ -405,7 +405,7 @@ struct DrumRollView: View {
         let files = KnockFolders.sampleFiles()
         if !files.isEmpty {
             items.append(.submenu("Your samples", icon: "tray.full", files.map { url in
-                .item(url.deletingPathExtension().lastPathComponent) { controller.importSample(url, toPad: pad) }
+                BBMenuItem.item(url.deletingPathExtension().lastPathComponent) { controller.importSample(url, toPad: pad) }
             }))
         }
         if controller.state.pads[pad].sampleFile != nil {
@@ -697,7 +697,7 @@ struct DrumRollView: View {
     private var laneHeader: some View {
         VStack(alignment: .leading, spacing: 8) {
             chip(lane.rawValue, width: compact ? 110 : 140)
-                .bbMenu(title: "Lane", width: 200) { Lane.allCases.map { l in .item(l.rawValue, checked: lane == l) { lane = l } } }
+                .bbMenu(title: "Lane", width: 200) { Lane.allCases.map { l in BBMenuItem.item(l.rawValue, checked: lane == l) { lane = l } } }
             if let pad = selectedPad {
                 Text(Pad(rawValue: pad)?.channelTitle ?? "").font(.system(size: 10, design: .monospaced)).foregroundColor(S.green)
             }
@@ -789,8 +789,8 @@ struct DrumRollView: View {
             .background(box(lit: false))
             .bbMenu(title: "Kits · drum sounds", width: 320) {
                 SoundMode.allCases.map { mode in
-                    .submenu("\(mode.title) kits", icon: "square.grid.3x3", KitLibrary.kits(for: mode).map { def in
-                        .item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
+                    BBMenuItem.submenu("\(mode.title) kits", icon: "square.grid.3x3", KitLibrary.kits(for: mode).map { def in
+                        BBMenuItem.item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
                     })
                 }
             }

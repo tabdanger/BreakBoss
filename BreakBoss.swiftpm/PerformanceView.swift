@@ -142,7 +142,7 @@ struct PerformanceView: View {
         .padding(.horizontal, 12).padding(.vertical, 8)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(white: 0.16)))
         .bbMenu(title: "Pattern") {
-            controller.loops.indices.map { i in .item("\(i + 1)  \(controller.loops[i].name)", checked: i == pattern) { pattern = i } }
+            controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == pattern) { pattern = i } }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

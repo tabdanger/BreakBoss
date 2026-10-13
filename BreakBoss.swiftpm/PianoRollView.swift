@@ -74,7 +74,7 @@ struct PianoRollView: View {
                     Button { undo() } label: { Image(systemName: "arrow.uturn.backward") }.disabled(undoStack.isEmpty)
                     Button { redo() } label: { Image(systemName: "arrow.uturn.forward") }.disabled(redoStack.isEmpty)
                     Text("SNAP 1/\(snap)").foregroundColor(DrumRollStyle.green)
-                        .bbMenu(title: "Snap", width: 200) { [4, 8, 16, 32, 64].map { d in .item("1/\(d)", checked: snap == d) { snap = d } } }
+                        .bbMenu(title: "Snap", width: 200) { [4, 8, 16, 32, 64].map { d in BBMenuItem.item("1/\(d)", checked: snap == d) { snap = d } } }
                 }
                 ToolbarItemGroup(placement: .confirmationAction) {
                     Button { page = max(0, page - 1) } label: { Image(systemName: "chevron.left") }.disabled(page == 0)
