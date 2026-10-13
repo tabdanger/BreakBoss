@@ -232,6 +232,12 @@ def run_device(family, device, app, bundle_id, output, timeout):
                     print(f"::notice title=Self-test::{family} self-test passed; all six device layouts rendered", flush=True)
             elif state == "failed":
                 failure = f"{family} SELF-TEST FAILED; see selftest-{family}.log"
+                try:
+                    lines = [l for l in selftest.read_text(errors="replace").splitlines() if "SELF-TEST FAILED:" in l]
+                    for line in lines[:25]:
+                        print(f"::error title={family} check::{line.split('SELF-TEST FAILED:', 1)[1].strip()[:300]}", flush=True)
+                except OSError:
+                    pass
             elif failure is None:
                 failure = f"{family} app produced no self-test result within {timeout} seconds"
     finally:
