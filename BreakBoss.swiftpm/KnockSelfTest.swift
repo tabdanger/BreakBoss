@@ -903,7 +903,7 @@ enum KnockSelfTest {
         check(drums.events.first { Int($0.pad) == Pad.snare.rawValue }?.length == 0, "drum roll: drum hits have no length")
         let kickKey = NoteKey(p.events.first { Int($0.pad) == Pad.kick.rawValue }!)
         let (moved, movedKeys) = PatternEdit.move(p, [kickKey], by: step * 2)
-        check(moved.events.contains { Int($0.pad) == Pad.kick.rawValue && $0.tick == step * 2 } && movedKeys.count == 1, "drum roll: move")
+        check(moved.events.contains { Int($0.pad) == Pad.kick.rawValue && $0.tick == kickKey.tick + step * 2 } && movedKeys.count == 1, "drum roll: move")
         let (clampedMove, _) = PatternEdit.move(p, [kickKey], by: -500)
         check(clampedMove.events.contains { Int($0.pad) == Pad.kick.rawValue && $0.tick == 0 }, "drum roll: notes can't move before the start")
         let bassKey = NoteKey(p.events.first { Int($0.pad) == Pad.bass808.rawValue }!)
