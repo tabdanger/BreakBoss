@@ -260,6 +260,13 @@ final class KnockController: ObservableObject {
     }
 
     @Published private(set) var recording = false
+    @Published private(set) var metronome = false
+
+    /// Drum roll metronome: a click on every beat while the pattern plays.
+    func setMetronome(_ on: Bool) {
+        metronome = on
+        engine.send(KEvent(kind: .metronome, a: on ? 1 : 0))
+    }
 
     func setRecording(_ on: Bool) {
         recording = on
@@ -343,9 +350,8 @@ final class KnockController: ObservableObject {
     func dice() {
         let seed = UInt32.random(in: 2...UInt32.max)
         if playMode == .loop {
-            state.grooveSeed = seed
-            rebuildLoops()
-            readout = Readout(title: "DICE", value: "NEW GROOVES", time: Date())
+            _ = seed
+            randomizePattern()      // the dice = RANDOMIZE: a new pattern in this preset's style
         } else {
             state.soundSeed = seed
             for i in state.pads.indices where state.pads[i].sampleFile != nil || stockLibrary.sample(kitID: state.kitID, pad: i) != nil {
@@ -531,7 +537,8 @@ final class KnockController: ObservableObject {
     var patternStyle: GrooveStyle { state.patternStyle ?? kitDefinition.style }
 
     func rebuildLoops() {
-        let generated = GrooveGenerator.loops(style: patternStyle, seed: state.grooveSeed)
+        let generated = state.basePattern.map { GrooveGenerator.loops(fromMain: $0, style: patternStyle, seed: state.grooveSeed) }
+            ?? GrooveGenerator.loops(style: patternStyle, seed: state.grooveSeed)
         var merged = generated
         for i in 0..<min(merged.count, state.editedLoops.count) {
             if let edit = state.editedLoops[i] { merged[i] = edit }
@@ -605,11 +612,35 @@ final class KnockController: ObservableObject {
         readout = Readout(title: "PRESET", value: "INIT", time: Date())
     }
 
-    func loadFactoryPreset(_ fp: FactoryPreset) {
-        // Always apply the complete snapshot, even when the matching kit is already loaded.
-        // This resets pad edits/imports as well as FX, rather than depending on the previous kit.
-        restore(fp.applying(to: state))
-        readout = Readout(title: "PRESET", value: fp.name, time: Date())
+    /// PRESETS: load a pattern (and its tempo and swing). Sounds, mode and knobs stay.
+    func loadPatternPreset(_ preset: PatternPreset) {
+        restore(preset.applying(to: state))
+        readout = Readout(title: "PATTERN", value: preset.name, time: Date())
+    }
+
+    // MARK: Randomize
+
+    /// A new pattern in the current preset's style, built from that style's presets.
+    func randomizePattern() {
+        let style = PatternRandomizer.style(for: state.presetName)
+        let length = loops.first?.lengthTicks ?? PatternData.ppq * 8
+        let seed = UInt32.random(in: 2...UInt32.max)
+        var s = state
+        s.basePattern = PatternRandomizer.randomPattern(style: style, length: max(length, PatternData.ppq * 8), seed: seed)
+        s.patternStyle = PatternBank.presets(in: style).first?.grooveStyle ?? patternStyle
+        s.grooveSeed = seed
+        s.editedLoops = Array(repeating: nil, count: Pad.count)
+        state = s
+        rebuildLoops()
+        scheduleSave()
+        readout = Readout(title: "RANDOMIZE", value: "NEW \(style.uppercased()) PATTERN", time: Date())
+    }
+
+    /// New notes for one channel of one loop; every other channel stays as it is.
+    func randomizeChannel(loop: Int, pad: Int) {
+        guard loops.indices.contains(loop) else { return }
+        let style = PatternRandomizer.style(for: state.presetName)
+        setLoop(loop, PatternRandomizer.randomChannel(loops[loop], pad: pad, style: style, seed: UInt32.random(in: 2...UInt32.max)))
     }
 
     func savePreset(as name: String) {

@@ -58,8 +58,14 @@ struct MenuView: View {
                 }
 
                 Section {
-                    Picker("Pad notes", selection: Binding(get: { controller.midiMap }, set: { controller.setMIDIMap($0) })) {
-                        ForEach(MIDIPadMap.allCases, id: \.self) { Text($0.title).tag($0) }
+                    ForEach(MIDIPadMap.allCases, id: \.self) { map in
+                        Button { controller.setMIDIMap(map) } label: {
+                            HStack {
+                                Text(map.title).foregroundColor(.primary)
+                                Spacer()
+                                if controller.midiMap == map { Image(systemName: "checkmark").foregroundColor(accent) }
+                            }
+                        }
                     }
                     ForEach(0..<Pad.count, id: \.self) { pad in learnRow(pad) }
                 } header: {
@@ -78,7 +84,7 @@ struct MenuView: View {
                     guide("ONE-SHOT / LOOP", "ONE-SHOT: the pads play drums. LOOP: the pads play grooves made from the kit; a new pick starts on the next bar, tap the same pad again to stop at the end of the bar.")
                     guide("MODERN / VINTAGE / TEXTURE", "Modern is clean and punchy. Vintage is home to soul, boom bap and break grooves, with tape drive, low-end warmth and a rolled-off top. Texture adds resampling, instability, synced delay and gated reverb. You can play any kit or imported acoustic sample in every mode.")
                     guide("KITS / PRESETS", "KITS change the drum sounds only; the pattern keeps playing. PRESETS change the pattern only (groove, variation and tempo); the sounds and knobs stay. Mix any pattern with any kit. SAVE stores everything as your own preset.")
-                    guide("DICE", "LOOP: new grooves in the kit's style. ONE-SHOT: new variations of the kit's sounds.")
+                    guide("DICE", "The dice randomizes. LOOP: a new pattern in the preset's style. ONE-SHOT: new variations of the kit's sounds. In the drum roll, each channel has its own dice that changes only that channel.")
                     guide("KNOBS", "Drag up or right to turn up. Double-tap to reset.")
                     guide("BPM", "Drag up or down on the display. Double-tap for the kit's tempo. With TEMPO SYNC on, the DAW or MIDI clock sets it.")
                     guide("HOLD A PAD", "ONE-SHOT: pad editor (level, pan, tune, decay, filter, reverse, your sample). LOOP: step editor for that loop, or drop in a MIDI file.")

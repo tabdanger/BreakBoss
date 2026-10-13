@@ -162,6 +162,14 @@ final class KnockEngine {
     /// Where the playing pattern is, in ticks from its start (for the drum roll's playhead).
     let playheadTick = UnsafeMutablePointer<Double>.allocate(capacity: 1)
     private var lastBeatsPerSample: Double = 0
+    private var blockBeat0: Double = 0
+    // Metronome (drum roll): a short sine click, accented on the bar. Mixed after the master
+    // section so the clipper and effects never touch it.
+    private var metronomeOn = false
+    private var clickPhase: Double = 0
+    private var clickRemaining = 0
+    private var clickFreq: Double = 1500
+    private var clickGain: Float = 0
 
     /// Pads that sound (bit per pad). The export renderer uses it for stems.
     var padMask: UInt16 = 0xFFFF
@@ -469,6 +477,7 @@ final class KnockEngine {
         ms.output = params[KParam.output.rawValue]
         ms.clipperOn = params[KParam.clipper.rawValue] > 0.5
         master.process(mixL, mixR, count: frames, ms)
+        if metronomeOn || clickRemaining > 0 { addClicks(frames: frames) }
 
         left.update(from: mixL, count: frames)
         right.update(from: mixR, count: frames)
@@ -553,6 +562,8 @@ final class KnockEngine {
             padMask = UInt16(truncatingIfNeeded: e.a)
         case .recordArm:
             recordArmed = e.a != 0
+        case .metronome:
+            metronomeOn = e.a != 0
         case .noteOff:
             // One-shot duration belongs to the sample and DECAY control, even for a
             // chromatic 808. Only Loop mode treats MIDI note length as a gate.
@@ -710,6 +721,40 @@ final class KnockEngine {
         return out
     }
 
+    /// Metronome clicks for this block: one on every beat the transport crosses.
+    private func addClicks(frames: Int) {
+        let clickLength = Int(sampleRate * 0.035)
+        var nextClick = -1, accent = false
+        if metronomeOn && playing && lastBeatsPerSample > 0 {
+            let first = (blockBeat0 - 1e-9).rounded(.up)
+            let offset = Int(((first - blockBeat0) / lastBeatsPerSample).rounded(.down))
+            if offset >= 0 && offset < frames {
+                nextClick = offset
+                accent = Int((first - loopStartBeat).rounded()) % 4 == 0
+            }
+        }
+        for i in 0..<frames {
+            if i == nextClick {
+                clickRemaining = clickLength
+                clickPhase = 0
+                clickFreq = accent ? 2_200 : 1_500
+                clickGain = accent ? 0.42 : 0.28
+                // A second beat inside one block (very long buffers / fast tempos).
+                let after = blockBeat0 + Double(i + 1) * lastBeatsPerSample
+                let next = (after - 1e-9).rounded(.up)
+                let o = Int(((next - blockBeat0) / lastBeatsPerSample).rounded(.down))
+                if o > i && o < frames { nextClick = o; accent = Int((next - loopStartBeat).rounded()) % 4 == 0 }
+            }
+            guard clickRemaining > 0 else { continue }
+            let env = Float(clickRemaining) / Float(clickLength)
+            let s = Float(sin(clickPhase)) * clickGain * env * env
+            clickPhase += 2 * .pi * clickFreq / sampleRate
+            clickRemaining -= 1
+            mixL[i] = (mixL[i] + s).clamped(-1, 1)
+            mixR[i] = (mixR[i] + s).clamped(-1, 1)
+        }
+    }
+
     // MARK: Pads
 
     private func trigger(pad: Int, velocity: Float, semis: Float, lengthSamples: Int, glide: Bool, heldNote: Int = -1) {
@@ -834,6 +879,7 @@ final class KnockEngine {
             b0 = beat
         }
         let b1 = b0 + Double(frames) * beatsPerSample
+        blockBeat0 = b0
         defer {
             beat = b1
             status[0] = playing ? 1 : 0

@@ -980,6 +980,22 @@ enum KnockSelfTest {
         rp.events = [GrooveEvent(tick: 0, pad: Int8(Pad.snare.rawValue), velocity: 1, semis: 7)]
         let set = PatternSet([rp])
         check(set.loops[0].events[0].semis == 7, "drum roll: drum hits keep their own pitch for the engine")
+        // Metronome: silent kit, playing → clicks; off → silence.
+        let m = KnockEngine()
+        m.prepare(sampleRate: 48_000, maxFrames: 256)
+        m.setParam(.playMode, 1); m.setParam(.followDAW, 0); m.setParam(.tempoSync, 0); m.setTempo(120)
+        m.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        m.patternHandoff.publish(PatternSet(Array(repeating: PatternData(name: "E", lengthTicks: bar, events: []), count: Pad.count)))
+        renderBlock(m)
+        m.send(KEvent(kind: .loopPad, a: 0))
+        m.send(KEvent(kind: .metronome, a: 1))
+        var clickEnergy: Float = 0
+        for _ in 0..<200 {
+            var l = [Float](repeating: 0, count: 256), r = l
+            l.withUnsafeMutableBufferPointer { lp in r.withUnsafeMutableBufferPointer { rp in m.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+            clickEnergy += l.reduce(0) { $0 + $1 * $1 }
+        }
+        check(clickEnergy > 0.5, "metronome clicks while playing (\(clickEnergy))")
         _ = rp
     }
 
@@ -1002,11 +1018,27 @@ enum KnockSelfTest {
     }
 
     static func checkFactoryPresetsAndKitIndependence() {
-        let presets = FactoryPresets.all
-        check(presets.count >= 50 && Set(presets.map { $0.name }).count == presets.count,
-              "50+ factory presets have unique browser names")
-        for mode in SoundMode.allCases {
-            check(presets.filter { $0.mode == mode }.count >= 16, "\(mode.title) has a complete bank of factory presets")
+        let presets = PatternBank.all
+        check(presets.count >= 150 && Set(presets.map { $0.name }).count == presets.count, "pattern bank loads with unique names (\(presets.count))")
+        let wanted = ["Trap", "Dark Trap", "West Coast", "Drill", "Amapiano", "South African RnB", "RnB", "90s RnB",
+                      "80s RnB", "80s Pop", "80s Funk", "EDM", "House", "Techno"]
+        for style in wanted { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
+        check(PatternBank.styles.first == "Danger Patterns" && PatternBank.presets(in: "Danger Patterns").count >= 13, "Danger Patterns come first")
+        for p in presets {
+            let pat = p.pattern
+            check(!pat.events.isEmpty && pat.events.allSatisfy { $0.tick >= 0 && $0.tick < pat.lengthTicks && Int($0.pad) < Pad.count },
+                  "\(p.name): pattern decodes inside its length")
+        }
+        if let hh = PatternBank.preset(named: "80s HIP HOP 1") {
+            let kicks = hh.pattern.events.filter { Int($0.pad) == Pad.kick.rawValue }.map { $0.tick / PatternData.stepTicks }
+            check(kicks == [0, 3, 6, 10, 13] && hh.bpm == 87 && hh.swing == 54, "Danger Pattern 80s HIP HOP 1 matches the cheat sheet")
+        } else {
+            check(false, "Danger Pattern 80s HIP HOP 1 is present")
+        }
+        if let trap = PatternBank.preset(named: "TRAP 2 TRIPLET HATS") {
+            let hats = trap.pattern.events.filter { Int($0.pad) == Pad.hat.rawValue }.map { $0.tick }
+            check(hats.contains(4 * 24) && hats.contains(4 * 24 + 16) && hats.contains(4 * 24 + 32), "triplet hats decode at 1/3-step spacing")
+            check(trap.pattern.events.contains { Int($0.pad) == Pad.bass808.rawValue && $0.length > 24 }, "808 lines decode with their length")
         }
         check(KitLibrary.kits(for: .modern).count >= 6 && KitLibrary.kits(for: .vintage).count >= 6 &&
               KitLibrary.kits(for: .texture).count >= 4, "mode browsers cover six Modern, six Vintage, and four Texture factory kits")
@@ -1048,34 +1080,37 @@ enum KnockSelfTest {
         let twice = changedKit.selectingKit(KitLibrary.neoSoul)
         check(twice.patternStyle == changedKit.patternStyle, "cycling kits never changes the pattern")
 
-        var styles = Set<GrooveStyle>()
         for preset in presets {
             let state = preset.applying(to: source)
             check(state.kitID == source.kitID && state.mode == source.mode && state.pads == source.pads,
                   "\(preset.name): keeps the current kit, mode and pad sounds")
-            for p in KParam.allCases where p.isKnob || p == .clipper {
+            for p in KParam.allCases where (p.isKnob || p == .clipper) && p != .bounce {
                 check(state.values[p.id] == source.values[p.id], "\(preset.name): keeps \(p.name)")
             }
-            check(state.patternStyle == KitLibrary.kit(id: preset.kitID).style && state.grooveSeed == FactoryPreset.seed(preset.name) &&
-                  state.editedLoops.allSatisfy { $0 == nil } && state.presetName == preset.name,
-                  "\(preset.name): loads its own pattern")
+            check(state.basePattern == preset.pattern && state.editedLoops.allSatisfy { $0 == nil } && state.presetName == preset.name &&
+                  abs((state.values[KParam.bounce.id] ?? 0) - preset.bounce) < 0.0001, "\(preset.name): loads its pattern and swing")
             check(state.values[KParam.playMode.id] == 0 && state.values[KParam.tempoSync.id] == 1 &&
                   state.values[KParam.followDAW.id] == 0 && state.bpm == source.bpm,
                   "\(preset.name): preserves player and host transport choices (tempo sync keeps the tempo)")
-            let data = try? encoder.encode(state)
-            let restored = data.flatMap { try? JSONDecoder().decode(KnockState.self, from: $0) }
-            check(restored == state, "\(preset.name): pattern choice round-trips")
-            if let st = state.patternStyle { styles.insert(st) }
+            let loops = GrooveGenerator.loops(fromMain: preset.pattern, style: preset.grooveStyle, seed: 1)
+            check(loops.count == Pad.count && !loops[0].events.isEmpty && loops.allSatisfy { $0.lengthTicks >= PatternData.ppq * 4 },
+                  "\(preset.name): 12 loops built from its pattern")
+            check(loops[0].events.count >= preset.pattern.events.count, "\(preset.name): MAIN A keeps every authored hit")
         }
-        check(Set(presets.map { FactoryPreset.seed($0.name) }).count == presets.count, "every preset is its own pattern variation")
-        check(styles.count >= 8, "presets cover many groove families (\(styles.count))")
         var unsynced = source
         unsynced.values[KParam.tempoSync.id] = 0
-        if let first = presets.first {
-            check(first.applying(to: unsynced).bpm == KitLibrary.kit(id: first.kitID).tempo, "a preset sets its tempo when not synced")
-        }
+        if let first = presets.first { check(first.applying(to: unsynced).bpm == first.bpm, "a preset sets its tempo when not synced") }
         let old = try? JSONDecoder().decode(KnockState.self, from: encoder.encode(KnockState()))
-        check(old?.patternStyle == nil && old?.mutedPads == nil, "older saves load and follow their kit's patterns")
+        check(old?.patternStyle == nil && old?.basePattern == nil, "older saves load and follow their kit's patterns")
+        // Randomize stays in style and only touches what it should.
+        let r1 = PatternRandomizer.randomPattern(style: "House", length: PatternData.ppq * 8, seed: 5)
+        let r2 = PatternRandomizer.randomPattern(style: "House", length: PatternData.ppq * 8, seed: 5)
+        check(r1 == r2 && r1.events.contains { Int($0.pad) == Pad.kick.rawValue }, "randomize: same seed, same pattern, still has a kick")
+        if let base = PatternBank.preset(named: "TRAP 1 ATL BOUNCE")?.pattern {
+            let changed = PatternRandomizer.randomChannel(base, pad: Pad.hat.rawValue, style: "Trap", seed: 9)
+            check(changed.events.filter { Int($0.pad) != Pad.hat.rawValue } == base.events.filter { Int($0.pad) != Pad.hat.rawValue },
+                  "channel dice changes only that channel")
+        }
     }
 
     static func checkTextureControls() {

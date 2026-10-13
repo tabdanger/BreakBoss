@@ -42,8 +42,8 @@ struct DrumRollView: View {
     enum Lane: String, CaseIterable { case velocity = "VELOCITY", pitch = "PITCH" }
 
     @State private var tool: Tool = .draw
-    @State private var snap = 16              // 4, 8, 16, 32 or 0 (off)
-    @State private var triplet = false
+    @State private var snap: Int32 = PatternData.stepTicks   // grid in ticks (0 = none)
+    @State private var selectedPad: Int?                      // channel picked for its own edits
     @State private var lane: Lane = .velocity
     @State private var follow = true
     @State private var page = 0
@@ -92,10 +92,19 @@ struct DrumRollView: View {
     private var pageStart: Int32 { Int32(min(page, pages - 1) * barsPerPage) * PatternEdit.barTicks }
     private var pageTicks: Int32 { Int32(barsPerPage) * PatternEdit.barTicks }
     /// Grid step in ticks for the SNAP setting (0 = free, placed on 1/64ths).
-    private var snapTicks: Int32 {
-        guard snap > 0 else { return 0 }
-        let base = PatternEdit.barTicks / Int32(snap)
-        return triplet ? max(1, base * 2 / 3) : base
+    private var snapTicks: Int32 { snap }
+
+    /// SNAP values, FL Studio style (96 ticks per beat, a step is a 16th).
+    static let snapChoices: [(section: String, items: [(String, Int32)])] = [
+        ("Straight", [("1/2 (half note)", 192), ("Beat (1/4)", 96), ("1/2 Beat (1/8)", 48), ("1/4 Beat (1/16)", 24),
+                      ("Step (1/16)", 24), ("1/2 Step (1/32)", 12), ("1/4 Step (1/64)", 6),
+                      ("1/16", 24), ("1/32", 12), ("1/64", 6)]),
+        ("Triplet", [("1/3 Beat (1/8 triplet)", 32), ("1/3 Step (1/16 triplet)", 8), ("1/6 Beat", 16), ("1/6 Step", 4)]),
+        ("Off", [("None (free)", 0)])
+    ]
+    private var snapLabel: String {
+        for group in Self.snapChoices { if let hit = group.items.first(where: { $0.1 == snap }) { return hit.0.components(separatedBy: " (").first ?? hit.0 } }
+        return "\(snap) TICKS"
     }
     private var placeTicks: Int32 { snapTicks > 0 ? snapTicks : 6 }
     private var isThisPlaying: Bool { controller.isPlaying && Int(controller.meters.status[1]) == loop }
@@ -109,6 +118,7 @@ struct DrumRollView: View {
                 VStack(spacing: 0) {
                     header
                     toolbar
+                    if let pad = selectedPad { channelStrip(pad) }
                     editor
                     footer
                 }
@@ -117,6 +127,7 @@ struct DrumRollView: View {
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
+        .bbMenuHost()
         .background(Color.black.ignoresSafeArea())
         .preferredColorScheme(.dark)
         .background(spaceBar)
@@ -199,6 +210,10 @@ struct DrumRollView: View {
                 Image(systemName: "play.fill").font(.system(size: 22)).foregroundColor(S.green)
                     .frame(width: 46, height: 40).background(box(lit: isThisPlaying))
             }
+            Button { controller.setMetronome(!controller.metronome) } label: {
+                Image(systemName: "metronome.fill").font(.system(size: 18)).foregroundColor(controller.metronome ? S.green : S.text)
+                    .frame(width: 46, height: 40).background(box(lit: controller.metronome))
+            }
             Button {
                 let on = !controller.recording
                 controller.setRecording(on)
@@ -212,49 +227,39 @@ struct DrumRollView: View {
     }
 
     private var bpmMenu: some View {
-        Menu {
-            if controller.tempoIsExternal {
-                Text("Tempo follows the DAW / MIDI clock")
-            } else {
-                ForEach([-5, -1, 1, 5], id: \.self) { d in
-                    Button(d > 0 ? "+\(d) BPM" : "\(d) BPM") { controller.setBPM(controller.state.bpm + Double(d)) }
-                }
-                Divider()
-                ForEach([70, 85, 90, 95, 100, 120, 128, 140, 150, 160], id: \.self) { b in
-                    Button("\(b) BPM") { controller.setBPM(Double(b)) }
-                }
-            }
-        } label: { chip("\(Int(controller.liveTempo.rounded())) BPM", width: 112) }
+        chip("\(Int(controller.liveTempo.rounded())) BPM", width: 112)
+            .bbPanel(title: "Tempo", width: 340) { TempoPanel(controller: controller) }
     }
 
     private var barsMenu: some View {
-        Menu {
-            ForEach([4, 8, 16], id: \.self) { b in
-                Button("\(b) BARS") { commit(PatternEdit.setLength(pattern, bars: b)) }
+        chip("\(bars) BAR\(bars == 1 ? "" : "S")", width: 104)
+            .bbMenu(title: "Pattern length") {
+                [4, 8, 16].map { b in .item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
             }
-        } label: { chip("\(bars) BAR\(bars == 1 ? "" : "S")", width: 104) }
     }
 
     private var patternMenu: some View {
-        Menu {
-            ForEach(controller.loops.indices, id: \.self) { i in
-                Button("\(i + 1)  \(controller.loops[i].name)") { loop = i }
+        chip(controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", width: 132)
+            .bbMenu(title: "Loop") {
+                controller.loops.indices.map { i in .item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
             }
-        } label: { chip(controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", width: 132) }
     }
 
     private var settingsMenu: some View {
-        Menu {
-            Toggle("Follow playhead", isOn: $follow)
-            Button("Copy these bars to the next ones") {
-                commit(PatternEdit.copyNext(pattern, fromBar: Int(pageStart / PatternEdit.barTicks), bars: barsPerPage))
-            }
-            Button("Quantize \(selection.isEmpty ? "all notes" : "selection")") {
-                commit(PatternEdit.quantize(pattern, selection.isEmpty ? nil : selection, grid: snapTicks > 0 ? snapTicks : PatternData.stepTicks))
-            }
-            Button("Blank pattern", role: .destructive) { var p = pattern; p.events = []; commit(p); selection = [] }
-            Button("Back to the generated pattern") { controller.useGeneratedLoop(loop); selection = [] }
-        } label: { iconBox("gearshape.fill") }
+        iconBox("gearshape.fill").bbMenu(title: "Drum roll", width: 320) {
+            [
+                .item("Follow playhead", icon: "arrow.right.to.line", checked: follow) { follow.toggle() },
+                .item("Metronome", icon: "metronome", checked: controller.metronome) { controller.setMetronome(!controller.metronome) },
+                .item("Copy these bars to the next ones", icon: "doc.on.doc") {
+                    commit(PatternEdit.copyNext(pattern, fromBar: Int(pageStart / PatternEdit.barTicks), bars: barsPerPage))
+                },
+                .item("Quantize \(selection.isEmpty ? "all notes" : "selection")", icon: "squareshape.split.3x3") {
+                    commit(PatternEdit.quantize(pattern, selection.isEmpty ? nil : selection, grid: snapTicks > 0 ? snapTicks : PatternData.stepTicks))
+                },
+                .item("Back to the preset's pattern", icon: "arrow.uturn.backward") { controller.useGeneratedLoop(loop); selection = [] },
+                .item("Blank pattern", icon: "trash", destructive: true) { var p = pattern; p.events = []; commit(p); selection = [] }
+            ]
+        }
     }
 
     // MARK: Toolbar
@@ -271,11 +276,12 @@ struct DrumRollView: View {
                 Button { redo() } label: { labelBox("arrow.uturn.forward", "REDO", enabled: !redoStack.isEmpty) }
                     .disabled(redoStack.isEmpty)
                 divider
-                Menu {
-                    ForEach([4, 8, 16, 32], id: \.self) { d in Button("1/\(d)") { snap = d } }
-                    Button("Off (free)") { snap = 0 }
-                } label: { chip("SNAP  \(snap > 0 ? "1/\(snap)" : "OFF")", width: 140) }
-                Button { triplet.toggle() } label: { labelBox(nil, "TRIPLET", lit: triplet) }
+                chip("SNAP  \(snapLabel)", width: 190)
+                    .bbMenu(title: "Snap", width: 300) {
+                        Self.snapChoices.flatMap { group -> [BBMenuItem] in
+                            [.header(group.section)] + group.items.map { item in .item(item.0, checked: item.1 == snap && item.0.hasPrefix(snapLabel)) { snap = item.1 } }
+                        }
+                    }
                 divider
                 knobBlock(title: "SWING", value: controller.value(.bounce),
                           text: controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%",
@@ -303,11 +309,13 @@ struct DrumRollView: View {
     }
 
     private var swingMenu: some View {
-        Menu {
-            ForEach([0, 54, 56, 58, 62, 66, 72], id: \.self) { pct in
-                Button(pct == 0 ? "Off" : "\(pct)%") { controller.set(.bounce, pct == 0 ? 0 : Float(pct - 50) / 22) }
+        Image(systemName: "chevron.down").font(.system(size: 11, weight: .semibold)).foregroundColor(S.text)
+            .frame(width: 22, height: 30)
+            .bbMenu(title: "Swing", width: 220) {
+                [0, 54, 56, 58, 62, 66, 72].map { pct in
+                    .item(pct == 0 ? "Off" : "\(pct)%") { controller.set(.bounce, pct == 0 ? 0 : Float(pct - 50) / 22) }
+                }
             }
-        } label: { Image(systemName: "chevron.down").font(.system(size: 11, weight: .semibold)).foregroundColor(S.text) }
     }
 
     private var divider: some View { Rectangle().fill(S.border).frame(width: 1, height: 30) }
@@ -359,6 +367,66 @@ struct DrumRollView: View {
         }
     }
 
+    /// The selected channel's own controls: its sound, level, pan, tune, decay, filter,
+    /// reverse, piano roll and dice. Nothing here touches the other channels.
+    private func channelStrip(_ pad: Int) -> some View {
+        let ps = controller.state.pads[pad]
+        func set(_ change: (inout PadSettings) -> Void) { var v = controller.state.pads[pad]; change(&v); controller.setPadSettings(pad, v) }
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Pad(rawValue: pad)?.channelTitle ?? "").font(.system(size: 14, weight: .semibold)).foregroundColor(S.green)
+                    Text(controller.padName(pad).uppercased()).font(.system(size: 9, design: .monospaced)).foregroundColor(S.dim).lineLimit(1)
+                }
+                .frame(width: 120, alignment: .leading)
+                labelBox("waveform", compact ? nil : "SAMPLE")
+                    .bbMenu(title: controller.padName(pad), width: 320) { channelSampleItems(pad) }
+                Button { pianoRollPad = pad } label: { labelBox("pianokeys", compact ? nil : "PIANO ROLL") }
+                Button { controller.randomizeChannel(loop: loop, pad: pad) } label: { labelBox("dice", nil) }
+                divider
+                stripKnob("LEVEL", ps.level, 0...1, String(format: "%.0f%%", ps.level / 0.8 * 100)) { v in set { $0.level = v } }
+                stripKnob("PAN", ps.pan, -1...1, ps.pan == 0 ? "C" : String(format: "%@%.0f", ps.pan < 0 ? "L" : "R", abs(ps.pan) * 100)) { v in set { $0.pan = abs(v) < 0.03 ? 0 : v } }
+                stripKnob("TUNE", ps.tune, -24...24, String(format: "%+.1f", ps.tune)) { v in set { $0.tune = (v * 2).rounded() / 2 } }
+                stripKnob("DECAY", ps.decay, 0.05...1, ps.decay >= 0.999 ? "FULL" : String(format: "%.0f%%", ps.decay * 100)) { v in set { $0.decay = v } }
+                stripKnob("FILTER", ps.filter, 0...1, ps.filter >= 0.999 ? "OPEN" : String(format: "%.0f Hz", 40 * powf(450, ps.filter))) { v in set { $0.filter = v } }
+                Button { set { $0.reverse.toggle() } } label: { labelBox("arrow.left.arrow.right", "REV", lit: ps.reverse) }
+                Button { selectedPad = nil } label: { iconBox("xmark") }
+            }
+            .padding(.horizontal, 10)
+        }
+        .frame(height: 58)
+        .background(S.channel)
+        .overlay(Rectangle().fill(S.green.opacity(0.6)).frame(height: 1), alignment: .bottom)
+    }
+
+    private func channelSampleItems(_ pad: Int) -> [BBMenuItem] {
+        var items: [BBMenuItem] = [.item("Load a sample from Files…", icon: "folder") { importPad = pad }]
+        if !controller.isPlugin { items.append(.item("Record to this channel…", icon: "record.circle") { recordPad = pad }) }
+        let files = KnockFolders.sampleFiles()
+        if !files.isEmpty {
+            items.append(.submenu("Your samples", icon: "tray.full", files.map { url in
+                .item(url.deletingPathExtension().lastPathComponent) { controller.importSample(url, toPad: pad) }
+            }))
+        }
+        if controller.state.pads[pad].sampleFile != nil {
+            items.append(.item("Back to the kit's sound", icon: "arrow.uturn.backward", destructive: true) { controller.revertPad(pad) })
+        }
+        return items
+    }
+
+    private func stripKnob(_ title: String, _ value: Float, _ range: ClosedRange<Float>, _ text: String,
+                           set: @escaping (Float) -> Void) -> some View {
+        let norm = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
+        return HStack(spacing: 6) {
+            DrumRollKnob(value: norm) { v, _ in set(range.lowerBound + v * (range.upperBound - range.lowerBound)) }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title).font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundColor(S.dim)
+                Text(text).font(.system(size: 12, design: .monospaced)).foregroundColor(S.text)
+            }
+            .frame(width: 58, alignment: .leading)
+        }
+    }
+
     private var pageControl: some View {
         HStack(spacing: 6) {
             Button { page = max(0, page - 1); follow = false } label: {
@@ -400,29 +468,11 @@ struct DrumRollView: View {
                 Image(systemName: "play.fill").font(.system(size: 13)).foregroundColor(S.text)
                     .frame(width: 30, height: 28).background(box(lit: false))
             }
-            Menu {
-                Section(controller.padName(pad).uppercased()) {
-                    Button { importPad = pad } label: { Label("Load a sample from Files…", systemImage: "folder") }
-                    if !controller.isPlugin {
-                        Button { recordPad = pad } label: { Label("Record to this channel…", systemImage: "record.circle") }
-                    }
-                    let files = KnockFolders.sampleFiles()
-                    if !files.isEmpty {
-                        Menu("Your samples") {
-                            ForEach(files, id: \.self) { url in
-                                Button(url.deletingPathExtension().lastPathComponent) { controller.importSample(url, toPad: pad) }
-                            }
-                        }
-                    }
-                    Button { pianoRollPad = pad } label: { Label("Piano roll (pitch & velocity)…", systemImage: "pianokeys") }
-                    if custom {
-                        Button(role: .destructive) { controller.revertPad(pad) } label: { Label("Back to the kit's sound", systemImage: "arrow.uturn.backward") }
-                    }
-                }
-            } label: {
+            Button { selectedPad = selectedPad == pad ? nil : pad } label: {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)")
-                        .font(.system(size: compact ? 11 : 14, weight: .medium)).foregroundColor(muted ? S.dim : S.text).lineLimit(1)
+                        .font(.system(size: compact ? 11 : 14, weight: .medium))
+                        .foregroundColor(selectedPad == pad ? S.green : (muted ? S.dim : S.text)).lineLimit(1)
                     if !compact && height > 40 {
                         Text(controller.padName(pad).uppercased())
                             .font(.system(size: 9, design: .monospaced)).foregroundColor(custom ? S.green : S.dim).lineLimit(1)
@@ -431,12 +481,16 @@ struct DrumRollView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
             }
+            Button { controller.randomizeChannel(loop: loop, pad: pad) } label: {
+                Image(systemName: "dice").font(.system(size: 12)).foregroundColor(S.text)
+                    .frame(width: compact ? 24 : 28, height: 28).background(box(lit: false))
+            }
             Button { controller.toggleMute(pad) } label: { smallToggle("M", on: muted, color: S.orange) }
             Button { controller.toggleSolo(pad) } label: { smallToggle("S", on: solo, color: S.green) }
         }
         .padding(.horizontal, compact ? 4 : 8)
         .frame(height: height)
-        .background(pad % 2 == 0 ? S.channel : S.channel.opacity(0.85))
+        .background(selectedPad == pad ? S.greenDark : (pad % 2 == 0 ? S.channel : S.channel.opacity(0.85)))
         .overlay(Rectangle().fill(Color.black.opacity(0.5)).frame(height: 1), alignment: .bottom)
         .onDrop(of: [UTType.fileURL, UTType.audio], isTargeted: nil) { providers in dropSample(providers, pad: pad) }
     }
@@ -642,9 +696,11 @@ struct DrumRollView: View {
 
     private var laneHeader: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Menu {
-                ForEach(Lane.allCases, id: \.self) { l in Button(l.rawValue) { lane = l } }
-            } label: { chip(lane.rawValue, width: compact ? 110 : 140) }
+            chip(lane.rawValue, width: compact ? 110 : 140)
+                .bbMenu(title: "Lane", width: 200) { Lane.allCases.map { l in .item(l.rawValue, checked: lane == l) { lane = l } } }
+            if let pad = selectedPad {
+                Text(Pad(rawValue: pad)?.channelTitle ?? "").font(.system(size: 10, design: .monospaced)).foregroundColor(S.green)
+            }
             Spacer()
             HStack {
                 Spacer()
@@ -673,7 +729,7 @@ struct DrumRollView: View {
                 let bx = CGFloat(b) / CGFloat(barsPerPage) * size.width
                 ctx.fill(Path(CGRect(x: bx, y: 0, width: 1.5, height: size.height)), with: .color(S.beatLine))
             }
-            for e in pattern.events where visible(e) {
+            for e in pattern.events where visible(e) && (selectedPad == nil || Int(e.pad) == selectedPad) {
                 let sel = selection.contains(NoteKey(e))
                 let v: CGFloat
                 if lane == .velocity { v = CGFloat(e.velocity) } else { v = CGFloat((e.semis.clamped(-12, 12) + 12) / 24) }
@@ -700,6 +756,7 @@ struct DrumRollView: View {
         let v = Float(1 - (g.location.y - 4) / (h - 8)).clamped(0, 1)
         let keys = Set(pattern.events.filter { e in
             visible(e) && abs(x(e.tick, w) + 5 - g.location.x) <= 8 && (selection.isEmpty || selection.contains(NoteKey(e)))
+                && (selectedPad == nil || Int(e.pad) == selectedPad)
         }.map(NoteKey.init))
         guard !keys.isEmpty else { return }
         if lane == .velocity {
@@ -719,28 +776,28 @@ struct DrumRollView: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            Menu {
-                ForEach(SoundMode.allCases, id: \.rawValue) { mode in
-                    Section("\(mode.title) kits") {
-                        ForEach(KitLibrary.kits(for: mode)) { def in Button(def.name) { controller.selectKit(def) } }
-                    }
+            HStack(spacing: 0) {
+                Image(systemName: "square.grid.3x3.fill").font(.system(size: 16)).foregroundColor(S.text)
+                    .frame(width: 46, height: 44).background(S.button)
+                HStack {
+                    Text(controller.state.kitName).font(.system(size: compact ? 13 : 17, weight: .medium)).foregroundColor(S.text).lineLimit(1)
+                    Spacer(minLength: 6)
+                    Image(systemName: "chevron.down").foregroundColor(S.text)
                 }
-            } label: {
-                HStack(spacing: 0) {
-                    Image(systemName: "square.grid.3x3.fill").font(.system(size: 16)).foregroundColor(S.text)
-                        .frame(width: 46, height: 44).background(S.button)
-                    HStack {
-                        Text(controller.state.kitName).font(.system(size: compact ? 13 : 17, weight: .medium)).foregroundColor(S.text).lineLimit(1)
-                        Spacer(minLength: 6)
-                        Image(systemName: "chevron.down").foregroundColor(S.text)
-                    }
-                    .padding(.horizontal, 12).frame(width: compact ? 150 : 190, height: 44)
+                .padding(.horizontal, 12).frame(width: compact ? 150 : 190, height: 44)
+            }
+            .background(box(lit: false))
+            .bbMenu(title: "Kits · drum sounds", width: 320) {
+                SoundMode.allCases.map { mode in
+                    .submenu("\(mode.title) kits", icon: "square.grid.3x3", KitLibrary.kits(for: mode).map { def in
+                        .item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
+                    })
                 }
-                .background(box(lit: false))
             }
             Button { cycleKit(-1) } label: { iconBox("chevron.left") }
             Button { cycleKit(1) } label: { iconBox("chevron.right") }
             Spacer(minLength: 6)
+            Button { controller.randomizePattern(); selection = [] } label: { labelBox("dice.fill", nil) }
             Button { duplicate() } label: { labelBox("plus.square.on.square", compact ? nil : "DUPLICATE") }
             Button { clear() } label: { labelBox("trash", compact ? nil : "CLEAR") }
             if let url = exportURL {
@@ -870,6 +927,32 @@ struct DrumRollView: View {
         }
         .foregroundColor(lit ? S.green : (enabled ? S.text : S.dim))
         .padding(.horizontal, 14).frame(height: 44).background(box(lit: lit))
+    }
+}
+
+/// The tempo slider panel (header BPM). Follows the DAW / MIDI clock when TEMPO SYNC has one.
+struct TempoPanel: View {
+    @ObservedObject var controller: KnockController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if controller.tempoIsExternal {
+                Text("Tempo follows the DAW / MIDI clock: \(Int(controller.liveTempo.rounded())) BPM")
+                    .font(.system(size: 13, design: .monospaced)).foregroundColor(BBMenuStyle.dim)
+            } else {
+                BBSlider(value: controller.state.bpm, range: 40...240, step: 1, label: { "\(Int($0)) BPM" }) { controller.setBPM($0) }
+                HStack(spacing: 6) {
+                    ForEach([70, 90, 100, 120, 140, 160], id: \.self) { b in
+                        Button { controller.setBPM(Double(b)) } label: {
+                            Text("\(b)").font(.system(size: 13, weight: .medium, design: .monospaced))
+                                .foregroundColor(Int(controller.state.bpm) == b ? .black : BBMenuStyle.text)
+                                .frame(maxWidth: .infinity, minHeight: 34)
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Int(controller.state.bpm) == b ? BBMenuStyle.accent : BBMenuStyle.row))
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

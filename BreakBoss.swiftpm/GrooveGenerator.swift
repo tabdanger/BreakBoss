@@ -171,6 +171,67 @@ enum GrooveGenerator {
         return out
     }
 
+    /// The 12 loops built around a preset's own pattern: A is the pattern itself, B and C
+    /// longer versions with a variation and a fill, D a sparse version, then fills,
+    /// intro, breakdown, no 808, kick + 808, tops and a roll-up in the preset's style.
+    static func loops(fromMain main: PatternData, style: GrooveStyle, seed: UInt32) -> [PatternData] {
+        var rng = KRandom(seed: seed &+ 909)
+        let bar = PatternData.ppq * 4
+        func tiled(_ bars: Int) -> PatternData {
+            var p = main
+            p.lengthTicks = Int32(bars) * bar
+            p.events = PatternRandomizer.tile(main.events, from: max(main.lengthTicks, bar), to: p.lengthTicks)
+            return p
+        }
+        let a = main.lengthTicks < bar * 2 ? tiled(2) : main
+        let b = withFill(tiled(max(4, a.bars)), style, &rng)
+        var c = tiled(max(8, a.bars))
+        c = withFill(c, style, &rng)
+        var d = keep(a, [.kick, .snare, .clap, .hat, .bass808])
+        d.events.removeAll { $0.velocity < 0.5 }
+        var out: [PatternData] = []
+        for slot in LoopSlot.allCases {
+            var p: PatternData
+            switch slot {
+            case .mainA: p = a
+            case .mainB: p = b
+            case .mainC: p = c
+            case .mainD: p = d
+            case .fillA: p = withFill(a, style, &rng)
+            case .fillB: p = withFill(tiled(4), style, &rng)
+            case .intro: p = keep(a, [.hat, .openHat, .perc1, .perc2, .rim])
+            case .breakdown: p = breakdown(a, style)
+            case .no808: p = keep(a, Pad.allCases.filter { $0 != .bass808 })
+            case .kick808: p = keep(a, [.kick, .bass808])
+            case .tops: p = keep(a, [.hat, .openHat, .perc1, .perc2, .rim, .cymbal])
+            case .roll: p = rollUp(style, &rng)
+            }
+            p.name = slot.title
+            p = finishKeepingLength(p)
+            out.append(p)
+        }
+        return out
+    }
+
+    /// finish() without its density budget, so authored patterns keep every hit.
+    private static func finishKeepingLength(_ pattern: PatternData) -> PatternData {
+        var p = pattern
+        p.lengthTicks = max(p.lengthTicks, PatternData.ppq * 4)
+        let end = p.lengthTicks
+        p.events = p.events.compactMap { original in
+            guard original.pad >= 0, Int(original.pad) < Pad.count, original.velocity.isFinite, original.semis.isFinite else { return nil }
+            var e = original
+            e.tick = min(max(e.tick, 0), end - 1)
+            e.velocity = e.velocity.clamped(0.05, 1)
+            if e.pad == Int8(Pad.bass808.rawValue) { e.length = min(max(e.length, 12), end - e.tick) } else { e.length = 0; e.glide = false }
+            return e
+        }
+        p.sort()
+        var seen = Set<NoteKey>()
+        p.events = p.events.filter { seen.insert(NoteKey(tick: $0.tick, pad: $0.pad, semis: 0)).inserted }
+        return p
+    }
+
     enum Flavour { case normal, busy, sparse }
 
     static func groove(_ style: GrooveStyle, seed: UInt32, flavour: Flavour, bars: Int = 2) -> PatternData {

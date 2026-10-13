@@ -45,6 +45,7 @@ struct PerformanceView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .navigationViewStyle(.stack).preferredColorScheme(.dark)
+        .bbMenuHost()
         .sheet(item: $editor) { target in
             if target.loop { LoopEditorView(controller: controller, loop: target.pad) }
             else { PadEditorView(controller: controller, pad: target.pad) }
@@ -133,9 +134,17 @@ struct PerformanceView: View {
     }
 
     private var patternPicker: some View {
-        Picker("Pattern", selection: $pattern) {
-            ForEach(0..<controller.loops.count, id: \.self) { i in Text(controller.loops[i].name).tag(i) }
-        }.frame(maxWidth: .infinity, alignment: .leading)
+        HStack {
+            Text(controller.loops.indices.contains(pattern) ? controller.loops[pattern].name : "PATTERN")
+                .font(.system(.body, design: .monospaced))
+            Image(systemName: "chevron.down")
+        }
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color(white: 0.16)))
+        .bbMenu(title: "Pattern") {
+            controller.loops.indices.map { i in .item("\(i + 1)  \(controller.loops[i].name)", checked: i == pattern) { pattern = i } }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder private func patternControls(compact: Bool) -> some View {

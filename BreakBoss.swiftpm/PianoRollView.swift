@@ -73,7 +73,8 @@ struct PianoRollView: View {
                 ToolbarItemGroup(placement: .navigationBarLeading) {
                     Button { undo() } label: { Image(systemName: "arrow.uturn.backward") }.disabled(undoStack.isEmpty)
                     Button { redo() } label: { Image(systemName: "arrow.uturn.forward") }.disabled(redoStack.isEmpty)
-                    Menu("SNAP 1/\(snap)") { ForEach([4, 8, 16, 32], id: \.self) { d in Button("1/\(d)") { snap = d } } }
+                    Text("SNAP 1/\(snap)").foregroundColor(DrumRollStyle.green)
+                        .bbMenu(title: "Snap", width: 200) { [4, 8, 16, 32, 64].map { d in .item("1/\(d)", checked: snap == d) { snap = d } } }
                 }
                 ToolbarItemGroup(placement: .confirmationAction) {
                     Button { page = max(0, page - 1) } label: { Image(systemName: "chevron.left") }.disabled(page == 0)
@@ -84,6 +85,7 @@ struct PianoRollView: View {
         }
         .navigationViewStyle(.stack)
         .preferredColorScheme(.dark)
+        .bbMenuHost()
     }
 
     // MARK: Drawing

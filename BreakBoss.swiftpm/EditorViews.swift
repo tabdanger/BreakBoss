@@ -297,9 +297,11 @@ struct ExportView: View {
                             Text("\(i + 1)  \(controller.loops[i].name)").tag(i)
                         }
                     }
+                    .pickerStyle(.inline)
                     Picker("Length", selection: $bars) {
                         ForEach([1, 2, 4, 8, 16], id: \.self) { Text("\($0) bars").tag($0) }
                     }
+                    .pickerStyle(.segmented)
                     HStack {
                         Text("Tempo")
                         Spacer()
