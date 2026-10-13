@@ -12,28 +12,35 @@ struct ScopeView: View {
 
     static let red = Color(red: 1, green: 0.30, blue: 0.20)
 
+    @State private var tracer = ScopeTracer()
+
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
+        // Redraw on every display frame (60 or 120 Hz) straight from the audio ring, instead of
+        // the 30 Hz meter copy, so the trace moves smoothly.
+        TimelineView(.animation) { context in
             let now = context.date
             ZStack(alignment: .topLeading) {
                 Canvas { ctx, size in
-                    let scope = controller.meters.scope
-                    let n = MasterBus.scopeSize
-                    let count = 300
-                    let end = controller.meters.scopeWrite
-                    var path = Path()
+                    let points = tracer.advance(meters: controller.engine.meters, now: now)
                     let mid = size.height / 2
-                    for i in 0..<count {
-                        let idx = (end - count + i + n) & (n - 1)
-                        let v = CGFloat(max(-1, min(1, scope[idx])))
-                        let x = CGFloat(i) / CGFloat(count - 1) * size.width
-                        let y = mid - v * mid * 0.85
-                        if i == 0 { path.move(to: CGPoint(x: x, y: y)) } else { path.addLine(to: CGPoint(x: x, y: y)) }
+                    let count = points.count
+                    func pt(_ i: Int) -> CGPoint {
+                        CGPoint(x: CGFloat(i) / CGFloat(count - 1) * size.width,
+                                y: mid - CGFloat(max(-1, min(1, points[i]))) * mid * 0.85)
                     }
+                    // Smooth curve through the midpoints, so there are no sharp corners.
+                    var path = Path()
+                    path.move(to: pt(0))
+                    for i in 1..<count - 1 {
+                        let p = pt(i), q = pt(i + 1)
+                        path.addQuadCurve(to: CGPoint(x: (p.x + q.x) / 2, y: (p.y + q.y) / 2), control: p)
+                    }
+                    path.addLine(to: pt(count - 1))
                     var glow = ctx
                     glow.addFilter(.blur(radius: 3 * scale))
                     glow.stroke(path, with: .color(ScopeView.red.opacity(0.55)), lineWidth: 4 * scale)
-                    ctx.stroke(path, with: .color(Color(red: 1, green: 0.55, blue: 0.42)), lineWidth: 1.6 * scale)
+                    ctx.stroke(path, with: .color(Color(red: 1, green: 0.55, blue: 0.42)),
+                               style: StrokeStyle(lineWidth: 1.6 * scale, lineCap: .round, lineJoin: .round))
                 }
                 VStack(alignment: .leading, spacing: 2 * scale) {
                     if let r = controller.readout, now.timeIntervalSince(r.time) < 1.8 {
@@ -79,6 +86,52 @@ struct ScopeView: View {
         return Text(text)
             .font(.system(size: 12 * scale, design: .monospaced))
             .foregroundColor(ScopeView.red.opacity(0.75))
+    }
+}
+
+/// Keeps the trace steady and fluid: each frame it lines the wave up on a rising zero
+/// crossing (so it doesn't jump sideways), then eases every point toward the new shape.
+final class ScopeTracer {
+    static let pointCount = 160
+    /// About 45 ms of audio across the screen (the ring holds roughly 6,000 values a second).
+    static let window = 272
+    private var ring = [Float](repeating: 0, count: MasterBus.scopeSize)
+    private var shown = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var target = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var last: Date?
+
+    func advance(meters: SharedMeters, now: Date) -> [Float] {
+        let n = MasterBus.scopeSize
+        let end = meters.copyScope(into: &ring)
+        let dt = min(0.1, max(0.001, now.timeIntervalSince(last ?? now.addingTimeInterval(-1.0 / 60))))
+        last = now
+
+        // Look back up to one window for a rising crossing to start from.
+        let latestStart = end - Self.window
+        var start = latestStart
+        for back in 0..<Self.window {
+            let i = latestStart - back
+            let a = ring[(i - 1 + n * 2) & (n - 1)], b = ring[(i + n * 2) & (n - 1)]
+            if a < 0 && b >= 0 && b - a > 0.002 { start = i; break }
+        }
+        let step = Float(Self.window) / Float(Self.pointCount)
+        for p in 0..<Self.pointCount {
+            // Average the values each point covers, which also takes out fizz.
+            let from = Float(p) * step, to = from + step
+            var sum: Float = 0
+            var c: Float = 0
+            var k = Int(from)
+            while Float(k) < to {
+                sum += ring[(start + k + n * 2) & (n - 1)]
+                c += 1
+                k += 1
+            }
+            target[p] = c > 0 ? sum / c : 0
+        }
+        // Ease toward the new frame (about 30 ms), the same at 60 or 120 Hz.
+        let ease = Float(1 - exp(-dt / 0.03))
+        for p in 0..<Self.pointCount { shown[p] += (target[p] - shown[p]) * ease }
+        return shown
     }
 }
 

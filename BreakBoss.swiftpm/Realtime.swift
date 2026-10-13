@@ -215,6 +215,16 @@ final class SharedMeters {
         scopeWrite = master.scopeWrite
         os_unfair_lock_unlock(lock)
     }
+    /// The scope ring and its write position, copied into a buffer the screen reuses
+    /// (no allocation, so it can run every display frame).
+    func copyScope(into buffer: inout [Float]) -> Int {
+        if buffer.count != MasterBus.scopeSize { buffer = [Float](repeating: 0, count: MasterBus.scopeSize) }
+        os_unfair_lock_lock(lock)
+        defer { os_unfair_lock_unlock(lock) }
+        buffer.withUnsafeMutableBufferPointer { $0.baseAddress!.update(from: scope, count: MasterBus.scopeSize) }
+        return scopeWrite
+    }
+
     func snapshot() -> MeterSnapshot {
         os_unfair_lock_lock(lock)
         defer { os_unfair_lock_unlock(lock) }
