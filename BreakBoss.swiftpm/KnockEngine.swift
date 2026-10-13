@@ -158,7 +158,7 @@ final class KnockEngine {
         precondition(KParam.count <= UInt32.bitWidth)
         heldLoops.initialize(repeating: 0, count: 2064)
         midiPadTable.initialize(repeating: -1, count: 128)
-        for pad in 0..<Pad.count { midiPadTable[MIDIPadMap.standard[pad]] = Int8(pad) }
+        for pad in 0..<Pad.count { midiPadTable[MIDIPadMap.standardNotes[pad]] = Int8(pad) }
         lastNoteOn.initialize(to: 0)
         params = .allocate(capacity: KParam.count)
         hostParams = .allocate(capacity: KParam.count)

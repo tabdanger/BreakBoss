@@ -58,9 +58,9 @@ enum MIDIPadMap: String, CaseIterable, Codable {
     case standard, mpcClassic, custom
 
     /// Pads 1-12: C1 up (also an MPC's "Chromatic C1" setting).
-    static let standard: [Int] = Array(36...47)
+    static let standardNotes: [Int] = Array(36...47)
     /// An MPC's "Classic MPC" map, pads A01-A12. A01 sits bottom-left like pad 1.
-    static let mpcClassic: [Int] = [37, 36, 42, 82, 40, 38, 46, 44, 48, 47, 45, 43]
+    static let mpcClassicNotes: [Int] = [37, 36, 42, 82, 40, 38, 46, 44, 48, 47, 45, 43]
 
     var title: String {
         switch self {
@@ -73,9 +73,9 @@ enum MIDIPadMap: String, CaseIterable, Codable {
     /// One note per pad; a note given to two pads only plays the later pad.
     static func notes(_ map: MIDIPadMap, custom: [Int]?) -> [Int] {
         switch map {
-        case .standard: return standard
-        case .mpcClassic: return mpcClassic
-        case .custom: return clean(custom ?? standard)
+        case .standard: return standardNotes
+        case .mpcClassic: return mpcClassicNotes
+        case .custom: return clean(custom ?? standardNotes)
         }
     }
 

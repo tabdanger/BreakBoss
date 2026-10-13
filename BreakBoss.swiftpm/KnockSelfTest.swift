@@ -823,16 +823,16 @@ enum KnockSelfTest {
         check(onlyPad(hits(36), 0) && onlyPad(hits(47), 11), "MIDI map: standard notes 36-47 by default")
         // MPC Classic, sent the way the controller sends it.
         e.send(KEvent(kind: .mapNote, a: -1))
-        for (pad, note) in MIDIPadMap.mpcClassic.enumerated() { e.send(KEvent(kind: .mapNote, a: Int32(note), value: Double(pad))) }
+        for (pad, note) in MIDIPadMap.mpcClassicNotes.enumerated() { e.send(KEvent(kind: .mapNote, a: Int32(note), value: Double(pad))) }
         renderBlock(e)
-        for (pad, note) in MIDIPadMap.mpcClassic.enumerated() {
+        for (pad, note) in MIDIPadMap.mpcClassicNotes.enumerated() {
             check(onlyPad(hits(UInt8(note)), pad), "MIDI map: MPC Classic note \(note) plays pad \(pad + 1)")
         }
         check(hits(39).allSatisfy { $0 == 0 } && hits(41).allSatisfy { $0 == 0 }, "MIDI map: notes not on an MPC pad play nothing")
         let bass808 = hits(60)
         check(bass808[Pad.bass808.rawValue] > 0 && bass808.enumerated().allSatisfy { $0.offset == Pad.bass808.rawValue || $0.element == 0 },
               "MIDI map: the chromatic 808 still plays on notes the map doesn't use")
-        let learned = MIDIPadMap.learn(MIDIPadMap.standard, pad: 2, note: 36)
+        let learned = MIDIPadMap.learn(MIDIPadMap.standardNotes, pad: 2, note: 36)
         check(learned[2] == 36 && learned[0] == -1 && learned.count == Pad.count, "MIDI learn moves a note to the new pad only")
         check(MIDIPadMap.clean([200, -5]) == [-1, -1] + Array(repeating: -1, count: Pad.count - 2), "MIDI map cleans bad notes")
         var saved = KnockState()
