@@ -7,6 +7,9 @@
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <!-- Keeps playing when you switch apps (e.g. while a DAW records it through Inter-App audio routing). -->
+    <!-- Hold a pad > Record to this pad. -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>BreakBoss records from the microphone only when you tap Record to put a new sound on a pad.</string>
     <key>UIBackgroundModes</key>
     <array>
         <string>audio</string>

@@ -16,6 +16,7 @@ struct PadEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var importing = false
     @State private var files: [URL] = []
+    @StateObject private var recorder = PadRecorder()
 
     var body: some View {
         let settings = controller.state.pads[pad]
@@ -43,7 +44,12 @@ struct PadEditorView: View {
                 }
 
                 Section("Your sound") {
-                    Button { importing = true } label: { Label("Import an audio file…", systemImage: "square.and.arrow.down") }
+                    Button { importing = true } label: { Label("Files…", systemImage: "folder") }
+                        .disabled(recorder.isRecording)
+                    if !controller.isPlugin { recordRow }
+                    if let message = recorder.message {
+                        Text(message).font(.footnote).foregroundColor(accent)
+                    }
                     if settings.sampleFile != nil {
                         Button(role: .destructive) { controller.revertPad(pad) } label: {
                             Label("Back to the kit's sound", systemImage: "arrow.uturn.backward")
@@ -105,11 +111,40 @@ struct PadEditorView: View {
         .navigationViewStyle(.stack)
         .preferredColorScheme(.dark)
         .onAppear { files = KnockFolders.sampleFiles() }
+        .onDisappear { if recorder.isRecording { recorder.cancel() } }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.audio], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first {
                 controller.importSample(url, toPad: pad)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { files = KnockFolders.sampleFiles() }
             }
+        }
+    }
+
+    /// Record from the mic straight onto this pad (standalone app; a plug-in can't use the mic).
+    @ViewBuilder private var recordRow: some View {
+        if recorder.isRecording {
+            HStack(spacing: 12) {
+                Button {
+                    if let url = recorder.stop() {
+                        controller.importSample(url, toPad: pad)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { files = KnockFolders.sampleFiles() }
+                    }
+                } label: { Label("Stop", systemImage: "stop.fill") }
+                    .buttonStyle(.borderedProminent).tint(accent)
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color(white: 0.2))
+                        Capsule().fill(accent).frame(width: g.size.width * CGFloat(recorder.level))
+                    }
+                }
+                .frame(height: 8)
+                Text(String(format: "%.1f s", recorder.seconds)).font(.system(.body, design: .monospaced))
+                Button(role: .cancel) { recorder.cancel() } label: { Image(systemName: "xmark") }
+                    .buttonStyle(.borderless)
+            }
+        } else {
+            Button { recorder.start() } label: { Label("Record to this pad", systemImage: "record.circle") }
+                .foregroundColor(accent)
         }
     }
 

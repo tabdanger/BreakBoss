@@ -62,6 +62,9 @@ struct KnockState: Codable, Equatable {
     /// Loops you edited or imported (nil = the generated one).
     var editedLoops: [PatternData?] = Array(repeating: nil, count: Pad.count)
     var presetName: String = "INIT"
+    /// Which live MIDI notes play the pads (a controller setting, so presets keep the current one).
+    var midiMap: MIDIPadMap? = nil
+    var midiCustomNotes: [Int]? = nil
 
     static func normalizedPads(_ source: [PadSettings]) -> [PadSettings] {
         var pads = Array(source.prefix(Pad.count))
@@ -89,6 +92,7 @@ struct KnockState: Codable, Equatable {
         s.soundSeed = 1
         s.grooveSeed = 1
         s.pads = Self.normalizedPads(s.pads)
+        if let custom = s.midiCustomNotes { s.midiCustomNotes = MIDIPadMap.clean(custom) }
         for i in s.pads.indices { s.pads[i].sampleFile = nil }
         s.editedLoops = Array(repeating: nil, count: Pad.count)
         if (s.values[KParam.tempoSync.id] ?? KParam.tempoSync.defaultValue) < 0.5 {

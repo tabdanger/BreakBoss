@@ -15,9 +15,9 @@ struct ScopeView: View {
     @State private var tracer = ScopeTracer()
 
     var body: some View {
-        // Redraw on every display frame (60 or 120 Hz) straight from the audio ring, instead of
-        // the 30 Hz meter copy, so the trace moves smoothly.
-        TimelineView(.animation) { context in
+        // Redraw at 60 Hz straight from the audio ring (not the 30 Hz meter copy), so the trace
+        // moves smoothly without spending ProMotion's 120 Hz on it.
+        TimelineView(.animation(minimumInterval: 1.0 / 60)) { context in
             let now = context.date
             ZStack(alignment: .topLeading) {
                 Canvas { ctx, size in
@@ -36,9 +36,11 @@ struct ScopeView: View {
                         path.addQuadCurve(to: CGPoint(x: (p.x + q.x) / 2, y: (p.y + q.y) / 2), control: p)
                     }
                     path.addLine(to: pt(count - 1))
-                    var glow = ctx
-                    glow.addFilter(.blur(radius: 3 * scale))
-                    glow.stroke(path, with: .color(ScopeView.red.opacity(0.55)), lineWidth: 4 * scale)
+                    // Glow from two soft wide strokes; a blur filter every frame costs far more.
+                    let round = StrokeStyle(lineWidth: 7 * scale, lineCap: .round, lineJoin: .round)
+                    ctx.stroke(path, with: .color(ScopeView.red.opacity(0.14)), style: round)
+                    ctx.stroke(path, with: .color(ScopeView.red.opacity(0.32)),
+                               style: StrokeStyle(lineWidth: 3.5 * scale, lineCap: .round, lineJoin: .round))
                     ctx.stroke(path, with: .color(Color(red: 1, green: 0.55, blue: 0.42)),
                                style: StrokeStyle(lineWidth: 1.6 * scale, lineCap: .round, lineJoin: .round))
                 }
@@ -168,13 +170,16 @@ struct PadView: View {
             let current = Int(controller.meters.status[1]) == pad && controller.meters.status[0] > 0.5
             let queued = Int(controller.meters.status[2]) == pad
             let blink = queued && Int(now.timeIntervalSinceReferenceDate * 4) % 2 == 0
+            let light = PadView.lightColor(controller.mode)
+            let lit = loopMode && current
             ZStack {
                 Rectangle().fill(Color.black.opacity(pressed ? 0.12 : 0))
-                Rectangle().fill(Color.white.opacity(Double(flash) * 0.32))
-                if loopMode && (current || blink) {
+                // Each mode lights its pads in its own colour: hits flash, the playing loop's pad glows.
+                Rectangle().fill(light.opacity(max(Double(flash) * 0.5, lit ? 0.2 : 0)))
+                if lit || blink || flash > 0.01 {
                     Rectangle()
-                        .strokeBorder(ScopeView.red.opacity(current ? 0.9 : 0.6), lineWidth: 3 * scale)
-                        .shadow(color: ScopeView.red.opacity(0.7), radius: 6 * scale)
+                        .strokeBorder(light.opacity(lit ? 0.9 : blink ? 0.6 : Double(flash) * 0.8), lineWidth: 3 * scale)
+                        .shadow(color: light.opacity(0.7), radius: 6 * scale)
                 }
                 if dropping {
                     Rectangle().strokeBorder(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 3 * scale, dash: [8 * scale, 5 * scale]))
@@ -220,13 +225,22 @@ struct PadView: View {
         }
     }
 
+    /// Modern red, Vintage light yellow, Texture blue.
+    static func lightColor(_ mode: SoundMode) -> Color {
+        switch mode {
+        case .modern: return Color(red: 1, green: 0.20, blue: 0.14)
+        case .vintage: return Color(red: 1, green: 0.93, blue: 0.62)
+        case .texture: return Color(red: 0.25, green: 0.62, blue: 1)
+        }
+    }
+
     private func flashAmount(hits: UInt32, now: Date) -> Float {
         if hits != memory.count {
             memory.count = hits
             memory.time = now
         }
         let dt = Float(now.timeIntervalSince(memory.time))
-        return max(0, 1 - dt / 0.16)
+        return max(0, 1 - dt / 0.22)
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {

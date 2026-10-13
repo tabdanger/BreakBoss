@@ -1,5 +1,6 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import Foundation
+import AVFoundation
 
 // MARK: - Self-test
 //
@@ -32,6 +33,9 @@ enum KnockSelfTest {
         phase("checkMigration", checkMigration)
         phase("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence)
         phase("checkTextureControls", checkTextureControls)
+        phase("checkPatternEditor", checkPatternEditor)
+        phase("checkMIDIPadMap", checkMIDIPadMap)
+        phase("checkRecordingTrim", checkRecordingTrim)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -761,6 +765,128 @@ enum KnockSelfTest {
             e.kitHandoff.collect()
         }
         check(e.status[7] > 0, "rapid kit switches keep rendering")
+    }
+
+    static func checkPatternEditor() {
+        let bar = PatternData.ppq * 4, cell = PatternData.stepTicks
+        var p = PatternData(name: "T", lengthTicks: bar * 2, events: [])
+        p = PatternEdit.toggle(p, pad: Pad.snare.rawValue, tick: cell * 4, cell: cell)
+        check(p.events.count == 1 && p.events[0].tick == cell * 4 && Int(p.events[0].pad) == Pad.snare.rawValue,
+              "editor: tap adds a hit on the step")
+        p = PatternEdit.toggle(p, pad: Pad.snare.rawValue, tick: cell * 4, cell: cell)
+        check(p.events.isEmpty, "editor: tapping the same step removes it")
+        var swung = PatternData(name: "S", lengthTicks: bar, events: [GrooveEvent(tick: cell * 2 + 5, pad: Int8(Pad.hat.rawValue), velocity: 0.4)])
+        swung = PatternEdit.toggle(swung, pad: Pad.hat.rawValue, tick: cell * 2, cell: cell)
+        check(swung.events.isEmpty, "editor: removing a step also removes a swung hit inside it")
+        let kept = PatternEdit.toggle(PatternData(name: "K", lengthTicks: bar, events: [GrooveEvent(tick: 0, pad: 0, velocity: 0.33)]),
+                                      pad: Pad.hat.rawValue, tick: cell * 8, cell: cell)
+        check(kept.events.contains { $0.tick == 0 && $0.velocity == 0.33 }, "editor: untouched hits keep their velocity")
+        let bass = PatternEdit.longBass(PatternData(name: "B", lengthTicks: bar, events: []), from: cell * 2, cells: 6, cell: cell)
+        check(bass.events.count == 1 && bass.events[0].length == cell * 6 && Int(bass.events[0].pad) == Pad.bass808.rawValue,
+              "editor: dragging on the 808 row draws one long note")
+        let edge = PatternEdit.longBass(PatternData(name: "E", lengthTicks: bar, events: []), from: bar - cell * 2, cells: 6, cell: cell)
+        check(edge.events.first.map { $0.tick + $0.length <= bar } == true, "editor: long 808 stays inside the loop")
+        var source = PatternData(name: "C", lengthTicks: bar * 2, events: [
+            GrooveEvent(tick: 0, pad: 0, velocity: 1), GrooveEvent(tick: bar + cell * 4, pad: 1, velocity: 1)])
+        source = PatternEdit.copyNext(source, fromBar: 0, bars: 2)
+        check(source.bars == 4 && source.events.count == 4 && source.events.contains { $0.tick == bar * 2 } &&
+              source.events.contains { $0.tick == bar * 3 + cell * 4 }, "editor: COPY NEXT copies bars 1-2 into 3-4")
+        let longer = PatternEdit.setLength(PatternData(name: "L", lengthTicks: bar, events: [GrooveEvent(tick: cell, pad: 0, velocity: 1)]), bars: 4)
+        check(longer.bars == 4 && longer.events.map { $0.tick } == [cell, bar + cell, bar * 2 + cell, bar * 3 + cell],
+              "editor: longer length repeats the pattern")
+        let shorter = PatternEdit.setLength(longer, bars: 1)
+        check(shorter.bars == 1 && shorter.events.count == 1, "editor: shorter length drops hits past the end")
+        let capped = PatternEdit.copyNext(PatternData(name: "M", lengthTicks: bar * 8, events: [GrooveEvent(tick: bar * 6, pad: 0, velocity: 1)]),
+                                          fromBar: 6, bars: 2)
+        check(capped.bars == 8 && capped.events.count == 1, "editor: COPY NEXT never goes past 8 bars")
+        // Edits reach the engine as a valid loop.
+        let set = PatternSet([source])
+        check(set.loops[0].count == source.events.count && set.loops[0].lengthTicks == Int(source.lengthTicks),
+              "editor: edited pattern loads into the engine unchanged")
+    }
+
+    static func checkMIDIPadMap() {
+        let e = KnockEngine()
+        e.prepare(sampleRate: 48_000, maxFrames: 256)
+        e.setParam(.playMode, 0)
+        e.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        renderBlock(e)
+        func hits(_ note: UInt8) -> [UInt32] {
+            let before = (0..<Pad.count).map { e.padHits[$0] }
+            e.receiveMIDI(status: 0x90, data1: note, data2: 100, time: 0)
+            renderBlock(e)
+            e.receiveMIDI(status: 0x80, data1: note, data2: 0, time: 0)
+            renderBlock(e)
+            return (0..<Pad.count).map { e.padHits[$0] - before[$0] }
+        }
+        func onlyPad(_ d: [UInt32], _ pad: Int) -> Bool { d.enumerated().allSatisfy { $0.offset == pad ? $0.element > 0 : $0.element == 0 } }
+        check(onlyPad(hits(36), 0) && onlyPad(hits(47), 11), "MIDI map: standard notes 36-47 by default")
+        // MPC Classic, sent the way the controller sends it.
+        e.send(KEvent(kind: .mapNote, a: -1))
+        for (pad, note) in MIDIPadMap.mpcClassic.enumerated() { e.send(KEvent(kind: .mapNote, a: Int32(note), value: Double(pad))) }
+        renderBlock(e)
+        for (pad, note) in MIDIPadMap.mpcClassic.enumerated() {
+            check(onlyPad(hits(UInt8(note)), pad), "MIDI map: MPC Classic note \(note) plays pad \(pad + 1)")
+        }
+        check(hits(39).allSatisfy { $0 == 0 } && hits(41).allSatisfy { $0 == 0 }, "MIDI map: notes not on an MPC pad play nothing")
+        let bass808 = hits(60)
+        check(bass808[Pad.bass808.rawValue] > 0 && bass808.enumerated().allSatisfy { $0.offset == Pad.bass808.rawValue || $0.element == 0 },
+              "MIDI map: the chromatic 808 still plays on notes the map doesn't use")
+        let learned = MIDIPadMap.learn(MIDIPadMap.standard, pad: 2, note: 36)
+        check(learned[2] == 36 && learned[0] == -1 && learned.count == Pad.count, "MIDI learn moves a note to the new pad only")
+        check(MIDIPadMap.clean([200, -5]) == [-1, -1] + Array(repeating: -1, count: Pad.count - 2), "MIDI map cleans bad notes")
+        var saved = KnockState()
+        saved.midiMap = .mpcClassic
+        let round = try? JSONDecoder().decode(KnockState.self, from: JSONEncoder().encode(saved))
+        check(round?.midiMap == .mpcClassic, "MIDI map is saved with the session / AUv3 project")
+        let old = try? JSONDecoder().decode(KnockState.self, from: JSONEncoder().encode(KnockState()))
+        check(old != nil && old?.midiMap == nil, "sessions without a MIDI map still load (standard map)")
+        check(e.lastNoteOn.pointee & 0x7F == 60 && e.lastNoteOn.pointee >> 8 > 0, "MIDI learn sees the last note played")
+    }
+
+    static func checkRecordingTrim() {
+        #if canImport(AVFoundation)
+        do {
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("selftest take.wav")
+            try? FileManager.default.removeItem(at: url)
+            let settings: [String: Any] = [AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 48_000,
+                                           AVNumberOfChannelsKey: 1, AVLinearPCMBitDepthKey: 24,
+                                           AVLinearPCMIsFloatKey: false, AVLinearPCMIsBigEndianKey: false]
+            let format = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1)!
+            let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 48_000)!
+            buffer.frameLength = 48_000
+            let d = buffer.floatChannelData![0]
+            for i in 0..<48_000 { d[i] = i < 24_000 ? 0.001 : 0.5 * sinf(Float(i) * 0.05) * expf(-Float(i - 24_000) / 4_000) }
+            do {
+                let w = try AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
+                try w.write(from: buffer)
+            }
+            let trimmed = try PadRecorder.trimLeadingSilence(url)
+            check(trimmed != nil, "record: a take with sound is kept")
+            if let trimmed {
+                let f = try AVAudioFile(forReading: trimmed)
+                check(f.length > 23_000 && f.length < 24_400, "record: silence before the hit is trimmed (\(f.length) frames)")
+                let b = AVAudioPCMBuffer(pcmFormat: f.processingFormat, frameCapacity: AVAudioFrameCount(f.length))!
+                try f.read(into: b)
+                check(abs(b.floatChannelData![0][0]) < 0.0001, "record: the trimmed take starts without a click")
+                let back = try SampleLoader.load(trimmed)
+                check(back.length > 0, "record: the take loads like an imported sample")
+                try? FileManager.default.removeItem(at: trimmed)
+            }
+            let silent = FileManager.default.temporaryDirectory.appendingPathComponent("selftest silent.wav")
+            try? FileManager.default.removeItem(at: silent)
+            for i in 0..<48_000 { d[i] = 0.0005 }
+            do {
+                let w = try AVAudioFile(forWriting: silent, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
+                try w.write(from: buffer)
+            }
+            check(try PadRecorder.trimLeadingSilence(silent) == nil, "record: a silent take is not put on the pad")
+            try? FileManager.default.removeItem(at: url)
+            try? FileManager.default.removeItem(at: silent)
+        } catch {
+            check(false, "record: trim test ran (\(error.localizedDescription))")
+        }
+        #endif
     }
 
     static func checkMigration() {

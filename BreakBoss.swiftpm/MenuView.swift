@@ -17,6 +17,9 @@ struct MenuView: View {
     @State private var performance = false
     @State private var portable = false
     @State private var engineControls = false
+    @State private var learningPad: Int?
+    @State private var learnBase: Int32 = 0
+    private let learnTicker = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     private let accent = Color(red: 1, green: 0.30, blue: 0.20)
 
@@ -24,7 +27,7 @@ struct MenuView: View {
         NavigationView {
             Form {
                 Section("Performance") {
-                    Button("Open 4 × 4 performance pads") { performance = true }
+                    Button("Open the 12 performance pads") { performance = true }
                     Button("Engine controls") { engineControls = true }
                     Button("Share / import a complete preset") { portable = true }
                     Button("All notes and loops off") { controller.panic() }
@@ -55,7 +58,18 @@ struct MenuView: View {
                 }
 
                 Section {
-                    mapRow("36 – 47", "Pads 1 – 12, in order. ONE-SHOT plays a full strike regardless of note length. LOOP plays a rhythm while the key is held; release stops it. Last-held note takes priority.")
+                    Picker("Pad notes", selection: Binding(get: { controller.midiMap }, set: { controller.setMIDIMap($0) })) {
+                        ForEach(MIDIPadMap.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    ForEach(0..<Pad.count, id: \.self) { pad in learnRow(pad) }
+                } header: {
+                    Text("MIDI controller (MPC and other pad controllers)")
+                } footer: {
+                    Text("On an MPC, pick the same pad note setting on the MPC (Classic MPC or Chromatic C1), or tap Learn next to a pad here and hit the MPC pad you want for it. MPC pads A01–A12 line up with pads 1–12, bottom-left first. This only changes live playing; MIDI files and MIDI export keep notes 36–47.")
+                }
+
+                Section {
+                    mapRow("36 – 47", "Pads 1 – 12, in order (with the standard pad notes above). ONE-SHOT plays a full strike regardless of note length. LOOP plays a rhythm while the key is held; release stops it. Last-held note takes priority.")
                     mapRow("48 – 84", "The 808, chromatic. Note 60 is the kit's tuning. Note numbers stay the same when a DAW uses different octave names.")
                     mapRow("MIDI clock", "TEMPO SYNC follows its tempo, FOLLOW DAW its start / stop.")
                 } header: { Text("MIDI") }
@@ -68,6 +82,7 @@ struct MenuView: View {
                     guide("KNOBS", "Drag up or right to turn up. Double-tap to reset.")
                     guide("BPM", "Drag up or down on the display. Double-tap for the kit's tempo. With TEMPO SYNC on, the DAW or MIDI clock sets it.")
                     guide("HOLD A PAD", "ONE-SHOT: pad editor (level, pan, tune, decay, filter, reverse, your sample). LOOP: step editor for that loop, or drop in a MIDI file.")
+                    guide("PATTERN EDITOR", "The piano-keys button next to EXPORT opens the step editor for the loop that's playing: pick a pattern, grid and length, tap squares, drag a long 808, COPY NEXT, BLANK PATTERN, undo and redo.")
                     guide("EXPORT", "The arrow button renders MIDI, a stereo mix and stems you can drag into a DAW or share.")
                 }
 
@@ -166,6 +181,34 @@ struct MenuView: View {
                     .buttonStyle(.borderless)
                     .accessibilityLabel("Restore kit sound on pad \(pad + 1)")
                     .frame(minWidth: 44, minHeight: 44)
+            }
+        }
+    }
+
+    private func learnRow(_ pad: Int) -> some View {
+        let note = controller.midiPadNotes[pad]
+        let learning = learningPad == pad
+        return HStack {
+            Text("Pad \(pad + 1)").font(.system(.body, design: .monospaced)).frame(width: 64, alignment: .leading)
+            Text(controller.padName(pad).uppercased()).font(.caption).foregroundColor(.secondary).lineLimit(1)
+            Spacer()
+            Text(learning ? "HIT A PAD…" : note >= 0 ? "NOTE \(note)" : "—")
+                .font(.system(.caption, design: .monospaced))
+                .foregroundColor(learning ? accent : .primary)
+            Button(learning ? "Cancel" : "Learn") {
+                if learning { learningPad = nil } else {
+                    learnBase = controller.lastMIDINoteOn.count
+                    learningPad = pad
+                }
+            }
+            .buttonStyle(.bordered)
+        }
+        .onReceive(learnTicker) { _ in
+            guard learningPad == pad else { return }
+            let last = controller.lastMIDINoteOn
+            if last.count != learnBase {
+                controller.learnMIDINote(pad: pad, note: last.note)
+                learningPad = nil
             }
         }
     }

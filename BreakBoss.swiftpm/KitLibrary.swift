@@ -52,6 +52,49 @@ enum Pad: Int, CaseIterable {
     }
 }
 
+/// Which live MIDI note plays each pad, for hardware pad controllers. MIDI files and MIDI
+/// export always use notes 36-47; this only changes what incoming notes trigger.
+enum MIDIPadMap: String, CaseIterable, Codable {
+    case standard, mpcClassic, custom
+
+    /// Pads 1-12: C1 up (also an MPC's "Chromatic C1" setting).
+    static let standard: [Int] = Array(36...47)
+    /// An MPC's "Classic MPC" map, pads A01-A12. A01 sits bottom-left like pad 1.
+    static let mpcClassic: [Int] = [37, 36, 42, 82, 40, 38, 46, 44, 48, 47, 45, 43]
+
+    var title: String {
+        switch self {
+        case .standard: return "BreakBoss / MPC Chromatic C1 (36–47)"
+        case .mpcClassic: return "MPC Classic (A01–A12)"
+        case .custom: return "Custom (MIDI learn)"
+        }
+    }
+
+    /// One note per pad; a note given to two pads only plays the later pad.
+    static func notes(_ map: MIDIPadMap, custom: [Int]?) -> [Int] {
+        switch map {
+        case .standard: return standard
+        case .mpcClassic: return mpcClassic
+        case .custom: return clean(custom ?? standard)
+        }
+    }
+
+    static func clean(_ notes: [Int]) -> [Int] {
+        var out = Array(notes.prefix(Pad.count)).map { (0...127).contains($0) ? $0 : -1 }
+        while out.count < Pad.count { out.append(-1) }
+        return out
+    }
+
+    /// Gives `note` to `pad` and takes it off any other pad.
+    static func learn(_ notes: [Int], pad: Int, note: Int) -> [Int] {
+        var out = clean(notes)
+        guard (0..<Pad.count).contains(pad), (0...127).contains(note) else { return out }
+        for i in out.indices where out[i] == note { out[i] = -1 }
+        out[pad] = note
+        return out
+    }
+}
+
 // MARK: - Kits
 
 struct KitDefinition: Identifiable {

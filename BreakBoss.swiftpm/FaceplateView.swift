@@ -23,6 +23,7 @@ struct FaceplateView: View {
     @State private var editor: EditorTarget?
     @State private var showExport = false
     @State private var showMenu = false
+    @State private var patternEditor: PatternTarget?
     @State private var namePrompt: NamePrompt?
     @State private var nameText = ""
 
@@ -30,6 +31,11 @@ struct FaceplateView: View {
         let pad: Int
         let loop: Bool
         var id: Int { pad * 2 + (loop ? 1 : 0) }
+    }
+
+    struct PatternTarget: Identifiable {
+        let loop: Int
+        var id: Int { loop }
     }
 
     enum NamePrompt: Identifiable {
@@ -73,6 +79,7 @@ struct FaceplateView: View {
         }
         .sheet(isPresented: $showExport) { ExportView(controller: controller) }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
+        .sheet(item: $patternEditor) { target in PatternEditorView(controller: controller, loop: target.loop) }
         .alert(namePrompt == .kit ? "Save Kit" : "Save Preset", isPresented: Binding(
             get: { namePrompt != nil }, set: { if !$0 { namePrompt = nil } })) {
             TextField("Name", text: $nameText)
@@ -134,6 +141,13 @@ struct FaceplateView: View {
         }
         hit(L.clipperRect, s) { controller.toggle(.clipper) }
         hit(L.exportRect, s) { showExport = true }
+        if let r = L.editorRect {
+            hit(r, s) {
+                // Opens on the loop that's playing, otherwise loop 1.
+                let current = Int(controller.meters.status[1])
+                patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : 0)
+            }
+        }
         hit(L.menuRect, s) { showMenu = true }
     }
 

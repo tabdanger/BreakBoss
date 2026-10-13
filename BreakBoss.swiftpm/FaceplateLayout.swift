@@ -42,6 +42,8 @@ struct FaceplateLayout: Decodable {
     let saveRect: [Double]
     let exportRect: [Double]
     let menuRect: [Double]
+    /// Pattern editor (piano keys) button, left of EXPORT.
+    let editorRect: [Double]?
     let modeButtons: [String: [Double]]
     /// Artwork positions in reading order. Pad IDs are independent of the device layout.
     let pads: [[Double]]

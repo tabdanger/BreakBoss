@@ -145,12 +145,21 @@ final class KnockEngine {
     private var clockRunning = false
     private var midiClockBeat: Double = 0
 
+    /// Live MIDI note -> pad (-1 = not a pad). Written only by the audio thread, from .mapNote
+    /// events, so it never changes in the middle of a block. MIDI files keep notes 36-47.
+    private let midiPadTable = UnsafeMutablePointer<Int8>.allocate(capacity: 128)
+    /// The last live note-on: (count << 8) | note, so the MIDI learn screen can see it.
+    let lastNoteOn = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
+
     /// Pads that sound (bit per pad). The export renderer uses it for stems.
     var padMask: UInt16 = 0xFFFF
 
     init() {
         precondition(KParam.count <= UInt32.bitWidth)
         heldLoops.initialize(repeating: 0, count: 2064)
+        midiPadTable.initialize(repeating: -1, count: 128)
+        for pad in 0..<Pad.count { midiPadTable[MIDIPadMap.standard[pad]] = Int8(pad) }
+        lastNoteOn.initialize(to: 0)
         params = .allocate(capacity: KParam.count)
         hostParams = .allocate(capacity: KParam.count)
         for p in KParam.allCases { (params + p.rawValue).initialize(to: p.defaultValue) }
@@ -177,6 +186,8 @@ final class KnockEngine {
 
     deinit {
         heldLoops.deallocate()
+        midiPadTable.deallocate()
+        lastNoteOn.deallocate()
         params.deallocate()
         hostParams.deallocate()
         displayBPM.deallocate()
@@ -241,9 +252,16 @@ final class KnockEngine {
         }
     }
 
+    @inline(__always)
+    private func livePad(_ note: Int) -> Int? {
+        guard note >= 0 && note < 128 else { return nil }
+        let pad = Int(midiPadTable[note])
+        return pad >= 0 && pad < Pad.count ? pad : nil
+    }
+
     private func noteEvent(note: Int, velocity: UInt8) -> KEvent {
         let v = Double(velocity) / 127
-        if let pad = Pad.index(forMIDINote: note) {
+        if let pad = livePad(note) {
             if params[KParam.playMode.rawValue] > 0.5 { return KEvent(kind: .loopPad, a: Int32(pad), value: v) }
             return KEvent(kind: .pad, a: Int32(pad), value: v)
         }
@@ -308,7 +326,7 @@ final class KnockEngine {
         switch event.kind {
         case .midiNoteOn, .noteOff:
             return params[KParam.playMode.rawValue] > 0.5 && event.a >= 0 &&
-                Pad.index(forMIDINote: Int(event.a) % 128) != nil
+                livePad(Int(event.a) % 128) != nil
         case .allOff:
             return true
         default:
@@ -488,9 +506,16 @@ final class KnockEngine {
 
     private func apply(_ e: KEvent, offset: Int) {
         switch e.kind {
+        case .mapNote:
+            if e.a < 0 {
+                midiPadTable.update(repeating: -1, count: 128)
+            } else if e.a < 128 {
+                midiPadTable[Int(e.a)] = Int8(clamping: Int(e.value))
+            }
         case .midiNoteOn:
             let note = Int(e.a) % 128
-            if params[KParam.playMode.rawValue] > 0.5, Pad.index(forMIDINote: note) != nil {
+            lastNoteOn.pointee = (lastNoteOn.pointee &+ 256) & ~0xFF | Int32(note)
+            if params[KParam.playMode.rawValue] > 0.5, livePad(note) != nil {
                 beginGate(Int(e.a))
             } else {
                 let event = noteEvent(note: note, velocity: UInt8(clamping: Int(e.value * 127)))
@@ -577,7 +602,7 @@ final class KnockEngine {
     private func loopForToken(_ token: Int) -> Int? {
         if token >= 2048 && token < 2064 { return token - 2048 }
         guard token >= 0 && token < 2048 else { return nil }
-        return Pad.index(forMIDINote: token % 128)
+        return livePad(token % 128)
     }
 
     private func clearGates() {

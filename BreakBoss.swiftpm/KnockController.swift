@@ -123,6 +123,40 @@ final class KnockController: ObservableObject {
     private func pushAllToEngine() {
         for p in KParam.allCases { engine.setParam(p, value(p)) }
         engine.setTempo(state.bpm)
+        pushMIDIMap()
+    }
+
+    // MARK: MIDI pad map (hardware controllers such as an MPC)
+
+    var midiMap: MIDIPadMap { state.midiMap ?? .standard }
+    var midiPadNotes: [Int] { MIDIPadMap.notes(midiMap, custom: state.midiCustomNotes) }
+
+    func setMIDIMap(_ map: MIDIPadMap) {
+        if map == .custom && state.midiCustomNotes == nil { state.midiCustomNotes = midiPadNotes }
+        state.midiMap = map
+        pushMIDIMap()
+        scheduleSave()
+    }
+
+    /// MIDI learn: the next note becomes this pad's note (switches to the custom map).
+    func learnMIDINote(pad: Int, note: Int) {
+        state.midiCustomNotes = MIDIPadMap.learn(midiPadNotes, pad: pad, note: note)
+        state.midiMap = .custom
+        pushMIDIMap()
+        scheduleSave()
+    }
+
+    /// The last note-on the engine received: (counter, note).
+    var lastMIDINoteOn: (count: Int32, note: Int) {
+        let v = engine.lastNoteOn.pointee
+        return (v >> 8, Int(v & 0x7F))
+    }
+
+    private func pushMIDIMap() {
+        engine.send(KEvent(kind: .mapNote, a: -1))
+        for (pad, note) in midiPadNotes.enumerated() where note >= 0 {
+            engine.send(KEvent(kind: .mapNote, a: Int32(note), value: Double(pad)))
+        }
     }
 
     /// AUv3: host automation writes the engine directly; bring the faceplate along.
@@ -488,7 +522,10 @@ final class KnockController: ObservableObject {
 
     func loadUserPreset(_ name: String) {
         guard let preset = KnockStore.loadUserPreset(name) else { notice = "Couldn't open the preset \(name)."; return }
-        restore(preset.state)
+        var s = preset.state
+        s.midiMap = state.midiMap          // the MIDI controller setup isn't part of a sound preset
+        s.midiCustomNotes = state.midiCustomNotes
+        restore(s)
         readout = Readout(title: "PRESET", value: preset.state.presetName, time: Date())
     }
 

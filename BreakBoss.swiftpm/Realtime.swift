@@ -79,6 +79,7 @@ struct KEvent {
         case midiClock    // value: time in seconds
         case songPosition // a: MIDI beats (16ths)
         case allOff
+        case mapNote      // a: MIDI note (-1 = clear the whole map), value: pad 0...11 or -1
     }
     var kind: Kind
     var a: Int32 = 0

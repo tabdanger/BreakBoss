@@ -174,7 +174,7 @@ struct PortablePresetView: View {
             DispatchQueue.main.async {
                 working = false
                 switch result {
-                case .success(let state): controller.restore(state); controller.notice = "Portable preset loaded."
+                case .success(var state): state.midiMap = controller.state.midiMap; state.midiCustomNotes = controller.state.midiCustomNotes; controller.restore(state); controller.notice = "Portable preset loaded."
                 case .failure(let failure): error = failure.localizedDescription
                 }
             }
