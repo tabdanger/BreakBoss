@@ -194,7 +194,7 @@ struct LoopEditorView: View {
                     }
                     .padding(.vertical, 4)
                 }
-                Text("Tap a square to add or remove a hit. Micro-timing and velocity from the generated groove are kept on hits you don't touch. Drop a MIDI file on the pad (or import one below) to use your own groove: notes 36–47 play pads 1–12, 85–88 play pads 13–16, and 48–84 play the 808.")
+                Text("Tap a square to add or remove a hit. Micro-timing and velocity from the generated groove are kept on hits you don't touch. Drop a MIDI file on the pad (or import one below) to use your own groove: notes 36–47 play pads 1–12 and 48–84 play the 808.")
                     .font(.footnote).foregroundColor(.secondary)
                 ViewThatFits(in: .horizontal) {
                     HStack { loopActions(edited: edited) }.fixedSize(horizontal: true, vertical: false)

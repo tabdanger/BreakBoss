@@ -96,7 +96,7 @@ enum WavWriter {
 // MARK: - MIDI files
 
 enum MIDIFile {
-    /// One track, channel 10. Pads are notes 36...51; chromatic 808 notes are 52...84
+    /// One track, channel 10. Pads are notes 36...47; chromatic 808 notes are 48...84
     /// (60 = its tuning). MIDI export bounds bass pitches to that chromatic range so they
     /// cannot be mistaken for drum pads on import; audio rendering keeps the full pitch.
     static func write(_ pattern: PatternData, tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
@@ -140,7 +140,7 @@ enum MIDIFile {
         try Data(data).write(to: url, options: .atomic)
     }
 
-    /// Reads a MIDI file into a loop. Notes 36...51 land on the pads, 52...84 on the 808.
+    /// Reads a MIDI file into a loop. Notes 36...47 land on the pads, 48...84 on the 808.
     static func read(_ url: URL) -> PatternData? {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }

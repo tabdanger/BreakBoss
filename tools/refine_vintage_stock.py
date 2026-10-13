@@ -146,8 +146,8 @@ def refine(source: Path, package: Path, selections_path: Path,
     assignments = indexed(manifest["assignments"], "manifest")
     if manifest.get("version") != 1 or provenance.get("version") != 1:
         fail("Unsupported existing stock format")
-    if not len(current) == len(roots) * 16 == 544 or len(roots) != 34:
-        fail("Expected the complete 34-kit, 544-assignment stock bank")
+    if not len(current) == len(roots) * 12 == 408 or len(roots) != 34:
+        fail("Expected the complete 34-kit, 408-assignment stock bank")
     if set(current) != set(records) or set(current) != set(assignments):
         fail("Manifest, selections, and provenance addresses differ")
     if provenance.get("selectionsSHA256") != sha(old_selection_bytes):

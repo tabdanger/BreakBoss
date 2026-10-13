@@ -108,7 +108,7 @@ class SimulatorTests(unittest.TestCase):
             self.assertNotIn("self-test passed", simulate.combined_log(console, root, started=101))
             for name in simulate.expected_layout_names("iphone"):
                 path = cache / name
-                path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", 590, 1280)
+                path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", 941, 1672)
                                  + b"\0\0\0\0IEND\xaeB`\x82")
                 os.utime(path, (100, 100))
             self.assertEqual(len(simulate.missing_layout_names("iphone", cache, started=101)), 6)
@@ -158,7 +158,7 @@ class SimulatorTests(unittest.TestCase):
             self.assertEqual(simulate.missing_layout_names("ipad", cache), [])
             self.assertEqual(len(simulate.missing_layout_names("iphone", cache)), 6)
             for name in simulate.expected_layout_names("iphone"):
-                write(name, 590, 1280)
+                write(name, 941, 1672)
             self.assertEqual(simulate.missing_layout_names("iphone", cache), [])
             wrong = "layout-phone-modern-loop.png"
             write(wrong, 1448, 1086)

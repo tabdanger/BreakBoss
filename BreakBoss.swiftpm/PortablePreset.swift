@@ -138,7 +138,7 @@ struct PortablePresetView: View {
         NavigationView {
             Form {
                 Section {
-                    Text("Share your current kit, all 16 pad settings, imported audio, patterns, and processing controls in one .bbpack file.")
+                    Text("Share your current kit, all 12 pad settings, imported audio, patterns, and processing controls in one .bbpack file.")
                     Button(working ? "Preparing…" : "Prepare complete preset") { makePackage() }.disabled(working)
                     if let url { ShareLink(item: url) { Label("Share / save preset", systemImage: "square.and.arrow.up") } }
                     Button("Import .bbpack preset") { importing = true }.disabled(working)

@@ -39,7 +39,7 @@ extension PadSettings {
     }
 }
 
-/// The sounds on the 16 pads, ready for the audio thread (read-only once published).
+/// The sounds on the 12 pads, ready for the audio thread (read-only once published).
 final class KitBuffers {
     let name: String
     let samples: [SampleBuffer]

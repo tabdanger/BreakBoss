@@ -220,7 +220,7 @@ def number(item: dict, key: str, lower: float, upper: float, default=None):
 
 def validate_selections(raw, roots: dict[str, float]) -> list[dict]:
     selections = raw.get("selections") if isinstance(raw, dict) else raw
-    if not isinstance(selections, list) or not 1 <= len(selections) <= min(MAX_ASSIGNMENTS, len(roots) * 16):
+    if not isinstance(selections, list) or not 1 <= len(selections) <= min(MAX_ASSIGNMENTS, len(roots) * 12):
         fail("Selections must be a nonempty list within the factory assignment limit")
     seen, result = set(), []
     for item in selections:
@@ -230,7 +230,7 @@ def validate_selections(raw, roots: dict[str, float]) -> list[dict]:
         pad = item.get("pad")
         if not isinstance(kit, str) or kit not in roots:
             fail(f"Unknown factory kitID: {kit!r}")
-        if isinstance(pad, bool) or not isinstance(pad, int) or not 0 <= pad < 16:
+        if isinstance(pad, bool) or not isinstance(pad, int) or not 0 <= pad < 12:
             fail("pad must be an integer in 0..15")
         if (kit, pad) in seen:
             fail(f"Duplicate kit/pad assignment: {kit}, {pad}")

@@ -55,6 +55,11 @@ struct FaceplateLayout: Decodable {
         "\(isPhone ? "PhonePlate" : "Plate")_\(mode.assetSuffix)"
     }
 
+    /// State overlays cut from the same plate: "oneshot_on_modern" or "phone_oneshot_on_modern".
+    func overlayName(_ kind: String, _ suffix: String) -> String {
+        "\(isPhone ? "phone_" : "")\(kind)_\(suffix)"
+    }
+
     static func rect(_ r: [Double]) -> CGRect {
         guard r.count == 4 else { return .zero }
         return CGRect(x: r[0], y: r[1], width: r[2] - r[0], height: r[3] - r[1])

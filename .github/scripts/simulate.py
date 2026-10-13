@@ -54,7 +54,7 @@ def expected_layout_names(family):
 
 
 def missing_layout_names(family, cache, started=None):
-    expected_size = {"iphone": (590, 1280), "ipad": (1448, 1086)}[family]
+    expected_size = {"iphone": (941, 1672), "ipad": (1448, 1086)}[family]
     missing = []
     for name in sorted(expected_layout_names(family)):
         path = cache / name if cache else None

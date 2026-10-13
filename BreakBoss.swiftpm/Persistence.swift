@@ -239,7 +239,7 @@ struct FactoryPreset {
 enum FactoryPresets {
     // These are authored recipes, not randomized aliases. Each preset has a different FX
     // snapshot and specific pad adjustments. The profiles provide sensible starting envelopes
-    // for the 16 fixed drum roles; edits below tune each recipe to its own musical purpose.
+    // for the 12 fixed drum roles; edits below tune each recipe to its own musical purpose.
     private enum PadShape {
         case modernPunch, modernSmooth, modernDry, memphis
         case vintageDry, vintageLive, vintageDust, vintageDisco

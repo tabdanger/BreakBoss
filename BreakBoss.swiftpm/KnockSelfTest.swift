@@ -75,7 +75,7 @@ enum KnockSelfTest {
 
     static func checkKits() {
         for def in KitLibrary.factory {
-            check(def.pads.count == Pad.count, "\(def.name): 16 pads")
+            check(def.pads.count == Pad.count, "\(def.name): 12 pads")
             for (i, r) in def.pads.enumerated() {
                 let b = DrumSynth.render(r, sampleRate: 48_000, seed: 7)
                 var peak: Float = 0
@@ -152,7 +152,7 @@ enum KnockSelfTest {
         for style in GrooveStyle.allCases {
             for seed: UInt32 in [1, 2, 77, 12345] {
                 let loops = GrooveGenerator.loops(style: style, seed: seed)
-                check(loops.count == Pad.count, "\(style) seed \(seed): 16 loops")
+                check(loops.count == Pad.count, "\(style) seed \(seed): 12 loops")
                 for (i, p) in loops.enumerated() {
                     check(!p.events.isEmpty, "\(style) loop \(i + 1) has hits")
                     check(p.lengthTicks % (PatternData.ppq * 4) == 0, "\(style) loop \(i + 1) whole bars")
@@ -183,8 +183,6 @@ enum KnockSelfTest {
                 check(loops[LoopSlot.kick808.rawValue].events.allSatisfy {
                     $0.pad == Int8(Pad.kick.rawValue) || $0.pad == Int8(Pad.bass808.rawValue)
                 }, "\(style): Kick + 808 has only its two lanes")
-                check(loops[LoopSlot.shakerGroove.rawValue].events.allSatisfy { $0.pad == Int8(Pad.shaker.rawValue) },
-                      "\(style): shaker slot keeps its role")
                 // The main groove has a backbeat (snare or clap or rim) and a kick.
                 let a = loops[0]
                 check(a.events.contains { $0.pad == Int8(Pad.kick.rawValue) }, "\(style) main A has a kick")
@@ -325,7 +323,7 @@ enum KnockSelfTest {
             for i in a.indices { difference = max(difference, abs(a[i] - b[i])) }
             return difference
         }
-        for note: UInt8 in [36, 48, 51, 52, 60, 85] {
+        for note: UInt8 in [36, 47, 48, 52, 60, 84] {
             let e = engine()
             e.hostMIDI(offset: 73, status: 0x90, data1: note, data2: 127)
             let actual = block(e, 128)
@@ -431,7 +429,7 @@ enum KnockSelfTest {
             return left
         }
         func energy(_ values: [Float]) -> Float { values.reduce(0) { $0 + $1 * $1 } }
-        for note in (36...51).map({ UInt8($0) }) + [52, 60, 84] {
+        for note in (36...47).map({ UInt8($0) }) + [48, 60, 84] {
             let short = engine(), held = engine()
             for e in [short, held] { e.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 127) }
             // An immediate key release must leave the first sample, attack and entire tail
@@ -454,7 +452,7 @@ enum KnockSelfTest {
             _ = block(short)
             check(short.padHits[pad] == 2, "One-Shot MIDI \(note): another programmed note creates the next strike")
         }
-        for note: UInt8 in [36, 37, 42, 48, 51, 60] {
+        for note: UInt8 in [36, 37, 42, 47, 48, 60] {
             let soft = engine(), hard = engine()
             soft.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 32)
             hard.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 127)
@@ -663,7 +661,7 @@ enum KnockSelfTest {
                 check(back.events.count == loops[0].events.count, "MIDI round trip keeps every hit (\(back.events.count)/\(loops[0].events.count))")
                 check(back.lengthTicks == loops[0].lengthTicks, "MIDI round trip keeps the length")
             }
-            let allPads = PatternData(name: "ALL 16 MIDI PADS", lengthTicks: PatternData.ppq * 4,
+            let allPads = PatternData(name: "ALL 12 MIDI PADS", lengthTicks: PatternData.ppq * 4,
                                       events: Pad.allCases.map { pad in
                 GrooveEvent(tick: Int32(pad.rawValue * 12), pad: Int8(pad.rawValue), velocity: 0.75,
                             length: pad == .bass808 ? 12 : 0)
@@ -672,7 +670,7 @@ enum KnockSelfTest {
             let allPadsBack = MIDIFile.read(url)
             check(allPadsBack?.events.count == Pad.count &&
                   Set(allPadsBack?.events.map { Int($0.pad) } ?? []) == Set(Pad.allCases.map { $0.rawValue }),
-                  "MIDI export and import preserve all 16 sequential drum pads")
+                  "MIDI export and import preserve all 12 sequential drum pads")
             let lowBass = PatternData(name: "LOW 808 MIDI", lengthTicks: PatternData.ppq * 4,
                                       events: [GrooveEvent(tick: 0, pad: Int8(Pad.bass808.rawValue), velocity: 1,
                                                            semis: -12, length: 96)])
@@ -727,7 +725,7 @@ enum KnockSelfTest {
         e.receiveMIDI(status: 0x90, data1: 36, data2: 0, time: 0)
         renderBlock(e)
         check(e.status[0] == 0 && e.status[1] == -1, "zero velocity note-on releases final loop")
-        for note in 36...51 {
+        for note in 36...47 {
             e.receiveMIDI(status: 0x90, data1: UInt8(note), data2: 100, time: 0)
             renderBlock(e)
             check(e.status[0] == 1 && e.status[1] == Double(note - 36), "MIDI note \(note) holds full loop \(note - 35)")
@@ -735,9 +733,9 @@ enum KnockSelfTest {
             renderBlock(e)
             check(e.status[0] == 0 && e.status[1] == -1, "releasing MIDI note \(note) stops its held loop")
         }
-        e.receiveMIDI(status: 0x90, data1: 88, data2: 127, time: 0)
+        e.receiveMIDI(status: 0x90, data1: 47, data2: 127, time: 0)
         renderBlock(e)
-        check(e.status[1] == 15, "MIDI reaches loop 16")
+        check(e.status[1] == 11, "MIDI reaches loop 12")
         e.receiveMIDI(status: 0xB0, data1: 123, data2: 0, time: 0)
         renderBlock(e)
         check(e.status[0] == 0, "all notes off stops loop sequencing")
@@ -771,19 +769,19 @@ enum KnockSelfTest {
 
     static func checkMigration() {
         var old = KnockState()
-        old.pads = Array(repeating: PadSettings(), count: 12)
+        old.pads = Array(repeating: PadSettings(), count: 16)
         old.pads[0].tune = 7
-        old.editedLoops = Array(repeating: nil, count: 12)
+        old.editedLoops = Array(repeating: nil, count: 16)
         old.editedLoops[2] = PatternData(name: "KEEP", lengthTicks: 384, events: [])
         let new = old.normalized()
-        check(new.pads.count == 16 && new.pads[0].tune == 7, "12-pad kits migrate without losing pad settings")
-        check(new.editedLoops.count == 16 && new.editedLoops[2]?.name == "KEEP", "12-loop presets preserve edits")
+        check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
+        check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
         check(KitLibrary.core.count == 17 && KitLibrary.textures.count == 7 && KitLibrary.legacy.count == 10 && KitLibrary.factory.count == 34,
               "34 factory kits include 17 core, seven textures, and ten original kits")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")
         check(Pad.allCases.allSatisfy { Pad.index(forMIDINote: $0.midiNote) == $0.rawValue }, "all pad MIDI mappings round trip")
-        check(Pad.allCases.map { $0.midiNote } == Array(36...51), "16 factory pads use consecutive MIDI notes 36 through 51")
-        check((36...51).allSatisfy { !Pad.bassNoteRange.contains($0) } &&
+        check(Pad.count == 12 && Pad.allCases.map { $0.midiNote } == Array(36...47), "12 pads use consecutive MIDI notes 36 through 47")
+        check((36...47).allSatisfy { !Pad.bassNoteRange.contains($0) } &&
               Pad.bassNoteRange.allSatisfy { Pad.index(forMIDINote: $0) == nil }, "drum pad and chromatic 808 MIDI ranges do not overlap")
     }
 
@@ -837,7 +835,7 @@ enum KnockSelfTest {
             check(state.mode == preset.mode && state.values[KParam.soundMode.id] == Float(preset.mode.rawValue) &&
                   state.presetName == preset.name, "\(preset.name): restores the preset mode and name")
             check(state.pads.count == Pad.count && state.pads == preset.pads && state.pads.allSatisfy { $0.sampleFile == nil },
-                  "\(preset.name): restores all 16 pad settings and stock sample identities")
+                  "\(preset.name): restores all 12 pad settings and stock sample identities")
             check(state.values[KParam.playMode.id] == 0 && state.values[KParam.tempoSync.id] == 1 &&
                   state.values[KParam.followDAW.id] == 0, "\(preset.name): preserves player and host transport choices")
             for p in KParam.allCases where p.isKnob || p == .clipper {

@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 // MARK: - The menu button (top right, next to export)
 //
-// Your samples on all 16 pads in one place, saving kits, the MIDI note map and a short guide.
+// Your samples on all 12 pads in one place, saving kits, the MIDI note map and a short guide.
 
 struct MenuView: View {
     @ObservedObject var controller: KnockController
@@ -55,9 +55,8 @@ struct MenuView: View {
                 }
 
                 Section {
-                    mapRow("36 – 51", "Pads 1 – 16, sequentially. ONE-SHOT plays a full strike regardless of note length. LOOP plays a rhythm while the key is held; release stops it. Last-held note takes priority.")
-                    mapRow("85 – 88", "Alternate notes for pads / loops 13 – 16 from older BreakBoss versions.")
-                    mapRow("52 – 84", "The 808, chromatic. Note 60 is the kit's tuning. Note numbers stay the same when a DAW uses different octave names.")
+                    mapRow("36 – 47", "Pads 1 – 12, in order. ONE-SHOT plays a full strike regardless of note length. LOOP plays a rhythm while the key is held; release stops it. Last-held note takes priority.")
+                    mapRow("48 – 84", "The 808, chromatic. Note 60 is the kit's tuning. Note numbers stay the same when a DAW uses different octave names.")
                     mapRow("MIDI clock", "TEMPO SYNC follows its tempo, FOLLOW DAW its start / stop.")
                 } header: { Text("MIDI") }
 
@@ -104,7 +103,7 @@ struct MenuView: View {
             Button("Save") { controller.saveKit(as: kitName) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Saves the 16 pads (your samples and pad settings) as a kit.")
+            Text("Saves the 12 pads (your samples and pad settings) as a kit.")
         }
     }
 

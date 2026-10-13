@@ -9,22 +9,20 @@ import Foundation
 //   top row:     7 808     8 PERC 1   9 PERC 2   10 TOM LO   11 TOM HI   12 CYMBAL
 //   bottom row:  1 KICK    2 SNARE    3 CLAP     4 RIM/SNAP  5 HAT       6 OPEN HAT
 //
-// MIDI notes 36...51 play pads 1...16 sequentially. Notes 52...84 play the 808 chromatically
-// (note 60 is the kit's 808 tuning). Notes 85...88 remain aliases for older pad controllers.
+// MIDI notes 36...47 play pads 1...12 in order. Notes 48...84 play the 808 chromatically
+// (note 60 is the kit's 808 tuning).
 
 enum Pad: Int, CaseIterable {
-    case kick = 0, snare, clap, rim, hat, openHat, bass808, perc1, perc2, tomLow, tomHigh, cymbal, shaker, tambourine, conga, fx
+    case kick = 0, snare, clap, rim, hat, openHat, bass808, perc1, perc2, tomLow, tomHigh, cymbal
 
-    static let count = 16
+    static let count = 12
     static let firstNote = 36
     static let bassRootNote = 60
-    static let bassNoteRange = 52...84
+    static let bassNoteRange = 48...84
 
     var midiNote: Int { Self.firstNote + rawValue }
     static func index(forMIDINote note: Int) -> Int? {
-        if (36...51).contains(note) { return note - 36 }
-        if (85...88).contains(note) { return note - 85 + 12 }
-        return nil
+        (36...47).contains(note) ? note - 36 : nil
     }
 
     var label: String {
@@ -41,10 +39,6 @@ enum Pad: Int, CaseIterable {
         case .tomLow: return "TOM LO"
         case .tomHigh: return "TOM HI"
         case .cymbal: return "CYMBAL"
-        case .shaker: return "SHAKER"
-        case .tambourine: return "TAMB"
-        case .conga: return "CONGA"
-        case .fx: return "FX"
         }
     }
 
@@ -82,13 +76,7 @@ struct KitDefinition: Identifiable {
 
     init(id: String, name: String, style: GrooveStyle, tempo: Double, bassHz: Float, pads: [DrumRecipe]) {
         self.id = id; self.name = name; self.style = style; self.tempo = tempo; self.bassHz = bassHz
-        let extras = [
-            DrumRecipe(kind: .shaker, tune: 1.1, decay: 0.10, level: 0.65, label: "SHAKER"),
-            DrumRecipe(kind: .tambourine, tune: 0.9, decay: 0.22, level: 0.6, label: "TAMB"),
-            DrumRecipe(kind: .conga, tune: 280, decay: 0.28, level: 0.7, label: "CONGA"),
-            DrumRecipe(kind: .cowbell, tune: 730, decay: 0.55, drive: 0.3, level: 0.6, label: "FX BELL")
-        ]
-        self.pads = pads.count == 12 ? pads + extras : pads
+        self.pads = Array(pads.prefix(Pad.count))
     }
 }
 

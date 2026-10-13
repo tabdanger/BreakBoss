@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - Grooves
 //
-// LOOP mode turns a kit into 16 ready-made grooves, generated here from what we know about how
+// LOOP mode turns a kit into 12 ready-made grooves, generated here from what we know about how
 // each style is programmed. Nothing is copied from records: these are rules, and the dice rolls
 // new grooves from the same rules.
 //
@@ -11,11 +11,11 @@ import Foundation
 //               808, 16th hats with rolls (1/32, triplets, 1/64) whose velocity swells, an open
 //               hat on an off-beat cut by the next closed hat.
 //   West Bounce modern West Coast (ratchet / Ty-style): claps and snaps on 2 and 4, bouncing
-//               kick, short punchy 808 with octave jumps, 8th hats, shaker.
+//               kick, short punchy 808 with octave jumps, 8th hats, shaker on PERC 1.
 //   Bay Slap    Bay Area slap: hard snare on 2 and 4, busy syncopated kick, long sliding 808,
 //               hats with triplet flips.
 //   West 90s    90s G-funk / Quik-style: clap on 2 and 4, open hat mirroring kick and clap with
-//               varied velocity, tambourine doubling the clap but rushing, swung 16ths.
+//               varied velocity, tambourine (PERC 1) doubling the clap but rushing, swung 16ths.
 //   Neo Soul    Dilla-style feel: loose late kicks, early snares, quintuplet / septuplet hat
 //               swing, ghost notes, rim clicks.
 //   Gospel      groove with ghost notes, linear "chop" fills (R L L R L L R L around the kit)
@@ -61,7 +61,7 @@ struct PatternData: Codable, Equatable {
     }
 }
 
-/// The engine's read-only copy of the 16 loops (made on the main thread, read on the audio
+/// The engine's read-only copy of the 12 loops (made on the main thread, read on the audio
 /// thread, never changed after).
 final class PatternSet {
     final class Loop {
@@ -98,7 +98,7 @@ final class PatternSet {
 }
 
 enum LoopSlot: Int, CaseIterable {
-    case mainA = 0, mainB, mainC, mainD, fillA, fillB, intro, breakdown, no808, kick808, tops, roll, percussion, shakerGroove, halfTime, alternate
+    case mainA = 0, mainB, mainC, mainD, fillA, fillB, intro, breakdown, no808, kick808, tops, roll
 
     var title: String {
         switch self {
@@ -114,10 +114,6 @@ enum LoopSlot: Int, CaseIterable {
         case .kick808: return "KICK + 808"
         case .tops: return "TOPS"
         case .roll: return "ROLL UP"
-        case .percussion: return "PERCUSSION"
-        case .shakerGroove: return "SHAKERS"
-        case .halfTime: return "HALF TIME"
-        case .alternate: return "ALTERNATE"
         }
     }
 }
@@ -127,7 +123,7 @@ enum LoopSlot: Int, CaseIterable {
 enum GrooveGenerator {
     static let step = Double(PatternData.stepTicks)
 
-    /// Sixteen loops, with two-, four- and eight-bar phrases. Generation runs outside render.
+    /// Twelve loops, with two-, four- and eight-bar phrases. Generation runs outside render.
     /// Same seed, same grooves; no sampled recording or named song sequence is reproduced.
     static func loops(style: GrooveStyle, seed: UInt32) -> [PatternData] {
         let a = groove(style, seed: seed, flavour: .normal, bars: 2)
@@ -145,30 +141,12 @@ enum GrooveGenerator {
             case .mainD: p = d
             case .fillA: p = withFill(a, style, &rng)
             case .fillB: p = withFill(b, style, &rng)
-            case .intro: p = keep(b, [.hat, .openHat, .perc1, .perc2, .rim, .shaker, .tambourine, .fx])
+            case .intro: p = keep(b, [.hat, .openHat, .perc1, .perc2, .rim])
             case .breakdown: p = breakdown(b, style)
             case .no808: p = keep(a, Pad.allCases.filter { $0 != .bass808 })
             case .kick808: p = keep(a, [.kick, .bass808])
-            case .tops: p = keep(b, [.hat, .openHat, .perc1, .perc2, .rim, .cymbal, .shaker, .tambourine])
+            case .tops: p = keep(b, [.hat, .openHat, .perc1, .perc2, .rim, .cymbal])
             case .roll: p = rollUp(style, &rng)
-            case .percussion:
-                p = keep(b, [.perc1, .perc2, .rim])
-                for step in stride(from: 0, to: Int(p.lengthTicks / PatternData.stepTicks), by: 3) {
-                    p.events.append(GrooveEvent(tick: Int32(step) * PatternData.stepTicks,
-                                               pad: Int8(Pad.conga.rawValue), velocity: step % 2 == 0 ? 0.85 : 0.6))
-                }
-            case .shakerGroove:
-                p = PatternData(name: "", lengthTicks: b.lengthTicks, events: [])
-                for step in 0..<Int(b.lengthTicks / PatternData.stepTicks) {
-                    p.events.append(GrooveEvent(tick: Int32(step) * PatternData.stepTicks,
-                                               pad: Int8(Pad.shaker.rawValue), velocity: step % 4 == 0 ? 0.78 : step % 2 == 0 ? 0.57 : 0.35))
-                }
-            case .halfTime:
-                p = d
-                p.lengthTicks *= 2
-                for i in p.events.indices { p.events[i].tick *= 2; p.events[i].length *= 2 }
-            case .alternate:
-                p = groove(style, seed: seed &+ 707, flavour: .normal, bars: 8)
             }
             p.name = slot.title
             p = finish(p)
@@ -275,13 +253,13 @@ enum GrooveGenerator {
                     e.velocity = (e.velocity * (part % 2 == 0 ? 0.92 : 1.03)).clamped(0.05, 1)
                     // A phrase breathes at its midpoint; the backbeat and bass anchors remain.
                     if part == 2, e.tick < Int32(start + 96), let pad = Pad(rawValue: Int(e.pad)),
-                       [Pad.hat, .perc1, .perc2, .shaker, .tambourine].contains(pad) { continue }
+                       [Pad.hat, .perc1, .perc2].contains(pad) { continue }
                 }
                 b.events.append(e)
             }
             if part > 0 {
                 let answer = Double(part * 32 + 29)
-                b.hit(style == .amapiano ? .conga : .rim, answer, flavour == .sparse ? 0.32 : 0.54,
+                b.hit(style == .amapiano ? Pad.perc2 : .rim, answer, flavour == .sparse ? 0.32 : 0.54,
                       offset: style.isLive ? 3 : 0)
                 if flavour != .sparse {
                     b.hit(.perc2, answer + 2, 0.42)
@@ -363,7 +341,7 @@ enum GrooveGenerator {
         trapRolls(&b, &rng, count: rolls)
         openHats(&b, &rng, perBar: f == .sparse ? 0 : 1, spots: restrained ? [14] : [6, 14])
         if style == .trapSoul && f == .busy {
-            for s in stride(from: 1, to: b.stepsTotal, by: 2) { b.hit(.shaker, Double(s), 0.28) }
+            for s in stride(from: 1, to: b.stepsTotal, by: 2) { b.hit(.perc1, Double(s), 0.28) }
         }
     }
 
@@ -412,7 +390,7 @@ enum GrooveGenerator {
                 b.hit(.perc1, Double(o + (bar % 2 == 0 ? 7 : 15)), 0.4, offset: 3)
                 b.hit(.hat, Double(o + 11), 0.3, offset: 4)
             }
-            if f == .busy { b.hit(.perc2, Double(o + 3), 0.42); b.hit(.shaker, Double(o + 14), 0.36) }
+            if f == .busy { b.hit(.perc2, Double(o + 3), 0.42); b.hit(.perc1, Double(o + 14), 0.36) }
         }
         hats(&b, every: 2, level: 0.62)
         let notes: [Float] = rng.pick([[0, 0, 7, 0, 3, 0], [0, 5, 0, 7, 0, 0]])
@@ -431,7 +409,7 @@ enum GrooveGenerator {
             for s in [4, 12] {
                 b.hit(.snare, Double(o + s), 0.96)
                 b.hit(.clap, Double(o + s), eighties ? 0.67 : 0.45, offset: eighties ? 0 : 2)
-                if f != .sparse { b.hit(.tambourine, Double(o + s), 0.46) }
+                if f != .sparse { b.hit(.perc1, Double(o + s), 0.46) }
             }
             b.hit(.bass808, Double(o), 0.79, semis: bar % 2 == 0 ? 0 : 7, length: 72)
             b.hit(.bass808, Double(o + 8), 0.73, semis: 0, length: 66)
@@ -451,7 +429,7 @@ enum GrooveGenerator {
             for s in [0, 4, 8, 12] { b.hit(.kick, Double(o + s), s == 0 ? 0.73 : 0.59) }
             for s in [4, 12] { b.hit(.rim, Double(o + s), 0.56) }
             for s in 0..<16 {
-                b.hit(.shaker, Double(o + s), s % 4 == 0 ? 0.65 : s % 2 == 0 ? 0.48 : 0.3, offset: s % 2 == 1 ? 3 : 0)
+                b.hit(.perc1, Double(o + s), s % 4 == 0 ? 0.65 : s % 2 == 0 ? 0.48 : 0.3, offset: s % 2 == 1 ? 3 : 0)
             }
             let bass = f == .sparse ? [0, 7, 10] : bar % 2 == 0 ? call : Array(Set(call + [15])).sorted()
             let notes: [Float] = bar % 2 == 0 ? [0, 0, 12, 7, 0] : [0, 7, 0, 12, 7, 12]
@@ -462,7 +440,7 @@ enum GrooveGenerator {
                       semis: notes[i % notes.count], length: f == .sparse ? 30 : 24)
             }
             for s in [3, 6, 11, 14] where f != .sparse || s == 6 || s == 14 {
-                b.hit(.conga, Double(o + s), s == 6 ? 0.6 : 0.42, offset: s % 2 == 1 ? 2 : 0)
+                b.hit(.perc2, Double(o + s), s == 6 ? 0.6 : 0.42, offset: s % 2 == 1 ? 2 : 0)
             }
             for s in [2, 10] { b.hit(.perc1, Double(o + s), 0.45) }
             if f == .busy { b.hit(.perc2, Double(o + 15), 0.55); b.hit(.clap, Double(o + 12), 0.45) }
@@ -481,10 +459,10 @@ enum GrooveGenerator {
             if style == .afrobeats || style == .latin {
                 for step in [0, 3, 6, 10, 12] { b.hit(.perc1, Double(base + step), rng.range(0.6, 0.9)) }
                 for step in [2, 5, 9, 14] { b.hit(.perc2, Double(base + step), rng.range(0.45, 0.75)) }
-                for step in 0..<16 { b.hit(.shaker, Double(base + step), step % 2 == 0 ? 0.65 : 0.4) }
+                for step in 0..<16 { b.hit(.perc1, Double(base + step), step % 2 == 0 ? 0.65 : 0.4) }
             }
             if style == .experimental {
-                for step in [3, 11, 15] { b.hit(.fx, Double(base + step), rng.range(0.4, 0.8)) }
+                for step in [3, 11, 15] { b.hit(.perc2, Double(base + step), rng.range(0.4, 0.8)) }
             }
             if flavour == .busy { b.hit(.openHat, Double(base + 14), 0.65) }
             b.hit(.bass808, Double(base), 0.85, length: Int(PatternData.ppq * 2))
