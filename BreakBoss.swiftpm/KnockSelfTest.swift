@@ -123,8 +123,8 @@ enum KnockSelfTest {
                 }
             }
         }
-        check(assignments == 544, "stock audio covers all 544 factory pad assignments")
-        check(urls.count == 318, "stock audio contains 318 distinct assigned WAV files")
+        check(assignments == 408, "stock audio covers all 408 factory pad assignments")
+        check(urls.count == 247, "stock audio contains 247 distinct assigned WAV files")
         for url in urls.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             autoreleasepool {
                 do {
@@ -676,8 +676,8 @@ enum KnockSelfTest {
                                                            semis: -12, length: 96)])
             try MIDIFile.write(lowBass, tempo: 95, bounce: 0, bars: 1, to: url)
             let bassBack = MIDIFile.read(url)?.events.first
-            check(bassBack?.pad == Int8(Pad.bass808.rawValue) && bassBack?.semis == -8 && bassBack?.length == 96,
-                  "MIDI export bounds low 808 pitch to note 52 instead of colliding with pad 13")
+            check(bassBack?.pad == Int8(Pad.bass808.rawValue) && bassBack?.semis == -12 && bassBack?.length == 96,
+                  "MIDI export keeps a low 808 on note 48, just above the pads")
             check(lowBass.events[0].semis == -12, "MIDI pitch bounding leaves authored and audio-export bass pitch unchanged")
         } catch {
             check(false, "MIDI file writes: \(error)")
