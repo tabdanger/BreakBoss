@@ -27,6 +27,10 @@ final class KnockController: ObservableObject {
     @Published private(set) var loadingKit = false
     /// A short message for the screen (errors, "saved", ...).
     @Published var notice: String?
+    /// True while there's sound (plus a second to let the trace settle). The screen only
+    /// animates while it's true, so a silent app doesn't redraw it 60 times a second.
+    @Published private(set) var scopeActive = false
+    private var lastSound = Date.distantPast
 
     /// The 12 loops as the engine has them (generated, with your edits on top).
     @Published private(set) var loops: [PatternData] = []
@@ -67,6 +71,12 @@ final class KnockController: ObservableObject {
         let metering = Timer(timeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.meters = self.engine.meters.snapshot()
+            let m = self.meters
+            if m.status[0] > 0.5 || m.scope.contains(where: { abs($0) > 0.0003 }) { self.lastSound = Date() }
+            // Knob / pad readouts on the screen need the clock to fade out too.
+            let showingReadout = self.readout.map { Date().timeIntervalSince($0.time) < 2.0 } ?? false
+            let active = showingReadout || Date().timeIntervalSince(self.lastSound) < 1.0
+            if active != self.scopeActive { self.scopeActive = active }
         }
         RunLoop.main.add(metering, forMode: .common)
         timers.append(metering)

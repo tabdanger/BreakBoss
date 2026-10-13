@@ -17,7 +17,7 @@ struct ScopeView: View {
     var body: some View {
         // Redraw at 60 Hz straight from the audio ring (not the 30 Hz meter copy), so the trace
         // moves smoothly without spending ProMotion's 120 Hz on it.
-        TimelineView(.animation(minimumInterval: 1.0 / 60)) { context in
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !controller.scopeActive)) { context in
             let now = context.date
             ZStack(alignment: .topLeading) {
                 Canvas { ctx, size in
