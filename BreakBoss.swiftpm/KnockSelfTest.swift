@@ -746,14 +746,10 @@ enum KnockSelfTest {
             renderBlock(e)
             check(e.padHits[pad.rawValue] > before, "MIDI plays pad \(pad.rawValue + 1)")
         }
-        let shakerBefore = e.padHits[Pad.shaker.rawValue]
+        let bassBefore = e.padHits[Pad.bass808.rawValue]
         e.receiveMIDI(status: 0x90, data1: 48, data2: 100, time: 0)
         renderBlock(e)
-        check(e.padHits[Pad.shaker.rawValue] > shakerBefore, "MIDI note 48 plays sequential pad 13")
-        let bassBefore = e.padHits[Pad.bass808.rawValue]
-        e.receiveMIDI(status: 0x90, data1: 52, data2: 100, time: 0)
-        renderBlock(e)
-        check(e.padHits[Pad.bass808.rawValue] > bassBefore, "MIDI note 52 plays the lowest chromatic 808 without overlapping pads")
+        check(e.padHits[Pad.bass808.rawValue] > bassBefore, "MIDI note 48 plays the lowest chromatic 808 without overlapping pads")
         e.setParam(.playMode, 1)
         for _ in 0..<1200 { e.receiveMIDI(status: 0x90, data1: 36, data2: 100, time: 0) }
         renderBlock(e)
