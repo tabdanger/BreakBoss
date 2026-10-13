@@ -115,7 +115,7 @@ struct KnockState: Codable, Equatable {
         while s.editedLoops.count < Pad.count { s.editedLoops.append(nil) }
         for i in s.editedLoops.indices {
             guard var loop = s.editedLoops[i] else { continue }
-            loop.lengthTicks = loop.lengthTicks.clamped(384, 3072)
+            loop.lengthTicks = loop.lengthTicks.clamped(384, PatternEdit.barTicks * Int32(PatternEdit.maxBars))
             loop.events = Array(loop.events.prefix(4096)).filter {
                 $0.pad >= 0 && Int($0.pad) < Pad.count && $0.tick >= 0 && $0.tick < loop.lengthTicks &&
                 $0.velocity.isFinite && $0.semis.isFinite
@@ -123,7 +123,7 @@ struct KnockState: Codable, Equatable {
             for j in loop.events.indices {
                 loop.events[j].velocity = loop.events[j].velocity.clamped(0, 1)
                 loop.events[j].semis = loop.events[j].semis.clamped(-12, 24)
-                loop.events[j].length = loop.events[j].length.clamped(0, 3072)
+                loop.events[j].length = loop.events[j].length.clamped(0, PatternEdit.barTicks * Int32(PatternEdit.maxBars))
             }
             loop.sort(); s.editedLoops[i] = loop
         }

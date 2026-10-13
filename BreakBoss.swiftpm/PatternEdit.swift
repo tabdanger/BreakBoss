@@ -4,6 +4,8 @@ import Foundation
 /// The editor's note operations, kept out of the view so the self-test can check them.
 enum PatternEdit {
     static let barTicks = PatternData.ppq * 4
+    /// Longest pattern: 16 bars (the drum roll offers 4, 8 or 16).
+    static let maxBars = 16
 
     /// Adds a hit at `tick`, or removes the pad's hits already in that cell.
     static func toggle(_ pattern: PatternData, pad: Int, tick: Int32, cell: Int32) -> PatternData {
@@ -34,12 +36,12 @@ enum PatternEdit {
         return p
     }
 
-    /// Copies `bars` bars starting at `fromBar` into the bars right after (up to 8 bars long).
+    /// Copies `bars` bars starting at `fromBar` into the bars right after (up to 16 bars long).
     static func copyNext(_ pattern: PatternData, fromBar: Int, bars: Int) -> PatternData {
         var p = pattern
         let span = Int32(bars) * barTicks
         let from = Int32(fromBar) * barTicks, to = from + span
-        let needed = min(8, fromBar + bars * 2)
+        let needed = min(maxBars, fromBar + bars * 2)
         if needed > p.bars { p.lengthTicks = Int32(needed) * barTicks }
         let destEnd = min(to + span, p.lengthTicks)
         guard to < p.lengthTicks else { return pattern }
@@ -56,7 +58,7 @@ enum PatternEdit {
     /// Longer repeats what's there; shorter drops the hits past the new end.
     static func setLength(_ pattern: PatternData, bars: Int) -> PatternData {
         var p = pattern
-        let oldLen = max(p.lengthTicks, barTicks), newLen = Int32(max(1, min(8, bars))) * barTicks
+        let oldLen = max(p.lengthTicks, barTicks), newLen = Int32(max(1, min(maxBars, bars))) * barTicks
         guard newLen != p.lengthTicks else { return pattern }
         if newLen > oldLen {
             let source = p.events
@@ -155,7 +157,7 @@ enum PatternEdit {
         return (p, newKeys)
     }
 
-    /// FL's Ctrl+B: copies the notes right after themselves (whole beats), adding bars up to 8.
+    /// FL's Ctrl+B: copies the notes right after themselves (whole beats), adding bars up to 16.
     static func duplicate(_ pattern: PatternData, _ keys: Set<NoteKey>) -> (PatternData, Set<NoteKey>) {
         var p = pattern
         let picked = p.events.filter { keys.contains(NoteKey($0)) }
@@ -164,7 +166,7 @@ enum PatternEdit {
         let lo = (picked.map { $0.tick }.min()! / beat) * beat
         let hiRaw = picked.map { $0.tick + max($0.length, 1) }.max()!
         let span = max(beat, ((hiRaw - lo + beat - 1) / beat) * beat)
-        let needed = min(8 * barTicks, ((lo + span * 2 + barTicks - 1) / barTicks) * barTicks)
+        let needed = min(Int32(maxBars) * barTicks, ((lo + span * 2 + barTicks - 1) / barTicks) * barTicks)
         if needed > p.lengthTicks { p.lengthTicks = needed }
         var newKeys = Set<NoteKey>()
         for var e in picked {

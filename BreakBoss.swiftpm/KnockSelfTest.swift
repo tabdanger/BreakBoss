@@ -797,9 +797,19 @@ enum KnockSelfTest {
               "editor: longer length repeats the pattern")
         let shorter = PatternEdit.setLength(longer, bars: 1)
         check(shorter.bars == 1 && shorter.events.count == 1, "editor: shorter length drops hits past the end")
-        let capped = PatternEdit.copyNext(PatternData(name: "M", lengthTicks: bar * 8, events: [GrooveEvent(tick: bar * 6, pad: 0, velocity: 1)]),
-                                          fromBar: 6, bars: 2)
-        check(capped.bars == 8 && capped.events.count == 1, "editor: COPY NEXT never goes past 8 bars")
+        let capped = PatternEdit.copyNext(PatternData(name: "M", lengthTicks: bar * 16, events: [GrooveEvent(tick: bar * 14, pad: 0, velocity: 1)]),
+                                          fromBar: 14, bars: 2)
+        check(capped.bars == 16 && capped.events.count == 1, "editor: COPY NEXT never goes past 16 bars")
+        let sixteen = PatternEdit.setLength(PatternData(name: "X", lengthTicks: bar * 4, events: [GrooveEvent(tick: 0, pad: 0, velocity: 1)]), bars: 16)
+        check(sixteen.bars == 16 && sixteen.events.count == 4, "drum roll: 16 bars repeats a 4-bar pattern four times")
+        check(PatternEdit.setLength(sixteen, bars: 32).bars == 16, "drum roll: patterns stop at 16 bars")
+        var saved16 = KnockState()
+        saved16.editedLoops[0] = sixteen
+        check(saved16.normalized().editedLoops[0]?.bars == 16, "a 16-bar pattern is saved and restored at full length")
+        let mid16 = FileManager.default.temporaryDirectory.appendingPathComponent("selftest-16.mid")
+        if (try? MIDIFile.write(sixteen, tempo: 120, bounce: 0, bars: 16, to: mid16)) != nil {
+            check(MIDIFile.read(mid16)?.bars == 16, "a 16-bar pattern exports and re-imports as MIDI at full length")
+        }
         // Edits reach the engine as a valid loop.
         let set = PatternSet([source])
         check(set.loops[0].count == source.events.count && set.loops[0].lengthTicks == Int(source.lengthTicks),

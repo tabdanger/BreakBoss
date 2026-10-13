@@ -229,8 +229,8 @@ struct DrumRollView: View {
 
     private var barsMenu: some View {
         Menu {
-            ForEach([1, 2, 4, 8], id: \.self) { b in
-                Button("\(b) BAR\(b == 1 ? "" : "S")") { commit(PatternEdit.setLength(pattern, bars: b)) }
+            ForEach([4, 8, 16], id: \.self) { b in
+                Button("\(b) BARS") { commit(PatternEdit.setLength(pattern, bars: b)) }
             }
         } label: { chip("\(bars) BAR\(bars == 1 ? "" : "S")", width: 104) }
     }

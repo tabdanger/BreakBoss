@@ -229,13 +229,13 @@ enum MIDIFile {
                 let off = offs.first { $0.note == on.note && $0.tick > on.tick }
                 let len = off.map { Int((Double($0.tick - on.tick) * scale).rounded()) } ?? Int(PatternData.ppq)
                 events.append(GrooveEvent(tick: Int32(t), pad: Int8(Pad.bass808.rawValue), velocity: Float(on.vel) / 127,
-                                          semis: Float(on.note - Pad.bassRootNote), length: Int32(len.clamped(0, 3072))))
+                                          semis: Float(on.note - Pad.bassRootNote), length: Int32(len.clamped(0, Int(PatternEdit.barTicks) * PatternEdit.maxBars))))
             }
         }
         guard !events.isEmpty else { return nil }
         let bar = Int(PatternData.ppq) * 4
         let endTick = max(lastTick + 1, Int((Double(trackEndTick) * scale).rounded()))
-        let bars = min(8, max(1, Int(ceil(Double(endTick) / Double(bar)))))
+        let bars = min(PatternEdit.maxBars, max(1, Int(ceil(Double(endTick) / Double(bar)))))
         var p = PatternData(name: url.deletingPathExtension().lastPathComponent.uppercased(), lengthTicks: Int32(bars * bar), events: events)
         let limit = p.lengthTicks
         p.events.removeAll { $0.tick >= limit }
