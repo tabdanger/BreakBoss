@@ -24,6 +24,7 @@ struct FaceplateView: View {
     @State private var showExport = false
     @State private var showMenu = false
     @State private var patternEditor: PatternTarget?
+    @State private var browser: BrowserView.Kind?
     @State private var namePrompt: NamePrompt?
     @State private var nameText = ""
 
@@ -47,7 +48,7 @@ struct FaceplateView: View {
         GeometryReader { geo in
             let mode = controller.mode
             let device = deviceOverride ?? (UIDevice.current.userInterfaceIdiom == .phone ? .phone : .tablet)
-            if let layout = FaceplateLayout.forMode(mode, device: device) {
+            if let layout = FaceplateLayout.forFace(controller.faceKey, device: device) ?? FaceplateLayout.forMode(mode, device: device) {
                 if layout.isPhone && geo.size.width > geo.size.height {
                     // Keep the portrait instrument large enough to use after rotation.
                     // The artwork stays proportional and every row remains reachable.
@@ -82,6 +83,7 @@ struct FaceplateView: View {
         .sheet(isPresented: $showExport) { ExportView(controller: controller) }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
         .fullScreenCover(item: $patternEditor) { target in DrumRollView(controller: controller, loop: target.loop) }
+        .fullScreenCover(item: $browser) { kind in BrowserView(controller: controller, kind: kind) }
         .alert(namePrompt == .kit ? "Save Kit" : "Save Preset", isPresented: Binding(
             get: { namePrompt != nil }, set: { if !$0 { namePrompt = nil } })) {
             TextField("Name", text: $nameText)
@@ -110,9 +112,9 @@ struct FaceplateView: View {
 
     @ViewBuilder
     private func plate(_ L: FaceplateLayout, mode: SoundMode, s: CGFloat) -> some View {
-        let sfx = mode.assetSuffix
+        let sfx = controller.faceKey
         ZStack(alignment: .topLeading) {
-            Image(L.plateImageName(for: mode))
+            Image(L.plateImageName(face: sfx))
                 .resizable()
                 .interpolation(.high)
                 .frame(width: L.width * s, height: L.height * s)
@@ -266,11 +268,11 @@ struct FaceplateView: View {
     }
 
     private var kitsMenu: some View {
-        Color.white.opacity(0.001).bbMenu(title: "Kits · drum sounds", width: 320) { kitMenuItems() }
+        Color.white.opacity(0.001).contentShape(Rectangle()).onTapGesture { browser = .kits }
     }
 
     private var presetsMenu: some View {
-        Color.white.opacity(0.001).bbMenu(title: "Presets · patterns", width: 340) { presetMenuItems() }
+        Color.white.opacity(0.001).contentShape(Rectangle()).onTapGesture { browser = .presets }
     }
 }
 

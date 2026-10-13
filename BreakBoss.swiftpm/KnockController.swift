@@ -262,6 +262,15 @@ final class KnockController: ObservableObject {
     @Published private(set) var recording = false
     @Published private(set) var metronome = false
 
+    /// Platinum: Modern's alternate faceplate (free while testing; will be a paid unlock).
+    @Published private(set) var platinumFace: Bool = UserDefaults.standard.bool(forKey: "breakboss.platinumFace")
+    func setPlatinumFace(_ on: Bool) {
+        platinumFace = on
+        UserDefaults.standard.set(on, forKey: "breakboss.platinumFace")
+    }
+    /// Which faceplate is showing: Platinum replaces Modern only.
+    var faceKey: String { mode == .modern && platinumFace ? "platinum" : mode.assetSuffix }
+
     /// Drum roll metronome: a click on every beat while the pattern plays.
     func setMetronome(_ on: Bool) {
         metronome = on

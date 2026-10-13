@@ -1,0 +1,13 @@
+{
+  "images": [
+    {
+      "filename": "led_off_platinum.png",
+      "idiom": "universal",
+      "scale": "1x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

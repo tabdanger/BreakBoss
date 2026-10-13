@@ -26,6 +26,21 @@ struct MenuView: View {
     var body: some View {
         NavigationView {
             Form {
+                Section {
+                    ForEach([false, true], id: \.self) { plat in
+                        Button { controller.setPlatinumFace(plat); if controller.mode != .modern { controller.selectMode(.modern) } } label: {
+                            HStack {
+                                Text(plat ? "PLATINUM" : "MODERN (BLACK)").foregroundColor(.primary)
+                                Spacer()
+                                if controller.platinumFace == plat { Image(systemName: "checkmark").foregroundColor(accent) }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Modern faceplate")
+                } footer: {
+                    Text("Platinum is Modern's alternate face: same sound and controls, brushed-silver plate. Free while we test.")
+                }
                 Section("Performance") {
                     Button("Open the 12 performance pads") { performance = true }
                     Button("Engine controls") { engineControls = true }
