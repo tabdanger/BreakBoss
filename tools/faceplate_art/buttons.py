@@ -121,6 +121,12 @@ for n, (dx, dy) in SHIFT.items():
     exp_sprite = orig[e[1]-pad:e[3]+pad, e[0]-pad:e[2]+pad].copy()
     men_sprite = orig[m[1]-pad:m[3]+pad, m[0]-pad:m[2]+pad].copy()
 
+    if n.startswith("l_") and os.path.exists("plat_geom_l.json"):
+        # Platinum master (Oct 14): the three buttons are already on the plate (plat_unify.py TOPCAPS)
+        R_ = json.load(open("rects.json"))[n]
+        L["editorRect"], L["exportRect"], L["menuRect"] = R_["editorRect"], R_["exportRect"], R_["menuRect"]
+        print(n, "buttons from plat_unify", L["editorRect"], L["exportRect"], L["menuRect"])
+        continue
     if n in CAPS:
         tablet_buttons(a, orig, n, dx, dy, L)
         Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).save(f"out/{n}_plate.png")

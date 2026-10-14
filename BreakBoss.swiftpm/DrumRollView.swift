@@ -818,18 +818,6 @@ struct DrumRollView: View {
                 Text(Pad(rawValue: pad)?.channelTitle ?? "").font(.system(size: 10, design: .monospaced)).foregroundColor(theme.ink)
             }
             Spacer()
-            HStack {
-                Spacer()
-                VStack(alignment: .trailing) {
-                    Text(lane == .velocity ? "127" : "+12").font(.system(size: 11, design: .monospaced))
-                    Spacer()
-                    Text(lane == .velocity ? "64" : "0").font(.system(size: 11, design: .monospaced))
-                    Spacer()
-                    Text(lane == .velocity ? "0" : "-12").font(.system(size: 11, design: .monospaced))
-                }
-                .foregroundColor(theme.ink)
-                .padding(.trailing, 6)
-            }
         }
         .padding(8)
     }
@@ -843,6 +831,15 @@ struct DrumRollView: View {
             for b in 0...barsPerPage {
                 let bx = CGFloat(b) / CGFloat(barsPerPage) * size.width
                 ctx.fill(Path(CGRect(x: bx, y: 0, width: 1.5, height: size.height)), with: .color(S.beatLine))
+            }
+            // The scale sits on the lane's own lines: 127 on the top line (full), 64 in the middle, 0 at the bottom.
+            let marks: [(String, CGFloat, UnitPoint)] = lane == .velocity
+                ? [("127", 1, .topTrailing), ("64", 0.5, .trailing), ("0", 0, .bottomTrailing)]
+                : [("+12", 1, .topTrailing), ("0", 0.5, .trailing), ("-12", 0, .bottomTrailing)]
+            for m in marks {
+                let y = 4 + (1 - m.1) * (size.height - 8)
+                ctx.draw(Text(m.0).font(.system(size: 10, design: .monospaced)).foregroundColor(Color.white.opacity(0.55)),
+                         at: CGPoint(x: size.width - 4, y: m.1 == 1 ? y + 2 : (m.1 == 0 ? y - 2 : y)), anchor: m.2)
             }
             for e in pattern.events where visible(e) && (selectedPad == nil || Int(e.pad) == selectedPad) {
                 let sel = selection.contains(NoteKey(e))
