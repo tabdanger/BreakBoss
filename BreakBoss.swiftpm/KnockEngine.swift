@@ -194,6 +194,8 @@ final class KnockEngine {
     private let midiOffChannel = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)
     private let midiOffNote = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)
     private var sampleClock: Int64 = 0
+    /// When each channel*128+note was last sent by MIDI OUT (loop-back guard).
+    private let midiSentAt = UnsafeMutablePointer<Int64>.allocate(capacity: 2048)
     private var renderBase = 0
 
     init() {
@@ -206,6 +208,7 @@ final class KnockEngine {
         midiOffDue.initialize(repeating: -1, count: Pad.count)
         midiOffChannel.initialize(repeating: 0, count: Pad.count)
         midiOffNote.initialize(repeating: 0, count: Pad.count)
+        midiSentAt.initialize(repeating: Int64.min / 2, count: 2048)
         for pad in 0..<Pad.count { midiPadTable[MIDIPadMap.standardNotes[pad]] = Int8(pad) }
         lastNoteOn.initialize(to: 0)
         recordRing.initialize(repeating: RecordedHit(), count: KnockEngine.recordCapacity)
@@ -237,7 +240,7 @@ final class KnockEngine {
 
     deinit {
         midiOut.deallocate(); midiOutChannel.deallocate(); midiOutNote.deallocate()
-        midiOffDue.deallocate(); midiOffChannel.deallocate(); midiOffNote.deallocate()
+        midiOffDue.deallocate(); midiOffChannel.deallocate(); midiOffNote.deallocate(); midiSentAt.deallocate()
         heldLoops.deallocate()
         midiPadTable.deallocate()
         lastNoteOn.deallocate()
@@ -574,6 +577,8 @@ final class KnockEngine {
                 midiPadTable[Int(e.a)] = Int8(clamping: Int(e.value))
             }
         case .midiNoteOn:
+            // Our own MIDI OUT coming back in (a loop-back route): ignore it, or every hit retriggers itself.
+            if midiOutOn, e.a >= 0, e.a < 2048, sampleClock - midiSentAt[Int(e.a)] < Int64(sampleRate * 0.05) { break }
             let note = Int(e.a) % 128
             lastNoteOn.pointee = (lastNoteOn.pointee &+ 256) & ~0xFF | Int32(note)
             if params[KParam.playMode.rawValue] > 0.5, !recordArmed, livePad(note) != nil {
@@ -832,6 +837,7 @@ final class KnockEngine {
         }
         let vel = UInt8((Int((velocity * 127).rounded())).clamped(1, 127))
         pushMIDIOut(frame: frame, 0x90 | UInt8(ch), UInt8(note), vel)
+        midiSentAt[Int(ch) * 128 + note] = sampleClock + Int64(frame)
         let gate = pad == Pad.bass808.rawValue ? (length > 0 ? length : Int(sampleRate * 0.3)) : Int(sampleRate * 0.06)
         midiOffDue[pad] = sampleClock + Int64(frame + max(1, gate))
         midiOffChannel[pad] = UInt8(ch)

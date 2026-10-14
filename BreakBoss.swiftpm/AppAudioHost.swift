@@ -153,6 +153,12 @@ final class AppAudioHost {
         connectSources()
     }
 
+    private func isOwnSource(_ endpoint: MIDIEndpointRef) -> Bool {
+        var name: Unmanaged<CFString>?
+        guard MIDIObjectGetStringProperty(endpoint, kMIDIPropertyName, &name) == noErr, let n = name?.takeRetainedValue() else { return false }
+        return (n as String) == "BreakBoss Out"
+    }
+
     private func connectSources() {
         guard midiPort != 0 else { return }
         let available = Set((0..<MIDIGetNumberOfSources()).map { MIDIGetSource($0) })
@@ -160,6 +166,9 @@ final class AppAudioHost {
         connectedSources.formIntersection(available)
         for i in 0..<MIDIGetNumberOfSources() {
             let endpoint = MIDIGetSource(i)
+            // Never listen to our own "BreakBoss Out": the hits we send would come straight back in,
+            // retrigger the pads / loops every audio block and turn the beat into a buzzing tone.
+            if endpoint == midiSource || isOwnSource(endpoint) { continue }
             if !connectedSources.contains(endpoint), MIDIPortConnectSource(midiPort, endpoint, nil) == noErr {
                 connectedSources.insert(endpoint)
             }
