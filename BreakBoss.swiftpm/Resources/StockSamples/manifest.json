@@ -2448,6 +2448,438 @@
       "pad": 11,
       "file": "bb_2000s-rnb_p11.wav",
       "displayName": "WORLD LATIN AIR CYMBAL"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 0,
+      "file": "bb_kp2-knockgang-kick-b1bf10_p00.wav",
+      "displayName": "KNOCKGANG KICK"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 1,
+      "file": "bb_kp2-flint-b1bf10_p01.wav",
+      "displayName": "FLINT"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 2,
+      "file": "bb_kp2-kenzo-b1bf10_p02.wav",
+      "displayName": "KENZO"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 3,
+      "file": "bb_kp2-flint-b1bf10_p03.wav",
+      "displayName": "FLINT"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 4,
+      "file": "bb_kp2-flicker-c848f9_p04.wav",
+      "displayName": "FLICKER"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 5,
+      "file": "bb_kp2-bounce-040811_p05.wav",
+      "displayName": "BOUNCE"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 6,
+      "file": "bb_kp2-grounded-5edbd7_p06.wav",
+      "displayName": "GROUNDED"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 7,
+      "file": "bb_kp2-action-b1bf10_p07.wav",
+      "displayName": "ACTION"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 8,
+      "file": "bb_kp2-deals-b1bf10_p08.wav",
+      "displayName": "DEALS"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 9,
+      "file": "bb_kp2-reverse-kick-madness-b1bf10_p09.wav",
+      "displayName": "REVERSE KICK MADNESS"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 10,
+      "file": "bb_kp2-beads-hit-b1bf10_p10.wav",
+      "displayName": "BEADS HIT"
+    },
+    {
+      "kitID": "detroit",
+      "pad": 11,
+      "file": "bb_kp2-planes-3de3ea_p11.wav",
+      "displayName": "PLANES"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 0,
+      "file": "bb_kp2-game-time-kick-b1bf10_p00.wav",
+      "displayName": "GAME TIME KICK"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 1,
+      "file": "bb_kp2-pure-knock-snare-b1bf10_p01.wav",
+      "displayName": "PURE KNOCK SNARE"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 2,
+      "file": "bb_kp2-issa-bounce-clap-snare-b1bf10_p02.wav",
+      "displayName": "ISSA BOUNCE CLAP SNARE"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 3,
+      "file": "bb_kp2-hunger-b1bf10_p03.wav",
+      "displayName": "HUNGER"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 4,
+      "file": "bb_kp2-based-c848f9_p04.wav",
+      "displayName": "BASED"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 5,
+      "file": "bb_kp2-groove-040811_p05.wav",
+      "displayName": "GROOVE"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 6,
+      "file": "bb_kp2-made-2a1dd0_p06.wav",
+      "displayName": "MADE"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 7,
+      "file": "bb_kp2-encore-b1bf10_p07.wav",
+      "displayName": "ENCORE"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 8,
+      "file": "bb_kp2-tech-b1bf10_p08.wav",
+      "displayName": "TECH"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 9,
+      "file": "bb_kp2-earthquake-b1bf10_p09.wav",
+      "displayName": "EARTHQUAKE"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 10,
+      "file": "bb_kp2-clickety-engine-b1bf10_p10.wav",
+      "displayName": "CLICKETY ENGINE"
+    },
+    {
+      "kitID": "knock-gang",
+      "pad": 11,
+      "file": "bb_kp2-classics-3de3ea_p11.wav",
+      "displayName": "CLASSICS"
+    },
+    {
+      "kitID": "rage",
+      "pad": 0,
+      "file": "bb_kp2-clipped-b1bf10_p00.wav",
+      "displayName": "CLIPPED"
+    },
+    {
+      "kitID": "rage",
+      "pad": 1,
+      "file": "bb_kp2-rage-b1bf10_p01.wav",
+      "displayName": "RAGE"
+    },
+    {
+      "kitID": "rage",
+      "pad": 2,
+      "file": "bb_kp2-tank-b1bf10_p02.wav",
+      "displayName": "TANK"
+    },
+    {
+      "kitID": "rage",
+      "pad": 3,
+      "file": "bb_kp2-metals-b1bf10_p03.wav",
+      "displayName": "METALS"
+    },
+    {
+      "kitID": "rage",
+      "pad": 4,
+      "file": "bb_kp2-radiant-c848f9_p04.wav",
+      "displayName": "RADIANT"
+    },
+    {
+      "kitID": "rage",
+      "pad": 5,
+      "file": "bb_kp2-distort-040811_p05.wav",
+      "displayName": "DISTORT"
+    },
+    {
+      "kitID": "rage",
+      "pad": 6,
+      "file": "bb_kp2-sukuna-5edbd7_p06.wav",
+      "displayName": "SUKUNA"
+    },
+    {
+      "kitID": "rage",
+      "pad": 7,
+      "file": "bb_kp2-ultimate-b1bf10_p07.wav",
+      "displayName": "ULTIMATE"
+    },
+    {
+      "kitID": "rage",
+      "pad": 8,
+      "file": "bb_kp2-ninja-b1bf10_p08.wav",
+      "displayName": "NINJA"
+    },
+    {
+      "kitID": "rage",
+      "pad": 9,
+      "file": "bb_kp2-nether-b1bf10_p09.wav",
+      "displayName": "NETHER"
+    },
+    {
+      "kitID": "rage",
+      "pad": 10,
+      "file": "bb_kp2-whoopish-layer-b1bf10_p10.wav",
+      "displayName": "WHOOPISH LAYER"
+    },
+    {
+      "kitID": "rage",
+      "pad": 11,
+      "file": "bb_kp2-marching-3de3ea_p11.wav",
+      "displayName": "MARCHING"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 0,
+      "file": "bb_kp2-brick-b1bf10_p00.wav",
+      "displayName": "BRICK"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 1,
+      "file": "bb_kp2-k9-b1bf10_p01.wav",
+      "displayName": "K9"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 2,
+      "file": "bb_kp2-goto-b1bf10_p02.wav",
+      "displayName": "GOTO"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 3,
+      "file": "bb_kp2-pressing-b1bf10_p03.wav",
+      "displayName": "PRESSING"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 4,
+      "file": "bb_kp2-mirage-c848f9_p04.wav",
+      "displayName": "MIRAGE"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 5,
+      "file": "bb_kp2-kunai-040811_p05.wav",
+      "displayName": "KUNAI"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 6,
+      "file": "bb_kp2-toji-2a1dd0_p06.wav",
+      "displayName": "TOJI"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 7,
+      "file": "bb_kp2-hellsing-b1bf10_p07.wav",
+      "displayName": "HELLSING"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 8,
+      "file": "bb_kp2-rooms-b1bf10_p08.wav",
+      "displayName": "ROOMS"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 9,
+      "file": "bb_kp2-softer-b1bf10_p09.wav",
+      "displayName": "SOFTER"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 10,
+      "file": "bb_kp2-tamb-cha-ching-b1bf10_p10.wav",
+      "displayName": "TAMB CHA CHING"
+    },
+    {
+      "kitID": "drill-nights",
+      "pad": 11,
+      "file": "bb_kp2-news-3de3ea_p11.wav",
+      "displayName": "NEWS"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 0,
+      "file": "bb_kp2-str8-up-analog-kick-b1bf10_p00.wav",
+      "displayName": "STR8 UP ANALOG KICK"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 1,
+      "file": "bb_kp2-funk-snare-b1bf10_p01.wav",
+      "displayName": "FUNK SNARE"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 2,
+      "file": "bb_kp2-dramatic-clap-snare-b1bf10_p02.wav",
+      "displayName": "DRAMATIC CLAP SNARE"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 3,
+      "file": "bb_kp2-quick-knock-snare-b1bf10_p03.wav",
+      "displayName": "QUICK KNOCK SNARE"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 4,
+      "file": "bb_kp2-velvet-c848f9_p04.wav",
+      "displayName": "VELVET"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 5,
+      "file": "bb_kp2-body-040811_p05.wav",
+      "displayName": "BODY"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 6,
+      "file": "bb_kp2-hands-369faa_p06.wav",
+      "displayName": "HANDS"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 7,
+      "file": "bb_kp2-tambourine-double-hit-b1bf10_p07.wav",
+      "displayName": "TAMBOURINE DOUBLE HIT"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 8,
+      "file": "bb_kp2-small-tambourine-double-hit-2-b1bf10_p08.wav",
+      "displayName": "SMALL TAMBOURINE DOUBLE HIT 2"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 9,
+      "file": "bb_kp2-tube-kick-b1bf10_p09.wav",
+      "displayName": "TUBE KICK"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 10,
+      "file": "bb_kp2-lofi-1-kick-b1bf10_p10.wav",
+      "displayName": "LOFI 1 KICK"
+    },
+    {
+      "kitID": "analog-funk",
+      "pad": 11,
+      "file": "bb_kp2-organic-3de3ea_p11.wav",
+      "displayName": "ORGANIC"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 0,
+      "file": "bb_kp2-reason-analog-kick-b1bf10_p00.wav",
+      "displayName": "REASON ANALOG KICK"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 1,
+      "file": "bb_kp2-lofi-warm-snare-b1bf10_p01.wav",
+      "displayName": "LOFI WARM SNARE"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 2,
+      "file": "bb_kp2-rift-clap-snare-b1bf10_p02.wav",
+      "displayName": "RIFT CLAP SNARE"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 3,
+      "file": "bb_kp2-casper-b1bf10_p03.wav",
+      "displayName": "CASPER"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 4,
+      "file": "bb_kp2-twilight-c848f9_p04.wav",
+      "displayName": "TWILIGHT"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 5,
+      "file": "bb_kp2-white-noise-040811_p05.wav",
+      "displayName": "WHITE NOISE"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 6,
+      "file": "bb_kp2-jogo-e84ef9_p06.wav",
+      "displayName": "JOGO"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 7,
+      "file": "bb_kp2-oyster-layer-b1bf10_p07.wav",
+      "displayName": "OYSTER LAYER"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 8,
+      "file": "bb_kp2-groaning-wild-animal-b1bf10_p08.wav",
+      "displayName": "GROANING WILD ANIMAL"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 9,
+      "file": "bb_kp2-cold-winter-43a62a_p09.wav",
+      "displayName": "COLD WINTER"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 10,
+      "file": "bb_kp2-ghosts-43a62a_p10.wav",
+      "displayName": "GHOSTS"
+    },
+    {
+      "kitID": "sky-textures",
+      "pad": 11,
+      "file": "bb_kp2-bird-ambience-43a62a_p11.wav",
+      "displayName": "BIRD AMBIENCE"
     }
   ]
 }

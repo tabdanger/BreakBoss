@@ -80,6 +80,8 @@ struct KnockState: Codable, Equatable {
     var snapToScale: Bool? = nil
     /// MIDI OUT (multi-out): send the pattern's hits to external gear, each drum channel on its
     /// own MIDI channel (-1 = not sent) and note. nil = defaults (channels 1-12, notes 36-47).
+    /// Home-screen dice: per pad, which kit's stock sound plays ("kitID"), nil = the kit's own.
+    var stockPicks: [String?]? = nil
     var midiOut: Bool? = nil
     var midiOutChannels: [Int]? = nil
     var midiOutNotes: [Int]? = nil
@@ -113,6 +115,7 @@ struct KnockState: Codable, Equatable {
         s.mutedPads = s.mutedPads.map { Array(($0 + Array(repeating: false, count: Pad.count)).prefix(Pad.count)) }
         s.soloPads = s.soloPads.map { Array(($0 + Array(repeating: false, count: Pad.count)).prefix(Pad.count)) }
         for i in s.pads.indices { s.pads[i].sampleFile = nil }
+        s.stockPicks = nil                      // a kit brings its own sounds back
         // KITS change the drum sounds only: the pattern, its edits and the tempo stay put.
         if s.patternStyle == nil { s.patternStyle = KitLibrary.kit(id: kitID).style }
         return s

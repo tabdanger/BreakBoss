@@ -146,7 +146,13 @@ enum KitLibrary {
         variant("80s-pop", "80s POP", heavyBreak, .pop80s, 114, 163, 0.15, 0.16),
         variant("90s-pop", "90s POP", funkBreak, .pop90s, 108, 173, 0.05, 0.08),
         variant("live-pop", "LIVE POP", gospelChops, .pop, 120, 191, 0.12, 0.02),
-        variant("lo-fi", "LO-FI", neoSoul, .loFi, 78, 281, -0.22, 0.18)
+        variant("lo-fi", "LO-FI", neoSoul, .loFi, 78, 281, -0.22, 0.18),
+        // Tyrone's second packs (Oct 14): see tools/apply_kit_pack.py
+        variant("detroit", "DETROIT", modernTrap, .trapAtlanta, 150, 301, 0.05, 0.2),
+        variant("knock-gang", "KNOCK GANG", drumMastery, .trap, 142, 313, 0.08, 0.15),
+        variant("rage", "RAGE", modernTrap, .trapToronto, 160, 317, -0.05, 0.35),
+        variant("drill-nights", "DRILL NIGHTS", drumMastery, .trapMemphis, 142, 331, -0.1, 0.25),
+        variant("analog-funk", "ANALOG FUNK", funkBreak, .funkBreak, 96, 337, 0, 0.1)
     ]
     static let textures: [KitDefinition] = [
         variant("afrobeats", "AFROBEATS", baySlap, .afrobeats, 106, 211, 0.08, 0.04),
@@ -155,7 +161,8 @@ enum KitLibrary {
         variant("shakers", "SHAKERS", neoSoul, .afrobeats, 108, 251, 0.2, 0.02),
         variant("perc-loops", "PERC LOOPS", baySlap, .latin, 115, 263, 0.06, 0.08),
         variant("resampled-textures", "RESAMPLED TEXTURES", looseBreak, .experimental, 90, 277, -0.25, 0.5),
-        variant("amapiano", "AMAPIANO", modernTrap, .amapiano, 112, 293, -0.1, 0.04)
+        variant("amapiano", "AMAPIANO", modernTrap, .amapiano, 112, 293, -0.1, 0.04),
+        variant("sky-textures", "SKY TEXTURES", looseBreak, .experimental, 100, 347, -0.1, 0.2)
     ]
     static let factory = core + textures + legacy
 

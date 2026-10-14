@@ -390,22 +390,28 @@ final class KnockController: ObservableObject {
     // MARK: Dice
 
     /// LOOP mode: new grooves for this kit. ONE-SHOT mode: new variations of the kit's sounds.
+    /// The kit whose stock sound this pad plays after a dice roll (nil = the kit's own).
+    static func stockPick(_ s: KnockState, pad: Int) -> String? {
+        guard let picks = s.stockPicks, picks.indices.contains(pad) else { return nil }
+        return picks[pad]
+    }
+
+    /// Home-screen dice (any mode): every pad gets a random sound of its own kind from all the
+    /// stock sounds (every kit's kicks for the kick pad, and so on). The 808 only picks 808s tuned
+    /// to this kit's root, so it stays in key. Pads holding your own samples are left alone.
     func dice() {
-        let seed = UInt32.random(in: 2...UInt32.max)
-        if playMode == .loop {
-            _ = seed
-            randomizePattern()      // the dice = RANDOMIZE: a new pattern in this preset's style
-        } else {
-            state.soundSeed = seed
-            for i in state.pads.indices where state.pads[i].sampleFile != nil || stockLibrary.sample(kitID: state.kitID, pad: i) != nil {
-                var rng = KRandom(seed: seed &* 2_654_435_761 &+ UInt32(i * 977))
-                state.pads[i].tune = rng.range(-3, 3)
-                state.pads[i].pan = rng.range(-0.2, 0.2)
-                state.pads[i].decay = rng.range(0.65, 1)
-            }
-            rebuildKit()
-            readout = Readout(title: "DICE", value: "NEW SOUNDS", time: Date())
+        var picks = state.stockPicks ?? Array(repeating: nil, count: Pad.count)
+        while picks.count < Pad.count { picks.append(nil) }
+        let root = kitDefinition.bassHz
+        for pad in 0..<Pad.count where state.pads[pad].sampleFile == nil {
+            var pool = stockLibrary.kits(withPad: pad)
+            if pad == Pad.bass808.rawValue { pool = pool.filter { abs(KitLibrary.kit(id: $0).bassHz - root) < 0.5 } }
+            pool.removeAll { $0 == (picks[pad] ?? state.kitID) }          // always a change
+            if let pick = pool.randomElement() { picks[pad] = pick }
         }
+        state.stockPicks = picks
+        rebuildKit()
+        readout = Readout(title: "DICE", value: "NEW SOUNDS", time: Date())
         scheduleSave()
     }
 
@@ -483,7 +489,8 @@ final class KnockController: ObservableObject {
                         continue
                     }
                     failed.append(file)
-                } else if let sample = stock.sample(kitID: def.id, pad: pad) {
+                } else if let sample = KnockController.stockPick(s, pad: pad).flatMap({ stock.sample(kitID: $0, pad: pad) })
+                            ?? stock.sample(kitID: def.id, pad: pad) {
                     if let buffer = try? SampleLoader.load(sample.url) {
                         samples.append(buffer)
                         stockNames[pad] = sample.displayName

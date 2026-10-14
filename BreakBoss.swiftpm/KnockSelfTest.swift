@@ -128,8 +128,15 @@ enum KnockSelfTest {
                 }
             }
         }
-        check(assignments == 408, "stock audio covers all 408 factory pad assignments")
-        check(urls.count == 218, "stock audio contains 218 distinct assigned WAV files")
+        check(assignments == 480, "stock audio covers all 480 factory pad assignments")
+        check(urls.count == 290, "stock audio contains 290 distinct assigned WAV files")
+        // Home dice draws each pad's sound from every kit's sound for that pad.
+        check(Pad.allCases.allSatisfy { library.kits(withPad: $0.rawValue).count == KitLibrary.factory.count }, "dice: every pad has a sound in every kit")
+        var picked = KnockState(); picked.stockPicks = Array(repeating: nil, count: Pad.count); picked.stockPicks?[0] = "detroit"
+        check(KnockController.stockPick(picked, pad: 0) == "detroit" && KnockController.stockPick(picked, pad: 1) == nil, "dice: per-pad picks")
+        check(picked.selectingKit(KitLibrary.drumMastery).stockPicks == nil, "dice: choosing a kit brings its own sounds back")
+        let detroitKick = library.sample(kitID: "detroit", pad: 0)
+        check(detroitKick?.url.lastPathComponent.hasPrefix("bb_kp2-") == true, "Detroit kit plays Tyrone's new pack")
         // Vintage kits play Tyrone's Vintage pack (kicks, snares/claps, hats).
         for kit in KitLibrary.kits(for: .vintage) {
             let kick = library.sample(kitID: kit.id, pad: Pad.kick.rawValue)
@@ -1062,8 +1069,8 @@ enum KnockSelfTest {
         let new = old.normalized()
         check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
-        check(KitLibrary.core.count == 17 && KitLibrary.textures.count == 7 && KitLibrary.legacy.count == 10 && KitLibrary.factory.count == 34,
-              "34 factory kits include 17 core, seven textures, and ten original kits")
+        check(KitLibrary.core.count == 22 && KitLibrary.textures.count == 8 && KitLibrary.legacy.count == 10 && KitLibrary.factory.count == 40,
+              "40 factory kits include 22 core, eight textures, and ten original kits")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")
         check(Pad.allCases.allSatisfy { Pad.index(forMIDINote: $0.midiNote) == $0.rawValue }, "all pad MIDI mappings round trip")
         check(Pad.count == 12 && Pad.allCases.map { $0.midiNote } == Array(36...47), "12 pads use consecutive MIDI notes 36 through 47")
