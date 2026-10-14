@@ -210,8 +210,21 @@ enum KitLibrary {
 
     static let factory = core + textures + legacy + genres
 
+    /// The genre kits (two per preset genre), grouped by genre in the order of the preset list.
+    static var genreGroups: [(genre: String, kits: [KitDefinition])] {
+        var order: [String] = []; var map: [String: [KitDefinition]] = [:]
+        for k in genres {
+            let g = String(k.name.dropLast(2))            // "BOOM BAP A" -> "BOOM BAP"
+            if map[g] == nil { order.append(g) }
+            map[g, default: []].append(k)
+        }
+        return order.map { ($0, map[$0] ?? []) }
+    }
+
+    /// Mode lists (the genre kits have their own section, see genreGroups).
     static func kits(for mode: SoundMode) -> [KitDefinition] {
-        let kits = factory.filter { $0.preferredMode == mode }
+        let genreIDs = Set(genres.map(\.id))
+        let kits = factory.filter { $0.preferredMode == mode && !genreIDs.contains($0.id) }
         guard mode == .vintage else { return kits }
         let primary = ["boom-bap", "live-soul", "vintage-rnb", "dirty-soul", "funk-break", "loose-break"]
         return primary.compactMap { id in kits.first { $0.id == id } }

@@ -234,6 +234,13 @@ struct FaceplateView: View {
                     }
                 }))
         }
+        items.append(.submenu("Genre kits", icon: "music.note.list", KitLibrary.genreGroups.map { g in
+            BBMenuItem.submenu(g.genre, icon: "square.grid.3x3", g.kits.map { def in
+                BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) {
+                    controller.selectKit(def)
+                }
+            })
+        }))
         if !controller.userKits.isEmpty {
             items.append(.submenu("My kits", icon: "person.crop.square", controller.userKits.map { name in
                 BBMenuItem.item(name, checked: controller.state.userKit == name) { controller.selectUserKit(name) }

@@ -53,6 +53,7 @@ def build(dev, mode, src, G, caps=None):
         d = Lsm - local
         d = np.sign(d) * np.maximum(np.abs(d) - 7, 0)          # drop the brushing grain
         d = d * (1 - FLAT)
+        d = np.minimum(d, 18 if look[reg] == "modern" else 40)     # silver highlights stay subtle on every material
         mat = mats[look[reg]]
         if look[reg] == "modern":
             mat = mat * (MODERN_LEVELS[dev].get(reg, 30.0) / max(float(mat.mean()), 1))
@@ -67,46 +68,53 @@ def build(dev, mode, src, G, caps=None):
     noise = cv2.GaussianBlur(np.random.default_rng(3).normal(0, 1, (H, W)).astype(np.float32), (0, 0), 0.8)[..., None] * 2.5
     pad_px = np.clip(col * (1 + (Lsm - lvl)[..., None] / 255 * k) * (1 if look["pads"] == "white" else 1) + noise, 0, 255)
     if look["pads"] == "dark":       # dark pads keep the source's own relative shading
-        pad_px = np.clip(col * np.clip(1 + (Lsm - lvl)[..., None] / max(lvl, 1) * 0.6, 0.3, 2.2) + noise, 0, 255)
+        pad_px = np.clip(col * np.clip(1 + (Lsm - lvl)[..., None] / max(lvl, 1) * 0.6, 0.3, 1.25) + noise, 0, 255)
     if look["pads"] == "source": pad_px = s
     out = out * (1 - pads[..., None]) + pad_px * pads[..., None]
-    # buttons, windows, the scope: Platinum's own, identical on every plate
-    for key in KEEP:
-        if key in ("exportRect", "menuRect"):
-            if dev == "l": continue          # iPad: the three small buttons are added after the knobs
-            x0, y0, x1, y1 = caps[0 if key == "exportRect" else 1] if caps else RR[key]
-        else:
-            x0, y0, x1, y1 = RR[key]
-        kk = M0.rect_mask(H, W, (x0 - 1, y0 - 1, x1 + 1, y1 + 1), 0.8, radius=3)
-        if key != "clipperRect":
-            # only the dark cap or window itself, not the silver rim around it
-            X0, Y0, X1, Y1 = max(x0 - 4, 0), max(y0 - 4, 0), x1 + 4, y1 + 4
-            dark = (Ls[Y0:Y1, X0:X1] < 105).astype(np.uint8)
-            dark = cv2.morphologyEx(dark, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
-            n_, lab = cv2.connectedComponents(dark)
-            if n_ > 1:
-                big = 1 + int(np.argmax([(lab == i).sum() for i in range(1, n_)]))
-                cap = (lab == big).astype(np.uint8)
-                ff = cap.copy(); hh, ww = ff.shape
-                fm = np.zeros((hh + 2, ww + 2), np.uint8); inv = (1 - cap).astype(np.uint8)
-                cv2.floodFill(inv, fm, (0, 0), 0)          # holes (letters, icons) become part of the cap
-                cap = np.clip(cap + inv, 0, 1).astype(np.float32)
-                kk = np.zeros((H, W), np.float32); kk[Y0:Y1, X0:X1] = cv2.GaussianBlur(cap, (0, 0), 0.7)
-        out = out * (1 - kk[..., None]) + s * kk[..., None]
-    # lamps: Platinum's lamp, no bezel
-    for key in ("ledTempo", "ledFollow"):
-        x0, y0, x1, y1 = RR[key]; cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-        yy, xx = np.mgrid[0:H, 0:W]; rho = np.hypot(xx - cx, yy - cy)
-        core = np.clip(((10.0 if dev == "l" else 14.0) - rho) / 1.5, 0, 1)[..., None]
-        out = out * (1 - core) + s * core
-    # the lit mode button for this plate
+    # the lit mode button for this plate: swap the caps in a copy of the source first, so the cut below
+    # takes only the cap itself (no silver from around it)
+    s2 = s.copy()
     capsm = {k: RR[f"mode_{k}"] for k in ("modern", "vintage", "texture")}
     lit, unlit = capsm["modern"], capsm["vintage"]
     target = capsm[mode]
     if target != lit:
         def cut(r): return s[r[1]:r[3], r[0]:r[2]]
         h, w = target[3] - target[1], target[2] - target[0]
-        out[target[1]:target[3], target[0]:target[2]] = cv2.resize(cut(lit), (w, h))
+        s2[target[1]:target[3], target[0]:target[2]] = cv2.resize(cut(lit), (w, h))
         h, w = lit[3] - lit[1], lit[2] - lit[0]
-        out[lit[1]:lit[3], lit[0]:lit[2]] = cv2.resize(cut(unlit), (w, h))
+        s2[lit[1]:lit[3], lit[0]:lit[2]] = cv2.resize(cut(unlit), (w, h))
+    L2 = s2.mean(2)
+    # buttons, windows, the scope, the clipper lamp: Platinum's own, identical on every plate. Only the
+    # dark cap / window / lamp is taken; Platinum's silver bevels and highlights around them are left
+    # out, so each plate draws those edges in its own material.
+    for key in KEEP:
+        if key in ("exportRect", "menuRect"):
+            if dev == "l": continue          # iPad: the three small buttons are added after the knobs
+            x0, y0, x1, y1 = caps[0 if key == "exportRect" else 1] if caps else RR[key]
+        else:
+            x0, y0, x1, y1 = RR[key]
+        X0, Y0, X1, Y1 = max(x0 - 6, 0), max(y0 - 6, 0), min(x1 + 6, W), min(y1 + 6, H)
+        sub = s2[Y0:Y1, X0:X1]; Lsub = L2[Y0:Y1, X0:X1]
+        dark = (Lsub < 105)
+        if key == "clipperRect": dark |= (sub[..., 2] - sub[..., 1] > 40)
+        dark = cv2.morphologyEx(dark.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
+        n_, lab = cv2.connectedComponents(dark)
+        if n_ <= 1: continue
+        big = 1 + int(np.argmax([(lab == i).sum() for i in range(1, n_)]))
+        cap = (lab == big).astype(np.uint8)
+        inv = (1 - cap).astype(np.uint8); fm = np.zeros((inv.shape[0] + 2, inv.shape[1] + 2), np.uint8)
+        cv2.floodFill(inv, fm, (0, 0), 0)                  # holes (letters, icons, lit dashes) belong to the cap
+        cap = np.clip(cap + inv, 0, 1).astype(np.uint8)
+        # no light rim: bright pixels within 4 px of the cap's outline go
+        dist = cv2.distanceTransform(cap, cv2.DIST_L2, 3)
+        cap[(dist <= 4) & (Lsub > 120)] = 0
+        cap = cv2.morphologyEx(cap, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+        kk = cv2.GaussianBlur(cap.astype(np.float32), (0, 0), 0.7)[..., None]
+        out[Y0:Y1, X0:X1] = out[Y0:Y1, X0:X1] * (1 - kk) + sub * kk
+    # lamps: Platinum's lamp, no bezel
+    for key in ("ledTempo", "ledFollow"):
+        x0, y0, x1, y1 = RR[key]; cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        yy, xx = np.mgrid[0:H, 0:W]; rho = np.hypot(xx - cx, yy - cy)
+        core = np.clip(((10.0 if dev == "l" else 14.0) - rho) / 1.5, 0, 1)[..., None]
+        out = out * (1 - core) + s * core
     return np.clip(out, 0, 255).astype(np.uint8)

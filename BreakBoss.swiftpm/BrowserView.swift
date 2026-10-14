@@ -79,6 +79,13 @@ struct BrowserView: View {
                                     detail: "\(mode.title.uppercased()) · \(Int(def.tempo)) BPM", bank: "\(mode.title.uppercased()) KITS", user: false))
                 }
             }
+            for g in KitLibrary.genreGroups {
+                for def in g.kits {
+                    n += 1
+                    out.append(Item(id: def.id, number: n, category: g.genre, name: def.name,
+                                    detail: "\(Int(def.tempo)) BPM", bank: "GENRE KITS", user: false))
+                }
+            }
             out += controller.userKits.enumerated().map { i, name in
                 Item(id: "user:" + name, number: i + 1, category: "USER", name: name.uppercased(), detail: "YOUR KIT", bank: Self.userBank, user: true)
             }

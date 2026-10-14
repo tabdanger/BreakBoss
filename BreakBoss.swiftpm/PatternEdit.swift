@@ -167,6 +167,22 @@ enum PatternEdit {
         return p
     }
 
+    /// Lane dice: new velocities only (the notes, timing and pitch stay). Only `pad`'s notes when one
+    /// is given, every note otherwise. Downbeats lean loud, off-beats and ghost spots lean softer.
+    static func randomizeVelocity(_ pattern: PatternData, pad: Int?, keys: Set<NoteKey> = [], seed: UInt64) -> PatternData {
+        var p = pattern
+        var rng = SplitMix(seed)
+        for i in p.events.indices {
+            let e = p.events[i]
+            if let pad, Int(e.pad) != pad { continue }
+            if !keys.isEmpty && !keys.contains(NoteKey(e)) { continue }
+            let onBeat = e.tick % PatternData.ppq == 0
+            let lo: Float = onBeat ? 0.72 : 0.38, hi: Float = 1.0
+            p.events[i].velocity = (lo + (hi - lo) * rng.unit()).clamped(0.05, 1)
+        }
+        return p
+    }
+
     /// Pitch per note in semitones (drums: -12...+12, 808: -12...+24). Keys change with pitch.
     static func setPitch(_ pattern: PatternData, _ keys: Set<NoteKey>, _ semis: Float) -> (PatternData, Set<NoteKey>) {
         var p = pattern
@@ -239,3 +255,18 @@ struct NoteKey: Hashable {
     init(_ e: GrooveEvent) { tick = e.tick; pad = e.pad; semis = e.semis }
 }
 
+
+
+/// Small seeded generator for the edit helpers.
+struct SplitMix {
+    private var state: UInt64
+    init(_ seed: UInt64) { state = seed }
+    mutating func next() -> UInt64 {
+        state &+= 0x9E3779B97F4A7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
+        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
+        return z ^ (z >> 31)
+    }
+    mutating func unit() -> Float { Float(next() >> 40) / Float(1 << 24) }
+}

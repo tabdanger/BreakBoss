@@ -79,7 +79,7 @@ if __name__ == "__main__":
         unify.K = dict(K); unify.K[f"{dev}_modern"] = G["knobs"]
         unify.LABELS = dict(LABELS); unify.LABELS[dev] = G["labels"]
         unify.R2 = dict(R2); unify.R2[f"{dev}_modern"] = G["rects"]
-        master2.LOOK["modern"]["pads"] = "source" if dev == "l" else "dark"
+        master2.LOOK["modern"]["pads"] = "dark"
         plates = {"platinum": src, **{k: master2.build(dev, k, src, G, caps) for k in ("modern", "vintage", "texture")}}
         # wood: Modern's frame, left side mirrored from the right
         mod = cv2.imread(f"{A2}/src/{dev}_modern.png")

@@ -253,6 +253,11 @@ struct DrumRollView: View {
                     .shadow(color: controller.recording ? S.red : .clear, radius: 6)
                     .frame(width: 46, height: 40).background(box(lit: controller.recording, color: S.red))
             }
+            // Top dice: everything new, the sounds on every pad and the whole pattern.
+            Button { controller.dice(); controller.randomizePattern(); selection = [] } label: {
+                Image(systemName: "dice.fill").font(.system(size: 18)).foregroundColor(S.text)
+                    .frame(width: 46, height: 40).background(box(lit: false))
+            }
         }
     }
 
@@ -803,7 +808,10 @@ struct DrumRollView: View {
     }
 
     private var diceButton: some View {
-        Button { controller.randomizePattern(); selection = [] } label: { iconBox("dice.fill") }
+        // Velocity dice: new velocities only (the selected notes, or the selected channel, or every note).
+        Button {
+            commit(PatternEdit.randomizeVelocity(pattern, pad: selectedPad, keys: selection, seed: UInt64.random(in: 1...UInt64.max)))
+        } label: { iconBox("dice.fill") }
     }
 
     private var laneHeader: some View {
@@ -885,7 +893,7 @@ struct DrumRollView: View {
 
     // MARK: Footer
 
-    private var orderedKits: [KitDefinition] { SoundMode.allCases.flatMap { KitLibrary.kits(for: $0) } }
+    private var orderedKits: [KitDefinition] { SoundMode.allCases.flatMap { KitLibrary.kits(for: $0) } + KitLibrary.genres }
 
     private var footer: some View {
         HStack(spacing: 8) {
@@ -905,7 +913,11 @@ struct DrumRollView: View {
                     BBMenuItem.submenu("\(mode.title) kits", icon: "square.grid.3x3", KitLibrary.kits(for: mode).map { def in
                         BBMenuItem.item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
                     })
-                }
+                } + [BBMenuItem.submenu("Genre kits", icon: "music.note.list", KitLibrary.genreGroups.map { g in
+                    BBMenuItem.submenu(g.genre, icon: "square.grid.3x3", g.kits.map { def in
+                        BBMenuItem.item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
+                    })
+                })]
             }
             Button { cycleKit(-1) } label: { iconBox("chevron.left") }
             Button { cycleKit(1) } label: { iconBox("chevron.right") }
