@@ -218,6 +218,13 @@ if __name__ == "__main__":
     for dev in "lp":
         modern = cv2.imread(f"{A2}/src/{dev}_modern.png"); H, W = modern.shape[:2]
         wm = wood_mask(dev, H, W)
+        # The frame every plate gets: Modern's, with the left wood an exact mirror of the right.
+        frame = modern.copy()
+        Rr = BODY[f"{dev}_modern"][1]
+        side = W - (Rr + 2)                      # width of the right-hand wood strip
+        frame[:, :side] = modern[:, ::-1][:, :side]
+        lm = np.zeros((H, W), np.float32); lm[:, :side] = 1
+        lm = cv2.GaussianBlur(lm, (0, 0), 1.0)[..., None]
         sprites = knob_sprites(dev)
         plates = {"modern": modern, "vintage": warp_onto_modern(dev, "vintage"), "texture": warp_onto_modern(dev, "texture"),
                   "platinum": cv2.imread(f"src/{dev}_platinum.png")}
@@ -230,7 +237,8 @@ if __name__ == "__main__":
                 bx0, by0, bx1, by1 = R2["l_modern"]["bpmBox"]
                 img[by0 + 3:by1 - 3, bx0 + 3:bx1 - 3] = modern[by0 + 3:by1 - 3, bx0 + 3:bx1 - 3]
             if mode != "modern":
-                img = (img.astype(np.float32) * (1 - wm) + modern.astype(np.float32) * wm).astype(np.uint8)
+                img = (img.astype(np.float32) * (1 - wm) + frame.astype(np.float32) * wm).astype(np.uint8)
+            img = (img.astype(np.float32) * (1 - lm) + frame.astype(np.float32) * lm).astype(np.uint8)
             cv2.imwrite(f"src/{dev}_{mode}.png", img)
         # Every plate: Modern's boxes, Platinum's knob sizes at Modern's positions.
         for mode in ("modern", "vintage", "texture", "platinum"):
