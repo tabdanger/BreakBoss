@@ -211,5 +211,12 @@ def ints(o):
     if isinstance(o,(np.integer,)): return int(o)
     if isinstance(o,(np.floating,)): return float(o)
     return o
+# Every plate draws its live text (BPM digits, kit and preset names) in Modern's exact spots.
+for dev in ("tablet", "phone"):
+    m = layouts[dev].get("modern")
+    for mode, lay in layouts[dev].items():
+        if m and mode != "modern":
+            for k in ("bpmDigits", "bpmLabelX", "kitText", "presetText", "bpmBox"):
+                if k in m: lay[k] = m[k]   # same live-text spots on every plate
 json.dump(ints(layouts["tablet"]),open("out/KnockLayout.json","w"),indent=1)
 json.dump(ints(layouts["phone"]),open("out/PhoneKnockLayout.json","w"),indent=1)
