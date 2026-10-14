@@ -4,7 +4,7 @@
 import json, os, numpy as np, cv2
 from PIL import Image, ImageDraw
 
-SHIFT = {"l_modern": (5, -2), "l_vintage": (3, -1), "l_texture": (6, -3),
+SHIFT = {"l_modern": (5, -2), "l_vintage": (3, -1), "l_texture": (6, -3), "l_platinum": (5, -2),
          "p_modern": (0, 0), "p_vintage": (0, 0), "p_texture": (0, 0), "p_platinum": (0, 0)}
 lays = {"tablet": json.load(open("out/KnockLayout.json")), "phone": json.load(open("out/PhoneKnockLayout.json"))}
 
@@ -168,7 +168,7 @@ for n, (dx, dy) in SHIFT.items():
     print(n, "editor", ed, "export", e, "menu", m)
 
 # iPad Platinum has no top-right buttons: give it Modern's three, in Modern's exact spots.
-if "platinum" in lays["tablet"] and os.path.exists("out/l_platinum_plate.png"):
+if False and "platinum" in lays["tablet"]:   # Platinum now comes from the master like the others
     mod = np.asarray(Image.open("out/l_modern_plate.png").convert("RGB")).astype(np.float32)
     plat = np.asarray(Image.open("out/l_platinum_plate.png").convert("RGB")).astype(np.float32)
     Lm, Lp = lays["tablet"]["modern"], lays["tablet"]["platinum"]

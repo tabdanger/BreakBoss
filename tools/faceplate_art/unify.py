@@ -67,7 +67,7 @@ def knob_sprites(dev):
         sprites[k] = (rgb[..., ::-1].copy(), a, h, dot_ring(R, h), sh)
     return sprites
 
-def paste_knobs(img, dev, n, sprites):
+def paste_knobs(img, dev, n, sprites, clear=True):
     out = img.astype(np.float32)
     labels = []
     for k in ORDER:
@@ -85,7 +85,7 @@ def paste_knobs(img, dev, n, sprites):
         old = ((prho < ro * big) & (yy > h - ro * 1.6)).astype(np.uint8)
         lx0, lx1 = lb[0] - x0 - 10, lb[2] - x0 + 10
         old[max(0, lb[1] - y0 - 7):lb[3] - y0 + 16, max(0, min(lx0, h - int(ro * 1.6))):max(lx1, h + int(ro * 1.6))] = 1
-        if old.any():
+        if clear and old.any():
             # smooth plate colour from around the knob (normalised blur), no smearing
             f = reg.astype(np.float32)
             fl = f.mean(2); ref = float(np.median(fl[(prho > ro * 1.7) & (prho < ro * 2.2)]))
@@ -189,7 +189,7 @@ def erase_letters(reg, box):
     o = cv2.GaussianBlur(m.astype(np.float32), (0, 0), 0.8)[..., None]
     return np.clip(f * (1 - o) + fill * o, 0, 255)
 
-def redraw_text(img, dev):
+def redraw_text(img, dev, erase=True):
     """Every printed word in Modern's place and size, in Aldrich, in this plate's own ink."""
     out = img.astype(np.float32)
     L = LABELS[dev]; Rm = R2[f"{dev}_modern"]
@@ -215,18 +215,19 @@ def redraw_text(img, dev):
         if key not in BUTTONS:       # printed on the plate: the same ink as the knob labels
             ink = (44, 44, 46) if med > 120 else (224, 224, 226)
         ex = 6 if key in BUTTONS else 16
-        out[Y0:Y1, X0:X1] = erase_letters(reg, (bx0 - X0 - ex, by0 - Y0 - 5, bx1 - X0 + ex, by1 - Y0 + 5))
+        if erase or key in BUTTONS:
+            out[Y0:Y1, X0:X1] = erase_letters(reg, (bx0 - X0 - ex, by0 - Y0 - 5, bx1 - X0 + ex, by1 - Y0 + 5))
         jobs.append((text, (bx0 + bx1) / 2, by0, by1 - by0, ink, bx1 - bx0))
     for text, cx, top, ch, ink, tw in jobs:
         textdraw.draw(out, text, cx, top, ch, ink, target_w=tw)
     return np.clip(out, 0, 255).astype(np.uint8)
 
-def redraw_clipper_label(img, dev):
+def redraw_clipper_label(img, dev, erase=True):
     out = img.astype(np.float32)
     bx0, by0, bx1, by1 = LABELS[dev]["clipper"]
     X0, Y0, X1, Y1 = bx0 - 30, by0 - 8, bx1 + 30, by1 + 10
     reg = out[Y0:Y1, X0:X1]; med = float(np.median(reg.mean(2)))
-    out[Y0:Y1, X0:X1] = erase_letters(reg, (8, 2, reg.shape[1] - 8, reg.shape[0] - 2))
+    if erase: out[Y0:Y1, X0:X1] = erase_letters(reg, (8, 2, reg.shape[1] - 8, reg.shape[0] - 2))
     ink = (44, 44, 46) if med > 120 else (224, 224, 226)
     textdraw.draw(out, "CLIPPER", (bx0 + bx1) / 2, by0, by1 - by0, ink, target_w=bx1 - bx0)
     return np.clip(out, 0, 255).astype(np.uint8)
@@ -294,15 +295,19 @@ if __name__ == "__main__":
         lm = np.zeros((H, W), np.float32); lm[:, :side] = 1
         lm = cv2.GaussianBlur(lm, (0, 0), 1.0)[..., None]
         sprites = knob_sprites(dev)
-        plates = {"modern": modern, "vintage": warp_onto_modern(dev, "vintage"), "texture": warp_onto_modern(dev, "texture"),
-                  "platinum": cv2.imread(f"src/{dev}_platinum.png")}
-        if dev == "l":
-            plates["platinum"] = platinum_lights(plates["platinum"], modern)
+        if True:
+            # Every plate from Modern's own artwork (master.py): identical trays, panels, lines and boxes.
+            import master
+            plates = {"modern": modern, **{k: master.build(dev, k, modern) for k in ("vintage", "texture", "platinum")}}
+        else:
+            plates = {"modern": modern, "vintage": warp_onto_modern(dev, "vintage"), "texture": warp_onto_modern(dev, "texture"),
+                      "platinum": cv2.imread(f"src/{dev}_platinum.png")}
         for mode, img in plates.items():
-            img = paste_knobs(img, dev, mode, sprites)
-            img = redraw_clipper_label(img, dev)
-            img = redraw_text(img, dev)
-            if mode == "platinum" and dev == "l":
+            img = paste_knobs(img, dev, "modern", sprites, clear=(mode == "modern"))
+            fresh = mode != "modern"          # built from the master: no old lettering to remove
+            img = redraw_clipper_label(img, dev, erase=not fresh)
+            img = redraw_text(img, dev, erase=not fresh)
+            if mode == "platinum" and dev == "l" and False:
                 # same BPM display as the other plates ("121 BPM", digits first)
                 bx0, by0, bx1, by1 = R2["l_modern"]["bpmBox"]
                 img[by0 + 3:by1 - 3, bx0 + 3:bx1 - 3] = modern[by0 + 3:by1 - 3, bx0 + 3:bx1 - 3]
@@ -319,6 +324,6 @@ if __name__ == "__main__":
                 R[n] = json.loads(json.dumps(R[f"{dev}_modern"])); R[n].update(keep)
     json.dump(K, open("knobs.json", "w"), indent=1); json.dump(R, open("rects.json", "w"), indent=1)
     caps = json.load(open("caps.json"))
-    for n in ("l_vintage", "l_texture"): caps[n] = caps["l_modern"]
+    for n in ("l_vintage", "l_texture", "l_platinum"): caps[n] = caps["l_modern"]
     json.dump(caps, open("caps.json", "w"))
     print("done")
