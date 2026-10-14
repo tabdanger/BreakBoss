@@ -78,6 +78,11 @@ struct KnockState: Codable, Equatable {
     var scaleRoot: Int? = nil
     var scaleName: String? = nil
     var snapToScale: Bool? = nil
+    /// MIDI OUT (multi-out): send the pattern's hits to external gear, each drum channel on its
+    /// own MIDI channel (-1 = not sent) and note. nil = defaults (channels 1-12, notes 36-47).
+    var midiOut: Bool? = nil
+    var midiOutChannels: [Int]? = nil
+    var midiOutNotes: [Int]? = nil
 
     static func normalizedPads(_ source: [PadSettings]) -> [PadSettings] {
         var pads = Array(source.prefix(Pad.count))

@@ -250,6 +250,7 @@ struct DrumRollView: View {
             [
                 .item("Follow playhead", icon: "arrow.right.to.line", checked: follow) { follow.toggle() },
                 .item("Metronome", icon: "metronome", checked: controller.metronome) { controller.setMetronome(!controller.metronome) },
+                .submenu("MIDI out (external gear)", icon: "cable.connector", midiOutItems()),
                 .item("Copy these bars to the next ones", icon: "doc.on.doc") {
                     commit(PatternEdit.copyNext(pattern, fromBar: Int(pageStart / PatternEdit.barTicks), bars: barsPerPage))
                 },
@@ -383,6 +384,8 @@ struct DrumRollView: View {
                     .bbMenu(title: controller.padName(pad), width: 320) { channelSampleItems(pad) }
                 Button { pianoRollPad = pad } label: { labelBox("pianokeys", compact ? nil : "PIANO ROLL") }
                 Button { controller.randomizeChannel(loop: loop, pad: pad) } label: { labelBox("dice", nil) }
+                labelBox("cable.connector", midiOutLabel(pad), lit: controller.midiOutOn && controller.midiOutChannels[pad] >= 0)
+                    .bbMenu(title: "MIDI out · \(Pad(rawValue: pad)?.channelTitle ?? "")", width: 240) { midiOutChannelItems(pad) }
                 divider
                 stripKnob("LEVEL", ps.level, 0...1, String(format: "%.0f%%", ps.level / 0.8 * 100)) { v in set { $0.level = v } }
                 stripKnob("PAN", ps.pan, -1...1, ps.pan == 0 ? "C" : String(format: "%@%.0f", ps.pan < 0 ? "L" : "R", abs(ps.pan) * 100)) { v in set { $0.pan = abs(v) < 0.03 ? 0 : v } }
@@ -493,6 +496,45 @@ struct DrumRollView: View {
         .background(selectedPad == pad ? S.greenDark : (pad % 2 == 0 ? S.channel : S.channel.opacity(0.85)))
         .overlay(Rectangle().fill(Color.black.opacity(0.5)).frame(height: 1), alignment: .bottom)
         .onDrop(of: [UTType.fileURL, UTType.audio], isTargeted: nil) { providers in dropSample(providers, pad: pad) }
+    }
+
+    // MARK: MIDI out (multi-out)
+
+    private func midiOutLabel(_ pad: Int) -> String {
+        let ch = controller.midiOutChannels[pad]
+        return ch < 0 ? "MIDI OFF" : "MIDI \(ch + 1)"
+    }
+
+    private func midiOutItems() -> [BBMenuItem] {
+        var items: [BBMenuItem] = [
+            BBMenuItem.item(controller.midiOutOn ? "MIDI out is ON" : "Turn MIDI out on", icon: "power", checked: controller.midiOutOn) {
+                controller.setMIDIOut(!controller.midiOutOn)
+            },
+            .header("Routing"),
+            BBMenuItem.item("Multi-out: each channel on its own MIDI channel (1–12)", icon: "square.stack.3d.down.right") { controller.setMIDIOutLayout(multi: true) },
+            BBMenuItem.item("All channels on MIDI channel 10 (GM drums)", icon: "10.circle") { controller.setMIDIOutLayout(multi: false) },
+            .header("Channels"),
+        ]
+        for pad in 0..<Pad.count {
+            items.append(.submenu("\(Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)")  ·  \(midiOutLabel(pad))  ·  \(MusicScale.noteName(controller.midiOutNotes[pad]))",
+                                  midiOutChannelItems(pad)))
+        }
+        items.append(.header(controller.isPlugin ? "Plug-in: route the plug-in's MIDI output in your DAW" : "App: other apps see \"BreakBoss Out\" as a MIDI source"))
+        return items
+    }
+
+    private func midiOutChannelItems(_ pad: Int) -> [BBMenuItem] {
+        var items: [BBMenuItem] = [BBMenuItem.item("Don't send this channel", checked: controller.midiOutChannels[pad] < 0) { controller.setMIDIOutChannel(pad: pad, -1) }]
+        items += (0..<16).map { ch in
+            BBMenuItem.item("MIDI channel \(ch + 1)", checked: controller.midiOutChannels[pad] == ch) {
+                controller.setMIDIOutChannel(pad: pad, ch)
+                if !controller.midiOutOn { controller.setMIDIOut(true) }
+            }
+        }
+        items.append(.submenu("Note: \(MusicScale.noteName(controller.midiOutNotes[pad]))", icon: "pianokeys", (24...84).map { n in
+            BBMenuItem.item(MusicScale.noteName(n), detail: "\(n)", checked: controller.midiOutNotes[pad] == n) { controller.setMIDIOutNote(pad: pad, n) }
+        }))
+        return items
     }
 
     /// Long-press menu on a channel: FL-style fills, clear, randomize.

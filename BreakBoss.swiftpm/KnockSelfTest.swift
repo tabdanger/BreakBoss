@@ -1019,6 +1019,37 @@ enum KnockSelfTest {
             clickEnergy += l.reduce(0) { $0 + $1 * $1 }
         }
         check(clickEnergy > 0.5, "metronome clicks while playing (\(clickEnergy))")
+        // MIDI out (multi-out): kick on channel 1 note 36, snare on channel 2 note 38, off by default.
+        let mo = KnockEngine()
+        mo.prepare(sampleRate: 48_000, maxFrames: 256)
+        mo.setParam(.playMode, 1); mo.setParam(.followDAW, 0); mo.setParam(.tempoSync, 0); mo.setTempo(120)
+        mo.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        var loopsMO = Array(repeating: PatternData(name: "E", lengthTicks: bar, events: []), count: Pad.count)
+        loopsMO[0] = PatternData(name: "M", lengthTicks: bar, events: [GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1),
+                                                                       GrooveEvent(tick: PatternData.ppq, pad: Int8(Pad.snare.rawValue), velocity: 0.5)])
+        mo.patternHandoff.publish(PatternSet(loopsMO))
+        renderBlock(mo)
+        func collect(_ blocks: Int) -> [(Int, UInt8, UInt8, UInt8)] {
+            var got: [(Int, UInt8, UInt8, UInt8)] = []
+            for _ in 0..<blocks {
+                var l = [Float](repeating: 0, count: 256), r = l
+                l.withUnsafeMutableBufferPointer { lp in r.withUnsafeMutableBufferPointer { rp in mo.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+                mo.forEachMIDIOut { got.append(($0, $1, $2, $3)) }
+            }
+            return got
+        }
+        mo.send(KEvent(kind: .loopPad, a: 0))
+        check(collect(120).isEmpty, "MIDI out: nothing is sent while it's off")
+        mo.send(KEvent(kind: .midiOut, a: Int32(Pad.kick.rawValue), value: 0 * 128 + 36))
+        mo.send(KEvent(kind: .midiOut, a: Int32(Pad.snare.rawValue), value: 1 * 128 + 38))
+        mo.send(KEvent(kind: .midiOut, a: -1, value: 1))
+        let sent = collect(240)
+        check(sent.contains { $0.1 == 0x90 && $0.2 == 36 && $0.3 == 127 }, "MIDI out: kick note on, channel 1, note 36")
+        check(sent.contains { $0.1 == 0x91 && $0.2 == 38 && $0.3 == 64 }, "MIDI out: snare on its own channel (2), note 38, velocity")
+        check(sent.contains { $0.1 == 0x80 && $0.2 == 36 }, "MIDI out: note off follows")
+        check(sent.allSatisfy { $0.0 >= 0 && $0.0 < 256 }, "MIDI out: messages fall inside their buffer")
+        mo.send(KEvent(kind: .stop))
+        _ = collect(4)
         _ = rp
     }
 

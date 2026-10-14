@@ -182,6 +182,11 @@ final class KnockEngine {
     let midiOut = UnsafeMutablePointer<MIDIOutMessage>.allocate(capacity: KnockEngine.midiOutCapacity)
     /// Messages from the last render call (read right after render() on the same thread).
     private(set) var midiOutCount = 0
+    /// Hands the last render call's MIDI out to `send` (frame offset, status, data1, data2).
+    @inline(__always)
+    func forEachMIDIOut(_ send: (Int, UInt8, UInt8, UInt8) -> Void) {
+        for i in 0..<midiOutCount { let m = midiOut[i]; send(Int(m.frame), m.status, m.data1, m.data2) }
+    }
     private var midiOutOn = false
     private let midiOutChannel = UnsafeMutablePointer<Int16>.allocate(capacity: Pad.count)   // -1 = off
     private let midiOutNote = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)

@@ -135,6 +135,7 @@ final class KnockController: ObservableObject {
         engine.setTempo(state.bpm)
         pushMIDIMap()
         pushPadMask()
+        pushMIDIOut()
     }
 
     // MARK: MIDI pad map (hardware controllers such as an MPC)
@@ -253,6 +254,38 @@ final class KnockController: ObservableObject {
             if audible { mask |= 1 << UInt16(pad) }
         }
         return mask
+    }
+
+    // MARK: MIDI out (multi-out)
+
+    static let defaultMIDIOutChannels = Array(0..<Pad.count)          // pad n on MIDI channel n + 1
+    static let defaultMIDIOutNotes = Array(36..<(36 + Pad.count))      // C1 up, like the input map
+    var midiOutOn: Bool { state.midiOut ?? false }
+    var midiOutChannels: [Int] { (state.midiOutChannels ?? KnockController.defaultMIDIOutChannels).count == Pad.count ? state.midiOutChannels ?? KnockController.defaultMIDIOutChannels : KnockController.defaultMIDIOutChannels }
+    var midiOutNotes: [Int] { (state.midiOutNotes ?? KnockController.defaultMIDIOutNotes).count == Pad.count ? state.midiOutNotes ?? KnockController.defaultMIDIOutNotes : KnockController.defaultMIDIOutNotes }
+
+    func setMIDIOut(_ on: Bool) { state.midiOut = on; pushMIDIOut(); scheduleSave() }
+    func setMIDIOutChannel(pad: Int, _ channel: Int) {
+        var ch = midiOutChannels; guard ch.indices.contains(pad) else { return }
+        ch[pad] = max(-1, min(15, channel)); state.midiOutChannels = ch; pushMIDIOut(); scheduleSave()
+    }
+    func setMIDIOutNote(pad: Int, _ note: Int) {
+        var n = midiOutNotes; guard n.indices.contains(pad) else { return }
+        n[pad] = max(0, min(127, note)); state.midiOutNotes = n; pushMIDIOut(); scheduleSave()
+    }
+    /// Quick setups: every channel on its own MIDI channel, or all on channel 10 (GM drums).
+    func setMIDIOutLayout(multi: Bool) {
+        state.midiOutChannels = multi ? KnockController.defaultMIDIOutChannels : Array(repeating: 9, count: Pad.count)
+        state.midiOutNotes = multi ? KnockController.defaultMIDIOutNotes : [36, 38, 39, 37, 42, 46, 35, 56, 54, 45, 50, 49]
+        pushMIDIOut(); scheduleSave()
+    }
+
+    func pushMIDIOut() {
+        let ch = midiOutChannels, notes = midiOutNotes
+        for pad in 0..<Pad.count {
+            engine.send(KEvent(kind: .midiOut, a: Int32(pad), value: ch[pad] < 0 ? -1 : Double(ch[pad] * 128 + notes[pad])))
+        }
+        engine.send(KEvent(kind: .midiOut, a: -1, value: midiOutOn ? 1 : 0))
     }
 
     private func pushPadMask() {
@@ -681,6 +714,9 @@ final class KnockController: ObservableObject {
         var s = preset.state
         s.midiMap = state.midiMap          // the MIDI controller setup isn't part of a sound preset
         s.midiCustomNotes = state.midiCustomNotes
+        s.midiOut = state.midiOut               // MIDI out routing is a studio setting too
+        s.midiOutChannels = state.midiOutChannels
+        s.midiOutNotes = state.midiOutNotes
         restore(s, keepPlaying: true)
         readout = Readout(title: "PRESET", value: preset.state.presetName, time: Date())
     }
