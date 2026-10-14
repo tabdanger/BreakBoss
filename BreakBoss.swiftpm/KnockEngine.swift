@@ -174,10 +174,33 @@ final class KnockEngine {
     /// Pads that sound (bit per pad). The export renderer uses it for stems.
     var padMask: UInt16 = 0xFFFF
 
+    // MIDI OUT (drum roll): the pattern's hits as MIDI, each drum channel on its own MIDI
+    // channel and note. Collected per render call with sample offsets into fixed storage;
+    // the plug-in hands them to the host, the app to CoreMIDI. Nothing allocates here.
+    struct MIDIOutMessage { var frame: Int32 = 0; var status: UInt8 = 0; var data1: UInt8 = 0; var data2: UInt8 = 0 }
+    static let midiOutCapacity = 256
+    let midiOut = UnsafeMutablePointer<MIDIOutMessage>.allocate(capacity: KnockEngine.midiOutCapacity)
+    /// Messages from the last render call (read right after render() on the same thread).
+    private(set) var midiOutCount = 0
+    private var midiOutOn = false
+    private let midiOutChannel = UnsafeMutablePointer<Int16>.allocate(capacity: Pad.count)   // -1 = off
+    private let midiOutNote = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)
+    private let midiOffDue = UnsafeMutablePointer<Int64>.allocate(capacity: Pad.count)       // -1 = none
+    private let midiOffChannel = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)
+    private let midiOffNote = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)
+    private var sampleClock: Int64 = 0
+    private var renderBase = 0
+
     init() {
         precondition(KParam.count <= UInt32.bitWidth)
         heldLoops.initialize(repeating: 0, count: 2064)
         midiPadTable.initialize(repeating: -1, count: 128)
+        midiOut.initialize(repeating: MIDIOutMessage(), count: KnockEngine.midiOutCapacity)
+        midiOutChannel.initialize(repeating: -1, count: Pad.count)
+        midiOutNote.initialize(repeating: 36, count: Pad.count)
+        midiOffDue.initialize(repeating: -1, count: Pad.count)
+        midiOffChannel.initialize(repeating: 0, count: Pad.count)
+        midiOffNote.initialize(repeating: 0, count: Pad.count)
         for pad in 0..<Pad.count { midiPadTable[MIDIPadMap.standardNotes[pad]] = Int8(pad) }
         lastNoteOn.initialize(to: 0)
         recordRing.initialize(repeating: RecordedHit(), count: KnockEngine.recordCapacity)
@@ -208,6 +231,8 @@ final class KnockEngine {
     }
 
     deinit {
+        midiOut.deallocate(); midiOutChannel.deallocate(); midiOutNote.deallocate()
+        midiOffDue.deallocate(); midiOffChannel.deallocate(); midiOffNote.deallocate()
         heldLoops.deallocate()
         midiPadTable.deallocate()
         lastNoteOn.deallocate()
@@ -334,8 +359,10 @@ final class KnockEngine {
                 dirty &= dirty - 1
             }
         }
+        midiOutCount = 0
         var done = 0
         while done < total {
+            renderBase = done
             // A loop gate must change transport before its part of the block is scheduled.
             // Splitting at that exact boundary also keeps stop/release fades at the correct
             // sample. Ordinary pad and bass notes remain inexpensive segmented BlockEvents.
@@ -344,6 +371,8 @@ final class KnockEngine {
                         host: done == 0 ? host : advanced(host, by: done))
             done += n
         }
+        flushMIDIOffs(frames: total)
+        sampleClock += Int64(total)
         status[7] += 1
     }
 
@@ -564,6 +593,20 @@ final class KnockEngine {
             recordArmed = e.a != 0
         case .metronome:
             metronomeOn = e.a != 0
+        case .midiOut:
+            if e.a < 0 {
+                let on = e.value > 0.5
+                if !on { midiOutAllOff(offset: offset) }
+                midiOutOn = on
+            } else if e.a < Int32(Pad.count) {
+                let pad = Int(e.a)
+                if midiOffDue[pad] >= 0 { midiOutAllOff(offset: offset) }
+                if e.value < 0 { midiOutChannel[pad] = -1 } else {
+                    let v = Int(e.value)
+                    midiOutChannel[pad] = Int16((v / 128).clamped(0, 15))
+                    midiOutNote[pad] = UInt8((v % 128).clamped(0, 127))
+                }
+            }
         case .noteOff:
             // One-shot duration belongs to the sample and DECAY control, even for a
             // chromatic 808. Only Loop mode treats MIDI note length as a gate.
@@ -597,6 +640,7 @@ final class KnockEngine {
             if currentLoop < 0 { currentLoop = 0 }
             startTransport(at: 0)
         case .stop:
+            midiOutAllOff(offset: offset)
             clearGates()
             playing = false
             queuedLoop = -2
@@ -626,6 +670,7 @@ final class KnockEngine {
             midiClockBeat = Double(e.a) / 4
             if params[KParam.followDAW.rawValue] > 0.5 { beat = midiClockBeat }
         case .allOff:
+            midiOutAllOff(offset: offset)
             clearGates()
             playing = false
             currentLoop = -1
@@ -752,6 +797,61 @@ final class KnockEngine {
             clickRemaining -= 1
             mixL[i] = (mixL[i] + s).clamped(-1, 1)
             mixR[i] = (mixR[i] + s).clamped(-1, 1)
+        }
+    }
+
+    // MARK: MIDI out
+
+    @inline(__always)
+    private func pushMIDIOut(frame: Int, _ status: UInt8, _ d1: UInt8, _ d2: UInt8) {
+        guard midiOutCount < KnockEngine.midiOutCapacity else { return }
+        midiOut[midiOutCount] = MIDIOutMessage(frame: Int32(frame), status: status, data1: d1, data2: d2)
+        midiOutCount += 1
+    }
+
+    /// A pattern hit as MIDI on its channel's own MIDI channel. The 808 sends its played pitch.
+    @inline(__always)
+    private func midiOutHit(pad: Int, velocity: Float, semis: Float, length: Int, offset: Int) {
+        guard midiOutOn, pad >= 0, pad < Pad.count, padMask & (1 << UInt16(pad)) != 0 else { return }
+        let ch = midiOutChannel[pad]
+        guard ch >= 0 else { return }
+        var note = Int(midiOutNote[pad])
+        if pad == Pad.bass808.rawValue { note += Int(semis.rounded()) }
+        note = note.clamped(0, 127)
+        let frame = renderBase + max(0, offset)
+        if midiOffDue[pad] >= 0 {
+            pushMIDIOut(frame: frame, 0x80 | midiOffChannel[pad], midiOffNote[pad], 0)
+            midiOffDue[pad] = -1
+        }
+        let vel = UInt8((Int((velocity * 127).rounded())).clamped(1, 127))
+        pushMIDIOut(frame: frame, 0x90 | UInt8(ch), UInt8(note), vel)
+        let gate = pad == Pad.bass808.rawValue ? (length > 0 ? length : Int(sampleRate * 0.3)) : Int(sampleRate * 0.06)
+        midiOffDue[pad] = sampleClock + Int64(frame + max(1, gate))
+        midiOffChannel[pad] = UInt8(ch)
+        midiOffNote[pad] = UInt8(note)
+    }
+
+    /// Note-offs that fall inside this render call, then the call's messages in time order.
+    private func flushMIDIOffs(frames: Int) {
+        let end = sampleClock + Int64(frames)
+        for pad in 0..<Pad.count where midiOffDue[pad] >= 0 && midiOffDue[pad] < end {
+            pushMIDIOut(frame: Int(max(0, midiOffDue[pad] - sampleClock)), 0x80 | midiOffChannel[pad], midiOffNote[pad], 0)
+            midiOffDue[pad] = -1
+        }
+        guard midiOutCount > 1 else { return }
+        for i in 1..<midiOutCount {      // insertion sort: a handful of messages per call
+            let m = midiOut[i]
+            var j = i - 1
+            while j >= 0 && midiOut[j].frame > m.frame { midiOut[j + 1] = midiOut[j]; j -= 1 }
+            midiOut[j + 1] = m
+        }
+    }
+
+    /// Stop / all off: release every MIDI note still held.
+    private func midiOutAllOff(offset: Int) {
+        for pad in 0..<Pad.count where midiOffDue[pad] >= 0 {
+            pushMIDIOut(frame: renderBase + max(0, offset), 0x80 | midiOffChannel[pad], midiOffNote[pad], 0)
+            midiOffDue[pad] = -1
         }
     }
 
@@ -1005,6 +1105,11 @@ final class KnockEngine {
     // Loop hits use the same trigger with length and glide.
     private func apply(_ b: BlockEvent, offset: Int) {
         if b.fromLoop {
+            if b.event.kind == .bass {
+                midiOutHit(pad: Pad.bass808.rawValue, velocity: Float(b.event.value), semis: Float(b.event.a), length: b.length, offset: offset)
+            } else {
+                midiOutHit(pad: b.pad, velocity: Float(b.event.value), semis: b.semis, length: 0, offset: offset)
+            }
             if b.event.kind == .bass {
                 trigger(pad: Pad.bass808.rawValue, velocity: Float(b.event.value), semis: Float(b.event.a),
                         lengthSamples: b.length, glide: b.glide)

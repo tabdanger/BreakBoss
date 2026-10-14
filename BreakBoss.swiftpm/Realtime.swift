@@ -83,6 +83,8 @@ struct KEvent {
         case padMask      // a: bit per pad that may sound (drum roll mute / solo)
         case recordArm    // a: 1 = record pad / MIDI hits into the playing pattern, 0 = off
         case metronome    // a: 1 = click on every beat while playing, 0 = off
+        case midiOut      // a: pad 0...11, value: channel (0...15) * 128 + note, or -1 = channel off;
+                          // a: -1 = MIDI out on (value 1) / off (value 0)
     }
     var kind: Kind
     var a: Int32 = 0

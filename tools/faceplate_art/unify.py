@@ -158,6 +158,37 @@ def row_fill(f, mask):
             out[bad, xx, ch] = np.interp(bad, rows, f[rows, xx, ch])
     return cv2.GaussianBlur(out, (0, 0), sigmaX=0.5, sigmaY=1.0) * mask[..., None] + f * (~mask[..., None])
 
+def erase_letters(reg, box):
+    """Removes only the letter pixels inside box (x0, y0, x1, y1 in reg), filling each from the
+    plate right around it, so the background keeps its own shading and no patch shows."""
+    f = reg.astype(np.float32)
+    lum = f.mean(2)
+    bg = cv2.medianBlur(np.clip(lum, 0, 255).astype(np.uint8), 21).astype(np.float32)
+    ink = np.abs(lum - bg) > 16
+    x0, y0, x1, y1 = [int(v) for v in box]
+    lim = np.zeros(ink.shape, bool); lim[max(0, y0):y1, max(0, x0):x1] = True
+    m = cv2.dilate((ink & lim).astype(np.uint8), np.ones((3, 3), np.uint8), iterations=2).astype(bool) & lim
+    if not m.any(): return f
+    w = (~cv2.dilate(m.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)).astype(np.float32)
+    fill = f.copy()
+    for sig in (2.0, 4.0, 8.0):          # small first, wider where the letters were thick
+        num = cv2.GaussianBlur(f * w[..., None], (0, 0), sig); den = cv2.GaussianBlur(w, (0, 0), sig)[..., None]
+        est = num / np.maximum(den, 1e-4)
+        ok = (den[..., 0] > 0.15) & m & (fill == f).all(2)
+        fill[ok] = est[ok]
+    rest = m & (fill == f).all(2)
+    if rest.any():
+        num = cv2.GaussianBlur(f * w[..., None], (0, 0), 14); den = cv2.GaussianBlur(w, (0, 0), 14)[..., None]
+        fill[rest] = (num / np.maximum(den, 1e-4))[rest]
+    # the plate's own fine grain on the filled pixels
+    hp = lum - cv2.GaussianBlur(lum, (0, 0), 2)
+    sd = min(3.0, float(np.median(np.abs(hp[w > 0.5]))) * 1.48) if (w > 0.5).sum() > 20 else 1.0
+    nz = cv2.GaussianBlur(np.random.default_rng(int(lum.sum()) % 99991).normal(0, 1, lum.shape).astype(np.float32), (0, 0), 0.7)
+    nz *= sd / max(float(nz.std()), 1e-3)
+    fill = fill + (nz[..., None] * m[..., None])
+    o = cv2.GaussianBlur(m.astype(np.float32), (0, 0), 0.8)[..., None]
+    return np.clip(f * (1 - o) + fill * o, 0, 255)
+
 def redraw_text(img, dev):
     """Every printed word in Modern's place and size, in Aldrich, in this plate's own ink."""
     out = img.astype(np.float32)
@@ -181,12 +212,10 @@ def redraw_text(img, dev):
             ink = tuple(float(v) for v in reg[strong].mean(0))
         else:
             ink = (44, 44, 46) if med > 120 else (224, 224, 226)
-        m = np.zeros(lum.shape, bool)
-        m[max(0, by0 - py - Y0):by1 + py - Y0, max(0, bx0 - px - X0):bx1 + px - X0] = True
-        if key in ("ledTempo", "ledFollow"): m[:, :3] = False
-        m |= cv2.dilate(ink_mask.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool) & \
-             (np.abs(np.arange(lum.shape[0])[:, None] - (by0 + by1) / 2 + Y0) < (by1 - by0) * 0.9)
-        out[Y0:Y1, X0:X1] = row_fill(reg, m)
+        if key not in BUTTONS:       # printed on the plate: the same ink as the knob labels
+            ink = (44, 44, 46) if med > 120 else (224, 224, 226)
+        ex = 6 if key in BUTTONS else 16
+        out[Y0:Y1, X0:X1] = erase_letters(reg, (bx0 - X0 - ex, by0 - Y0 - 5, bx1 - X0 + ex, by1 - Y0 + 5))
         jobs.append((text, (bx0 + bx1) / 2, by0, by1 - by0, ink, bx1 - bx0))
     for text, cx, top, ch, ink, tw in jobs:
         textdraw.draw(out, text, cx, top, ch, ink, target_w=tw)
@@ -197,8 +226,7 @@ def redraw_clipper_label(img, dev):
     bx0, by0, bx1, by1 = LABELS[dev]["clipper"]
     X0, Y0, X1, Y1 = bx0 - 30, by0 - 8, bx1 + 30, by1 + 10
     reg = out[Y0:Y1, X0:X1]; med = float(np.median(reg.mean(2)))
-    m = np.zeros(reg.shape[:2], bool); m[3:-3, 14:-14] = True
-    out[Y0:Y1, X0:X1] = row_fill(reg, m)
+    out[Y0:Y1, X0:X1] = erase_letters(reg, (8, 2, reg.shape[1] - 8, reg.shape[0] - 2))
     ink = (44, 44, 46) if med > 120 else (224, 224, 226)
     textdraw.draw(out, "CLIPPER", (bx0 + bx1) / 2, by0, by1 - by0, ink, target_w=bx1 - bx0)
     return np.clip(out, 0, 255).astype(np.uint8)

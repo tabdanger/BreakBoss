@@ -15,6 +15,13 @@ def text_alpha(text, cap_h, target_w=None, max_track=3.0):
     hb = f.getbbox("H")
     widths = [f.getlength(ch) for ch in text]
     natural = sum(widths)
+    if target_w and natural > target_w * SS:
+        # never wider than the original word: scale the type down to fit
+        k = target_w * SS / natural
+        f = ImageFont.truetype(FONT, max(4, int(f.size * k)))
+        hb = f.getbbox("H")
+        widths = [f.getlength(ch) for ch in text]
+        natural = sum(widths)
     track = 0.0
     if target_w and len(text) > 1:
         track = np.clip((target_w * SS - natural) / (len(text) - 1), 0, max_track * SS)
