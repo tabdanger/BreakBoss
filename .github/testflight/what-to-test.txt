@@ -1,0 +1,8 @@
+New in this build:
+- Platinum is the master faceplate; Modern, Vintage and Texture are built around it with clean edges.
+- New artist-style kits and presets: Toronto Nights, Late Night RnB, ATL Wave, Rockstar Bounce, Vamp Rage, Carolina Soul, LA Lyricist, Soft Soul and Houston Queen.
+- Genre kits have their own section in every kit menu.
+- Four dice, four jobs: faceplate dice = new sounds, velocity dice = new velocities, channel dice = new channel pattern, top drum roll dice = new sounds and pattern.
+- Snap to Scale button in the drum roll channel bar (key, scale, fit notes).
+
+Please try switching faceplates, loading kits and presets, using each dice, and recording MIDI into your DAW. Send feedback with a screenshot if anything looks or sounds off.
