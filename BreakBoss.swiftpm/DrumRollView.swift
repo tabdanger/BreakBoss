@@ -615,8 +615,8 @@ struct DrumRollView: View {
                 } else {
                     let t = snapped(tickAt(start.x, w))
                     undoStack.append(pattern); redoStack = []
+                    // Drawing is silent: a new note sounds only when the playhead reaches it.
                     work = PatternEdit.addNote(pattern, pad: startRow, tick: t, velocity: lastVelocity)
-                    controller.auditionPad(startRow, velocity: lastVelocity)
                     drag = .paint(pad: startRow, lastCell: Int(t / placeTicks))
                 }
             case .select:
@@ -687,7 +687,6 @@ struct DrumRollView: View {
             let len = abs(g.translation.width) < 6 ? last808Length : length
             last808Length = len
             commit(PatternEdit.addNote(pattern, pad: Pad.bass808.rawValue, tick: start, length: len, velocity: lastVelocity))
-            controller.auditionPad(Pad.bass808.rawValue, velocity: lastVelocity)
         case .paint, .erase:
             if let p = work { work = nil; controller.setLoop(loop, p) }   // the undo point was pushed when the finger went down
             else { _ = undoStack.popLast() }                             // nothing changed
