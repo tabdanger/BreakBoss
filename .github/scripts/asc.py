@@ -312,6 +312,8 @@ def upsert(list_path, item_type, match, attributes, create_relationships):
         s2, j2 = call("PATCH", f"/v1/{item_type}/{existing['id']}",
                       {"data": {"type": item_type, "id": existing["id"], "attributes": attributes}})
         return s2 == 200, f"HTTP {s2} {problem(j2)}"
+    if item_type in ("betaAppLocalizations", "betaBuildLocalizations"):
+        attributes = {"locale": "en-US", **attributes}          # Apple needs the language on a new one
     s2, j2 = call("POST", f"/v1/{item_type}", {"data": {"type": item_type, "attributes": attributes,
                                                          "relationships": create_relationships}})
     return s2 == 201, f"HTTP {s2} {problem(j2)}"
