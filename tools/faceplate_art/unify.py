@@ -231,6 +231,46 @@ def redraw_clipper_label(img, dev):
     textdraw.draw(out, "CLIPPER", (bx0 + bx1) / 2, by0, by1 - by0, ink, target_w=bx1 - bx0)
     return np.clip(out, 0, 255).astype(np.uint8)
 
+# ---------------------------------------------------------------- Platinum's lights (iPad art)
+def platinum_lights(img, modern):
+    """The Platinum iPad art has an amber dash under MODERN and its own dark clipper lamp.
+    Both become Modern's: a red dash, and Modern's lit ON button inside Platinum's silver frame."""
+    out = img.astype(np.float32); mod = modern.astype(np.float32)
+    # MODERN dash: amber -> Modern's red, same brightness and glow shape
+    x0, y0, x1, y1 = R2["l_modern"]["mode_modern"]
+    reg = out[y0:y1 + 12, x0:x1]
+    b, g, r = reg[..., 0], reg[..., 1], reg[..., 2]
+    amber = np.clip((r - b - 25) / 60, 0, 1) * np.clip((g - b - 10) / 40, 0, 1)
+    amber = cv2.GaussianBlur(amber, (0, 0), 0.8)[..., None]
+    lum = reg.max(2, keepdims=True)
+    red = np.concatenate([lum * 0.16, lum * 0.18, lum], 2)
+    red[..., 1:2][lum > 235] = 225; red[..., 0:1][lum > 235] = 225          # hot white core like Modern's
+    out[y0:y1 + 12, x0:x1] = reg * (1 - amber) + red * amber
+    # Clipper: Modern's lit button in Platinum's bezel
+    cx0, cy0, cx1, cy1 = R2["l_modern"]["clipperRect"]
+    pad = 12
+    P = out[cy0 - pad:cy1 + pad, cx0 - pad:cx1 + pad]
+    lumP = P.mean(2)
+    dark = (lumP < 70).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(dark)
+    k = 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))
+    x, y, w, h = st[k, :4]                       # Platinum's dark well inside the silver bezel
+    src = mod[cy0:cy1, cx0:cx1]
+    lit = (src.max(2) > 90).astype(np.uint8)     # Modern's lit face (red + glow + ON)
+    ys, xs = np.nonzero(lit)
+    face = src[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    inset = 3
+    face = cv2.resize(face, (w - 2 * inset, h - 2 * inset), interpolation=cv2.INTER_AREA)
+    m = np.zeros((h - 2 * inset, w - 2 * inset), np.float32); m[2:-2, 2:-2] = 1
+    m = cv2.GaussianBlur(m, (0, 0), 1.2)[..., None]
+    tgt = P[y + inset:y + h - inset, x + inset:x + w - inset]
+    P[y + inset:y + h - inset, x + inset:x + w - inset] = tgt * (1 - m) + face * m
+    # a little red spill on the bezel, like the lamp on the other plates
+    glow = np.zeros(lumP.shape, np.float32); glow[y:y + h, x:x + w] = 1
+    glow = np.clip(cv2.GaussianBlur(glow, (0, 0), 5) - glow, 0, 1)[..., None] * 0.35
+    P[:] = P * (1 - glow) + np.array([40, 40, 255], np.float32) * glow
+    return np.clip(out, 0, 255).astype(np.uint8)
+
 # ---------------------------------------------------------------- wood
 def wood_mask(dev, H, W):
     m = np.zeros((H, W), np.float32)
@@ -256,6 +296,8 @@ if __name__ == "__main__":
         sprites = knob_sprites(dev)
         plates = {"modern": modern, "vintage": warp_onto_modern(dev, "vintage"), "texture": warp_onto_modern(dev, "texture"),
                   "platinum": cv2.imread(f"src/{dev}_platinum.png")}
+        if dev == "l":
+            plates["platinum"] = platinum_lights(plates["platinum"], modern)
         for mode, img in plates.items():
             img = paste_knobs(img, dev, mode, sprites)
             img = redraw_clipper_label(img, dev)
