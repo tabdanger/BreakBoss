@@ -407,7 +407,19 @@ def external(build_number):
     status, js = call("GET", f"/v1/apps/{app_id}/betaGroups?limit=50")
     groups = [g for g in js.get("data", []) if not g["attributes"].get("isInternalGroup")] if status == 200 else []
     if not groups:
-        say("error", "External group", "There is no external tester group.")
+        # First time: make the external group (with a public link, like MS26's)
+        app_name = "BreakBoss"
+        for attrs in ({"name": f"{app_name} Beta", "publicLinkEnabled": True, "publicLinkLimitEnabled": False},
+                      {"name": f"{app_name} Beta"}):
+            sc, jc = call("POST", "/v1/betaGroups", {"data": {"type": "betaGroups", "attributes": attrs,
+                          "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+            if sc == 201:
+                groups = [jc["data"]]
+                say("notice", "External group", f"Made the external group \"{attrs['name']}\"" + (" with a public link." if attrs.get("publicLinkEnabled") else "."))
+                break
+            say("warning", "External group", f"Couldn't make the group ({attrs}): HTTP {sc} {problem(jc)}")
+    if not groups:
+        say("error", "External group", "There is no external tester group and one couldn't be made.")
         sys.exit(1)
     for group in groups:
         s0, j0 = call("GET", f"/v1/betaGroups/{group['id']}/builds?limit=50")
