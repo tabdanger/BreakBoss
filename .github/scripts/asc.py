@@ -348,6 +348,23 @@ def external(build_number):
         if not contact[key]:
             contact[key] = (saved.get(key) or "").strip()
     if not feedback or not all(contact.values()):
+        # Same details as Tyrone's other apps (MS26, Console E): copy them from the first app on the
+        # team that already has a complete Beta App Review contact and feedback email.
+        sa, ja = call("GET", "/v1/apps?limit=50")
+        for other in (ja.get("data", []) if sa == 200 else []):
+            if other["id"] == app_id: continue
+            so, jo = call("GET", f"/v1/apps/{other['id']}/betaAppReviewDetail")
+            oc = jo.get("data", {}).get("attributes", {}) if so == 200 else {}
+            sl, jl = call("GET", f"/v1/apps/{other['id']}/betaAppLocalizations")
+            ol = next((d for d in jl.get("data", []) if str(d["attributes"].get("locale", "")).startswith("en")), None) if sl == 200 else None
+            ofb = ((ol or {}).get("attributes", {}).get("feedbackEmail") or "").strip()
+            if all((oc.get(k) or "").strip() for k in contact) and (feedback or ofb):
+                for k in contact:
+                    if not contact[k]: contact[k] = oc[k].strip()
+                feedback = feedback or ofb
+                say("notice", "Review contact", f"Using the same review contact and feedback email as {other['attributes'].get('name')}.")
+                break
+    if not feedback or not all(contact.values()):
         say("error", "External testing", "Feedback email and the review contact (name, phone, email) are all needed, and App Store Connect doesn't have them yet.")
         sys.exit(1)
     contact["demoAccountRequired"] = False
