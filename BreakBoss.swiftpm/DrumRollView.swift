@@ -32,6 +32,31 @@ enum DrumRollStyle {
     static let stepLine = Color(red: 48 / 255, green: 52 / 255, blue: 54 / 255)
 }
 
+/// The drum roll wears the faceplate it was opened from (Tyrone's mock-ups): the plate's own
+/// material around the panels, its own side cheeks, and ink that reads on that material.
+/// The grid, buttons and every control stay the same in all four.
+struct DrumRollTheme {
+    let plate: String
+    let side: String
+    /// Print on the plate (logo, channel names, BARS, lane scale).
+    let ink: Color
+    let inkDim: Color
+    let light: Bool
+
+    static func forFace(_ key: String) -> DrumRollTheme {
+        switch key {
+        case "platinum": return DrumRollTheme(plate: "DrumRollPlate_platinum", side: "DrumRollSide_platinum",
+                                              ink: Color(white: 0.12), inkDim: Color(white: 0.3), light: true)
+        case "vintage": return DrumRollTheme(plate: "DrumRollPlate_vintage", side: "DrumRollSide_vintage",
+                                             ink: Color(red: 0.13, green: 0.11, blue: 0.09), inkDim: Color(red: 0.34, green: 0.3, blue: 0.25), light: true)
+        case "texture": return DrumRollTheme(plate: "DrumRollPlate_texture", side: "DrumRollSide_texture",
+                                             ink: Color(white: 0.95), inkDim: Color(white: 0.8), light: false)
+        default: return DrumRollTheme(plate: "DrumRollPlate_modern", side: "DrumRollSide_modern",
+                                      ink: DrumRollStyle.text, inkDim: DrumRollStyle.dim, light: false)
+        }
+    }
+}
+
 struct DrumRollView: View {
     @ObservedObject var controller: KnockController
     @State var loop: Int
@@ -107,6 +132,8 @@ struct DrumRollView: View {
         return "\(snap) TICKS"
     }
     private var placeTicks: Int32 { snapTicks > 0 ? snapTicks : 6 }
+    private var theme: DrumRollTheme { DrumRollTheme.forFace(controller.faceKey) }
+    private var plate: some View { Image(theme.plate).resizable(resizingMode: .tile) }
     private var isThisPlaying: Bool { controller.isPlaying && Int(controller.meters.status[1]) == loop }
 
     // MARK: Body
@@ -114,7 +141,7 @@ struct DrumRollView: View {
     var body: some View {
         GeometryReader { geo in
             HStack(spacing: 0) {
-                wood
+                side(flip: false)
                 VStack(spacing: 0) {
                     header
                     toolbar
@@ -122,8 +149,8 @@ struct DrumRollView: View {
                     editor
                     footer
                 }
-                .background(S.toolbar)
-                wood
+                .background(plate)
+                side(flip: true)
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
@@ -164,8 +191,10 @@ struct DrumRollView: View {
         }
     }
 
-    private var wood: some View {
-        Image("DrumRollWood").resizable().frame(width: compact ? 8 : 14).ignoresSafeArea()
+    /// The faceplate's side cheek (wood, or Platinum's silver frame); the right one is mirrored.
+    private func side(flip: Bool) -> some View {
+        Image(theme.side).resizable().scaleEffect(x: flip ? -1 : 1, y: 1)
+            .frame(width: compact ? 10 : 24).ignoresSafeArea()
     }
 
     // MARK: Header
@@ -174,11 +203,12 @@ struct DrumRollView: View {
         HStack(spacing: compact ? 6 : 10) {
             Button { showMenu = true } label: {
                 Image(systemName: "line.3.horizontal").font(.system(size: 20, weight: .regular)).foregroundColor(S.text)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 40, height: 40).background(box(lit: false))
             }
             if !compact {
                 Image("DrumRollLogo").resizable().scaledToFit().frame(height: 26)
-                Text("D R U M   R O L L").font(.system(size: 13, weight: .medium)).foregroundColor(S.text).lineLimit(1)
+                    .colorMultiply(theme.light ? Color(white: 0.1) : .white)
+                Text("D R U M   R O L L").font(.system(size: 13, weight: .medium)).foregroundColor(theme.ink).lineLimit(1)
                     .fixedSize()
             }
             Spacer(minLength: 4)
@@ -197,7 +227,6 @@ struct DrumRollView: View {
         }
         .padding(.horizontal, 10)
         .frame(height: compact ? 56 : 70)
-        .background(S.header)
     }
 
     private var transport: some View {
@@ -306,7 +335,7 @@ struct DrumRollView: View {
             .padding(.horizontal, 10)
         }
         .frame(height: compact ? 52 : 64)
-        .background(S.toolbar)
+        .overlay(Rectangle().fill(Color.black.opacity(0.22)).frame(height: 1), alignment: .bottom)
     }
 
     private var swingMenu: some View {
@@ -348,7 +377,7 @@ struct DrumRollView: View {
             let gridW = max(100, geo.size.width - stripW)
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
-                    pageControl.frame(width: stripW, height: rulerH).background(S.channel)
+                    pageControl.frame(width: stripW, height: rulerH)
                     ruler(width: gridW).frame(width: gridW, height: rulerH)
                 }
                 HStack(spacing: 0) {
@@ -433,12 +462,12 @@ struct DrumRollView: View {
     private var pageControl: some View {
         HStack(spacing: 6) {
             Button { page = max(0, page - 1); follow = false } label: {
-                Image(systemName: "chevron.left").foregroundColor(page > 0 ? S.text : S.dim)
+                Image(systemName: "chevron.left").foregroundColor(page > 0 ? theme.ink : theme.inkDim)
             }.disabled(page == 0)
             Text(barsPerPage == 1 ? "BAR \(page * barsPerPage + 1)" : "BARS \(page * barsPerPage + 1)–\(min(bars, (page + 1) * barsPerPage))")
-                .font(.system(size: 11, design: .monospaced)).foregroundColor(S.dim).lineLimit(1)
+                .font(.system(size: 11, design: .monospaced)).foregroundColor(theme.ink).lineLimit(1)
             Button { page = min(pages - 1, page + 1); follow = false } label: {
-                Image(systemName: "chevron.right").foregroundColor(page < pages - 1 ? S.text : S.dim)
+                Image(systemName: "chevron.right").foregroundColor(page < pages - 1 ? theme.ink : theme.inkDim)
             }.disabled(page >= pages - 1)
         }
     }
@@ -475,10 +504,10 @@ struct DrumRollView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)")
                     .font(.system(size: compact ? 11 : 14, weight: .medium))
-                    .foregroundColor(selectedPad == pad ? S.green : (muted ? S.dim : S.text)).lineLimit(1)
+                    .foregroundColor(selectedPad == pad ? (theme.light ? Color(red: 0.12, green: 0.42, blue: 0.1) : S.green) : (muted ? theme.inkDim : theme.ink)).lineLimit(1)
                 if !compact && height > 40 {
                     Text(controller.padName(pad).uppercased())
-                        .font(.system(size: 9, design: .monospaced)).foregroundColor(custom ? S.green : S.dim).lineLimit(1)
+                        .font(.system(size: 9, design: .monospaced)).foregroundColor(custom ? (theme.light ? Color(red: 0.12, green: 0.42, blue: 0.1) : S.green) : theme.inkDim).lineLimit(1)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -493,8 +522,8 @@ struct DrumRollView: View {
         }
         .padding(.horizontal, compact ? 4 : 8)
         .frame(height: height)
-        .background(selectedPad == pad ? S.greenDark : (pad % 2 == 0 ? S.channel : S.channel.opacity(0.85)))
-        .overlay(Rectangle().fill(Color.black.opacity(0.5)).frame(height: 1), alignment: .bottom)
+        .background(selectedPad == pad ? S.green.opacity(theme.light ? 0.35 : 0.18) : Color.black.opacity(pad % 2 == 0 ? 0 : 0.05))
+        .overlay(Rectangle().fill(Color.black.opacity(theme.light ? 0.18 : 0.45)).frame(height: 1), alignment: .bottom)
         .onDrop(of: [UTType.fileURL, UTType.audio], isTargeted: nil) { providers in dropSample(providers, pad: pad) }
     }
 
@@ -766,7 +795,7 @@ struct DrumRollView: View {
                 VStack(alignment: .leading, spacing: 6) { laneChip; diceButton }
             }
             if let pad = selectedPad {
-                Text(Pad(rawValue: pad)?.channelTitle ?? "").font(.system(size: 10, design: .monospaced)).foregroundColor(S.green)
+                Text(Pad(rawValue: pad)?.channelTitle ?? "").font(.system(size: 10, design: .monospaced)).foregroundColor(theme.ink)
             }
             Spacer()
             HStack {
@@ -778,12 +807,11 @@ struct DrumRollView: View {
                     Spacer()
                     Text(lane == .velocity ? "0" : "-12").font(.system(size: 11, design: .monospaced))
                 }
-                .foregroundColor(S.dim)
+                .foregroundColor(theme.ink)
                 .padding(.trailing, 6)
             }
         }
         .padding(8)
-        .background(S.lane)
     }
 
     private func laneView(width w: CGFloat, height h: CGFloat) -> some View {
@@ -874,7 +902,7 @@ struct DrumRollView: View {
         }
         .padding(.horizontal, 12)
         .frame(height: compact ? 58 : 72)
-        .background(S.header)
+        .overlay(Rectangle().fill(Color.black.opacity(0.22)).frame(height: 1), alignment: .top)
     }
 
     private func cycleKit(_ step: Int) {
