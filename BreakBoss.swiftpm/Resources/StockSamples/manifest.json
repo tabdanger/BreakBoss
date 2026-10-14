@@ -2738,6 +2738,150 @@
       "displayName": "NEWS"
     },
     {
+      "kitID": "danger-drums",
+      "pad": 0,
+      "file": "bb_kp2-kick-booked-b1bf10_p00.wav",
+      "displayName": "KICK (BOOKED)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 1,
+      "file": "bb_kp2-snare-fresh-b1bf10_p01.wav",
+      "displayName": "SNARE (FRESH)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 2,
+      "file": "bb_kp2-clap-mindful-b1bf10_p02.wav",
+      "displayName": "CLAP (MINDFUL)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 3,
+      "file": "bb_kp2-rim-banger-b1bf10_p03.wav",
+      "displayName": "RIM (BANGER)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 4,
+      "file": "bb_kp2-hihat-intro-c848f9_p04.wav",
+      "displayName": "HIHAT (INTRO)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 5,
+      "file": "bb_kp2-open-hat-shawty-040811_p05.wav",
+      "displayName": "OPEN HAT (SHAWTY)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 6,
+      "file": "bb_kp2-chosen-2a1dd0_p06.wav",
+      "displayName": "CHOSEN"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 7,
+      "file": "bb_kp2-percussion-clave-b1bf10_p07.wav",
+      "displayName": "PERCUSSION (CLAVE)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 8,
+      "file": "bb_kp2-percussion-light-b1bf10_p08.wav",
+      "displayName": "PERCUSSION (LIGHT)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 9,
+      "file": "bb_kp2-percussion-tom1-b1bf10_p09.wav",
+      "displayName": "PERCUSSION (TOM1)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 10,
+      "file": "bb_kp2-percussion-blocked-b1bf10_p10.wav",
+      "displayName": "PERCUSSION (BLOCKED)"
+    },
+    {
+      "kitID": "danger-drums",
+      "pad": 11,
+      "file": "bb_kp2-stream-3de3ea_p11.wav",
+      "displayName": "STREAM"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 0,
+      "file": "bb_kp2-kick-prime-b1bf10_p00.wav",
+      "displayName": "KICK (PRIME)"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 1,
+      "file": "bb_kp2-snare-cooked-b1bf10_p01.wav",
+      "displayName": "SNARE (COOKED)"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 2,
+      "file": "bb_kp2-clap-rival-b1bf10_p02.wav",
+      "displayName": "CLAP (RIVAL)"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 3,
+      "file": "bb_kp2-rim-special-b1bf10_p03.wav",
+      "displayName": "RIM (SPECIAL)"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 4,
+      "file": "bb_kp2-hihat-sonic-c848f9_p04.wav",
+      "displayName": "HIHAT (SONIC)"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 5,
+      "file": "bb_kp2-open-hat-lastcall-040811_p05.wav",
+      "displayName": "OPEN HAT (LASTCALL)"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 6,
+      "file": "bb_kp2-geo-5edbd7_p06.wav",
+      "displayName": "GEO"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 7,
+      "file": "bb_kp2-percussion-dial-b1bf10_p07.wav",
+      "displayName": "PERCUSSION (DIAL)"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 8,
+      "file": "bb_kp2-percussion-actually-b1bf10_p08.wav",
+      "displayName": "PERCUSSION (ACTUALLY)"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 9,
+      "file": "bb_kp2-kick-face-b1bf10_p09.wav",
+      "displayName": "KICK (FACE)"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 10,
+      "file": "bb_kp2-percussion-paint1-a-b1bf10_p10.wav",
+      "displayName": "PERCUSSION (PAINT1) - A"
+    },
+    {
+      "kitID": "danger-drums-2",
+      "pad": 11,
+      "file": "bb_kp2-yoto-3de3ea_p11.wav",
+      "displayName": "YOTO"
+    },
+    {
       "kitID": "analog-funk",
       "pad": 0,
       "file": "bb_kp2-str8-up-analog-kick-b1bf10_p00.wav",

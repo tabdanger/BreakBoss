@@ -152,6 +152,8 @@ enum KitLibrary {
         variant("knock-gang", "KNOCK GANG", drumMastery, .trap, 142, 313, 0.08, 0.15),
         variant("rage", "RAGE", modernTrap, .trapToronto, 160, 317, -0.05, 0.35),
         variant("drill-nights", "DRILL NIGHTS", drumMastery, .trapMemphis, 142, 331, -0.1, 0.25),
+        variant("danger-drums", "DANGER DRUMS", drumMastery, .trap, 140, 353, 0.05, 0.15),
+        variant("danger-drums-2", "DANGER DRUMS 2", modernTrap, .trapAtlanta, 144, 359, 0, 0.2),
         variant("analog-funk", "ANALOG FUNK", funkBreak, .funkBreak, 96, 337, 0, 0.1)
     ]
     static let textures: [KitDefinition] = [

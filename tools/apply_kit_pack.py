@@ -2,7 +2,7 @@
 """Builds the six kits made from Tyrone's second round of packs (Oct 14): Kicks 3, Snares + Claps 2,
 Percussive One Shots 2 and the 156-sound Archive (808s, claps, snares, rims, snaps, hats, open hats,
 cymbals, risers, textures). The Cymatics pack is left out on purpose (its licence doesn't allow
-shipping the raw samples in an app).
+shipping the raw samples in an app). Danger Drums: Tyrone's own home-made sounds (two kits).
 
   python3 tools/apply_kit_pack.py KitPack2.zip --package BreakBoss.swiftpm
 
@@ -26,6 +26,7 @@ def ar(folder, name):          # the Archive's naming: "[Kind] Name - (@prod.by.
 def kk(name): return f"Kicks 2.zip.zip/{name}.wav"
 def sc(name): return f"Snares + Claps 2/{name}.wav"
 def pc(name): return f"Percussive One Shots 2/{name}.wav"
+def dd(name): return f"Danger Drums/{name}.wav"     # Tyrone's own home-made bank: "Danger Drums"
 
 HAT = {"tailSeconds": 0.4}
 OPEN = {"tailSeconds": 1.2}
@@ -51,6 +52,15 @@ KITS = {
                           H: (ar("Hi Hats 2", "Mirage"), HAT), O: (ar("Open Hats 2", "Kunai"), OPEN), B: (ar("808 2", "Toji"), b808(F1)),
                           P1: ar("Snaps 2", "Hellsing"), P2: ar("Rims 2", "Rooms"), LT: ar("Kicks 2", "Softer"),
                           HT: pc("Tamb Cha Ching (1)"), CY: (ar("Cymbals & Crashes 2", "[Cymbal] News"), CYM)}),
+    # Danger Drums: Tyrone's own bank (808s and cymbals from the Archive)
+    "danger-drums": (F1, {K: dd("Kick (Booked)"), S: dd("Snare (Fresh)"), C: dd("Clap (Mindful)"), R: dd("Rim (Banger)"),
+                          H: (dd("Hihat (Intro)"), HAT), O: (dd("Open Hat (Shawty)"), OPEN), B: (ar("808 2", "Chosen"), b808(F1)),
+                          P1: dd("Percussion (Clave)"), P2: dd("Percussion (Light)"), LT: dd("Percussion (Tom1)"),
+                          HT: dd("Percussion (Blocked)"), CY: (ar("Cymbals & Crashes 2", "[Cymbal] Stream"), CYM)}),
+    "danger-drums-2": (E1, {K: dd("Kick (Prime)"), S: dd("Snare (Cooked)"), C: dd("Clap (Rival)"), R: dd("Rim (Special)"),
+                            H: (dd("Hihat (Sonic)"), HAT), O: (dd("Open Hat (LastCall)"), OPEN), B: (ar("808 2", "Geo"), b808(E1)),
+                            P1: dd("Percussion (Dial)"), P2: dd("Percussion (Actually)"), LT: dd("Kick (Face)"),
+                            HT: dd("Percussion (Paint1) - A"), CY: (ar("Cymbals & Crashes 2", "[Crash] Yoto"), CYM)}),
     # Vintage: the analog / funk / lo-fi kicks and warm snares
     "analog-funk": (E1, {K: kk("Str8 Up Analog Kick"), S: sc("Funk Snare (1)"), C: sc("Dramatic Clap Snare"), R: sc("Quick Knock Snare"),
                          H: (ar("Hi Hats 2", "Velvet"), HAT), O: (ar("Open Hats 2", "Body"), OPEN), B: (ar("808 2", "Hands"), b808(E1, 2.0)),
