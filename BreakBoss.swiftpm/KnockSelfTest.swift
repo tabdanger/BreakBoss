@@ -1043,7 +1043,7 @@ enum KnockSelfTest {
         mo.send(KEvent(kind: .midiOut, a: Int32(Pad.kick.rawValue), value: 0 * 128 + 36))
         mo.send(KEvent(kind: .midiOut, a: Int32(Pad.snare.rawValue), value: 1 * 128 + 38))
         mo.send(KEvent(kind: .midiOut, a: -1, value: 1))
-        let sent = collect(240)
+        let sent = collect(800)          // two full bars at 120 BPM (4.3 s), so every hit comes round again
         check(sent.contains { $0.1 == 0x90 && $0.2 == 36 && $0.3 == 127 }, "MIDI out: kick note on, channel 1, note 36")
         check(sent.contains { $0.1 == 0x91 && $0.2 == 38 && $0.3 == 64 }, "MIDI out: snare on its own channel (2), note 38, velocity")
         check(sent.contains { $0.1 == 0x80 && $0.2 == 36 }, "MIDI out: note off follows")
