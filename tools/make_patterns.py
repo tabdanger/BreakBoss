@@ -345,11 +345,76 @@ pat(TE, "TECHNO 9 PEAK", 138, k=FOUR, c="....X.......X.......X.......X...", h="x
 pat(TE, "TECHNO 10 DUB", 124, 54, k=FOUR, r="......x.......x.......x.....x...", h="..x...x...x...x...x...x...x...x.", p2="...o.......o.......o.......o....", b="..0.....0.......0.....0.0.......")
 
 # ---------------- checks and output ----------------
+
+# ================= VINTAGE STYLES (acoustic kits: boom bap, jazz, neo soul, soul R&B) =================
+def two(bar):            # same bar twice (2 bars, 32 steps)
+    assert len(bar) == 16, bar
+    return bar * 2
+RIDE = two("x...x..xx...x..x")          # jazz "spang-a-lang": 1, 2 (a), 3, 4 (a)
+FOOT = two("....x.......x...")          # hi-hat foot on 2 and 4
+BACK = two("....X.......X...")          # backbeat
+H8 = two("x.x.x.x.x.x.x.x.")
+SHAKE = two("ogogogogogogogog")
+
+# ---------------- Boom Bap (MPC swing, knocking kicks, crack on 2 & 4) ----------------
+BB = "Boom Bap"
+pat(BB, "BOOM BAP 1 CLASSIC", 90, 58, k="X......x..x.....X......x..x..x..", s=BACK, h=H8)
+pat(BB, "BOOM BAP 2 DUSTY GHOSTS", 88, 60, k="X.....x...x.....X.....x..x......", s="....X..g...gX.......X..g....X.g.", h=two("x.xgx.xgx.xgx.xg"))
+pat(BB, "BOOM BAP 3 HEAD NOD", 93, 56, k="X..x......x.....X..x....x.x.....", s=BACK, h=H8, o="..............x...............x.")
+pat(BB, "BOOM BAP 4 KNOCK & RIM", 92, 57, k="X.......x.x.....X.....x...x.....", s=BACK, r="..g.......g.......g.......g...g.", h=two("x...x...x...x..."))
+pat(BB, "BOOM BAP 5 SHAKER", 86, 62, k="X......x..x...x.X......x.x......", s=BACK, h=H8, p1=SHAKE)
+pat(BB, "BOOM BAP 6 CHOP", 95, 55, k="X.x.......x..x..X.x.....x.......", s="....X.......X.......X.....g.X...", c="............x...............x...", h=H8)
+pat(BB, "BOOM BAP 7 LAZY", 84, 64, k="X......x.......x.X......x..x....", s="....X.....g.X.......X.....g.X...", h=two("x..xx..xx..xx..x"))
+pat(BB, "BOOM BAP 8 BREAK", 96, 55, k="X.x.......xx....X.x.......x.....", s="....X..g.g..X.......X..g.g..X..g", h=H8, o="......x...............x.........")
+pat(BB, "BOOM BAP 9 RIDE", 90, 58, k="X......x..x.....X......x.....x..", s=BACK, cr=two("x...x...x...x..."), h=two("..x...x...x...x."))
+pat(BB, "BOOM BAP 10 DARK", 82, 60, k="X.........x.....X.......x..x....", s=BACK, h=H8, p2="..............x...............x.",
+    b="0---------3-----0-------5--3----")
+
+# ---------------- Jazz (swung ride, foot hat on 2 & 4, feathered kick, comping) ----------------
+J = "Jazz"
+pat(J, "JAZZ 1 SWING RIDE", 120, 66, cr=RIDE, h=FOOT, k=two("g...g...g...g..."), s="......g.....g.........g......g..")
+pat(J, "JAZZ 2 BRUSHES", 96, 64, cr=RIDE, h=FOOT, p1=two("oggoggoggoggoggo"), k=two("g.......g......."))
+pat(J, "JAZZ 3 BEBOP", 160, 62, cr=RIDE, h=FOOT, s="...g..x......g....g....x...g..g.", k="..........x.............x.......")
+pat(J, "JAZZ 4 JAZZ HOP", 88, 60, k="X......x..x.....X......x..x.....", s=BACK, cr=RIDE, h=FOOT)
+pat(J, "JAZZ 5 BOSSA", 130, 50, k=two("x..x....x..x...."), r="x..x..x...x..x..x..x..x...x..x..", h=H8)
+pat(J, "JAZZ 6 BALLAD", 70, 66, cr=RIDE, p1=two("o.g.o.g.o.g.o.g."), h=FOOT, k=two("g.......g......."))
+pat(J, "JAZZ 7 FUNK", 100, 58, k="X..x..x...x.....X..x....x.x.....", s="....X..g.g..X..g....X..g.g..X..g", h=H8, cr=two("x.......x......."))
+pat(J, "JAZZ 8 SHUFFLE", 110, 66, cr=two("x.x.x.x.x.x.x.x."), k=two("X.......x......."), s="....X.......X.......X.......X..g")
+pat(J, "JAZZ 9 LO-FI", 82, 62, k="X.....x...x.....X.......x.x.....", s=BACK, cr=RIDE, r=two("......g.......g."))
+pat(J, "JAZZ 10 UPTEMPO", 150, 60, cr=RIDE, h=FOOT, k=two("g...g...g...g..."), s="..g.....g..x.......g....x..g....")
+
+# ---------------- Neo Soul (Dilla / D'Angelo: lazy kicks, late snares, rims, ghosts) ----------------
+N = "Neo Soul"
+pat(N, "NEO SOUL 1 DILLA", 88, 62, k="X......x..x.x...X.....x....x....", s=BACK, h=two("x.xgx.xgx.xgx.xg"))
+pat(N, "NEO SOUL 2 RIM KEEPER", 82, 60, k="X.........x..x..X.......x.......", r=BACK, h=H8, p1=SHAKE)
+pat(N, "NEO SOUL 3 VOODOO", 78, 64, k="X......x...x....X.....x...x.....", s=two("....X..g....X..g"), h=two("x..x..x.x..x..x."))
+pat(N, "NEO SOUL 4 LATE SNARE", 85, 66, k="X.....x...x.....X.....x.....x...", s=two(".....X.......X.."), h=H8)
+pat(N, "NEO SOUL 5 OPEN HAT", 90, 58, k="X..x......x.....X..x....x.x.....", s=BACK, h=H8, o="......x.......x.......x.......x.")
+pat(N, "NEO SOUL 6 BROKEN", 92, 56, k="X..x...x..x.....X..x...x.....x..", s="....X.....g.X.......X.....g.X...", h=two("xgxgxgxgxgxgxgxg"))
+pat(N, "NEO SOUL 7 SOFT CLAP", 80, 62, k="X.......x.x.....X.......x...x...", c=two("....o.......o..."), s=two("....x.......x..."), h=H8,
+    b="0-------5--3----0-------7--5----", glide=True)
+pat(N, "NEO SOUL 8 RIDE", 84, 60, k="X......x..x.....X......x...x....", s=BACK, cr=H8, r=two("..g.......g....."))
+pat(N, "NEO SOUL 9 SHAKER POCKET", 86, 64, p1=two("xgogxgogxgogxgog"), k="X.....x...x.....X.....x.x.......", s=BACK, h=two("..x...x...x...x."))
+pat(N, "NEO SOUL 10 SLOW JAM", 72, 66, k="X.......x..x....X.......x.......", s=BACK, h=H8, o="..............x...............x.", p2="...............x...............x")
+
+# ---------------- Soul RnB (Motown, 70s, quiet storm, Philly) ----------------
+SR = "Soul RnB"
+pat(SR, "SOUL RNB 1 MOTOWN", 104, 52, k="x.......x.x.....x.......x.x.....", s=BACK, p1=two("....x.......x..."), h=H8)
+pat(SR, "SOUL RNB 2 70s GROOVE", 98, 54, k="X..x....x.x.....X..x....x..x....", s=two("....X..g....X..g"), h=two("x.xxx.xxx.xxx.xx"), o="..............x...............x.")
+pat(SR, "SOUL RNB 3 SLOW JAM", 68, 58, k="X.......x..x....X.......x..x....", s=BACK, h=H8, r="..............g...............g.")
+pat(SR, "SOUL RNB 4 QUIET STORM", 76, 56, k="X......x..x.....X......x........", s=BACK, h=H8, cr="x...............x...............")
+pat(SR, "SOUL RNB 5 BREAK SOUL", 100, 55, k="X.x.......xx.x..X.x.......x.....", s="....X..g.g..X.......X..g.g..X..g", h=H8)
+pat(SR, "SOUL RNB 6 GOSPEL PUSH", 94, 60, k="X.....x...x..x..X.....x...x.....", s=BACK, c=BACK, h=H8, o="......x...............x.........")
+pat(SR, "SOUL RNB 7 SHAKER", 88, 58, p1=SHAKE, k="X......x..x.....X......x..x.x...", s=BACK, h=two("x...x...x...x..."))
+pat(SR, "SOUL RNB 8 PHILLY", 112, 50, k=two("x...x...x...x..."), s=BACK, o=two("..x...x...x...x."), h=two("x...x...x...x..."))
+pat(SR, "SOUL RNB 9 HALF TIME", 72, 60, k="X.......x.......X.....x.x.......", s=two("........X......."), h=H8)
+pat(SR, "SOUL RNB 10 RIDE", 92, 56, cr=H8, k="X..x......x.....X..x......x.x...", s=BACK)
+
 from collections import Counter
 cnt = Counter(p["style"] for p in P)
 for st, n in cnt.items():
     if st != D: assert n == 10, (st, n)
-assert len(cnt) == 15, cnt
+assert len(cnt) == 19, cnt
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)
 VALID = set(".xXogrqt")

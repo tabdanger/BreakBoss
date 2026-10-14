@@ -7,7 +7,8 @@ import Foundation
 // and pad settings stay as they are, so any pattern plays through any kit. The 12 loops are
 // built from the preset's pattern (main, variations, fills, breakdown, tops, roll).
 // Styles: Tyrone's Danger Patterns plus 10 presets each of Trap, Dark Trap, West Coast, Drill,
-// Amapiano, South African RnB, RnB, 90s RnB, 80s RnB, 80s Pop, 80s Funk, EDM, House, Techno.
+// Amapiano, South African RnB, RnB, 90s RnB, 80s RnB, 80s Pop, 80s Funk, EDM, House, Techno, and the
+// Vintage styles Boom Bap, Jazz, Neo Soul and Soul RnB.
 
 struct PatternPreset: Decodable, Equatable {
     let style: String
@@ -37,6 +38,10 @@ struct PatternPreset: Decodable, Equatable {
         case "80s Funk": return .funkBreak
         case "EDM", "House": return .pop
         case "Techno": return .experimental
+        case "Boom Bap": return .boomBap
+        case "Jazz": return .looseBreak
+        case "Neo Soul": return .neoSoul
+        case "Soul RnB": return .gospel
         default:
             if name.contains("AFRO") { return .afrobeats }
             if name.contains("BREAK") { return .funkBreak }

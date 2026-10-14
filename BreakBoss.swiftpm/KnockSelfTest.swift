@@ -129,7 +129,12 @@ enum KnockSelfTest {
             }
         }
         check(assignments == 408, "stock audio covers all 408 factory pad assignments")
-        check(urls.count == 247, "stock audio contains 247 distinct assigned WAV files")
+        check(urls.count == 218, "stock audio contains 218 distinct assigned WAV files")
+        // Vintage kits play Tyrone's Vintage pack (kicks, snares/claps, hats).
+        for kit in KitLibrary.kits(for: .vintage) {
+            let kick = library.sample(kitID: kit.id, pad: Pad.kick.rawValue)
+            check(kick?.url.lastPathComponent.hasPrefix("bb_vtg-") == true, "\(kit.name): kick from the Vintage pack")
+        }
         for url in urls.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             autoreleasepool {
                 do {
@@ -1039,7 +1044,8 @@ enum KnockSelfTest {
         let presets = PatternBank.all
         check(presets.count >= 150 && Set(presets.map { $0.name }).count == presets.count, "pattern bank loads with unique names (\(presets.count))")
         let wanted = ["Trap", "Dark Trap", "West Coast", "Drill", "Amapiano", "South African RnB", "RnB", "90s RnB",
-                      "80s RnB", "80s Pop", "80s Funk", "EDM", "House", "Techno"]
+                      "80s RnB", "80s Pop", "80s Funk", "EDM", "House", "Techno",
+                      "Boom Bap", "Jazz", "Neo Soul", "Soul RnB"]
         for style in wanted { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
         check(PatternBank.styles.first == "Danger Patterns" && PatternBank.presets(in: "Danger Patterns").count >= 13, "Danger Patterns come first")
         for p in presets {

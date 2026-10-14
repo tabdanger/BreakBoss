@@ -2059,6 +2059,518 @@
     "p2": "...o.......o.......o.......o....",
     "b": "..0.....0.......0.....0.0......."
    }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 1 CLASSIC",
+   "bpm": 90,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.....X......x..x..x..",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 2 DUSTY GHOSTS",
+   "bpm": 88,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x.....X.....x..x......",
+    "s": "....X..g...gX.......X..g....X.g.",
+    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg"
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 3 HEAD NOD",
+   "bpm": 93,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..x......x.....X..x....x.x.....",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "..............x...............x."
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 4 KNOCK & RIM",
+   "bpm": 92,
+   "swing": 57,
+   "glide": false,
+   "lanes": {
+    "k": "X.......x.x.....X.....x...x.....",
+    "s": "....X.......X.......X.......X...",
+    "r": "..g.......g.......g.......g...g.",
+    "h": "x...x...x...x...x...x...x...x..."
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 5 SHAKER",
+   "bpm": 86,
+   "swing": 62,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x...x.X......x.x......",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "p1": "ogogogogogogogogogogogogogogogog"
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 6 CHOP",
+   "bpm": 95,
+   "swing": 55,
+   "glide": false,
+   "lanes": {
+    "k": "X.x.......x..x..X.x.....x.......",
+    "s": "....X.......X.......X.....g.X...",
+    "c": "............x...............x...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 7 LAZY",
+   "bpm": 84,
+   "swing": 64,
+   "glide": false,
+   "lanes": {
+    "k": "X......x.......x.X......x..x....",
+    "s": "....X.....g.X.......X.....g.X...",
+    "h": "x..xx..xx..xx..xx..xx..xx..xx..x"
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 8 BREAK",
+   "bpm": 96,
+   "swing": 55,
+   "glide": false,
+   "lanes": {
+    "k": "X.x.......xx....X.x.......x.....",
+    "s": "....X..g.g..X.......X..g.g..X..g",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "......x...............x........."
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 9 RIDE",
+   "bpm": 90,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.....X......x.....x..",
+    "s": "....X.......X.......X.......X...",
+    "cr": "x...x...x...x...x...x...x...x...",
+    "h": "..x...x...x...x...x...x...x...x."
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 10 DARK",
+   "bpm": 82,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X.........x.....X.......x..x....",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "p2": "..............x...............x.",
+    "b": "0---------3-----0-------5--3----"
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 1 SWING RIDE",
+   "bpm": 120,
+   "swing": 66,
+   "glide": false,
+   "lanes": {
+    "cr": "x...x..xx...x..xx...x..xx...x..x",
+    "h": "....x.......x.......x.......x...",
+    "k": "g...g...g...g...g...g...g...g...",
+    "s": "......g.....g.........g......g.."
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 2 BRUSHES",
+   "bpm": 96,
+   "swing": 64,
+   "glide": false,
+   "lanes": {
+    "cr": "x...x..xx...x..xx...x..xx...x..x",
+    "h": "....x.......x.......x.......x...",
+    "p1": "oggoggoggoggoggooggoggoggoggoggo",
+    "k": "g.......g.......g.......g......."
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 3 BEBOP",
+   "bpm": 160,
+   "swing": 62,
+   "glide": false,
+   "lanes": {
+    "cr": "x...x..xx...x..xx...x..xx...x..x",
+    "h": "....x.......x.......x.......x...",
+    "s": "...g..x......g....g....x...g..g.",
+    "k": "..........x.............x......."
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 4 JAZZ HOP",
+   "bpm": 88,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.....X......x..x.....",
+    "s": "....X.......X.......X.......X...",
+    "cr": "x...x..xx...x..xx...x..xx...x..x",
+    "h": "....x.......x.......x.......x..."
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 5 BOSSA",
+   "bpm": 130,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x..x....x..x....x..x....x..x....",
+    "r": "x..x..x...x..x..x..x..x...x..x..",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 6 BALLAD",
+   "bpm": 70,
+   "swing": 66,
+   "glide": false,
+   "lanes": {
+    "cr": "x...x..xx...x..xx...x..xx...x..x",
+    "p1": "o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.",
+    "h": "....x.......x.......x.......x...",
+    "k": "g.......g.......g.......g......."
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 7 FUNK",
+   "bpm": 100,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x.....X..x....x.x.....",
+    "s": "....X..g.g..X..g....X..g.g..X..g",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "cr": "x.......x.......x.......x......."
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 8 SHUFFLE",
+   "bpm": 110,
+   "swing": 66,
+   "glide": false,
+   "lanes": {
+    "cr": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "k": "X.......x.......X.......x.......",
+    "s": "....X.......X.......X.......X..g"
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 9 LO-FI",
+   "bpm": 82,
+   "swing": 62,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x.....X.......x.x.....",
+    "s": "....X.......X.......X.......X...",
+    "cr": "x...x..xx...x..xx...x..xx...x..x",
+    "r": "......g.......g.......g.......g."
+   }
+  },
+  {
+   "style": "Jazz",
+   "name": "JAZZ 10 UPTEMPO",
+   "bpm": 150,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "cr": "x...x..xx...x..xx...x..xx...x..x",
+    "h": "....x.......x.......x.......x...",
+    "k": "g...g...g...g...g...g...g...g...",
+    "s": "..g.....g..x.......g....x..g...."
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 1 DILLA",
+   "bpm": 88,
+   "swing": 62,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.x...X.....x....x....",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg"
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 2 RIM KEEPER",
+   "bpm": 82,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X.........x..x..X.......x.......",
+    "r": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "p1": "ogogogogogogogogogogogogogogogog"
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 3 VOODOO",
+   "bpm": 78,
+   "swing": 64,
+   "glide": false,
+   "lanes": {
+    "k": "X......x...x....X.....x...x.....",
+    "s": "....X..g....X..g....X..g....X..g",
+    "h": "x..x..x.x..x..x.x..x..x.x..x..x."
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 4 LATE SNARE",
+   "bpm": 85,
+   "swing": 66,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x.....X.....x.....x...",
+    "s": ".....X.......X.......X.......X..",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 5 OPEN HAT",
+   "bpm": 90,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X..x......x.....X..x....x.x.....",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "......x.......x.......x.......x."
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 6 BROKEN",
+   "bpm": 92,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..x...x..x.....X..x...x.....x..",
+    "s": "....X.....g.X.......X.....g.X...",
+    "h": "xgxgxgxgxgxgxgxgxgxgxgxgxgxgxgxg"
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 7 SOFT CLAP",
+   "bpm": 80,
+   "swing": 62,
+   "glide": true,
+   "lanes": {
+    "k": "X.......x.x.....X.......x...x...",
+    "c": "....o.......o.......o.......o...",
+    "s": "....x.......x.......x.......x...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "b": "0-------5--3----0-------7--5----"
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 8 RIDE",
+   "bpm": 84,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.....X......x...x....",
+    "s": "....X.......X.......X.......X...",
+    "cr": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "r": "..g.......g.......g.......g....."
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 9 SHAKER POCKET",
+   "bpm": 86,
+   "swing": 64,
+   "glide": false,
+   "lanes": {
+    "p1": "xgogxgogxgogxgogxgogxgogxgogxgog",
+    "k": "X.....x...x.....X.....x.x.......",
+    "s": "....X.......X.......X.......X...",
+    "h": "..x...x...x...x...x...x...x...x."
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 10 SLOW JAM",
+   "bpm": 72,
+   "swing": 66,
+   "glide": false,
+   "lanes": {
+    "k": "X.......x..x....X.......x.......",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "..............x...............x.",
+    "p2": "...............x...............x"
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 1 MOTOWN",
+   "bpm": 104,
+   "swing": 52,
+   "glide": false,
+   "lanes": {
+    "k": "x.......x.x.....x.......x.x.....",
+    "s": "....X.......X.......X.......X...",
+    "p1": "....x.......x.......x.......x...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 2 70s GROOVE",
+   "bpm": 98,
+   "swing": 54,
+   "glide": false,
+   "lanes": {
+    "k": "X..x....x.x.....X..x....x..x....",
+    "s": "....X..g....X..g....X..g....X..g",
+    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
+    "o": "..............x...............x."
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 3 SLOW JAM",
+   "bpm": 68,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X.......x..x....X.......x..x....",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "r": "..............g...............g."
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 4 QUIET STORM",
+   "bpm": 76,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.....X......x........",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "cr": "x...............x..............."
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 5 BREAK SOUL",
+   "bpm": 100,
+   "swing": 55,
+   "glide": false,
+   "lanes": {
+    "k": "X.x.......xx.x..X.x.......x.....",
+    "s": "....X..g.g..X.......X..g.g..X..g",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 6 GOSPEL PUSH",
+   "bpm": 94,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x..x..X.....x...x.....",
+    "s": "....X.......X.......X.......X...",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "......x...............x........."
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 7 SHAKER",
+   "bpm": 88,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "p1": "ogogogogogogogogogogogogogogogog",
+    "k": "X......x..x.....X......x..x.x...",
+    "s": "....X.......X.......X.......X...",
+    "h": "x...x...x...x...x...x...x...x..."
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 8 PHILLY",
+   "bpm": 112,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x...x...x...x...x...x...x...x...",
+    "s": "....X.......X.......X.......X...",
+    "o": "..x...x...x...x...x...x...x...x.",
+    "h": "x...x...x...x...x...x...x...x..."
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 9 HALF TIME",
+   "bpm": 72,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X.......x.......X.....x.x.......",
+    "s": "........X...............X.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
+   }
+  },
+  {
+   "style": "Soul RnB",
+   "name": "SOUL RNB 10 RIDE",
+   "bpm": 92,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "cr": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "k": "X..x......x.....X..x......x.x...",
+    "s": "....X.......X.......X.......X..."
+   }
   }
  ]
 }

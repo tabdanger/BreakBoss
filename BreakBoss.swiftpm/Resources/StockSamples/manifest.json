@@ -76,38 +76,38 @@
     {
       "kitID": "80s-pop",
       "pad": 0,
-      "file": "bb_80s-pop_p00.wav",
-      "displayName": "80S POP KICK"
+      "file": "bb_vtg-fist-to-face-kick-0bfdcd_p00.wav",
+      "displayName": "FIST TO FACE KICK"
     },
     {
       "kitID": "80s-pop",
       "pad": 1,
-      "file": "bb_80s-pop_p01.wav",
-      "displayName": "80S POP SNARE"
+      "file": "bb_vtg-primary-snare-w-verb-0bfdcd_p01.wav",
+      "displayName": "PRIMARY SNARE W VERB"
     },
     {
       "kitID": "80s-pop",
       "pad": 2,
-      "file": "bb_80s-pop_p02.wav",
-      "displayName": "80S POP CLAP"
+      "file": "bb_vtg-sorcerer-clap-3-b27828_p02.wav",
+      "displayName": "SORCERER CLAP 3"
     },
     {
       "kitID": "80s-pop",
       "pad": 3,
-      "file": "bb_80s-pop_p03.wav",
-      "displayName": "80S POP RIM"
+      "file": "bb_vtg-forshitsandgiggles-snare-0bfdcd_p03.wav",
+      "displayName": "FORSHITSANDGIGGLES SNARE"
     },
     {
       "kitID": "80s-pop",
       "pad": 4,
-      "file": "bb_80s-pop_p04.wav",
-      "displayName": "80S POP HAT"
+      "file": "bb_vtg-shifted-hihat-819ba1_p04.wav",
+      "displayName": "SHIFTED HIHAT"
     },
     {
       "kitID": "80s-pop",
       "pad": 5,
-      "file": "bb_80s-pop_p05.wav",
-      "displayName": "80S POP OPEN HAT"
+      "file": "bb_vtg-pop-open-hihat-0bfdcd_p05.wav",
+      "displayName": "POP OPEN HIHAT"
     },
     {
       "kitID": "80s-pop",
@@ -118,14 +118,14 @@
     {
       "kitID": "80s-pop",
       "pad": 7,
-      "file": "bb_80s-pop_p07.wav",
-      "displayName": "80S POP PERC A"
+      "file": "bb_vtg-finesse-shaker-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER"
     },
     {
       "kitID": "80s-pop",
       "pad": 8,
-      "file": "bb_80s-pop_p08.wav",
-      "displayName": "80S POP PERC B"
+      "file": "bb_vtg-clicked-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "CLICKED REV HIHAT"
     },
     {
       "kitID": "80s-pop",
@@ -142,44 +142,44 @@
     {
       "kitID": "80s-pop",
       "pad": 11,
-      "file": "bb_80s-pop_p11.wav",
-      "displayName": "80S POP AIR CYMBAL"
+      "file": "bb_vtg-compressed-ride-43a62a_p11.wav",
+      "displayName": "COMPRESSED RIDE"
     },
     {
       "kitID": "90s-pop",
       "pad": 0,
-      "file": "bb_2000s-rnb_p00.wav",
-      "displayName": "90S POP KICK"
+      "file": "bb_vtg-whole-club-thump-kick-0bfdcd_p00.wav",
+      "displayName": "WHOLE CLUB THUMP KICK"
     },
     {
       "kitID": "90s-pop",
       "pad": 1,
-      "file": "bb_90s-pop_p01.wav",
-      "displayName": "90S POP SNARE"
+      "file": "bb_vtg-fun-snare-w-verb-0bfdcd_p01.wav",
+      "displayName": "FUN SNARE W VERB"
     },
     {
       "kitID": "90s-pop",
       "pad": 2,
-      "file": "bb_90s-pop_p02.wav",
-      "displayName": "90S POP CLAP"
+      "file": "bb_vtg-engulfed-clap-0bfdcd_p02.wav",
+      "displayName": "ENGULFED CLAP"
     },
     {
       "kitID": "90s-pop",
       "pad": 3,
-      "file": "bb_90s-pop_p03.wav",
-      "displayName": "90S POP RIM"
+      "file": "bb_vtg-pierce-snare-0bfdcd_p03.wav",
+      "displayName": "PIERCE SNARE"
     },
     {
       "kitID": "90s-pop",
       "pad": 4,
-      "file": "bb_90s-pop_p04.wav",
-      "displayName": "90S POP HAT"
+      "file": "bb_vtg-prism-hihat-819ba1_p04.wav",
+      "displayName": "PRISM HIHAT"
     },
     {
       "kitID": "90s-pop",
       "pad": 5,
-      "file": "bb_90s-pop_p05.wav",
-      "displayName": "90S POP OPEN HAT"
+      "file": "bb_vtg-throne-open-hihat-0bfdcd_p05.wav",
+      "displayName": "THRONE OPEN HIHAT"
     },
     {
       "kitID": "90s-pop",
@@ -190,14 +190,14 @@
     {
       "kitID": "90s-pop",
       "pad": 7,
-      "file": "bb_90s-pop_p07.wav",
-      "displayName": "90S POP PERC A"
+      "file": "bb_vtg-finesse-shaker-2-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER 2"
     },
     {
       "kitID": "90s-pop",
       "pad": 8,
-      "file": "bb_90s-pop_p08.wav",
-      "displayName": "90S POP PERC B"
+      "file": "bb_vtg-tripped-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "TRIPPED REV HIHAT"
     },
     {
       "kitID": "90s-pop",
@@ -214,8 +214,8 @@
     {
       "kitID": "90s-pop",
       "pad": 11,
-      "file": "bb_80s-pop_p11.wav",
-      "displayName": "90S POP AIR CYMBAL"
+      "file": "bb_vtg-trippy-ride-43a62a_p11.wav",
+      "displayName": "TRIPPY RIDE"
     },
     {
       "kitID": "afrobeats",
@@ -508,38 +508,38 @@
     {
       "kitID": "boom-bap",
       "pad": 0,
-      "file": "bb_vintage32-boom-bap_p00.wav",
-      "displayName": "BOOM BAP KICK"
+      "file": "bb_vtg-alchemy-kick-0bfdcd_p00.wav",
+      "displayName": "ALCHEMY KICK"
     },
     {
       "kitID": "boom-bap",
       "pad": 1,
-      "file": "bb_vintage32-boom-bap_p01.wav",
-      "displayName": "BOOM BAP SNARE"
+      "file": "bb_vtg-british-snare-0bfdcd_p01.wav",
+      "displayName": "BRITISH SNARE"
     },
     {
       "kitID": "boom-bap",
       "pad": 2,
-      "file": "bb_boom-bap_p02.wav",
-      "displayName": "BOOM BAP CLAP"
+      "file": "bb_vtg-engulfed-clap-0bfdcd_p02.wav",
+      "displayName": "ENGULFED CLAP"
     },
     {
       "kitID": "boom-bap",
       "pad": 3,
-      "file": "bb_vintage32-boom-bap_p03.wav",
-      "displayName": "BOOM BAP RIM"
+      "file": "bb_vtg-pierce-snare-0bfdcd_p03.wav",
+      "displayName": "PIERCE SNARE"
     },
     {
       "kitID": "boom-bap",
       "pad": 4,
-      "file": "bb_boom-bap_p04.wav",
-      "displayName": "BOOM BAP HAT"
+      "file": "bb_vtg-throne-hihat-0bfdcd_p04.wav",
+      "displayName": "THRONE HIHAT"
     },
     {
       "kitID": "boom-bap",
       "pad": 5,
-      "file": "bb_boom-bap_p05.wav",
-      "displayName": "BOOM BAP OPEN HAT"
+      "file": "bb_vtg-throne-open-hihat-0bfdcd_p05.wav",
+      "displayName": "THRONE OPEN HIHAT"
     },
     {
       "kitID": "boom-bap",
@@ -550,14 +550,14 @@
     {
       "kitID": "boom-bap",
       "pad": 7,
-      "file": "bb_boom-bap_p07.wav",
-      "displayName": "BOOM BAP PERC A"
+      "file": "bb_vtg-finesse-shaker-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER"
     },
     {
       "kitID": "boom-bap",
       "pad": 8,
-      "file": "bb_boom-bap_p08.wav",
-      "displayName": "BOOM BAP PERC B"
+      "file": "bb_vtg-tripped-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "TRIPPED REV HIHAT"
     },
     {
       "kitID": "boom-bap",
@@ -574,44 +574,44 @@
     {
       "kitID": "boom-bap",
       "pad": 11,
-      "file": "bb_boom-bap_p11.wav",
-      "displayName": "BOOM BAP AIR CYMBAL"
+      "file": "bb_vtg-compressed-ride-43a62a_p11.wav",
+      "displayName": "COMPRESSED RIDE"
     },
     {
       "kitID": "cole-world",
       "pad": 0,
-      "file": "bb_cole-world_p00.wav",
-      "displayName": "COLE WORLD KICK"
+      "file": "bb_vtg-shaped-kick-0bfdcd_p00.wav",
+      "displayName": "SHAPED KICK"
     },
     {
       "kitID": "cole-world",
       "pad": 1,
-      "file": "bb_cole-world_p01.wav",
-      "displayName": "COLE WORLD SNARE"
+      "file": "bb_vtg-idk-snare-4-0bfdcd_p01.wav",
+      "displayName": "IDK SNARE 4"
     },
     {
       "kitID": "cole-world",
       "pad": 2,
-      "file": "bb_cole-world_p02.wav",
-      "displayName": "COLE WORLD CLAP"
+      "file": "bb_vtg-hush-clap-0bfdcd_p02.wav",
+      "displayName": "HUSH CLAP"
     },
     {
       "kitID": "cole-world",
       "pad": 3,
-      "file": "bb_cole-world_p03.wav",
-      "displayName": "COLE WORLD RIM"
+      "file": "bb_vtg-forshitsandgiggles-snare-0bfdcd_p03.wav",
+      "displayName": "FORSHITSANDGIGGLES SNARE"
     },
     {
       "kitID": "cole-world",
       "pad": 4,
-      "file": "bb_cole-world_p04.wav",
-      "displayName": "COLE WORLD HAT"
+      "file": "bb_vtg-smither-hihat-2-0bfdcd_p04.wav",
+      "displayName": "SMITHER HIHAT 2"
     },
     {
       "kitID": "cole-world",
       "pad": 5,
-      "file": "bb_cole-world_p05.wav",
-      "displayName": "COLE WORLD OPEN HAT"
+      "file": "bb_vtg-pop-open-hihat-0bfdcd_p05.wav",
+      "displayName": "POP OPEN HIHAT"
     },
     {
       "kitID": "cole-world",
@@ -622,14 +622,14 @@
     {
       "kitID": "cole-world",
       "pad": 7,
-      "file": "bb_cole-world_p07.wav",
-      "displayName": "COLE WORLD PERC A"
+      "file": "bb_vtg-finesse-shaker-2-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER 2"
     },
     {
       "kitID": "cole-world",
       "pad": 8,
-      "file": "bb_cole-world_p08.wav",
-      "displayName": "COLE WORLD PERC B"
+      "file": "bb_vtg-tripped-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "TRIPPED REV HIHAT"
     },
     {
       "kitID": "cole-world",
@@ -646,8 +646,8 @@
     {
       "kitID": "cole-world",
       "pad": 11,
-      "file": "bb_cole-world_p11.wav",
-      "displayName": "COLE WORLD AIR CYMBAL"
+      "file": "bb_vtg-compressed-ride-43a62a_p11.wav",
+      "displayName": "COMPRESSED RIDE"
     },
     {
       "kitID": "dark-experimental",
@@ -724,38 +724,38 @@
     {
       "kitID": "dirty-soul",
       "pad": 0,
-      "file": "bb_vintage32-dirty-soul_p00.wav",
-      "displayName": "DIRTY SOUL KICK"
+      "file": "bb_vtg-heavyweight-kick-0c6096_p00.wav",
+      "displayName": "HEAVYWEIGHT KICK"
     },
     {
       "kitID": "dirty-soul",
       "pad": 1,
-      "file": "bb_vintage32-dirty-soul_p01.wav",
-      "displayName": "DIRTY SOUL SNARE"
+      "file": "bb_vtg-british-snare-2-0bfdcd_p01.wav",
+      "displayName": "BRITISH SNARE 2"
     },
     {
       "kitID": "dirty-soul",
       "pad": 2,
-      "file": "bb_dirty-soul_p02.wav",
-      "displayName": "DIRTY SOUL CLAP"
+      "file": "bb_vtg-sorcerer-clap-0bfdcd_p02.wav",
+      "displayName": "SORCERER CLAP"
     },
     {
       "kitID": "dirty-soul",
       "pad": 3,
-      "file": "bb_vintage32-dirty-soul_p03.wav",
-      "displayName": "DIRTY SOUL RIM"
+      "file": "bb_vtg-pierce-snare-0bfdcd_p03.wav",
+      "displayName": "PIERCE SNARE"
     },
     {
       "kitID": "dirty-soul",
       "pad": 4,
-      "file": "bb_dirty-soul_p04.wav",
-      "displayName": "DIRTY SOUL HAT"
+      "file": "bb_vtg-lowpitch-hihat-819ba1_p04.wav",
+      "displayName": "LOWPITCH HIHAT"
     },
     {
       "kitID": "dirty-soul",
       "pad": 5,
-      "file": "bb_dirty-soul_p05.wav",
-      "displayName": "DIRTY SOUL OPEN HAT"
+      "file": "bb_vtg-smither-open-hihat-b27828_p05.wav",
+      "displayName": "SMITHER OPEN HIHAT"
     },
     {
       "kitID": "dirty-soul",
@@ -766,14 +766,14 @@
     {
       "kitID": "dirty-soul",
       "pad": 7,
-      "file": "bb_dirty-soul_p07.wav",
-      "displayName": "DIRTY SOUL PERC A"
+      "file": "bb_vtg-finesse-shaker-2-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER 2"
     },
     {
       "kitID": "dirty-soul",
       "pad": 8,
-      "file": "bb_dirty-soul_p08.wav",
-      "displayName": "DIRTY SOUL PERC B"
+      "file": "bb_vtg-clicked-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "CLICKED REV HIHAT"
     },
     {
       "kitID": "dirty-soul",
@@ -790,8 +790,8 @@
     {
       "kitID": "dirty-soul",
       "pad": 11,
-      "file": "bb_dirty-soul_p11.wav",
-      "displayName": "DIRTY SOUL AIR CYMBAL"
+      "file": "bb_vtg-compressed-ride-a7b03d_p11.wav",
+      "displayName": "COMPRESSED RIDE"
     },
     {
       "kitID": "drum-mastery",
@@ -868,38 +868,38 @@
     {
       "kitID": "funk-break",
       "pad": 0,
-      "file": "bb_vintage32-funk-break_p00.wav",
-      "displayName": "FUNK BREAK KICK"
+      "file": "bb_vtg-timeless-kick-0bfdcd_p00.wav",
+      "displayName": "TIMELESS KICK"
     },
     {
       "kitID": "funk-break",
       "pad": 1,
-      "file": "bb_vintage32-funk-break_p01.wav",
-      "displayName": "FUNK BREAK SNARE"
+      "file": "bb_vtg-arriba-snare-0bfdcd_p01.wav",
+      "displayName": "ARRIBA SNARE"
     },
     {
       "kitID": "funk-break",
       "pad": 2,
-      "file": "bb_boom-bap_p02.wav",
-      "displayName": "FUNK BREAK CLAP"
+      "file": "bb_vtg-sorcerer-clap-0bfdcd_p02.wav",
+      "displayName": "SORCERER CLAP"
     },
     {
       "kitID": "funk-break",
       "pad": 3,
-      "file": "bb_vintage32-funk-break_p03.wav",
-      "displayName": "FUNK BREAK RIM"
+      "file": "bb_vtg-bell-rimshot-0bfdcd_p03.wav",
+      "displayName": "BELL RIMSHOT"
     },
     {
       "kitID": "funk-break",
       "pad": 4,
-      "file": "bb_boom-bap_p04.wav",
-      "displayName": "FUNK BREAK HAT"
+      "file": "bb_vtg-golden-hihat-0bfdcd_p04.wav",
+      "displayName": "GOLDEN HIHAT"
     },
     {
       "kitID": "funk-break",
       "pad": 5,
-      "file": "bb_boom-bap_p05.wav",
-      "displayName": "FUNK BREAK OPEN HAT"
+      "file": "bb_vtg-tripped-open-hihat-0bfdcd_p05.wav",
+      "displayName": "TRIPPED OPEN HIHAT"
     },
     {
       "kitID": "funk-break",
@@ -910,14 +910,14 @@
     {
       "kitID": "funk-break",
       "pad": 7,
-      "file": "bb_boom-bap_p07.wav",
-      "displayName": "FUNK BREAK PERC A"
+      "file": "bb_vtg-finesse-shaker-2-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER 2"
     },
     {
       "kitID": "funk-break",
       "pad": 8,
-      "file": "bb_boom-bap_p08.wav",
-      "displayName": "FUNK BREAK PERC B"
+      "file": "bb_vtg-clicked-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "CLICKED REV HIHAT"
     },
     {
       "kitID": "funk-break",
@@ -934,44 +934,44 @@
     {
       "kitID": "funk-break",
       "pad": 11,
-      "file": "bb_boom-bap_p11.wav",
-      "displayName": "FUNK BREAK AIR CYMBAL"
+      "file": "bb_vtg-trippy-ride-43a62a_p11.wav",
+      "displayName": "TRIPPY RIDE"
     },
     {
       "kitID": "gospel-chops",
       "pad": 0,
-      "file": "bb_cole-world_p00.wav",
-      "displayName": "GOSPEL CHOPS KICK"
+      "file": "bb_vtg-whole-club-thump-kick-0bfdcd_p00.wav",
+      "displayName": "WHOLE CLUB THUMP KICK"
     },
     {
       "kitID": "gospel-chops",
       "pad": 1,
-      "file": "bb_cole-world_p01.wav",
-      "displayName": "GOSPEL CHOPS SNARE"
+      "file": "bb_vtg-primary-snare-w-verb-0bfdcd_p01.wav",
+      "displayName": "PRIMARY SNARE W VERB"
     },
     {
       "kitID": "gospel-chops",
       "pad": 2,
-      "file": "bb_cole-world_p02.wav",
-      "displayName": "GOSPEL CHOPS CLAP"
+      "file": "bb_vtg-sorcerer-clap-3-b27828_p02.wav",
+      "displayName": "SORCERER CLAP 3"
     },
     {
       "kitID": "gospel-chops",
       "pad": 3,
-      "file": "bb_cole-world_p03.wav",
-      "displayName": "GOSPEL CHOPS RIM"
+      "file": "bb_vtg-bell-rimshot-0bfdcd_p03.wav",
+      "displayName": "BELL RIMSHOT"
     },
     {
       "kitID": "gospel-chops",
       "pad": 4,
-      "file": "bb_cole-world_p04.wav",
-      "displayName": "GOSPEL CHOPS HAT"
+      "file": "bb_vtg-clicked-hihat-0bfdcd_p04.wav",
+      "displayName": "CLICKED HIHAT"
     },
     {
       "kitID": "gospel-chops",
       "pad": 5,
-      "file": "bb_cole-world_p05.wav",
-      "displayName": "GOSPEL CHOPS OPEN HAT"
+      "file": "bb_vtg-clicked-open-hihat-0bfdcd_p05.wav",
+      "displayName": "CLICKED OPEN HIHAT"
     },
     {
       "kitID": "gospel-chops",
@@ -982,14 +982,14 @@
     {
       "kitID": "gospel-chops",
       "pad": 7,
-      "file": "bb_cole-world_p07.wav",
-      "displayName": "GOSPEL CHOPS PERC A"
+      "file": "bb_vtg-finesse-shaker-2-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER 2"
     },
     {
       "kitID": "gospel-chops",
       "pad": 8,
-      "file": "bb_cole-world_p08.wav",
-      "displayName": "GOSPEL CHOPS PERC B"
+      "file": "bb_vtg-pop-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "POP REV HIHAT"
     },
     {
       "kitID": "gospel-chops",
@@ -1006,44 +1006,44 @@
     {
       "kitID": "gospel-chops",
       "pad": 11,
-      "file": "bb_cole-world_p11.wav",
-      "displayName": "GOSPEL CHOPS AIR CYMBAL"
+      "file": "bb_vtg-compressed-ride-43a62a_p11.wav",
+      "displayName": "COMPRESSED RIDE"
     },
     {
       "kitID": "heavy-break",
       "pad": 0,
-      "file": "bb_heavy-break_p00.wav",
-      "displayName": "HEAVY BREAK KICK"
+      "file": "bb_vtg-wayy-more-thumpier-kick-0bfdcd_p00.wav",
+      "displayName": "WAYY MORE THUMPIER KICK"
     },
     {
       "kitID": "heavy-break",
       "pad": 1,
-      "file": "bb_heavy-break_p01.wav",
-      "displayName": "HEAVY BREAK SNARE"
+      "file": "bb_vtg-cahones-snare-3-7c3fdc_p01.wav",
+      "displayName": "CAHONES SNARE 3"
     },
     {
       "kitID": "heavy-break",
       "pad": 2,
-      "file": "bb_heavy-break_p02.wav",
-      "displayName": "HEAVY BREAK CLAP"
+      "file": "bb_vtg-trap-clap-snare-0bfdcd_p02.wav",
+      "displayName": "TRAP CLAP SNARE"
     },
     {
       "kitID": "heavy-break",
       "pad": 3,
-      "file": "bb_heavy-break_p03.wav",
-      "displayName": "HEAVY BREAK RIM"
+      "file": "bb_vtg-forshitsandgiggles-snare-0bfdcd_p03.wav",
+      "displayName": "FORSHITSANDGIGGLES SNARE"
     },
     {
       "kitID": "heavy-break",
       "pad": 4,
-      "file": "bb_heavy-break_p04.wav",
-      "displayName": "HEAVY BREAK HAT"
+      "file": "bb_vtg-tripped-hihat-0bfdcd_p04.wav",
+      "displayName": "TRIPPED HIHAT"
     },
     {
       "kitID": "heavy-break",
       "pad": 5,
-      "file": "bb_heavy-break_p05.wav",
-      "displayName": "HEAVY BREAK OPEN HAT"
+      "file": "bb_vtg-clicked-open-hihat-0bfdcd_p05.wav",
+      "displayName": "CLICKED OPEN HIHAT"
     },
     {
       "kitID": "heavy-break",
@@ -1054,14 +1054,14 @@
     {
       "kitID": "heavy-break",
       "pad": 7,
-      "file": "bb_heavy-break_p07.wav",
-      "displayName": "HEAVY BREAK PERC A"
+      "file": "bb_vtg-pop-rev-hihat-0bfdcd_p07.wav",
+      "displayName": "POP REV HIHAT"
     },
     {
       "kitID": "heavy-break",
       "pad": 8,
-      "file": "bb_heavy-break_p08.wav",
-      "displayName": "HEAVY BREAK PERC B"
+      "file": "bb_vtg-tripped-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "TRIPPED REV HIHAT"
     },
     {
       "kitID": "heavy-break",
@@ -1078,44 +1078,44 @@
     {
       "kitID": "heavy-break",
       "pad": 11,
-      "file": "bb_boom-bap_p11.wav",
-      "displayName": "HEAVY BREAK AIR CYMBAL"
+      "file": "bb_vtg-compressed-ride-43a62a_p11.wav",
+      "displayName": "COMPRESSED RIDE"
     },
     {
       "kitID": "live-pop",
       "pad": 0,
-      "file": "bb_amapiano_p00.wav",
-      "displayName": "LIVE POP KICK"
+      "file": "bb_vtg-shaped-kick-b-0bfdcd_p00.wav",
+      "displayName": "SHAPED KICK"
     },
     {
       "kitID": "live-pop",
       "pad": 1,
-      "file": "bb_live-pop_p01.wav",
-      "displayName": "LIVE POP SNARE"
+      "file": "bb_vtg-british-snare-0bfdcd_p01.wav",
+      "displayName": "BRITISH SNARE"
     },
     {
       "kitID": "live-pop",
       "pad": 2,
-      "file": "bb_live-pop_p02.wav",
-      "displayName": "LIVE POP CLAP"
+      "file": "bb_vtg-hush-clap-0bfdcd_p02.wav",
+      "displayName": "HUSH CLAP"
     },
     {
       "kitID": "live-pop",
       "pad": 3,
-      "file": "bb_live-pop_p03.wav",
-      "displayName": "LIVE POP RIM"
+      "file": "bb_vtg-bell-rimshot-0bfdcd_p03.wav",
+      "displayName": "BELL RIMSHOT"
     },
     {
       "kitID": "live-pop",
       "pad": 4,
-      "file": "bb_live-pop_p04.wav",
-      "displayName": "LIVE POP HAT"
+      "file": "bb_vtg-golden-hihat-0bfdcd_p04.wav",
+      "displayName": "GOLDEN HIHAT"
     },
     {
       "kitID": "live-pop",
       "pad": 5,
-      "file": "bb_live-pop_p05.wav",
-      "displayName": "LIVE POP OPEN HAT"
+      "file": "bb_vtg-tripped-open-hihat-0bfdcd_p05.wav",
+      "displayName": "TRIPPED OPEN HIHAT"
     },
     {
       "kitID": "live-pop",
@@ -1126,14 +1126,14 @@
     {
       "kitID": "live-pop",
       "pad": 7,
-      "file": "bb_live-pop_p07.wav",
-      "displayName": "LIVE POP PERC A"
+      "file": "bb_vtg-finesse-shaker-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER"
     },
     {
       "kitID": "live-pop",
       "pad": 8,
-      "file": "bb_live-pop_p08.wav",
-      "displayName": "LIVE POP PERC B"
+      "file": "bb_vtg-pop-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "POP REV HIHAT"
     },
     {
       "kitID": "live-pop",
@@ -1150,44 +1150,44 @@
     {
       "kitID": "live-pop",
       "pad": 11,
-      "file": "bb_80s-pop_p11.wav",
-      "displayName": "LIVE POP AIR CYMBAL"
+      "file": "bb_vtg-compressed-ride-43a62a_p11.wav",
+      "displayName": "COMPRESSED RIDE"
     },
     {
       "kitID": "live-soul",
       "pad": 0,
-      "file": "bb_vintage32-live-soul_p00.wav",
-      "displayName": "LIVE SOUL KICK"
+      "file": "bb_vtg-mega-kick-2-0bfdcd_p00.wav",
+      "displayName": "MEGA KICK 2"
     },
     {
       "kitID": "live-soul",
       "pad": 1,
-      "file": "bb_vintage32-live-soul_p01.wav",
-      "displayName": "LIVE SOUL SNARE"
+      "file": "bb_vtg-depth-snare-4dc1e3_p01.wav",
+      "displayName": "DEPTH SNARE"
     },
     {
       "kitID": "live-soul",
       "pad": 2,
-      "file": "bb_cole-world_p02.wav",
-      "displayName": "LIVE SOUL CLAP"
+      "file": "bb_vtg-spiri-clap-snare-0bfdcd_p02.wav",
+      "displayName": "SPIRI CLAP SNARE"
     },
     {
       "kitID": "live-soul",
       "pad": 3,
-      "file": "bb_vintage32-live-soul_p03.wav",
-      "displayName": "LIVE SOUL RIM"
+      "file": "bb_vtg-bell-rimshot-0bfdcd_p03.wav",
+      "displayName": "BELL RIMSHOT"
     },
     {
       "kitID": "live-soul",
       "pad": 4,
-      "file": "bb_cole-world_p04.wav",
-      "displayName": "LIVE SOUL HAT"
+      "file": "bb_vtg-throne-hihat-0bfdcd_p04.wav",
+      "displayName": "THRONE HIHAT"
     },
     {
       "kitID": "live-soul",
       "pad": 5,
-      "file": "bb_cole-world_p05.wav",
-      "displayName": "LIVE SOUL OPEN HAT"
+      "file": "bb_vtg-tripped-open-hihat-0bfdcd_p05.wav",
+      "displayName": "TRIPPED OPEN HIHAT"
     },
     {
       "kitID": "live-soul",
@@ -1198,14 +1198,14 @@
     {
       "kitID": "live-soul",
       "pad": 7,
-      "file": "bb_cole-world_p07.wav",
-      "displayName": "LIVE SOUL PERC A"
+      "file": "bb_vtg-finesse-shaker-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER"
     },
     {
       "kitID": "live-soul",
       "pad": 8,
-      "file": "bb_cole-world_p08.wav",
-      "displayName": "LIVE SOUL PERC B"
+      "file": "bb_vtg-tripped-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "TRIPPED REV HIHAT"
     },
     {
       "kitID": "live-soul",
@@ -1222,44 +1222,44 @@
     {
       "kitID": "live-soul",
       "pad": 11,
-      "file": "bb_cole-world_p11.wav",
-      "displayName": "LIVE SOUL AIR CYMBAL"
+      "file": "bb_vtg-trippy-ride-43a62a_p11.wav",
+      "displayName": "TRIPPY RIDE"
     },
     {
       "kitID": "lo-fi",
       "pad": 0,
-      "file": "bb_lo-fi_p00.wav",
-      "displayName": "LO FI KICK"
+      "file": "bb_vtg-heavyweight-kick-c57dca_p00.wav",
+      "displayName": "HEAVYWEIGHT KICK"
     },
     {
       "kitID": "lo-fi",
       "pad": 1,
-      "file": "bb_lo-fi_p01.wav",
-      "displayName": "LO FI SNARE"
+      "file": "bb_vtg-depth-snare-af56ca_p01.wav",
+      "displayName": "DEPTH SNARE"
     },
     {
       "kitID": "lo-fi",
       "pad": 2,
-      "file": "bb_lo-fi_p02.wav",
-      "displayName": "LO FI CLAP"
+      "file": "bb_vtg-sorcerer-clap-af56ca_p02.wav",
+      "displayName": "SORCERER CLAP"
     },
     {
       "kitID": "lo-fi",
       "pad": 3,
-      "file": "bb_lo-fi_p03.wav",
-      "displayName": "LO FI RIM"
+      "file": "bb_vtg-forshitsandgiggles-snare-af56ca_p03.wav",
+      "displayName": "FORSHITSANDGIGGLES SNARE"
     },
     {
       "kitID": "lo-fi",
       "pad": 4,
-      "file": "bb_lo-fi_p04.wav",
-      "displayName": "LO FI HAT"
+      "file": "bb_vtg-lowpitch-hihat-c7503c_p04.wav",
+      "displayName": "LOWPITCH HIHAT"
     },
     {
       "kitID": "lo-fi",
       "pad": 5,
-      "file": "bb_lo-fi_p05.wav",
-      "displayName": "LO FI OPEN HAT"
+      "file": "bb_vtg-smither-open-hihat-9b737c_p05.wav",
+      "displayName": "SMITHER OPEN HIHAT"
     },
     {
       "kitID": "lo-fi",
@@ -1270,14 +1270,14 @@
     {
       "kitID": "lo-fi",
       "pad": 7,
-      "file": "bb_lo-fi_p07.wav",
-      "displayName": "LO FI PERC A"
+      "file": "bb_vtg-finesse-shaker-ff9d59_p07.wav",
+      "displayName": "FINESSE SHAKER"
     },
     {
       "kitID": "lo-fi",
       "pad": 8,
-      "file": "bb_lo-fi_p08.wav",
-      "displayName": "LO FI PERC B"
+      "file": "bb_vtg-clicked-rev-hihat-68627e_p08.wav",
+      "displayName": "CLICKED REV HIHAT"
     },
     {
       "kitID": "lo-fi",
@@ -1294,44 +1294,44 @@
     {
       "kitID": "lo-fi",
       "pad": 11,
-      "file": "bb_dirty-soul_p11.wav",
-      "displayName": "LO FI AIR CYMBAL"
+      "file": "bb_vtg-trippy-ride-090c57_p11.wav",
+      "displayName": "TRIPPY RIDE"
     },
     {
       "kitID": "loose-break",
       "pad": 0,
-      "file": "bb_vintage32-loose-break_p00.wav",
-      "displayName": "LOOSE BREAK KICK"
+      "file": "bb_vtg-beads-kick-0bfdcd_p00.wav",
+      "displayName": "BEADS KICK"
     },
     {
       "kitID": "loose-break",
       "pad": 1,
-      "file": "bb_vintage32-loose-break_p01.wav",
-      "displayName": "LOOSE BREAK SNARE"
+      "file": "bb_vtg-trapknock-snare-0bfdcd_p01.wav",
+      "displayName": "TRAPKNOCK SNARE"
     },
     {
       "kitID": "loose-break",
       "pad": 2,
-      "file": "bb_loose-break_p02.wav",
-      "displayName": "LOOSE BREAK CLAP"
+      "file": "bb_vtg-hush-clap-0bfdcd_p02.wav",
+      "displayName": "HUSH CLAP"
     },
     {
       "kitID": "loose-break",
       "pad": 3,
-      "file": "bb_vintage32-loose-break_p03.wav",
-      "displayName": "LOOSE BREAK RIM"
+      "file": "bb_vtg-pierce-snare-0bfdcd_p03.wav",
+      "displayName": "PIERCE SNARE"
     },
     {
       "kitID": "loose-break",
       "pad": 4,
-      "file": "bb_loose-break_p04.wav",
-      "displayName": "LOOSE BREAK HAT"
+      "file": "bb_vtg-clicked-hihat-0bfdcd_p04.wav",
+      "displayName": "CLICKED HIHAT"
     },
     {
       "kitID": "loose-break",
       "pad": 5,
-      "file": "bb_loose-break_p05.wav",
-      "displayName": "LOOSE BREAK OPEN HAT"
+      "file": "bb_vtg-pop-open-hihat-0bfdcd_p05.wav",
+      "displayName": "POP OPEN HIHAT"
     },
     {
       "kitID": "loose-break",
@@ -1342,14 +1342,14 @@
     {
       "kitID": "loose-break",
       "pad": 7,
-      "file": "bb_loose-break_p07.wav",
-      "displayName": "LOOSE BREAK PERC A"
+      "file": "bb_vtg-finesse-shaker-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER"
     },
     {
       "kitID": "loose-break",
       "pad": 8,
-      "file": "bb_loose-break_p08.wav",
-      "displayName": "LOOSE BREAK PERC B"
+      "file": "bb_vtg-clicked-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "CLICKED REV HIHAT"
     },
     {
       "kitID": "loose-break",
@@ -1366,8 +1366,8 @@
     {
       "kitID": "loose-break",
       "pad": 11,
-      "file": "bb_boom-bap_p11.wav",
-      "displayName": "LOOSE BREAK AIR CYMBAL"
+      "file": "bb_vtg-trippy-ride-43a62a_p11.wav",
+      "displayName": "TRIPPY RIDE"
     },
     {
       "kitID": "memphis-trap",
@@ -1588,38 +1588,38 @@
     {
       "kitID": "neo-soul",
       "pad": 0,
-      "file": "bb_amapiano_p00.wav",
-      "displayName": "NEO SOUL KICK"
+      "file": "bb_vtg-quiet-power-kick-0bfdcd_p00.wav",
+      "displayName": "QUIET POWER KICK"
     },
     {
       "kitID": "neo-soul",
       "pad": 1,
-      "file": "bb_neo-soul_p01.wav",
-      "displayName": "NEO SOUL SNARE"
+      "file": "bb_vtg-depth-snare-0bfdcd_p01.wav",
+      "displayName": "DEPTH SNARE"
     },
     {
       "kitID": "neo-soul",
       "pad": 2,
-      "file": "bb_neo-soul_p02.wav",
-      "displayName": "NEO SOUL CLAP"
+      "file": "bb_vtg-spiri-clap-snare-0bfdcd_p02.wav",
+      "displayName": "SPIRI CLAP SNARE"
     },
     {
       "kitID": "neo-soul",
       "pad": 3,
-      "file": "bb_neo-soul_p03.wav",
-      "displayName": "NEO SOUL RIM"
+      "file": "bb_vtg-bell-rimshot-0bfdcd_p03.wav",
+      "displayName": "BELL RIMSHOT"
     },
     {
       "kitID": "neo-soul",
       "pad": 4,
-      "file": "bb_neo-soul_p04.wav",
-      "displayName": "NEO SOUL HAT"
+      "file": "bb_vtg-lowpitch-hihat-819ba1_p04.wav",
+      "displayName": "LOWPITCH HIHAT"
     },
     {
       "kitID": "neo-soul",
       "pad": 5,
-      "file": "bb_neo-soul_p05.wav",
-      "displayName": "NEO SOUL OPEN HAT"
+      "file": "bb_vtg-smither-open-hihat-b27828_p05.wav",
+      "displayName": "SMITHER OPEN HIHAT"
     },
     {
       "kitID": "neo-soul",
@@ -1630,14 +1630,14 @@
     {
       "kitID": "neo-soul",
       "pad": 7,
-      "file": "bb_neo-soul_p07.wav",
-      "displayName": "NEO SOUL PERC A"
+      "file": "bb_vtg-finesse-shaker-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER"
     },
     {
       "kitID": "neo-soul",
       "pad": 8,
-      "file": "bb_neo-soul_p08.wav",
-      "displayName": "NEO SOUL PERC B"
+      "file": "bb_vtg-clicked-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "CLICKED REV HIHAT"
     },
     {
       "kitID": "neo-soul",
@@ -1654,8 +1654,8 @@
     {
       "kitID": "neo-soul",
       "pad": 11,
-      "file": "bb_cole-world_p11.wav",
-      "displayName": "NEO SOUL AIR CYMBAL"
+      "file": "bb_vtg-trippy-ride-43a62a_p11.wav",
+      "displayName": "TRIPPY RIDE"
     },
     {
       "kitID": "perc-loops",
@@ -2092,38 +2092,38 @@
     {
       "kitID": "vintage-rnb",
       "pad": 0,
-      "file": "bb_vintage32-vintage-rnb_p00.wav",
-      "displayName": "VINTAGE RNB KICK"
+      "file": "bb_vtg-pop-kick-0bfdcd_p00.wav",
+      "displayName": "POP KICK"
     },
     {
       "kitID": "vintage-rnb",
       "pad": 1,
-      "file": "bb_vintage32-vintage-rnb_p01.wav",
-      "displayName": "VINTAGE RNB SNARE"
+      "file": "bb_vtg-waves-snare-0bfdcd_p01.wav",
+      "displayName": "WAVES SNARE"
     },
     {
       "kitID": "vintage-rnb",
       "pad": 2,
-      "file": "bb_vintage-rnb_p02.wav",
-      "displayName": "VINTAGE RNB CLAP"
+      "file": "bb_vtg-soft-metal-clap-1939b8_p02.wav",
+      "displayName": "SOFT METAL CLAP"
     },
     {
       "kitID": "vintage-rnb",
       "pad": 3,
-      "file": "bb_vintage32-vintage-rnb_p03.wav",
-      "displayName": "VINTAGE RNB RIM"
+      "file": "bb_vtg-bell-rimshot-0bfdcd_p03.wav",
+      "displayName": "BELL RIMSHOT"
     },
     {
       "kitID": "vintage-rnb",
       "pad": 4,
-      "file": "bb_vintage-rnb_p04.wav",
-      "displayName": "VINTAGE RNB HAT"
+      "file": "bb_vtg-golden-hihat-0bfdcd_p04.wav",
+      "displayName": "GOLDEN HIHAT"
     },
     {
       "kitID": "vintage-rnb",
       "pad": 5,
-      "file": "bb_vintage-rnb_p05.wav",
-      "displayName": "VINTAGE RNB OPEN HAT"
+      "file": "bb_vtg-throne-open-hihat-0bfdcd_p05.wav",
+      "displayName": "THRONE OPEN HIHAT"
     },
     {
       "kitID": "vintage-rnb",
@@ -2134,14 +2134,14 @@
     {
       "kitID": "vintage-rnb",
       "pad": 7,
-      "file": "bb_vintage-rnb_p07.wav",
-      "displayName": "VINTAGE RNB PERC A"
+      "file": "bb_vtg-finesse-shaker-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER"
     },
     {
       "kitID": "vintage-rnb",
       "pad": 8,
-      "file": "bb_vintage-rnb_p08.wav",
-      "displayName": "VINTAGE RNB PERC B"
+      "file": "bb_vtg-pop-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "POP REV HIHAT"
     },
     {
       "kitID": "vintage-rnb",
@@ -2158,44 +2158,44 @@
     {
       "kitID": "vintage-rnb",
       "pad": 11,
-      "file": "bb_cole-world_p11.wav",
-      "displayName": "VINTAGE RNB AIR CYMBAL"
+      "file": "bb_vtg-trippy-ride-43a62a_p11.wav",
+      "displayName": "TRIPPY RIDE"
     },
     {
       "kitID": "west-90s",
       "pad": 0,
-      "file": "bb_loose-break_p00.wav",
-      "displayName": "WEST 90S KICK"
+      "file": "bb_vtg-cheat-code-kick-0bfdcd_p00.wav",
+      "displayName": "CHEAT CODE KICK"
     },
     {
       "kitID": "west-90s",
       "pad": 1,
-      "file": "bb_loose-break_p01.wav",
-      "displayName": "WEST 90S SNARE"
+      "file": "bb_vtg-trapknock-snare-2-0bfdcd_p01.wav",
+      "displayName": "TRAPKNOCK SNARE 2"
     },
     {
       "kitID": "west-90s",
       "pad": 2,
-      "file": "bb_loose-break_p02.wav",
-      "displayName": "WEST 90S CLAP"
+      "file": "bb_vtg-sorcerer-clap-0bfdcd_p02.wav",
+      "displayName": "SORCERER CLAP"
     },
     {
       "kitID": "west-90s",
       "pad": 3,
-      "file": "bb_loose-break_p03.wav",
-      "displayName": "WEST 90S RIM"
+      "file": "bb_vtg-bell-rimshot-0bfdcd_p03.wav",
+      "displayName": "BELL RIMSHOT"
     },
     {
       "kitID": "west-90s",
       "pad": 4,
-      "file": "bb_loose-break_p04.wav",
-      "displayName": "WEST 90S HAT"
+      "file": "bb_vtg-prism-hihat-819ba1_p04.wav",
+      "displayName": "PRISM HIHAT"
     },
     {
       "kitID": "west-90s",
       "pad": 5,
-      "file": "bb_loose-break_p05.wav",
-      "displayName": "WEST 90S OPEN HAT"
+      "file": "bb_vtg-throne-open-hihat-0bfdcd_p05.wav",
+      "displayName": "THRONE OPEN HIHAT"
     },
     {
       "kitID": "west-90s",
@@ -2206,14 +2206,14 @@
     {
       "kitID": "west-90s",
       "pad": 7,
-      "file": "bb_loose-break_p07.wav",
-      "displayName": "WEST 90S PERC A"
+      "file": "bb_vtg-finesse-shaker-2-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER 2"
     },
     {
       "kitID": "west-90s",
       "pad": 8,
-      "file": "bb_loose-break_p08.wav",
-      "displayName": "WEST 90S PERC B"
+      "file": "bb_vtg-pop-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "POP REV HIHAT"
     },
     {
       "kitID": "west-90s",
@@ -2230,8 +2230,8 @@
     {
       "kitID": "west-90s",
       "pad": 11,
-      "file": "bb_boom-bap_p11.wav",
-      "displayName": "WEST 90S AIR CYMBAL"
+      "file": "bb_vtg-compressed-ride-43a62a_p11.wav",
+      "displayName": "COMPRESSED RIDE"
     },
     {
       "kitID": "west-bounce",
@@ -2308,38 +2308,38 @@
     {
       "kitID": "west-end",
       "pad": 0,
-      "file": "bb_loose-break_p00.wav",
-      "displayName": "WEST END KICK"
+      "file": "bb_vtg-fist-to-face-kick-0bfdcd_p00.wav",
+      "displayName": "FIST TO FACE KICK"
     },
     {
       "kitID": "west-end",
       "pad": 1,
-      "file": "bb_loose-break_p01.wav",
-      "displayName": "WEST END SNARE"
+      "file": "bb_vtg-alchemy-snare-0bfdcd_p01.wav",
+      "displayName": "ALCHEMY SNARE"
     },
     {
       "kitID": "west-end",
       "pad": 2,
-      "file": "bb_loose-break_p02.wav",
-      "displayName": "WEST END CLAP"
+      "file": "bb_vtg-engulfed-clap-0bfdcd_p02.wav",
+      "displayName": "ENGULFED CLAP"
     },
     {
       "kitID": "west-end",
       "pad": 3,
-      "file": "bb_loose-break_p03.wav",
-      "displayName": "WEST END RIM"
+      "file": "bb_vtg-pierce-snare-0bfdcd_p03.wav",
+      "displayName": "PIERCE SNARE"
     },
     {
       "kitID": "west-end",
       "pad": 4,
-      "file": "bb_loose-break_p04.wav",
-      "displayName": "WEST END HAT"
+      "file": "bb_vtg-shifted-hihat-819ba1_p04.wav",
+      "displayName": "SHIFTED HIHAT"
     },
     {
       "kitID": "west-end",
       "pad": 5,
-      "file": "bb_loose-break_p05.wav",
-      "displayName": "WEST END OPEN HAT"
+      "file": "bb_vtg-tripped-open-hihat-0bfdcd_p05.wav",
+      "displayName": "TRIPPED OPEN HIHAT"
     },
     {
       "kitID": "west-end",
@@ -2350,14 +2350,14 @@
     {
       "kitID": "west-end",
       "pad": 7,
-      "file": "bb_loose-break_p07.wav",
-      "displayName": "WEST END PERC A"
+      "file": "bb_vtg-finesse-shaker-a7b203_p07.wav",
+      "displayName": "FINESSE SHAKER"
     },
     {
       "kitID": "west-end",
       "pad": 8,
-      "file": "bb_loose-break_p08.wav",
-      "displayName": "WEST END PERC B"
+      "file": "bb_vtg-tripped-rev-hihat-0bfdcd_p08.wav",
+      "displayName": "TRIPPED REV HIHAT"
     },
     {
       "kitID": "west-end",
@@ -2374,8 +2374,8 @@
     {
       "kitID": "west-end",
       "pad": 11,
-      "file": "bb_boom-bap_p11.wav",
-      "displayName": "WEST END AIR CYMBAL"
+      "file": "bb_vtg-compressed-ride-43a62a_p11.wav",
+      "displayName": "COMPRESSED RIDE"
     },
     {
       "kitID": "world-latin",
