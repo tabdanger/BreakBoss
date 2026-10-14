@@ -623,8 +623,17 @@ final class KnockController: ObservableObject {
 
     /// PRESETS: load a pattern (and its tempo and swing). Sounds, mode and knobs stay.
     func loadPatternPreset(_ preset: PatternPreset) {
-        restore(preset.applying(to: state))
+        restore(preset.applying(to: state), keepPlaying: true)   // the beat carries on with the new pattern
         readout = Readout(title: "PATTERN", value: preset.name, time: Date())
+    }
+
+    // MARK: Snap to scale (piano roll)
+
+    func setScale(root: Int? = nil, name: String? = nil, snap: Bool? = nil) {
+        if let root { state.scaleRoot = ((root % 12) + 12) % 12 }
+        if let name { state.scaleName = name; if snap == nil { state.snapToScale = true } }   // picking a scale turns snap on, like FL
+        if let snap { state.snapToScale = snap }
+        scheduleSave()
     }
 
     // MARK: Randomize
@@ -672,7 +681,7 @@ final class KnockController: ObservableObject {
         var s = preset.state
         s.midiMap = state.midiMap          // the MIDI controller setup isn't part of a sound preset
         s.midiCustomNotes = state.midiCustomNotes
-        restore(s)
+        restore(s, keepPlaying: true)
         readout = Readout(title: "PRESET", value: preset.state.presetName, time: Date())
     }
 
@@ -690,9 +699,10 @@ final class KnockController: ObservableObject {
         restore(s)
     }
 
-    func restore(_ s: KnockState) {
+    /// keepPlaying: switching presets swaps the pattern under the running transport instead of stopping it.
+    func restore(_ s: KnockState, keepPlaying: Bool = false) {
         let s = s.normalized()
-        engine.send(KEvent(kind: .allOff))
+        if !keepPlaying { engine.send(KEvent(kind: .allOff)) }
         state = s
         pushAllToEngine()
         rebuildKit()

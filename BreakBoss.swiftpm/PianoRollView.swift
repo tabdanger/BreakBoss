@@ -75,6 +75,18 @@ struct PianoRollView: View {
                     Button { redo() } label: { Image(systemName: "arrow.uturn.forward") }.disabled(redoStack.isEmpty)
                     Text("SNAP 1/\(snap)").foregroundColor(DrumRollStyle.green)
                         .bbMenu(title: "Snap", width: 200) { [4, 8, 16, 32, 64].map { d in BBMenuItem.item("1/\(d)", checked: snap == d) { snap = d } } }
+                    Text("KEY \(MusicScale.noteNames[controller.scaleRoot])").foregroundColor(DrumRollStyle.green)
+                        .bbMenu(title: "Key", width: 160) {
+                            MusicScale.noteNames.enumerated().map { i, n in BBMenuItem.item(n, checked: controller.scaleRoot == i) { controller.setScale(root: i) } }
+                        }
+                    Text(controller.scale.name.uppercased()).foregroundColor(DrumRollStyle.green).lineLimit(1)
+                        .bbMenu(title: "Scale", width: 260) { scaleMenu() }
+                    Button { controller.setScale(snap: !controller.snapToScale) } label: {
+                        Text(controller.snapToScale ? "SCALE SNAP ON" : "SCALE SNAP OFF")
+                            .foregroundColor(controller.snapToScale ? .black : DrumRollStyle.green)
+                            .padding(.horizontal, 6).padding(.vertical, 3)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(controller.snapToScale ? DrumRollStyle.green : Color.clear))
+                    }
                 }
                 ToolbarItemGroup(placement: .confirmationAction) {
                     Button { page = max(0, page - 1) } label: { Image(systemName: "chevron.left") }.disabled(page == 0)
@@ -88,10 +100,42 @@ struct PianoRollView: View {
         .bbMenuHost()
     }
 
+    // MARK: Scale
+
+    private func scaleMenu() -> [BBMenuItem] {
+        var items = MusicScale.all.map { sc in
+            BBMenuItem.item(sc.name, checked: controller.scale.name == sc.name) { controller.setScale(name: sc.name) }
+        }
+        items.append(.header("Notes already drawn"))
+        items.append(BBMenuItem.item("Fit this channel's notes to the scale", icon: "tuningfork") { fitToScale() })
+        return items
+    }
+
+    /// FL's "snap notes to scale": moves every note of this channel to the nearest scale note.
+    private func fitToScale() {
+        let base = controller.baseNote(pad: pad)
+        var p = stored
+        for i in p.events.indices where Int(p.events[i].pad) == pad {
+            let n = controller.scale.snap(base + Int(p.events[i].semis.rounded()), root: controller.scaleRoot)
+            p.events[i].semis = Float(n - base).clamped(-12, Float(topSemis))
+        }
+        commit(p)
+    }
+
     // MARK: Drawing
 
     private func y(_ semis: Float, _ rowH: CGFloat) -> CGFloat { CGFloat(Float(topSemis) - semis.rounded()) * rowH }
-    private func semisAt(_ y: CGFloat, _ rowH: CGFloat) -> Float { Float(topSemis - Int(y / rowH)).clamped(-12, Float(topSemis)) }
+    private func semisAt(_ y: CGFloat, _ rowH: CGFloat) -> Float { inKey(Float(topSemis - Int(y / rowH))) }
+    /// SNAP TO SCALE: the nearest pitch in the chosen key and scale (when snap is on), kept on the grid.
+    private func inKey(_ semis: Float) -> Float {
+        let s = semis.clamped(-12, Float(topSemis))
+        let snapped = controller.scaleSnapped(s, pad: pad)
+        if snapped >= -12 && snapped <= Float(topSemis) { return snapped }
+        return controller.scaleSnapped(s + (snapped < -12 ? 1 : -1), pad: pad).clamped(-12, Float(topSemis))
+    }
+    private func note(_ semis: Int) -> Int { controller.baseNote(pad: pad) + semis }
+    private func inScale(_ semis: Int) -> Bool { controller.scale.contains(note(semis), root: controller.scaleRoot) }
+    private func isRoot(_ semis: Int) -> Bool { (((note(semis) - controller.scaleRoot) % 12) + 12) % 12 == 0 }
     private func x(_ t: Int32, _ w: CGFloat) -> CGFloat { CGFloat(t - pageStart) / CGFloat(pageTicks) * w }
     private func tickAt(_ x: CGFloat, _ w: CGFloat) -> Int32 { pageStart + Int32((x / w * CGFloat(pageTicks)).rounded(.down)) }
     private func snapped(_ t: Int32) -> Int32 { max(0, min((t / grid) * grid, max(pattern.lengthTicks, 1) - 1)) }
@@ -104,13 +148,17 @@ struct PianoRollView: View {
         VStack(spacing: 0) {
             ForEach(0..<rows, id: \.self) { r in
                 let semis = topSemis - r
-                let black = [1, 3, 6, 8, 10].contains(((semis % 12) + 12) % 12)
+                let n = note(semis)
+                let black = [1, 3, 6, 8, 10].contains(((n % 12) + 12) % 12)
+                let out = controller.snapToScale && !inScale(semis)
                 Button { controller.auditionPad(pad, velocity: lastVelocity, semis: Float(semis)) } label: {
-                    Text(semis == 0 ? "0" : semis % 12 == 0 ? "\(semis > 0 ? "+" : "")\(semis)" : "")
-                        .font(.system(size: 9, design: .monospaced))
+                    // Real note names (C2, F#1 …) so the 808 can be tuned to the song's key.
+                    Text(rowH >= 15 || n % 12 == 0 ? MusicScale.noteName(n) : "")
+                        .font(.system(size: 9, weight: isRoot(semis) && controller.snapToScale ? .bold : .regular, design: .monospaced))
                         .foregroundColor(black ? .white : .black)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing).padding(.trailing, 4)
                         .background(black ? Color(white: 0.12) : Color(white: semis == 0 ? 0.95 : 0.82))
+                        .overlay(controller.snapToScale && isRoot(semis) ? S.green.opacity(0.35) : out ? Color.black.opacity(0.45) : Color.clear)
                         .overlay(Rectangle().fill(Color.black.opacity(0.4)).frame(height: 0.5), alignment: .bottom)
                 }
                 .frame(height: rowH)
@@ -122,9 +170,15 @@ struct PianoRollView: View {
         Canvas { ctx, size in
             for r in 0..<rows {
                 let semis = topSemis - r
-                let black = [1, 3, 6, 8, 10].contains(((semis % 12) + 12) % 12)
-                ctx.fill(Path(CGRect(x: 0, y: CGFloat(r) * rowH, width: size.width, height: rowH)),
-                         with: .color(semis == 0 ? S.rowB.opacity(1) : black ? S.rowA : S.rowB.opacity(0.8)))
+                let black = [1, 3, 6, 8, 10].contains(((note(semis) % 12) + 12) % 12)
+                let rowRect = Path(CGRect(x: 0, y: CGFloat(r) * rowH, width: size.width, height: rowH))
+                if controller.snapToScale {
+                    // FL-style scale highlighting: the key's notes lit, the root tinted, the rest dark.
+                    ctx.fill(rowRect, with: .color(inScale(semis) ? S.rowB : S.rowA.opacity(0.6)))
+                    if isRoot(semis) { ctx.fill(rowRect, with: .color(S.green.opacity(0.12))) }
+                } else {
+                    ctx.fill(rowRect, with: .color(semis == 0 ? S.rowB.opacity(1) : black ? S.rowA : S.rowB.opacity(0.8)))
+                }
             }
             let steps = Int(pageTicks / grid)
             for s in 0...steps {
@@ -199,7 +253,7 @@ struct PianoRollView: View {
         case .move(let key, let origin, let startTick, let startSemis):
             let dt = snapped(tickAt(g.location.x, w)) - snapped(tickAt(g.startLocation.x, w))
             let (moved, keys) = PatternEdit.move(origin, [key], by: dt)
-            let semis = (startSemis + Float((g.startLocation.y - g.location.y) / rowH).rounded()).clamped(-12, Float(topSemis))
+            let semis = inKey(startSemis + Float((g.startLocation.y - g.location.y) / rowH).rounded())
             work = PatternEdit.setPitch(moved, keys, semis).0
             _ = startTick
         case .resize(let key, let origin):

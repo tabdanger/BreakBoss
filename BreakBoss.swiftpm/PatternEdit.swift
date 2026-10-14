@@ -7,6 +7,29 @@ enum PatternEdit {
     /// Longest pattern: 16 bars (the drum roll offers 4, 8 or 16).
     static let maxBars = 16
 
+    /// Channel menu "Fill every …": replaces the channel's hits with one every `every` ticks
+    /// across the whole pattern (FL's "fill each N steps"). The 808 holds until the next hit.
+    static func fill(_ pattern: PatternData, pad: Int, every: Int32, velocity: Float) -> PatternData {
+        guard every > 0 else { return pattern }
+        var p = pattern
+        p.events.removeAll { Int($0.pad) == pad }
+        let bass = pad == Pad.bass808.rawValue
+        var t: Int32 = 0
+        while t < p.lengthTicks {
+            p.events.append(GrooveEvent(tick: t, pad: Int8(pad), velocity: velocity, length: bass ? max(6, min(every, p.lengthTicks - t) - 2) : 0))
+            t += every
+        }
+        p.sort()
+        return p
+    }
+
+    /// Removes every hit of one channel.
+    static func clearChannel(_ pattern: PatternData, pad: Int) -> PatternData {
+        var p = pattern
+        p.events.removeAll { Int($0.pad) == pad }
+        return p
+    }
+
     /// Adds a hit at `tick`, or removes the pad's hits already in that cell.
     static func toggle(_ pattern: PatternData, pad: Int, tick: Int32, cell: Int32) -> PatternData {
         var p = pattern

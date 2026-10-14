@@ -1,5 +1,6 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import SwiftUI
+import UIKit
 
 // MARK: - BreakBoss's own drop-down menus (no Apple pop-up menus anywhere)
 //
@@ -68,6 +69,13 @@ extension View {
         modifier(BBMenuTrigger(title: title, width: width, items: items, custom: nil))
     }
 
+    /// Opens a BreakBoss menu on a long press (or a right-click with a trackpad or mouse);
+    /// a normal tap still runs `tap`.
+    func bbLongPressMenu(title: String? = nil, width: CGFloat = 280, tap: @escaping () -> Void,
+                         items: @escaping () -> [BBMenuItem]) -> some View {
+        modifier(BBMenuTrigger(title: title, width: width, items: items, custom: nil, tap: tap, longPress: true))
+    }
+
     /// Makes this view open a BreakBoss panel with custom content (e.g. a slider).
     func bbPanel<Content: View>(title: String? = nil, width: CGFloat = 320, @ViewBuilder content: @escaping () -> Content) -> some View {
         modifier(BBMenuTrigger(title: title, width: width, items: { [] }, custom: { AnyView(content()) }))
@@ -80,19 +88,50 @@ private struct BBMenuTrigger: ViewModifier {
     let width: CGFloat
     let items: () -> [BBMenuItem]
     let custom: (() -> AnyView)?
+    var tap: (() -> Void)? = nil
+    var longPress = false
     @State private var frame: CGRect = .zero
 
+    private func open() {
+        center.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?()))
+    }
+
     func body(content: Content) -> some View {
-        content
+        let base = content
             .background(GeometryReader { g in
                 Color.clear
                     .onAppear { frame = g.frame(in: .named(bbSpace)) }
                     .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
             })
             .contentShape(Rectangle())
-            .onTapGesture {
-                center.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?()))
-            }
+        if longPress {
+            base
+                .onTapGesture { tap?() }
+                .onLongPressGesture(minimumDuration: 0.4) { open() }
+                .background(SecondaryClickCatcher { open() })
+        } else {
+            base.onTapGesture { open() }
+        }
+    }
+}
+
+/// A trackpad / mouse right-click on the view (iPadOS pointer), for the long-press menus.
+private struct SecondaryClickCatcher: UIViewRepresentable {
+    let action: () -> Void
+    func makeCoordinator() -> Coordinator { Coordinator(action: action) }
+    func makeUIView(context: Context) -> UIView {
+        let v = UIView()
+        v.backgroundColor = .clear
+        let g = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.fire))
+        g.buttonMaskRequired = .secondary
+        v.addGestureRecognizer(g)
+        return v
+    }
+    func updateUIView(_ uiView: UIView, context: Context) { context.coordinator.action = action }
+    final class Coordinator: NSObject {
+        var action: () -> Void
+        init(action: @escaping () -> Void) { self.action = action }
+        @objc func fire() { action() }
     }
 }
 

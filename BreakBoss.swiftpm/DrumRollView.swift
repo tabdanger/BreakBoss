@@ -468,19 +468,19 @@ struct DrumRollView: View {
                 Image(systemName: "play.fill").font(.system(size: 13)).foregroundColor(S.text)
                     .frame(width: 30, height: 28).background(box(lit: false))
             }
-            Button { selectedPad = selectedPad == pad ? nil : pad } label: {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)")
-                        .font(.system(size: compact ? 11 : 14, weight: .medium))
-                        .foregroundColor(selectedPad == pad ? S.green : (muted ? S.dim : S.text)).lineLimit(1)
-                    if !compact && height > 40 {
-                        Text(controller.padName(pad).uppercased())
-                            .font(.system(size: 9, design: .monospaced)).foregroundColor(custom ? S.green : S.dim).lineLimit(1)
-                    }
+            // Tap selects the channel; long-press (or right-click) opens its fill menu.
+            VStack(alignment: .leading, spacing: 1) {
+                Text(Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)")
+                    .font(.system(size: compact ? 11 : 14, weight: .medium))
+                    .foregroundColor(selectedPad == pad ? S.green : (muted ? S.dim : S.text)).lineLimit(1)
+                if !compact && height > 40 {
+                    Text(controller.padName(pad).uppercased())
+                        .font(.system(size: 9, design: .monospaced)).foregroundColor(custom ? S.green : S.dim).lineLimit(1)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .bbLongPressMenu(title: Pad(rawValue: pad)?.channelTitle ?? "Channel", width: 260,
+                             tap: { selectedPad = selectedPad == pad ? nil : pad }) { channelMenu(pad) }
             Button { controller.randomizeChannel(loop: loop, pad: pad) } label: {
                 Image(systemName: "dice").font(.system(size: 12)).foregroundColor(S.text)
                     .frame(width: compact ? 24 : 28, height: 28).background(box(lit: false))
@@ -493,6 +493,19 @@ struct DrumRollView: View {
         .background(selectedPad == pad ? S.greenDark : (pad % 2 == 0 ? S.channel : S.channel.opacity(0.85)))
         .overlay(Rectangle().fill(Color.black.opacity(0.5)).frame(height: 1), alignment: .bottom)
         .onDrop(of: [UTType.fileURL, UTType.audio], isTargeted: nil) { providers in dropSample(providers, pad: pad) }
+    }
+
+    /// Long-press menu on a channel: FL-style fills, clear, randomize.
+    private func channelMenu(_ pad: Int) -> [BBMenuItem] {
+        let fills: [(String, Int32)] = [("Fill every bar", PatternEdit.barTicks), ("Fill every 1/2 bar", PatternEdit.barTicks / 2),
+                                        ("Fill every 1/4 (beat)", PatternData.ppq), ("Fill every 1/8", PatternData.ppq / 2),
+                                        ("Fill every step (1/16)", PatternData.stepTicks), ("Fill every 1/2 step (1/32)", PatternData.stepTicks / 2)]
+        var items: [BBMenuItem] = fills.map { f in
+            BBMenuItem.item(f.0, icon: "square.grid.4x3.fill") { commit(PatternEdit.fill(pattern, pad: pad, every: f.1, velocity: lastVelocity)) }
+        }
+        items.append(BBMenuItem.item("Randomize channel", icon: "dice") { controller.randomizeChannel(loop: loop, pad: pad) })
+        items.append(BBMenuItem.item("Clear channel", icon: "trash", destructive: true) { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
+        return items
     }
 
     private func smallToggle(_ t: String, on: Bool, color: Color) -> some View {
@@ -694,10 +707,23 @@ struct DrumRollView: View {
 
     // MARK: Velocity / pitch lane
 
+    private var laneChip: some View {
+        chip(lane.rawValue, width: compact ? 110 : 140)
+            .bbMenu(title: "Lane", width: 200) { Lane.allCases.map { l in BBMenuItem.item(l.rawValue, checked: lane == l) { lane = l } } }
+    }
+
+    private var diceButton: some View {
+        Button { controller.randomizePattern(); selection = [] } label: { iconBox("dice.fill") }
+    }
+
     private var laneHeader: some View {
         VStack(alignment: .leading, spacing: 8) {
-            chip(lane.rawValue, width: compact ? 110 : 140)
-                .bbMenu(title: "Lane", width: 200) { Lane.allCases.map { l in BBMenuItem.item(l.rawValue, checked: lane == l) { lane = l } } }
+            // Randomize the whole pattern sits beside the lane picker (moved here from the footer);
+            // on a narrow iPhone strip it drops under it.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) { laneChip; diceButton }
+                VStack(alignment: .leading, spacing: 6) { laneChip; diceButton }
+            }
             if let pad = selectedPad {
                 Text(Pad(rawValue: pad)?.channelTitle ?? "").font(.system(size: 10, design: .monospaced)).foregroundColor(S.green)
             }
@@ -764,7 +790,8 @@ struct DrumRollView: View {
             work = PatternEdit.setVelocity(pattern, keys, value)
             lastVelocity = value
         } else {
-            let (p, newKeys) = PatternEdit.setPitch(pattern, keys, v * 24 - 12)
+            let raw = (v * 24 - 12).rounded()
+            let (p, newKeys) = PatternEdit.setPitch(pattern, keys, selectedPad.map { controller.scaleSnapped(raw, pad: $0) } ?? raw)
             work = p
             if !selection.isEmpty { selection = selection.subtracting(keys).union(newKeys) }
         }
@@ -797,7 +824,6 @@ struct DrumRollView: View {
             Button { cycleKit(-1) } label: { iconBox("chevron.left") }
             Button { cycleKit(1) } label: { iconBox("chevron.right") }
             Spacer(minLength: 6)
-            Button { controller.randomizePattern(); selection = [] } label: { labelBox("dice.fill", nil) }
             Button { duplicate() } label: { labelBox("plus.square.on.square", compact ? nil : "DUPLICATE") }
             Button { clear() } label: { labelBox("trash", compact ? nil : "CLEAR") }
             if let url = exportURL {

@@ -932,6 +932,24 @@ enum KnockSelfTest {
         check(loose.events.map { $0.tick }.sorted() == [0, 24], "drum roll: quantize (and wrap at the end)")
         let rec = PatternEdit.addRecorded(PatternData(name: "R", lengthTicks: bar, events: []), pad: 2, tick: 47, velocity: 0.6, semis: 0, snap: step)
         check(rec.events.first?.tick == 48, "drum roll: recorded hits snap to the grid")
+        // Channel long-press menu: fill every N.
+        let filled = PatternEdit.fill(p, pad: Pad.hat.rawValue, every: PatternData.ppq, velocity: 0.7)
+        check(filled.events.filter { Int($0.pad) == Pad.hat.rawValue }.map { $0.tick } == [0, 96, 192, 288, 384, 480, 576, 672],
+              "drum roll: fill every 1/4 puts a hit on every beat")
+        check(filled.events.filter { Int($0.pad) != Pad.hat.rawValue }.count == p.events.count, "drum roll: fill leaves other channels alone")
+        let halfStep = PatternEdit.fill(p, pad: Pad.hat.rawValue, every: step / 2, velocity: 0.7)
+        check(halfStep.events.filter { Int($0.pad) == Pad.hat.rawValue }.count == Int(bar * 2 / (step / 2)), "drum roll: fill every 1/2 step")
+        let barFill = PatternEdit.fill(p, pad: Pad.bass808.rawValue, every: bar, velocity: 1)
+        check(barFill.events.filter { Int($0.pad) == Pad.bass808.rawValue }.map { $0.tick } == [0, bar]
+              && barFill.events.allSatisfy { Int($0.pad) != Pad.bass808.rawValue || $0.length > step }, "drum roll: fill every bar (808 holds)")
+        check(!PatternEdit.clearChannel(filled, pad: Pad.hat.rawValue).events.contains { Int($0.pad) == Pad.hat.rawValue }, "drum roll: clear channel")
+        // Snap to scale (FL's list).
+        let minor = MusicScale.named("Minor (Aeolian)")
+        check(MusicScale.all.count == 23 && minor.steps == [0, 2, 3, 5, 7, 8, 10], "scales: FL list and C minor")
+        check(minor.snap(61, root: 0) == 60 && minor.snap(64, root: 0) == 63 && minor.snap(66, root: 0) == 65, "scales: snap to nearest (ties go down)")
+        check(MusicScale.named("Major (Ionian)").snap(66, root: 7) == 66 && !MusicScale.named("Major (Ionian)").contains(65, root: 7), "scales: G major has F# not F")
+        check(MusicScale.midiNote(hz: 55) == 33 && MusicScale.noteName(33) == "A1" && MusicScale.noteName(60) == "C4", "scales: 808 root note names")
+        check(MusicScale.all.allSatisfy { sc in (0..<128).allSatisfy { sc.contains(sc.snap($0, root: 3), root: 3) } }, "scales: every snap lands in the scale")
         // Mute / solo.
         var muted = Array(repeating: false, count: Pad.count), solo = muted
         check(KnockController.padMask(muted: muted, solo: solo) == 0x0FFF, "mute/solo: everything plays by default")

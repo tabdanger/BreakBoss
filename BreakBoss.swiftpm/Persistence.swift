@@ -74,6 +74,10 @@ struct KnockState: Codable, Equatable {
     /// Which live MIDI notes play the pads (a controller setting, so presets keep the current one).
     var midiMap: MIDIPadMap? = nil
     var midiCustomNotes: [Int]? = nil
+    /// Piano roll SNAP TO SCALE: key (0 = C), FL scale name, on/off.
+    var scaleRoot: Int? = nil
+    var scaleName: String? = nil
+    var snapToScale: Bool? = nil
 
     static func normalizedPads(_ source: [PadSettings]) -> [PadSettings] {
         var pads = Array(source.prefix(Pad.count))
