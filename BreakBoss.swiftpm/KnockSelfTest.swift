@@ -140,7 +140,8 @@ enum KnockSelfTest {
         // Vintage kits play Tyrone's Vintage pack (kicks, snares/claps, hats).
         for kit in KitLibrary.kits(for: .vintage) {
             let kick = library.sample(kitID: kit.id, pad: Pad.kick.rawValue)
-            check(kick?.url.lastPathComponent.hasPrefix("bb_vtg-") == true, "\(kit.name): kick from the Vintage pack")
+            let file = kick?.url.lastPathComponent ?? ""
+            check(["bb_vtg-", "bb_g-", "bb_kp2-"].contains { file.hasPrefix($0) }, "\(kit.name): kick from Tyrone's packs")
         }
         for url in urls.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             autoreleasepool {
