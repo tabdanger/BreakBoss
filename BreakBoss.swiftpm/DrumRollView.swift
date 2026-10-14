@@ -434,7 +434,11 @@ struct DrumRollView: View {
                 .frame(width: 120, alignment: .leading)
                 labelBox("waveform", compact ? nil : "SAMPLE")
                     .bbMenu(title: controller.padName(pad), width: 320) { channelSampleItems(pad) }
-                Button { pianoRollPad = pad } label: { labelBox("pianokeys", compact ? nil : "PIANO ROLL") }
+                // SNAP TO SCALE (replaces the piano roll button): key, scale, snap on/off, fit notes
+                labelBox("tuningfork", compact ? nil : (controller.snapToScale
+                         ? "\(MusicScale.noteNames[controller.scaleRoot]) \(controller.scale.name.uppercased())" : "SNAP TO SCALE"),
+                         lit: controller.snapToScale)
+                    .bbMenu(title: "Snap to scale", width: 300) { scaleItems(pad) }
                 Button { controller.randomizeChannel(loop: loop, pad: pad) } label: { labelBox("dice", nil) }
                 labelBox("cable.connector", midiOutLabel(pad), lit: controller.midiOutOn && controller.midiOutChannels[pad] >= 0)
                     .bbMenu(title: "MIDI out · \(Pad(rawValue: pad)?.channelTitle ?? "")", width: 240) { midiOutChannelItems(pad) }
@@ -1029,6 +1033,31 @@ struct DrumRollView: View {
             Image(systemName: "chevron.down").font(.system(size: 11, weight: .semibold)).foregroundColor(S.text)
         }
         .padding(.horizontal, 12).frame(width: width, height: 40).background(box(lit: false))
+    }
+
+    /// SNAP TO SCALE menu (FL Studio's scales): turns snap on/off, picks the key and scale, and can fit
+    /// the notes already drawn on this channel to the scale.
+    private func scaleItems(_ pad: Int) -> [BBMenuItem] {
+        var items: [BBMenuItem] = [
+            BBMenuItem.item(controller.snapToScale ? "Snap to scale: ON" : "Snap to scale: OFF", icon: "tuningfork",
+                            checked: controller.snapToScale) { controller.setScale(snap: !controller.snapToScale) },
+            BBMenuItem.submenu("Key: \(MusicScale.noteNames[controller.scaleRoot])", icon: "music.note",
+                MusicScale.noteNames.enumerated().map { i, n in BBMenuItem.item(n, checked: controller.scaleRoot == i) { controller.setScale(root: i) } }),
+            BBMenuItem.submenu("Scale: \(controller.scale.name)", icon: "music.note.list",
+                MusicScale.all.map { sc in BBMenuItem.item(sc.name, checked: controller.scale.name == sc.name) { controller.setScale(name: sc.name) } })
+        ]
+        items.append(.header("Notes already drawn"))
+        items.append(BBMenuItem.item("Fit this channel's notes to the scale", icon: "wand.and.stars") {
+            let base = controller.baseNote(pad: pad)
+            let top: Float = pad == Pad.bass808.rawValue ? 24 : 12
+            var p = pattern
+            for i in p.events.indices where Int(p.events[i].pad) == pad {
+                let n = controller.scale.snap(base + Int(p.events[i].semis.rounded()), root: controller.scaleRoot)
+                p.events[i].semis = Float(n - base).clamped(-12, top)
+            }
+            commit(p)
+        })
+        return items
     }
 
     private func labelBox(_ icon: String?, _ title: String?, lit: Bool = false, enabled: Bool = true) -> some View {
