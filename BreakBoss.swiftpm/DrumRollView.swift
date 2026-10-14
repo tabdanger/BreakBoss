@@ -133,6 +133,8 @@ struct DrumRollView: View {
     }
     private var placeTicks: Int32 { snapTicks > 0 ? snapTicks : 6 }
     private var theme: DrumRollTheme { DrumRollTheme.forFace(controller.faceKey) }
+    /// Notes light up in the colour the pads glow on this faceplate (red, cream, blue).
+    private var noteColor: Color { PadView.lightColor(controller.mode) }
     private var plate: some View { Image(theme.plate).resizable(resizingMode: .tile) }
     private var isThisPlaying: Bool { controller.isPlaying && Int(controller.meters.status[1]) == loop }
 
@@ -628,9 +630,10 @@ struct DrumRollView: View {
             for e in pattern.events where visible(e) {
                 let r = noteRect(e, w: size.width, rowH: rowH)
                 let sel = selection.contains(NoteKey(e))
-                let base = sel ? S.orange : S.green
+                let base = sel ? Color.white : noteColor
                 let shade = 0.55 + 0.45 * Double(e.velocity)
-                if sel { ctx.fill(Path(roundedRect: r.insetBy(dx: -2, dy: -2), cornerRadius: 5), with: .color(S.orange.opacity(0.3))) }
+                // a soft glow around each note, like a lit pad
+                ctx.fill(Path(roundedRect: r.insetBy(dx: -2, dy: -2), cornerRadius: 5), with: .color((sel ? Color.white : noteColor).opacity(sel ? 0.35 : 0.22)))
                 ctx.fill(Path(roundedRect: r, cornerRadius: 4), with: .color(base.opacity(shade)))
                 if e.semis != 0 && r.width > 14 {
                     ctx.draw(Text(e.semis > 0 ? "+\(Int(e.semis))" : "\(Int(e.semis))").font(.system(size: 9, weight: .bold)).foregroundColor(.black),
@@ -645,7 +648,7 @@ struct DrumRollView: View {
             if isThisPlaying, let t = controller.playheadTick {
                 let px = x(Int32(t), size.width)
                 if px >= 0 && px <= size.width {
-                    ctx.fill(Path(CGRect(x: px - 1, y: 0, width: 2, height: size.height)), with: .color(S.green))
+                    ctx.fill(Path(CGRect(x: px - 1, y: 0, width: 2, height: size.height)), with: .color(noteColor))
                 }
             }
             _ = tick   // redraw the playhead with the ticker
@@ -831,7 +834,7 @@ struct DrumRollView: View {
                 let bx = x(e.tick, size.width) + 3
                 let top = 4 + (1 - v) * (size.height - 8)
                 ctx.fill(Path(CGRect(x: bx, y: top, width: 5, height: size.height - 4 - top)),
-                         with: .color((sel ? S.orange : S.green).opacity(selection.isEmpty || sel ? 0.95 : 0.35)))
+                         with: .color((sel ? Color.white : noteColor).opacity(selection.isEmpty || sel ? 0.95 : 0.35)))
             }
         }
         .contentShape(Rectangle())

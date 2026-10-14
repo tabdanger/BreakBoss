@@ -32,6 +32,8 @@ struct PianoRollView: View {
 
     private typealias S = DrumRollStyle
 
+    /// Notes in the colour the pads glow on this faceplate.
+    private var noteColor: Color { PadView.lightColor(controller.mode) }
     private var isBass: Bool { pad == Pad.bass808.rawValue }
     private var topSemis: Int { isBass ? 24 : 12 }
     private var rows: Int { topSemis + 12 + 1 }
@@ -175,7 +177,7 @@ struct PianoRollView: View {
                 if controller.snapToScale {
                     // FL-style scale highlighting: the key's notes lit, the root tinted, the rest dark.
                     ctx.fill(rowRect, with: .color(inScale(semis) ? S.rowB : S.rowA.opacity(0.6)))
-                    if isRoot(semis) { ctx.fill(rowRect, with: .color(S.green.opacity(0.12))) }
+                    if isRoot(semis) { ctx.fill(rowRect, with: .color(noteColor.opacity(0.12))) }
                 } else {
                     ctx.fill(rowRect, with: .color(semis == 0 ? S.rowB.opacity(1) : black ? S.rowA : S.rowB.opacity(0.8)))
                 }
@@ -190,7 +192,7 @@ struct PianoRollView: View {
             }
             for e in notes {
                 ctx.fill(Path(roundedRect: rect(e, w: size.width, rowH: rowH), cornerRadius: 3),
-                         with: .color(S.green.opacity(0.55 + 0.45 * Double(e.velocity))))
+                         with: .color(noteColor.opacity(0.55 + 0.45 * Double(e.velocity))))
             }
         }
         .contentShape(Rectangle())
@@ -204,7 +206,7 @@ struct PianoRollView: View {
             ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(S.lane))
             for e in notes {
                 let top = 4 + (1 - CGFloat(e.velocity)) * (size.height - 8)
-                ctx.fill(Path(CGRect(x: x(e.tick, size.width) + 2, y: top, width: 5, height: size.height - 4 - top)), with: .color(S.green))
+                ctx.fill(Path(CGRect(x: x(e.tick, size.width) + 2, y: top, width: 5, height: size.height - 4 - top)), with: .color(noteColor))
             }
         }
         .contentShape(Rectangle())
