@@ -320,10 +320,6 @@ final class KnockController: ObservableObject {
     /// Plays the given pattern from its start (or keeps it going if it's already the one playing).
     func playPattern(_ loop: Int) {
         guard loops.indices.contains(loop) else { return }
-        if value(.followDAW) > 0.5 && meters.status[5] > 0 {
-            readout = Readout(title: "FOLLOW DAW", value: "START IT FROM THE DAW", time: Date())
-            return
-        }
         if isPlaying && Int(meters.status[1]) == loop { return }
         if isPlaying { engine.send(KEvent(kind: .stop)) }
         engine.send(KEvent(kind: .loopPad, a: Int32(loop)))
@@ -380,10 +376,6 @@ final class KnockController: ObservableObject {
     var isPlaying: Bool { meters.status[0] > 0.5 }
 
     func playPressed() {
-        if value(.followDAW) > 0.5 && meters.status[5] > 0 {
-            readout = Readout(title: "FOLLOW DAW", value: "START IT FROM THE DAW", time: Date())
-            return
-        }
         engine.send(KEvent(kind: isPlaying ? .stop : .play))
     }
 

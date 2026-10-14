@@ -640,6 +640,26 @@ enum KnockSelfTest {
         check(!heardWhileStopped, "FOLLOW DAW: silent while the DAW is stopped")
         check(heard, "FOLLOW DAW: plays when the DAW plays")
         check(abs(engine.status[4] - tempo) < 0.01, "TEMPO SYNC: uses the DAW's tempo")
+        // BreakBoss's own STOP / PLAY still work while the DAW runs.
+        func run(_ blocks: Int) -> Bool {
+            var loud = false
+            for _ in 0..<blocks {
+                l.withUnsafeMutableBufferPointer { lp in
+                    r.withUnsafeMutableBufferPointer { rp in
+                        engine.render(frames: 512, left: lp.baseAddress!, right: rp.baseAddress!,
+                                      host: HostTiming(tempo: tempo, beat: beat, playing: true))
+                    }
+                }
+                beat += 512 / 48_000 * tempo / 60
+                if l.contains(where: { abs($0) > 0.01 }) { loud = true }
+            }
+            return loud
+        }
+        engine.send(KEvent(kind: .stop))
+        _ = run(40)
+        check(!run(200), "FOLLOW DAW: BreakBoss STOP mutes the pattern while the DAW keeps playing")
+        engine.send(KEvent(kind: .play))
+        check(run(200), "FOLLOW DAW: BreakBoss PLAY brings the pattern back on the DAW's beat")
     }
 
     /// Nothing playing: silence (and after a while the chain stops running).

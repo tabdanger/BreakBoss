@@ -161,6 +161,21 @@ enum PatternEdit {
         return (p, NoteKey(p.events[i]))
     }
 
+    /// SELECT tool trim: every selected note (any channel) gets longer or shorter by `delta` ticks
+    /// from where it was when the drag started. Drum notes without a length start from one step.
+    static func trim(_ origin: PatternData, _ keys: Set<NoteKey>, by delta: Int32, minLength: Int32) -> (PatternData, Set<NoteKey>) {
+        var p = origin
+        var out = Set<NoteKey>()
+        for i in p.events.indices where keys.contains(NoteKey(p.events[i])) {
+            let e = p.events[i]
+            let start = e.length > 0 ? e.length : PatternData.stepTicks
+            let room = max(p.lengthTicks, 6) - e.tick
+            p.events[i].length = min(max(start + delta, max(minLength, 6)), max(room, 6))
+            out.insert(NoteKey(p.events[i]))
+        }
+        return (p, out)
+    }
+
     static func setVelocity(_ pattern: PatternData, _ keys: Set<NoteKey>, _ velocity: Float) -> PatternData {
         var p = pattern
         for i in p.events.indices where keys.contains(NoteKey(p.events[i])) { p.events[i].velocity = velocity.clamped(0.05, 1) }

@@ -83,6 +83,7 @@ struct DrumRollView: View {
     @State private var swingStart: Float?
     @State private var showMenu = false
     @State private var importPad: Int?
+    @State private var soundPad: Int?
     @State private var recordPad: Int?
     @State private var pianoRollPad: Int?
     @State private var exportURL: URL?
@@ -95,6 +96,7 @@ struct DrumRollView: View {
         case long808(start: Int32)
         case move(keys: Set<NoteKey>, origin: PatternData, startTick: Int32, followSelection: Bool)
         case resize(key: NoteKey, origin: PatternData)
+        case trim(keys: Set<NoteKey>, origin: PatternData, startTick: Int32)
         case marquee(start: CGPoint, current: CGPoint)
         case erase
         case tapOnNote(key: NoteKey)
@@ -174,6 +176,9 @@ struct DrumRollView: View {
         }
         .sheet(item: Binding(get: { recordPad.map { PadID(pad: $0) } }, set: { recordPad = $0?.pad })) { target in
             ChannelRecordSheet(controller: controller, pad: target.pad)
+        }
+        .fullScreenCover(item: Binding(get: { soundPad.map { PadID(pad: $0) } }, set: { soundPad = $0?.pad })) { target in
+            SoundLibraryView(controller: controller, pad: target.pad) { soundPad = nil }
         }
         .fileImporter(isPresented: Binding(get: { importPad != nil }, set: { if !$0 { importPad = nil } }),
                       allowedContentTypes: [.audio], allowsMultipleSelection: false) { result in
@@ -459,7 +464,8 @@ struct DrumRollView: View {
     }
 
     private func channelSampleItems(_ pad: Int) -> [BBMenuItem] {
-        var items: [BBMenuItem] = [.item("Load a sample from Files…", icon: "folder") { importPad = pad }]
+        var items: [BBMenuItem] = [.item("Sound library…", icon: "square.and.arrow.down") { soundPad = pad },
+                                   .item("Load a sample from Files…", icon: "folder") { importPad = pad }]
         if !controller.isPlugin { items.append(.item("Record to this channel…", icon: "record.circle") { recordPad = pad }) }
         let files = KnockFolders.sampleFiles()
         if !files.isEmpty {
@@ -523,8 +529,9 @@ struct DrumRollView: View {
         let muted = controller.mutedPads[pad], solo = controller.soloPads[pad]
         let custom = controller.state.pads[pad].sampleFile != nil
         return HStack(spacing: compact ? 4 : 8) {
-            Button { controller.auditionPad(pad, velocity: lastVelocity) } label: {
-                Image(systemName: "play.fill").font(.system(size: 13)).foregroundColor(S.text)
+            // IMPORT: BreakBoss's sound menu (every sound by type, packs, your imports) for this channel
+            Button { soundPad = pad } label: {
+                Image(systemName: "square.and.arrow.down").font(.system(size: 13)).foregroundColor(S.text)
                     .frame(width: 30, height: 28).background(box(lit: false))
             }
             // Tap selects the channel; long-press (or right-click) opens its fill menu.
@@ -625,6 +632,7 @@ struct DrumRollView: View {
     private func noteWidth(_ e: GrooveEvent, _ w: CGFloat) -> CGFloat {
         let step = w / CGFloat(pageTicks) * CGFloat(PatternData.stepTicks)
         if Int(e.pad) == Pad.bass808.rawValue && e.length > 0 { return max(step * 0.6, CGFloat(e.length) / CGFloat(pageTicks) * w - 2) }
+        if e.length > 0 { return max(6, CGFloat(e.length) / CGFloat(pageTicks) * w - 2) }     // trimmed drum note
         return max(6, min(step * 0.72, 30))
     }
     private func noteRect(_ e: GrooveEvent, w: CGFloat, rowH: CGFloat) -> CGRect {
@@ -661,6 +669,10 @@ struct DrumRollView: View {
                 // a soft glow around each note, like a lit pad
                 ctx.fill(Path(roundedRect: r.insetBy(dx: -2, dy: -2), cornerRadius: 5), with: .color((sel ? Color.white : noteColor).opacity(sel ? 0.35 : 0.22)))
                 ctx.fill(Path(roundedRect: r, cornerRadius: 4), with: .color(base.opacity(shade)))
+                if sel && tool == .select {      // trim handle: drag the right edge
+                    ctx.fill(Path(roundedRect: CGRect(x: r.maxX - 4, y: r.minY + 3, width: 3, height: r.height - 6), cornerRadius: 1.5),
+                             with: .color(Color.black.opacity(0.55)))
+                }
                 if e.semis != 0 && r.width > 14 {
                     ctx.draw(Text(e.semis > 0 ? "+\(Int(e.semis))" : "\(Int(e.semis))").font(.system(size: 9, weight: .bold)).foregroundColor(.black),
                              at: CGPoint(x: r.midX, y: r.midY))
@@ -720,7 +732,11 @@ struct DrumRollView: View {
                     drag = .paint(pad: startRow, lastCell: Int(t / placeTicks))
                 }
             case .select:
-                if let hit, selection.contains(NoteKey(hit)) {
+                if let hit, start.x > noteRect(hit, w: w, rowH: rowH).maxX - 12 {
+                    // The right edge: trim (longer / shorter), the whole selection together.
+                    if !selection.contains(NoteKey(hit)) { selection = [NoteKey(hit)] }
+                    drag = .trim(keys: selection, origin: pattern, startTick: tickAt(start.x, w))
+                } else if let hit, selection.contains(NoteKey(hit)) {
                     drag = .move(keys: selection, origin: pattern, startTick: tickAt(start.x, w), followSelection: true)
                 } else if let hit {
                     selection = [NoteKey(hit)]
@@ -757,6 +773,13 @@ struct DrumRollView: View {
             let (moved, newKeys) = PatternEdit.move(origin, keys, by: d)
             work = moved
             if followSelection { selection = newKeys }
+        case .trim(let keys, let origin, let startTick):
+            let raw = tickAt(g.location.x, w) - startTick
+            let unit = snapTicks > 0 ? snapTicks : Int32(6)
+            let d = (raw / unit) * unit
+            let (trimmed, newKeys) = PatternEdit.trim(origin, keys, by: d, minLength: min(unit, PatternData.stepTicks / 2))
+            work = trimmed
+            selection = newKeys
         case .resize(let key, let origin):
             guard let e = origin.events.first(where: { NoteKey($0) == key }) else { return }
             let end = snapped(tickAt(g.location.x, w) + placeTicks / 2)
@@ -790,7 +813,7 @@ struct DrumRollView: View {
         case .paint, .erase:
             if let p = work { work = nil; controller.setLoop(loop, p) }   // the undo point was pushed when the finger went down
             else { _ = undoStack.popLast() }                             // nothing changed
-        case .move(_, _, _, _), .resize(_, _):
+        case .move(_, _, _, _), .resize(_, _), .trim(_, _, _):
             if let p = work { commit(p) } else { work = nil }
         case .marquee(let a, let b):
             let rect = CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(a.x - b.x), height: abs(a.y - b.y))

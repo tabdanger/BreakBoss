@@ -1,8 +1,8 @@
 New in this build:
-- Platinum is the master faceplate; Modern, Vintage and Texture are built around it with clean edges.
-- New artist-style kits and presets: Toronto Nights, Late Night RnB, ATL Wave, Rockstar Bounce, Vamp Rage, Carolina Soul, LA Lyricist, Soft Soul and Houston Queen.
-- Genre kits have their own section in every kit menu.
-- Four dice, four jobs: faceplate dice = new sounds, velocity dice = new velocities, channel dice = new channel pattern, top drum roll dice = new sounds and pattern.
-- Snap to Scale button in the drum roll channel bar (key, scale, fit notes).
+- MIDI out into your DAW from the plug-in (Logic Pro: make a Software Instrument track, set its MIDI input to BreakBoss in the track settings, arm it and record).
+- SELECT tool: drag the right edge of selected notes to make them longer or shorter.
+- Channel rack: the play button is now IMPORT, which opens BreakBoss's sound library (every sound sorted by type and pack, plus importing single sounds or whole packs).
+- FOLLOW DAW: BreakBoss's play and stop buttons now work while the DAW is running.
+- Artist-style kits and presets, genre kits section, Snap to Scale button in the drum roll.
 
-Please try switching faceplates, loading kits and presets, using each dice, and recording MIDI into your DAW. Send feedback with a screenshot if anything looks or sounds off.
+Please try recording BreakBoss MIDI into your DAW, trimming notes, loading sounds from the library, and the transport buttons with the DAW playing.

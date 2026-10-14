@@ -52,6 +52,9 @@ enum SampleLoader {
             return url.path.replacingOccurrences(of: folder.standardizedFileURL.path + "/", with: "")
         }
         var dest = folder.appendingPathComponent(url.lastPathComponent)
+        // The same sound again (a library pick, say): reuse the copy that's already there.
+        let size = { (u: URL) in (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? -1 }
+        if FileManager.default.fileExists(atPath: dest.path) && size(dest) == size(url) { return dest.lastPathComponent }
         var n = 2
         while FileManager.default.fileExists(atPath: dest.path) {
             let base = url.deletingPathExtension().lastPathComponent

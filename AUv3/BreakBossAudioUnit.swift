@@ -85,6 +85,12 @@ public final class BreakBossAudioUnit: AUAudioUnit {
     private final class MIDIOutHolder { var block: AUMIDIOutputEventBlock? }
     private let midiOutHolder = MIDIOutHolder()
 
+    /// Hosts (Logic Pro for iPad among them) can hand over their MIDI output block after rendering
+    /// has started, or swap it when the routing changes; keep the render block's copy current.
+    public override var midiOutputEventBlock: AUMIDIOutputEventBlock? {
+        didSet { midiOutHolder.block = midiOutputEventBlock }
+    }
+
     public override var parameterTree: AUParameterTree? {
         get { tree }
         set { if let newValue { tree = newValue } }

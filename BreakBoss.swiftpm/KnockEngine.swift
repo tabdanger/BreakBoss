@@ -139,6 +139,10 @@ final class KnockEngine {
     private var queuedLoop = -2      // -2 = nothing queued
     private var loopStartBeat: Double = 0
     private var wasHostPlaying = false
+    /// FOLLOW DAW: BreakBoss's own STOP mutes the pattern while the DAW keeps running (PLAY brings it
+    /// back on the DAW's beat); with the DAW stopped, PLAY runs BreakBoss on its own at the DAW's tempo.
+    private var userArmed = true
+    private var localRun = false
     private var clockTempo: Double = 0
     private var lastClockTime: Double = 0
     private var clockCount: Int = 0
@@ -631,14 +635,17 @@ final class KnockEngine {
         case .loopPad:
             clearGates()
             let pad = Int(e.a)
+            let armedBefore = userArmed
+            if pad >= 0 { userArmed = true }
             let following = followingHost
-            if pad < 0 || (pad == currentLoop && (playing || following)) {
+            if pad < 0 || (pad == currentLoop && (playing || (following && armedBefore))) {
                 // Same pad again (or -1): stop at the end of the bar.
                 queuedLoop = -1
                 if !playing && !following { currentLoop = -1; queuedLoop = -2 }
             } else if !playing && !following {
                 currentLoop = pad
                 queuedLoop = -2
+                localRun = true
                 startTransport(at: 0)
             } else if currentLoop < 0 {
                 currentLoop = pad
@@ -650,10 +657,18 @@ final class KnockEngine {
         case .play:
             clearGates()
             if currentLoop < 0 { currentLoop = 0 }
-            startTransport(at: 0)
+            userArmed = true
+            if followingHost && wasHostPlaying {
+                playing = true                  // back in on the DAW's own beat
+            } else {
+                localRun = true
+                startTransport(at: 0)
+            }
         case .stop:
             midiOutAllOff(offset: offset)
             clearGates()
+            userArmed = false
+            localRun = false
             playing = false
             queuedLoop = -2
             releaseAll()
@@ -684,6 +699,7 @@ final class KnockEngine {
         case .allOff:
             midiOutAllOff(offset: offset)
             clearGates()
+            localRun = false
             playing = false
             currentLoop = -1
             queuedLoop = -2
@@ -838,7 +854,7 @@ final class KnockEngine {
         let vel = UInt8((Int((velocity * 127).rounded())).clamped(1, 127))
         pushMIDIOut(frame: frame, 0x90 | UInt8(ch), UInt8(note), vel)
         midiSentAt[Int(ch) * 128 + note] = sampleClock + Int64(frame)
-        let gate = pad == Pad.bass808.rawValue ? (length > 0 ? length : Int(sampleRate * 0.3)) : Int(sampleRate * 0.06)
+        let gate = length > 0 ? length : (pad == Pad.bass808.rawValue ? Int(sampleRate * 0.3) : Int(sampleRate * 0.06))
         midiOffDue[pad] = sampleClock + Int64(frame + max(1, gate))
         midiOffChannel[pad] = UInt8(ch)
         midiOffNote[pad] = UInt8(note)
@@ -961,7 +977,7 @@ final class KnockEngine {
         let sync = params[KParam.tempoSync.rawValue] > 0.5
         let loopMode = params[KParam.playMode.rawValue] > 0.5
         let hostHasTransport = host?.beat != nil && host?.playing != nil
-        followingHost = follow && (hostHasTransport || clockRunning)
+        followingHost = follow && ((hostHasTransport && host?.playing == true) || clockRunning)
         status[5] = host?.tempo != nil ? 1 : 0
         status[6] = clockTempo
 
@@ -980,12 +996,19 @@ final class KnockEngine {
             if hp && !wasHostPlaying {
                 releaseAll()
                 if currentLoop < 0 && loopMode { currentLoop = 0 }
+                userArmed = true            // the DAW starting brings BreakBoss in
+                localRun = false
             }
-            if !hp && wasHostPlaying { releaseAll() }
+            if !hp && wasHostPlaying { releaseAll(); localRun = false }
             wasHostPlaying = hp
-            playing = hp && currentLoop >= 0
-            b0 = hb
-            loopStartBeat = 0
+            if hp {
+                playing = userArmed && currentLoop >= 0
+                b0 = hb
+                loopStartBeat = 0
+            } else {
+                playing = localRun && currentLoop >= 0
+                b0 = beat
+            }
         } else if follow && clockRunning {
             b0 = beat
         } else {
@@ -1121,13 +1144,13 @@ final class KnockEngine {
             if b.event.kind == .bass {
                 midiOutHit(pad: Pad.bass808.rawValue, velocity: Float(b.event.value), semis: Float(b.event.a), length: b.length, offset: offset)
             } else {
-                midiOutHit(pad: b.pad, velocity: Float(b.event.value), semis: b.semis, length: 0, offset: offset)
+                midiOutHit(pad: b.pad, velocity: Float(b.event.value), semis: b.semis, length: b.length, offset: offset)
             }
             if b.event.kind == .bass {
                 trigger(pad: Pad.bass808.rawValue, velocity: Float(b.event.value), semis: Float(b.event.a),
                         lengthSamples: b.length, glide: b.glide)
             } else {
-                trigger(pad: b.pad, velocity: Float(b.event.value), semis: b.semis, lengthSamples: 0, glide: false)
+                trigger(pad: b.pad, velocity: Float(b.event.value), semis: b.semis, lengthSamples: b.length, glide: false)
             }
         } else {
             apply(b.event, offset: offset)
