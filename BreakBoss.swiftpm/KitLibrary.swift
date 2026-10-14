@@ -166,7 +166,49 @@ enum KitLibrary {
         variant("amapiano", "AMAPIANO", modernTrap, .amapiano, 112, 293, -0.1, 0.04),
         variant("sky-textures", "SKY TEXTURES", looseBreak, .experimental, 100, 347, -0.1, 0.2)
     ]
-    static let factory = core + textures + legacy
+    /// Two kits per preset style, built from Tyrone's packs (tools/build_genre_kits.py).
+    static let genres: [KitDefinition] = [
+        variant("g-trap-a", "TRAP A", drumMastery, .trapAtlanta, 140, 401, 0, 0.1),
+        variant("g-trap-b", "TRAP B", drumMastery, .trapAtlanta, 140, 402, 0, 0.1),
+        variant("g-dark-trap-a", "DARK TRAP A", heavyBreak, .trapToronto, 135, 403, 0, 0.1),
+        variant("g-dark-trap-b", "DARK TRAP B", heavyBreak, .trapToronto, 135, 404, 0, 0.1),
+        variant("g-drill-a", "DRILL A", modernTrap, .trapMemphis, 142, 405, 0, 0.1),
+        variant("g-drill-b", "DRILL B", modernTrap, .trapMemphis, 142, 406, 0, 0.1),
+        variant("g-detroit-a", "DETROIT A", modernTrap, .trapAtlanta, 160, 407, 0, 0.1),
+        variant("g-detroit-b", "DETROIT B", modernTrap, .trapAtlanta, 160, 408, 0, 0.1),
+        variant("g-west-coast-a", "WEST COAST A", westBounce, .westBounce, 98, 409, 0, 0.1),
+        variant("g-west-coast-b", "WEST COAST B", westBounce, .westBounce, 98, 410, 0, 0.1),
+        variant("g-rnb-a", "RNB A", drumMastery, .trapSoul, 118, 411, 0, 0.1),
+        variant("g-rnb-b", "RNB B", drumMastery, .trapSoul, 118, 412, 0, 0.1),
+        variant("g-90s-rnb-a", "90S RNB A", west90s, .pop90s, 96, 413, 0, 0.1),
+        variant("g-90s-rnb-b", "90S RNB B", west90s, .pop90s, 96, 414, 0, 0.1),
+        variant("g-80s-rnb-a", "80S RNB A", gospelChops, .pop80s, 104, 415, 0, 0.1),
+        variant("g-80s-rnb-b", "80S RNB B", gospelChops, .pop80s, 104, 416, 0, 0.1),
+        variant("g-80s-pop-a", "80S POP A", funkBreak, .pop80s, 116, 417, 0, 0.1),
+        variant("g-80s-pop-b", "80S POP B", funkBreak, .pop80s, 116, 418, 0, 0.1),
+        variant("g-80s-funk-a", "80S FUNK A", funkBreak, .funkBreak, 104, 419, 0, 0.1),
+        variant("g-80s-funk-b", "80S FUNK B", funkBreak, .funkBreak, 104, 420, 0, 0.1),
+        variant("g-boom-bap-a", "BOOM BAP A", heavyBreak, .boomBap, 90, 421, 0, 0.1),
+        variant("g-boom-bap-b", "BOOM BAP B", heavyBreak, .boomBap, 90, 422, 0, 0.1),
+        variant("g-jazz-a", "JAZZ A", looseBreak, .looseBreak, 120, 423, 0, 0.1),
+        variant("g-jazz-b", "JAZZ B", looseBreak, .looseBreak, 120, 424, 0, 0.1),
+        variant("g-neo-soul-a", "NEO SOUL A", neoSoul, .neoSoul, 86, 425, 0, 0.1),
+        variant("g-neo-soul-b", "NEO SOUL B", neoSoul, .neoSoul, 86, 426, 0, 0.1),
+        variant("g-soul-rnb-a", "SOUL RNB A", gospelChops, .gospel, 94, 427, 0, 0.1),
+        variant("g-soul-rnb-b", "SOUL RNB B", gospelChops, .gospel, 94, 428, 0, 0.1),
+        variant("g-amapiano-a", "AMAPIANO A", baySlap, .amapiano, 112, 429, 0, 0.1),
+        variant("g-amapiano-b", "AMAPIANO B", baySlap, .amapiano, 112, 430, 0, 0.1),
+        variant("g-south-african-rnb-a", "SOUTH AFRICAN RNB A", looseBreak, .amapiano, 110, 431, 0, 0.1),
+        variant("g-south-african-rnb-b", "SOUTH AFRICAN RNB B", looseBreak, .amapiano, 110, 432, 0, 0.1),
+        variant("g-edm-a", "EDM A", drumMastery, .experimental, 128, 433, 0, 0.1),
+        variant("g-edm-b", "EDM B", drumMastery, .experimental, 128, 434, 0, 0.1),
+        variant("g-house-a", "HOUSE A", funkBreak, .afrobeats, 124, 435, 0, 0.1),
+        variant("g-house-b", "HOUSE B", funkBreak, .afrobeats, 124, 436, 0, 0.1),
+        variant("g-techno-a", "TECHNO A", heavyBreak, .experimental, 130, 437, 0, 0.1),
+        variant("g-techno-b", "TECHNO B", heavyBreak, .experimental, 130, 438, 0, 0.1)
+    ]
+
+    static let factory = core + textures + legacy + genres
 
     static func kits(for mode: SoundMode) -> [KitDefinition] {
         let kits = factory.filter { $0.preferredMode == mode }

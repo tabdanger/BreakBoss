@@ -411,30 +411,30 @@ pat(SR, "SOUL RNB 9 HALF TIME", 72, 60, k="X.......x.......X.....x.x.......", s=
 pat(SR, "SOUL RNB 10 RIDE", 92, 56, cr=H8, k="X..x......x.....X..x......x.x...", s=BACK)
 
 
-# ---------------- Detroit (Sada Baby / Babyface Ray / Tee Grizzley / 42 Dugg: 140-160, dry claps on 2 & 4,
-# skippy kicks around the 808, triplet hat rolls, sparse percussion) ----------------
+# ---------------- Detroit (2020+ Detroit / Michigan rap: fast 150-172, hard snare + clap on 2 & 4,
+# off-beat "neck-breaking" kicks the 808 follows, sparse hats, rim / perc accents, few rolls) ----------------
 DT = "Detroit"
-DCL = two("....X.......X...")
-pat(DT, "DETROIT 1 SKIPPY", 152, k="x..x...x..x...x.x..x....x.x.....", c=DCL, h="x.x.t.x.x.x.x.t.x.x.t.x.x.x.r.x.",
-    b="0--0---0--3---5-0--0----3-3-----")
-pat(DT, "DETROIT 2 SADA BOUNCE", 156, k="x.x...x...x.x...x.x...x..x......", c=DCL, s=two("..........g....."),
-    h="x.xxx.x.t.xxx.x.x.xxx.x.t.xx..x.", b="0-0---0---3-3---0-0---5--3------")
-pat(DT, "DETROIT 3 FLINT", 148, k="x...x..x..x.....x...x..x..x..x..", c=DCL, h="x.x.x.x.x.x.t.x.x.x.x.x.x.x.t.t.",
-    o="..............o...............o.", b="0---0--0--A-----0---0--0--5--3--", glide=True)
-pat(DT, "DETROIT 4 SCAM RAP", 150, k="x.....xx..x.....x.....x...x.x...", c=DCL, h="x.t.x.x.x.t.x.x.x.t.x.x.x.t.x.qx",
-    p1="...x.......x.......x.......x....", b="0-----00--3-----0-----5---3-3---")
-pat(DT, "DETROIT 5 GRIZZLEY", 140, k="x......x..x...x.x.....x...x.....", c=DCL, s=DCL, h="x.x.x.x.x.x.x.x.r.x.x.x.t.x.x.x.",
-    o="......o...............o.........", b="0------0--3---5-0-----3---0-----")
-pat(DT, "DETROIT 6 DUGG", 158, k="x..x..x...x..x..x..x..x...x.....", c=DCL, h="xxt.xxt.xxt.xxt.xxt.xxt.xxt.xqxx",
-    b="0--0--0---3--3--0--0--5---3-----")
-pat(DT, "DETROIT 7 RAY SLOW BOUNCE", 144, k="x.......x.x.....x.....x...x.....", c=DCL, h="x...x.t.x...x.x.x...x.t.x...x.r.",
-    p2="......o...............o.........", b="0-------3-3-----0-----5---3-----", glide=True)
-pat(DT, "DETROIT 8 PIANO PUSH", 154, k="x.x.....x.x...x.x.x.....x...x...", c=DCL, s="...........g...............g....",
-    h="x.x.x.t.x.x.x.t.x.x.x.t.x.x.r.r.", b="0-0-----3-3---5-0-0-----3---0---")
-pat(DT, "DETROIT 9 OFFBEAT KICKS", 150, k="..x...x...x..x....x...x...x...x.", c=DCL, h="x.x.x.x.x.t.x.x.x.x.x.x.x.t.x.x.",
-    p1="x...............x...............", b="..0---0---3--3....0---5---3---0-")
-pat(DT, "DETROIT 10 DILLA HOMAGE", 90, 62, k="X......x..x.x...X.....x....x....", s=BACK, h=two("x.xgx.xgx.xgx.xg"),
-    b="0---------3-----0-------5--3----")
+BB2 = two("....X.......X...")
+pat(DT, "DETROIT 1 NECK BREAKER", 162, k="x..x..x...x...x.x..x..x...xx....", s=BB2, c=BB2, h=two("x...x...x...x..."),
+    b="0--0--0---0---5-0--0--0---33----")
+pat(DT, "DETROIT 2 SCAM BOUNCE", 158, k="x.x..x....x..x..x.x..x...x..x...", s=BB2, c=BB2, r="..x.......x.......x.......x.....",
+    h=two("x.x.x.x.x.x.x.x."), b="0-0--0----3--3--0-0--5---3--0---")
+pat(DT, "DETROIT 3 FLINT OFFBEAT", 166, k="..x..x...x..x.....x..x...x...x..", s=BB2, c=BB2, h=two("....x.......x..."),
+    p1="x.......x.......x.......x.......", b="..0--0---0--5.....0--3---0---0--")
+pat(DT, "DETROIT 4 SAMPLE CHOP", 150, k="x......x..x.....x..x......x.....", s=BB2, c=BB2, h=two("x.x.x.x.x.x.x.x."),
+    o="..............x...............x.", b="0------0--3-----0--0------5-----")
+pat(DT, "DETROIT 5 MUTTER", 156, k="x..x......x..x..x..x.....x.x....", s=BB2, r=two("......x.......x."), h=two("x...x...x...x..."),
+    b="0--0------3--3--0--0-----5-3----")
+pat(DT, "DETROIT 6 SKIP KICK", 168, k="x.x...x.x..x....x.x...x..x.x....", s=BB2, c=BB2, h="x.x.x.x.x.x.x.t.x.x.x.x.x.x.x.t.",
+    b="0-0---0-0--3----0-0---5--3-3----")
+pat(DT, "DETROIT 7 COLD PIANO", 152, k="x.......x.x.....x.....x...x.....", s=BB2, c=BB2, h=two("x.....x.....x..."),
+    p2="......o...............o.........", b="0-------3-3-----0-----5---3-----")
+pat(DT, "DETROIT 8 HARD DRUMS", 172, k="x..x..x..x..x...x..x..x..x.x....", s=BB2, c=BB2, h=two("x.x.x.x.x.x.x.x."),
+    r="...x.......x.......x.......x....", b="0--0--0--0--3---0--0--5--3-3----")
+pat(DT, "DETROIT 9 SLOW CRUISE", 150, k="x.........x..x..x.......x.x.....", s=BB2, c=BB2, h=two("x...x...x...x..."),
+    o="......o...............o.........", b="0---------3--3--0-------5-3-----", glide=True)
+pat(DT, "DETROIT 10 PERC TALK", 160, k="x..x....x.x..x..x..x....x...x...", s=BB2, c=BB2, p1=two("..x...x...x..x.."),
+    h=two("x.......x......."), b="0--0----3-3--3--0--0----5---3---")
 
 
 # ---------------- More Danger Patterns (Tyrone's Sampley cheat book) and two KXVI-style trap patterns ----------------
@@ -490,7 +490,7 @@ for p in P:
         allowed = set(".-0123456789abcABCDEFGHIJKL") if lane == "b" else VALID
         bad = set(s) - allowed
         assert not bad, (p["name"], lane, bad)
-    assert 60 <= p["bpm"] <= 160 and 50 <= p["swing"] <= 66
+    assert 60 <= p["bpm"] <= 180 and 50 <= p["swing"] <= 66
 out = os.path.join(os.path.dirname(__file__), "..", "BreakBoss.swiftpm", "Resources", "PatternBank.json")
 json.dump({"version": 1, "patterns": P}, open(out, "w"), indent=1)
 print(len(P), "patterns;", dict(cnt))
