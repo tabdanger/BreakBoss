@@ -38,6 +38,7 @@ struct PatternPreset: Decodable, Equatable {
         case "80s Funk": return .funkBreak
         case "EDM", "House": return .pop
         case "Techno": return .experimental
+        case "Detroit": return .trapAtlanta
         case "Boom Bap": return .boomBap
         case "Jazz": return .looseBreak
         case "Neo Soul": return .neoSoul

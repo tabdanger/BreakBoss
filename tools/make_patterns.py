@@ -410,11 +410,37 @@ pat(SR, "SOUL RNB 8 PHILLY", 112, 50, k=two("x...x...x...x..."), s=BACK, o=two("
 pat(SR, "SOUL RNB 9 HALF TIME", 72, 60, k="X.......x.......X.....x.x.......", s=two("........X......."), h=H8)
 pat(SR, "SOUL RNB 10 RIDE", 92, 56, cr=H8, k="X..x......x.....X..x......x.x...", s=BACK)
 
+
+# ---------------- Detroit (Sada Baby / Babyface Ray / Tee Grizzley / 42 Dugg: 140-160, dry claps on 2 & 4,
+# skippy kicks around the 808, triplet hat rolls, sparse percussion) ----------------
+DT = "Detroit"
+DCL = two("....X.......X...")
+pat(DT, "DETROIT 1 SKIPPY", 152, k="x..x...x..x...x.x..x....x.x.....", c=DCL, h="x.x.t.x.x.x.x.t.x.x.t.x.x.x.r.x.",
+    b="0--0---0--3---5-0--0----3-3-----")
+pat(DT, "DETROIT 2 SADA BOUNCE", 156, k="x.x...x...x.x...x.x...x..x......", c=DCL, s=two("..........g....."),
+    h="x.xxx.x.t.xxx.x.x.xxx.x.t.xx..x.", b="0-0---0---3-3---0-0---5--3------")
+pat(DT, "DETROIT 3 FLINT", 148, k="x...x..x..x.....x...x..x..x..x..", c=DCL, h="x.x.x.x.x.x.t.x.x.x.x.x.x.x.t.t.",
+    o="..............o...............o.", b="0---0--0--A-----0---0--0--5--3--", glide=True)
+pat(DT, "DETROIT 4 SCAM RAP", 150, k="x.....xx..x.....x.....x...x.x...", c=DCL, h="x.t.x.x.x.t.x.x.x.t.x.x.x.t.x.qx",
+    p1="...x.......x.......x.......x....", b="0-----00--3-----0-----5---3-3---")
+pat(DT, "DETROIT 5 GRIZZLEY", 140, k="x......x..x...x.x.....x...x.....", c=DCL, s=DCL, h="x.x.x.x.x.x.x.x.r.x.x.x.t.x.x.x.",
+    o="......o...............o.........", b="0------0--3---5-0-----3---0-----")
+pat(DT, "DETROIT 6 DUGG", 158, k="x..x..x...x..x..x..x..x...x.....", c=DCL, h="xxt.xxt.xxt.xxt.xxt.xxt.xxt.xqxx",
+    b="0--0--0---3--3--0--0--5---3-----")
+pat(DT, "DETROIT 7 RAY SLOW BOUNCE", 144, k="x.......x.x.....x.....x...x.....", c=DCL, h="x...x.t.x...x.x.x...x.t.x...x.r.",
+    p2="......o...............o.........", b="0-------3-3-----0-----5---3-----", glide=True)
+pat(DT, "DETROIT 8 PIANO PUSH", 154, k="x.x.....x.x...x.x.x.....x...x...", c=DCL, s="...........g...............g....",
+    h="x.x.x.t.x.x.x.t.x.x.x.t.x.x.r.r.", b="0-0-----3-3---5-0-0-----3---0---")
+pat(DT, "DETROIT 9 OFFBEAT KICKS", 150, k="..x...x...x..x....x...x...x...x.", c=DCL, h="x.x.x.x.x.t.x.x.x.x.x.x.x.t.x.x.",
+    p1="x...............x...............", b="..0---0---3--3....0---5---3---0-")
+pat(DT, "DETROIT 10 DILLA HOMAGE", 90, 62, k="X......x..x.x...X.....x....x....", s=BACK, h=two("x.xgx.xgx.xgx.xg"),
+    b="0---------3-----0-------5--3----")
+
 from collections import Counter
 cnt = Counter(p["style"] for p in P)
 for st, n in cnt.items():
     if st != D: assert n == 10, (st, n)
-assert len(cnt) == 19, cnt
+assert len(cnt) == 20, cnt
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)
 VALID = set(".xXogrqt")

@@ -2571,6 +2571,144 @@
     "k": "X..x......x.....X..x......x.x...",
     "s": "....X.......X.......X.......X..."
    }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 1 SKIPPY",
+   "bpm": 152,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x..x...x..x...x.x..x....x.x.....",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.x.t.x.x.x.x.t.x.x.t.x.x.x.r.x.",
+    "b": "0--0---0--3---5-0--0----3-3-----"
+   }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 2 SADA BOUNCE",
+   "bpm": 156,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x.x...x...x.x...x.x...x..x......",
+    "c": "....X.......X.......X.......X...",
+    "s": "..........g...............g.....",
+    "h": "x.xxx.x.t.xxx.x.x.xxx.x.t.xx..x.",
+    "b": "0-0---0---3-3---0-0---5--3------"
+   }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 3 FLINT",
+   "bpm": 148,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "k": "x...x..x..x.....x...x..x..x..x..",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.t.x.x.x.x.x.x.x.t.t.",
+    "o": "..............o...............o.",
+    "b": "0---0--0--A-----0---0--0--5--3--"
+   }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 4 SCAM RAP",
+   "bpm": 150,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x.....xx..x.....x.....x...x.x...",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.t.x.x.x.t.x.x.x.t.x.x.x.t.x.qx",
+    "p1": "...x.......x.......x.......x....",
+    "b": "0-----00--3-----0-----5---3-3---"
+   }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 5 GRIZZLEY",
+   "bpm": 140,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x......x..x...x.x.....x...x.....",
+    "c": "....X.......X.......X.......X...",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.r.x.x.x.t.x.x.x.",
+    "o": "......o...............o.........",
+    "b": "0------0--3---5-0-----3---0-----"
+   }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 6 DUGG",
+   "bpm": 158,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x..x..x...x..x..x..x..x...x.....",
+    "c": "....X.......X.......X.......X...",
+    "h": "xxt.xxt.xxt.xxt.xxt.xxt.xxt.xqxx",
+    "b": "0--0--0---3--3--0--0--5---3-----"
+   }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 7 RAY SLOW BOUNCE",
+   "bpm": 144,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "k": "x.......x.x.....x.....x...x.....",
+    "c": "....X.......X.......X.......X...",
+    "h": "x...x.t.x...x.x.x...x.t.x...x.r.",
+    "p2": "......o...............o.........",
+    "b": "0-------3-3-----0-----5---3-----"
+   }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 8 PIANO PUSH",
+   "bpm": 154,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x.x.....x.x...x.x.x.....x...x...",
+    "c": "....X.......X.......X.......X...",
+    "s": "...........g...............g....",
+    "h": "x.x.x.t.x.x.x.t.x.x.x.t.x.x.r.r.",
+    "b": "0-0-----3-3---5-0-0-----3---0---"
+   }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 9 OFFBEAT KICKS",
+   "bpm": 150,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "..x...x...x..x....x...x...x...x.",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.t.x.x.x.x.x.x.x.t.x.x.",
+    "p1": "x...............x...............",
+    "b": "..0---0---3--3....0---5---3---0-"
+   }
+  },
+  {
+   "style": "Detroit",
+   "name": "DETROIT 10 DILLA HOMAGE",
+   "bpm": 90,
+   "swing": 62,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.x...X.....x....x....",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg",
+    "b": "0---------3-----0-------5--3----"
+   }
   }
  ]
 }
