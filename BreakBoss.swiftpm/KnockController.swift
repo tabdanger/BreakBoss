@@ -260,7 +260,8 @@ final class KnockController: ObservableObject {
 
     static let defaultMIDIOutChannels = Array(0..<Pad.count)          // pad n on MIDI channel n + 1
     static let defaultMIDIOutNotes = Array(36..<(36 + Pad.count))      // C1 up, like the input map
-    var midiOutOn: Bool { state.midiOut ?? false }
+    /// On by default in the plug-in, so a DAW's armed MIDI track records the pads and pattern.
+    var midiOutOn: Bool { state.midiOut ?? isPlugin }
     var midiOutChannels: [Int] { (state.midiOutChannels ?? KnockController.defaultMIDIOutChannels).count == Pad.count ? state.midiOutChannels ?? KnockController.defaultMIDIOutChannels : KnockController.defaultMIDIOutChannels }
     var midiOutNotes: [Int] { (state.midiOutNotes ?? KnockController.defaultMIDIOutNotes).count == Pad.count ? state.midiOutNotes ?? KnockController.defaultMIDIOutNotes : KnockController.defaultMIDIOutNotes }
 

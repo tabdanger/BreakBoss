@@ -436,10 +436,51 @@ pat(DT, "DETROIT 9 OFFBEAT KICKS", 150, k="..x...x...x..x....x...x...x...x.", c=
 pat(DT, "DETROIT 10 DILLA HOMAGE", 90, 62, k="X......x..x.x...X.....x....x....", s=BACK, h=two("x.xgx.xgx.xgx.xg"),
     b="0---------3-----0-------5--3----")
 
+
+# ---------------- More Danger Patterns (Tyrone's Sampley cheat book) and two KXVI-style trap patterns ----------------
+def st(n, *hits, ch="x"):
+    """A lane of n steps with `ch` at the given step numbers (0-based)."""
+    l = ["."] * n
+    for h in hits: l[h] = ch
+    return "".join(l)
+pat(D, "DRILL 1", 142, k=st(32, 0, 22), h=st(32, 0, 3, 6, 8, 10, 11, 12, 13, 14, 16, 19, 22, 23, 24, 28, 29, 30, 31),
+    s=st(32, 8, 28, ch="X"), p1=st(32, 0, 3, 6, 14, 16, 19), r=st(32, 26), o=st(32, 4))
+pat(D, "DRILL 2", 142, k=st(32, 0, 20, 24, 26), h=st(32, 0, 3, 6, 8, 11, 12, 13, 14, 15, 16, 19, 22, 24, 27, 28, 29, 30, 31),
+    s=st(32, 8, 28, ch="X"), p1=st(32, 18, 30), p2=st(32, 1, 3, 6, 20), o=st(32, 2, 5))
+pat(D, "HIP HOP SWING 1", 90, 56, o=st(16, 7, 13), h=st(16, 0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 14, 15),
+    s=st(16, 4, 7, 9, 11, 12, 15), k=st(16, 0, 2, 10, 13))
+pat(D, "HIP HOP SWING 2", 90, 56, h=st(16, 2, 6, 10, 14), s=st(16, 4, 12, ch="X"), k=st(16, 0, 7, 15))
+pat(D, "HIP HOP SWING 3", 90, 56, ht=st(16, 2, 3, 10, 11), o=st(16, 6, 14), h=st(16, 2, 3, 7, 8, 9, 14, 15),
+    s=st(16, 4, 12, ch="X"), r=st(16, 4, 12), k=st(16, 0, 2, 5, 8, 11, 15))
+pat(D, "HIP HOP SWING 4", 85, 60, p1=st(16, 0), h=st(16, 2, 4, 6, 8, 10, 12, 14), c=st(16, 4, 12), s=st(16, 12, ch="X"),
+    k=st(16, 0, 7, 8, 10, 13, 15))
+pat(D, "HIP HOP SWING 5", 85, 60, o=st(16, 6, 14), p1=st(16, 4, 12), h=st(16, *range(16)), c=st(16, 1),
+    s=st(16, 4, 7, 12, ch="X"), k=st(16, 0, 11, 13, 14))
+pat(D, "HIP HOP SWING 6", 85, 60, h=st(16, 0, 2, 4, 6, 8, 10, 12, 14), s=st(16, 4, 12, ch="X"), k=st(16, 0, 1, 7, 10, 14))
+pat(D, "HIP HOP SWING 7", 95, 60, p1=st(16, 0), h=st(16, 0, 2, 4, 6, 8, 10, 12, 14), s=st(16, 4, 12, ch="X"),
+    k=st(16, 0, 7, 8, 10, 13, 15))
+pat(D, "HIP HOP SWING 8", 95, 60, h=st(16, 0, 2, 4, 6, 8, 10, 12, 14), c=st(16, 4, 12), s=st(16, 10, 15, ch="X"),
+    k=st(16, 0, 2, 5, 6, 7))
+pat(D, "HIP HOP SWING 9", 95, 60, o=st(16, 14), h=st(16, 0, 2, 4, 6, 8, 10, 12), s=st(16, 4, 7, 12, ch="X"), k=st(16, 0, 10))
+pat(D, "HIP HOP SWING 10", 95, 60, o=st(16, 15), h=st(16, 0, 2, 4, 6, 8, 10, 12, 14), s=st(16, 4, 7, 12, ch="X"), k=st(16, 0, 10))
+pat(D, "HIP HOP RIDE", 90, 60, cr=st(16, 0, 4, 8, 12), r=st(16, 10), k=st(16, 0, 2, 6))
+pat(D, "BOOM BAP 90 1", 90, 60, h=st(16, 2, 6, 9), s=st(16, 4, 7, 11, ch="X"), k=st(16, 0, 8))
+pat(D, "BOOM BAP 90 2", 90, 60, h=st(16, 2, 6, 10), s=st(16, 4, 8, 11, ch="X"), k=st(16, 0, 9, 13, 14))
+pat(D, "BOOM BAP 90 3", 90, 60, h=st(16, 2, 10), s=st(16, 4, 11, ch="X"), k=st(16, 0, 8))
+pat(D, "BOOM BAP 90 4", 90, 60, h=st(16, 2, 6, 10), s=st(16, 4, 7, 11, ch="X"), k=st(16, 0, 8))
+pat(D, "BOOM BAP 90 5", 90, 60, h=st(16, 2, 6, 9), s=st(16, 4, 11, ch="X"), k=st(16, 0, 7, 8))
+# KXVI-style trap (FL channel rack, 2 bars): 808 leads, clap + snare stacked on 3, bounce snare, 8th hats
+pat(T, "TRAP 11 ATL BOUNCE SNARE", 130, b="0-------------" + "0-----" * 3, c=st(32, 8, 24, ch="X"),
+    s=st(32, 8, 24, ch="X") [:14] + "o" + st(32, 8, 24, ch="X")[15:18] + "o" + st(32, 8, 24, ch="X")[19:],
+    h=st(32, *range(0, 32, 2)), o=st(32, 0, 24))
+pat(T, "TRAP 12 ATL 808 PUSH", 130, b="0-----0-----0-------------------", c=st(32, 8, 24, ch="X"),
+    s=st(32, 8, 24, ch="X")[:14] + "o" + st(32, 8, 24, ch="X")[15:18] + "o" + st(32, 8, 24, ch="X")[19:],
+    h=st(32, *[i for i in range(0, 32, 2) if i != 10]), o=st(32, 0, 24))
+
 from collections import Counter
 cnt = Counter(p["style"] for p in P)
 for st, n in cnt.items():
-    if st != D: assert n == 10, (st, n)
+    if st != D: assert n >= 10, (st, n)
 assert len(cnt) == 20, cnt
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)

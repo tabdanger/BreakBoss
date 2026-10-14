@@ -588,9 +588,11 @@ final class KnockEngine {
             endGate(Int(e.a))
         case .pad:
             trigger(pad: Int(e.a), velocity: Float(e.value), semis: 0, lengthSamples: 0, glide: false)
+            midiOutHit(pad: Int(e.a), velocity: Float(e.value), semis: 0, length: 0, offset: offset)   // pad taps reach the DAW
             record(pad: Int(e.a), velocity: Float(e.value), semis: 0, offset: offset)
         case .bass:
             trigger(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), lengthSamples: 0, glide: false, heldNote: Int(e.a) + Pad.bassRootNote)
+            midiOutHit(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), length: 0, offset: offset)
             record(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), offset: offset)
         case .padMask:
             padMask = UInt16(truncatingIfNeeded: e.a)

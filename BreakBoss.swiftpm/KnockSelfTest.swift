@@ -1077,7 +1077,7 @@ enum KnockSelfTest {
         let wanted = ["Trap", "Dark Trap", "West Coast", "Drill", "Amapiano", "South African RnB", "RnB", "90s RnB",
                       "80s RnB", "80s Pop", "80s Funk", "EDM", "House", "Techno",
                       "Boom Bap", "Jazz", "Neo Soul", "Soul RnB", "Detroit"]
-        for style in wanted { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
+        for style in wanted { check(PatternBank.presets(in: style).count >= 10, "\(style): at least 10 presets") }
         check(PatternBank.styles.first == "Danger Patterns" && PatternBank.presets(in: "Danger Patterns").count >= 13, "Danger Patterns come first")
         for p in presets {
             let pat = p.pattern

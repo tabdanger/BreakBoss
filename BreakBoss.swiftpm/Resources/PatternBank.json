@@ -2709,6 +2709,269 @@
     "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg",
     "b": "0---------3-----0-------5--3----"
    }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "DRILL 1",
+   "bpm": 142,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x.....................x.........",
+    "h": "x..x..x.x.xxxxx.x..x..xxx...xxxx",
+    "s": "........X...................X...",
+    "p1": "x..x..x.......x.x..x............",
+    "r": "..........................x.....",
+    "o": "....x..........................."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "DRILL 2",
+   "bpm": 142,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x...................x...x.x.....",
+    "h": "x..x..x.x..xxxxxx..x..x.x..xxxxx",
+    "s": "........X...................X...",
+    "p1": "..................x...........x.",
+    "p2": ".x.x..x.............x...........",
+    "o": "..x..x.........................."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 1",
+   "bpm": 90,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "o": ".......x.....x..",
+    "h": "xxxxxxx.xxxxx.xx",
+    "s": "....x..x.x.xx..x",
+    "k": "x.x.......x..x.."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 2",
+   "bpm": 90,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "h": "..x...x...x...x.",
+    "s": "....X.......X...",
+    "k": "x......x.......x"
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 3",
+   "bpm": 90,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "ht": "..xx......xx....",
+    "o": "......x.......x.",
+    "h": "..xx...xxx....xx",
+    "s": "....X.......X...",
+    "r": "....x.......x...",
+    "k": "x.x..x..x..x...x"
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 4",
+   "bpm": 85,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "p1": "x...............",
+    "h": "..x.x.x.x.x.x.x.",
+    "c": "....x.......x...",
+    "s": "............X...",
+    "k": "x......xx.x..x.x"
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 5",
+   "bpm": 85,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "o": "......x.......x.",
+    "p1": "....x.......x...",
+    "h": "xxxxxxxxxxxxxxxx",
+    "c": ".x..............",
+    "s": "....X..X....X...",
+    "k": "x..........x.xx."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 6",
+   "bpm": 85,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "h": "x.x.x.x.x.x.x.x.",
+    "s": "....X.......X...",
+    "k": "xx.....x..x...x."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 7",
+   "bpm": 95,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "p1": "x...............",
+    "h": "x.x.x.x.x.x.x.x.",
+    "s": "....X.......X...",
+    "k": "x......xx.x..x.x"
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 8",
+   "bpm": 95,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "h": "x.x.x.x.x.x.x.x.",
+    "c": "....x.......x...",
+    "s": "..........X....X",
+    "k": "x.x..xxx........"
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 9",
+   "bpm": 95,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "o": "..............x.",
+    "h": "x.x.x.x.x.x.x...",
+    "s": "....X..X....X...",
+    "k": "x.........x....."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP SWING 10",
+   "bpm": 95,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "o": "...............x",
+    "h": "x.x.x.x.x.x.x.x.",
+    "s": "....X..X....X...",
+    "k": "x.........x....."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "HIP HOP RIDE",
+   "bpm": 90,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "cr": "x...x...x...x...",
+    "r": "..........x.....",
+    "k": "x.x...x........."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "BOOM BAP 90 1",
+   "bpm": 90,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "h": "..x...x..x......",
+    "s": "....X..X...X....",
+    "k": "x.......x......."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "BOOM BAP 90 2",
+   "bpm": 90,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "h": "..x...x...x.....",
+    "s": "....X...X..X....",
+    "k": "x........x...xx."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "BOOM BAP 90 3",
+   "bpm": 90,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "h": "..x.......x.....",
+    "s": "....X......X....",
+    "k": "x.......x......."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "BOOM BAP 90 4",
+   "bpm": 90,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "h": "..x...x...x.....",
+    "s": "....X..X...X....",
+    "k": "x.......x......."
+   }
+  },
+  {
+   "style": "Danger Patterns",
+   "name": "BOOM BAP 90 5",
+   "bpm": 90,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "h": "..x...x..x......",
+    "s": "....X......X....",
+    "k": "x......xx......."
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 11 ATL BOUNCE SNARE",
+   "bpm": 130,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "b": "0-------------0-----0-----0-----",
+    "c": "........X...............X.......",
+    "s": "........X.....o...o.....X.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "x.......................x......."
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 12 ATL 808 PUSH",
+   "bpm": 130,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "b": "0-----0-----0-------------------",
+    "c": "........X...............X.......",
+    "s": "........X.....o...o.....X.......",
+    "h": "x.x.x.x.x...x.x.x.x.x.x.x.x.x.x.",
+    "o": "x.......................x......."
+   }
   }
  ]
 }

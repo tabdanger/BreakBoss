@@ -220,7 +220,6 @@ struct DrumRollView: View {
                 HStack(spacing: 8) {
                     bpmMenu
                     barsMenu
-                    patternMenu
                     settingsMenu
                 }
             }
@@ -269,10 +268,27 @@ struct DrumRollView: View {
             }
     }
 
+    /// PRESETS area (bottom, next to the kits): which of the 12 patterns you're editing, and every
+    /// preset pattern by style. Loading a preset keeps the beat playing and the kit as it is.
     private var patternMenu: some View {
-        chip(controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", width: 132)
-            .bbMenu(title: "Loop") {
-                controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
+        chip(controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", width: compact ? 120 : 170)
+            .bbMenu(title: "Patterns · presets", width: 340) {
+                var items: [BBMenuItem] = [.header("This preset's patterns")]
+                items += controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
+                items.append(.header("Presets · \(controller.state.presetName)"))
+                for style in PatternBank.styles {
+                    items.append(.submenu(style, icon: style == "Danger Patterns" ? "bolt.fill" : "music.note.list",
+                        PatternBank.presets(in: style).map { p in
+                            BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
+                                            checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p); selection = [] }
+                        }))
+                }
+                if !controller.userPresets.isEmpty {
+                    items.append(.submenu("My presets", icon: "person.crop.square", controller.userPresets.map { name in
+                        BBMenuItem.item(name) { controller.loadUserPreset(name); selection = [] }
+                    }))
+                }
+                return items
             }
     }
 
@@ -570,9 +586,10 @@ struct DrumRollView: View {
 
     /// Long-press menu on a channel: FL-style fills, clear, randomize.
     private func channelMenu(_ pad: Int) -> [BBMenuItem] {
-        let fills: [(String, Int32)] = [("Fill every bar", PatternEdit.barTicks), ("Fill every 1/2 bar", PatternEdit.barTicks / 2),
-                                        ("Fill every 1/4 (beat)", PatternData.ppq), ("Fill every 1/8", PatternData.ppq / 2),
-                                        ("Fill every step (1/16)", PatternData.stepTicks), ("Fill every 1/2 step (1/32)", PatternData.stepTicks / 2)]
+        let step = PatternData.stepTicks
+        let fills: [(String, Int32)] = [("Fill every step", step), ("Fill every 2 steps", step * 2), ("Fill every 4 steps (beat)", step * 4),
+                                        ("Fill every 8 steps (1/2 bar)", step * 8), ("Fill every bar", PatternEdit.barTicks),
+                                        ("Fill every 1/2 step (1/32)", step / 2)]
         var items: [BBMenuItem] = fills.map { f in
             BBMenuItem.item(f.0, icon: "square.grid.4x3.fill") { commit(PatternEdit.fill(pattern, pad: pad, every: f.1, velocity: lastVelocity)) }
         }
@@ -895,6 +912,7 @@ struct DrumRollView: View {
             }
             Button { cycleKit(-1) } label: { iconBox("chevron.left") }
             Button { cycleKit(1) } label: { iconBox("chevron.right") }
+            patternMenu
             Spacer(minLength: 6)
             Button { duplicate() } label: { labelBox("plus.square.on.square", compact ? nil : "DUPLICATE") }
             Button { clear() } label: { labelBox("trash", compact ? nil : "CLEAR") }
