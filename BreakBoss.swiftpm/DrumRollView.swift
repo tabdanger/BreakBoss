@@ -996,21 +996,7 @@ struct DrumRollView: View {
     }
 
     private func dropSample(_ providers: [NSItemProvider], pad: Int) -> Bool {
-        guard let provider = providers.first else { return false }
-        if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
-            _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                if let url { DispatchQueue.main.async { controller.importSample(url, toPad: pad) } }
-            }
-            return true
-        }
-        provider.loadFileRepresentation(forTypeIdentifier: UTType.audio.identifier) { url, _ in
-            guard let url else { return }
-            let copy = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
-            try? FileManager.default.removeItem(at: copy)
-            try? FileManager.default.copyItem(at: url, to: copy)
-            DispatchQueue.main.async { controller.importSample(copy, toPad: pad) }
-        }
-        return true
+        controller.importDropped(providers, toPad: pad)
     }
 
     // MARK: Small pieces

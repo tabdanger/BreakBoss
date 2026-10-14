@@ -199,6 +199,10 @@ struct FaceplateView: View {
             PadView(controller: controller, pad: L.padIndex(forLayoutPosition: i), rect: L.pads[i], scale: s) { loopEditor in
                 editor = EditorTarget(pad: L.padIndex(forLayoutPosition: i), loop: loopEditor)
             }
+            // Drop a sound file (Files, a sample app, Split View) onto a pad to load it there.
+            .onDrop(of: [UTType.fileURL, UTType.audio], isTargeted: nil) { providers in
+                controller.importDropped(providers, toPad: L.padIndex(forLayoutPosition: i))
+            }
         }
     }
 
@@ -273,6 +277,30 @@ struct FaceplateView: View {
 
     private var presetsMenu: some View {
         Color.white.opacity(0.001).contentShape(Rectangle()).onTapGesture { browser = .presets }
+    }
+}
+
+// MARK: - Dropping sound files on pads (faceplate pads and drum roll channels)
+
+extension KnockController {
+    /// Loads a dropped audio file onto a pad (WAV, AIFF, CAF, MP3, M4A, FLAC…).
+    func importDropped(_ providers: [NSItemProvider], toPad pad: Int) -> Bool {
+        guard let provider = providers.first else { return false }
+        if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+            _ = provider.loadObject(ofClass: URL.self) { [weak self] url, _ in
+                if let url { DispatchQueue.main.async { self?.importSample(url, toPad: pad) } }
+            }
+            return true
+        }
+        guard provider.hasItemConformingToTypeIdentifier(UTType.audio.identifier) else { return false }
+        provider.loadFileRepresentation(forTypeIdentifier: UTType.audio.identifier) { [weak self] url, _ in
+            guard let url else { return }
+            let copy = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+            try? FileManager.default.removeItem(at: copy)
+            try? FileManager.default.copyItem(at: url, to: copy)
+            DispatchQueue.main.async { self?.importSample(copy, toPad: pad) }
+        }
+        return true
     }
 }
 

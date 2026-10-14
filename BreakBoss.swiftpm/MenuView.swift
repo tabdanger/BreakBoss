@@ -95,6 +95,24 @@ struct MenuView: View {
                     mapRow("MIDI clock", "TEMPO SYNC follows its tempo, FOLLOW DAW its start / stop.")
                 } header: { Text("MIDI") }
 
+                Section {
+                    Toggle(isOn: Binding(get: { controller.midiOutOn }, set: { controller.setMIDIOut($0) })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("MIDI out to your DAW")
+                            Text(controller.isPlugin ? "Sent from the plug-in's MIDI output" : "Sent on the \"BreakBoss Out\" MIDI port")
+                                .font(.caption).foregroundColor(.secondary)
+                        }
+                    }
+                    Button { controller.setMIDIOutLayout(multi: true) } label: {
+                        mapRow("Multi-out", "Each pad on its own MIDI channel (1–12), notes C1 up")
+                    }
+                    Button { controller.setMIDIOutLayout(multi: false) } label: {
+                        mapRow("One channel", "Every pad on MIDI channel 10 (General MIDI drums)")
+                    }
+                } header: { Text("MIDI out") } footer: {
+                    Text("Everything you play on the pads and every note the patterns and drum roll play goes out as MIDI. In your DAW, record BreakBoss's MIDI output onto a track and the notes land in its piano roll, ready to edit. The 808 sends the note it plays. Pick each channel's MIDI channel and note in the drum roll (tap a channel name).")
+                }
+
                 Section("How it works") {
                     guide("ONE-SHOT / LOOP", "ONE-SHOT: the pads play drums. LOOP: the pads play grooves made from the kit; a new pick starts on the next bar, tap the same pad again to stop at the end of the bar.")
                     guide("MODERN / VINTAGE / TEXTURE", "Modern is clean and punchy. Vintage is home to soul, boom bap and break grooves, with tape drive, low-end warmth and a rolled-off top. Texture adds resampling, instability, synced delay and gated reverb. You can play any kit or imported acoustic sample in every mode.")
