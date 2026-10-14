@@ -128,8 +128,8 @@ enum KnockSelfTest {
                 }
             }
         }
-        check(assignments == 960, "stock audio covers all 960 factory pad assignments")
-        check(urls.count == 555, "stock audio contains 555 distinct assigned WAV files")
+        check(assignments == 1176, "stock audio covers all 1176 factory pad assignments")
+        check(urls.count == 703, "stock audio contains 703 distinct assigned WAV files")
         // Home dice draws each pad's sound from every kit's sound for that pad.
         check(Pad.allCases.allSatisfy { library.kits(withPad: $0.rawValue).count == KitLibrary.factory.count }, "dice: every pad has a sound in every kit")
         var picked = KnockState(); picked.stockPicks = Array(repeating: nil, count: Pad.count); picked.stockPicks?[0] = "detroit"
@@ -1070,8 +1070,8 @@ enum KnockSelfTest {
         let new = old.normalized()
         check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
-        check(KitLibrary.core.count == 24 && KitLibrary.textures.count == 8 && KitLibrary.legacy.count == 10 && KitLibrary.genres.count == 38 && KitLibrary.factory.count == 80,
-              "80 factory kits: 24 core, eight textures, ten originals and 38 genre kits")
+        check(KitLibrary.core.count == 24 && KitLibrary.textures.count == 8 && KitLibrary.legacy.count == 10 && KitLibrary.genres.count == 56 && KitLibrary.factory.count == 98,
+              "98 factory kits: 24 core, eight textures, ten originals and 56 genre and artist-style kits")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")
         check(Pad.allCases.allSatisfy { Pad.index(forMIDINote: $0.midiNote) == $0.rawValue }, "all pad MIDI mappings round trip")
         check(Pad.count == 12 && Pad.allCases.map { $0.midiNote } == Array(36...47), "12 pads use consecutive MIDI notes 36 through 47")
@@ -1084,7 +1084,8 @@ enum KnockSelfTest {
         check(presets.count >= 150 && Set(presets.map { $0.name }).count == presets.count, "pattern bank loads with unique names (\(presets.count))")
         let wanted = ["Trap", "Dark Trap", "West Coast", "Drill", "Amapiano", "South African RnB", "RnB", "90s RnB",
                       "80s RnB", "80s Pop", "80s Funk", "EDM", "House", "Techno",
-                      "Boom Bap", "Jazz", "Neo Soul", "Soul RnB", "Detroit"]
+                      "Boom Bap", "Jazz", "Neo Soul", "Soul RnB", "Detroit", "Toronto Nights", "Late Night RnB", "ATL Wave",
+                      "Rockstar Bounce", "Vamp Rage", "Carolina Soul", "LA Lyricist", "Soft Soul", "Houston Queen"]
         for style in wanted { check(PatternBank.presets(in: style).count >= 10, "\(style): at least 10 presets") }
         check(PatternBank.styles.first == "Danger Patterns" && PatternBank.presets(in: "Danger Patterns").count >= 13, "Danger Patterns come first")
         for p in presets {

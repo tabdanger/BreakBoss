@@ -205,7 +205,26 @@ enum KitLibrary {
         variant("g-house-a", "HOUSE A", funkBreak, .afrobeats, 124, 435, 0, 0.1),
         variant("g-house-b", "HOUSE B", funkBreak, .afrobeats, 124, 436, 0, 0.1),
         variant("g-techno-a", "TECHNO A", heavyBreak, .experimental, 130, 437, 0, 0.1),
-        variant("g-techno-b", "TECHNO B", heavyBreak, .experimental, 130, 438, 0, 0.1)
+        variant("g-techno-b", "TECHNO B", heavyBreak, .experimental, 130, 438, 0, 0.1),
+        // Artist styles (Tyrone's Danger Demon / Danger OG Trap packs): named for the sound, not the artist
+        variant("s-toronto-nights-a", "TORONTO NIGHTS A", heavyBreak, .trapToronto, 136, 501, 0, 0.1),
+        variant("s-toronto-nights-b", "TORONTO NIGHTS B", heavyBreak, .trapToronto, 136, 502, 0, 0.1),
+        variant("s-late-night-rnb-a", "LATE NIGHT RNB A", neoSoul, .trapSoul, 74, 503, 0, 0.1),
+        variant("s-late-night-rnb-b", "LATE NIGHT RNB B", neoSoul, .trapSoul, 74, 504, 0, 0.1),
+        variant("s-atl-wave-a", "ATL WAVE A", modernTrap, .trapAtlanta, 145, 505, 0, 0.1),
+        variant("s-atl-wave-b", "ATL WAVE B", modernTrap, .trapAtlanta, 145, 506, 0, 0.1),
+        variant("s-rockstar-bounce-a", "ROCKSTAR BOUNCE A", westBounce, .trapAtlanta, 155, 507, 0, 0.1),
+        variant("s-rockstar-bounce-b", "ROCKSTAR BOUNCE B", westBounce, .trapAtlanta, 155, 508, 0, 0.1),
+        variant("s-vamp-rage-a", "VAMP RAGE A", modernTrap, .trapAtlanta, 152, 509, 0, 0.1),
+        variant("s-vamp-rage-b", "VAMP RAGE B", modernTrap, .trapAtlanta, 152, 510, 0, 0.1),
+        variant("s-carolina-soul-a", "CAROLINA SOUL A", funkBreak, .boomBap, 90, 511, 0, 0.1),
+        variant("s-carolina-soul-b", "CAROLINA SOUL B", funkBreak, .boomBap, 90, 512, 0, 0.1),
+        variant("s-la-lyricist-a", "LA LYRICIST A", westBounce, .westBounce, 94, 513, 0, 0.1),
+        variant("s-la-lyricist-b", "LA LYRICIST B", westBounce, .westBounce, 94, 514, 0, 0.1),
+        variant("s-soft-soul-a", "SOFT SOUL A", neoSoul, .neoSoul, 82, 515, 0, 0.1),
+        variant("s-soft-soul-b", "SOFT SOUL B", neoSoul, .neoSoul, 82, 516, 0, 0.1),
+        variant("s-houston-queen-a", "HOUSTON QUEEN A", gospelChops, .rnb, 100, 517, 0, 0.1),
+        variant("s-houston-queen-b", "HOUSTON QUEEN B", gospelChops, .rnb, 100, 518, 0, 0.1)
     ]
 
     static let factory = core + textures + legacy + genres

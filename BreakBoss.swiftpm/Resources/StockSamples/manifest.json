@@ -5760,6 +5760,1302 @@
       "pad": 11,
       "file": "bb_g-marching-3de3ea_p00.wav",
       "displayName": "MARCHING"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 0,
+      "file": "bb_s-og-kick1-b1bf10_p00.wav",
+      "displayName": "OG KICK1"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 1,
+      "file": "bb_s-demon-snare-23-ecb346_p00.wav",
+      "displayName": "DEMON SNARE 23"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 2,
+      "file": "bb_s-og-clap11-b1bf10_p00.wav",
+      "displayName": "OG CLAP11"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 4,
+      "file": "bb_s-demon-hh-1-0ebe9f_p00.wav",
+      "displayName": "DEMON HH 1"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 5,
+      "file": "bb_s-og-ohh7-e841df_p00.wav",
+      "displayName": "OG OHH7"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 6,
+      "file": "bb_s-og-dope-boy-v3-b37b45_p00.wav",
+      "displayName": "OG DOPE BOY V3"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 7,
+      "file": "bb_s-demon-percs-11-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 11"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 8,
+      "file": "bb_s-demon-percs-9-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 9"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms10-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS10 2"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms11-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS11 2"
+    },
+    {
+      "kitID": "s-toronto-nights-a",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 0,
+      "file": "bb_s-demon-kick-10-b1bf10_p00.wav",
+      "displayName": "DEMON KICK 10"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 1,
+      "file": "bb_s-og-snare5-ecb346_p00.wav",
+      "displayName": "OG SNARE5"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 2,
+      "file": "bb_s-demon-clap-19-b1bf10_p00.wav",
+      "displayName": "DEMON CLAP 19"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 4,
+      "file": "bb_s-demon-hh-5-0ebe9f_p00.wav",
+      "displayName": "DEMON HH 5"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 5,
+      "file": "bb_s-og-ohh4-e841df_p00.wav",
+      "displayName": "OG OHH4"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 6,
+      "file": "bb_s-demon-808-13-b37b45_p00.wav",
+      "displayName": "DEMON 808 13"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 7,
+      "file": "bb_s-demon-percs-15-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 15"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 8,
+      "file": "bb_s-og-sr-fx-2-dirty-b1bf10_p00.wav",
+      "displayName": "OG SR FX 2 DIRTY"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms01-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS01 2"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms11-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS11 2"
+    },
+    {
+      "kitID": "s-toronto-nights-b",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 0,
+      "file": "bb_s-demon-kick-7-b1bf10_p00.wav",
+      "displayName": "DEMON KICK 7"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 1,
+      "file": "bb_s-og-snare11-41818d_p00.wav",
+      "displayName": "OG SNARE11"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 2,
+      "file": "bb_s-demon-clap-17-ecb346_p00.wav",
+      "displayName": "DEMON CLAP 17"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 4,
+      "file": "bb_s-demon-hh-6-1a0b91_p00.wav",
+      "displayName": "DEMON HH 6"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 5,
+      "file": "bb_s-og-ohh6-040811_p00.wav",
+      "displayName": "OG OHH6"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 6,
+      "file": "bb_s-og-demons-favorite-808-3-b37b45_p00.wav",
+      "displayName": "OG DEMONS FAVORITE 808 3"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 7,
+      "file": "bb_s-demon-percs-10-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 10"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 8,
+      "file": "bb_s-demon-percs-9-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 9"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms01-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS01 2"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms10-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS10 2"
+    },
+    {
+      "kitID": "s-late-night-rnb-a",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 0,
+      "file": "bb_s-demon-kick-3-b1bf10_p00.wav",
+      "displayName": "DEMON KICK 3"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 1,
+      "file": "bb_s-og-snare14-current-41818d_p00.wav",
+      "displayName": "OG SNARE14 CURRENT"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 2,
+      "file": "bb_s-og-clap3-ecb346_p00.wav",
+      "displayName": "OG CLAP3"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 4,
+      "file": "bb_s-demon-hh-1-1a0b91_p00.wav",
+      "displayName": "DEMON HH 1"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 5,
+      "file": "bb_s-og-ohh5-040811_p00.wav",
+      "displayName": "OG OHH5"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 6,
+      "file": "bb_s-demon-808-15-b37b45_p00.wav",
+      "displayName": "DEMON 808 15"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 7,
+      "file": "bb_s-demon-percs-17-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 17"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 8,
+      "file": "bb_s-demon-percs-7-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 7"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms11-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS11 2"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms10-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS10 2"
+    },
+    {
+      "kitID": "s-late-night-rnb-b",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 0,
+      "file": "bb_s-demon-kick-1-1c3f15_p00.wav",
+      "displayName": "DEMON KICK 1"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 1,
+      "file": "bb_s-demon-snare-6-b1bf10_p00.wav",
+      "displayName": "DEMON SNARE 6"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 2,
+      "file": "bb_s-demon-clap-17-b1bf10_p00.wav",
+      "displayName": "DEMON CLAP 17"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 4,
+      "file": "bb_s-demon-hh-7-c848f9_p00.wav",
+      "displayName": "DEMON HH 7"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 5,
+      "file": "bb_s-demon-ohh-6-040811_p00.wav",
+      "displayName": "DEMON OHH 6"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 6,
+      "file": "bb_s-demon-808-17-e8bc4e_p00.wav",
+      "displayName": "DEMON 808 17"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 7,
+      "file": "bb_s-og-hardddd-b1bf10_p00.wav",
+      "displayName": "OG HARDDDD"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 8,
+      "file": "bb_s-demon-percs-10-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 10"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms11-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS11 2"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms01-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS01 2"
+    },
+    {
+      "kitID": "s-atl-wave-a",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 0,
+      "file": "bb_s-demon-kick-5-1c3f15_p00.wav",
+      "displayName": "DEMON KICK 5"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 1,
+      "file": "bb_s-og-snare8-b1bf10_p00.wav",
+      "displayName": "OG SNARE8"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 2,
+      "file": "bb_s-demon-clap-2-b1bf10_p00.wav",
+      "displayName": "DEMON CLAP 2"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 4,
+      "file": "bb_s-demon-hh-1-c848f9_p00.wav",
+      "displayName": "DEMON HH 1"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 5,
+      "file": "bb_s-og-ohh7-040811_p00.wav",
+      "displayName": "OG OHH7"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 6,
+      "file": "bb_s-demon-808-2-e8bc4e_p00.wav",
+      "displayName": "DEMON 808 2"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 7,
+      "file": "bb_s-og-sr-fx-2-dirty-b1bf10_p00.wav",
+      "displayName": "OG SR FX 2 DIRTY"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 8,
+      "file": "bb_s-og-sr-fx-4-b1bf10_p00.wav",
+      "displayName": "OG SR FX 4"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms10-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS10 2"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms01-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS01 2"
+    },
+    {
+      "kitID": "s-atl-wave-b",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 0,
+      "file": "bb_s-demon-kick-8-b1bf10_p00.wav",
+      "displayName": "DEMON KICK 8"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 1,
+      "file": "bb_s-og-snare14-master-8ff503_p00.wav",
+      "displayName": "OG SNARE14 MASTER"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 2,
+      "file": "bb_s-og-clap7-b1bf10_p00.wav",
+      "displayName": "OG CLAP7"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 4,
+      "file": "bb_s-demon-hh-7-c848f9_p00.wav",
+      "displayName": "DEMON HH 7"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 5,
+      "file": "bb_s-demon-ohh-8-040811_p00.wav",
+      "displayName": "DEMON OHH 8"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 6,
+      "file": "bb_s-demon-808-14-3525fe_p00.wav",
+      "displayName": "DEMON 808 14"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 7,
+      "file": "bb_s-demon-percs-9-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 9"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 8,
+      "file": "bb_s-og-sr-fx-2-b1bf10_p00.wav",
+      "displayName": "OG SR FX 2"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms11-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS11 2"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms01-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS01 2"
+    },
+    {
+      "kitID": "s-rockstar-bounce-a",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 0,
+      "file": "bb_s-demon-kick-10-b1bf10_p00.wav",
+      "displayName": "DEMON KICK 10"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 1,
+      "file": "bb_s-demon-snare-2-8ff503_p00.wav",
+      "displayName": "DEMON SNARE 2"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 2,
+      "file": "bb_s-demon-clap-3-b1bf10_p00.wav",
+      "displayName": "DEMON CLAP 3"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 4,
+      "file": "bb_s-demon-hh-5-c848f9_p00.wav",
+      "displayName": "DEMON HH 5"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 5,
+      "file": "bb_s-demon-ohh-6-040811_p00.wav",
+      "displayName": "DEMON OHH 6"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 6,
+      "file": "bb_s-demon-808-6-3525fe_p00.wav",
+      "displayName": "DEMON 808 6"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 7,
+      "file": "bb_s-demon-percs-3-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 3"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 8,
+      "file": "bb_s-demon-percs-19-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 19"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms10-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS10 2"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms01-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS01 2"
+    },
+    {
+      "kitID": "s-rockstar-bounce-b",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 0,
+      "file": "bb_s-demon-kick-5-a34c02_p00.wav",
+      "displayName": "DEMON KICK 5"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 1,
+      "file": "bb_s-og-snare12-11753c_p00.wav",
+      "displayName": "OG SNARE12"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 2,
+      "file": "bb_s-og-clap5-b1bf10_p00.wav",
+      "displayName": "OG CLAP5"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 4,
+      "file": "bb_s-demon-hh-1-c848f9_p00.wav",
+      "displayName": "DEMON HH 1"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 5,
+      "file": "bb_s-og-ohh4-574ffa_p00.wav",
+      "displayName": "OG OHH4"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 6,
+      "file": "bb_s-demon-808-15-e24837_p00.wav",
+      "displayName": "DEMON 808 15"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 7,
+      "file": "bb_s-demon-percs-6-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 6"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 8,
+      "file": "bb_s-demon-percs-12-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 12"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms10-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS10 2"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms11-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS11 2"
+    },
+    {
+      "kitID": "s-vamp-rage-a",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 0,
+      "file": "bb_s-demon-kick-3-a34c02_p00.wav",
+      "displayName": "DEMON KICK 3"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 1,
+      "file": "bb_s-og-snare6-11753c_p00.wav",
+      "displayName": "OG SNARE6"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 2,
+      "file": "bb_s-og-clap8-b1bf10_p00.wav",
+      "displayName": "OG CLAP8"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 3,
+      "file": "bb_s-og-808-rim-2-b1bf10_p00.wav",
+      "displayName": "OG 808 RIM 2"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 4,
+      "file": "bb_s-demon-hh-7-c848f9_p00.wav",
+      "displayName": "DEMON HH 7"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 5,
+      "file": "bb_s-og-ohh6-574ffa_p00.wav",
+      "displayName": "OG OHH6"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 6,
+      "file": "bb_s-demon-808-4-e24837_p00.wav",
+      "displayName": "DEMON 808 4"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 7,
+      "file": "bb_s-demon-percs-2-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 2"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 8,
+      "file": "bb_s-og-sr-fx-2-b1bf10_p00.wav",
+      "displayName": "OG SR FX 2"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms01-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS01 2"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms11-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS11 2"
+    },
+    {
+      "kitID": "s-vamp-rage-b",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 0,
+      "file": "bb_s-lofi-1-kick-8fed2d_p00.wav",
+      "displayName": "LOFI 1 KICK"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 1,
+      "file": "bb_s-pounce-snare-1c3f15_p00.wav",
+      "displayName": "POUNCE SNARE"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 2,
+      "file": "bb_s-clap-rival-b1bf10_p00.wav",
+      "displayName": "CLAP (RIVAL)"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 3,
+      "file": "bb_s-rim-special-b1bf10_p00.wav",
+      "displayName": "RIM (SPECIAL)"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 4,
+      "file": "bb_s-clicked-hihat-0ebe9f_p00.wav",
+      "displayName": "CLICKED HIHAT"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 5,
+      "file": "bb_s-throne-open-hihat-040811_p00.wav",
+      "displayName": "THRONE OPEN HIHAT"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 6,
+      "file": "bb_s-demon-808-3-5edbd7_p00.wav",
+      "displayName": "DEMON 808 3"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 7,
+      "file": "bb_s-small-tambourine-double-hit-2-b1bf10_p00.wav",
+      "displayName": "SMALL TAMBOURINE DOUBLE HIT 2"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 8,
+      "file": "bb_s-oyster-layer-b1bf10_p00.wav",
+      "displayName": "OYSTER LAYER"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 9,
+      "file": "bb_s-earthquake-040811_p00.wav",
+      "displayName": "EARTHQUAKE"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 10,
+      "file": "bb_s-earthquake-040811_p00.wav",
+      "displayName": "EARTHQUAKE"
+    },
+    {
+      "kitID": "s-carolina-soul-a",
+      "pad": 11,
+      "file": "bb_s-trippy-ride-3de3ea_p00.wav",
+      "displayName": "TRIPPY RIDE"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 0,
+      "file": "bb_s-kick-nevermind-8fed2d_p00.wav",
+      "displayName": "KICK (NEVERMIND)"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 1,
+      "file": "bb_s-quick-knock-snare-1c3f15_p00.wav",
+      "displayName": "QUICK KNOCK SNARE"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 2,
+      "file": "bb_s-soft-metal-clap-b1bf10_p00.wav",
+      "displayName": "SOFT METAL CLAP"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 3,
+      "file": "bb_s-rim-whole-b1bf10_p00.wav",
+      "displayName": "RIM (WHOLE)"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 4,
+      "file": "bb_s-golden-hihat-0ebe9f_p00.wav",
+      "displayName": "GOLDEN HIHAT"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 5,
+      "file": "bb_s-clicked-open-hihat-040811_p00.wav",
+      "displayName": "CLICKED OPEN HIHAT"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 6,
+      "file": "bb_s-og-demons-favorite-808-3-5edbd7_p00.wav",
+      "displayName": "OG DEMONS FAVORITE 808 3"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 7,
+      "file": "bb_s-groaning-wild-animal-b1bf10_p00.wav",
+      "displayName": "GROANING WILD ANIMAL"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 8,
+      "file": "bb_s-tamb-cha-ching-b1bf10_p00.wav",
+      "displayName": "TAMB CHA CHING"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 9,
+      "file": "bb_s-percussion-blocked-040811_p00.wav",
+      "displayName": "PERCUSSION (BLOCKED)"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 10,
+      "file": "bb_s-percussion-tom1-040811_p00.wav",
+      "displayName": "PERCUSSION (TOM1)"
+    },
+    {
+      "kitID": "s-carolina-soul-b",
+      "pad": 11,
+      "file": "bb_s-compressed-ride-3de3ea_p00.wav",
+      "displayName": "COMPRESSED RIDE"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 0,
+      "file": "bb_s-reason-analog-kick-b1bf10_p00.wav",
+      "displayName": "REASON ANALOG KICK"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 1,
+      "file": "bb_s-og-snare13-2fbfb6_p00.wav",
+      "displayName": "OG SNARE13"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 2,
+      "file": "bb_s-demon-clap-15-b1bf10_p00.wav",
+      "displayName": "DEMON CLAP 15"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 3,
+      "file": "bb_s-rim-pay-b1bf10_p00.wav",
+      "displayName": "RIM (PAY)"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 4,
+      "file": "bb_s-demon-hh-3-698758_p00.wav",
+      "displayName": "DEMON HH 3"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 5,
+      "file": "bb_s-demon-ohh-1-040811_p00.wav",
+      "displayName": "DEMON OHH 1"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 6,
+      "file": "bb_s-og-dope-boy-v1-e84ef9_p00.wav",
+      "displayName": "OG DOPE BOY V1"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 7,
+      "file": "bb_s-oyster-layer-b1bf10_p00.wav",
+      "displayName": "OYSTER LAYER"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 8,
+      "file": "bb_s-demon-percs-17-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 17"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 9,
+      "file": "bb_s-og-distressed-909-toms11-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS11 2"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 10,
+      "file": "bb_s-percussion-light-040811_p00.wav",
+      "displayName": "PERCUSSION (LIGHT)"
+    },
+    {
+      "kitID": "s-la-lyricist-a",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 0,
+      "file": "bb_s-funk-kick-b1bf10_p00.wav",
+      "displayName": "FUNK KICK"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 1,
+      "file": "bb_s-og-snare15-2fbfb6_p00.wav",
+      "displayName": "OG SNARE15"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 2,
+      "file": "bb_s-og-clap12-b1bf10_p00.wav",
+      "displayName": "OG CLAP12"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 3,
+      "file": "bb_s-rim-riddle-b1bf10_p00.wav",
+      "displayName": "RIM (RIDDLE)"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 4,
+      "file": "bb_s-hihat-whathappened-698758_p00.wav",
+      "displayName": "HIHAT (WHATHAPPENED)"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 5,
+      "file": "bb_s-open-hat-betweenus-040811_p00.wav",
+      "displayName": "OPEN HAT (BETWEENUS)"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 6,
+      "file": "bb_s-demon-808-16-e84ef9_p00.wav",
+      "displayName": "DEMON 808 16"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 7,
+      "file": "bb_s-percussion-tom1-b1bf10_p00.wav",
+      "displayName": "PERCUSSION (TOM1)"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 8,
+      "file": "bb_s-demon-percs-11-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 11"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 9,
+      "file": "bb_s-clickety-engine-040811_p00.wav",
+      "displayName": "CLICKETY ENGINE"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 10,
+      "file": "bb_s-beads-hit-040811_p00.wav",
+      "displayName": "BEADS HIT"
+    },
+    {
+      "kitID": "s-la-lyricist-b",
+      "pad": 11,
+      "file": "bb_s-compressed-ride-3de3ea_p00.wav",
+      "displayName": "COMPRESSED RIDE"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 0,
+      "file": "bb_s-superpower-kick-fc4e1f_p00.wav",
+      "displayName": "SUPERPOWER KICK"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 1,
+      "file": "bb_s-newest-leaf-snare-342846_p00.wav",
+      "displayName": "NEWEST LEAF SNARE"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 2,
+      "file": "bb_s-clap-rival-b1bf10_p00.wav",
+      "displayName": "CLAP (RIVAL)"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 3,
+      "file": "bb_s-rim-special-b1bf10_p00.wav",
+      "displayName": "RIM (SPECIAL)"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 4,
+      "file": "bb_s-hihat-sonic-219f41_p00.wav",
+      "displayName": "HIHAT (SONIC)"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 5,
+      "file": "bb_s-open-hat-lastcall-040811_p00.wav",
+      "displayName": "OPEN HAT (LASTCALL)"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 6,
+      "file": "bb_s-demon-808-3-8d4a11_p00.wav",
+      "displayName": "DEMON 808 3"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 7,
+      "file": "bb_s-small-tambourine-double-hit-2-b1bf10_p00.wav",
+      "displayName": "SMALL TAMBOURINE DOUBLE HIT 2"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 8,
+      "file": "bb_s-clicked-rev-hihat-b1bf10_p00.wav",
+      "displayName": "CLICKED REV HIHAT"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 9,
+      "file": "bb_s-beads-hit-040811_p00.wav",
+      "displayName": "BEADS HIT"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 10,
+      "file": "bb_s-clickety-engine-040811_p00.wav",
+      "displayName": "CLICKETY ENGINE"
+    },
+    {
+      "kitID": "s-soft-soul-a",
+      "pad": 11,
+      "file": "bb_s-compressed-ride-3de3ea_p00.wav",
+      "displayName": "COMPRESSED RIDE"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 0,
+      "file": "bb_s-kick-honest-fc4e1f_p00.wav",
+      "displayName": "KICK (HONEST)"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 1,
+      "file": "bb_s-british-snare-342846_p00.wav",
+      "displayName": "BRITISH SNARE"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 2,
+      "file": "bb_s-rift-clap-snare-b1bf10_p00.wav",
+      "displayName": "RIFT CLAP SNARE"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 3,
+      "file": "bb_s-bell-rimshot-b1bf10_p00.wav",
+      "displayName": "BELL RIMSHOT"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 4,
+      "file": "bb_s-prism-hihat-219f41_p00.wav",
+      "displayName": "PRISM HIHAT"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 5,
+      "file": "bb_s-open-hat-shawty-040811_p00.wav",
+      "displayName": "OPEN HAT (SHAWTY)"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 6,
+      "file": "bb_s-demon-808-9-8d4a11_p00.wav",
+      "displayName": "DEMON 808 9"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 7,
+      "file": "bb_s-finesse-shaker-2-b1bf10_p00.wav",
+      "displayName": "FINESSE SHAKER 2"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 8,
+      "file": "bb_s-tamb-mini-roll-b1bf10_p00.wav",
+      "displayName": "TAMB MINI ROLL"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 9,
+      "file": "bb_s-clickety-engine-040811_p00.wav",
+      "displayName": "CLICKETY ENGINE"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 10,
+      "file": "bb_s-earthquake-040811_p00.wav",
+      "displayName": "EARTHQUAKE"
+    },
+    {
+      "kitID": "s-soft-soul-b",
+      "pad": 11,
+      "file": "bb_s-trippy-ride-3de3ea_p00.wav",
+      "displayName": "TRIPPY RIDE"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 0,
+      "file": "bb_s-knockgang-kick-b1bf10_p00.wav",
+      "displayName": "KNOCKGANG KICK"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 1,
+      "file": "bb_s-shout-snare-b1bf10_p00.wav",
+      "displayName": "SHOUT SNARE"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 2,
+      "file": "bb_s-demon-clap-15-8ff503_p00.wav",
+      "displayName": "DEMON CLAP 15"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 3,
+      "file": "bb_s-rim-machine-b1bf10_p00.wav",
+      "displayName": "RIM (MACHINE)"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 4,
+      "file": "bb_s-hihat-knight-c848f9_p00.wav",
+      "displayName": "HIHAT (KNIGHT)"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 5,
+      "file": "bb_s-og-ohh2-040811_p00.wav",
+      "displayName": "OG OHH2"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 6,
+      "file": "bb_s-demon-808-5-dc0d88_p00.wav",
+      "displayName": "DEMON 808 5"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 7,
+      "file": "bb_s-og-weirdtriangle-b1bf10_p00.wav",
+      "displayName": "OG WEIRDTRIANGLE"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 8,
+      "file": "bb_s-demon-percs-10-b1bf10_p00.wav",
+      "displayName": "DEMON PERCS 10"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 9,
+      "file": "bb_s-earthquake-040811_p00.wav",
+      "displayName": "EARTHQUAKE"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms11-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS11 2"
+    },
+    {
+      "kitID": "s-houston-queen-a",
+      "pad": 11,
+      "file": "bb_s-trippy-ride-3de3ea_p00.wav",
+      "displayName": "TRIPPY RIDE"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 0,
+      "file": "bb_s-tube-kick-b1bf10_p00.wav",
+      "displayName": "TUBE KICK"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 1,
+      "file": "bb_s-lofi-warm-snare-b1bf10_p00.wav",
+      "displayName": "LOFI WARM SNARE"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 2,
+      "file": "bb_s-rift-clap-snare-8ff503_p00.wav",
+      "displayName": "RIFT CLAP SNARE"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 3,
+      "file": "bb_s-rim-banger-b1bf10_p00.wav",
+      "displayName": "RIM (BANGER)"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 4,
+      "file": "bb_s-demon-hh-2-c848f9_p00.wav",
+      "displayName": "DEMON HH 2"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 5,
+      "file": "bb_s-demon-ohh-7-040811_p00.wav",
+      "displayName": "DEMON OHH 7"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 6,
+      "file": "bb_s-demon-808-13-dc0d88_p00.wav",
+      "displayName": "DEMON 808 13"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 7,
+      "file": "bb_s-percussion-clave-b1bf10_p00.wav",
+      "displayName": "PERCUSSION (CLAVE)"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 8,
+      "file": "bb_s-og-spshak05-2-b1bf10_p00.wav",
+      "displayName": "OG SPSHAK05 2"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 9,
+      "file": "bb_s-percussion-tom1-040811_p00.wav",
+      "displayName": "PERCUSSION (TOM1)"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 10,
+      "file": "bb_s-og-distressed-909-toms10-2-040811_p00.wav",
+      "displayName": "OG DISTRESSED 909 TOMS10 2"
+    },
+    {
+      "kitID": "s-houston-queen-b",
+      "pad": 11,
+      "file": "bb_s-og-real-cymbal-3de3ea_p00.wav",
+      "displayName": "OG REAL CYMBAL"
     }
   ]
 }

@@ -477,11 +477,145 @@ pat(T, "TRAP 12 ATL 808 PUSH", 130, b="0-----0-----0-------------------", c=st(3
     s=st(32, 8, 24, ch="X")[:14] + "o" + st(32, 8, 24, ch="X")[15:18] + "o" + st(32, 8, 24, ch="X")[19:],
     h=st(32, *[i for i in range(0, 32, 2) if i != 10]), o=st(32, 0, 24))
 
+
+# ---------------- Artist styles (Oct 14): named for the sound, not the artist ----------------
+def rep(unit, n=32): return (unit * (n // len(unit) + 1))[:n]
+def put(lane, *pairs):
+    l = list(lane)
+    for i, ch in pairs: l[i] = ch
+    return "".join(l)
+def bass(*notes, n=32):
+    """808 line: (step, note char, length in steps)."""
+    l = ["."] * n
+    for step, ch, ln in notes:
+        l[step] = ch
+        for j in range(step + 1, min(n, step + ln)): l[j] = "-"
+    return "".join(l)
+HALF = st(32, 8, 24, ch="X")                     # half-time backbeat (beat 3 of each bar)
+BACK = st(32, 4, 12, 20, 28, ch="X")             # 2 and 4
+
+# TORONTO NIGHTS (Drake): dark half-time, muffled kicks, sparse hats, long sliding 808s
+TN = "Toronto Nights"
+pat(TN, "TORONTO NIGHTS 1 SIX", 136, k=st(32, 0, 10, 16, 26), c=HALF, h=rep("x...x..."), b=bass((0, "0", 10), (10, "0", 6), (16, "3", 10), (26, "5", 6)), glide=True)
+pat(TN, "TORONTO NIGHTS 2 MIDNIGHT", 134, k=st(32, 0, 7, 16, 22), s=HALF, h=rep("x.x.x.x.x.x.x.xq"), o=st(32, 14), b=bass((0, "0", 7), (7, "0", 9), (16, "A", 6), (22, "0", 10)), glide=True)
+pat(TN, "TORONTO NIGHTS 3 QUEEN STREET", 140, k=st(32, 0, 3, 10, 16, 19), c=HALF, r=st(32, 15, 31), h=rep("x...x...x...x.r."), b=bass((0, "0", 3), (3, "0", 7), (10, "7", 6), (16, "0", 3), (19, "5", 13)), glide=True)
+pat(TN, "TORONTO NIGHTS 4 COLD NIGHT", 132, k=st(32, 0, 11, 16), s=HALF, p1=st(32, 6, 22), h=rep("x.....x.x.....x."), b=bass((0, "0", 11), (11, "C", 5), (16, "0", 16)), glide=True)
+pat(TN, "TORONTO NIGHTS 5 BOUNCE", 138, k=st(32, 0, 6, 10, 16, 22, 26), c=HALF, h=rep("x.x.x.x.t.x.x.x."), o=st(32, 6, 22), b=bass((0, "0", 6), (6, "0", 4), (10, "3", 6), (16, "0", 6), (22, "0", 4), (26, "5", 6)))
+pat(TN, "TORONTO NIGHTS 6 SLIDE", 136, k=st(32, 0, 13, 16, 29), s=HALF, c=st(32, 8, 24), h=rep("x.x.x.xxx.x.x.x."), b=bass((0, "0", 13), (13, "7", 3), (16, "0", 13), (29, "c", 3)), glide=True)
+pat(TN, "TORONTO NIGHTS 7 DRIFT", 128, k=st(32, 0, 9, 16, 25), c=HALF, r=st(32, 20), h=rep("x...x...x...x..."), p2=st(32, 12, 28), b=bass((0, "0", 9), (9, "B", 7), (16, "0", 9), (25, "3", 7)), glide=True)
+pat(TN, "TORONTO NIGHTS 8 WINTER", 140, k=st(32, 0, 2, 10, 16, 18), s=HALF, h=rep("x.x.x.x.x.x.x.x.").replace("x.x.x.x.x.x.x.x.", "x.x.x.x.x.x.x.x.", 1), o=st(32, 30), b=bass((0, "0", 2), (2, "0", 8), (10, "5", 6), (16, "0", 2), (18, "0", 14)))
+pat(TN, "TORONTO NIGHTS 9 DUNDAS", 136, k=st(32, 0, 6, 11, 16, 27), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (13, "t"), (29, "q")), b=bass((0, "0", 6), (6, "3", 5), (11, "5", 5), (16, "0", 11), (27, "A", 5)), glide=True)
+pat(TN, "TORONTO NIGHTS 10 LAKESHORE", 130, k=st(32, 0, 16, 23), s=HALF, h=rep("x.......x......."), p1=st(32, 4, 12, 20, 28), b=bass((0, "0", 16), (16, "0", 7), (23, "5", 9)), glide=True)
+
+# LATE NIGHT RNB (PARTYNEXTDOOR): slow dark RnB, snaps and rims, swung hats, gliding 808
+LN = "Late Night RnB"
+pat(LN, "LATE NIGHT RNB 1 AFTER HOURS", 72, 54, k=st(32, 0, 7, 10, 16, 23), c=HALF, r=st(32, 8, 24), h=rep("x.x.x.x.x.x.x.xr"), b=bass((0, "0", 7), (7, "0", 3), (10, "3", 6), (16, "0", 7), (23, "5", 9)), glide=True)
+pat(LN, "LATE NIGHT RNB 2 SNAPS", 70, 56, k=st(32, 0, 10, 16, 26), r=HALF, h=rep("xxxxxxxxxxxxxxxx"), o=st(32, 14, 30), b=bass((0, "0", 10), (10, "A", 6), (16, "0", 10), (26, "3", 6)), glide=True)
+pat(LN, "LATE NIGHT RNB 3 NEON", 74, 54, k=st(32, 0, 6, 16, 19, 22), s=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (14, "t"), (30, "t")), p1=st(32, 12, 28, ch="g"), b=bass((0, "0", 6), (6, "0", 10), (16, "5", 3), (19, "3", 3), (22, "0", 10)), glide=True)
+pat(LN, "LATE NIGHT RNB 4 SLOW MOTION", 68, 58, k=st(32, 0, 11, 16), c=HALF, r=st(32, 8, 24, 30, ch="o"), h=rep("x...x...x...x..."), b=bass((0, "0", 11), (11, "7", 5), (16, "0", 16)), glide=True)
+pat(LN, "LATE NIGHT RNB 5 CITY LIGHTS", 76, 55, k=st(32, 0, 3, 10, 16, 26), c=HALF, h=rep("x.xxx.xxx.xxx.xx"), b=bass((0, "0", 3), (3, "0", 7), (10, "3", 6), (16, "0", 10), (26, "B", 6)), glide=True)
+pat(LN, "LATE NIGHT RNB 6 CANDLES", 72, 56, k=st(32, 0, 9, 16, 25), r=HALF, s=st(32, 8, 24, ch="o"), h=rep("x.x.x.x.x.x.x.x."), o=st(32, 6, 22), b=bass((0, "0", 9), (9, "5", 7), (16, "0", 9), (25, "7", 7)), glide=True)
+pat(LN, "LATE NIGHT RNB 7 LATE TEXT", 70, 54, k=st(32, 0, 7, 16, 18, 23), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (12, "r"), (28, "q")), b=bass((0, "0", 7), (7, "3", 9), (16, "0", 2), (18, "0", 5), (23, "A", 9)), glide=True)
+pat(LN, "LATE NIGHT RNB 8 PENTHOUSE", 75, 57, k=st(32, 0, 10, 13, 16, 26), c=HALF, r=st(32, 15, 31, ch="g"), h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 10), (10, "0", 3), (13, "5", 3), (16, "0", 16)))
+pat(LN, "LATE NIGHT RNB 9 RAIN", 66, 58, k=st(32, 0, 16, 22), s=HALF, r=st(32, 8, 24), h=rep("x.....x.x.....x."), p1=st(32, 2, 18, ch="g"), b=bass((0, "0", 16), (16, "3", 6), (22, "5", 10)), glide=True)
+pat(LN, "LATE NIGHT RNB 10 LOW LIGHT", 73, 55, k=st(32, 0, 6, 10, 16, 22, 28), c=HALF, h=rep("x.x.x.x.t.x.x.x."), o=st(32, 30), b=bass((0, "0", 6), (6, "0", 4), (10, "7", 6), (16, "0", 6), (22, "5", 6), (28, "3", 4)), glide=True)
+
+# ATL WAVE (Future): fast trap, rolling hats, punchy 808 bounces
+AW = "ATL Wave"
+pat(AW, "ATL WAVE 1 NIGHT RIDE", 150, k=st(32, 0, 7, 10, 16, 23, 26), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (12, "r"), (13, "r"), (28, "q")), b=bass((0, "0", 7), (7, "0", 3), (10, "0", 6), (16, "0", 7), (23, "3", 3), (26, "5", 6)))
+pat(AW, "ATL WAVE 2 CUP", 145, k=st(32, 0, 3, 10, 16, 19, 26), c=HALF, s=st(32, 8, 24), h=rep("x.x.t.x.x.x.t.x."), o=st(32, 14), b=bass((0, "0", 3), (3, "0", 7), (10, "7", 6), (16, "0", 3), (19, "0", 7), (26, "5", 6)))
+pat(AW, "ATL WAVE 3 OUTER SPACE", 148, k=st(32, 0, 6, 11, 16, 22, 27), c=HALF, h=rep("xxxxxxxxxxxxxxqx"), b=bass((0, "0", 6), (6, "0", 5), (11, "3", 5), (16, "0", 6), (22, "0", 5), (27, "A", 5)))
+pat(AW, "ATL WAVE 4 SYRUP", 140, k=st(32, 0, 10, 13, 16, 26), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (6, "t"), (22, "t"), (30, "q")), p1=st(32, 4, 20), b=bass((0, "0", 10), (10, "5", 3), (13, "7", 3), (16, "0", 10), (26, "3", 6)))
+pat(AW, "ATL WAVE 5 BANDS", 150, k=st(32, 0, 2, 7, 16, 18, 23), c=HALF, h=rep("x.x.x.x.x.x.x.xr"), o=st(32, 6, 22), b=bass((0, "0", 2), (2, "0", 5), (7, "0", 9), (16, "0", 2), (18, "0", 5), (23, "C", 9)))
+pat(AW, "ATL WAVE 6 PURPLE", 144, k=st(32, 0, 11, 16, 27), c=HALF, s=st(32, 30, ch="o"), h=put(rep("x.x.x.x.x.x.x.x."), (9, "q"), (25, "r")), b=bass((0, "0", 11), (11, "3", 5), (16, "0", 11), (27, "5", 5)), glide=True)
+pat(AW, "ATL WAVE 7 STAR", 152, k=st(32, 0, 3, 6, 16, 19, 22), c=HALF, h=rep("x.x.x.x.t.x.x.x."), b=bass((0, "0", 3), (3, "0", 3), (6, "0", 10), (16, "0", 3), (19, "0", 3), (22, "7", 10)))
+pat(AW, "ATL WAVE 8 ROLLING", 142, k=st(32, 0, 7, 16, 23, 29), c=HALF, h=rep("x.x.x.x.x.x.x.x."), o=st(32, 14, 30), p2=st(32, 10, 26), b=bass((0, "0", 7), (7, "0", 9), (16, "0", 7), (23, "3", 6), (29, "5", 3)))
+pat(AW, "ATL WAVE 9 STREETS", 148, k=st(32, 0, 10, 16, 20, 26), c=HALF, h=put(rep("xxxxxxxxxxxxxxxx"), (14, "q"), (15, "q")), b=bass((0, "0", 10), (10, "0", 6), (16, "0", 4), (20, "5", 6), (26, "3", 6)))
+pat(AW, "ATL WAVE 10 SLOW POUR", 140, k=st(32, 0, 6, 16, 22), c=HALF, h=rep("x...x.x.x...x.x."), b=bass((0, "0", 6), (6, "A", 10), (16, "0", 6), (22, "C", 10)), glide=True)
+
+# ROCKSTAR BOUNCE (Lil Uzi Vert): fast, bright, bouncy, melodic 808s
+RB = "Rockstar Bounce"
+pat(RB, "ROCKSTAR BOUNCE 1 PINK", 155, k=st(32, 0, 6, 10, 16, 22, 26), c=HALF, h=rep("x.x.x.x.x.x.x.x."), o=st(32, 14, 30), b=bass((0, "0", 6), (6, "7", 4), (10, "5", 6), (16, "0", 6), (22, "3", 4), (26, "5", 6)))
+pat(RB, "ROCKSTAR BOUNCE 2 BRIGHT", 160, k=st(32, 0, 3, 10, 16, 19, 26), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (13, "r"), (29, "t")), b=bass((0, "0", 3), (3, "0", 7), (10, "c", 6), (16, "0", 3), (19, "0", 7), (26, "7", 6)))
+pat(RB, "ROCKSTAR BOUNCE 3 PHILLY", 150, k=st(32, 0, 7, 10, 16, 23), c=HALF, s=st(32, 15, ch="g"), h=rep("xxxxxxxxxxxxxxxx"), b=bass((0, "0", 7), (7, "3", 3), (10, "5", 6), (16, "0", 7), (23, "7", 9)))
+pat(RB, "ROCKSTAR BOUNCE 4 GLOW", 158, k=st(32, 0, 6, 11, 16, 22, 27), c=HALF, h=rep("x.x.t.x.x.x.t.x."), p1=st(32, 2, 18), b=bass((0, "0", 6), (6, "0", 5), (11, "3", 5), (16, "0", 6), (22, "5", 5), (27, "7", 5)))
+pat(RB, "ROCKSTAR BOUNCE 5 FLEX", 154, k=st(32, 0, 10, 16, 26, 29), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (6, "q"), (22, "q")), o=st(32, 12, 28), b=bass((0, "0", 10), (10, "0", 6), (16, "0", 10), (26, "5", 3), (29, "7", 3)))
+pat(RB, "ROCKSTAR BOUNCE 6 MONEY", 162, k=st(32, 0, 3, 7, 16, 19, 23), c=HALF, h=rep("x.x.x.x.x.x.x.xr"), b=bass((0, "0", 3), (3, "0", 4), (7, "0", 9), (16, "0", 3), (19, "0", 4), (23, "3", 9)))
+pat(RB, "ROCKSTAR BOUNCE 7 SPACE", 150, k=st(32, 0, 11, 16, 27), c=HALF, h=rep("x.x.x.x.t.x.x.x."), p2=st(32, 6, 22), b=bass((0, "0", 11), (11, "7", 5), (16, "0", 11), (27, "c", 5)), glide=True)
+pat(RB, "ROCKSTAR BOUNCE 8 SKIPPY", 156, k=st(32, 0, 6, 16, 22, 30), c=HALF, s=st(32, 8, 24), h=put(rep("xxxxxxxxxxxxxxxx"), (12, "q"), (28, "q")), b=bass((0, "0", 6), (6, "5", 10), (16, "0", 6), (22, "3", 8), (30, "5", 2)))
+pat(RB, "ROCKSTAR BOUNCE 9 SUGAR", 152, k=st(32, 0, 7, 10, 16, 26), c=HALF, h=rep("x.x.x.x.x.x.x.x."), o=st(32, 6, 22, 30), b=bass((0, "0", 7), (7, "0", 3), (10, "7", 6), (16, "0", 10), (26, "5", 6)))
+pat(RB, "ROCKSTAR BOUNCE 10 LASER", 160, k=st(32, 0, 2, 10, 16, 18, 26), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (13, "t"), (14, "r"), (30, "q")), b=bass((0, "0", 2), (2, "0", 8), (10, "3", 6), (16, "0", 2), (18, "0", 8), (26, "A", 6)))
+
+# VAMP RAGE (Playboi Carti): rage, distorted 808 on every kick, sparse snares, choppy hats
+VR = "Vamp Rage"
+pat(VR, "VAMP RAGE 1 MOSH", 150, k=st(32, 0, 3, 6, 10, 16, 19, 22, 26), c=HALF, h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 3), (3, "0", 3), (6, "0", 4), (10, "0", 6), (16, "0", 3), (19, "0", 3), (22, "0", 4), (26, "3", 6)))
+pat(VR, "VAMP RAGE 2 NONSTOP", 160, k=st(32, 0, 4, 8, 12, 16, 20, 24, 28), c=HALF, h=rep("x.xxx.xxx.xxx.xx"), b=bass((0, "0", 4), (4, "0", 4), (8, "0", 4), (12, "3", 4), (16, "0", 4), (20, "0", 4), (24, "0", 4), (28, "5", 4)))
+pat(VR, "VAMP RAGE 3 SKY", 155, k=st(32, 0, 7, 10, 16, 23, 26), c=HALF, o=st(32, 6, 14, 22, 30), h=rep("x...x...x...x..."), b=bass((0, "0", 7), (7, "0", 3), (10, "0", 6), (16, "0", 7), (23, "7", 3), (26, "5", 6)))
+pat(VR, "VAMP RAGE 4 SLAM", 152, k=st(32, 0, 2, 6, 10, 16, 18, 22, 26), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (14, "q"), (30, "q")), b=bass((0, "0", 2), (2, "0", 4), (6, "0", 4), (10, "0", 6), (16, "0", 2), (18, "0", 4), (22, "0", 4), (26, "A", 6)))
+pat(VR, "VAMP RAGE 5 PUNK", 158, k=st(32, 0, 6, 12, 16, 22, 28), c=HALF, s=st(32, 30, ch="o"), h=rep("xxxxxxxxxxxxxxxx"), b=bass((0, "0", 6), (6, "0", 6), (12, "3", 4), (16, "0", 6), (22, "0", 6), (28, "5", 4)))
+pat(VR, "VAMP RAGE 6 SPIKES", 150, k=st(32, 0, 3, 10, 13, 16, 19, 26, 29), c=HALF, h=rep("x.x.x.x.x.x.x.x."), p1=st(32, 4, 20), b=bass((0, "0", 3), (3, "0", 7), (10, "0", 3), (13, "3", 3), (16, "0", 3), (19, "0", 7), (26, "0", 3), (29, "5", 3)))
+pat(VR, "VAMP RAGE 7 FLOWERS", 162, k=st(32, 0, 3, 6, 11, 16, 19, 22, 27), c=HALF, h=rep("x.x.x.x.x.x.x.x."), o=st(32, 14), b=bass((0, "0", 3), (3, "0", 3), (6, "0", 5), (11, "7", 5), (16, "0", 3), (19, "0", 3), (22, "0", 5), (27, "5", 5)))
+pat(VR, "VAMP RAGE 8 BLACKOUT", 155, k=st(32, 0, 5, 10, 16, 21, 26), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (12, "r"), (28, "r")), b=bass((0, "0", 5), (5, "0", 5), (10, "0", 6), (16, "0", 5), (21, "0", 5), (26, "C", 6)))
+pat(VR, "VAMP RAGE 9 CHAOS", 148, k=st(32, 0, 2, 4, 10, 16, 18, 20, 26), c=HALF, h=rep("x.x.x.x.x.x.x.x."), p2=st(32, 7, 23), b=bass((0, "0", 2), (2, "0", 2), (4, "0", 6), (10, "3", 6), (16, "0", 2), (18, "0", 2), (20, "0", 6), (26, "5", 6)))
+pat(VR, "VAMP RAGE 10 FULL VAMP", 165, k=st(32, *range(0, 32, 2)), c=HALF, h=rep("x...x...x...x..."), o=st(32, 30), b=bass(*[(i, "0" if i % 8 else "3", 2) for i in range(0, 32, 2)]))
+
+# CAROLINA SOUL (J. Cole): soulful boom bap, dusty swung drums, warm kicks
+CS = "Carolina Soul"
+pat(CS, "CAROLINA SOUL 1 DUSTY", 90, 58, k=st(32, 0, 7, 10, 16, 23, 26), s=BACK, h=rep("x.x.x.x.x.x.x.x."), o=st(32, 14, 30))
+pat(CS, "CAROLINA SOUL 2 PORCH", 86, 60, k=st(32, 0, 3, 10, 16, 19, 26), s=BACK, h=rep("x.xgx.xgx.xgx.xg"), p1=st(32, 30, ch="g"))
+pat(CS, "CAROLINA SOUL 3 SUNSET", 92, 56, k=st(32, 0, 6, 9, 16, 22, 25), s=put(BACK, (15, "g"), (31, "g")), h=rep("x.x.x.x.x.x.x.x."))
+pat(CS, "CAROLINA SOUL 4 HOMETOWN", 88, 60, k=st(32, 0, 10, 11, 16, 26), s=BACK, h=rep("xxxxxxxxxxxxxxxx"), o=st(32, 6, 22))
+pat(CS, "CAROLINA SOUL 5 CROOKED", 94, 57, k=st(32, 0, 7, 8, 16, 23, 24), s=put(BACK, (10, "g"), (26, "g")), h=rep("x.x.x.x.x.x.x.x."), cr=st(32, 0))
+pat(CS, "CAROLINA SOUL 6 WARM", 84, 58, k=st(32, 0, 9, 16, 25), s=BACK, r=st(32, 14, 30, ch="g"), h=rep("x.x.x.x.x.x.x.x."))
+pat(CS, "CAROLINA SOUL 7 VILLE", 90, 62, k=st(32, 0, 3, 7, 16, 19, 23), s=BACK, h=put(rep("x.x.x.x.x.x.x.x."), (14, "o"), (15, "x")))
+pat(CS, "CAROLINA SOUL 8 TAPE", 88, 56, k=st(32, 0, 10, 16, 22, 26), s=BACK, h=rep("x.xxx.xxx.xxx.xx"), b=bass((0, "0", 10), (16, "0", 6), (22, "5", 4), (26, "3", 6)))
+pat(CS, "CAROLINA SOUL 9 FIRST CHILD", 92, 55, k=st(32, 0, 6, 10, 16, 22, 26), s=BACK, h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 6), (6, "0", 4), (10, "A", 6), (16, "0", 6), (22, "3", 4), (26, "5", 6)))
+pat(CS, "CAROLINA SOUL 10 DREAMS", 86, 60, k=st(32, 0, 7, 11, 16, 27), s=put(BACK, (23, "g")), h=rep("x.x.x.x.x.x.x.x."), p1=st(32, 8, 24, ch="o"))
+
+# LA LYRICIST (Kendrick Lamar): West Coast bounce meets jazz and boom bap
+LL = "LA Lyricist"
+pat(LL, "LA LYRICIST 1 STRUT", 94, 56, k=st(32, 0, 3, 10, 16, 19, 26), s=BACK, c=st(32, 4, 20), h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 3), (3, "0", 7), (10, "5", 6), (16, "0", 3), (19, "7", 7), (26, "5", 6)))
+pat(LL, "LA LYRICIST 2 STOMP", 150, k=st(32, 0, 3, 16, 19), c=HALF, h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 3), (3, "0", 13), (16, "0", 3), (19, "A", 13)))
+pat(LL, "LA LYRICIST 3 CITY", 96, 54, k=st(32, 0, 6, 10, 16, 22, 26), c=BACK, h=rep("x.xxx.xxx.xxx.xx"), o=st(32, 14, 30), b=bass((0, "0", 6), (6, "0", 4), (10, "3", 6), (16, "0", 6), (22, "5", 4), (26, "7", 6)))
+pat(LL, "LA LYRICIST 4 WINGS", 98, 62, k=st(32, 0, 7, 16, 23), s=BACK, h=rep("x.xgx.xgx.xgx.xg"), cr=st(32, 0), p1=st(32, 14, 30, ch="g"))
+pat(LL, "LA LYRICIST 5 DOUBLE TIME", 140, k=st(32, 0, 6, 10, 16, 22, 26), c=HALF, s=st(32, 15, 31, ch="g"), h=rep("xxxxxxxxxxxxxxxx"), b=bass((0, "0", 6), (6, "0", 4), (10, "0", 6), (16, "0", 6), (22, "3", 4), (26, "0", 6)))
+pat(LL, "LA LYRICIST 6 GOOD STEP", 92, 58, k=st(32, 0, 10, 16, 26), s=BACK, r=st(32, 7, 23, ch="g"), h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 10), (10, "5", 6), (16, "0", 10), (26, "3", 6)), glide=True)
+pat(LL, "LA LYRICIST 7 MARCH", 110, 56, k=st(32, 0, 3, 8, 16, 19, 24), s=BACK, h=put(rep("x.x.x.x.x.x.x.x."), (14, "r")), o=st(32, 30))
+pat(LL, "LA LYRICIST 8 WEST SIDE", 92, 55, k=st(32, 0, 7, 10, 16, 23, 26), c=BACK, h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 7), (7, "0", 3), (10, "7", 6), (16, "0", 7), (23, "5", 3), (26, "3", 6)), glide=True)
+pat(LL, "LA LYRICIST 9 SERMON", 100, 60, k=st(32, 0, 9, 16, 21, 25), s=put(BACK, (11, "g"), (27, "g")), h=rep("x.xxx.xxx.xxx.xx"))
+pat(LL, "LA LYRICIST 10 CHAPTER", 90, 58, k=st(32, 0, 3, 6, 16, 22), s=BACK, h=rep("x.x.x.x.x.x.x.x."), o=st(32, 14), p2=st(32, 10, 26))
+
+# SOFT SOUL (SZA): airy neo soul RnB, laid-back swung drums, soft 808
+SS = "Soft Soul"
+pat(SS, "SOFT SOUL 1 CONTROL", 80, 58, k=st(32, 0, 7, 16, 23), r=BACK, h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 7), (7, "3", 9), (16, "0", 7), (23, "5", 9)), glide=True)
+pat(SS, "SOFT SOUL 2 GOOD MORNING", 76, 60, k=st(32, 0, 10, 16, 26), s=put(BACK, (14, "g"), (30, "g")), h=rep("x.xgx.xgx.xgx.xg"), b=bass((0, "0", 10), (10, "5", 6), (16, "A", 10), (26, "0", 6)), glide=True)
+pat(SS, "SOFT SOUL 3 SLEEP IN", 84, 56, k=st(32, 0, 6, 16, 22), c=BACK, h=put(rep("x.x.x.x.x.x.x.x."), (14, "t")), b=bass((0, "0", 6), (6, "0", 10), (16, "3", 6), (22, "5", 10)), glide=True)
+pat(SS, "SOFT SOUL 4 SWAY", 88, 54, k=st(32, 0, 3, 10, 16, 19, 26), s=BACK, h=rep("x.x.x.x.x.x.x.x."), p1=st(32, 6, 22, ch="o"))
+pat(SS, "SOFT SOUL 5 GARDEN", 72, 60, k=st(32, 0, 9, 16), r=BACK, h=rep("x...x...x...x..."), cr=st(32, 0), b=bass((0, "0", 9), (9, "7", 7), (16, "0", 16)), glide=True)
+pat(SS, "SOFT SOUL 6 CLOCKS", 82, 57, k=st(32, 0, 7, 10, 16, 23), c=BACK, h=rep("x.xxx.xxx.xxx.xx"), b=bass((0, "0", 7), (7, "0", 3), (10, "3", 6), (16, "0", 16)))
+pat(SS, "SOFT SOUL 7 CLOUDS", 70, 58, k=st(32, 0, 7, 10, 16, 23, 26), c=HALF, r=st(32, 8, 24), h=put(rep("x.x.x.x.x.x.x.x."), (12, "r"), (28, "t")), b=bass((0, "0", 7), (7, "0", 3), (10, "5", 6), (16, "0", 7), (23, "3", 9)), glide=True)
+pat(SS, "SOFT SOUL 8 DRIVE", 86, 55, k=st(32, 0, 6, 11, 16, 22), s=BACK, h=rep("x.x.x.x.x.x.x.x."), o=st(32, 14, 30))
+pat(SS, "SOFT SOUL 9 ORBIT", 78, 60, k=st(32, 0, 10, 16, 22, 26), r=BACK, s=st(32, 15, 31, ch="g"), h=rep("x.xgx.xgx.xgx.xg"), b=bass((0, "0", 10), (10, "3", 6), (16, "0", 6), (22, "5", 4), (26, "7", 6)), glide=True)
+pat(SS, "SOFT SOUL 10 SUNDAY", 74, 62, k=st(32, 0, 7, 16), s=BACK, h=rep("x.x.x.x.x.x.x.x."), p1=st(32, 3, 19, ch="g"), b=bass((0, "0", 7), (7, "5", 9), (16, "0", 16)), glide=True)
+
+# HOUSTON QUEEN (Beyonce): big claps, bounce, RnB-pop drums, a little Houston swing
+HQ = "Houston Queen"
+pat(HQ, "HOUSTON QUEEN 1 MARCH", 124, k=st(32, 0, 6, 10, 16, 22, 26), c=BACK, h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 6), (6, "0", 4), (10, "3", 6), (16, "0", 6), (22, "0", 4), (26, "5", 6)))
+pat(HQ, "HOUSTON QUEEN 2 CRUSH", 100, 56, k=st(32, 0, 3, 7, 16, 19, 23), s=BACK, c=BACK, h=rep("xxxxxxxxxxxxxxxx"), o=st(32, 14, 30))
+pat(HQ, "HOUSTON QUEEN 3 LATE PARTY", 120, 54, k=st(32, 0, 10, 16, 26), c=put(BACK, (13, "o"), (29, "o")), h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 10), (10, "5", 6), (16, "0", 10), (26, "3", 6)), glide=True)
+pat(HQ, "HOUSTON QUEEN 4 DISCO", 120, k=st(32, 0, 4, 8, 12, 16, 20, 24, 28), c=BACK, h=rep("..x...x...x...x."), o=st(32, 2, 10, 18, 26))
+pat(HQ, "HOUSTON QUEEN 5 BACKSEAT", 96, 57, k=st(32, 0, 7, 10, 16, 23), c=BACK, h=put(rep("x.x.x.x.x.x.x.x."), (14, "r"), (30, "q")), b=bass((0, "0", 7), (7, "0", 3), (10, "7", 6), (16, "0", 7), (23, "5", 9)))
+pat(HQ, "HOUSTON QUEEN 6 BOUNCE", 130, k=st(32, 0, 6, 16, 22), c=HALF, h=rep("x.x.x.x.x.x.x.x."), b=bass((0, "0", 6), (6, "0", 10), (16, "0", 6), (22, "3", 10)))
+pat(HQ, "HOUSTON QUEEN 7 STRUT", 84, 58, k=st(32, 0, 10, 16, 26), s=put(BACK, (15, "g")), h=rep("x.xgx.xgx.xgx.xg"), p1=st(32, 6, 22, ch="o"))
+pat(HQ, "HOUSTON QUEEN 8 SLOW BOUNCE", 72, 60, k=st(32, 0, 3, 10, 16, 19), c=HALF, r=st(32, 8, 24), h=rep("x.x.x.x.x.x.x.xr"), b=bass((0, "0", 3), (3, "0", 7), (10, "5", 6), (16, "0", 3), (19, "3", 13)), glide=True)
+pat(HQ, "HOUSTON QUEEN 9 THIRD WARD", 98, 56, k=st(32, 0, 6, 9, 16, 22, 25), c=BACK, s=BACK, h=rep("x.x.x.x.x.x.x.x."), o=st(32, 30))
+pat(HQ, "HOUSTON QUEEN 10 RODEO", 105, 55, k=st(32, 0, 10, 16, 26), s=BACK, h=rep("x.x.x.x.x.x.x.x."), p2=st(32, 3, 7, 19, 23, ch="o"))
+
 from collections import Counter
 cnt = Counter(p["style"] for p in P)
 for st, n in cnt.items():
     if st != D: assert n >= 10, (st, n)
-assert len(cnt) == 20, cnt
+assert len(cnt) == 29, cnt
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)
 VALID = set(".xXogrqt")

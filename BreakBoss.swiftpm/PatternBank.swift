@@ -43,6 +43,13 @@ struct PatternPreset: Decodable, Equatable {
         case "Jazz": return .looseBreak
         case "Neo Soul": return .neoSoul
         case "Soul RnB": return .gospel
+        case "Toronto Nights": return .trapToronto
+        case "Late Night RnB": return .trapSoul
+        case "ATL Wave", "Rockstar Bounce", "Vamp Rage": return .trapAtlanta
+        case "Carolina Soul": return .boomBap
+        case "LA Lyricist": return .westBounce
+        case "Soft Soul": return .neoSoul
+        case "Houston Queen": return .rnb
         default:
             if name.contains("AFRO") { return .afrobeats }
             if name.contains("BREAK") { return .funkBreak }
