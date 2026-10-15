@@ -438,6 +438,23 @@ def external(build_number):
     s4, j4 = call("POST", "/v1/betaAppReviewSubmissions",
                   {"data": {"type": "betaAppReviewSubmissions",
                             "relationships": {"build": {"data": {"type": "builds", "id": build["id"]}}}}})
+    if s4 == 422 and "review" in problem(j4).lower():
+        # Apple reviews one build at a time: retire the older build that's still waiting (Tyrone's call:
+        # the newest build goes out now), then submit this one.
+        sb, jb = call("GET", f"/v1/builds?filter[app]={app_id}&sort=-uploadedDate&limit=20&include=buildBetaDetail")
+        details = {d["id"]: d for d in jb.get("included", []) if d.get("type") == "buildBetaDetails"} if sb == 200 else {}
+        for old in (jb.get("data", []) if sb == 200 else []):
+            if old["id"] == build["id"]: continue
+            rel = old.get("relationships", {}).get("buildBetaDetail", {}).get("data") or {}
+            state = details.get(rel.get("id"), {}).get("attributes", {}).get("externalBuildState")
+            if state in ("WAITING_FOR_BETA_REVIEW", "IN_BETA_REVIEW"):
+                se, je = call("PATCH", f"/v1/builds/{old['id']}", {"data": {"type": "builds", "id": old["id"], "attributes": {"expired": True}}})
+                say("notice" if se == 200 else "warning", "Beta App Review",
+                    f"Build {old['attributes'].get('version')} ({state}) " + ("retired so the new build can go in." if se == 200 else f"couldn't be retired: HTTP {se} {problem(je)}"))
+        time.sleep(20)
+        s4, j4 = call("POST", "/v1/betaAppReviewSubmissions",
+                      {"data": {"type": "betaAppReviewSubmissions",
+                                "relationships": {"build": {"data": {"type": "builds", "id": build["id"]}}}}})
     if s4 == 201:
         say("notice", "Beta App Review", f"Build {number} was sent to Apple for Beta App Review.")
     else:
