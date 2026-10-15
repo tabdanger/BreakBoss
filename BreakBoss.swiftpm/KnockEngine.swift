@@ -192,6 +192,8 @@ final class KnockEngine {
         for i in 0..<midiOutCount { let m = midiOut[i]; send(Int(m.frame), m.status, m.data1, m.data2) }
     }
     private var midiOutOn = false
+    /// True while a note from the DAW is being played: those hits don't go back out (no MIDI thru).
+    private var playingHostNote = false
     private let midiOutChannel = UnsafeMutablePointer<Int16>.allocate(capacity: Pad.count)   // -1 = off
     private let midiOutNote = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)
     private let midiOffDue = UnsafeMutablePointer<Int64>.allocate(capacity: Pad.count)       // -1 = none
@@ -316,6 +318,21 @@ final class KnockEngine {
     }
 
     @inline(__always)
+    /// MIDI shaped like BreakBoss's own MIDI OUT (each pad on its channel and note, the 808 on its
+    /// channel from C2 to C5): which pad it is, and the 808's pitch. Nil for anything else (a
+    /// controller), which keeps the normal pad map and LOOP launching.
+    private func outRoute(channel: Int, note: Int) -> (pad: Int, semis: Int)? {
+        guard midiOutOn, channel >= 0, channel < 16 else { return nil }
+        let bass = Pad.bass808.rawValue
+        for p in 0..<Pad.count where p != bass && midiOutChannel[p] == Int16(channel) && Int(midiOutNote[p]) == note {
+            return (p, 0)
+        }
+        if midiOutChannel[bass] == Int16(channel) && Pad.bassNoteRange.contains(note) {
+            return (bass, note - Pad.bassRootNote)
+        }
+        return nil
+    }
+
     private func livePad(_ note: Int) -> Int? {
         guard note >= 0 && note < 128 else { return nil }
         let pad = Int(midiPadTable[note])
@@ -585,6 +602,18 @@ final class KnockEngine {
             if midiOutOn, e.a >= 0, e.a < 2048, sampleClock - midiSentAt[Int(e.a)] < Int64(sampleRate * 0.05) { break }
             let note = Int(e.a) % 128
             lastNoteOn.pointee = (lastNoteOn.pointee &+ 256) & ~0xFF | Int32(note)
+            // The DAW playing back what BreakBoss recorded into it (same channels and notes as
+            // MIDI OUT): always the drum itself, in ONE-SHOT and LOOP mode alike.
+            if e.a >= 0, let r = outRoute(channel: Int(e.a) / 128, note: note) {
+                playingHostNote = true
+                if r.pad == Pad.bass808.rawValue {
+                    apply(KEvent(kind: .bass, a: Int32(r.semis), value: e.value), offset: offset)
+                } else {
+                    apply(KEvent(kind: .pad, a: Int32(r.pad), value: e.value), offset: offset)
+                }
+                playingHostNote = false
+                break
+            }
             if params[KParam.playMode.rawValue] > 0.5, !recordArmed, livePad(note) != nil {
                 beginGate(Int(e.a))
             } else {
@@ -624,6 +653,17 @@ final class KnockEngine {
                 }
             }
         case .noteOff:
+            // A recorded part playing back: the 808 note ends where the DAW's note ends (its
+            // length as recorded); drums are one-shots and ring out.
+            if e.a >= 0, let r = outRoute(channel: Int(e.a) / 128, note: Int(e.a) % 128) {
+                if r.pad == Pad.bass808.rawValue {
+                    let note = Int(e.a) % 128
+                    for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].heldNote == note {
+                        voices[v].release(samples: Int(sampleRate * 0.03))
+                    }
+                }
+                break
+            }
             // One-shot duration belongs to the sample and DECAY control, even for a
             // chromatic 808. Only Loop mode treats MIDI note length as a gate.
             guard params[KParam.playMode.rawValue] > 0.5 else { break }
@@ -840,11 +880,12 @@ final class KnockEngine {
     /// A pattern hit as MIDI on its channel's own MIDI channel. The 808 sends its played pitch.
     @inline(__always)
     private func midiOutHit(pad: Int, velocity: Float, semis: Float, length: Int, offset: Int) {
-        guard midiOutOn, pad >= 0, pad < Pad.count, padMask & (1 << UInt16(pad)) != 0 else { return }
+        guard midiOutOn, !playingHostNote, pad >= 0, pad < Pad.count, padMask & (1 << UInt16(pad)) != 0 else { return }
         let ch = midiOutChannel[pad]
         guard ch >= 0 else { return }
         var note = Int(midiOutNote[pad])
-        if pad == Pad.bass808.rawValue { note += Int(semis.rounded()) }
+        // The 808 plays chromatically around C3 (60), the same range BreakBoss reads back in.
+        if pad == Pad.bass808.rawValue { note = Pad.bassRootNote + Int(semis.rounded()) }
         note = note.clamped(0, 127)
         let frame = renderBase + max(0, offset)
         if midiOffDue[pad] >= 0 {

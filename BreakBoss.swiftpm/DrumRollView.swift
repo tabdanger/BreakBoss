@@ -72,6 +72,11 @@ struct DrumRollView: View {
     @State private var lane: Lane = .velocity
     @State private var follow = true
     @State private var page = 0
+    /// Pinch zoom: 0 = the normal view, 1 = one bar, 2 = half a bar, 3 = one beat. SNAP follows it.
+    @State private var zoomLevel = 0
+    @State private var pinchBase: CGFloat = 1
+    @State private var pinching = false
+    static let zoomSnaps: [Int32] = [24, 12, 6, 3]
     @State private var selection = Set<NoteKey>()
     @State private var undoStack: [PatternData] = []
     @State private var redoStack: [PatternData] = []
@@ -115,9 +120,18 @@ struct DrumRollView: View {
     private var compact: Bool { sizeClass == .compact }
     private var bars: Int { max(1, pattern.bars) }
     private var barsPerPage: Int { min(compact ? 2 : 4, bars) }
-    private var pages: Int { max(1, (bars + barsPerPage - 1) / barsPerPage) }
-    private var pageStart: Int32 { Int32(min(page, pages - 1) * barsPerPage) * PatternEdit.barTicks }
-    private var pageTicks: Int32 { Int32(barsPerPage) * PatternEdit.barTicks }
+    /// The visible stretch of the pattern at this zoom.
+    private var windowTicks: Int32 {
+        switch zoomLevel {
+        case 0: return Int32(barsPerPage) * PatternEdit.barTicks
+        case 1: return PatternEdit.barTicks
+        case 2: return PatternEdit.barTicks / 2
+        default: return PatternData.ppq
+        }
+    }
+    private var pages: Int { max(1, Int((Int32(bars) * PatternEdit.barTicks + windowTicks - 1) / windowTicks)) }
+    private var pageStart: Int32 { Int32(min(page, pages - 1)) * windowTicks }
+    private var pageTicks: Int32 { windowTicks }
     /// Grid step in ticks for the SNAP setting (0 = free, placed on 1/64ths).
     private var snapTicks: Int32 { snap }
 
@@ -125,7 +139,7 @@ struct DrumRollView: View {
     static let snapChoices: [(section: String, items: [(String, Int32)])] = [
         ("Straight", [("1/2 (half note)", 192), ("Beat (1/4)", 96), ("1/2 Beat (1/8)", 48), ("1/4 Beat (1/16)", 24),
                       ("Step (1/16)", 24), ("1/2 Step (1/32)", 12), ("1/4 Step (1/64)", 6),
-                      ("1/16", 24), ("1/32", 12), ("1/64", 6)]),
+                      ("1/16", 24), ("1/32", 12), ("1/64", 6), ("1/128", 3)]),
         ("Triplet", [("1/3 Beat (1/8 triplet)", 32), ("1/3 Step (1/16 triplet)", 8), ("1/6 Beat", 16), ("1/6 Step", 4)]),
         ("Off", [("None (free)", 0)])
     ]
@@ -274,7 +288,7 @@ struct DrumRollView: View {
     private var barsMenu: some View {
         chip("\(bars) BAR\(bars == 1 ? "" : "S")", width: 104)
             .bbMenu(title: "Pattern length") {
-                [4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
+                [2, 4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
             }
     }
 
@@ -309,7 +323,7 @@ struct DrumRollView: View {
                 .item("Metronome", icon: "metronome", checked: controller.metronome) { controller.setMetronome(!controller.metronome) },
                 .submenu("MIDI out (external gear)", icon: "cable.connector", midiOutItems()),
                 .item("Copy these bars to the next ones", icon: "doc.on.doc") {
-                    commit(PatternEdit.copyNext(pattern, fromBar: Int(pageStart / PatternEdit.barTicks), bars: barsPerPage))
+                    commit(PatternEdit.copyNext(pattern, fromBar: Int(pageStart / PatternEdit.barTicks), bars: max(1, Int(pageTicks / PatternEdit.barTicks))))
                 },
                 .item("Quantize \(selection.isEmpty ? "all notes" : "selection")", icon: "squareshape.split.3x3") {
                     commit(PatternEdit.quantize(pattern, selection.isEmpty ? nil : selection, grid: snapTicks > 0 ? snapTicks : PatternData.stepTicks))
@@ -492,12 +506,53 @@ struct DrumRollView: View {
         }
     }
 
+    private var pageLabel: String {
+        let bar = Int(pageStart / PatternEdit.barTicks) + 1
+        if zoomLevel == 0 {
+            let last = min(bars, bar + barsPerPage - 1)
+            return last == bar ? "BAR \(bar)" : "BARS \(bar)–\(last)"
+        }
+        let beat = Int((pageStart % PatternEdit.barTicks) / PatternData.ppq) + 1
+        return zoomLevel == 1 ? "BAR \(bar) · ZOOM" : "BAR \(bar).\(beat) · ZOOM"
+    }
+
+    /// Two-finger spread / pinch (touch or trackpad): one zoom level per clear spread, around the
+    /// middle of what's on screen. SNAP gets finer as you zoom in (1/16, 1/32, 1/64, 1/128).
+    private func setZoom(_ level: Int) {
+        let newLevel = max(0, min(Self.zoomSnaps.count - 1, level))
+        guard newLevel != zoomLevel else { return }
+        let center = pageStart + pageTicks / 2
+        zoomLevel = newLevel
+        page = max(0, min(pages - 1, Int(center / windowTicks)))
+        snap = Self.zoomSnaps[newLevel]
+        follow = false
+    }
+
+    private var pinch: some Gesture {
+        MagnificationGesture()
+            .onChanged { scale in
+                if !pinching {
+                    pinching = true
+                    // a finger that landed first may have started drawing: undo that
+                    switch drag {
+                    case .paint, .erase: _ = undoStack.popLast()
+                    default: break
+                    }
+                    drag = .none; work = nil
+                }
+                let r = scale / pinchBase
+                if r > 1.3 { setZoom(zoomLevel + 1); pinchBase = scale }
+                else if r < 0.77 { setZoom(zoomLevel - 1); pinchBase = scale }
+            }
+            .onEnded { _ in pinchBase = 1; pinching = false; drag = .none; work = nil }
+    }
+
     private var pageControl: some View {
         HStack(spacing: 6) {
             Button { page = max(0, page - 1); follow = false } label: {
                 Image(systemName: "chevron.left").foregroundColor(page > 0 ? theme.ink : theme.inkDim)
             }.disabled(page == 0)
-            Text(barsPerPage == 1 ? "BAR \(page * barsPerPage + 1)" : "BARS \(page * barsPerPage + 1)–\(min(bars, (page + 1) * barsPerPage))")
+            Text(pageLabel)
                 .font(.system(size: 11, design: .monospaced)).foregroundColor(theme.ink).lineLimit(1)
             Button { page = min(pages - 1, page + 1); follow = false } label: {
                 Image(systemName: "chevron.right").foregroundColor(page < pages - 1 ? theme.ink : theme.inkDim)
@@ -507,18 +562,28 @@ struct DrumRollView: View {
 
     private func ruler(width: CGFloat) -> some View {
         Canvas { ctx, size in
-            let firstBar = Int(pageStart / PatternEdit.barTicks)
-            let perBar = size.width / CGFloat(barsPerPage)
-            for b in 0..<barsPerPage {
-                let x = CGFloat(b) * perBar
-                ctx.fill(Path(CGRect(x: x, y: 0, width: 1.5, height: size.height)), with: .color(S.barLine))
-                ctx.draw(Text("\(firstBar + b + 1)").font(.system(size: 13, weight: .medium)).foregroundColor(S.text),
-                         at: CGPoint(x: x + 10, y: 11))
-                for s in 1..<16 {
-                    let sx = x + perBar * CGFloat(s) / 16
-                    let h: CGFloat = s % 4 == 0 ? 12 : 6
-                    ctx.fill(Path(CGRect(x: sx, y: size.height - h, width: 1, height: h)), with: .color(S.dim.opacity(0.7)))
+            let px = { (t: Int32) in CGFloat(t - pageStart) / CGFloat(pageTicks) * size.width }
+            let fine: Int32 = zoomLevel >= 2 ? 6 : PatternData.stepTicks
+            var t = pageStart
+            while t <= pageStart + pageTicks {
+                let x = px(t)
+                if t % PatternEdit.barTicks == 0 {
+                    ctx.fill(Path(CGRect(x: x, y: 0, width: 1.5, height: size.height)), with: .color(S.barLine))
+                    if t < pageStart + pageTicks {
+                        ctx.draw(Text("\(t / PatternEdit.barTicks + 1)").font(.system(size: 13, weight: .medium)).foregroundColor(S.text),
+                                 at: CGPoint(x: x + 10, y: 11))
+                    }
+                } else if t % PatternData.ppq == 0 {
+                    ctx.fill(Path(CGRect(x: x, y: size.height - 12, width: 1, height: 12)), with: .color(S.dim.opacity(0.7)))
+                    if zoomLevel > 0 {
+                        let label = "\(t / PatternEdit.barTicks + 1).\((t % PatternEdit.barTicks) / PatternData.ppq + 1)"
+                        ctx.draw(Text(label).font(.system(size: 11)).foregroundColor(S.dim), at: CGPoint(x: x + 14, y: 11))
+                    }
+                } else {
+                    let h: CGFloat = t % PatternData.stepTicks == 0 ? 7 : 4
+                    ctx.fill(Path(CGRect(x: x, y: size.height - h, width: 1, height: h)), with: .color(S.dim.opacity(0.6)))
                 }
+                t += fine
             }
             ctx.fill(Path(CGRect(x: 0, y: size.height - 1, width: size.width, height: 1)), with: .color(S.border))
         }
@@ -652,7 +717,8 @@ struct DrumRollView: View {
             for s in 0...steps {
                 let t = Int32(s) * (snapTicks > 0 ? snapTicks : PatternData.stepTicks)
                 let lx = CGFloat(t) / CGFloat(pageTicks) * size.width
-                let isBar = t % PatternEdit.barTicks == 0, isBeat = t % PatternData.ppq == 0
+                let at = pageStart + t
+                let isBar = at % PatternEdit.barTicks == 0, isBeat = at % PatternData.ppq == 0
                 ctx.fill(Path(CGRect(x: lx, y: 0, width: isBar ? 1.5 : 1, height: size.height)),
                          with: .color(isBar ? S.barLine : isBeat ? S.beatLine : S.stepLine))
             }
@@ -693,8 +759,9 @@ struct DrumRollView: View {
         }
         .contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 0)
-            .onChanged { g in gridChanged(g, w: w, rowH: rowH) }
-            .onEnded { g in gridEnded(g, w: w, rowH: rowH) })
+            .onChanged { g in if !pinching { gridChanged(g, w: w, rowH: rowH) } }
+            .onEnded { g in if pinching { drag = .none; work = nil } else { gridEnded(g, w: w, rowH: rowH) } })
+        .simultaneousGesture(pinch)
     }
 
     // MARK: Grid gestures
@@ -863,9 +930,14 @@ struct DrumRollView: View {
             for frac in [0.0, 0.5, 1.0] {
                 ctx.fill(Path(CGRect(x: 0, y: CGFloat(frac) * (size.height - 8) + 4, width: size.width, height: 1)), with: .color(S.stepLine))
             }
-            for b in 0...barsPerPage {
-                let bx = CGFloat(b) / CGFloat(barsPerPage) * size.width
-                ctx.fill(Path(CGRect(x: bx, y: 0, width: 1.5, height: size.height)), with: .color(S.beatLine))
+            var lt = ((pageStart + PatternData.ppq - 1) / PatternData.ppq) * PatternData.ppq
+            while lt <= pageStart + pageTicks {
+                let bx = CGFloat(lt - pageStart) / CGFloat(pageTicks) * size.width
+                let bar = lt % PatternEdit.barTicks == 0
+                if bar || zoomLevel > 0 {
+                    ctx.fill(Path(CGRect(x: bx, y: 0, width: bar ? 1.5 : 1, height: size.height)), with: .color(bar ? S.beatLine : S.stepLine))
+                }
+                lt += PatternData.ppq
             }
             // The scale sits on the lane's own lines: 127 on the top line (full), 64 in the middle, 0 at the bottom.
             let marks: [(String, CGFloat, UnitPoint)] = lane == .velocity

@@ -325,8 +325,11 @@ extension View {
 
 /// An invisible button that darkens a little while pressed (like a real button going in).
 struct PressableArea: View {
+    /// Held for half a second (optional): this instead of `action`.
+    var longAction: (() -> Void)? = nil
     let action: () -> Void
     @State private var down = false
+    @State private var downAt = Date()
 
     var body: some View {
         Rectangle()
@@ -334,10 +337,11 @@ struct PressableArea: View {
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
-                    .onChanged { _ in if !down { down = true } }
+                    .onChanged { _ in if !down { down = true; downAt = Date() } }
                     .onEnded { g in
                         down = false
-                        if abs(g.translation.width) < 40 && abs(g.translation.height) < 40 { action() }
+                        guard abs(g.translation.width) < 40 && abs(g.translation.height) < 40 else { return }
+                        if let longAction, Date().timeIntervalSince(downAt) > 0.5 { longAction() } else { action() }
                     }
             )
     }
@@ -533,7 +537,13 @@ struct PlayButtonView: View {
                 }
             }
             .allowsHitTesting(false)
-            PressableArea { controller.playPressed() }.place(rect, scale)
+            // RECORD armed: a red ring round PLAY (hold PLAY to arm / disarm, MPC style)
+            if controller.recording {
+                RoundedRectangle(cornerRadius: 6 * scale).stroke(Color(red: 1, green: 0.16, blue: 0.12), lineWidth: 3 * scale)
+                    .shadow(color: Color.red.opacity(0.8), radius: 6 * scale)
+                    .place(rect, scale).allowsHitTesting(false)
+            }
+            PressableArea(longAction: { controller.toggleRecordPads() }) { controller.playPressed() }.place(rect, scale)
         }
     }
 }

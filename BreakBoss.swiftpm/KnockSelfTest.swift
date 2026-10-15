@@ -1077,7 +1077,15 @@ enum KnockSelfTest {
         check(sent.contains { $0.1 == 0x80 && $0.2 == 36 }, "MIDI out: note off follows")
         check(sent.allSatisfy { $0.0 >= 0 && $0.0 < 256 }, "MIDI out: messages fall inside their buffer")
         mo.send(KEvent(kind: .stop))
-        _ = collect(4)
+        _ = collect(40)
+        // Round trip: the DAW playing the recorded part back plays the drum itself (LOOP mode too), no echo.
+        mo.hostMIDI(offset: 0, status: 0x91, data1: 38, data2: 100)
+        var l3 = [Float](repeating: 0, count: 256), r3 = l3
+        l3.withUnsafeMutableBufferPointer { lp in r3.withUnsafeMutableBufferPointer { rp in mo.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+        var echoed = 0
+        mo.forEachMIDIOut { _, _, _, _ in echoed += 1 }
+        check(l3.contains { abs($0) > 0.01 }, "MIDI in: the recorded snare (channel 2, note 38) plays the snare in LOOP mode")
+        check(echoed == 0, "MIDI in: notes from the DAW don't go back out")
         _ = rp
     }
 

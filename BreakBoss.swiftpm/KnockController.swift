@@ -68,6 +68,14 @@ final class KnockController: ObservableObject {
         }
         RunLoop.main.add(collect, forMode: .common)
         timers.append(collect)
+        // RECORD (MPC style): finger-played pad hits land in the playing pattern, on the
+        // record grid, from the faceplate as well as the drum roll.
+        let rec = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard let self, self.recording else { return }
+            self.mergeRecorded(snap: self.recordSnap)
+        }
+        RunLoop.main.add(rec, forMode: .common)
+        timers.append(rec)
         let metering = Timer(timeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.meters = self.engine.meters.snapshot()
@@ -276,7 +284,10 @@ final class KnockController: ObservableObject {
     }
     /// Quick setups: every channel on its own MIDI channel, or all on channel 10 (GM drums).
     func setMIDIOutLayout(multi: Bool) {
-        state.midiOutChannels = multi ? KnockController.defaultMIDIOutChannels : Array(repeating: 9, count: Pad.count)
+        // One channel: the drums on channel 10 (GM drum notes); the 808 keeps its own channel (7)
+        // so its pitches never land on a drum note.
+        var one = Array(repeating: 9, count: Pad.count); one[Pad.bass808.rawValue] = Pad.bass808.rawValue
+        state.midiOutChannels = multi ? KnockController.defaultMIDIOutChannels : one
         state.midiOutNotes = multi ? KnockController.defaultMIDIOutNotes : [36, 38, 39, 37, 42, 46, 35, 56, 54, 45, 50, 49]
         pushMIDIOut(); scheduleSave()
     }
@@ -309,6 +320,22 @@ final class KnockController: ObservableObject {
     func setMetronome(_ on: Bool) {
         metronome = on
         engine.send(KEvent(kind: .metronome, a: on ? 1 : 0))
+    }
+
+    /// Record quantize (ticks; 0 = as played). 1/16 by default, like an MPC's TC 16.
+    var recordSnap: Int32 = PatternData.stepTicks
+
+    /// Faceplate: hold PLAY to record pads like an MPC (starts the pattern if it isn't playing);
+    /// hold it again to stop recording. Works in ONE-SHOT and LOOP mode.
+    func toggleRecordPads() {
+        if recording {
+            setRecording(false)
+            readout = Readout(title: "RECORD", value: "OFF", time: Date())
+        } else {
+            setRecording(true)
+            if !isPlaying { playPressed() }
+            readout = Readout(title: "RECORD", value: "PLAY THE PADS", time: Date())
+        }
     }
 
     func setRecording(_ on: Bool) {

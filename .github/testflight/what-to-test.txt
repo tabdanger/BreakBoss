@@ -1,8 +1,7 @@
 New in this build:
-- MIDI out into your DAW from the plug-in (Logic Pro: make a Software Instrument track, set its MIDI input to BreakBoss in the track settings, arm it and record).
-- SELECT tool: drag the right edge of selected notes to make them longer or shorter.
-- Channel rack: the play button is now IMPORT, which opens BreakBoss's sound library (every sound sorted by type and pack, plus importing single sounds or whole packs).
-- FOLLOW DAW: BreakBoss's play and stop buttons now work while the DAW is running.
-- Artist-style kits and presets, genre kits section, Snap to Scale button in the drum roll.
+- MIDI round trip: BreakBoss MIDI recorded in your DAW plays BreakBoss back like an instrument (each pad on its own MIDI channel, the 808 pitched on channel 7), in ONE-SHOT and LOOP mode.
+- Drum roll: pinch or trackpad-spread to zoom; SNAP gets finer as you zoom in. New 2-bar pattern length.
+- Record pads MPC style: hold PLAY on the faceplate to arm recording (red ring), then finger-play the pads.
+- SELECT tool note trimming, the IMPORT sound library on each channel, and FOLLOW DAW play/stop.
 
-Please try recording BreakBoss MIDI into your DAW, trimming notes, loading sounds from the library, and the transport buttons with the DAW playing.
+Please try recording BreakBoss into your DAW and playing it back, zooming the drum roll, and finger-recording on the pads.
