@@ -600,6 +600,78 @@ final class KnockController: ObservableObject {
         return kitDefinition.pads[pad].label
     }
 
+    // MARK: New channel rack (the original instrument faceplate is unchanged)
+
+    var workspaceChannels: [WorkspaceChannel] { state.workspaceChannels ?? [] }
+
+    func ensureWorkspace(loop: Int) {
+        guard state.workspaceChannels == nil else { return }
+        state.workspaceChannels = []
+        // A new rack starts blank instead of silently playing all generated kit
+        // channels. Existing explicitly edited loops are never discarded.
+        if loops.indices.contains(loop) && state.editedLoops[loop] == nil {
+            var blank = loops[loop]
+            blank.events = []
+            setLoop(loop, blank)
+        }
+        scheduleSave()
+    }
+
+    @discardableResult
+    func addWorkspaceChannel(_ sound: LibrarySound, loop: Int) -> WorkspaceChannel? {
+        ensureWorkspace(loop: loop)
+        let occupied = Set(workspaceChannels.map(\.pad))
+        guard let pad = (0..<Pad.count).first(where: { !occupied.contains($0) }) else {
+            notice = "Only 12 channels fit in the rack."
+            return nil
+        }
+        let row = WorkspaceChannel(id: UUID(), pad: pad, soundID: sound.id,
+                                   name: sound.name, category: sound.type.rawValue)
+        state.workspaceChannels?.append(row)
+        // Reuse the off-audio-thread sample loader; every drop gets its own pad.
+        importSample(sound.url, toPad: pad)
+        scheduleSave()
+        return row
+    }
+
+    func removeWorkspaceChannel(_ id: UUID, loop: Int) {
+        guard let row = workspaceChannels.first(where: { $0.id == id }) else { return }
+        state.workspaceChannels?.removeAll { $0.id == id }
+        if loops.indices.contains(loop) {
+            var data = loops[loop]
+            data.events.removeAll { Int($0.pad) == row.pad }
+            setLoop(loop, data)
+        }
+        scheduleSave()
+    }
+
+    func toggleWorkspaceStep(loop: Int, pad: Int, step: Int, bar: Int = 0) {
+        guard workspaceChannels.contains(where: { $0.pad == pad }),
+              loops.indices.contains(loop), (0..<16).contains(step) else { return }
+        let tick = (Int32(bar) * 16 + Int32(step)) * PatternData.stepTicks
+        setLoop(loop, PatternEdit.toggle(loops[loop], pad: pad, tick: tick,
+                                         cell: PatternData.stepTicks))
+    }
+
+    func toggleWorkspacePianoNote(loop: Int, pad: Int, step: Int, bar: Int,
+                                  semitones: Int) {
+        guard workspaceChannels.contains(where: { $0.pad == pad }),
+              loops.indices.contains(loop), (0..<16).contains(step),
+              (-24...24).contains(semitones) else { return }
+        let tick = (Int32(bar) * 16 + Int32(step)) * PatternData.stepTicks
+        var data = loops[loop]
+        let before = data.events.count
+        data.events.removeAll { Int($0.pad) == pad && $0.tick == tick &&
+            Int($0.semis.rounded()) == semitones }
+        if data.events.count == before {
+            data.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: 0.85,
+                                          semis: Float(semitones),
+                                          length: pad == Pad.bass808.rawValue ? PatternData.stepTicks : 0))
+        }
+        data.sort()
+        setLoop(loop, data)
+    }
+
     // MARK: Loops
 
     /// The groove family the patterns come from (PRESETS set it; KITS don't).
