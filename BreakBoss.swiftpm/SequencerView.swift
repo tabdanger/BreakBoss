@@ -180,7 +180,6 @@ struct SequencerView: View {
     private var placeTicks: Int32 { snapTicks > 0 ? snapTicks : 6 }
     private var theme: DrumRollTheme { DrumRollTheme.forFace(controller.faceKey) }
     private var noteColor: Color { PadView.lightColor(controller.mode) }
-    private var plate: some View { Image(theme.plate).resizable(resizingMode: .tile) }
     private var isThisPlaying: Bool { controller.isPlaying && Int(controller.meters.status[1]) == loop }
 
     // MARK: Rack rows
@@ -195,8 +194,8 @@ struct SequencerView: View {
     /// row per semitone (its piano roll).
     /// An expanded track keeps its step row (the band) on top; its piano roll's pitch rows start at pitchTop.
     struct RowLayout { let channel: WorkspaceChannel; let y: CGFloat; let height: CGFloat; let pitch: ClosedRange<Int>?; let pitchRowH: CGFloat; let pitchTop: CGFloat }
-    private var pitchRowH: CGFloat { compact ? 13 : 16 }
     private func layouts(rowH: CGFloat) -> [RowLayout] {
+        let pitchRowH = rowH * 0.3
         var y: CGFloat = 0
         var out: [RowLayout] = []
         for ch in channels {
@@ -221,30 +220,41 @@ struct SequencerView: View {
     /// The expanded track's step band on top of its piano roll (its own steps, like a closed row).
     private func inBand(_ y: CGFloat, _ l: RowLayout) -> Bool { l.pitch != nil && y < l.pitchTop }
 
-    // MARK: Body
+    // MARK: Body — Tyrone's picture is the plate; the live controls sit on it at measured spots
+
+    static let artW: CGFloat = 1536, artH: CGFloat = 1024
+    /// Art rectangles (px in the picture): [x0, y0, x1, y1]
+    enum A {
+        static let tools: [[Double]] = [[305, 194, 393, 239], [397, 194, 485, 239], [489, 194, 576, 239]]
+        static let undo: [Double] = [580, 194, 667, 239], redo: [Double] = [672, 194, 760, 239]
+        static let stop: [Double] = [792, 193, 845, 240], play: [Double] = [849, 193, 902, 240], rec: [Double] = [904, 193, 957, 240]
+        static let bpm: [Double] = [983, 194, 1102, 239], bars: [Double] = [1109, 194, 1222, 239], main: [Double] = [1230, 194, 1351, 239]
+        static let gear: [Double] = [1356, 194, 1402, 239], cloud: [Double] = [1430, 193, 1484, 241]
+        static let snap: [Double] = [877, 245, 1047, 279], swing: [Double] = [1059, 244, 1219, 279], humanize: [Double] = [1230, 244, 1368, 279]
+        static let swingKnob: [Double] = [1188, 247, 1216, 275], humanizeKnob: [Double] = [1337, 247, 1365, 275]
+        static let pageBack: [Double] = [400, 246, 436, 280], pageText: [Double] = [436, 248, 534, 278], pageForward: [Double] = [534, 246, 572, 280]
+        static let leftPanel: [Double] = [33, 300, 285, 693]
+        static let rackX0: Double = 298, rackX1: Double = 534, gridX0: Double = 549, gridX1: Double = 1445, panelX1: Double = 1495
+        static let rowsY0: Double = 341, rowsY1: Double = 594, rowH: Double = 56.5, labelsY: Double = 325
+        static let laneY0: Double = 600, laneY1: Double = 682
+        static let padsButton: [Double] = [97, 725, 137, 760], gridButton: [Double] = [47, 727, 87, 760]
+        static let drumTrack: [Double] = [158, 715, 348, 768], drumCircle: [Double] = [164, 719, 212, 767]
+        static let patternBack: [Double] = [602, 732, 640, 772], patternForward: [Double] = [640, 732, 677, 772], patternChip: [Double] = [677, 732, 841, 772]
+        static let kitBack: [Double] = [889, 732, 927, 772], kitForward: [Double] = [927, 732, 964, 772], kitChip: [Double] = [964, 732, 1129, 772]
+    }
 
     var body: some View {
         GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                VStack(spacing: compact ? 4 : 8) {
-                    header
-                    HStack(spacing: compact ? 4 : 8) {
-                        if !compact { leftPanel.frame(width: 232) }
-                        editor
-                    }
-                    footer
-                }
-                .padding(compact ? 6 : 12)
-                .background(slab)
-                .padding(compact ? 2 : 10)
-                if compact && showLibrary {
-                    leftPanel.frame(width: min(300, geo.size.width * 0.8))
-                        .background(darkPanel).shadow(color: .black.opacity(0.6), radius: 12)
-                        .padding(.leading, 12)
-                        .transition(.move(edge: .leading))
-                }
+            let s = min(geo.size.width / Self.artW, geo.size.height / Self.artH)
+            ZStack(alignment: .topLeading) {
+                Image("SeqPlate").resizable().frame(width: Self.artW * s, height: Self.artH * s)
+                topBar(s)
+                leftPanel(s)
+                editor(s)
+                footer(s)
             }
-            .frame(width: geo.size.width, height: geo.size.height)
+            .frame(width: Self.artW * s, height: Self.artH * s)
+            .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .bbMenuHost()
         .background(Color.black.ignoresSafeArea())
@@ -294,197 +304,136 @@ struct SequencerView: View {
         }
     }
 
-    /// The silver body (Platinum's brushed plate) with its rounded edge and shadow.
-    private var slab: some View {
-        RoundedRectangle(cornerRadius: compact ? 14 : 24)
-            .fill(ImagePaint(image: Image(theme.plate), scale: 1))
-            .overlay(RoundedRectangle(cornerRadius: compact ? 14 : 24).stroke(LinearGradient(colors: [Color.white.opacity(0.7), Color.black.opacity(0.5)], startPoint: .top, endPoint: .bottom), lineWidth: 1.5))
-            .shadow(color: .black.opacity(0.8), radius: 18, y: 10)
+    /// An invisible press area over a painted button.
+    private func hit(_ r: [Double], _ s: CGFloat, action: @escaping () -> Void) -> some View {
+        PressableArea(action: action).place(r, s)
+    }
+    private func artText(_ text: String, _ r: [Double], _ s: CGFloat, size: CGFloat = 15, weight: Font.Weight = .medium,
+                         color: Color = .white, align: Alignment = .center) -> some View {
+        Text(text).font(.system(size: size * s, weight: weight)).foregroundColor(color).lineLimit(1).minimumScaleFactor(0.6)
+            .frame(width: (r[2] - r[0]) * s, height: (r[3] - r[1]) * s, alignment: align)
+            .place(r, s)
+    }
+    private func litRing(_ r: [Double], _ s: CGFloat, color: Color = S.green) -> some View {
+        RoundedRectangle(cornerRadius: 7 * s).stroke(color, lineWidth: 1.5 * s)
+            .background(RoundedRectangle(cornerRadius: 7 * s).fill(color.opacity(0.12)))
+            .place(r, s).allowsHitTesting(false)
+    }
+    /// The picture's knob, turned to the value (drag up or right to turn it up).
+    private func artKnob(_ r: [Double], _ s: CGFloat, value: Float, change: @escaping (Float, Bool) -> Void) -> some View {
+        ArtKnob(value: value, change: change).place(r, s)
     }
 
-    /// A dark inset panel on the silver.
-    private var darkPanel: some View {
-        RoundedRectangle(cornerRadius: 10)
-            .fill(Color(white: 0.08))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.8), lineWidth: 1.5))
-            .shadow(color: .white.opacity(0.35), radius: 0.5, y: 1)
-    }
+    // MARK: Top bar
 
-    // MARK: Top bar (the approved layout): logo · tools / bars · transport · tempo, bars, pattern, gear / snap, swing, humanize · cloud
-
-    private var header: some View {
-        HStack(alignment: .top, spacing: compact ? 6 : 12) {
-            VStack(alignment: .leading, spacing: 0) {
-                Image(systemName: "crown.fill").font(.system(size: 14)).foregroundColor(theme.ink)
-                Image("DrumRollLogo").resizable().scaledToFit().frame(height: compact ? 18 : 24).colorMultiply(Color(white: 0.1))
-                Text("DRUM SEQUENCER").font(.system(size: 8, weight: .semibold)).tracking(2.5).foregroundColor(theme.inkDim)
+    @ViewBuilder private func topBar(_ s: CGFloat) -> some View {
+        // DRAW / SELECT / ERASE
+        ForEach(0..<3, id: \.self) { i in
+            let t: Tool = [.draw, .select, .erase][i]
+            let on = tool == t
+            if on { litRing(A.tools[i], s) }
+            HStack(spacing: 4 * s) {
+                Image(systemName: ["pencil", "rectangle.dashed", "eraser"][i]).font(.system(size: 13 * s, weight: .medium))
+                Text(["DRAW", "SELECT", "ERASE"][i]).font(.system(size: 13 * s, weight: .medium))
             }
-            .fixedSize()
-            .padding(.top, 4)
-            if compact {
-                Button { withAnimation(.easeOut(duration: 0.2)) { showLibrary.toggle() } } label: { iconBox(showLibrary ? "xmark" : "music.note.list") }
-            }
-            // tools and the bars pager, in their own dark panel
-            VStack(spacing: 6) {
-                HStack(spacing: 6) {
-                    toolButton(.draw, "pencil", compact ? nil : "DRAW")
-                    toolButton(.select, "rectangle.dashed", compact ? nil : "SELECT")
-                    toolButton(.erase, "eraser", compact ? nil : "ERASE")
-                    Button { undo() } label: { labelBox("arrow.uturn.backward", compact ? nil : "UNDO", enabled: !undoStack.isEmpty) }.disabled(undoStack.isEmpty)
-                    Button { redo() } label: { labelBox("arrow.uturn.forward", compact ? nil : "REDO", enabled: !redoStack.isEmpty) }.disabled(redoStack.isEmpty)
-                }
-                pageControl
-            }
-            .padding(6).background(darkPanel)
-            transport.padding(6).background(darkPanel)
-            VStack(spacing: 6) {
-                HStack(spacing: 6) { bpmMenu; barsMenu; loopMenu; settingsMenu }
-                HStack(spacing: 6) {
-                    chip("SNAP  \(snapLabel)", width: compact ? 140 : 176)
-                        .bbMenu(title: "Snap", width: 300) {
-                            Self.snapChoices.flatMap { group -> [BBMenuItem] in
-                                [.header(group.section)] + group.items.map { item in BBMenuItem.item(item.0, checked: item.1 == snap) { snap = item.1 } }
-                            }
-                        }
-                    labelBox("tuningfork", nil, lit: controller.snapToScale)
-                        .bbMenu(title: "Snap to scale", width: 300) { scaleItems(selectedPad) }
-                    knobBlock(title: "SWING", value: controller.value(.bounce),
-                              text: controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%",
-                              menu: AnyView(swingMenu)) { v, ended in
-                        if swingStart == nil { swingStart = controller.value(.bounce) }
-                        controller.set(.bounce, v)
-                        if ended { swingStart = nil }
-                    }
-                    knobBlock(title: "HUMANIZE", value: pattern.humanize ?? 0, text: nil, menu: nil) { v, ended in
-                        if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(pattern); redoStack = [] }
-                        var p = pattern
-                        p.humanize = v < 0.01 ? nil : v
-                        work = p
-                        if ended { humanizeStart = nil; work = nil; controller.setLoop(loop, p) }
-                    }
-                }
-            }
-            .padding(6).background(darkPanel)
-            Spacer(minLength: 0)
-            if let url = exportURL {
-                ShareLink(item: url) { iconBox("icloud.and.arrow.up") }
-                    .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
-                    .padding(6).background(darkPanel)
+            .foregroundColor(on ? S.green : .white).place(A.tools[i], s).allowsHitTesting(false)
+            hit(A.tools[i], s) { tool = t }
+        }
+        HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.backward").font(.system(size: 13 * s, weight: .medium)); Text("UNDO").font(.system(size: 13 * s, weight: .medium)) }
+            .foregroundColor(undoStack.isEmpty ? Color(white: 0.5) : .white).place(A.undo, s).allowsHitTesting(false)
+        hit(A.undo, s) { undo() }
+        HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.forward").font(.system(size: 13 * s, weight: .medium)); Text("REDO").font(.system(size: 13 * s, weight: .medium)) }
+            .foregroundColor(redoStack.isEmpty ? Color(white: 0.5) : .white).place(A.redo, s).allowsHitTesting(false)
+        hit(A.redo, s) { redo() }
+        // bars pager
+        artText(pageLabel, A.pageText, s, size: 17, weight: .medium, color: Color(white: 0.1))
+        hit(A.pageBack, s) { page = max(0, page - 1); follow = false }
+        hit(A.pageForward, s) { page = min(pages - 1, page + 1); follow = false }
+        // transport
+        RoundedRectangle(cornerRadius: 2 * s).fill(Color.white).frame(width: 15 * s, height: 15 * s).place([806, 205, 831, 228], s).allowsHitTesting(false)
+        hit(A.stop, s) { controller.stopPlayback() }
+        if isThisPlaying { litRing(A.play, s) }
+        Image(systemName: "play.fill").font(.system(size: 17 * s)).foregroundColor(S.green).place(A.play, s).allowsHitTesting(false)
+        hit(A.play, s) { controller.playPattern(loop) }
+        if controller.recording { litRing(A.rec, s, color: S.red) }
+        Circle().fill(S.red).frame(width: 17 * s, height: 17 * s).shadow(color: controller.recording ? S.red : .clear, radius: 5 * s)
+            .place(A.rec, s).allowsHitTesting(false)
+        hit(A.rec, s) {
+            let on = !controller.recording
+            controller.setRecording(on)
+            if on && !isThisPlaying { controller.playPattern(loop) }
+        }
+        // tempo, bars, pattern, gear, cloud
+        artText("\(Int(controller.liveTempo.rounded())) BPM", [A.bpm[0] + 10, A.bpm[1], A.bpm[2] - 26, A.bpm[3]], s, size: 15, align: .leading)
+        Color.clear.contentShape(Rectangle()).place(A.bpm, s).bbPanel(title: "Tempo", width: 340) { TempoPanel(controller: controller) }
+        artText("\(bars) BARS", [A.bars[0] + 10, A.bars[1], A.bars[2] - 26, A.bars[3]], s, size: 15, align: .leading)
+        Color.clear.contentShape(Rectangle()).place(A.bars, s).bbMenu(title: "Pattern length") {
+            [2, 4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
+        }
+        artText(controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", [A.main[0] + 10, A.main[1], A.main[2] - 26, A.main[3]], s, size: 15, align: .leading)
+        Color.clear.contentShape(Rectangle()).place(A.main, s).bbMenu(title: "Patterns in this preset", width: 260) {
+            controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
+        }
+        Color.clear.contentShape(Rectangle()).place(A.gear, s).bbMenu(title: "Sequencer", width: 330) { settingsItems() }
+        if let url = exportURL {
+            ShareLink(item: url) { Color.clear.contentShape(Rectangle()) }.place(A.cloud, s)
+        }
+        // snap, scale, swing, humanize
+        artText(snapLabel, [A.snap[0] + 64, A.snap[1], A.snap[2] - 28, A.snap[3]], s, size: 13, align: .leading)
+        Color.clear.contentShape(Rectangle()).place(A.snap, s).bbMenu(title: "Snap", width: 300) {
+            Self.snapChoices.flatMap { group -> [BBMenuItem] in
+                [.header(group.section)] + group.items.map { item in BBMenuItem.item(item.0, checked: item.1 == snap) { snap = item.1 } }
             }
         }
-        .frame(height: compact ? 96 : 108)
-    }
-
-    private var transport: some View {
-        HStack(spacing: 6) {
-            Button { controller.stopPlayback() } label: {
-                RoundedRectangle(cornerRadius: 3).fill(S.text).frame(width: 16, height: 16).frame(width: 44, height: 40)
-                    .background(box(lit: false))
-            }
-            Button { controller.playPattern(loop) } label: {
-                Image(systemName: "play.fill").font(.system(size: 20)).foregroundColor(S.green)
-                    .frame(width: 44, height: 40).background(box(lit: isThisPlaying))
-            }
-            Button {
-                let on = !controller.recording
-                controller.setRecording(on)
-                if on && !isThisPlaying { controller.playPattern(loop) }
-            } label: {
-                Circle().fill(controller.recording ? S.red : S.red.opacity(0.75)).frame(width: 18, height: 18)
-                    .shadow(color: controller.recording ? S.red : .clear, radius: 6)
-                    .frame(width: 44, height: 40).background(box(lit: controller.recording, color: S.red))
-            }
+        // SNAP TO SCALE: a tuning fork on the SNAP chip's left edge (green when on)
+        Image(systemName: "tuningfork").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(controller.snapToScale ? S.green : Color(white: 0.45))
+            .place([A.snap[0] + 2, A.snap[1], A.snap[0] + 22, A.snap[3]], s)
+            .bbMenu(title: "Snap to scale", width: 300) { scaleItems(selectedPad) }
+        artText(controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%", [A.swing[0] + 76, A.swing[1], A.swing[2] - 46, A.swing[3]], s, size: 13, align: .leading)
+        artKnob(A.swingKnob, s, value: controller.value(.bounce)) { v, ended in
+            if swingStart == nil { swingStart = controller.value(.bounce) }
+            controller.set(.bounce, v)
+            if ended { swingStart = nil }
+        }
+        artKnob(A.humanizeKnob, s, value: pattern.humanize ?? 0) { v, ended in
+            if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(pattern); redoStack = [] }
+            var p = pattern
+            p.humanize = v < 0.01 ? nil : v
+            work = p
+            if ended { humanizeStart = nil; work = nil; controller.setLoop(loop, p) }
         }
     }
 
-    private var bpmMenu: some View {
-        chip("\(Int(controller.liveTempo.rounded())) BPM", width: 112)
-            .bbPanel(title: "Tempo", width: 340) { TempoPanel(controller: controller) }
-    }
-
-    private var barsMenu: some View {
-        chip("\(bars) BAR\(bars == 1 ? "" : "S")", width: 104)
-            .bbMenu(title: "Pattern length") {
-                [2, 4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
-            }
-    }
-
-    /// MAIN A …: which of the preset's 12 patterns you're editing.
-    private var loopMenu: some View {
-        chip(controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", width: compact ? 110 : 130)
-            .bbMenu(title: "Patterns in this preset", width: 260) {
-                controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
-            }
-    }
-
-    private var settingsMenu: some View {
-        iconBox("gearshape.fill").bbMenu(title: "Sequencer", width: 330) {
-            [
-                .item("BreakBoss menu…", icon: "line.3.horizontal") { showMenu = true },
-                .item("Follow playhead", icon: "arrow.right.to.line", checked: follow) { follow.toggle() },
-                .item("Metronome", icon: "metronome", checked: controller.metronome) { controller.setMetronome(!controller.metronome) },
-                .item("Duplicate \(selection.isEmpty ? "the pattern" : "selection")", icon: "plus.square.on.square") { duplicate() },
-                .item("Copy these bars to the next ones", icon: "doc.on.doc") {
-                    commit(PatternEdit.copyNext(pattern, fromBar: Int(pageStart / PatternEdit.barTicks), bars: max(1, Int(pageTicks / PatternEdit.barTicks))))
-                },
-                .item("Quantize \(selection.isEmpty ? "all notes" : "selection")", icon: "squareshape.split.3x3") {
-                    commit(PatternEdit.quantize(pattern, selection.isEmpty ? nil : selection, grid: snapTicks > 0 ? snapTicks : PatternData.stepTicks))
-                },
-                .item("Back to the preset's pattern", icon: "arrow.uturn.backward") { controller.useGeneratedLoop(loop); selection = [] },
-                .item("Kit's 12 channels back in the rack", icon: "square.grid.3x3") { controller.resetRack(); expandedID = nil; selectedID = nil },
-                .item("Clear \(selection.isEmpty ? "the pattern" : "selection")", icon: "trash", destructive: true) { clear() }
-            ]
-        }
-    }
-
-    private var swingMenu: some View {
-        Image(systemName: "chevron.down").font(.system(size: 11, weight: .semibold)).foregroundColor(S.text)
-            .frame(width: 22, height: 30)
-            .bbMenu(title: "Swing", width: 220) {
-                [0, 54, 56, 58, 62, 66, 72].map { pct in
-                    BBMenuItem.item(pct == 0 ? "Off" : "\(pct)%") { controller.set(.bounce, pct == 0 ? 0 : Float(pct - 50) / 22) }
-                }
-            }
-    }
-
-    private var divider: some View { Rectangle().fill(S.border).frame(width: 1, height: 30) }
-
-    private func toolButton(_ t: Tool, _ icon: String, _ title: String?) -> some View {
-        Button { tool = t } label: { labelBox(icon, title, lit: tool == t) }
-    }
-
-    private func knobBlock(title: String, value: Float, text: String?, menu: AnyView?,
-                           change: @escaping (Float, Bool) -> Void) -> some View {
-        HStack(spacing: 8) {
-            Text(text.map { "\(title)  \($0)" } ?? title)
-                .font(.system(size: 13, weight: .medium, design: .monospaced)).foregroundColor(S.text).fixedSize()
-            if let menu { menu }
-            DrumRollKnob(value: value, change: change)
-        }
-        .padding(.horizontal, 12).frame(height: 44)
-        .background(box(lit: false))
+    private func settingsItems() -> [BBMenuItem] {
+        [
+            .item("BreakBoss menu…", icon: "line.3.horizontal") { showMenu = true },
+            .item("Follow playhead", icon: "arrow.right.to.line", checked: follow) { follow.toggle() },
+            .item("Metronome", icon: "metronome", checked: controller.metronome) { controller.setMetronome(!controller.metronome) },
+            .item("Duplicate \(selection.isEmpty ? "the pattern" : "selection")", icon: "plus.square.on.square") { duplicate() },
+            .item("Copy these bars to the next ones", icon: "doc.on.doc") {
+                commit(PatternEdit.copyNext(pattern, fromBar: Int(pageStart / PatternEdit.barTicks), bars: max(1, Int(pageTicks / PatternEdit.barTicks))))
+            },
+            .item("Quantize \(selection.isEmpty ? "all notes" : "selection")", icon: "squareshape.split.3x3") {
+                commit(PatternEdit.quantize(pattern, selection.isEmpty ? nil : selection, grid: snapTicks > 0 ? snapTicks : PatternData.stepTicks))
+            },
+            .item("Back to the preset's pattern", icon: "arrow.uturn.backward") { controller.useGeneratedLoop(loop); selection = [] },
+            .item("Kit's 12 channels back in the rack", icon: "square.grid.3x3") { controller.resetRack(); expandedID = nil; selectedID = nil },
+            .item("Clear \(selection.isEmpty ? "the pattern" : "selection")", icon: "trash", destructive: true) { clear() }
+        ]
     }
 
     private var pageLabel: String {
         let bar = Int(pageStart / PatternEdit.barTicks) + 1
         if zoomLevel == 0 {
             let last = min(bars, bar + barsPerPage - 1)
-            return last == bar ? "BAR \(bar)" : "BARS \(bar)–\(last)"
+            return last == bar ? "BAR \(bar)" : "BARS \(bar)-\(last)"
         }
         let beat = Int((pageStart % PatternEdit.barTicks) / PatternData.ppq) + 1
         return zoomLevel == 1 ? "BAR \(bar) · ZOOM" : "BAR \(bar).\(beat) · ZOOM"
     }
 
-    private var pageControl: some View {
-        HStack(spacing: 4) {
-            Button { page = max(0, page - 1); follow = false } label: { iconBox("chevron.left") }.disabled(page == 0)
-            Text(pageLabel).font(.system(size: 12, weight: .medium, design: .monospaced)).foregroundColor(S.text).lineLimit(1)
-                .frame(width: compact ? 92 : 120)
-            Button { page = min(pages - 1, page + 1); follow = false } label: { iconBox("chevron.right") }.disabled(page >= pages - 1)
-        }
-    }
 
-    // MARK: Left panel: SOUNDS, GENERATE, MIDI
+    // MARK: Left panel: GENERAL (the sound library) · GENERATE · MIDI, on the picture's panel
 
     private var sounds: [LibrarySound] { userSounds + Self.factorySounds }
     private var shownSounds: [LibrarySound] {
@@ -497,162 +446,142 @@ struct SequencerView: View {
         return list
     }
 
-    private var leftPanel: some View {
-        VStack(spacing: 6) {
-            sectionHeader("GENERAL", .general)
-            if section == .general { soundsPanel }
-            sectionHeader("GENERATE", .generate)
-            if section == .generate { generatePanel }
-            sectionHeader("MIDI", .midi)
-            if section == .midi { midiPanel }
-            if section != .general { Spacer() }
+    @ViewBuilder private func leftPanel(_ s: CGFloat) -> some View {
+        let x0 = 33.0, x1 = 284.0, bx0 = 41.0, bx1 = 274.0
+        let top = 320.0, midiBottom = 686.0
+        // section headers (the picture's own), stacked by what's open
+        let headerH = 44.0, genHeaderH = 51.0, gap = 9.0
+        let generalBottom = top + headerH
+        switch section {
+        case .generate:
+            Image("SeqSectionGeneral").resizable().place([x0, top, x1, generalBottom], s)
+            hit([x0, top, x1, generalBottom], s) { section = .general }
+            Image("SeqSectionGenerate").resizable().place([bx0, 375, bx1, 632], s)
+            generateOverlay([bx0, 375, bx1, 632], s)
+            Image("SeqSectionMidi").resizable().place([x0, 642, x1, midiBottom], s)
+            hit([x0, 642, x1, midiBottom], s) { section = .midi }
+        case .general:
+            Image("SeqSectionGeneral").resizable().place([x0, top, x1, generalBottom], s)
+            Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([x1 - 44, top, x1 - 20, generalBottom], s).allowsHitTesting(false)
+            let genTop = 642 - gap - genHeaderH
+            soundsPanel([bx0, generalBottom + gap, bx1, genTop - gap], s)
+            Image("SeqGenerateHeader").resizable().place([bx0, genTop, bx1, genTop + genHeaderH], s)
+            Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([bx1 - 40, genTop, bx1 - 16, genTop + genHeaderH], s).allowsHitTesting(false)
+            hit([bx0, genTop, bx1, genTop + genHeaderH], s) { section = .generate }
+            Image("SeqSectionMidi").resizable().place([x0, 642, x1, midiBottom], s)
+            hit([x0, 642, x1, midiBottom], s) { section = .midi }
+        case .midi:
+            Image("SeqSectionGeneral").resizable().place([x0, top, x1, generalBottom], s)
+            hit([x0, top, x1, generalBottom], s) { section = .general }
+            let genTop = generalBottom + gap
+            Image("SeqGenerateHeader").resizable().place([bx0, genTop, bx1, genTop + genHeaderH], s)
+            Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([bx1 - 40, genTop, bx1 - 16, genTop + genHeaderH], s).allowsHitTesting(false)
+            hit([bx0, genTop, bx1, genTop + genHeaderH], s) { section = .generate }
+            let midiTop = genTop + genHeaderH + gap
+            Image("SeqSectionMidi").resizable().place([x0, midiTop, x1, midiTop + headerH], s)
+            Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([x1 - 44, midiTop, x1 - 20, midiTop + headerH], s).allowsHitTesting(false)
+            hit([x0, midiTop, x1, midiTop + headerH], s) { section = .generate }
+            midiPanel([bx0, midiTop + headerH + gap, bx1, midiBottom], s)
         }
-        .padding(8)
-        .background(darkPanel)
     }
 
-    private func sectionHeader(_ title: String, _ s: Panel) -> some View {
-        Button { withAnimation(.easeOut(duration: 0.15)) { section = s } } label: {
-            HStack {
-                Text(title).font(.system(size: 12, weight: .semibold, design: .monospaced)).foregroundColor(S.text)
-                Spacer()
-                Image(systemName: section == s ? "chevron.up" : "chevron.down").font(.system(size: 11, weight: .semibold)).foregroundColor(S.dim)
-            }
-            .padding(.horizontal, 12).frame(height: 40)
-            .background(RoundedRectangle(cornerRadius: 8).fill(section == s ? Color(white: 0.11) : S.button).overlay(RoundedRectangle(cornerRadius: 8).stroke(S.border, lineWidth: 1)))
+    /// The GENERATE box's live parts: GENRE, UPDATE SOUNDS, UPDATE TEMPO, Generate, Clear.
+    @ViewBuilder private func generateOverlay(_ r: [Double], _ s: CGFloat) -> some View {
+        let x0 = r[0], x1 = r[2]
+        // GENRE value (the picture says "House"): covered with the box's black, then the live genre
+        Rectangle().fill(Color(white: 0.04)).place([x0 + 12, 458, x1 - 40, 484], s).allowsHitTesting(false)
+        artText(generateStyle ?? PatternRandomizer.style(for: controller.state.presetName), [x0 + 14, 458, x1 - 40, 484], s, size: 17, weight: .regular, align: .leading)
+        Color.clear.contentShape(Rectangle()).place([x0, 436, x1, 490], s).bbMenu(title: "Genre", width: 280) {
+            [BBMenuItem.item("This preset's style", checked: generateStyle == nil) { generateStyle = nil }]
+            + PatternBank.styles.map { st in BBMenuItem.item(st, checked: generateStyle == st) { generateStyle = st } }
         }
+        Rectangle().fill(Color(white: 0.04)).place([x0 + 12, 526, x0 + 60, 548], s).allowsHitTesting(false)
+        artText(updateSounds ? "On" : "Off", [x0 + 14, 526, x0 + 60, 548], s, size: 16, weight: .regular, color: updateSounds ? .white : Color(white: 0.5), align: .leading)
+        hit([x0, 500, x0 + 116, 556], s) { updateSounds.toggle() }
+        Rectangle().fill(Color(white: 0.04)).place([x0 + 128, 526, x0 + 176, 548], s).allowsHitTesting(false)
+        artText(updateTempo ? "On" : "Off", [x0 + 130, 526, x0 + 176, 548], s, size: 16, weight: .regular, color: updateTempo ? .white : Color(white: 0.5), align: .leading)
+        hit([x0 + 118, 500, x1, 556], s) { updateTempo.toggle() }
+        hit([x0 + 12, 570, x0 + 140, 616], s) { generate() }
+        hit([x0 + 146, 570, x1 - 8, 616], s) { clear() }
     }
 
-    /// The SOUND LIBRARY: type chips, search, and the list. Drag a sound to the rack, or tap it to put it
-    /// on the selected channel.
-    private var soundsPanel: some View {
-        VStack(spacing: 6) {
+    /// The sound library (GENERAL open): type chips, search, the list, import. Drag a sound to the rack.
+    private func soundsPanel(_ r: [Double], _ s: CGFloat) -> some View {
+        VStack(spacing: 5 * s) {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 4) {
-                    typeChip("ALL", on: libraryType == nil) { libraryType = nil }
-                    ForEach(SoundType.allCases) { t in typeChip(t.rawValue, on: libraryType == t) { libraryType = t } }
+                HStack(spacing: 3 * s) {
+                    typeChip("ALL", on: libraryType == nil, s) { libraryType = nil }
+                    ForEach(SoundType.allCases) { t in typeChip(t.rawValue, on: libraryType == t, s) { libraryType = t } }
                 }
             }
-            HStack(spacing: 6) {
-                Image(systemName: "magnifyingglass").font(.system(size: 12)).foregroundColor(S.dim)
-                TextField("Search", text: $search).font(.system(size: 13)).foregroundColor(S.text).autocorrectionDisabled()
-                if !search.isEmpty { Button { search = "" } label: { Image(systemName: "xmark.circle.fill").foregroundColor(S.dim) } }
+            HStack(spacing: 5 * s) {
+                Image(systemName: "magnifyingglass").font(.system(size: 11 * s)).foregroundColor(S.dim)
+                TextField("Search", text: $search).font(.system(size: 13 * s)).foregroundColor(.white).autocorrectionDisabled()
+                if !search.isEmpty { Button { search = "" } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 12 * s)).foregroundColor(S.dim) } }
             }
-            .padding(.horizontal, 10).frame(height: 34).background(RoundedRectangle(cornerRadius: 6).fill(S.lane))
+            .padding(.horizontal, 8 * s).frame(height: 30 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.12)))
             ScrollView {
-                LazyVStack(spacing: 2) {
-                    ForEach(shownSounds) { s in soundRow(s) }
-                    if shownSounds.isEmpty {
-                        Text("Nothing here yet.").font(.system(size: 12, design: .monospaced)).foregroundColor(S.dim).padding(20)
-                    }
+                LazyVStack(spacing: 2 * s) {
+                    ForEach(shownSounds) { sound in soundRow(sound, s) }
+                    if shownSounds.isEmpty { Text("Nothing here yet.").font(.system(size: 12 * s)).foregroundColor(S.dim).padding(16 * s) }
                 }
             }
-            .background(RoundedRectangle(cornerRadius: 6).fill(S.lane.opacity(0.7)))
-            HStack(spacing: 6) {
-                Button { importKind = .sounds } label: { smallLabel("square.and.arrow.down", "SOUNDS") }
-                Button { importKind = .pack } label: { smallLabel("folder.badge.plus", "PACK") }
-                if let pad = selectedPad, !controller.isPlugin {
-                    Button { recordPad = pad } label: { smallLabel("record.circle", "REC") }
-                }
+            HStack(spacing: 5 * s) {
+                Button { importKind = .sounds } label: { smallLabel("square.and.arrow.down", "SOUNDS", s) }
+                Button { importKind = .pack } label: { smallLabel("folder.badge.plus", "PACK", s) }
+                if let pad = selectedPad, !controller.isPlugin { Button { recordPad = pad } label: { smallLabel("record.circle", "REC", s) } }
             }
-            if !libraryNote.isEmpty { Text(libraryNote).font(.system(size: 10, design: .monospaced)).foregroundColor(S.dim).lineLimit(1) }
-            Text("DRAG A SOUND ONTO THE RACK").font(.system(size: 9, weight: .semibold, design: .monospaced)).foregroundColor(S.dim)
+            Text(libraryNote.isEmpty ? "DRAG A SOUND ONTO THE RACK" : libraryNote).font(.system(size: 8 * s, weight: .semibold)).foregroundColor(S.dim).lineLimit(1)
         }
+        .padding(8 * s)
+        .background(RoundedRectangle(cornerRadius: 12 * s).fill(Color(white: 0.04)).overlay(RoundedRectangle(cornerRadius: 12 * s).stroke(Color(white: 0.2), lineWidth: 1)))
+        .place(r, s)
     }
 
-    private func soundRow(_ s: LibrarySound) -> some View {
-        let onSelected = selected?.soundID == s.id
-        return HStack(spacing: 8) {
-            Image(systemName: "waveform").font(.system(size: 11)).foregroundColor(onSelected ? S.green : S.dim).frame(width: 16)
+    private func soundRow(_ sound: LibrarySound, _ s: CGFloat) -> some View {
+        let onSelected = selected?.soundID == sound.id
+        return HStack(spacing: 6 * s) {
+            Image(systemName: "waveform").font(.system(size: 10 * s)).foregroundColor(onSelected ? S.green : S.dim).frame(width: 14 * s)
             VStack(alignment: .leading, spacing: 0) {
-                Text(s.name).font(.system(size: 12, weight: .medium)).foregroundColor(onSelected ? S.green : S.text).lineLimit(1)
-                Text(s.pack).font(.system(size: 9, design: .monospaced)).foregroundColor(S.dim).lineLimit(1)
+                Text(sound.name).font(.system(size: 12 * s, weight: .medium)).foregroundColor(onSelected ? S.green : .white).lineLimit(1)
+                Text(sound.pack).font(.system(size: 8 * s)).foregroundColor(S.dim).lineLimit(1)
             }
             Spacer(minLength: 0)
-            if s.user { Text("YOURS").font(.system(size: 8, weight: .bold, design: .monospaced)).foregroundColor(S.orange) }
-            Image(systemName: "line.3.horizontal").font(.system(size: 11)).foregroundColor(S.dim.opacity(0.6))
+            if sound.user { Text("YOURS").font(.system(size: 7 * s, weight: .bold)).foregroundColor(S.orange) }
+            Image(systemName: "line.3.horizontal").font(.system(size: 10 * s)).foregroundColor(S.dim.opacity(0.6))
         }
-        .padding(.horizontal, 8).frame(height: 38)
-        .background(RoundedRectangle(cornerRadius: 5).fill(onSelected ? S.green.opacity(0.12) : Color.clear))
+        .padding(.horizontal, 6 * s).frame(height: 34 * s)
+        .background(RoundedRectangle(cornerRadius: 5 * s).fill(onSelected ? S.green.opacity(0.12) : Color.clear))
         .contentShape(Rectangle())
         .onTapGesture {
-            // Tap: this sound on the selected channel, and hear it.
             guard let ch = selected else { return }
-            controller.replaceRackSound(ch.id, with: s)
+            controller.replaceRackSound(ch.id, with: sound)
             let pad = ch.pad
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { controller.auditionPad(pad) }
         }
         .onDrag {
-            NSItemProvider(object: (soundDragPrefix + s.id) as NSString)
+            NSItemProvider(object: (soundDragPrefix + sound.id) as NSString)
         } preview: {
-            Text(s.name).font(.system(size: 12, weight: .semibold)).foregroundColor(.black)
+            Text(sound.name).font(.system(size: 12, weight: .semibold)).foregroundColor(.black)
                 .padding(.horizontal, 12).frame(height: 30).background(Capsule().fill(S.green))
         }
     }
 
-    private func typeChip(_ title: String, on: Bool, action: @escaping () -> Void) -> some View {
+    private func typeChip(_ title: String, on: Bool, _ s: CGFloat, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .foregroundColor(on ? .black : S.text).padding(.horizontal, 8).frame(height: 26)
-                .background(RoundedRectangle(cornerRadius: 4).fill(on ? S.green : S.button))
+            Text(title).font(.system(size: 9 * s, weight: .semibold))
+                .foregroundColor(on ? .black : .white).padding(.horizontal, 7 * s).frame(height: 22 * s)
+                .background(RoundedRectangle(cornerRadius: 4 * s).fill(on ? S.green : Color(white: 0.2)))
         }
     }
 
-    private func smallLabel(_ icon: String, _ title: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon).font(.system(size: 11, weight: .medium))
-            Text(title).font(.system(size: 10, weight: .semibold, design: .monospaced))
+    private func smallLabel(_ icon: String, _ title: String, _ s: CGFloat) -> some View {
+        HStack(spacing: 3 * s) {
+            Image(systemName: icon).font(.system(size: 10 * s, weight: .medium))
+            Text(title).font(.system(size: 9 * s, weight: .semibold))
         }
-        .foregroundColor(S.text).frame(maxWidth: .infinity).frame(height: 32).background(box(lit: false))
-    }
-
-    /// GENERATE (the approved panel): GENRE, UPDATE SOUNDS, UPDATE TEMPO, Generate and Clear.
-    private var generatePanel: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("GENRE").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundColor(S.dim)
-                HStack {
-                    Text(generateStyle ?? PatternRandomizer.style(for: controller.state.presetName)).font(.system(size: 15)).foregroundColor(S.text).lineLimit(1)
-                    Spacer()
-                    Image(systemName: "chevron.down").font(.system(size: 12, weight: .semibold)).foregroundColor(S.text)
-                }
-            }
-            .padding(.horizontal, 10).padding(.vertical, 6).contentShape(Rectangle())
-            .bbMenu(title: "Genre", width: 280) {
-                [BBMenuItem.item("This preset's style", checked: generateStyle == nil) { generateStyle = nil }]
-                + PatternBank.styles.map { st in BBMenuItem.item(st, checked: generateStyle == st) { generateStyle = st } }
-            }
-            Rectangle().fill(S.border).frame(height: 1)
-            HStack(spacing: 0) {
-                toggleCell("UPDATE SOUNDS", on: updateSounds) { updateSounds.toggle() }
-                Rectangle().fill(S.border).frame(width: 1, height: 40)
-                toggleCell("UPDATE TEMPO", on: updateTempo) { updateTempo.toggle() }
-            }
-            Rectangle().fill(S.border).frame(height: 1)
-            HStack(spacing: 8) {
-                Button { generate() } label: {
-                    HStack(spacing: 6) { Image(systemName: "dice.fill"); Text("Generate").font(.system(size: 14, weight: .semibold)) }
-                        .foregroundColor(.white).padding(.horizontal, 16).frame(height: 40)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(LinearGradient(colors: [Color(red: 0.75, green: 0.08, blue: 0.1), Color(red: 0.5, green: 0.03, blue: 0.05)], startPoint: .top, endPoint: .bottom)))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.red.opacity(0.5), lineWidth: 1))
-                }
-                Button { clear() } label: {
-                    HStack(spacing: 6) { Image(systemName: "xmark"); Text("Clear").font(.system(size: 14)) }.foregroundColor(S.text)
-                }
-            }
-            .padding(.horizontal, 6).padding(.bottom, 4)
-        }
-        .padding(6).background(RoundedRectangle(cornerRadius: 8).fill(Color(white: 0.11)).overlay(RoundedRectangle(cornerRadius: 8).stroke(S.border, lineWidth: 1)))
-    }
-
-    private func toggleCell(_ title: String, on: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 9, weight: .semibold, design: .monospaced)).foregroundColor(S.dim)
-                Text(on ? "On" : "Off").font(.system(size: 14)).foregroundColor(on ? S.text : S.dim)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10)
-        }
+        .foregroundColor(.white).frame(maxWidth: .infinity).frame(height: 28 * s)
+        .background(RoundedRectangle(cornerRadius: 5 * s).fill(Color(white: 0.2)).overlay(RoundedRectangle(cornerRadius: 5 * s).stroke(Color(white: 0.3), lineWidth: 1)))
     }
 
     /// Generate: new steps in the chosen genre; UPDATE SOUNDS rolls new sounds on every channel too;
@@ -668,17 +597,32 @@ struct SequencerView: View {
         selection = []
     }
 
-    private var midiPanel: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            labelBox("power", controller.midiOutOn ? "MIDI OUT ON" : "MIDI OUT OFF", lit: controller.midiOutOn)
-                .onTapGesture { controller.setMIDIOut(!controller.midiOutOn) }
-            chip("ROUTING", width: 216).bbMenu(title: "MIDI out", width: 340) { midiOutItems() }
+    private func midiPanel(_ r: [Double], _ s: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 8 * s) {
+            Button { controller.setMIDIOut(!controller.midiOutOn) } label: {
+                HStack(spacing: 6 * s) {
+                    Circle().fill(controller.midiOutOn ? S.green : Color(white: 0.3)).frame(width: 8 * s, height: 8 * s)
+                    Text(controller.midiOutOn ? "MIDI OUT ON" : "MIDI OUT OFF").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                }
+                .frame(maxWidth: .infinity).frame(height: 32 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.2)))
+            }
+            HStack {
+                Text("ROUTING").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                Spacer()
+                Image(systemName: "chevron.down").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(.white)
+            }
+            .padding(.horizontal, 10 * s).frame(height: 32 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.2)))
+            .contentShape(Rectangle()).bbMenu(title: "MIDI out", width: 340) { midiOutItems() }
             Text(controller.isPlugin ? "Route the plug-in's MIDI output in your DAW. Each channel sends on its own MIDI channel; the 808 is pitched on channel 7."
                                      : "Other apps see \"BreakBoss Out\" as a MIDI source.")
-                .font(.system(size: 10)).foregroundColor(S.dim)
+                .font(.system(size: 9 * s)).foregroundColor(S.dim)
+            Spacer(minLength: 0)
         }
-        .padding(10).background(RoundedRectangle(cornerRadius: 6).fill(S.lane.opacity(0.7)))
+        .padding(8 * s)
+        .background(RoundedRectangle(cornerRadius: 12 * s).fill(Color(white: 0.04)).overlay(RoundedRectangle(cornerRadius: 12 * s).stroke(Color(white: 0.2), lineWidth: 1)))
+        .place(r, s)
     }
+
 
     // MARK: Track settings (sound, tune, decay, filter, reverse, solo, MIDI): from the channel's menu
 
@@ -732,167 +676,140 @@ struct SequencerView: View {
         }
     }
 
-    // MARK: Editor (rack + grid, lane)
+    // MARK: Editor: the rack and the grid on the picture's panels, the velocity lane under them
 
-    private var editor: some View {
-        GeometryReader { geo in
-            let rackW: CGFloat = compact ? 150 : 236
-            let rulerH: CGFloat = 30
-            let laneH: CGFloat = max(80, min(130, geo.size.height * 0.2))
-            let rowH: CGFloat = max(34, min(46, (geo.size.height - rulerH - laneH - 8) / CGFloat(max(channels.count, 8))))
-            let gridW = max(100, geo.size.width - rackW)
-            let L = layouts(rowH: rowH)
-            let gridH = max(L.last.map { $0.y + $0.height } ?? 0, geo.size.height - rulerH - laneH - 8)
-            VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                    Color.clear.frame(width: rackW, height: rulerH)
-                    ruler(width: gridW).frame(width: gridW, height: rulerH)
-                }
-                ScrollView(.vertical, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 0) {
-                        rack(L, rowH: rowH, height: gridH).frame(width: rackW)
-                        grid(L, width: gridW, rowH: rowH).frame(width: gridW, height: gridH)
+    @ViewBuilder private func editor(_ s: CGFloat) -> some View {
+        let rowH = A.rowH * s
+        let gridW = (A.gridX1 - A.gridX0) * s
+        let L = layouts(rowH: rowH)
+        let contentH = max(L.last.map { $0.y + $0.height } ?? 0, (A.rowsY1 - A.rowsY0) * s)
+        // beat numbers
+        ruler(width: gridW).place([A.gridX0, A.labelsY - 10, A.gridX1, A.labelsY + 10], s)
+        // the rows: rack column and the grid, scrolling together
+        ScrollView(.vertical, showsIndicators: false) {
+            ZStack(alignment: .topLeading) {
+                Color.clear.frame(width: (A.panelX1 - A.rackX0) * s, height: contentH)
+                rackColumn(L, rowH: rowH, s: s).frame(width: (A.rackX1 - A.rackX0) * s, height: contentH, alignment: .top)
+                grid(L, width: gridW, rowH: rowH).frame(width: gridW, height: contentH)
+                    .offset(x: (A.gridX0 - A.rackX0) * s)
+                // the dice at the end of every track: that track's steps only
+                ForEach(L, id: \.channel.id) { l in
+                    Button { selectedID = l.channel.id; controller.randomizeChannel(loop: loop, pad: l.channel.pad); selection = [] } label: {
+                        Image(systemName: "dice").font(.system(size: 13 * s)).foregroundColor(Color(white: 0.75))
+                            .frame(width: 30 * s, height: 30 * s).background(RoundedRectangle(cornerRadius: 5 * s).fill(Color(white: 0.14)))
                     }
-                }
-                Rectangle().fill(Color.black.opacity(0.6)).frame(height: 8)
-                HStack(spacing: 0) {
-                    laneHeader.frame(width: rackW, height: laneH)
-                    laneView(width: gridW, height: laneH).frame(width: gridW, height: laneH)
+                    .offset(x: (A.gridX1 + 10 - A.rackX0) * s, y: l.y + (min(l.height, rowH) - 30 * s) / 2)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .background(darkPanel)
         }
+        .frame(width: (A.panelX1 - A.rackX0) * s, height: (A.rowsY1 - A.rowsY0) * s)
+        .position(x: (A.rackX0 + A.panelX1) / 2 * s, y: (A.rowsY0 + A.rowsY1) / 2 * s)
+        .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: $rackTargeted) { providers in dropOnRack(providers, channel: nil) }
+        if rackTargeted {
+            RoundedRectangle(cornerRadius: 8 * s).stroke(S.green, lineWidth: 2 * s).place([A.rackX0, A.rowsY0 - 4, A.rackX1, A.rowsY1], s).allowsHitTesting(false)
+        }
+        // the velocity lane
+        laneHeader(s).place([A.rackX0 + 4, A.laneY0, A.rackX1, A.laneY1], s)
+        laneView(width: gridW, height: (A.laneY1 - A.laneY0) * s).place([A.gridX0, A.laneY0, A.gridX1, A.laneY1], s)
     }
 
     private func ruler(width: CGFloat) -> some View {
         Canvas { ctx, size in
             let px = { (t: Int32) in CGFloat(t - pageStart) / CGFloat(pageTicks) * size.width }
-            let fine: Int32 = zoomLevel >= 2 ? 6 : PatternData.stepTicks
             var t = pageStart
-            while t <= pageStart + pageTicks {
-                let x = px(t)
-                if t % PatternEdit.barTicks == 0 {
-                    ctx.fill(Path(CGRect(x: x, y: 0, width: 1.5, height: size.height)), with: .color(S.barLine))
-                } else if t % PatternData.ppq == 0 {
-                    ctx.fill(Path(CGRect(x: x, y: size.height - 10, width: 1, height: 10)), with: .color(S.dim.opacity(0.7)))
-                } else {
-                    let h: CGFloat = t % PatternData.stepTicks == 0 ? 6 : 3
-                    ctx.fill(Path(CGRect(x: x, y: size.height - h, width: 1, height: h)), with: .color(S.dim.opacity(0.5)))
-                }
-                if t % PatternData.ppq == 0 && t < pageStart + pageTicks {       // beat numbers 1…8 like the mock
+            while t < pageStart + pageTicks {
+                if t % PatternData.ppq == 0 {
                     let beat = (t - pageStart) / PatternData.ppq + 1
                     let label = zoomLevel == 0 ? "\(beat)" : "\(t / PatternEdit.barTicks + 1).\((t % PatternEdit.barTicks) / PatternData.ppq + 1)"
-                    ctx.draw(Text(label).font(.system(size: 11, weight: .medium)).foregroundColor(S.text), at: CGPoint(x: x + 8, y: 10))
+                    ctx.draw(Text(label).font(.system(size: size.height * 0.65, weight: .medium)).foregroundColor(.white), at: CGPoint(x: px(t) + size.height * 0.5, y: size.height / 2))
                 }
-                t += fine
+                t += PatternData.ppq
             }
-            ctx.fill(Path(CGRect(x: 0, y: size.height - 1, width: size.width, height: 1)), with: .color(S.border))
+            _ = tick
         }
-        .background(S.channel)
     }
 
-    // MARK: Channel rack
+    // MARK: Channel rack (the picture's rows)
 
-    private func rack(_ L: [RowLayout], rowH: CGFloat, height: CGFloat) -> some View {
-        VStack(spacing: 0) {
-            ForEach(L, id: \.channel.id) { l in channelRow(l, rowH: rowH) }
-            // the empty part of the rack: drop a sound here for a new channel
-            ZStack {
-                if channels.count < Pad.count {
-                    VStack(spacing: 4) {
-                        Image(systemName: "plus.circle.dashed").font(.system(size: 18)).foregroundColor(rackTargeted ? S.green : S.dim)
-                        Text(rackTargeted ? "DROP FOR A NEW CHANNEL" : "DROP A SOUND HERE").font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .foregroundColor(rackTargeted ? S.green : S.dim).multilineTextAlignment(.center)
-                    }
-                    .padding(8)
-                }
+    private func rackColumn(_ L: [RowLayout], rowH: CGFloat, s: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(L, id: \.channel.id) { l in
+                channelRow(l, rowH: rowH, s: s).offset(y: l.y)
             }
-            .frame(maxWidth: .infinity, minHeight: max(rowH, height - (L.last.map { $0.y + $0.height } ?? 0)))
-            .background(rackTargeted ? S.green.opacity(0.15) : Color.clear)
-            .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: $rackTargeted) { providers in dropOnRack(providers, channel: nil) }
+            if channels.count < Pad.count {
+                let y = (L.last.map { $0.y + $0.height } ?? 0)
+                VStack(spacing: 3 * s) {
+                    Image(systemName: "plus.circle.dashed").font(.system(size: 16 * s)).foregroundColor(rackTargeted ? S.green : Color(white: 0.45))
+                    Text(rackTargeted ? "DROP FOR A NEW CHANNEL" : "DROP A SOUND HERE").font(.system(size: 8 * s, weight: .semibold)).foregroundColor(rackTargeted ? S.green : Color(white: 0.45))
+                }
+                .frame(width: (A.rackX1 - A.rackX0) * s, height: rowH).offset(y: y)
+            }
         }
-        .frame(height: height, alignment: .top)
-        .background(Color(white: 0.16))
     }
 
-    private func channelRow(_ l: RowLayout, rowH: CGFloat) -> some View {
+    private func channelRow(_ l: RowLayout, rowH: CGFloat, s: CGFloat) -> some View {
         let ch = l.channel, pad = ch.pad
         let muted = controller.mutedPads[pad]
         let isSel = selectedID == ch.id
         let ps = controller.state.pads[pad]
         func set(_ change: (inout PadSettings) -> Void) { var v = controller.state.pads[pad]; change(&v); controller.setPadSettings(pad, v) }
-        return VStack(spacing: 0) {
-            HStack(spacing: compact ? 3 : 5) {
-                // ▶ expands this track into its piano roll
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) { expandedID = expandedID == ch.id ? nil : ch.id }
-                    selectedID = ch.id
-                } label: {
-                    Image(systemName: "triangle.fill").font(.system(size: 9)).foregroundColor(expandedID == ch.id ? S.green : S.dim)
-                        .rotationEffect(.degrees(expandedID == ch.id ? 180 : 90))
-                        .frame(width: 16, height: 28)
-                }
-                // the name oval: tap selects, long-press for the channel menu; a new channel pops in
-                Text(ch.name).font(.system(size: compact ? 9 : 10, weight: .semibold, design: .monospaced))
-                    .foregroundColor(isSel ? .black : (muted ? S.dim : S.text)).lineLimit(1).minimumScaleFactor(0.7)
-                    .padding(.horizontal, 8).frame(maxWidth: .infinity).frame(height: 26)
-                    .background(Capsule().fill(isSel ? S.green : S.button))
-                    .overlay(Capsule().stroke(rowTargeted == ch.id ? S.green : S.border, lineWidth: rowTargeted == ch.id ? 2 : 1))
-                    .scaleEffect(newborn.contains(ch.id) ? 0.2 : 1)
-                    .opacity(newborn.contains(ch.id) ? 0 : 1)
-                    .bbLongPressMenu(title: ch.name, width: 270, tap: { selectedID = ch.id }) { channelMenu(ch) }
-                if !compact {
-                    DrumRollKnob(value: ps.level, size: 22) { v, _ in set { $0.level = v } }
-                    DrumRollKnob(value: (ps.pan + 1) / 2, size: 22) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }
-                }
-                // the lamp: on / off (mute)
-                Button { controller.toggleMute(pad) } label: {
-                    Circle().fill(muted ? Color(white: 0.25) : S.green).frame(width: 9, height: 9)
-                        .shadow(color: muted ? .clear : S.green.opacity(0.9), radius: 4)
-                        .frame(width: 18, height: 28)
-                }
-                // the track's own dice: new steps for this track only
-                Button { selectedID = ch.id; controller.randomizeChannel(loop: loop, pad: pad); selection = [] } label: {
-                    Image(systemName: "dice").font(.system(size: 12)).foregroundColor(S.text)
-                        .frame(width: compact ? 22 : 26, height: 28).background(box(lit: false))
-                }
+        // art offsets inside the row sprite (298, 334): triangle 303-312, oval 321-524, name 335-425, knobs 440 / 478, lamp 509
+        let X = { (ax: Double) in CGFloat(ax - A.rackX0) * s }
+        return ZStack(alignment: .topLeading) {
+            Image("SeqRow").resizable().frame(width: 240 * s, height: 58 * s)
+                .scaleEffect(newborn.contains(ch.id) ? 0.3 : 1).opacity(newborn.contains(ch.id) ? 0 : 1)
+            // the lit oval of the selected track
+            if isSel {
+                Capsule().stroke(S.green, lineWidth: 1.5 * s).frame(width: 203 * s, height: 45 * s).offset(x: X(321), y: 5 * s).allowsHitTesting(false)
             }
-            .padding(.horizontal, compact ? 3 : 6)
-            .frame(height: rowH)
-            if l.pitch != nil {
-                // the expanded track: pitch names down the side of its piano roll
-                pitchKeys(l)
+            Text(ch.name).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(muted ? Color(white: 0.5) : .white).lineLimit(1).minimumScaleFactor(0.6)
+                .frame(width: 92 * s, height: 45 * s, alignment: .leading).offset(x: X(335), y: 5 * s)
+                .allowsHitTesting(false)
+            // the triangle opens the piano roll
+            if expandedID == ch.id {
+                Image(systemName: "triangle.fill").font(.system(size: 8 * s)).foregroundColor(S.green).rotationEffect(.degrees(180))
+                    .frame(width: 18 * s, height: 20 * s).background(Color(red: 0.86, green: 0.86, blue: 0.87)).offset(x: X(300), y: 17 * s).allowsHitTesting(false)
             }
+            PressableArea { withAnimation(.easeInOut(duration: 0.2)) { expandedID = expandedID == ch.id ? nil : ch.id }; selectedID = ch.id }
+                .frame(width: 24 * s, height: 45 * s).offset(x: X(298), y: 5 * s)
+            // tap the name: select; long-press: the channel menu
+            Color.clear.contentShape(Rectangle()).frame(width: 105 * s, height: 45 * s).offset(x: X(321), y: 5 * s)
+                .bbLongPressMenu(title: ch.name, width: 270, tap: { selectedID = ch.id }) { channelMenu(ch) }
+            ArtKnob(value: ps.level) { v, _ in set { $0.level = v } }.frame(width: 30 * s, height: 30 * s).offset(x: X(425), y: 13 * s)
+            ArtKnob(value: (ps.pan + 1) / 2) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 30 * s, height: 30 * s).offset(x: X(463), y: 13 * s)
+            // the lamp: on / off
+            if muted { Circle().fill(Color(white: 0.12)).frame(width: 9 * s, height: 9 * s).offset(x: X(504.5), y: 23.5 * s).allowsHitTesting(false) }
+            PressableArea { controller.toggleMute(pad) }.frame(width: 22 * s, height: 30 * s).offset(x: X(498), y: 13 * s)
+            if l.pitch != nil { pitchKeys(l, s: s).offset(y: rowH) }
         }
-        .frame(height: l.height)
-        .background(isSel ? S.green.opacity(0.14) : Color.clear)
-        .overlay(Rectangle().fill(Color.black.opacity(0.45)).frame(height: 1), alignment: .bottom)
+        .frame(width: (A.rackX1 - A.rackX0) * s, height: l.height, alignment: .topLeading)
+        .background(rowTargeted == ch.id ? S.green.opacity(0.25) : Color.clear)
         .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: Binding(get: { rowTargeted == ch.id }, set: { rowTargeted = $0 ? ch.id : nil })) { providers in
             dropOnRack(providers, channel: ch)
         }
     }
 
-    private func pitchKeys(_ l: RowLayout) -> some View {
+    private func pitchKeys(_ l: RowLayout, s: CGFloat) -> some View {
         let range = l.pitch ?? 0...0
         let base = controller.baseNote(pad: l.channel.pad)
         return VStack(spacing: 0) {
-            ForEach(Array(range.reversed()), id: \.self) { s in
-                let note = base + s
+            ForEach(Array(range.reversed()), id: \.self) { sm in
+                let note = base + sm
                 let inScale = !controller.snapToScale || controller.scale.contains(note, root: controller.scaleRoot)
                 let isRoot = controller.snapToScale && (note - controller.scaleRoot) % 12 == 0
                 HStack {
                     Spacer()
-                    Text(MusicScale.noteName(note)).font(.system(size: 9, design: .monospaced))
-                        .foregroundColor(isRoot ? S.green : (inScale ? S.text : S.dim.opacity(0.5)))
-                    Text(s == 0 ? "·" : (s > 0 ? "+\(s)" : "\(s)")).font(.system(size: 8, design: .monospaced)).foregroundColor(S.dim).frame(width: 22, alignment: .trailing)
+                    Text(MusicScale.noteName(note)).font(.system(size: 9 * s, design: .monospaced))
+                        .foregroundColor(isRoot ? S.green : (inScale ? Color(white: 0.15) : Color(white: 0.5)))
+                    Text(sm == 0 ? "·" : (sm > 0 ? "+\(sm)" : "\(sm)")).font(.system(size: 8 * s, design: .monospaced)).foregroundColor(Color(white: 0.4)).frame(width: 22 * s, alignment: .trailing)
                 }
-                .padding(.trailing, 8).frame(height: l.pitchRowH)
-                .background(isRoot ? S.green.opacity(0.12) : (inScale ? Color.clear : Color.black.opacity(0.25)))
+                .padding(.trailing, 12 * s).frame(height: l.pitchRowH)
+                .background(isRoot ? S.green.opacity(0.25) : (inScale ? Color.clear : Color.black.opacity(0.12)))
             }
         }
-        .frame(height: CGFloat(range.count) * l.pitchRowH, alignment: .top)
+        .frame(width: (A.rackX1 - A.rackX0) * s, height: CGFloat(range.count) * l.pitchRowH, alignment: .top)
     }
+
 
     /// Drop from the library (or a file from Files) onto the rack.
     private func dropOnRack(_ providers: [NSItemProvider], channel: WorkspaceChannel?) -> Bool {
@@ -1015,7 +932,7 @@ struct SequencerView: View {
     private func cellWidth(_ w: CGFloat) -> CGFloat { w / CGFloat(pageTicks) * CGFloat(cellTicks) }
     private func noteWidth(_ e: GrooveEvent, _ w: CGFloat) -> CGFloat {
         if e.length > 0 { return max(6, CGFloat(e.length) / CGFloat(pageTicks) * w - 3) }
-        return max(6, cellWidth(w) - 3)
+        return max(6, cellWidth(w) - 2)
     }
     private func noteRect(_ e: GrooveEvent, w: CGFloat, _ L: [RowLayout]) -> CGRect? {
         guard let l = layout(for: Int(e.pad), L) else { return nil }
@@ -1024,13 +941,13 @@ struct SequencerView: View {
             let y = l.pitchTop + CGFloat(range.upperBound - s) * l.pitchRowH
             return CGRect(x: x(e.tick, w) + 1.5, y: y + 1.5, width: noteWidth(e, w), height: l.pitchRowH - 3)
         }
-        return CGRect(x: x(e.tick, w) + 1.5, y: l.y + 4, width: noteWidth(e, w), height: l.height - 8)
+        return CGRect(x: x(e.tick, w) + 1, y: l.y + 2, width: noteWidth(e, w), height: l.height - 4)
     }
     private func visible(_ e: GrooveEvent) -> Bool { e.tick >= pageStart && e.tick < pageStart + pageTicks }
 
     private func grid(_ L: [RowLayout], width w: CGFloat, rowH: CGFloat) -> some View {
         Canvas { ctx, size in
-            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(S.rowA))
+            let cell = ctx.resolve(Image("SeqCell"))
             let cw = cellWidth(size.width)
             let cells = Int(pageTicks / cellTicks)
             for (i, l) in L.enumerated() {
@@ -1040,8 +957,9 @@ struct SequencerView: View {
                     for c in 0..<cells {
                         let at = pageStart + Int32(c) * cellTicks
                         let lit = pattern.events.contains { Int($0.pad) == l.channel.pad && $0.tick >= at && $0.tick < at + cellTicks }
-                        let r = CGRect(x: CGFloat(c) * cw + 1.5, y: l.y + 4, width: cw - 3, height: l.pitchTop - l.y - 8)
-                        ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(lit ? noteColor.opacity(0.8) : S.cell))
+                        let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.pitchTop - l.y)
+                        ctx.draw(cell, in: r)
+                        if lit { ctx.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 2), cornerRadius: 3), with: .color(noteColor.opacity(0.8))) }
                     }
                     // the piano roll: a stripe per semitone (scale notes lighter, the root greener)
                     let base = controller.baseNote(pad: l.channel.pad)
@@ -1057,24 +975,20 @@ struct SequencerView: View {
                     ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
                     ctx.fill(Path(CGRect(x: 0, y: l.y + l.height - 1, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
                 } else {
-                    ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: l.height)), with: .color(i % 2 == 0 ? S.rowA : S.rowB))
-                    // the step buttons
+                    // the step buttons (the picture's)
                     for c in 0..<cells {
                         let at = pageStart + Int32(c) * cellTicks
-                        let onBeat = at % PatternData.ppq == 0
-                        let r = CGRect(x: CGFloat(c) * cw + 1.5, y: l.y + 4, width: cw - 3, height: l.height - 8)
-                        ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(at >= pattern.lengthTicks ? Color.black.opacity(0.3) : (onBeat ? S.cellBeat : S.cell)))
-                        ctx.fill(Path(roundedRect: CGRect(x: r.minX, y: r.minY, width: r.width, height: 2), cornerRadius: 1), with: .color(Color.white.opacity(0.08)))
+                        let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.height)
+                        ctx.draw(cell, in: r)
+                        if at >= pattern.lengthTicks { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.55))) }
                     }
                 }
-                ctx.fill(Path(CGRect(x: 0, y: l.y + l.height - 1, width: size.width, height: 1)), with: .color(Color.black.opacity(0.5)))
             }
-            // beat and bar lines over everything
+            // the bar line
             var t = pageStart
             while t <= pageStart + pageTicks {
-                if t % PatternData.ppq == 0 {
-                    let isBar = t % PatternEdit.barTicks == 0
-                    ctx.fill(Path(CGRect(x: x(t, size.width), y: 0, width: isBar ? 2 : 1, height: size.height)), with: .color(isBar ? S.barLine.opacity(0.8) : S.beatLine))
+                if t % PatternEdit.barTicks == 0 && t > pageStart && t < pageStart + pageTicks {
+                    ctx.fill(Path(CGRect(x: x(t, size.width) - 0.5, y: 0, width: 1, height: size.height)), with: .color(Color.white.opacity(0.25)))
                 }
                 t += PatternData.ppq
             }
@@ -1087,8 +1001,9 @@ struct SequencerView: View {
                 let sel = selection.contains(NoteKey(e))
                 let base = sel ? Color.white : noteColor
                 let shade = 0.55 + 0.45 * Double(e.velocity)
-                ctx.fill(Path(roundedRect: r.insetBy(dx: -2, dy: -2), cornerRadius: 5), with: .color((sel ? Color.white : noteColor).opacity(sel ? 0.35 : 0.25)))
                 ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(base.opacity(shade)))
+                ctx.fill(Path(roundedRect: CGRect(x: r.minX + 2, y: r.minY + 2, width: r.width - 4, height: max(2, r.height * 0.12)), cornerRadius: 1.5), with: .color(Color.white.opacity(0.35)))
+                if sel { ctx.stroke(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.white), lineWidth: 1.5) }
                 if sel && tool == .select {
                     ctx.fill(Path(roundedRect: CGRect(x: r.maxX - 4, y: r.minY + 2, width: 3, height: max(2, r.height - 4)), cornerRadius: 1.5),
                              with: .color(Color.black.opacity(0.55)))
@@ -1112,7 +1027,7 @@ struct SequencerView: View {
             _ = tick
         }
         .contentShape(Rectangle())
-        .gesture(DragGesture(minimumDistance: 0)
+        .highPriorityGesture(DragGesture(minimumDistance: 0)
             .onChanged { g in if !pinching { gridChanged(g, w: w, L: L) } }
             .onEnded { g in if pinching { drag = .none; work = nil } else { gridEnded(g, w: w, L: L) } })
         .simultaneousGesture(pinch)
@@ -1296,23 +1211,33 @@ struct SequencerView: View {
 
     // MARK: Velocity / pitch lane
 
-    private var laneHeader: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                chip(lane.rawValue, width: compact ? 100 : 130)
-                    .bbMenu(title: "Lane", width: 200) { Lane.allCases.map { l in BBMenuItem.item(l.rawValue, checked: lane == l) { lane = l } } }
+    private func laneHeader(_ s: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 4 * s) {
+            HStack(spacing: 6 * s) {
+                HStack {
+                    Text(lane.rawValue).font(.system(size: 12 * s, weight: .medium)).foregroundColor(.white)
+                    Spacer()
+                    Image(systemName: "chevron.down").font(.system(size: 10 * s, weight: .semibold)).foregroundColor(.white)
+                }
+                .padding(.horizontal, 10 * s).frame(width: 150 * s, height: 36 * s)
+                .background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
+                .contentShape(Rectangle())
+                .bbMenu(title: "Lane", width: 200) { Lane.allCases.map { l in BBMenuItem.item(l.rawValue, checked: lane == l) { lane = l } } }
                 // velocity dice: new velocities only (selected notes, or the selected track, or all)
                 Button {
                     commit(PatternEdit.randomizeVelocity(pattern, pad: selectedPad, keys: selection, seed: UInt64.random(in: 1...UInt64.max)))
-                } label: { iconBox("dice.fill") }
+                } label: {
+                    Image(systemName: "dice.fill").font(.system(size: 14 * s)).foregroundColor(.white)
+                        .frame(width: 40 * s, height: 36 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
+                }
             }
-            if let ch = selected {
-                Text(ch.name).font(.system(size: 10, design: .monospaced)).foregroundColor(S.dim).lineLimit(1)
-            }
+            if let ch = selected { Text(ch.name).font(.system(size: 9 * s, design: .monospaced)).foregroundColor(Color(white: 0.25)).lineLimit(1) }
             Spacer(minLength: 0)
         }
-        .padding(8)
+        .padding(.top, 6 * s)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
+
 
     private func laneView(width w: CGFloat, height h: CGFloat) -> some View {
         Canvas { ctx, size in
@@ -1379,85 +1304,57 @@ struct SequencerView: View {
 
     private var orderedKits: [KitDefinition] { SoundMode.allCases.flatMap { KitLibrary.kits(for: $0) } + KitLibrary.genres }
 
-    private var footer: some View {
-        HStack(spacing: 10) {
-            // sequencer / pads: the pad button goes back to the faceplate
-            HStack(spacing: 2) {
-                Image(systemName: "square.grid.3x3.fill").font(.system(size: 15)).foregroundColor(.white)
-                    .frame(width: 38, height: 36).background(RoundedRectangle(cornerRadius: 6).fill(Color(white: 0.2)))
-                Button { dismiss() } label: {
-                    Image(systemName: "square.fill").font(.system(size: 15)).foregroundColor(Color(red: 0.95, green: 0.92, blue: 0.8))
-                        .frame(width: 38, height: 36).background(RoundedRectangle(cornerRadius: 6).fill(Color(white: 0.92)))
-                }
-            }
-            .padding(4).background(darkPanel)
-            Button { controller.toggleRecordPads() } label: {
-                HStack(spacing: 10) {
-                    ZStack {
-                        Circle().stroke(S.red, lineWidth: 2.5).frame(width: 30, height: 30)
-                            .shadow(color: controller.recording ? S.red : .clear, radius: 6)
-                        if controller.recording { Circle().fill(S.red).frame(width: 12, height: 12) }
-                        else { Text("1").font(.system(size: 12, weight: .semibold)).foregroundColor(S.text) }
-                    }
-                    if !compact { Text("Drum Track").font(.system(size: 14, weight: .medium)).foregroundColor(S.text) }
-                }
-                .padding(.horizontal, 12).frame(height: 44).background(darkPanel)
-            }
-            Spacer(minLength: 4)
-            picker("PATTERN", chip: patternMenu, back: { cycleLoop(-1) }, forward: { cycleLoop(1) })
-            if !compact { Rectangle().fill(theme.inkDim.opacity(0.5)).frame(width: 1, height: 44) }
-            picker("KIT", chip: kitMenu, back: { cycleKit(-1) }, forward: { cycleKit(1) })
-            Spacer(minLength: 4)
+    @ViewBuilder private func footer(_ s: CGFloat) -> some View {
+        // pads / sequencer switch: the pad button goes back to the faceplate
+        hit(A.padsButton, s) { dismiss() }
+        // Drum Track: MPC-style pad recording
+        if controller.recording {
+            Circle().stroke(S.red, lineWidth: 3 * s).shadow(color: S.red, radius: 6 * s).place(A.drumCircle, s).allowsHitTesting(false)
+            Circle().fill(S.red).frame(width: 12 * s, height: 12 * s).place(A.drumCircle, s).allowsHitTesting(false)
         }
-        .frame(height: compact ? 54 : 66)
-    }
-
-    private func picker<C: View>(_ title: String, chip: C, back: @escaping () -> Void, forward: @escaping () -> Void) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            if !compact { Text(title).font(.system(size: 9, weight: .semibold, design: .monospaced)).foregroundColor(theme.inkDim) }
-            HStack(spacing: 4) {
-                Button(action: back) { iconBox("chevron.left") }
-                Button(action: forward) { iconBox("chevron.right") }
-                chip
-            }
-        }
+        hit(A.drumTrack, s) { controller.toggleRecordPads() }
+        // PATTERN
+        artText(controller.state.presetName, [A.patternChip[0] + 6, A.patternChip[1], A.patternChip[2] - 30, A.patternChip[3]], s, size: 14, align: .leading)
+        Color.clear.contentShape(Rectangle()).place(A.patternChip, s).bbMenu(title: "Presets", width: 340) { presetItems() }
+        hit(A.patternBack, s) { cycleLoop(-1) }
+        hit(A.patternForward, s) { cycleLoop(1) }
+        // KIT
+        artText(controller.state.kitName, [A.kitChip[0] + 6, A.kitChip[1], A.kitChip[2] - 30, A.kitChip[3]], s, size: 14, align: .leading)
+        Color.clear.contentShape(Rectangle()).place(A.kitChip, s).bbMenu(title: "Kits · drum sounds", width: 320) { kitItems() }
+        hit(A.kitBack, s) { cycleKit(-1) }
+        hit(A.kitForward, s) { cycleKit(1) }
     }
 
     /// PRESETS: every preset pattern by style, and your own.
-    private var patternMenu: some View {
-        chip(controller.state.presetName, width: compact ? 120 : 190)
-            .bbMenu(title: "Presets", width: 340) {
-                var items: [BBMenuItem] = []
-                for style in PatternBank.styles {
-                    items.append(.submenu(style, icon: "music.note.list",
-                        PatternBank.presets(in: style).map { p in
-                            BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
-                                            checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p); selection = [] }
-                        }))
-                }
-                if !controller.userPresets.isEmpty {
-                    items.append(.submenu("My presets", icon: "person.crop.square", controller.userPresets.map { name in
-                        BBMenuItem.item(name) { controller.loadUserPreset(name); selection = [] }
-                    }))
-                }
-                return items
-            }
+    private func presetItems() -> [BBMenuItem] {
+        var items: [BBMenuItem] = []
+        for style in PatternBank.styles {
+            items.append(.submenu(style, icon: "music.note.list",
+                PatternBank.presets(in: style).map { p in
+                    BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
+                                    checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p); selection = [] }
+                }))
+        }
+        if !controller.userPresets.isEmpty {
+            items.append(.submenu("My presets", icon: "person.crop.square", controller.userPresets.map { name in
+                BBMenuItem.item(name) { controller.loadUserPreset(name); selection = [] }
+            }))
+        }
+        return items
     }
 
-    private var kitMenu: some View {
-        chip(controller.state.kitName, width: compact ? 120 : 190)
-            .bbMenu(title: "Kits · drum sounds", width: 320) {
-                SoundMode.allCases.map { mode in
-                    BBMenuItem.submenu("\(mode.title) kits", icon: "square.grid.3x3", KitLibrary.kits(for: mode).map { def in
-                        BBMenuItem.item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
-                    })
-                } + [BBMenuItem.submenu("Genre kits", icon: "music.note.list", KitLibrary.genreGroups.map { g in
-                    BBMenuItem.submenu(g.genre, icon: "square.grid.3x3", g.kits.map { def in
-                        BBMenuItem.item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
-                    })
-                })]
-            }
+    private func kitItems() -> [BBMenuItem] {
+        SoundMode.allCases.map { mode in
+            BBMenuItem.submenu("\(mode.title) kits", icon: "square.grid.3x3", KitLibrary.kits(for: mode).map { def in
+                BBMenuItem.item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
+            })
+        } + [BBMenuItem.submenu("Genre kits", icon: "music.note.list", KitLibrary.genreGroups.map { g in
+            BBMenuItem.submenu(g.genre, icon: "square.grid.3x3", g.kits.map { def in
+                BBMenuItem.item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
+            })
+        })]
     }
+
 
     private func cycleKit(_ step: Int) {
         let kits = orderedKits
@@ -1543,6 +1440,8 @@ struct SequencerView: View {
             .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
     }
 
+    private var divider: some View { Rectangle().fill(S.border).frame(width: 1, height: 30) }
+
     private func iconBox(_ name: String) -> some View {
         Image(systemName: name).font(.system(size: 16, weight: .medium)).foregroundColor(S.text)
             .frame(width: 40, height: 40).background(box(lit: false))
@@ -1619,7 +1518,31 @@ struct TempoPanel: View {
     }
 }
 
-/// A small knob (SWING, HUMANIZE, the rack's LEVEL and PAN): drag up or right to turn it up.
+/// The picture's knob, turned to its value: drag up or right to turn it up.
+struct ArtKnob: View {
+    let value: Float
+    let change: (Float, Bool) -> Void
+    @State private var start: Float?
+
+    var body: some View {
+        Image("SeqKnob").resizable().aspectRatio(contentMode: .fit)
+            .rotationEffect(.degrees(KnobControl.angle(value)))
+            .contentShape(Circle())
+            .gesture(DragGesture(minimumDistance: 1)
+                .onChanged { g in
+                    if start == nil { start = value }
+                    let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
+                    change(((start ?? value) + d).clamped(0, 1), false)
+                }
+                .onEnded { g in
+                    let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
+                    change(((start ?? value) + d).clamped(0, 1), true)
+                    start = nil
+                })
+    }
+}
+
+/// A small knob (the track settings): drag up or right to turn it up.
 struct DrumRollKnob: View {
     let value: Float
     var size: CGFloat = 36
