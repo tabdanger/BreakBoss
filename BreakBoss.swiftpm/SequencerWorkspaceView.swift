@@ -629,7 +629,7 @@ struct SequencerWorkspaceView: View {
         // A dropped track header physically grows from a circle to an oval.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
             withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
-                newborn.remove(row.id)
+                _ = newborn.remove(row.id)
             }
         }
         status = "Loaded \(sound.name)"
