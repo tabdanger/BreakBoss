@@ -335,11 +335,6 @@ struct SequencerView: View {
             .frame(width: (r[2] - r[0]) * s, height: (r[3] - r[1]) * s, alignment: align)
             .place(r, s)
     }
-    private func litRing(_ r: [Double], _ s: CGFloat, color: Color = S.green) -> some View {
-        RoundedRectangle(cornerRadius: 7 * s).stroke(color, lineWidth: 1.5 * s)
-            .background(RoundedRectangle(cornerRadius: 7 * s).fill(color.opacity(0.12)))
-            .place(r, s).allowsHitTesting(false)
-    }
     /// The picture's knob, turned to the value (drag up or right to turn it up).
     private func artKnob(_ r: [Double], _ s: CGFloat, value: Float, change: @escaping (Float, Bool) -> Void) -> some View {
         ArtKnob(value: value, change: change).place(r, s)
@@ -348,74 +343,88 @@ struct SequencerView: View {
     // MARK: Top bar
 
     @ViewBuilder private func topBar(_ s: CGFloat) -> some View {
-        // DRAW / SELECT / ERASE
+        // DRAW / SELECT / ERASE: real buttons from the picture, the active one lit green
         ForEach(0..<3, id: \.self) { i in
             let t: Tool = [.draw, .select, .erase][i]
             let on = tool == t
-            if on { litRing(A.tools[i], s) }
-            HStack(spacing: 4 * s) {
-                Image(systemName: ["pencil", "rectangle.dashed", "eraser"][i]).font(.system(size: 13 * s, weight: .medium))
-                Text(["DRAW", "SELECT", "ERASE"][i]).font(.system(size: 13 * s, weight: .medium))
+            SeqButton("SeqBtnTool", lit: on ? S.green : nil, scale: s, action: { tool = t }) {
+                HStack(spacing: 4 * s) {
+                    Image(systemName: ["pencil", "rectangle.dashed", "eraser"][i]).font(.system(size: 13 * s, weight: .medium))
+                    Text(["DRAW", "SELECT", "ERASE"][i]).font(.system(size: 13 * s, weight: .medium))
+                }
+                .foregroundColor(on ? S.green : .white)
             }
-            .foregroundColor(on ? S.green : .white).place(A.tools[i], s).allowsHitTesting(false)
-            hit(A.tools[i], s) { tool = t }
+            .place(A.tools[i], s)
         }
-        HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.backward").font(.system(size: 13 * s, weight: .medium)); Text("UNDO").font(.system(size: 13 * s, weight: .medium)) }
-            .foregroundColor(undoStack.isEmpty ? Color(white: 0.5) : .white).place(A.undo, s).allowsHitTesting(false)
-        hit(A.undo, s) { undo() }
-        HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.forward").font(.system(size: 13 * s, weight: .medium)); Text("REDO").font(.system(size: 13 * s, weight: .medium)) }
-            .foregroundColor(redoStack.isEmpty ? Color(white: 0.5) : .white).place(A.redo, s).allowsHitTesting(false)
-        hit(A.redo, s) { redo() }
+        SeqButton("SeqBtnTool", scale: s, action: { undo() }) {
+            HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.backward").font(.system(size: 13 * s, weight: .medium)); Text("UNDO").font(.system(size: 13 * s, weight: .medium)) }
+                .foregroundColor(undoStack.isEmpty ? Color(white: 0.5) : .white)
+        }
+        .place(A.undo, s)
+        SeqButton("SeqBtnTool", scale: s, action: { redo() }) {
+            HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.forward").font(.system(size: 13 * s, weight: .medium)); Text("REDO").font(.system(size: 13 * s, weight: .medium)) }
+                .foregroundColor(redoStack.isEmpty ? Color(white: 0.5) : .white)
+        }
+        .place(A.redo, s)
         // bars pager
         artText(pageLabel, A.pageText, s, size: 17, weight: .medium, color: Color(white: 0.1))
-        hit(A.pageBack, s) { page = max(0, page - 1); follow = false }
-        hit(A.pageForward, s) { page = min(pages - 1, page + 1); follow = false }
+        SeqGlyph(symbol: "chevron.left", scale: s, enabled: page > 0) { page = max(0, page - 1); follow = false }.place(A.pageBack, s)
+        SeqGlyph(symbol: "chevron.right", scale: s, enabled: page < pages - 1) { page = min(pages - 1, page + 1); follow = false }.place(A.pageForward, s)
         // transport
-        RoundedRectangle(cornerRadius: 2 * s).fill(Color.white).frame(width: 15 * s, height: 15 * s).place([806, 205, 831, 228], s).allowsHitTesting(false)
-        hit(A.stop, s) { controller.stopPlayback() }
-        if isThisPlaying { litRing(A.play, s) }
-        Image(systemName: "play.fill").font(.system(size: 17 * s)).foregroundColor(S.green).place(A.play, s).allowsHitTesting(false)
-        hit(A.play, s) { controller.playPattern(loop) }
-        if controller.recording { litRing(A.rec, s, color: S.red) }
-        Circle().fill(S.red).frame(width: 17 * s, height: 17 * s).shadow(color: controller.recording ? S.red : .clear, radius: 5 * s)
-            .place(A.rec, s).allowsHitTesting(false)
-        hit(A.rec, s) {
+        SeqButton("SeqBtnTransport", scale: s, action: { controller.stopPlayback() }) {
+            RoundedRectangle(cornerRadius: 2 * s).fill(Color.white).frame(width: 15 * s, height: 15 * s)
+        }
+        .place(A.stop, s)
+        SeqButton("SeqBtnTransport", lit: isThisPlaying ? S.green : nil, scale: s, action: { controller.playPattern(loop) }) {
+            Image(systemName: "play.fill").font(.system(size: 17 * s)).foregroundColor(S.green)
+        }
+        .place(A.play, s)
+        SeqButton("SeqBtnTransport", lit: controller.recording ? S.red : nil, scale: s, action: {
             let on = !controller.recording
             controller.setRecording(on)
             if on && !isThisPlaying { controller.playPattern(loop) }
+        }) {
+            Circle().fill(S.red).frame(width: 17 * s, height: 17 * s).shadow(color: controller.recording ? S.red : .clear, radius: 5 * s)
         }
+        .place(A.rec, s)
         // tempo, bars, pattern, gear, cloud
-        artText("\(Int(controller.liveTempo.rounded())) BPM", [A.bpm[0] + 10, A.bpm[1], A.bpm[2] - 26, A.bpm[3]], s, size: 15, align: .leading)
-        PressGlow().bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
-        artText("\(bars) BARS", [A.bars[0] + 10, A.bars[1], A.bars[2] - 26, A.bars[3]], s, size: 15, align: .leading)
-        PressGlow().bbMenuPlaced(A.bars, s, title: "Pattern length") {
-            [2, 4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
-        }
-        artText(controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", [A.main[0] + 10, A.main[1], A.main[2] - 26, A.main[3]], s, size: 15, align: .leading)
-        PressGlow().bbMenuPlaced(A.main, s, title: "Patterns in this preset", width: 260) {
-            controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
-        }
-        PressGlow().bbMenuPlaced(A.gear, s, title: "Sequencer", width: 330) { settingsItems() }
+        SeqChip(sprite: "SeqChipBpm", text: "\(Int(controller.liveTempo.rounded())) BPM", scale: s)
+            .bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
+        SeqChip(sprite: "SeqChipBars", text: "\(bars) BARS", scale: s)
+            .bbMenuPlaced(A.bars, s, title: "Pattern length") {
+                [2, 4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
+            }
+        SeqChip(sprite: "SeqChipMain", text: controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", scale: s)
+            .bbMenuPlaced(A.main, s, title: "Patterns in this preset", width: 260) {
+                controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
+            }
+        SeqArt(sprite: "SeqBtnGear", scale: s) { EmptyView() }
+            .bbMenuPlaced(A.gear, s, title: "Sequencer", width: 330) { settingsItems() }
         if let url = exportURL {
-            ShareLink(item: url) { Color.clear.contentShape(Rectangle()) }.place(A.cloud, s)
+            ShareLink(item: url) { SeqArt(sprite: "SeqBtnCloud", corner: 9, scale: s) { EmptyView() } }
+                .buttonStyle(SeqPress()).place(A.cloud, s)
+        } else {
+            SeqArt(sprite: "SeqBtnCloud", corner: 9, scale: s) { EmptyView() }.place(A.cloud, s).allowsHitTesting(false)
         }
         // snap, scale, swing, humanize
-        artText(snapLabel, [A.snap[0] + 64, A.snap[1], A.snap[2] - 28, A.snap[3]], s, size: 13, align: .leading)
-        PressGlow().bbMenuPlaced(A.snap, s, title: "Snap", width: 300) {
-            Self.snapChoices.flatMap { group -> [BBMenuItem] in
-                [.header(group.section)] + group.items.map { item in BBMenuItem.item(item.0, checked: item.1 == snap) { snap = item.1 } }
+        SeqChip(sprite: "SeqChipSnap", text: snapLabel, size: 13, leading: 64, trailing: 28, scale: s)
+            .bbMenuPlaced(A.snap, s, title: "Snap", width: 300) {
+                Self.snapChoices.flatMap { group -> [BBMenuItem] in
+                    [.header(group.section)] + group.items.map { item in BBMenuItem.item(item.0, checked: item.1 == snap) { snap = item.1 } }
+                }
             }
-        }
         // SNAP TO SCALE: a tuning fork on the SNAP chip's left edge (green when on)
         Image(systemName: "tuningfork").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(controller.snapToScale ? S.green : Color(white: 0.45))
             .bbMenu(title: "Snap to scale", width: 300) { scaleItems(selectedPad) }
             .place([A.snap[0] + 2, A.snap[1], A.snap[0] + 22, A.snap[3]], s)
+        SeqArt(sprite: "SeqChipSwing", scale: s) { EmptyView() }.place(A.swing, s).allowsHitTesting(false)
         artText(controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%", [A.swing[0] + 76, A.swing[1], A.swing[2] - 46, A.swing[3]], s, size: 13, align: .leading)
         artKnob(A.swingKnob, s, value: controller.value(.bounce)) { v, ended in
             if swingStart == nil { swingStart = controller.value(.bounce) }
             controller.set(.bounce, v)
             if ended { swingStart = nil }
         }
+        SeqArt(sprite: "SeqChipHumanize", scale: s) { EmptyView() }.place(A.humanize, s).allowsHitTesting(false)
         artKnob(A.humanizeKnob, s, value: pattern.humanize ?? 0) { v, ended in
             if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(pattern); redoStack = [] }
             var p = pattern
@@ -475,33 +484,54 @@ struct SequencerView: View {
         let generalBottom = top + headerH
         switch section {
         case .generate:
-            Image("SeqSectionGeneral").resizable().place([x0, top, x1, generalBottom], s)
-            hit([x0, top, x1, generalBottom], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .general } }
+            SeqButton("SeqSectionGeneral", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .general } }) {
+                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
+            }
+            .place([x0, top, x1, generalBottom], s)
             Image("SeqSectionGenerate").resizable().place([bx0, 375, bx1, 632], s)
             generateOverlay([bx0, 375, bx1, 632], s)
-            Image("SeqSectionMidi").resizable().place([x0, 642, x1, midiBottom], s)
-            hit([x0, 642, x1, midiBottom], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .midi } }
+            SeqButton("SeqSectionMidi", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .midi } }) {
+                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
+            }
+            .place([x0, 642, x1, midiBottom], s)
         case .general:
-            Image("SeqSectionGeneral").resizable().place([x0, top, x1, generalBottom], s)
-            Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([x1 - 44, top, x1 - 20, generalBottom], s).allowsHitTesting(false)
+            SeqButton("SeqSectionGeneral", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }) {
+                Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
+            }
+            .place([x0, top, x1, generalBottom], s)
             let genTop = 642 - gap - genHeaderH
             soundsPanel([bx0, generalBottom + gap, bx1, genTop - gap], s)
-            Image("SeqGenerateHeader").resizable().place([bx0, genTop, bx1, genTop + genHeaderH], s)
-            Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([bx1 - 40, genTop, bx1 - 16, genTop + genHeaderH], s).allowsHitTesting(false)
-            hit([bx0, genTop, bx1, genTop + genHeaderH], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }
-            Image("SeqSectionMidi").resizable().place([x0, 642, x1, midiBottom], s)
-            hit([x0, 642, x1, midiBottom], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .midi } }
+            SeqButton("SeqGenerateHeader", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }) {
+                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 24 * s)
+            }
+            .place([bx0, genTop, bx1, genTop + genHeaderH], s)
+            SeqButton("SeqSectionMidi", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .midi } }) {
+                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
+            }
+            .place([x0, 642, x1, midiBottom], s)
         case .midi:
-            Image("SeqSectionGeneral").resizable().place([x0, top, x1, generalBottom], s)
-            hit([x0, top, x1, generalBottom], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .general } }
+            SeqButton("SeqSectionGeneral", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .general } }) {
+                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
+            }
+            .place([x0, top, x1, generalBottom], s)
             let genTop = generalBottom + gap
-            Image("SeqGenerateHeader").resizable().place([bx0, genTop, bx1, genTop + genHeaderH], s)
-            Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([bx1 - 40, genTop, bx1 - 16, genTop + genHeaderH], s).allowsHitTesting(false)
-            hit([bx0, genTop, bx1, genTop + genHeaderH], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }
+            SeqButton("SeqGenerateHeader", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }) {
+                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 24 * s)
+            }
+            .place([bx0, genTop, bx1, genTop + genHeaderH], s)
             let midiTop = genTop + genHeaderH + gap
-            Image("SeqSectionMidi").resizable().place([x0, midiTop, x1, midiTop + headerH], s)
-            Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([x1 - 44, midiTop, x1 - 20, midiTop + headerH], s).allowsHitTesting(false)
-            hit([x0, midiTop, x1, midiTop + headerH], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }
+            SeqButton("SeqSectionMidi", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }) {
+                Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
+            }
+            .place([x0, midiTop, x1, midiTop + headerH], s)
             midiPanel([bx0, midiTop + headerH + gap, bx1, midiBottom], s)
         }
     }
@@ -522,8 +552,8 @@ struct SequencerView: View {
         Rectangle().fill(Color(white: 0.04)).place([x0 + 128, 526, x0 + 176, 548], s).allowsHitTesting(false)
         artText(updateTempo ? "On" : "Off", [x0 + 130, 526, x0 + 176, 548], s, size: 16, weight: .regular, color: updateTempo ? .white : Color(white: 0.5), align: .leading)
         hit([x0 + 118, 500, x1, 556], s) { updateTempo.toggle() }
-        hit([x0 + 12, 570, x0 + 140, 616], s) { generate() }
-        hit([x0 + 146, 570, x1 - 8, 616], s) { clear() }
+        SeqButton("SeqBtnGenerate", corner: 8, scale: s) { generate() }.place([55, 570, 180, 616], s)
+        SeqButton("SeqBtnClear", corner: 0, scale: s) { clear() }.place([186, 570, 266, 616], s)
     }
 
     /// The sound library (GENERAL open): type chips, search, the list, import. Drag a sound to the rack.
@@ -1340,23 +1370,31 @@ struct SequencerView: View {
 
     @ViewBuilder private func footer(_ s: CGFloat) -> some View {
         // pads / sequencer switch: the pad button goes back to the faceplate
-        hit(A.padsButton, s) { dismiss() }
+        Image("SeqSwitchBox").resizable().place([38, 715, 147, 772], s).allowsHitTesting(false)
+        SeqButton("SeqBtnGrid", corner: 6, scale: s) { }.place(A.gridButton, s)
+        SeqButton("SeqBtnPads", corner: 6, scale: s) { dismiss() }.place(A.padsButton, s)
         // Drum Track: MPC-style pad recording
-        if controller.recording {
-            Circle().stroke(S.red, lineWidth: 3 * s).shadow(color: S.red, radius: 6 * s).place(A.drumCircle, s).allowsHitTesting(false)
-            Circle().fill(S.red).frame(width: 12 * s, height: 12 * s).place(A.drumCircle, s).allowsHitTesting(false)
+        SeqButton("SeqDrumTrack", lit: controller.recording ? S.red : nil, corner: 12, scale: s, action: { controller.toggleRecordPads() }) {
+            if controller.recording {
+                HStack {
+                    Circle().stroke(S.red, lineWidth: 3 * s).shadow(color: S.red, radius: 6 * s)
+                        .overlay(Circle().fill(S.red).frame(width: 12 * s, height: 12 * s))
+                        .frame(width: 48 * s, height: 48 * s).padding(.leading, 6 * s)
+                    Spacer()
+                }
+            }
         }
-        hit(A.drumTrack, s) { controller.toggleRecordPads() }
+        .place(A.drumTrack, s)
         // PATTERN
-        artText(controller.state.presetName, [A.patternChip[0] + 6, A.patternChip[1], A.patternChip[2] - 30, A.patternChip[3]], s, size: 14, align: .leading)
-        PressGlow().bbMenuPlaced(A.patternChip, s, title: "Presets", width: 340) { presetItems() }
-        hit(A.patternBack, s) { cycleLoop(-1) }
-        hit(A.patternForward, s) { cycleLoop(1) }
+        SeqButton("SeqArrowBack", corner: 8, scale: s) { cycleLoop(-1) }.place(A.patternBack, s)
+        SeqButton("SeqArrowFwd", corner: 0, scale: s) { cycleLoop(1) }.place(A.patternForward, s)
+        SeqChip(sprite: "SeqChipPattern", text: controller.state.presetName, size: 14, leading: 6, trailing: 30, scale: s)
+            .bbMenuPlaced(A.patternChip, s, title: "Presets", width: 340) { presetItems() }
         // KIT
-        artText(controller.state.kitName, [A.kitChip[0] + 6, A.kitChip[1], A.kitChip[2] - 30, A.kitChip[3]], s, size: 14, align: .leading)
-        PressGlow().bbMenuPlaced(A.kitChip, s, title: "Kits · drum sounds", width: 320) { kitItems() }
-        hit(A.kitBack, s) { cycleKit(-1) }
-        hit(A.kitForward, s) { cycleKit(1) }
+        SeqButton("SeqArrowBack", corner: 8, scale: s) { cycleKit(-1) }.place(A.kitBack, s)
+        SeqButton("SeqArrowFwd", corner: 0, scale: s) { cycleKit(1) }.place(A.kitForward, s)
+        SeqChip(sprite: "SeqChipKit", text: controller.state.kitName, size: 14, leading: 6, trailing: 30, scale: s)
+            .bbMenuPlaced(A.kitChip, s, title: "Kits · drum sounds", width: 320) { kitItems() }
     }
 
     /// PRESETS: every preset pattern by style, and your own.
