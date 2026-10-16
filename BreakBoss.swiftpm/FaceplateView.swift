@@ -332,8 +332,10 @@ struct PressableArea: View {
     @State private var downAt = Date()
 
     var body: some View {
-        Rectangle()
-            .fill(Color.black.opacity(down ? 0.22 : 0.001))
+        RoundedRectangle(cornerRadius: 6)
+            .fill(Color.black.opacity(down ? 0.3 : 0.001))
+            .scaleEffect(down ? 0.96 : 1)
+            .animation(.easeOut(duration: 0.08), value: down)
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)

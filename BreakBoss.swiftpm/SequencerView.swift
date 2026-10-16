@@ -265,7 +265,16 @@ struct SequencerView: View {
             if controller.recording { controller.mergeRecorded(snap: snapTicks) }
             followPlayhead()
         }
-        .onAppear { if selectedID == nil { selectedID = channels.first?.id } }
+        .onAppear {
+            if selectedID == nil { selectedID = channels.first?.id }
+            // A fresh project opens with a blank grid: steps only light up when you press them
+            // (patterns come in from the PATTERN chip).
+            if controller.state.presetName == "INIT", loop < controller.state.editedLoops.count,
+               controller.state.editedLoops[loop] == nil, loop < controller.loops.count {
+                controller.setLoop(loop, PatternData(name: "LOOP \(loop + 1)", lengthTicks: controller.loops[loop].lengthTicks, events: []))
+            }
+        }
+        .modifier(SpaceBarKey { controller.togglePlayback(pattern: loop) })
         .onChange(of: loop) { _ in page = 0; selection = []; undoStack = []; redoStack = [] }
         .onDisappear { if controller.recording { controller.setRecording(false) } }
         .task(id: stored) { exportURL = writeMIDI() }
@@ -295,6 +304,18 @@ struct SequencerView: View {
     }
 
     struct PadID: Identifiable { let pad: Int; var id: Int { pad } }
+
+    /// Space bar = play / stop (hardware keyboard, standalone and plug-in on iOS 17+).
+    struct SpaceBarKey: ViewModifier {
+        let toggle: () -> Void
+        func body(content: Content) -> some View {
+            if #available(iOS 17.0, *) {
+                content.focusable().focusEffectDisabled().onKeyPress(.space) { toggle(); return .handled }
+            } else {
+                content
+            }
+        }
+    }
 
     @ViewBuilder private var spaceBar: some View {
         if !controller.isPlugin {
@@ -365,30 +386,30 @@ struct SequencerView: View {
         }
         // tempo, bars, pattern, gear, cloud
         artText("\(Int(controller.liveTempo.rounded())) BPM", [A.bpm[0] + 10, A.bpm[1], A.bpm[2] - 26, A.bpm[3]], s, size: 15, align: .leading)
-        Color.clear.contentShape(Rectangle()).place(A.bpm, s).bbPanel(title: "Tempo", width: 340) { TempoPanel(controller: controller) }
+        PressGlow().bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
         artText("\(bars) BARS", [A.bars[0] + 10, A.bars[1], A.bars[2] - 26, A.bars[3]], s, size: 15, align: .leading)
-        Color.clear.contentShape(Rectangle()).place(A.bars, s).bbMenu(title: "Pattern length") {
+        PressGlow().bbMenuPlaced(A.bars, s, title: "Pattern length") {
             [2, 4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
         }
         artText(controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", [A.main[0] + 10, A.main[1], A.main[2] - 26, A.main[3]], s, size: 15, align: .leading)
-        Color.clear.contentShape(Rectangle()).place(A.main, s).bbMenu(title: "Patterns in this preset", width: 260) {
+        PressGlow().bbMenuPlaced(A.main, s, title: "Patterns in this preset", width: 260) {
             controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
         }
-        Color.clear.contentShape(Rectangle()).place(A.gear, s).bbMenu(title: "Sequencer", width: 330) { settingsItems() }
+        PressGlow().bbMenuPlaced(A.gear, s, title: "Sequencer", width: 330) { settingsItems() }
         if let url = exportURL {
             ShareLink(item: url) { Color.clear.contentShape(Rectangle()) }.place(A.cloud, s)
         }
         // snap, scale, swing, humanize
         artText(snapLabel, [A.snap[0] + 64, A.snap[1], A.snap[2] - 28, A.snap[3]], s, size: 13, align: .leading)
-        Color.clear.contentShape(Rectangle()).place(A.snap, s).bbMenu(title: "Snap", width: 300) {
+        PressGlow().bbMenuPlaced(A.snap, s, title: "Snap", width: 300) {
             Self.snapChoices.flatMap { group -> [BBMenuItem] in
                 [.header(group.section)] + group.items.map { item in BBMenuItem.item(item.0, checked: item.1 == snap) { snap = item.1 } }
             }
         }
         // SNAP TO SCALE: a tuning fork on the SNAP chip's left edge (green when on)
         Image(systemName: "tuningfork").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(controller.snapToScale ? S.green : Color(white: 0.45))
-            .place([A.snap[0] + 2, A.snap[1], A.snap[0] + 22, A.snap[3]], s)
             .bbMenu(title: "Snap to scale", width: 300) { scaleItems(selectedPad) }
+            .place([A.snap[0] + 2, A.snap[1], A.snap[0] + 22, A.snap[3]], s)
         artText(controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%", [A.swing[0] + 76, A.swing[1], A.swing[2] - 46, A.swing[3]], s, size: 13, align: .leading)
         artKnob(A.swingKnob, s, value: controller.value(.bounce)) { v, ended in
             if swingStart == nil { swingStart = controller.value(.bounce) }
@@ -455,11 +476,11 @@ struct SequencerView: View {
         switch section {
         case .generate:
             Image("SeqSectionGeneral").resizable().place([x0, top, x1, generalBottom], s)
-            hit([x0, top, x1, generalBottom], s) { section = .general }
+            hit([x0, top, x1, generalBottom], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .general } }
             Image("SeqSectionGenerate").resizable().place([bx0, 375, bx1, 632], s)
             generateOverlay([bx0, 375, bx1, 632], s)
             Image("SeqSectionMidi").resizable().place([x0, 642, x1, midiBottom], s)
-            hit([x0, 642, x1, midiBottom], s) { section = .midi }
+            hit([x0, 642, x1, midiBottom], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .midi } }
         case .general:
             Image("SeqSectionGeneral").resizable().place([x0, top, x1, generalBottom], s)
             Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([x1 - 44, top, x1 - 20, generalBottom], s).allowsHitTesting(false)
@@ -467,20 +488,20 @@ struct SequencerView: View {
             soundsPanel([bx0, generalBottom + gap, bx1, genTop - gap], s)
             Image("SeqGenerateHeader").resizable().place([bx0, genTop, bx1, genTop + genHeaderH], s)
             Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([bx1 - 40, genTop, bx1 - 16, genTop + genHeaderH], s).allowsHitTesting(false)
-            hit([bx0, genTop, bx1, genTop + genHeaderH], s) { section = .generate }
+            hit([bx0, genTop, bx1, genTop + genHeaderH], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }
             Image("SeqSectionMidi").resizable().place([x0, 642, x1, midiBottom], s)
-            hit([x0, 642, x1, midiBottom], s) { section = .midi }
+            hit([x0, 642, x1, midiBottom], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .midi } }
         case .midi:
             Image("SeqSectionGeneral").resizable().place([x0, top, x1, generalBottom], s)
-            hit([x0, top, x1, generalBottom], s) { section = .general }
+            hit([x0, top, x1, generalBottom], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .general } }
             let genTop = generalBottom + gap
             Image("SeqGenerateHeader").resizable().place([bx0, genTop, bx1, genTop + genHeaderH], s)
             Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([bx1 - 40, genTop, bx1 - 16, genTop + genHeaderH], s).allowsHitTesting(false)
-            hit([bx0, genTop, bx1, genTop + genHeaderH], s) { section = .generate }
+            hit([bx0, genTop, bx1, genTop + genHeaderH], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }
             let midiTop = genTop + genHeaderH + gap
             Image("SeqSectionMidi").resizable().place([x0, midiTop, x1, midiTop + headerH], s)
             Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white).place([x1 - 44, midiTop, x1 - 20, midiTop + headerH], s).allowsHitTesting(false)
-            hit([x0, midiTop, x1, midiTop + headerH], s) { section = .generate }
+            hit([x0, midiTop, x1, midiTop + headerH], s) { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }
             midiPanel([bx0, midiTop + headerH + gap, bx1, midiBottom], s)
         }
     }
@@ -491,7 +512,7 @@ struct SequencerView: View {
         // GENRE value (the picture says "House"): covered with the box's black, then the live genre
         Rectangle().fill(Color(white: 0.04)).place([x0 + 12, 458, x1 - 40, 484], s).allowsHitTesting(false)
         artText(generateStyle ?? PatternRandomizer.style(for: controller.state.presetName), [x0 + 14, 458, x1 - 40, 484], s, size: 17, weight: .regular, align: .leading)
-        Color.clear.contentShape(Rectangle()).place([x0, 436, x1, 490], s).bbMenu(title: "Genre", width: 280) {
+        PressGlow().bbMenuPlaced([x0, 436, x1, 490], s, title: "Genre", width: 280) {
             [BBMenuItem.item("This preset's style", checked: generateStyle == nil) { generateStyle = nil }]
             + PatternBank.styles.map { st in BBMenuItem.item(st, checked: generateStyle == st) { generateStyle = st } }
         }
@@ -1315,12 +1336,12 @@ struct SequencerView: View {
         hit(A.drumTrack, s) { controller.toggleRecordPads() }
         // PATTERN
         artText(controller.state.presetName, [A.patternChip[0] + 6, A.patternChip[1], A.patternChip[2] - 30, A.patternChip[3]], s, size: 14, align: .leading)
-        Color.clear.contentShape(Rectangle()).place(A.patternChip, s).bbMenu(title: "Presets", width: 340) { presetItems() }
+        PressGlow().bbMenuPlaced(A.patternChip, s, title: "Presets", width: 340) { presetItems() }
         hit(A.patternBack, s) { cycleLoop(-1) }
         hit(A.patternForward, s) { cycleLoop(1) }
         // KIT
         artText(controller.state.kitName, [A.kitChip[0] + 6, A.kitChip[1], A.kitChip[2] - 30, A.kitChip[3]], s, size: 14, align: .leading)
-        Color.clear.contentShape(Rectangle()).place(A.kitChip, s).bbMenu(title: "Kits · drum sounds", width: 320) { kitItems() }
+        PressGlow().bbMenuPlaced(A.kitChip, s, title: "Kits · drum sounds", width: 320) { kitItems() }
         hit(A.kitBack, s) { cycleKit(-1) }
         hit(A.kitForward, s) { cycleKit(1) }
     }

@@ -44,8 +44,8 @@ struct BBMenuSpec: Identifiable {
 final class BBMenuCenter: ObservableObject {
     @Published var open: BBMenuSpec?
     @Published var path: [BBMenuItem] = []     // sub-lists opened inside the panel
-    func show(_ spec: BBMenuSpec) { path = []; open = spec }
-    func close() { open = nil; path = [] }
+    func show(_ spec: BBMenuSpec) { withAnimation(.easeOut(duration: 0.16)) { path = []; open = spec } }
+    func close() { withAnimation(.easeIn(duration: 0.12)) { open = nil; path = [] } }
 }
 
 enum BBMenuStyle {
@@ -76,6 +76,17 @@ extension View {
         modifier(BBMenuTrigger(title: title, width: width, items: items, custom: nil, tap: tap, longPress: true))
     }
 
+    /// A menu trigger placed over a painted button (faceplate pixels): the menu goes on BEFORE the
+    /// placement so its touch area and anchor are the button, not the whole screen.
+    func bbMenuPlaced(_ r: [Double], _ s: CGFloat, title: String? = nil, width: CGFloat = 280,
+                      items: @escaping () -> [BBMenuItem]) -> some View {
+        bbMenu(title: title, width: width, items: items).place(r, s)
+    }
+    func bbPanelPlaced<Content: View>(_ r: [Double], _ s: CGFloat, title: String? = nil, width: CGFloat = 320,
+                                      @ViewBuilder content: @escaping () -> Content) -> some View {
+        bbPanel(title: title, width: width, content: content).place(r, s)
+    }
+
     /// Makes this view open a BreakBoss panel with custom content (e.g. a slider).
     func bbPanel<Content: View>(title: String? = nil, width: CGFloat = 320, @ViewBuilder content: @escaping () -> Content) -> some View {
         modifier(BBMenuTrigger(title: title, width: width, items: { [] }, custom: { AnyView(content()) }))
@@ -91,6 +102,7 @@ private struct BBMenuTrigger: ViewModifier {
     var tap: (() -> Void)? = nil
     var longPress = false
     @State private var frame: CGRect = .zero
+    @State private var pressed = false
 
     private func open() {
         center.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?()))
@@ -104,6 +116,13 @@ private struct BBMenuTrigger: ViewModifier {
                     .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
             })
             .contentShape(Rectangle())
+            // The button goes in while your finger is on it (a quick darkening, back up on release).
+            .overlay(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(pressed ? 0.28 : 0)).allowsHitTesting(false))
+            .scaleEffect(pressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.08), value: pressed)
+            .simultaneousGesture(DragGesture(minimumDistance: 0)
+                .onChanged { _ in pressed = true }
+                .onEnded { _ in pressed = false })
         if longPress {
             base
                 .onTapGesture { tap?() }
@@ -113,6 +132,11 @@ private struct BBMenuTrigger: ViewModifier {
             base.onTapGesture { open() }
         }
     }
+}
+
+/// An empty touch area for a painted button (the press glow comes from the menu trigger).
+struct PressGlow: View {
+    var body: some View { Color.clear.contentShape(Rectangle()) }
 }
 
 /// A trackpad / mouse right-click on the view (iPadOS pointer), for the long-press menus.
@@ -150,6 +174,7 @@ private struct BBMenuHost: ViewModifier {
                                 .onTapGesture { center.close() }
                             BBMenuPanel(spec: spec)
                                 .environmentObject(center)
+                                .transition(.scale(scale: 0.92, anchor: .top).combined(with: .opacity))
                                 .frame(width: min(spec.width, geo.size.width - 16))
                                 .fixedSize(horizontal: false, vertical: true)
                                 .frame(maxHeight: max(160, geo.size.height - panelTop(spec, geo) - 12), alignment: .top)
