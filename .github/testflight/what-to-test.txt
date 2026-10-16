@@ -1,7 +1,6 @@
-Fixes to the DRUM SEQUENCER from the last build's recording:
-- Menus open on the button you tapped (the KIT menu no longer pops up at the corner on every tap, and the screen no longer dims on its own).
-- Every button presses in with a short animation; menus and the GENERAL / GENERATE / MIDI sections open and close with animations.
-- The grid opens blank, with every other beat's buttons in the darker grey. A pressed step lights its inner slot in the faceplate's colour: MODERN red, VINTAGE cream, TEXTURE blue.
-- Space bar (hardware keyboard) starts and stops the sequence.
-Still there: sound library on the left (drag a sound onto the rack to add a channel), 12-channel rack with per-track piano roll and dice, SNAP, SNAP TO SCALE, SWING, HUMANIZE, velocity lane, GENERATE, MIDI, PATTERN and KIT pickers.
-Please try tapping steps, every top-bar button and menu, the sections on the left, and the pads button to get back to the faceplate.
+Every button on the DRUM SEQUENCER is now its own real control, cut out of the approved picture (no more press areas over a painting):
+- DRAW / SELECT / ERASE / UNDO / REDO, the bars arrows, STOP / PLAY / REC, BPM / BARS / MAIN A chips, the gear, the cloud, SNAP, the GENERAL / GENERATE / MIDI headers, Generate / Clear, the pads switch, Drum Track, and the PATTERN / KIT arrows and chips all press in and spring back, and light up when they're on (DRAW green, PLAY green, REC red, Drum Track red while recording).
+- Menus open on the button you tapped and close with an animation.
+- The grid opens blank with every other beat darker grey; a pressed step lights its inner slot in the faceplate's colour (MODERN red, VINTAGE cream, TEXTURE blue).
+- Space bar on a hardware keyboard starts and stops the sequence.
+Please press everything and tell me what still feels dead or out of place.
