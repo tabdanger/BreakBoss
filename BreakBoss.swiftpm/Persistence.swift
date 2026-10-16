@@ -141,10 +141,10 @@ struct KnockState: Codable, Equatable {
         s.pads = Self.normalizedPads(s.pads)
         if let rows = s.workspaceChannels {
             var assigned = Set<Int>(), ids = Set<UUID>()
-            s.workspaceChannels = Array(rows.prefix(Pad.count)).filter { row in
+            s.workspaceChannels = Array(rows.filter { row in
                 (0..<Pad.count).contains(row.pad) &&
                     assigned.insert(row.pad).inserted && ids.insert(row.id).inserted
-            }
+            }.prefix(Pad.count))
         }
         s.editedLoops = Array(s.editedLoops.prefix(Pad.count))
         while s.editedLoops.count < Pad.count { s.editedLoops.append(nil) }
