@@ -77,7 +77,6 @@ struct SequencerWorkspaceView: View {
     @State private var bar = 0
     @State private var importKind: ImportKind?
     @State private var status = ""
-    @State private var audioPage = 0
 
     private enum ImportKind: Identifiable {
         case sounds, pack
@@ -194,8 +193,9 @@ struct SequencerWorkspaceView: View {
             toggleButton("MIDI OUT", on: controller.midiOutOn) {
                 controller.setMIDIOut(!controller.midiOutOn)
             }
-            toggleButton("MULTI-CHANNEL", on: controller.midiOutChannels != Array(repeating: 9, count: Pad.count)) {
-                controller.setMIDIOutLayout(multi: true)
+            toggleButton("MULTI-CHANNEL", on: controller.midiOutChannels == KnockController.defaultMIDIOutChannels) {
+                let isMulti = controller.midiOutChannels == KnockController.defaultMIDIOutChannels
+                controller.setMIDIOutLayout(multi: !isMulti)
             }
             toggleButton("FOLLOW DAW", on: controller.value(.followDAW) > 0.5) {
                 controller.toggle(.followDAW)
@@ -377,10 +377,55 @@ struct SequencerWorkspaceView: View {
             .background(skin.panel, in: RoundedRectangle(cornerRadius: 8))
 
             if expanded == row.id {
+                channelControls(row)
                 pianoRoll(row)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+    }
+
+    /// Each channel has its own sample settings, independent of its sound category.
+    private func channelControls(_ row: WorkspaceChannel) -> some View {
+        let settings = controller.state.pads[row.pad]
+        return VStack(spacing: 7) {
+            HStack(spacing: 10) {
+                Text("LEVEL").frame(width: 48, alignment: .leading)
+                Slider(value: Binding(
+                    get: { Double(controller.state.pads[row.pad].level) },
+                    set: { value in updatePad(row.pad) { $0.level = Float(value) } }
+                ), in: 0...1)
+                Text("\\(Int(settings.level * 100))%").frame(width: 34)
+                Text("PAN").frame(width: 26)
+                Slider(value: Binding(
+                    get: { Double(controller.state.pads[row.pad].pan) },
+                    set: { value in updatePad(row.pad) { $0.pan = Float(value) } }
+                ), in: -1...1)
+            }
+            HStack(spacing: 10) {
+                Text("TUNE").frame(width: 48, alignment: .leading)
+                Slider(value: Binding(
+                    get: { Double(controller.state.pads[row.pad].tune) },
+                    set: { value in updatePad(row.pad) { $0.tune = Float(value) } }
+                ), in: -24...24, step: 1)
+                Text("\\(Int(settings.tune)) ST").frame(width: 55)
+                Text("DECAY").frame(width: 42)
+                Slider(value: Binding(
+                    get: { Double(controller.state.pads[row.pad].decay) },
+                    set: { value in updatePad(row.pad) { $0.decay = Float(value) } }
+                ), in: 0.05...1)
+            }
+        }
+        .tint(skin.active)
+        .font(.system(size: 10, design: .monospaced))
+        .foregroundColor(skin.ink)
+        .padding(9)
+        .background(skin.panel, in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func updatePad(_ pad: Int, _ edit: (inout PadSettings) -> Void) {
+        var settings = controller.state.pads[pad]
+        edit(&settings)
+        controller.setPadSettings(pad, settings)
     }
 
     /// One octave inline, with individual pitched events on the same pattern timeline.
