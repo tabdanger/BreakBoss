@@ -42,8 +42,7 @@ enum KnockFolders {
     }
 }
 
-// A rack channel has its own audio slot and identity, so dragging the same
-// sound twice creates two independently editable tracks.
+/// Build 42 saved its first rack with this shape. Retained only for decoding those projects.
 struct WorkspaceChannel: Codable, Equatable, Identifiable {
     var id: UUID
     var pad: Int
@@ -77,10 +76,11 @@ struct KnockState: Codable, Equatable {
     /// Drum roll channel MUTE / SOLO (index = pad).
     var mutedPads: [Bool]? = nil
     var soloPads: [Bool]? = nil
-    /// nil = never opened the step rack, [] = an intentionally empty rack.
-    /// Optional for backwards compatibility with saved projects.
+    var pads: [PadSettings] = Array(repeating: PadSettings(), count: RackLimits.maxChannels)
+    /// Visible rows, in display order. nil migrates the original twelve drum channels.
+    var rackChannels: [RackChannel]? = nil
+    /// Compatibility with build 42. An empty array represents an intentionally empty rack.
     var workspaceChannels: [WorkspaceChannel]? = nil
-    var pads: [PadSettings] = Array(repeating: PadSettings(), count: Pad.count)
     /// Loops you edited or imported (nil = the generated one).
     var editedLoops: [PatternData?] = Array(repeating: nil, count: Pad.count)
     var presetName: String = "INIT"
@@ -100,8 +100,8 @@ struct KnockState: Codable, Equatable {
     var midiOutNotes: [Int]? = nil
 
     static func normalizedPads(_ source: [PadSettings]) -> [PadSettings] {
-        var pads = Array(source.prefix(Pad.count))
-        while pads.count < Pad.count { pads.append(PadSettings()) }
+        var pads = Array(source.prefix(RackLimits.maxChannels))
+        while pads.count < RackLimits.maxChannels { pads.append(PadSettings()) }
         for i in pads.indices {
             pads[i].level = pads[i].level.isFinite ? pads[i].level.clamped(0, 1) : 0.8
             pads[i].pan = pads[i].pan.isFinite ? pads[i].pan.clamped(-1, 1) : 0
@@ -114,9 +114,7 @@ struct KnockState: Codable, Equatable {
         return pads
     }
 
-    /// A kit changes the raw sample collection and its generated grooves. Keep the current
-    /// processing chain, including every pad's tone and envelope, when auditioning new sounds.
-    /// Imported sample identities are cleared so every pad actually receives the new kit.
+    /// A kit changes its original drum sounds. Added rows, patterns, tempo and processing stay.
     func selectingKit(_ kit: KitDefinition) -> KnockState {
         var s = self
         s.kitID = kit.id
@@ -125,10 +123,17 @@ struct KnockState: Codable, Equatable {
         s.soundSeed = 1
         s.pads = Self.normalizedPads(s.pads)
         if let custom = s.midiCustomNotes { s.midiCustomNotes = MIDIPadMap.clean(custom) }
-        s.mutedPads = s.mutedPads.map { Array(($0 + Array(repeating: false, count: Pad.count)).prefix(Pad.count)) }
-        s.soloPads = s.soloPads.map { Array(($0 + Array(repeating: false, count: Pad.count)).prefix(Pad.count)) }
-        for i in s.pads.indices { s.pads[i].sampleFile = nil }
-        s.stockPicks = nil                      // a kit brings its own sounds back
+        s.rackChannels = Self.migratedRackChannels(s)
+        for i in s.rackChannels!.indices where s.rackChannels![i].usesKitSound {
+            let slot = s.rackChannels![i].slot
+            s.pads[slot].sampleFile = nil
+            s.rackChannels![i].name = nil
+            s.rackChannels![i].libraryID = nil
+            s.rackChannels![i].stockFileName = nil
+            s.rackChannels![i].sourceBassHz = nil
+            if slot < Pad.count { s.rackChannels![i].role = slot }
+            if s.stockPicks?.indices.contains(slot) == true { s.stockPicks![slot] = nil }
+        }
         // KITS change the drum sounds only: the pattern, its edits and the tempo stay put.
         if s.patternStyle == nil { s.patternStyle = KitLibrary.kit(id: kitID).style }
         return s
@@ -136,23 +141,21 @@ struct KnockState: Codable, Equatable {
 
     func normalized() -> KnockState {
         var s = self
-        s.version = 2
+        s.version = 3
         s.bpm = s.bpm.isFinite ? s.bpm.clamped(40, 240) : 140
         s.pads = Self.normalizedPads(s.pads)
-        if let rows = s.workspaceChannels {
-            var assigned = Set<Int>(), ids = Set<UUID>()
-            s.workspaceChannels = Array(rows.filter { row in
-                (0..<Pad.count).contains(row.pad) &&
-                    assigned.insert(row.pad).inserted && ids.insert(row.id).inserted
-            }.prefix(Pad.count))
-        }
+        s.rackChannels = Self.migratedRackChannels(s)
+        s.workspaceChannels = nil
+        s.mutedPads = s.mutedPads.map { Array(($0 + Array(repeating: false, count: RackLimits.maxChannels)).prefix(RackLimits.maxChannels)) }
+        s.soloPads = s.soloPads.map { Array(($0 + Array(repeating: false, count: RackLimits.maxChannels)).prefix(RackLimits.maxChannels)) }
+        if let picks = s.stockPicks { s.stockPicks = Array((picks + Array(repeating: nil, count: RackLimits.maxChannels)).prefix(RackLimits.maxChannels)) }
         s.editedLoops = Array(s.editedLoops.prefix(Pad.count))
         while s.editedLoops.count < Pad.count { s.editedLoops.append(nil) }
         for i in s.editedLoops.indices {
             guard var loop = s.editedLoops[i] else { continue }
             loop.lengthTicks = loop.lengthTicks.clamped(384, PatternEdit.barTicks * Int32(PatternEdit.maxBars))
             loop.events = Array(loop.events.prefix(4096)).filter {
-                $0.pad >= 0 && Int($0.pad) < Pad.count && $0.tick >= 0 && $0.tick < loop.lengthTicks &&
+                $0.pad >= 0 && Int($0.pad) < RackLimits.maxChannels && $0.tick >= 0 && $0.tick < loop.lengthTicks &&
                 $0.velocity.isFinite && $0.semis.isFinite
             }
             for j in loop.events.indices {
@@ -171,6 +174,16 @@ struct KnockState: Codable, Equatable {
         s.playMode = (s.values[KParam.playMode.id] ?? 1) > 0.5 ? .loop : .oneShot
         return s
     }
+
+    private static func migratedRackChannels(_ state: KnockState) -> [RackChannel] {
+        if let channels = state.rackChannels { return RackChannel.normalized(channels) }
+        guard let oldRows = state.workspaceChannels else { return RackChannel.legacy }
+        return RackChannel.normalized(oldRows.map { row in
+            RackChannel(id: row.id, slot: row.pad, name: row.name,
+                        role: RackChannel.role(for: SoundType(rawValue: row.category) ?? .perc),
+                        libraryID: row.soundID, followsKit: false)
+        })
+    }
 }
 
 /// A saved kit: which factory kit it started from, its sound variation, and your pads.
@@ -179,6 +192,8 @@ struct UserKit: Codable {
     var baseKitID: String
     var soundSeed: UInt32
     var pads: [PadSettings]
+    var rackChannels: [RackChannel]? = nil
+    var stockPicks: [String?]? = nil
 }
 
 /// A saved preset: the whole faceplate (knobs, mode, kit, loops).

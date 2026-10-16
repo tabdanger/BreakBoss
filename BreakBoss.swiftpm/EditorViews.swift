@@ -25,7 +25,7 @@ struct PadEditorView: View {
                 Section {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("PAD \(pad + 1) · \(Pad(rawValue: pad)?.label ?? "")")
+                            Text("CHANNEL \(pad + 1) · \(controller.channelName(pad))")
                                 .font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
                             Text(controller.padName(pad).uppercased())
                                 .font(.system(.title3, design: .monospaced))
@@ -209,7 +209,8 @@ struct LoopEditorView: View {
                     }
                 ScrollView(.horizontal, showsIndicators: true) {
                     VStack(alignment: .leading, spacing: 3) {
-                        ForEach((0..<Pad.count).reversed(), id: \.self) { row in
+                        ForEach(controller.rackChannels.reversed()) { channel in
+                            let row = channel.slot
                             HStack(spacing: 3) {
                                 Text(controller.padName(row).uppercased())
                                     .font(.system(size: 11, design: .monospaced))

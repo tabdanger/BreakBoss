@@ -5,8 +5,8 @@ import UIKit
 
 // MARK: - The plug-in's window
 //
-// The host opens this when you show BreakBoss's interface. It's the same faceplate as the app,
-// scaled to whatever size the host gives it. Closing the window doesn't stop the sound.
+// The host opens the same instrument faceplate as the standalone app. Its sequencer
+// opens the silver channel rack; closing either surface does not stop the sound.
 
 public final class BreakBossAUViewController: AUViewController, AUAudioUnitFactory {
     private var unit: BreakBossAudioUnit?

@@ -79,7 +79,7 @@ extension KnockController {
     /// other channels count from C4. The channel's TUNE (whole semitones) is included.
     func baseNote(pad: Int) -> Int {
         let tune = Int(state.pads.indices.contains(pad) ? state.pads[pad].tune.rounded() : 0)
-        let root = pad == Pad.bass808.rawValue ? MusicScale.midiNote(hz: kitDefinition.bassHz) : 60
+        let root = channelRole(pad) == Pad.bass808.rawValue ? MusicScale.midiNote(hz: channelBassHz(pad)) : 60
         return root + tune
     }
 

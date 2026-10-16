@@ -106,12 +106,12 @@ class SimulatorTests(unittest.TestCase):
             old.write_text("self-test passed")
             os.utime(old, (100, 100))
             self.assertNotIn("self-test passed", simulate.combined_log(console, root, started=101))
-            for name in simulate.expected_layout_names("iphone"):
+            for name, size in simulate.expected_layout_sizes("iphone").items():
                 path = cache / name
-                path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", 941, 1672)
+                path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", *size)
                                  + b"\0\0\0\0IEND\xaeB`\x82")
                 os.utime(path, (100, 100))
-            self.assertEqual(len(simulate.missing_layout_names("iphone", cache, started=101)), 6)
+            self.assertEqual(len(simulate.missing_layout_names("iphone", cache, started=101)), 8)
 
     def test_launch_precedes_rpc_and_survives_its_first_timeout(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -147,19 +147,23 @@ class SimulatorTests(unittest.TestCase):
             self.assertEqual(events.count("get_app_container"), 2)
             self.assertIn("shutdown", events)
 
-    def test_layouts_require_the_actual_family_and_all_six_combinations(self):
+    def test_layouts_require_actual_family_and_both_rack_orientations(self):
         with tempfile.TemporaryDirectory() as folder:
             cache = Path(folder)
             def write(name, width, height):
                 (cache / name).write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", width, height)
                                           + b"\0\0\0\0IEND\xaeB`\x82")
-            for name in simulate.expected_layout_names("ipad"):
-                write(name, 1448, 1086)
+            for name, size in simulate.expected_layout_sizes("ipad").items():
+                write(name, *size)
             self.assertEqual(simulate.missing_layout_names("ipad", cache), [])
-            self.assertEqual(len(simulate.missing_layout_names("iphone", cache)), 6)
-            for name in simulate.expected_layout_names("iphone"):
-                write(name, 941, 1672)
+            self.assertEqual(len(simulate.missing_layout_names("iphone", cache)), 8)
+            for name, size in simulate.expected_layout_sizes("iphone").items():
+                write(name, *size)
             self.assertEqual(simulate.missing_layout_names("iphone", cache), [])
+            rack = "rack-phone-landscape.png"
+            write(rack, 590, 1280)
+            self.assertEqual(simulate.missing_layout_names("iphone", cache), [rack])
+            write(rack, 1280, 590)
             wrong = "layout-phone-modern-loop.png"
             write(wrong, 1448, 1086)
             self.assertEqual(simulate.missing_layout_names("iphone", cache), [wrong])

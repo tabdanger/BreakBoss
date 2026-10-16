@@ -1,48 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-// Shared sound-browser presentation after retiring the legacy step and piano screens.
-enum DrumRollStyle {
-    static let header = Color(red: 39 / 255, green: 39 / 255, blue: 40 / 255)
-    static let toolbar = Color(red: 32 / 255, green: 33 / 255, blue: 35 / 255)
-    static let rowA = Color(red: 33 / 255, green: 35 / 255, blue: 37 / 255)
-    static let rowB = Color(red: 41 / 255, green: 43 / 255, blue: 46 / 255)
-    static let channel = Color(red: 31 / 255, green: 32 / 255, blue: 34 / 255)
-    static let lane = Color(red: 28 / 255, green: 29 / 255, blue: 32 / 255)
-    static let button = Color(red: 44 / 255, green: 46 / 255, blue: 49 / 255)
-    static let border = Color(red: 66 / 255, green: 69 / 255, blue: 73 / 255)
-    static let text = Color(red: 222 / 255, green: 224 / 255, blue: 222 / 255)
-    static let dim = Color(red: 150 / 255, green: 153 / 255, blue: 155 / 255)
-    static let green = Color(red: 181 / 255, green: 232 / 255, blue: 124 / 255)
-    static let greenDark = Color(red: 34 / 255, green: 53 / 255, blue: 31 / 255)
-    static let orange = Color(red: 255 / 255, green: 178 / 255, blue: 46 / 255)
-    static let red = Color(red: 232 / 255, green: 44 / 255, blue: 38 / 255)
-    static let barLine = Color(red: 186 / 255, green: 189 / 255, blue: 187 / 255)
-    static let beatLine = Color(red: 70 / 255, green: 80 / 255, blue: 82 / 255)
-    static let stepLine = Color(red: 48 / 255, green: 52 / 255, blue: 54 / 255)
-}
-
-extension Pad {
-    /// The drum roll's channel names (Tyrone's DRUM ROLL design).
-    var channelTitle: String {
-        switch self {
-        case .kick: return "KICK"
-        case .snare: return "SNARE"
-        case .clap: return "CLAP"
-        case .rim: return "RIM"
-        case .hat: return "CLOSED HAT"
-        case .openHat: return "OPEN HAT"
-        case .bass808: return "808"
-        case .perc1: return "PERC 1"
-        case .perc2: return "PERC 2"
-        case .tomLow: return "LOW TOM"
-        case .tomHigh: return "HIGH TOM"
-        case .cymbal: return "CRASH"
-        }
-    }
-}
-
-
 // MARK: - Every sound in BreakBoss, by type
 
 /// One sound in the library: a stock sound from the factory packs, or one you imported.
@@ -223,7 +181,7 @@ struct SoundLibraryView: View {
         }
         .background(S.channel.ignoresSafeArea())
         .preferredColorScheme(.dark)
-        .onAppear { type = SoundType.forPad(pad) }
+        .onAppear { type = SoundType.forPad(controller.channelRole(pad)) }
         .fileImporter(isPresented: Binding(get: { importKind != nil }, set: { if !$0 { importKind = nil } }),
                       allowedContentTypes: importKind == .pack ? [.folder] : [.audio],
                       allowsMultipleSelection: importKind == .sounds) { result in
@@ -332,7 +290,7 @@ struct SoundLibraryView: View {
 
     /// Puts the sound on this channel and plays it once it's loaded.
     private func load(_ s: LibrarySound) {
-        controller.importSample(s.url, toPad: pad)
+        controller.replaceRackSound(s, slot: pad)
         loadedID = s.id
         let p = pad
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { controller.auditionPad(p) }

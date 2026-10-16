@@ -39,30 +39,34 @@ enum Exporter {
         let bounce = job.params[KParam.bounce.rawValue]
         if midi {
             let url = folder.appendingPathComponent(base).appendingPathExtension("mid")
-            try MIDIFile.write(pattern, tempo: job.tempo, bounce: bounce, bars: job.bars, to: url)
+            try MIDIFile.write(pattern, tempo: job.tempo, bounce: bounce, bars: job.bars, to: url, roles: job.kit.roles)
             out.midi = url
         }
         if mix {
-            let (l, r) = render(job, mask: 0xFFFF)
+            let (l, r) = render(job, mask: .max)
             let url = folder.appendingPathComponent(base).appendingPathExtension("wav")
             try WavWriter.write(left: l, right: r, sampleRate: job.sampleRate, to: url)
             out.mix = url
         }
         if stems {
-            let used = Set(pattern.events.map { Int($0.pad) })
-            for pad in Pad.allCases where used.contains(pad.rawValue) {
-                let (l, r) = render(job, mask: UInt16(1) << UInt16(pad.rawValue))
-                let name = "\(base) - \(pad.label.replacingOccurrences(of: " / ", with: "-"))"
+            let used = Set(pattern.events.compactMap { event -> Int? in
+                let index = Int(event.pad)
+                return index >= 0 && index < min(job.kit.samples.count, RackLimits.maxChannels) ? index : nil
+            }).sorted()
+            for pad in used {
+                let (l, r) = render(job, mask: UInt64(1) << pad)
+                let label = job.kit.channelNames[pad]
+                let name = "\(base) - \(pad + 1) \(label.replacingOccurrences(of: " / ", with: "-"))"
                 let url = folder.appendingPathComponent(KnockFolders.safe(name)).appendingPathExtension("wav")
                 try WavWriter.write(left: l, right: r, sampleRate: job.sampleRate, to: url)
-                out.stems.append(Stem(name: pad.label, url: url))
+                out.stems.append(Stem(name: label, url: url))
             }
         }
         return out
     }
 
     /// Renders `bars` bars of the loop (after one silent pass for the tails).
-    static func render(_ job: Job, mask: UInt16) -> ([Float], [Float]) {
+    static func render(_ job: Job, mask: UInt64) -> ([Float], [Float]) {
         let engine = KnockEngine()
         engine.prepare(sampleRate: job.sampleRate, maxFrames: 4_096)
         for p in KParam.allCases where p.rawValue < job.params.count { engine.setParam(p, job.params[p.rawValue]) }

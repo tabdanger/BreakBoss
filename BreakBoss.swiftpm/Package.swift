@@ -16,7 +16,7 @@ let package = Package(
             name: "BreakBoss",
             targets: ["AppModule"],
             bundleIdentifier: "com.tabdanger.BreakBoss",
-            displayVersion: "0.4.0",
+            displayVersion: "0.5.0",
             bundleVersion: "10",
             appIcon: .asset("AppIcon"),
             accentColor: .presetColor(.red),

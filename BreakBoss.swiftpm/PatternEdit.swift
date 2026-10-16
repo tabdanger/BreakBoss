@@ -9,11 +9,11 @@ enum PatternEdit {
 
     /// Channel menu "Fill every …": replaces the channel's hits with one every `every` ticks
     /// across the whole pattern (FL's "fill each N steps"). The 808 holds until the next hit.
-    static func fill(_ pattern: PatternData, pad: Int, every: Int32, velocity: Float) -> PatternData {
-        guard every > 0 else { return pattern }
+    static func fill(_ pattern: PatternData, pad: Int, every: Int32, velocity: Float, role: Int? = nil) -> PatternData {
+        guard every > 0, (0..<RackLimits.maxChannels).contains(pad), velocity.isFinite else { return pattern }
         var p = pattern
         p.events.removeAll { Int($0.pad) == pad }
-        let bass = pad == Pad.bass808.rawValue
+        let bass = (role ?? pad) == Pad.bass808.rawValue
         var t: Int32 = 0
         while t < p.lengthTicks {
             p.events.append(GrooveEvent(tick: t, pad: Int8(pad), velocity: velocity, length: bass ? max(6, min(every, p.lengthTicks - t) - 2) : 0))
@@ -31,17 +31,18 @@ enum PatternEdit {
     }
 
     /// Adds a hit at `tick`, or removes the pad's hits already in that cell.
-    static func toggle(_ pattern: PatternData, pad: Int, tick: Int32, cell: Int32) -> PatternData {
+    static func toggle(_ pattern: PatternData, pad: Int, tick: Int32, cell: Int32, role: Int? = nil) -> PatternData {
+        guard (0..<RackLimits.maxChannels).contains(pad), cell > 0 else { return pattern }
         var p = pattern
         let lo = tick - cell / 4, hi = tick + cell * 3 / 4
         let before = p.events.count
         p.events.removeAll { Int($0.pad) == pad && $0.tick >= lo && $0.tick < hi }
         if p.events.count == before {
-            if pad == Pad.bass808.rawValue {
+            if (role ?? pad) == Pad.bass808.rawValue {
                 p.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: 0.9, semis: 0,
                                             length: max(cell, PatternData.stepTicks * 2)))
             } else {
-                p.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: pad == Pad.hat.rawValue ? 0.7 : 0.9))
+                p.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: (role ?? pad) == Pad.hat.rawValue ? 0.7 : 0.9))
             }
         }
         p.sort()
@@ -112,12 +113,12 @@ enum PatternEdit {
 
     /// Adds a note, replacing one already on that pad at (almost) the same moment.
     static func addNote(_ pattern: PatternData, pad: Int, tick: Int32, length: Int32 = 0,
-                        velocity: Float, semis: Float = 0) -> PatternData {
+                        velocity: Float, semis: Float = 0, role: Int? = nil) -> PatternData {
         var p = pattern
-        guard (0..<Pad.count).contains(pad) else { return p }
+        guard (0..<RackLimits.maxChannels).contains(pad), velocity.isFinite, semis.isFinite else { return p }
         let t = max(0, min(tick, max(p.lengthTicks, 1) - 1))
         p.events.removeAll { Int($0.pad) == pad && abs($0.tick - t) <= 2 }
-        let isBass = pad == Pad.bass808.rawValue
+        let isBass = (role ?? pad) == Pad.bass808.rawValue
         let len = isBass ? min(max(length > 0 ? length : default808Length, 6), max(p.lengthTicks, 6) - t) : 0
         p.events.append(GrooveEvent(tick: t, pad: Int8(pad), velocity: velocity.clamped(0.05, 1),
                                     semis: semis.clamped(-12, 24), length: len))
@@ -154,9 +155,9 @@ enum PatternEdit {
     }
 
     /// 808 note length (drums have no length).
-    static func resize(_ pattern: PatternData, _ key: NoteKey, length: Int32) -> (PatternData, NoteKey) {
+    static func resize(_ pattern: PatternData, _ key: NoteKey, length: Int32, role: Int? = nil) -> (PatternData, NoteKey) {
         var p = pattern
-        guard let i = p.events.firstIndex(where: { NoteKey($0) == key }), Int(p.events[i].pad) == Pad.bass808.rawValue else { return (p, key) }
+        guard let i = p.events.firstIndex(where: { NoteKey($0) == key }), (role ?? Int(p.events[i].pad)) == Pad.bass808.rawValue else { return (p, key) }
         p.events[i].length = min(max(length, 6), max(p.lengthTicks, 6) - p.events[i].tick)
         return (p, NoteKey(p.events[i]))
     }
@@ -199,11 +200,11 @@ enum PatternEdit {
     }
 
     /// Pitch per note in semitones (drums: -12...+12, 808: -12...+24). Keys change with pitch.
-    static func setPitch(_ pattern: PatternData, _ keys: Set<NoteKey>, _ semis: Float) -> (PatternData, Set<NoteKey>) {
+    static func setPitch(_ pattern: PatternData, _ keys: Set<NoteKey>, _ semis: Float, role: Int? = nil) -> (PatternData, Set<NoteKey>) {
         var p = pattern
         var newKeys = Set<NoteKey>()
         for i in p.events.indices where keys.contains(NoteKey(p.events[i])) {
-            let isBass = Int(p.events[i].pad) == Pad.bass808.rawValue
+            let isBass = (role ?? Int(p.events[i].pad)) == Pad.bass808.rawValue
             p.events[i].semis = semis.rounded().clamped(-12, isBass ? 24 : 12)
             newKeys.insert(NoteKey(p.events[i]))
         }
@@ -252,12 +253,12 @@ enum PatternEdit {
     }
 
     /// A hit played while recording: snapped to `snap` (0 = where it was played).
-    static func addRecorded(_ pattern: PatternData, pad: Int, tick: Int32, velocity: Float, semis: Float, snap: Int32) -> PatternData {
+    static func addRecorded(_ pattern: PatternData, pad: Int, tick: Int32, velocity: Float, semis: Float, snap: Int32, role: Int? = nil) -> PatternData {
         let len = max(pattern.lengthTicks, 1)
         var t = tick
         if snap > 0 { t = ((tick + snap / 2) / snap) * snap }
         if t >= len { t -= len }
-        return addNote(pattern, pad: pad, tick: max(0, t), length: 0, velocity: velocity, semis: semis)
+        return addNote(pattern, pad: pad, tick: max(0, t), length: 0, velocity: velocity, semis: semis, role: role)
     }
 }
 

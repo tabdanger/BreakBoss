@@ -22,7 +22,6 @@ struct ContentView: View {
 
     var body: some View {
         FaceplateView(controller: controller)
-            .ignoresSafeArea(.container, edges: UIDevice.current.userInterfaceIdiom == .phone ? [] : .all)
             .statusBarHidden(true)
             .persistentSystemOverlays(.hidden)
             .preferredColorScheme(.dark)
@@ -39,7 +38,8 @@ struct ContentView: View {
     }
 }
 
-/// Build-machine only (BREAKBOSS_SNAPSHOTS=1): renders both approved device layouts.
+/// Build-machine only: retain the instrument snapshots and exercise the new rack in both
+/// orientations. The rack uses a loaded inventory so a snapshot never captures a loading row.
 enum LayoutSnapshots {
     @MainActor
     static func write(_ controller: KnockController) {
@@ -67,6 +67,23 @@ enum LayoutSnapshots {
         }
         controller.selectPlayMode(.loop)
         controller.selectMode(start)
+        let library = RackSoundLibrary(preloadedSounds: StockSampleLibrary.bundled.librarySounds())
+        let layouts: [(String, CGSize)] = [
+            ("phone-portrait", CGSize(width: 590, height: 1280)),
+            ("phone-landscape", CGSize(width: 1280, height: 590)),
+            ("tablet-portrait", CGSize(width: 1086, height: 1448)),
+            ("tablet-landscape", CGSize(width: 1448, height: 1086))
+        ]
+        for (name, size) in layouts {
+            let view = DrumRollView(controller: controller, loop: 0, library: library)
+                .frame(width: size.width, height: size.height)
+                .environment(\.horizontalSizeClass, size.width < 700 ? .compact : .regular)
+            let renderer = ImageRenderer(content: view)
+            renderer.scale = 1
+            if let image = renderer.uiImage, let data = image.pngData() {
+                try? data.write(to: caches.appendingPathComponent("rack-\(name).png"))
+            }
+        }
         print("BreakBoss layout snapshots written")
     }
 }

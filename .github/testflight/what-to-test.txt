@@ -1,12 +1,10 @@
-BreakBoss: rebuilt FL-style step sequencer (original instrument faceplate is unchanged).
+BreakBoss: rebuilt step sequencer. The original instrument faceplate and per-channel piano roll remain.
 
 Please test:
-- From the original faceplate, open the step sequencer. Verify three panels: generation/MIDI on the left, channel rack in the center, and searchable sound browser on the right.
-- Swipe left/right or use arrows to browse KICKS, SNARES, CLAPS, RIMS, HATS, 808s and other categories; verify all factory and imported sounds appear.
-- Drag a sample onto the channel rack (or tap its + button). Check that its new track name animates from a circle to an oval. Add the same sample twice: both tracks should have independent notes and MUTE/SOLO/level/pan/tune/decay.
-- Add up to 12 tracks, try a 13th, remove a track, then add another. Check that no notes leak between channels.
-- Tap 16-step buttons, change bars, edit velocity, and expand the left track arrow to edit pitched notes in the inline piano roll. Verify audio, playback and MIDI output.
-- Switch the original instrument faceplate: Modern = red active steps on dark, Platinum = red on silver, Vintage = pale yellow on cream, Texture = blue on blue. Check that the control positions do not move.
-- Verify the existing faceplate PLAY/record, DAW FOLLOW, MIDI playback and AUv3 in Logic Pro for iPad still work, with low CPU.
-
-Report any sound loading delays, stuck notes, crashes, wrong sample types or visual jumps.
+- Open the sequencer from the original faceplate. Look for the silver chassis, generation/MIDI controls on the left, channel rack in the center, and searchable sound library on the right. On smaller screens the library shares the workspace as a drawer.
+- Swipe the library categories or use arrows/tabs to browse Kicks, Claps, Snares, Rims, Hats, 808s and the other existing sounds. Preview a sound without changing the sequence.
+- Drag a sound onto the rack or use its + button. The new header should grow from a circle into an oval. Add the same sound twice and verify independent steps, level, pan, tuning and mute/solo.
+- The rack holds 12 sounds. Use New empty rack to start from scratch, remove a channel to make room, or Restore kit channels. A 13th sound should show a clear limit message.
+- Draw/erase/select steps; test undo/redo, bars, zoom, snap, velocity/pitch lanes, per-channel piano roll, generation and recording. Verify kits change sounds and pattern presets change rhythms.
+- Return to the original instrument and check that its pads still play after using an empty rack. Verify build 42 saved channel names, identities, samples and notes migrate correctly.
+- Verify MIDI export/import, audio/stems, AUv3 MIDI playback, FOLLOW DAW and 128-frame operation on your device. Report clicks, stuck notes, loading errors or visual jumps.

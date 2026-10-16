@@ -34,8 +34,12 @@ enum PortablePreset {
         var stockKeys: [URL: String] = [:]
         var stockNames: [String: String] = [:]
         let kitID = KitLibrary.kit(id: exportState.kitID).id
-        for pad in exportState.pads.indices where exportState.pads[pad].sampleFile == nil {
-            guard let stock = stockLibrary.sample(kitID: kitID, pad: pad) else { continue }
+        for channel in RackChannel.normalized(exportState.rackChannels)
+            where channel.usesKitSound && exportState.pads[channel.slot].sampleFile == nil {
+            let pad = channel.slot
+            let pick = exportState.stockPicks.flatMap { pad < $0.count ? $0[pad] : nil }
+            guard let stock = pick.flatMap({ stockLibrary.sample(kitID: $0, pad: channel.role) })
+                    ?? stockLibrary.sample(kitID: kitID, pad: channel.role) else { continue }
             let source = stock.url.resolvingSymlinksInPath().standardizedFileURL
             let key: String
             if let existing = stockKeys[source] {
@@ -95,7 +99,7 @@ enum PortablePreset {
         let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? Int.max
         guard size <= maxPackageBytes else { throw PackageError.tooLarge }
         let package = try JSONDecoder().decode(Package.self, from: Data(contentsOf: url))
-        guard package.version == 1, package.samples.count <= Pad.count else { throw PackageError.invalid }
+        guard package.version == 1, package.samples.count <= RackLimits.maxChannels else { throw PackageError.invalid }
         var state = package.state.normalized()
         var mapping: [String: String] = [:]
         var made: [URL] = []
@@ -138,7 +142,7 @@ struct PortablePresetView: View {
         NavigationView {
             Form {
                 Section {
-                    Text("Share your current kit, all 12 pad settings, imported audio, patterns, and processing controls in one .bbpack file.")
+                    Text("Share your current kit, all channel settings, imported audio, patterns, and processing controls in one .bbpack file.")
                     Button(working ? "Preparing…" : "Prepare complete preset") { makePackage() }.disabled(working)
                     if let url { ShareLink(item: url) { Label("Share / save preset", systemImage: "square.and.arrow.up") } }
                     Button("Import .bbpack preset") { importing = true }.disabled(working)

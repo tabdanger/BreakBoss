@@ -48,15 +48,23 @@ def result_state(text):
 
 
 def expected_layout_names(family):
+    return set(expected_layout_sizes(family))
+
+
+def expected_layout_sizes(family):
     device = {"iphone": "phone", "ipad": "tablet"}[family]
-    return {f"layout-{device}-{mode}-{play}.png"
-            for mode in ("modern", "vintage", "texture") for play in ("loop", "oneshot")}
+    faceplate_size = {"iphone": (941, 1672), "ipad": (1448, 1086)}[family]
+    sizes = {f"layout-{device}-{mode}-{play}.png": faceplate_size
+             for mode in ("modern", "vintage", "texture") for play in ("loop", "oneshot")}
+    portrait = {"iphone": (590, 1280), "ipad": (1086, 1448)}[family]
+    sizes[f"rack-{device}-portrait.png"] = portrait
+    sizes[f"rack-{device}-landscape.png"] = tuple(reversed(portrait))
+    return sizes
 
 
 def missing_layout_names(family, cache, started=None):
-    expected_size = {"iphone": (941, 1672), "ipad": (1448, 1086)}[family]
     missing = []
-    for name in sorted(expected_layout_names(family)):
+    for name, expected_size in sorted(expected_layout_sizes(family).items()):
         path = cache / name if cache else None
         if not path or not path.is_file() or (started is not None and path.stat().st_mtime < started):
             missing.append(name)
@@ -197,6 +205,8 @@ def run_device(family, device, app, bundle_id, output, timeout):
         if data:
             for old in (data / "Library" / "Caches").glob("layout-*.png"):
                 old.unlink()
+            for old in (data / "Library" / "Caches").glob("rack-*.png"):
+                old.unlink()
             (data / "Library" / "Caches" / "BreakBoss-selftest.log").unlink(missing_ok=True)
         with console.open("w") as file:
             launch_started = time.time()
@@ -216,7 +226,7 @@ def run_device(family, device, app, bundle_id, output, timeout):
                     break
                 time.sleep(2)
             if state == "passed":
-                # Require six complete images for this actual simulator's device family.
+                # Require six sampler images plus both rack orientations for this family.
                 # Other-device override renders cannot stand in for a missing phone/tablet render.
                 deadline = time.monotonic() + 30
                 missing = sorted(expected_layout_names(family))
@@ -229,7 +239,7 @@ def run_device(family, device, app, bundle_id, output, timeout):
                 if missing:
                     failure = f"{family} self-test passed but required faceplate PNGs are missing or invalid: {', '.join(missing)}"
                 else:
-                    print(f"::notice title=Self-test::{family} self-test passed; all six device layouts rendered", flush=True)
+                    print(f"::notice title=Self-test::{family} self-test passed; six sampler layouts and both rack orientations rendered", flush=True)
             elif state == "failed":
                 failure = f"{family} SELF-TEST FAILED; see selftest-{family}.log"
                 try:
@@ -247,7 +257,7 @@ def run_device(family, device, app, bundle_id, output, timeout):
             except (OSError, subprocess.SubprocessError) as error:
                 print(f"::warning title=Simulator diagnostics::{family}: {error}", flush=True)
         if data:
-            for source in (data / "Library" / "Caches").glob("layout-*.png"):
+            for source in (data / "Library" / "Caches").glob("*.png"):
                 if source.name in expected_layout_names(family) and source.stat().st_mtime >= launch_started:
                     shutil.copy2(source, shots / f"{source.stem}-{family}{source.suffix}")
         # This is the actual displayed app inside the simulated device, including its safe area,

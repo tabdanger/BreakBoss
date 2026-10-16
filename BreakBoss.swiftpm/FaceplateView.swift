@@ -82,7 +82,7 @@ struct FaceplateView: View {
         }
         .sheet(isPresented: $showExport) { ExportView(controller: controller) }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
-        .fullScreenCover(item: $patternEditor) { target in SequencerWorkspaceView(controller: controller, loop: target.loop) }
+        .fullScreenCover(item: $patternEditor) { target in DrumRollView(controller: controller, loop: target.loop) }
         .fullScreenCover(item: $browser) { kind in BrowserView(controller: controller, kind: kind) }
         .alert(namePrompt == .kit ? "Save Kit" : "Save Preset", isPresented: Binding(
             get: { namePrompt != nil }, set: { if !$0 { namePrompt = nil } })) {
@@ -292,20 +292,35 @@ struct FaceplateView: View {
 extension KnockController {
     /// Loads a dropped audio file onto a pad (WAV, AIFF, CAF, MP3, M4A, FLAC…).
     func importDropped(_ providers: [NSItemProvider], toPad pad: Int) -> Bool {
-        guard let provider = providers.first else { return false }
+        guard let channelID = rackChannels.first(where: { $0.slot == pad })?.id,
+              let provider = providers.first(where: {
+                  $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) ||
+                  $0.hasItemConformingToTypeIdentifier(UTType.audio.identifier)
+              }) else { return false }
         if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
             _ = provider.loadObject(ofClass: URL.self) { [weak self] url, _ in
-                if let url { DispatchQueue.main.async { self?.importSample(url, toPad: pad) } }
+                if let url {
+                    DispatchQueue.main.async {
+                        guard let self, self.rackChannels.contains(where: { $0.slot == pad && $0.id == channelID }) else { return }
+                        self.importSample(url, toPad: pad)
+                    }
+                }
             }
             return true
         }
         guard provider.hasItemConformingToTypeIdentifier(UTType.audio.identifier) else { return false }
         provider.loadFileRepresentation(forTypeIdentifier: UTType.audio.identifier) { [weak self] url, _ in
             guard let url else { return }
-            let copy = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
-            try? FileManager.default.removeItem(at: copy)
-            try? FileManager.default.copyItem(at: url, to: copy)
-            DispatchQueue.main.async { self?.importSample(copy, toPad: pad) }
+            do {
+                let file = try SampleLoader.copyIntoSamples(url)
+                let copy = SampleLoader.urlInSamples(file)
+                DispatchQueue.main.async {
+                    guard let self, self.rackChannels.contains(where: { $0.slot == pad && $0.id == channelID }) else { return }
+                    self.importSample(copy, toPad: pad)
+                }
+            } catch {
+                DispatchQueue.main.async { self?.notice = error.localizedDescription }
+            }
         }
         return true
     }

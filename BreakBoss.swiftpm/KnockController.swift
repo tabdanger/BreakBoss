@@ -1,6 +1,7 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import Foundation
 import SwiftUI
+import AVFoundation
 
 /// What the screen shows for a moment after you touch something.
 struct Readout: Equatable {
@@ -20,7 +21,7 @@ final class KnockController: ObservableObject {
     @Published var readout: Readout?
     @Published private(set) var userKits: [String] = []
     @Published private(set) var userPresets: [String] = []
-    /// The 12 pad sounds as loaded (for the pad editor's waveform).
+    /// All preallocated audio slots (unused rows share a silent buffer).
     @Published private(set) var kitSamples: [SampleBuffer] = []
     /// Names for successfully loaded factory samples; these never become device-local imports.
     @Published private(set) var stockSampleNames: [Int: String] = [:]
@@ -42,9 +43,14 @@ final class KnockController: ObservableObject {
 
     private let kitQueue = DispatchQueue(label: "breakboss.kit", qos: .userInitiated)
     private let stockLibrary = StockSampleLibrary.bundled
-    /// Temporary rack gating; original home pad routing remains available.
-    private var workspaceIsOpen = false
+    /// The instrument always keeps its twelve physical pads; only the open rack gates empty rows.
+    private var rackWorkspaceIsOpen = false
     private var kitGeneration = 0
+    private var sampleRequests: [Int: UUID] = [:]
+    private let decodedBudget = RackDecodedBudget()
+    private var loadedSources: [Int: String] = [:]
+    private var kitBuildCancellation: RackBuildCancellation?
+    private static let silentSample = SampleBuffer(left: [0], sampleRate: 48_000)
     private var timers: [Timer] = []
     private var saveWork: DispatchWorkItem?
 
@@ -57,7 +63,7 @@ final class KnockController: ObservableObject {
            let saved = try? JSONDecoder().decode(KnockState.self, from: data) {
             s = saved.normalized()
         }
-        state = s
+        state = s.normalized()
         pushAllToEngine()
         refreshLists()
         rebuildKit()
@@ -97,7 +103,7 @@ final class KnockController: ObservableObject {
         }
     }
 
-    deinit { timers.forEach { $0.invalidate() } }
+    deinit { kitBuildCancellation?.cancel(); timers.forEach { $0.invalidate() } }
 
     static let sessionKey = "breakboss.session"
 
@@ -232,48 +238,55 @@ final class KnockController: ObservableObject {
     /// Plays a pad's sound in any mode (drum roll ▶ buttons, previews). While RECORD is armed
     /// and the pattern runs, the engine also writes the hit into the pattern.
     func auditionPad(_ pad: Int, velocity: Float = 0.85, semis: Float = 0) {
-        guard pad >= 0 && pad < Pad.count else { return }
-        if pad == Pad.bass808.rawValue {
-            engine.send(KEvent(kind: .bass, a: Int32(semis.rounded()), value: Double(velocity)))
-        } else {
-            engine.send(KEvent(kind: .pad, a: Int32(pad), value: Double(velocity)))
-        }
+        auditionChannel(slot: pad, velocity: velocity, semis: semis)
     }
 
-    var mutedPads: [Bool] { state.mutedPads ?? Array(repeating: false, count: Pad.count) }
-    var soloPads: [Bool] { state.soloPads ?? Array(repeating: false, count: Pad.count) }
+    var mutedPads: [Bool] { Self.channelFlags(state.mutedPads) }
+    var soloPads: [Bool] { Self.channelFlags(state.soloPads) }
+
+    private static func channelFlags(_ flags: [Bool]?) -> [Bool] {
+        Array(((flags ?? []) + Array(repeating: false, count: RackLimits.maxChannels)).prefix(RackLimits.maxChannels))
+    }
 
     func toggleMute(_ pad: Int) {
-        guard (0..<Pad.count).contains(pad) else { return }
+        guard rackChannels.contains(where: { $0.slot == pad }) else { return }
         var m = mutedPads; m[pad].toggle(); state.mutedPads = m
         pushPadMask(); scheduleSave()
     }
 
     func toggleSolo(_ pad: Int) {
-        guard (0..<Pad.count).contains(pad) else { return }
+        guard rackChannels.contains(where: { $0.slot == pad }) else { return }
         var m = soloPads; m[pad].toggle(); state.soloPads = m
         pushPadMask(); scheduleSave()
     }
 
     /// FL-style: with any solo on, only soloed channels sound; mutes always silence.
-    static func padMask(muted: [Bool], solo: [Bool]) -> UInt16 {
+    static func padMask(muted: [Bool], solo: [Bool]) -> UInt64 {
         let anySolo = solo.contains(true)
-        var mask: UInt16 = 0
-        for pad in 0..<Pad.count {
+        var mask: UInt64 = 0
+        for pad in 0..<min(RackLimits.maxChannels, max(muted.count, solo.count)) {
             let audible = (anySolo ? (pad < solo.count && solo[pad]) : true) && !(pad < muted.count && muted[pad])
-            if audible { mask |= 1 << UInt16(pad) }
+            if audible { mask |= UInt64(1) << UInt64(pad) }
         }
         return mask
     }
 
     // MARK: MIDI out (multi-out)
 
-    static let defaultMIDIOutChannels = Array(0..<Pad.count)          // pad n on MIDI channel n + 1
-    static let defaultMIDIOutNotes = Array(36..<(36 + Pad.count))      // C1 up, like the input map
+    static let defaultMIDIOutChannels = Array(0..<Pad.count) + Array(repeating: -1, count: RackLimits.maxChannels - Pad.count)
+    static let defaultMIDIOutNotes = Array(36..<(36 + Pad.count)) + Array(repeating: 60, count: RackLimits.maxChannels - Pad.count)
     /// On by default in the plug-in, so a DAW's armed MIDI track records the pads and pattern.
     var midiOutOn: Bool { state.midiOut ?? isPlugin }
-    var midiOutChannels: [Int] { (state.midiOutChannels ?? KnockController.defaultMIDIOutChannels).count == Pad.count ? state.midiOutChannels ?? KnockController.defaultMIDIOutChannels : KnockController.defaultMIDIOutChannels }
-    var midiOutNotes: [Int] { (state.midiOutNotes ?? KnockController.defaultMIDIOutNotes).count == Pad.count ? state.midiOutNotes ?? KnockController.defaultMIDIOutNotes : KnockController.defaultMIDIOutNotes }
+    var midiOutChannels: [Int] { Self.midiRoutes(state.midiOutChannels, defaults: Self.defaultMIDIOutChannels, range: -1...15) }
+    var midiOutNotes: [Int] { Self.midiRoutes(state.midiOutNotes, defaults: Self.defaultMIDIOutNotes, range: 0...127) }
+
+    private static func midiRoutes(_ source: [Int]?, defaults: [Int], range: ClosedRange<Int>) -> [Int] {
+        var routes = defaults
+        for (i, value) in (source ?? []).prefix(RackLimits.maxChannels).enumerated() {
+            routes[i] = max(range.lowerBound, min(range.upperBound, value))
+        }
+        return routes
+    }
 
     func setMIDIOut(_ on: Bool) { state.midiOut = on; pushMIDIOut(); scheduleSave() }
     func setMIDIOutChannel(pad: Int, _ channel: Int) {
@@ -288,33 +301,38 @@ final class KnockController: ObservableObject {
     func setMIDIOutLayout(multi: Bool) {
         // One channel: the drums on channel 10 (GM drum notes); the 808 keeps its own channel (7)
         // so its pitches never land on a drum note.
-        var one = Array(repeating: 9, count: Pad.count); one[Pad.bass808.rawValue] = Pad.bass808.rawValue
+        var one = Array(repeating: -1, count: RackLimits.maxChannels)
+        for pad in 0..<Pad.count { one[pad] = 9 }
+        one[Pad.bass808.rawValue] = Pad.bass808.rawValue
         state.midiOutChannels = multi ? KnockController.defaultMIDIOutChannels : one
-        state.midiOutNotes = multi ? KnockController.defaultMIDIOutNotes : [36, 38, 39, 37, 42, 46, 35, 56, 54, 45, 50, 49]
+        state.midiOutNotes = multi ? KnockController.defaultMIDIOutNotes : [36, 38, 39, 37, 42, 46, 35, 56, 54, 45, 50, 49] + Array(repeating: 60, count: RackLimits.maxChannels - Pad.count)
         pushMIDIOut(); scheduleSave()
     }
 
     func pushMIDIOut() {
         let ch = midiOutChannels, notes = midiOutNotes
-        for pad in 0..<Pad.count {
-            engine.send(KEvent(kind: .midiOut, a: Int32(pad), value: ch[pad] < 0 ? -1 : Double(ch[pad] * 128 + notes[pad])))
+        for pad in 0..<RackLimits.maxChannels {
+            let usesInstrumentFallback = !rackWorkspaceIsOpen && !rackChannels.contains(where: { $0.slot == pad })
+            let channel = usesInstrumentFallback ? Self.defaultMIDIOutChannels[pad] : ch[pad]
+            let note = usesInstrumentFallback ? Self.defaultMIDIOutNotes[pad] : notes[pad]
+            engine.send(KEvent(kind: .midiOut, a: Int32(pad), value: channel < 0 ? -1 : Double(channel * 128 + note)))
         }
         engine.send(KEvent(kind: .midiOut, a: -1, value: midiOutOn ? 1 : 0))
     }
 
     private func pushPadMask() {
-        var mask = KnockController.padMask(muted: mutedPads, solo: soloPads)
-        if workspaceIsOpen {
-            var onlyVisible: UInt16 = 0
-            for row in workspaceChannels { onlyVisible |= UInt16(1) << UInt16(row.pad) }
-            mask &= onlyVisible
+        var mask = Self.padMask(muted: mutedPads, solo: soloPads)
+        if rackWorkspaceIsOpen {
+            let active = rackChannels.reduce(UInt64(0)) { $0 | (UInt64(1) << UInt64($1.slot)) }
+            mask &= active
         }
-        engine.send(KEvent(kind: .padMask, a: Int32(mask)))
+        engine.send(KEvent(kind: .padMask, mask: mask))
     }
 
-    func setWorkspaceOpen(_ open: Bool) {
-        workspaceIsOpen = open
+    func setRackWorkspaceOpen(_ open: Bool) {
+        rackWorkspaceIsOpen = open
         pushPadMask()
+        pushMIDIOut()
     }
 
     @Published private(set) var recording = false
@@ -388,7 +406,8 @@ final class KnockController: ObservableObject {
             let loop = Int(h.loop)
             guard loops.indices.contains(loop) else { continue }
             var p = touched[loop] ?? loops[loop]
-            p = PatternEdit.addRecorded(p, pad: Int(h.pad), tick: h.tick, velocity: h.velocity, semis: h.semis, snap: snap)
+            p = PatternEdit.addRecorded(p, pad: Int(h.pad), tick: h.tick, velocity: h.velocity, semis: h.semis, snap: snap,
+                                       role: channelRole(Int(h.pad)))
             touched[loop] = p
         }
         for (loop, p) in touched { setLoop(loop, p) }
@@ -417,6 +436,188 @@ final class KnockController: ObservableObject {
 
     func playPressed() {
         engine.send(KEvent(kind: isPlaying ? .stop : .play))
+    }
+
+    // MARK: Dynamic channel rack
+
+    var rackChannels: [RackChannel] { state.rackChannels ?? RackChannel.legacy }
+    var rackChannelCount: Int { rackChannels.count }
+
+    func channelRole(_ slot: Int) -> Int {
+        rackChannels.first(where: { $0.slot == slot })?.role ?? slot.clamped(0, Pad.count - 1)
+    }
+
+    func channelName(_ slot: Int) -> String { padName(slot) }
+
+    func channelBassHz(_ slot: Int) -> Float {
+        rackChannels.first(where: { $0.slot == slot })?.sourceBassHz ?? kitDefinition.bassHz
+    }
+
+    func auditionChannel(slot: Int, velocity: Float = 0.85, semis: Float = 0) {
+        guard (0..<Pad.count).contains(slot),
+              !rackWorkspaceIsOpen || rackChannels.contains(where: { $0.slot == slot }) else { return }
+        engine.send(KEvent(kind: .pad, a: Int32(slot), value: Double(velocity.clamped(0, 1)), semis: semis))
+    }
+
+    /// Reserves the row synchronously. The UI can spring its capsule open while audio decodes.
+    @discardableResult
+    func addBlankRackChannel(name: String = "EMPTY", role: Int = 0) -> Int? {
+        guard let slot = RackChannel.availableSlot(in: rackChannels) else {
+            notice = "The channel rack is full (12 sounds). Remove a channel or start a new empty rack to add another sound."
+            return nil
+        }
+        var channels = rackChannels
+        channels.append(RackChannel(slot: slot, name: name, role: role.clamped(0, Pad.count - 1), followsKit: false))
+        state.rackChannels = channels
+        state.pads[slot] = PadSettings()
+        var mute = mutedPads; mute[slot] = false; state.mutedPads = mute
+        var solo = soloPads; solo[slot] = false; state.soloPads = solo
+        var routes = midiOutChannels; routes[slot] = -1; state.midiOutChannels = routes
+        var notes = midiOutNotes; notes[slot] = 60; state.midiOutNotes = notes
+        if state.stockPicks?.indices.contains(slot) == true { state.stockPicks![slot] = nil }
+        stockSampleNames[slot] = nil
+        loadedSources[slot] = nil
+        if kitSamples.count == RackLimits.maxChannels { kitSamples[slot] = Self.silentSample }
+        if kitSamples.count == RackLimits.maxChannels && !loadingKit { republishKit() }
+        else { rebuildKit() }
+        pushPadMask(); pushMIDIOut(); scheduleSave()
+        return slot
+    }
+
+    @discardableResult
+    func appendRackSound(_ sound: LibrarySound) -> Int? {
+        guard let slot = addBlankRackChannel(name: sound.name, role: RackChannel.role(for: sound.type)) else { return nil }
+        replaceRackSound(sound, slot: slot)
+        return slot
+    }
+
+    @discardableResult
+    func appendRackImport(_ url: URL) -> Int? {
+        let name = url.deletingPathExtension().lastPathComponent
+        guard let slot = addBlankRackChannel(name: name, role: RackChannel.role(for: .guess(url.path))) else { return nil }
+        importSample(url, toPad: slot)
+        return slot
+    }
+
+    func replaceRackSound(_ sound: LibrarySound, slot: Int) {
+        guard var channels = state.rackChannels,
+              let index = channels.firstIndex(where: { $0.slot == slot }) else {
+            if !rackWorkspaceIsOpen { loadRackSample(sound.url, toPad: slot) }
+            return
+        }
+        channels[index].name = sound.name
+        channels[index].role = RackChannel.role(for: sound.type)
+        channels[index].libraryID = sound.id
+        channels[index].stockFileName = sound.user ? nil : sound.url.lastPathComponent
+        channels[index].sourceBassHz = sound.type == .bass && !sound.user
+            ? KitLibrary.factory.first(where: { $0.name == sound.pack })?.bassHz : nil
+        loadRackSample(sound.url, toPad: slot, metadata: channels[index])
+    }
+
+    func removeRackChannel(slot: Int) {
+        guard rackChannels.contains(where: { $0.slot == slot }) else { return }
+        engine.send(KEvent(kind: .channelOff, a: Int32(slot)))
+        sampleRequests[slot] = nil
+        // Materialise every loop before freeing the slot; a later row cannot inherit old notes.
+        var edits = loops
+        for i in edits.indices { edits[i].events.removeAll { Int($0.pad) == slot } }
+        state.editedLoops = edits.map(Optional.some)
+        state.basePattern?.events.removeAll { Int($0.pad) == slot }
+        state.rackChannels = rackChannels.filter { $0.slot != slot }
+        state.pads[slot] = PadSettings()
+        var mute = mutedPads; mute[slot] = false; state.mutedPads = mute
+        var solo = soloPads; solo[slot] = false; state.soloPads = solo
+        var routes = midiOutChannels; routes[slot] = -1; state.midiOutChannels = routes
+        var notes = midiOutNotes; notes[slot] = 60; state.midiOutNotes = notes
+        if state.stockPicks?.indices.contains(slot) == true { state.stockPicks![slot] = nil }
+        stockSampleNames[slot] = nil
+        loadedSources[slot] = nil
+        pushPadMask(); pushMIDIOut()
+        rebuildKit()
+        rebuildLoops()
+        scheduleSave()
+    }
+
+    /// An explicit fresh start for the rack. Opening an existing project never removes sounds.
+    /// Every pattern is cleared before slots can be reused, so newly dropped sounds start clean.
+    func clearRackChannels() {
+        resetRackChannels(to: [])
+    }
+
+    /// Restores the selected kit's twelve original sounds as a clean rack. Kept separate from
+    /// switching kits, which deliberately preserves manually added sounds and existing notes.
+    func restoreFactoryRackChannels() {
+        resetRackChannels(to: RackChannel.legacy)
+    }
+
+    private func resetRackChannels(to channels: [RackChannel]) {
+        setRecording(false)
+        sampleRequests.removeAll()
+        for channel in rackChannels { engine.send(KEvent(kind: .channelOff, a: Int32(channel.slot))) }
+        var edits = loops
+        for index in edits.indices { edits[index].events.removeAll() }
+        state.editedLoops = edits.map(Optional.some)
+        state.basePattern?.events.removeAll()
+        state.rackChannels = channels
+        state.pads = Array(repeating: PadSettings(), count: RackLimits.maxChannels)
+        state.mutedPads = Array(repeating: false, count: RackLimits.maxChannels)
+        state.soloPads = Array(repeating: false, count: RackLimits.maxChannels)
+        state.midiOutChannels = channels.isEmpty ? Array(repeating: -1, count: RackLimits.maxChannels) : Self.defaultMIDIOutChannels
+        state.midiOutNotes = channels.isEmpty ? Array(repeating: 60, count: RackLimits.maxChannels) : Self.defaultMIDIOutNotes
+        state.stockPicks = Array(repeating: nil, count: RackLimits.maxChannels)
+        stockSampleNames.removeAll()
+        loadedSources.removeAll()
+        kitSamples = Array(repeating: Self.silentSample, count: RackLimits.maxChannels)
+        pushPadMask(); pushMIDIOut()
+        rebuildKit()
+        rebuildLoops()
+        scheduleSave()
+    }
+
+    func moveRackChannel(from offsets: IndexSet, to destination: Int) {
+        var channels = rackChannels
+        let valid = IndexSet(offsets.filter { channels.indices.contains($0) })
+        guard !valid.isEmpty else { return }
+        channels.move(fromOffsets: valid, toOffset: destination.clamped(0, channels.count))
+        state.rackChannels = channels
+        scheduleSave()
+    }
+
+    private var kitRoles: [Int] {
+        var roles = Array(0..<RackLimits.maxChannels)
+        for channel in rackChannels { roles[channel.slot] = channel.role }
+        return roles
+    }
+
+    private var kitChannelNames: [String] { (0..<RackLimits.maxChannels).map(channelName) }
+
+    /// GENERATE affects the sequence on screen; its toggles independently opt in sounds/tempo.
+    func generateRackPattern(loop: Int, style: String, updateSounds: Bool, updateTempo: Bool) {
+        guard loops.indices.contains(loop), let preset = PatternBank.presets(in: style).randomElement() else { return }
+        let length = loops[loop].lengthTicks
+        if updateSounds,
+           let kit = KitLibrary.factory.filter({ $0.style == preset.grooveStyle }).randomElement() { selectKit(kit) }
+        let source = preset.pattern
+        var events: [GrooveEvent] = []
+        var start: Int32 = 0
+        while start < length {
+            for channel in rackChannels {
+                for event in source.events where Int(event.pad) == channel.role && event.tick + start < length {
+                    var mapped = event
+                    mapped.pad = Int8(channel.slot)
+                    mapped.tick += start
+                    mapped.length = min(mapped.length, length - mapped.tick)
+                    events.append(mapped)
+                }
+            }
+            start += max(1, source.lengthTicks)
+        }
+        var pattern = PatternData(name: preset.name, lengthTicks: length, events: Array(events.prefix(4096)), humanize: loops[loop].humanize)
+        pattern.sort()
+        setLoop(loop, pattern)
+        if updateTempo && !tempoIsExternal { setBPM(preset.bpm) }
+        set(.bounce, preset.bounce, show: false)
+        readout = Readout(title: "GENERATE", value: preset.name, time: Date())
     }
 
     // MARK: Dice
@@ -452,6 +653,7 @@ final class KnockController: ObservableObject {
     var kitDisplayName: String { "\(state.kitName) - \(mode.title)" }
 
     func selectKit(_ def: KitDefinition) {
+        for channel in rackChannels where channel.usesKitSound { sampleRequests[channel.slot] = nil }
         state = state.selectingKit(def)
         engine.setTempo(state.bpm)
         rebuildKit()
@@ -468,7 +670,31 @@ final class KnockController: ObservableObject {
         state.kitName = kit.name.uppercased()
         state.userKit = kit.name
         state.soundSeed = kit.soundSeed
-        state.pads = KnockState.normalizedPads(kit.pads)
+        let savedPads = KnockState.normalizedPads(kit.pads)
+        var channels = rackChannels
+        let savedChannels = RackChannel.normalized(kit.rackChannels)
+        // A sound-only kit switch keeps added rows and their existing notes/settings intact.
+        for channel in channels where channel.usesKitSound {
+            sampleRequests[channel.slot] = nil
+            if let saved = savedChannels.first(where: { $0.slot == channel.slot }) {
+                state.pads[channel.slot] = savedPads[saved.slot]
+                if let index = channels.firstIndex(where: { $0.slot == channel.slot }) {
+                    channels[index].name = saved.name
+                    channels[index].role = saved.role
+                    channels[index].libraryID = saved.libraryID
+                    channels[index].stockFileName = saved.stockFileName
+                    channels[index].sourceBassHz = saved.sourceBassHz
+                }
+            }
+        }
+        // Bring back saved additional rows if the slot is free; never overwrite current extras.
+        for channel in savedChannels where !channel.usesKitSound && !channels.contains(where: { $0.slot == channel.slot }) {
+            channels.append(channel)
+            state.pads[channel.slot] = savedPads[channel.slot]
+        }
+        state.rackChannels = RackChannel.normalized(channels)
+        if let picks = kit.stockPicks { state.stockPicks = Array((picks + Array(repeating: nil, count: RackLimits.maxChannels)).prefix(RackLimits.maxChannels)) }
+        pushPadMask(); pushMIDIOut()
         rebuildKit()
         rebuildLoops()
         readout = Readout(title: "KIT", value: state.kitName, time: Date())
@@ -478,7 +704,8 @@ final class KnockController: ObservableObject {
     func saveKit(as name: String) {
         let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty else { return }
-        let kit = UserKit(name: clean, baseKitID: state.kitID, soundSeed: state.soundSeed, pads: state.pads)
+        let kit = UserKit(name: clean, baseKitID: state.kitID, soundSeed: state.soundSeed, pads: state.pads,
+                          rackChannels: rackChannels, stockPicks: state.stockPicks)
         if KnockStore.saveUserKit(kit) {
             state.kitName = clean.uppercased()
             state.userKit = clean
@@ -500,51 +727,94 @@ final class KnockController: ObservableObject {
         userPresets = KnockStore.userPresetNames()
     }
 
-    /// Renders the kit's sounds (off the main thread) and hands them to the engine.
+    /// Renders changed sounds off the main thread; unchanged channels reuse immutable PCM.
     func rebuildKit() {
+        synchronizeDecodedBudget()
         kitGeneration += 1
         let generation = kitGeneration
+        kitBuildCancellation?.cancel()
+        let cancellation = RackBuildCancellation()
+        kitBuildCancellation = cancellation
         let s = state
         let def = KitLibrary.kit(id: s.kitID)
         let stock = stockLibrary
         let rate = engine.sampleRate > 0 ? engine.sampleRate : 48_000
+        let previousSamples = kitSamples
+        let previousSources = loadedSources
+        let budget = decodedBudget
         loadingKit = true
-        stockSampleNames = [:]
         kitQueue.async { [weak self] in
-            var samples: [SampleBuffer] = []
+            var samples = Array(repeating: KnockController.silentSample, count: RackLimits.maxChannels)
             var failed: [String] = []
             var stockNames: [Int: String] = [:]
-            for pad in 0..<Pad.count {
-                if let file = s.pads[pad].sampleFile {
-                    if let buffer = try? SampleLoader.load(SampleLoader.urlInSamples(file)) {
-                        samples.append(buffer)
-                        continue
-                    }
-                    failed.append(file)
-                } else if let sample = KnockController.stockPick(s, pad: pad).flatMap({ stock.sample(kitID: $0, pad: pad) })
-                            ?? stock.sample(kitID: def.id, pad: pad) {
-                    if let buffer = try? SampleLoader.load(sample.url) {
-                        samples.append(buffer)
-                        stockNames[pad] = sample.displayName
-                        continue
-                    }
-                    failed.append(sample.displayName)
+            var sources: [Int: String] = [:]
+            var reservations: [UUID] = []
+            let activeChannels = RackChannel.normalized(s.rackChannels)
+            // Empty rack slots still hold the selected kit for the original instrument surface.
+            // Only visible rows are sequenced/gated while the rack is open.
+            let audioChannels = (0..<RackLimits.maxChannels).map { slot in
+                activeChannels.first(where: { $0.slot == slot })
+                    ?? RackChannel(id: RackChannel.legacyID(slot: slot), slot: slot, role: slot, followsKit: true)
+            }
+            for channel in audioChannels {
+                if cancellation.isCancelled {
+                    for request in reservations { budget.cancel(request) }
+                    return
                 }
-                var recipe = def.pads[pad]
+                let pad = channel.slot
+                let role = channel.role
+                let file = s.pads[pad].sampleFile
+                let factorySample = channel.usesKitSound
+                    ? KnockController.stockPick(s, pad: pad).flatMap({ stock.sample(kitID: $0, pad: role) })
+                        ?? stock.sample(kitID: def.id, pad: role) : nil
+                let source = file.map { "file:" + $0 }
+                    ?? factorySample.map { "stock:" + $0.url.path }
+                    ?? "synth:\(def.id):\(role):\(s.soundSeed):\(rate)"
+                let url = file.map(SampleLoader.urlInSamples) ?? factorySample?.url
+                do {
+                    var buffer: SampleBuffer?
+                    if previousSources[pad] == source && previousSamples.indices.contains(pad) {
+                        buffer = previousSamples[pad]
+                    }
+                    if !channel.usesKitSound, buffer != nil || url != nil {
+                        let request = UUID()
+                        let bytes: Int
+                        if let buffer { bytes = buffer.length * 2 * MemoryLayout<Float>.size }
+                        else { bytes = try KnockController.decodedBytes(at: url!) }
+                        guard budget.reserve(request: request, channel: channel.id, bytes: bytes) else {
+                            throw RackSampleError.memoryBudget
+                        }
+                        reservations.append(request)
+                    }
+                    if buffer == nil, let url { buffer = try SampleLoader.load(url) }
+                    if let buffer {
+                        samples[pad] = buffer
+                        sources[pad] = source
+                        if file == nil, let factorySample { stockNames[pad] = factorySample.displayName }
+                        continue
+                    }
+                } catch {
+                    failed.append(file ?? factorySample?.displayName ?? channel.name ?? "Channel \(pad + 1)")
+                }
+                guard channel.usesKitSound else { continue }
+                var recipe = def.pads[role]
                 if s.soundSeed > 1 {
                     var rng = KRandom(seed: s.soundSeed &* 2_654_435_761 &+ UInt32(pad * 977))
                     recipe = recipe.varied(&rng)
                 }
-                samples.append(DrumSynth.render(recipe, sampleRate: rate, seed: s.soundSeed &+ UInt32(pad)))
+                samples[pad] = DrumSynth.render(recipe, sampleRate: rate, seed: s.soundSeed &+ UInt32(pad))
+                sources[pad] = "synth:\(def.id):\(role):\(s.soundSeed):\(rate)"
             }
-            DispatchQueue.main.async { [weak self, samples, failed, stockNames] in
+            DispatchQueue.main.async { [weak self, samples, failed, stockNames, sources, reservations] in
+                defer { for request in reservations { budget.cancel(request) } }
                 guard let self, generation == self.kitGeneration else { return }
                 self.kitSamples = samples
+                self.loadedSources = sources
                 self.stockSampleNames = stockNames
                 self.republishKit() // Apply edits made while decoding the kit.
                 self.loadingKit = false
                 if !failed.isEmpty {
-                    self.notice = "Samples unavailable: \(failed.joined(separator: ", ")). Using synthesized sounds."
+                    self.notice = "Samples unavailable or beyond the 64 MiB added-channel budget: \(failed.joined(separator: ", ")). Added rows stay silent; original factory rows use backups."
                 } else if let failure = stock.failure {
                     self.notice = "\(failure) Using synthesized sounds."
                 }
@@ -552,184 +822,144 @@ final class KnockController: ObservableObject {
         }
     }
 
+    private enum RackSampleError: LocalizedError {
+        case memoryBudget
+        var errorDescription: String? {
+            "This sound would exceed the 64 MiB decoded-audio budget for added channels. Remove a sound or use a shorter sample."
+        }
+    }
+
+    /// Read only the file header before reserving space; SampleLoader performs full validation.
+    private static func decodedBytes(at url: URL) throws -> Int {
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        let audio = try AVAudioFile(forReading: url)
+        guard audio.length > 0, audio.length <= Int64(RackLimits.extraDecodedByteLimit / 8) else {
+            throw RackSampleError.memoryBudget
+        }
+        return Int(audio.length) * 2 * MemoryLayout<Float>.size
+    }
+
+    private func synchronizeDecodedBudget() {
+        var costs: [UUID: Int] = [:]
+        for channel in rackChannels where !channel.usesKitSound && kitSamples.indices.contains(channel.slot) {
+            let sample = kitSamples[channel.slot]
+            if sample.length > 1 { costs[channel.id] = sample.length * 2 * MemoryLayout<Float>.size }
+        }
+        decodedBudget.synchronize(costs)
+    }
+
     /// Same sounds, new pad settings (level, pan, tune, decay, filter, reverse): instant.
     private func republishKit() {
-        guard kitSamples.count == Pad.count else { rebuildKit(); return }
+        guard kitSamples.count == RackLimits.maxChannels else { rebuildKit(); return }
+        synchronizeDecodedBudget()
         let kit = KitBuffers(name: state.kitName, samples: kitSamples, settings: state.pads,
-                             bassHz: kitDefinition.bassHz, renderSampleRate: engine.sampleRate)
+                             bassHz: kitDefinition.bassHz, renderSampleRate: engine.sampleRate,
+                             roles: kitRoles, channelNames: kitChannelNames)
         engine.kitHandoff.publish(kit)
     }
 
     // MARK: Pad editor
 
     func setPadSettings(_ pad: Int, _ settings: PadSettings) {
-        guard pad >= 0 && pad < Pad.count else { return }
+        guard state.pads.indices.contains(pad),
+              !rackWorkspaceIsOpen || rackChannels.contains(where: { $0.slot == pad }) else { return }
         let needsReload = settings.sampleFile != state.pads[pad].sampleFile
         state.pads[pad] = settings
         if needsReload { rebuildKit() } else { republishKit() }
         scheduleSave()
     }
 
-    /// Puts an audio file on a pad (it's copied into the Samples folder first).
-    func importSample(_ url: URL, toPad pad: Int) {
-        guard pad >= 0 && pad < Pad.count else { return }
-        let generation = kitGeneration
+    /// Puts an audio file on a channel (copied into Samples before publication).
+    func importSample(_ url: URL, toPad pad: Int) { loadRackSample(url, toPad: pad) }
+
+    private func loadRackSample(_ url: URL, toPad pad: Int, metadata: RackChannel? = nil) {
+        guard state.pads.indices.contains(pad) else { return }
+        let active = rackChannels.first(where: { $0.slot == pad })
+        guard active != nil || !rackWorkspaceIsOpen else { return }
+        let channel = active ?? RackChannel(id: RackChannel.legacyID(slot: pad), slot: pad, role: pad, followsKit: true)
+        let request = UUID()
+        sampleRequests[pad] = request
+        let budget = decodedBudget
         kitQueue.async { [weak self] in
             do {
                 let name = try SampleLoader.copyIntoSamples(url)
-                let buffer = try SampleLoader.load(SampleLoader.urlInSamples(name))
-                DispatchQueue.main.async { [weak self] in
-                    guard let self, self.kitGeneration == generation else { return }
-                    self.state.pads[pad].sampleFile = name
-                    self.stockSampleNames[pad] = nil
-                    if self.kitSamples.count == Pad.count {
-                        var samples = self.kitSamples
-                        samples[pad] = buffer
-                        self.kitSamples = samples
-                        self.republishKit()
-                    } else {
-                        self.rebuildKit()
+                let localURL = SampleLoader.urlInSamples(name)
+                if !channel.usesKitSound {
+                    let bytes = try KnockController.decodedBytes(at: localURL)
+                    guard budget.reserve(request: request, channel: channel.id, bytes: bytes) else {
+                        throw RackSampleError.memoryBudget
                     }
-                    self.readout = Readout(title: "PAD \(pad + 1)", value: (name as NSString).deletingPathExtension.uppercased(), time: Date())
+                }
+                let buffer = try SampleLoader.load(localURL)
+                DispatchQueue.main.async { [weak self] in
+                    defer { budget.cancel(request) }
+                    guard let self, self.sampleRequests[pad] == request else { return }
+                    let index = self.state.rackChannels?.firstIndex(where: { $0.slot == pad && $0.id == channel.id })
+                    // A home-pad import may finish with no rack row. It must never overwrite a
+                    // newly dropped row that claimed the same slot while decoding was in flight.
+                    guard active != nil ? index != nil : !self.rackChannels.contains(where: { $0.slot == pad }) else { return }
+                    self.sampleRequests[pad] = nil
+                    self.state.pads[pad].sampleFile = name
+                    if let index, let metadata { self.state.rackChannels![index] = metadata }
+                    else if let index {
+                        self.state.rackChannels![index].name = (name as NSString).deletingPathExtension
+                        self.state.rackChannels![index].libraryID = nil
+                        self.state.rackChannels![index].stockFileName = nil
+                        self.state.rackChannels![index].sourceBassHz = nil
+                    }
+                    self.stockSampleNames[pad] = nil
+                    self.loadedSources[pad] = "file:" + name
+                    if self.kitSamples.count != RackLimits.maxChannels {
+                        self.kitSamples = Array(repeating: Self.silentSample, count: RackLimits.maxChannels)
+                    }
+                    self.kitSamples[pad] = buffer
+                    self.synchronizeDecodedBudget()
+                    if self.loadingKit { self.rebuildKit() }
+                    else { self.republishKit() }
+                    self.readout = Readout(title: "CHANNEL \(pad + 1)", value: self.channelName(pad).uppercased(), time: Date())
                     self.scheduleSave()
                 }
             } catch {
-                DispatchQueue.main.async { [weak self] in self?.notice = error.localizedDescription }
+                DispatchQueue.main.async { [weak self] in
+                    defer { budget.cancel(request) }
+                    guard let self, self.sampleRequests[pad] == request else { return }
+                    self.sampleRequests[pad] = nil
+                    if self.state.pads[pad].sampleFile == nil,
+                       let index = self.state.rackChannels?.firstIndex(where: { $0.slot == pad && $0.id == channel.id }),
+                       !channel.usesKitSound {
+                        self.state.rackChannels![index].name = "LOAD FAILED · " + (metadata?.name ?? channel.name ?? url.lastPathComponent)
+                    }
+                    self.notice = error.localizedDescription
+                }
             }
         }
     }
 
     func revertPad(_ pad: Int) {
-        guard pad >= 0 && pad < Pad.count else { return }
+        guard state.pads.indices.contains(pad) else { return }
+        let index = state.rackChannels?.firstIndex(where: { $0.slot == pad })
+        guard index != nil || !rackWorkspaceIsOpen else { return }
+        sampleRequests[pad] = nil
         state.pads[pad] = PadSettings()
+        if let index {
+            state.rackChannels![index].name = nil
+            state.rackChannels![index].libraryID = nil
+            state.rackChannels![index].stockFileName = nil
+            state.rackChannels![index].sourceBassHz = nil
+        }
         rebuildKit()
         scheduleSave()
     }
 
     func padName(_ pad: Int) -> String {
-        guard (0..<Pad.count).contains(pad) else { return "" }
+        guard state.pads.indices.contains(pad) else { return "EMPTY" }
+        let channel = rackChannels.first(where: { $0.slot == pad })
+        if let name = channel?.name, !name.isEmpty { return name }
         if let f = state.pads[pad].sampleFile { return (f as NSString).deletingPathExtension }
         if let name = stockSampleNames[pad] { return name }
-        return kitDefinition.pads[pad].label
-    }
-
-    // MARK: New channel rack (the original instrument faceplate is unchanged)
-
-    var workspaceChannels: [WorkspaceChannel] { state.workspaceChannels ?? [] }
-
-    func ensureWorkspace(loop: Int) {
-        guard state.workspaceChannels == nil else { return }
-        state.workspaceChannels = []
-        // A new rack starts blank instead of silently playing all generated kit
-        // channels. Existing explicitly edited loops are never discarded.
-        if loops.indices.contains(loop) && state.editedLoops[loop] == nil {
-            var blank = loops[loop]
-            blank.events = []
-            setLoop(loop, blank)
-        }
-        scheduleSave()
-    }
-
-    @discardableResult
-    func addWorkspaceChannel(_ sound: LibrarySound, loop: Int) -> WorkspaceChannel? {
-        ensureWorkspace(loop: loop)
-        let occupied = Set(workspaceChannels.map(\.pad))
-        guard let pad = (0..<Pad.count).first(where: { !occupied.contains($0) }) else {
-            notice = "Only 12 channels fit in the rack."
-            return nil
-        }
-        let row = WorkspaceChannel(id: UUID(), pad: pad, soundID: sound.id,
-                                   name: sound.name, category: sound.type.rawValue)
-        // A new track must start with no ghost steps from an older kit/pattern.
-        if loops.indices.contains(loop) {
-            var cleared = loops[loop]
-            cleared.events.removeAll { Int($0.pad) == pad }
-            setLoop(loop, cleared)
-        }
-        state.workspaceChannels?.append(row)
-        pushPadMask()
-        // Reuse the off-audio-thread sample loader; every drop gets its own pad.
-        importSample(sound.url, toPad: pad)
-        scheduleSave()
-        return row
-    }
-
-    func removeWorkspaceChannel(_ id: UUID, loop: Int) {
-        guard let row = workspaceChannels.first(where: { $0.id == id }) else { return }
-        state.workspaceChannels?.removeAll { $0.id == id }
-        pushPadMask()
-        // Track deletion removes its notes across every pattern, not only this
-        // page. Reused audio slots cannot accidentally inherit hidden old steps.
-        for index in loops.indices {
-            let data = loops[index]
-            guard data.events.contains(where: { Int($0.pad) == row.pad }) else { continue }
-            var edited = data
-            edited.events.removeAll { Int($0.pad) == row.pad }
-            setLoop(index, edited)
-        }
-        scheduleSave()
-    }
-
-    /// Make genre-aware steps by sound category, not by the slot number chosen
-    /// when a sound was dropped into the rack.
-    func generateWorkspace(loop: Int) {
-        guard loops.indices.contains(loop) else { return }
-        let style = PatternRandomizer.style(for: state.presetName)
-        for row in workspaceChannels {
-            let sourcePad: Int
-            switch SoundType(rawValue: row.category) {
-            case .kick: sourcePad = 0
-            case .snare: sourcePad = 1
-            case .clap: sourcePad = 2
-            case .rim: sourcePad = 3
-            case .hat: sourcePad = 4
-            case .open: sourcePad = 5
-            case .bass: sourcePad = 6
-            case .perc: sourcePad = 7
-            case .tom: sourcePad = 9
-            case .cymbal: sourcePad = 11
-            default: sourcePad = 8
-            }
-            let current = loops[loop]
-            let made = PatternRandomizer.randomChannel(current, pad: sourcePad,
-                style: style, seed: UInt32.random(in: 2...UInt32.max))
-            var changed = current
-            changed.events.removeAll { Int($0.pad) == row.pad }
-            for event in made.events where Int(event.pad) == sourcePad {
-                var e = event
-                e.pad = Int8(row.pad)
-                changed.events.append(e)
-            }
-            changed.sort()
-            setLoop(loop, changed)
-        }
-    }
-
-    func toggleWorkspaceStep(loop: Int, pad: Int, step: Int, bar: Int = 0) {
-        guard workspaceChannels.contains(where: { $0.pad == pad }),
-              loops.indices.contains(loop), (0..<16).contains(step) else { return }
-        let tick = (Int32(bar) * 16 + Int32(step)) * PatternData.stepTicks
-        setLoop(loop, PatternEdit.toggle(loops[loop], pad: pad, tick: tick,
-                                         cell: PatternData.stepTicks))
-    }
-
-    func toggleWorkspacePianoNote(loop: Int, pad: Int, step: Int, bar: Int,
-                                  semitones: Int) {
-        guard workspaceChannels.contains(where: { $0.pad == pad }),
-              loops.indices.contains(loop), (0..<16).contains(step),
-              (-24...24).contains(semitones) else { return }
-        let tick = (Int32(bar) * 16 + Int32(step)) * PatternData.stepTicks
-        var data = loops[loop]
-        let before = data.events.count
-        data.events.removeAll { Int($0.pad) == pad && $0.tick == tick &&
-            Int($0.semis.rounded()) == semitones }
-        if data.events.count == before {
-            data.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: 0.85,
-                                          semis: Float(semitones),
-                                          length: pad == Pad.bass808.rawValue ? PatternData.stepTicks : 0))
-        }
-        data.sort()
-        setLoop(loop, data)
+        guard let channel else { return kitDefinition.pads[pad].label }
+        return channel.usesKitSound ? kitDefinition.pads[channel.role].label : "EMPTY"
     }
 
     // MARK: Loops
@@ -737,10 +967,28 @@ final class KnockController: ObservableObject {
     /// The groove family the patterns come from (PRESETS set it; KITS don't).
     var patternStyle: GrooveStyle { state.patternStyle ?? kitDefinition.style }
 
+    /// Factory patterns describe instrument roles; the rack is free to put those instruments
+    /// in any slot (and to use the same role more than once). Edited patterns already contain
+    /// stable audio slots and are applied after this mapping.
+    private func mappingPatternToRack(_ source: PatternData) -> PatternData {
+        let channels = rackChannels
+        if channels.count == Pad.count && channels.allSatisfy({ $0.slot == $0.role }) { return source }
+        var mapped = source
+        mapped.events = channels.flatMap { channel in
+            source.events.filter { Int($0.pad) == channel.role }.map { event in
+                var event = event
+                event.pad = Int8(channel.slot)
+                return event
+            }
+        }
+        mapped.sort()
+        return mapped
+    }
+
     func rebuildLoops() {
         let generated = state.basePattern.map { GrooveGenerator.loops(fromMain: $0, style: patternStyle, seed: state.grooveSeed) }
             ?? GrooveGenerator.loops(style: patternStyle, seed: state.grooveSeed)
-        var merged = generated
+        var merged = generated.map(mappingPatternToRack)
         for i in 0..<min(merged.count, state.editedLoops.count) {
             if let edit = state.editedLoops[i] { merged[i] = edit }
         }
@@ -757,7 +1005,7 @@ final class KnockController: ObservableObject {
 
     /// Step editor: adds a hit, or removes the ones already in that step.
     func toggleStep(loop: Int, pad: Int, step: Int) {
-        guard loop >= 0 && loop < loops.count else { return }
+        guard loop >= 0 && loop < loops.count, rackChannels.contains(where: { $0.slot == pad }) else { return }
         var p = loops[loop]
         let lo = Int32(step) * PatternData.stepTicks - 6
         let hi = Int32(step) * PatternData.stepTicks + 18
@@ -765,10 +1013,10 @@ final class KnockController: ObservableObject {
         p.events.removeAll { Int($0.pad) == pad && $0.tick >= lo && $0.tick < hi }
         if p.events.count == before {
             let tick = Int32(step) * PatternData.stepTicks
-            if pad == Pad.bass808.rawValue {
+            if channelRole(pad) == Pad.bass808.rawValue {
                 p.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: 0.9, semis: 0, length: PatternData.stepTicks * 2))
             } else {
-                p.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: pad == Pad.hat.rawValue ? 0.7 : 0.9))
+                p.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: channelRole(pad) == Pad.hat.rawValue ? 0.7 : 0.9))
             }
         }
         p.sort()
@@ -785,7 +1033,7 @@ final class KnockController: ObservableObject {
     func regenerateLoop(_ index: Int) {
         let fresh = GrooveGenerator.loops(style: patternStyle, seed: UInt32.random(in: 2...UInt32.max))
         guard index >= 0 && index < fresh.count else { return }
-        setLoop(index, fresh[index])
+        setLoop(index, mappingPatternToRack(fresh[index]))
     }
 
     func useGeneratedLoop(_ index: Int) { setLoop(index, nil) }
@@ -848,9 +1096,16 @@ final class KnockController: ObservableObject {
 
     /// New notes for one channel of one loop; every other channel stays as it is.
     func randomizeChannel(loop: Int, pad: Int) {
-        guard loops.indices.contains(loop) else { return }
+        guard loops.indices.contains(loop), rackChannels.contains(where: { $0.slot == pad }) else { return }
         let style = PatternRandomizer.style(for: state.presetName)
-        setLoop(loop, PatternRandomizer.randomChannel(loops[loop], pad: pad, style: style, seed: UInt32.random(in: 2...UInt32.max)))
+        let role = channelRole(pad)
+        let source = PatternData(name: loops[loop].name, lengthTicks: loops[loop].lengthTicks, events: [])
+        let fresh = PatternRandomizer.randomChannel(source, pad: role, style: style, seed: UInt32.random(in: 2...UInt32.max))
+        var pattern = loops[loop]
+        pattern.events.removeAll { Int($0.pad) == pad }
+        pattern.events += fresh.events.map { event in var event = event; event.pad = Int8(pad); return event }
+        pattern.sort()
+        setLoop(loop, pattern)
     }
 
     func savePreset(as name: String) {
@@ -897,6 +1152,7 @@ final class KnockController: ObservableObject {
     /// keepPlaying: switching presets swaps the pattern under the running transport instead of stopping it.
     func restore(_ s: KnockState, keepPlaying: Bool = false) {
         let s = s.normalized()
+        sampleRequests.removeAll()
         if !keepPlaying { engine.send(KEvent(kind: .allOff)) }
         state = s
         pushAllToEngine()
@@ -927,13 +1183,14 @@ final class KnockController: ObservableObject {
 
     func export(loop: Int, bars: Int, midi: Bool, mix: Bool, stems: Bool,
                 completion: @escaping (Result<Exporter.Output, Error>) -> Void) {
-        guard !loadingKit, kitSamples.count == Pad.count, loop >= 0, loop < loops.count else {
+        guard !loadingKit, kitSamples.count == RackLimits.maxChannels, loop >= 0, loop < loops.count else {
             completion(.failure(NSError(domain: "BreakBoss", code: 1, userInfo: [NSLocalizedDescriptionKey: "The kit is still loading."])))
             return
         }
         let exportRate: Double = 48_000
         let kit = KitBuffers(name: state.kitName, samples: kitSamples, settings: state.pads,
-                             bassHz: kitDefinition.bassHz, renderSampleRate: exportRate)
+                             bassHz: kitDefinition.bassHz, renderSampleRate: exportRate,
+                             roles: kitRoles, channelNames: kitChannelNames)
         let patterns = PatternSet(loops)
         var params = [Float](repeating: 0, count: KParam.count)
         for p in KParam.allCases { params[p.rawValue] = value(p) }

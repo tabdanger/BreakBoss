@@ -52,9 +52,11 @@ enum SampleLoader {
             return url.path.replacingOccurrences(of: folder.standardizedFileURL.path + "/", with: "")
         }
         var dest = folder.appendingPathComponent(url.lastPathComponent)
-        // The same sound again (a library pick, say): reuse the copy that's already there.
+        // Reuse an identical sound only. Different audio can share both filename and size;
+        // Foundation compares file contents on this control-plane import path.
         let size = { (u: URL) in (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? -1 }
-        if FileManager.default.fileExists(atPath: dest.path) && size(dest) == size(url) { return dest.lastPathComponent }
+        if FileManager.default.fileExists(atPath: dest.path), size(dest) == size(url),
+           FileManager.default.contentsEqual(atPath: dest.path, andPath: url.path) { return dest.lastPathComponent }
         var n = 2
         while FileManager.default.fileExists(atPath: dest.path) {
             let base = url.deletingPathExtension().lastPathComponent
@@ -99,10 +101,10 @@ enum WavWriter {
 // MARK: - MIDI files
 
 enum MIDIFile {
-    /// One track, channel 10. Pads are notes 36...47; chromatic 808 notes are 48...84
-    /// (60 = its tuning). MIDI export bounds bass pitches to that chromatic range so they
-    /// cannot be mistaken for drum pads on import; audio rendering keeps the full pitch.
-    static func write(_ pattern: PatternData, tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
+    /// One track. The original pads keep channel 10 notes 36...47 and the chromatic
+    /// 808 range 48...84 (60 = its tuning). Reassigned rows have distinct notes on channel 1.
+    /// Matching BBCR metadata retains per-hit tuning, duration, glide, and rack identity.
+    static func write(_ pattern: PatternData, tempo: Double, bounce: Float, bars: Int, to url: URL, roles: [Int]? = nil) throws {
         let ppq = Int(PatternData.ppq)
         var events: [(tick: Int, bytes: [UInt8])] = []
         let loopLen = max(1, Int(pattern.lengthTicks))
@@ -110,17 +112,28 @@ enum MIDIFile {
         let total = bars * ppq * 4
         for r in 0..<repeats {
             for e in pattern.events {
-                var t = r * loopLen + Int(e.tick) + Int(swing(tick: Int(e.tick), pad: Int(e.pad), bounce: bounce).rounded())
+                let slot = Int(e.pad)
+                guard (0..<RackLimits.maxChannels).contains(slot), e.velocity.isFinite, e.semis.isFinite else { continue }
+                let role = roles.flatMap { slot < $0.count ? $0[slot] : nil } ?? slot
+                var t = r * loopLen + Int(e.tick) + Int(swing(tick: Int(e.tick), pad: role, bounce: bounce).rounded())
                 t = max(0, t)
                 guard t < total else { continue }
-                let isBass = Int(e.pad) == Pad.bass808.rawValue
+                let isBass = role == Pad.bass808.rawValue
                 let bassNote = (Pad.bassRootNote + Int(e.semis.rounded())).clamped(Pad.bassNoteRange.lowerBound, Pad.bassNoteRange.upperBound)
-                let note = isBass ? UInt8(bassNote) : UInt8(Pad(rawValue: Int(e.pad))?.midiNote ?? 36)
-                let vel = UInt8(clamping: max(1, Int((e.velocity * 127).rounded())))
+                // Keep the established channel-10 map for unchanged factory roles. Added
+                // or reassigned rows use their own slot note on channel 1, preventing two
+                // independent 808 rows from collapsing onto the same channel/pitch route.
+                // BBCR metadata never changes unrelated imported channel-1 note mappings.
+                let legacyRoute = slot < Pad.count && role == slot
+                let channel: UInt8 = legacyRoute ? 9 : 0
+                let note = legacyRoute ? (isBass ? UInt8(bassNote) : UInt8(Pad(rawValue: slot)?.midiNote ?? 36)) : UInt8(slot)
+                let vel = UInt8(clamping: max(1, Int((e.velocity.clamped(0, 1) * 127).rounded())))
                 var len = isBass ? Int(e.length) : 12
                 if len <= 0 { len = ppq }
-                events.append((t, [0x99, note, vel]))
-                events.append((min(t + len, total), [0x89, note, 0]))
+                let metadata: [UInt8] = Array("BBCR".utf8) + [1, channel, note, UInt8(slot)] +
+                    be32(e.semis.bitPattern) + be32(UInt32(max(0, e.length))) + [e.glide ? 1 : 0]
+                events.append((t, [0xFF, 0x7F] + varLen(metadata.count) + metadata + [0] + [0x90 | channel, note, vel]))
+                events.append((min(t + len, total), [0x80 | channel, note, 0]))
             }
         }
         events.sort { $0.tick == $1.tick ? $0.bytes[0] < $1.bytes[0] : $0.tick < $1.tick }  // note-offs first
@@ -143,7 +156,8 @@ enum MIDIFile {
         try Data(data).write(to: url, options: .atomic)
     }
 
-    /// Reads a MIDI file into a loop. Notes 36...47 land on the pads, 48...84 on the 808.
+    /// Reads standard notes 36...47 as pads and 48...84 as the 808. BBCR metadata is
+    /// applied only to matching actual note-ons, so DAW note edits remain authoritative.
     static func read(_ url: URL) -> PatternData? {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
@@ -155,8 +169,12 @@ enum MIDIFile {
         let division = Int(bytes[12]) << 8 | Int(bytes[13])
         guard division > 0 && division < 0x8000 else { return nil }
         var pos = 8 + (Int(bytes[4]) << 24 | Int(bytes[5]) << 16 | Int(bytes[6]) << 8 | Int(bytes[7]))
-        var ons: [(tick: Int, note: Int, vel: Int)] = []
-        var offs: [(tick: Int, note: Int)] = []
+        var ons: [(tick: Int, channel: Int, note: Int, vel: Int)] = []
+        var offs: [(tick: Int, channel: Int, note: Int)] = []
+        var rackNotes: [String: GrooveEvent] = [:]
+        // A DAW can move notes without moving sequencer-specific metadata. Keep its
+        // declared routes, while per-hit pitch/glide still require an exact note match.
+        var rackRoutes: [Int: (pad: Int8, gated: Bool)] = [:]
         var trackEndTick = 0
         while pos + 8 <= bytes.count {
             let id = String(bytes: bytes[pos..<pos + 4], encoding: .ascii)
@@ -180,6 +198,7 @@ enum MIDIFile {
                     if st & 0x80 != 0 { p += 1; if st < 0xF0 { running = st } } else { st = running }
                     if st == 0xFF {
                         guard p + 1 < end else { break }
+                        let metaType = bytes[p]
                         p += 1
                         var l = 0
                         var lengthBytes = 0
@@ -189,6 +208,24 @@ enum MIDIFile {
                             if b & 0x80 == 0 { break }
                         }
                         guard l <= end - p else { return nil }
+                        if metaType == 0x7F, l == 17,
+                           Array(bytes[p..<p + 4]) == Array("BBCR".utf8), bytes[p + 4] == 1 {
+                            let channel = Int(bytes[p + 5]), note = Int(bytes[p + 6]), slot = Int(bytes[p + 7])
+                            func word(_ start: Int) -> UInt32 {
+                                UInt32(bytes[start]) << 24 | UInt32(bytes[start + 1]) << 16 | UInt32(bytes[start + 2]) << 8 | UInt32(bytes[start + 3])
+                            }
+                            let semis = Float(bitPattern: word(p + 8)), length = word(p + 12)
+                            guard rackNotes.count < 32768 else { return nil }
+                            if (0..<RackLimits.maxChannels).contains(slot), channel < 16, note < 128,
+                               semis.isFinite, abs(semis) <= 48, length <= UInt32(PatternEdit.barTicks * Int32(PatternEdit.maxBars)) {
+                                rackNotes["\(tick):\(channel):\(note)"] = GrooveEvent(tick: 0, pad: Int8(slot), velocity: 1,
+                                    semis: semis, length: Int32(length), glide: bytes[p + 16] == 1)
+                                if channel == 0 && note == slot {
+                                    let key = channel * 128 + note
+                                    rackRoutes[key] = (Int8(slot), length > 0 || rackRoutes[key]?.gated == true)
+                                }
+                            }
+                        }
                         p += l
                     } else if st == 0xF0 || st == 0xF7 {
                         var l = 0
@@ -208,8 +245,8 @@ enum MIDIFile {
                         let d1 = Int(bytes[p]), d2 = size > 1 ? Int(bytes[p + 1]) : 0
                         p += size
                         guard ons.count + offs.count < 32768, d1 < 128, d2 < 128 else { return nil }
-                        if kind == 0x90 && d2 > 0 { ons.append((tick, d1, d2)) }
-                        else if kind == 0x80 || kind == 0x90 { offs.append((tick, d1)) }
+                        if kind == 0x90 && d2 > 0 { ons.append((tick, Int(st & 0x0F), d1, d2)) }
+                        else if kind == 0x80 || kind == 0x90 { offs.append((tick, Int(st & 0x0F), d1)) }
                     }
                 }
                 // Keep the declared timeline, including note releases and a silent tail
@@ -224,12 +261,25 @@ enum MIDIFile {
         var lastTick = 0
         for on in ons {
             let t = Int((Double(on.tick) * scale).rounded())
-            guard t >= 0 && t < 8 * Int(PatternData.ppq) * 4 else { continue }
+            guard t >= 0 && t < PatternEdit.maxBars * Int(PatternData.ppq) * 4 else { continue }
             lastTick = max(lastTick, t)
-            if let pad = Pad.index(forMIDINote: on.note) {
+            if var event = rackNotes["\(on.tick):\(on.channel):\(on.note)"] {
+                event.tick = Int32(t)
+                event.velocity = Float(on.vel) / 127
+                if event.length > 0 {
+                    let off = offs.first { $0.channel == on.channel && $0.note == on.note && $0.tick > on.tick }
+                    if let off { event.length = Int32(Int((Double(off.tick - on.tick) * scale).rounded()).clamped(0, Int(PatternEdit.barTicks) * PatternEdit.maxBars)) }
+                }
+                events.append(event)
+            } else if let route = rackRoutes[on.channel * 128 + on.note] {
+                let off = offs.first { $0.channel == on.channel && $0.note == on.note && $0.tick > on.tick }
+                let length = route.gated ? (off.map { Int((Double($0.tick - on.tick) * scale).rounded()) } ?? Int(PatternData.ppq)) : 0
+                events.append(GrooveEvent(tick: Int32(t), pad: route.pad, velocity: Float(on.vel) / 127,
+                                          length: Int32(length.clamped(0, Int(PatternEdit.barTicks) * PatternEdit.maxBars))))
+            } else if let pad = Pad.index(forMIDINote: on.note) {
                 events.append(GrooveEvent(tick: Int32(t), pad: Int8(pad), velocity: Float(on.vel) / 127))
             } else if Pad.bassNoteRange.contains(on.note) {
-                let off = offs.first { $0.note == on.note && $0.tick > on.tick }
+                let off = offs.first { $0.channel == on.channel && $0.note == on.note && $0.tick > on.tick }
                 let len = off.map { Int((Double($0.tick - on.tick) * scale).rounded()) } ?? Int(PatternData.ppq)
                 events.append(GrooveEvent(tick: Int32(t), pad: Int8(Pad.bass808.rawValue), velocity: Float(on.vel) / 127,
                                           semis: Float(on.note - Pad.bassRootNote), length: Int32(len.clamped(0, Int(PatternEdit.barTicks) * PatternEdit.maxBars))))

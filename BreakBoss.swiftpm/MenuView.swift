@@ -39,7 +39,7 @@ struct MenuView: View {
                 } header: {
                     Text("Modern faceplate")
                 } footer: {
-                    Text("Platinum is Modern's alternate face: same sound and controls, brushed-silver plate. Free while we test.")
+                    Text("Choose the instrument faceplate. The step sequencer has its own brushed-silver channel rack.")
                 }
                 Section("Performance") {
                     Button("Open the 12 performance pads") { performance = true }
@@ -48,9 +48,9 @@ struct MenuView: View {
                     Button("All notes and loops off") { controller.panic() }
                 }
                 Section {
-                    ForEach(0..<Pad.count, id: \.self) { pad in padRow(pad) }
+                    ForEach(controller.rackChannels) { channel in padRow(channel.slot) }
                 } header: {
-                    Text("Your samples on the pads")
+                    Text("Channel sounds")
                 } footer: {
                     Text("Tap Import to put an audio file (WAV, AIFF, MP3, M4A, FLAC) on a pad. You can also drag a file from Files straight onto a pad, or hold a pad for its editor. Imported files are copied to "
                          + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreakBoss › Samples on this device."))
@@ -121,7 +121,7 @@ struct MenuView: View {
                     guide("KNOBS", "Drag up or right to turn up. Double-tap to reset.")
                     guide("BPM", "Drag up or down on the display. Double-tap for the kit's tempo. With TEMPO SYNC on, the DAW or MIDI clock sets it.")
                     guide("HOLD A PAD", "ONE-SHOT: pad editor (level, pan, tune, decay, filter, reverse, your sample). LOOP: step editor for that loop, or drop in a MIDI file.")
-                    guide("DRUM ROLL", "The piano-keys button opens the drum roll for the pattern that's playing. DRAW: tap to add, tap a note to delete, drag a note to move, drag along a row to paint, drag on the 808 row for a long note. SELECT: box notes, then move, DUPLICATE or CLEAR. ERASE: wipe over notes. The lane underneath sets velocity or pitch. Tap a channel name to load or record a sample onto it, or open its piano roll. M / S mute and solo. RECORD writes what you play on the ▶ buttons or a MIDI controller into the pattern. Space bar plays and stops.")
+                    guide("CHANNEL RACK", "Drag a sound from the library into the rack to add an independent channel, or use its + button. DRAW paints steps, SELECT moves or duplicates notes, and ERASE wipes them. The lane below edits velocity or pitch. Expand a channel for sound settings, mute/solo, piano roll, recording and MIDI routing. RECORD captures pad and MIDI playing. Space bar plays and stops.")
                     guide("EXPORT", "The arrow button renders MIDI, a stereo mix and stems you can drag into a DAW or share.")
                 }
 
@@ -157,7 +157,7 @@ struct MenuView: View {
             Button("Save") { controller.saveKit(as: kitName) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Saves the 12 pads (your samples and pad settings) as a kit.")
+            Text("Saves the current channel sounds and settings as a kit.")
         }
     }
 
@@ -199,7 +199,7 @@ struct MenuView: View {
                 .foregroundColor(own ? accent : .secondary)
             VStack(alignment: .leading, spacing: 1) {
                 Text(controller.padName(pad).uppercased()).font(.system(.body, design: .monospaced)).lineLimit(1)
-                Text(own ? "YOUR SAMPLE" : Pad(rawValue: pad)?.label ?? "")
+                Text(own ? "YOUR SAMPLE" : Pad(rawValue: controller.channelRole(pad))?.label ?? "CHANNEL")
                     .font(.caption).foregroundColor(own ? accent : .secondary)
             }
         }
@@ -207,7 +207,7 @@ struct MenuView: View {
 
     private func padActions(_ pad: Int, own: Bool) -> some View {
         HStack(spacing: 12) {
-            Button { controller.padDown(pad, velocity: 1) } label: { Image(systemName: "play.fill") }
+            Button { controller.auditionPad(pad, velocity: 1) } label: { Image(systemName: "play.fill") }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Play pad \(pad + 1)")
                 .frame(minWidth: 44, minHeight: 44)

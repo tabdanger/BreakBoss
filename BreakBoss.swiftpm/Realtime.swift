@@ -69,7 +69,7 @@ struct KEvent {
     enum Kind: UInt8 {
         case midiNoteOn   // a: channel * 128 + note
         case loopGateOn, loopGateOff // a: channel/note token, or 2048 + touch pad
-        case pad          // a: pad 0...11, value: velocity 0...1
+        case pad          // a: audio channel 0...63, value: velocity 0...1, semis: pitch
         case bass         // a: semitones from the 808 tuning, value: velocity
         case noteOff      // a: MIDI note (808 notes release)
         case loopPad      // a: loop 0...11 (-1 = stop loops)
@@ -85,10 +85,16 @@ struct KEvent {
         case metronome    // a: 1 = click on every beat while playing, 0 = off
         case midiOut      // a: pad 0...11, value: channel (0...15) * 128 + note, or -1 = channel off;
                           // a: -1 = MIDI out on (value 1) / off (value 0)
+        case channelOff   // a: audio channel to release without stopping transport
     }
     var kind: Kind
     var a: Int32 = 0
     var value: Double = 0
+    /// Full rack mute/solo mask; nil preserves older a-based physical-pad messages.
+    var mask: UInt64? = nil
+    var semis: Float = 0
+    /// Assigned by KnockEngine.send for a channel retirement; never read by the UI.
+    var recordGeneration: UInt32 = 0
 }
 
 /// Many producers (main thread, MIDI thread), one consumer (the audio thread).
@@ -193,7 +199,7 @@ final class SharedControls {
 
 struct MeterSnapshot {
     var status = [Double](repeating: 0, count: 8)
-    var padHits = [UInt32](repeating: 0, count: Pad.count)
+    var padHits = [UInt32](repeating: 0, count: RackLimits.maxChannels)
     var scope = [Float](repeating: 0, count: MasterBus.scopeSize)
     var scopeWrite = 0
 }
@@ -202,21 +208,21 @@ struct MeterSnapshot {
 final class SharedMeters {
     private let lock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
     private let status = UnsafeMutablePointer<Double>.allocate(capacity: 8)
-    private let hits = UnsafeMutablePointer<UInt32>.allocate(capacity: Pad.count)
+    private let hits = UnsafeMutablePointer<UInt32>.allocate(capacity: RackLimits.maxChannels)
     private let scope = UnsafeMutablePointer<Float>.allocate(capacity: MasterBus.scopeSize)
     private var scopeWrite = 0
     init() {
         lock.initialize(to: os_unfair_lock())
         status.initialize(repeating: 0, count: 8)
         status[1] = -1; status[2] = -2
-        hits.initialize(repeating: 0, count: Pad.count)
+        hits.initialize(repeating: 0, count: RackLimits.maxChannels)
         scope.initialize(repeating: 0, count: MasterBus.scopeSize)
     }
     deinit { status.deallocate(); hits.deallocate(); scope.deallocate(); lock.deinitialize(count: 1); lock.deallocate() }
     func publish(status source: UnsafeMutablePointer<Double>, hits sourceHits: UnsafeMutablePointer<UInt32>, master: MasterBus) {
         guard os_unfair_lock_trylock(lock) else { return }
         status.update(from: source, count: 8)
-        hits.update(from: sourceHits, count: Pad.count)
+        hits.update(from: sourceHits, count: RackLimits.maxChannels)
         scope.update(from: master.scope, count: MasterBus.scopeSize)
         scopeWrite = master.scopeWrite
         os_unfair_lock_unlock(lock)
@@ -235,7 +241,7 @@ final class SharedMeters {
         os_unfair_lock_lock(lock)
         defer { os_unfair_lock_unlock(lock) }
         return MeterSnapshot(status: Array(UnsafeBufferPointer(start: status, count: 8)),
-                             padHits: Array(UnsafeBufferPointer(start: hits, count: Pad.count)),
+                             padHits: Array(UnsafeBufferPointer(start: hits, count: RackLimits.maxChannels)),
                              scope: Array(UnsafeBufferPointer(start: scope, count: MasterBus.scopeSize)), scopeWrite: scopeWrite)
     }
 }

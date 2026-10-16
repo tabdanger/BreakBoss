@@ -219,11 +219,13 @@ enum GrooveGenerator {
         p.lengthTicks = max(p.lengthTicks, PatternData.ppq * 4)
         let end = p.lengthTicks
         p.events = p.events.compactMap { original in
-            guard original.pad >= 0, Int(original.pad) < Pad.count, original.velocity.isFinite, original.semis.isFinite else { return nil }
+            guard original.pad >= 0, Int(original.pad) < RackLimits.maxChannels, original.velocity.isFinite, original.semis.isFinite else { return nil }
             var e = original
             e.tick = min(max(e.tick, 0), end - 1)
             e.velocity = e.velocity.clamped(0.05, 1)
-            if e.pad == Int8(Pad.bass808.rawValue) { e.length = min(max(e.length, 12), end - e.tick) } else { e.length = 0; e.glide = false }
+            // An audio slot need not have its original physical-pad role. Preserve authored
+            // gates and slides; KitBuffers.roles decides which channels use them at playback.
+            e.length = min(max(e.length, 0), end - e.tick)
             return e
         }
         p.sort()
@@ -269,18 +271,13 @@ enum GrooveGenerator {
         let end = max(p.lengthTicks, PatternData.ppq * 4)
         p.lengthTicks = end
         p.events = p.events.compactMap { original in
-            guard original.pad >= 0, Int(original.pad) < Pad.count,
+            guard original.pad >= 0, Int(original.pad) < RackLimits.maxChannels,
                   original.velocity.isFinite, original.semis.isFinite else { return nil }
             var e = original
             e.tick = min(max(e.tick, 0), end - 1)
             e.velocity = e.velocity.clamped(0.05, 1)
             e.semis = e.semis.clamped(-12, 24)
-            if e.pad == Int8(Pad.bass808.rawValue) {
-                e.length = min(max(e.length, 12), end - e.tick)
-            } else {
-                e.length = 0
-                e.glide = false
-            }
+            e.length = min(max(e.length, 0), end - e.tick)
             return e
         }
         p.sort()

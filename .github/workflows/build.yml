@@ -4,13 +4,14 @@
 # 1. A Release compile of the Swift Playgrounds package, exactly as on the iPad.
 # 2. The same app plus the AUv3 plug-in, built from the Xcode project (xcode/).
 # 3. An optimized Release build runs on iPhone and iPad simulators. Each must pass the actual app self-test
-#    and draw the faceplates. Logs and screenshots are retained as downloadable artifacts.
+#    and draw the sampler plus the channel rack in both orientations. Logs and screenshots
+#    are retained as downloadable artifacts. This workflow never signs or uploads an app.
 # Signing and uploading to App Store Connect / TestFlight are in upload.yml.
 name: Build BreakBoss
 
 on:
   push:
-    branches: [main, codex/breakboss-workspace-rebuild]
+    branches: [main, codex/channel-rack-rebuild]
     paths:
       - "BreakBoss.swiftpm/**"
       - "AUv3/**"
@@ -105,13 +106,13 @@ jobs:
           python3 "$GITHUB_WORKSPACE/.github/scripts/annotate.py" "$RUNNER_TEMP/build-sim.log" "Simulator build"
           grep -q "BUILD SUCCEEDED" "$RUNNER_TEMP/build-sim.log"
 
-      - name: Run the self-test and draw the faceplates on iPhone and iPad
+      - name: Run the self-test and render the sampler and channel rack on iPhone and iPad
         run: |
           python3 .github/scripts/simulate.py \
             --products "$RUNNER_TEMP/dd-sim/Build/Products" \
             --output "$RUNNER_TEMP" --timeout 240
 
-      - name: Keep the iPhone and iPad faceplate screenshots
+      - name: Keep the iPhone and iPad sampler and channel rack screenshots
         if: always()
         uses: actions/upload-artifact@v5
         with:

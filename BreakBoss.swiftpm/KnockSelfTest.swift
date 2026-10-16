@@ -37,7 +37,10 @@ enum KnockSelfTest {
         phase("checkMIDIPadMap", checkMIDIPadMap)
         phase("checkRecordingTrim", checkRecordingTrim)
         phase("checkDrumRoll", checkDrumRoll)
-        phase("checkWorkspaceChannels", checkWorkspaceChannels)
+        phase("checkRackStateAndEditing", checkRackStateAndEditing)
+        phase("checkRackControllerImports", checkRackControllerImports)
+        phase("checkRackFileIdentity", checkRackFileIdentity)
+        phase("checkRackAudioAndMIDI", checkRackAudioAndMIDI)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -934,46 +937,6 @@ enum KnockSelfTest {
         #endif
     }
 
-    static func checkWorkspaceChannels() {
-        let sharedSound = "stock:bb-test-kick.wav"
-        let first = WorkspaceChannel(id: UUID(), pad: 0, soundID: sharedSound,
-                                     name: "KICK A", category: SoundType.kick.rawValue)
-        let second = WorkspaceChannel(id: UUID(), pad: 1, soundID: sharedSound,
-                                      name: "KICK B", category: SoundType.kick.rawValue)
-        var state = KnockState()
-        state.workspaceChannels = [first, second]
-        let normalized = state.normalized()
-        check(normalized.workspaceChannels?.count == 2 &&
-              normalized.workspaceChannels?[0].soundID == normalized.workspaceChannels?[1].soundID &&
-              normalized.workspaceChannels?[0].pad != normalized.workspaceChannels?[1].pad,
-              "rack: the same library sound may occupy independent engine slots")
-        let restored = (try? JSONEncoder().encode(state)).flatMap {
-            try? JSONDecoder().decode(KnockState.self, from: $0)
-        }
-        check(restored?.workspaceChannels == state.workspaceChannels,
-              "rack: duplicate sounds and track identity survive project saving")
-        state.workspaceChannels?.append(WorkspaceChannel(id: UUID(), pad: 1, soundID: sharedSound,
-                                                          name: "DUPLICATE PAD", category: SoundType.kick.rawValue))
-        check(state.normalized().workspaceChannels?.count == 2,
-              "rack: invalid duplicate audio slots are removed on migration")
-        for p in 2..<Pad.count {
-            state.workspaceChannels?.append(WorkspaceChannel(id: UUID(), pad: p,
-                soundID: "stock:sample-\(p)", name: "SAMPLE \(p)", category: SoundType.perc.rawValue))
-        }
-        check(state.normalized().workspaceChannels?.count == Pad.count,
-              "rack: up to 12 independent sound channels")
-        check(KnockState().normalized().workspaceChannels == nil,
-              "rack: old sessions open without losing their faceplate or saved pads")
-        var pattern = PatternData(name: "RACK", lengthTicks: PatternEdit.barTicks,
-                                  events: [])
-        pattern = PatternEdit.toggle(pattern, pad: first.pad, tick: 0, cell: PatternData.stepTicks)
-        check(pattern.events.count == 1 && Int(pattern.events[0].pad) == first.pad,
-              "rack: first channel has its own sequenced steps")
-        pattern = PatternEdit.toggle(pattern, pad: second.pad, tick: 0, cell: PatternData.stepTicks)
-        check(pattern.events.count == 2 && Set(pattern.events.map(\.pad)).count == 2,
-              "rack: identical sounds never share their MIDI events")
-    }
-
     static func checkDrumRoll() {
         let bar = PatternEdit.barTicks, step = PatternData.stepTicks
         // Note operations.
@@ -1137,7 +1100,10 @@ enum KnockSelfTest {
         old.editedLoops = Array(repeating: nil, count: 16)
         old.editedLoops[2] = PatternData(name: "KEEP", lengthTicks: 384, events: [])
         let new = old.normalized()
-        check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
+        check(new.pads.count == RackLimits.maxChannels && new.pads[0].tune == 7,
+              "16-pad saves retain their settings inside bounded rack storage")
+        check(Array(new.pads.prefix(Pad.count)) == Array(old.pads.prefix(Pad.count)),
+              "rack migration leaves all original twelve pad settings unchanged")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
         check(KitLibrary.core.count == 24 && KitLibrary.textures.count == 8 && KitLibrary.legacy.count == 10 && KitLibrary.genres.count == 56 && KitLibrary.factory.count == 98,
               "98 factory kits: 24 core, eight textures, ten originals and 56 genre and artist-style kits")
@@ -1200,7 +1166,7 @@ enum KnockSelfTest {
         source.bpm = 101
         let changedKit = source.selectingKit(KitLibrary.west90s)
         var expectedPads = source.pads
-        for i in expectedPads.indices { expectedPads[i].sampleFile = nil }
+        for i in 0..<Pad.count { expectedPads[i].sampleFile = nil }
         check(changedKit.kitID == KitLibrary.west90s.id && changedKit.kitName == KitLibrary.west90s.name &&
               changedKit.userKit == nil, "switching kits replaces the drum sounds")
         check(changedKit.values == source.values && changedKit.mode == source.mode &&
@@ -1244,6 +1210,427 @@ enum KnockSelfTest {
             check(changed.events.filter { Int($0.pad) != Pad.hat.rawValue } == base.events.filter { Int($0.pad) != Pad.hat.rawValue },
                   "channel dice changes only that channel")
         }
+    }
+
+    /// Row position never becomes an instrument address. Old projects, bounded allocation,
+    /// role-aware note edits and real MIDI files exercise the same twelve-slot rack.
+    static func checkRackStateAndEditing() {
+        check(Pad.count == 12 && RackLimits.maxChannels == 12, "rack capacity and physical performance mapping remain twelve")
+        var legacy = KnockState()
+        legacy.version = 2; legacy.rackChannels = nil
+        legacy.pads = Array(repeating: PadSettings(), count: Pad.count)
+        legacy.pads[0].tune = 7; legacy.pads[11].pan = -0.35
+        legacy.editedLoops[0] = PatternData(name: "OLD PROJECT", lengthTicks: 384,
+                                           events: [GrooveEvent(tick: 24, pad: 11, velocity: 0.7)])
+        do {
+            let data = try JSONEncoder().encode(legacy)
+            var object = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+            object.removeValue(forKey: "rackChannels")
+            let migrated = try JSONDecoder().decode(KnockState.self, from: JSONSerialization.data(withJSONObject: object)).normalized()
+            let channels = migrated.rackChannels ?? []
+            check(migrated.pads == legacy.pads, "legacy JSON retains the original twelve settings without enlarging the rack")
+            check(channels.map { $0.slot } == Array(0..<12) && channels.map { $0.id } == RackChannel.legacy.map { $0.id },
+                  "legacy JSON receives deterministic twelve-row identities")
+            check(migrated.editedLoops == legacy.editedLoops, "legacy JSON keeps every authored pattern unchanged")
+            let again = try JSONDecoder().decode(KnockState.self, from: JSONEncoder().encode(migrated)).normalized()
+            check(again == migrated && again.normalized() == again, "rack migration is stable across save/reload and repeated normalization")
+            var reassigned = migrated
+            reassigned.rackChannels?[11] = RackChannel(slot: 11, name: "SECOND 808", role: Pad.bass808.rawValue, followsKit: false)
+            reassigned.pads[11].tune = -5; reassigned.pads[11].filter = 0.42
+            reassigned.editedLoops[0]?.events.append(GrooveEvent(tick: 96, pad: 11, velocity: 0.75, semis: 7, length: 96, glide: true))
+            let restored = try JSONDecoder().decode(KnockState.self, from: JSONEncoder().encode(reassigned)).normalized()
+            check(restored.rackChannels?.last?.id == reassigned.rackChannels?.last?.id && restored.pads[11] == reassigned.pads[11],
+                  "a reassigned row keeps its identity and independent tone settings")
+            check(restored.editedLoops[0]?.events.contains { $0.pad == 11 && $0.semis == 7 && $0.glide } == true,
+                  "a reassigned row keeps its own pitched sliding notes")
+            let nextKit = restored.selectingKit(KitLibrary.west90s)
+            check(nextKit.rackChannels?.last == restored.rackChannels?.last && nextKit.pads[11] == restored.pads[11],
+                  "changing a factory kit preserves independently assigned rack sounds and their settings")
+        } catch { check(false, "rack state JSON round trip: \(error)") }
+
+        var build42 = KnockState()
+        build42.rackChannels = nil
+        let oldID = UUID()
+        build42.workspaceChannels = [WorkspaceChannel(id: oldID, pad: 3, soundID: "user:original.wav", name: "CUSTOM BASS", category: SoundType.bass.rawValue)]
+        build42.pads[3].sampleFile = "original.wav"
+        build42.pads[3].tune = 4
+        build42.editedLoops[0] = PatternData(name: "BUILD 42", lengthTicks: 384,
+                                           events: [GrooveEvent(tick: 48, pad: 3, velocity: 0.8, semis: -3, length: 48)])
+        let imported42 = build42.normalized()
+        check(imported42.rackChannels?.count == 1 && imported42.rackChannels?.first?.id == oldID &&
+              imported42.rackChannels?.first?.slot == 3 && imported42.rackChannels?.first?.role == Pad.bass808.rawValue &&
+              imported42.rackChannels?.first?.libraryID == "user:original.wav" && imported42.pads[3] == build42.pads[3] &&
+              imported42.editedLoops == build42.editedLoops,
+              "build42 saved rack migrates with sound identity, assigned role, settings and notes intact")
+        build42.workspaceChannels = []
+        check(build42.normalized().rackChannels?.isEmpty == true,
+              "an intentionally empty build42 rack stays empty during migration")
+
+        let full = (0..<12).map { RackChannel(slot: $0, role: $0, followsKit: true) }
+        check(RackChannel.availableSlot(in: full) == nil && RackChannel.availableSlot(in: full.filter { $0.slot != 7 }) == 7,
+              "rack allocation stops at twelve and reuses only a free audio slot")
+        let invalid = [RackChannel(slot: -1, role: 0), full[11], full[11], RackChannel(slot: 12, role: 0)]
+        check(RackChannel.normalized(invalid).map { $0.slot } == [11], "rack normalization rejects duplicate and out-of-range audio addresses")
+        let budget = RackDecodedBudget(limit: 100)
+        let ownerA = UUID(), ownerB = UUID(), requestA = UUID(), replacementA = UUID(), requestB = UUID()
+        check(budget.reserve(request: requestA, channel: ownerA, bytes: 60), "rack decoder reserves memory before an asynchronous import")
+        check(!budget.reserve(request: requestB, channel: ownerB, bytes: 41), "concurrent rack imports cannot overbook decoded memory")
+        check(budget.reserve(request: replacementA, channel: ownerA, bytes: 60) && budget.reservedBytes == 60,
+              "replacing one row does not count the same channel twice")
+        check(budget.reserve(request: requestB, channel: ownerB, bytes: 40) && budget.reservedBytes == 100,
+              "decoded-memory reservations allow exactly the bounded capacity")
+        budget.cancel(requestA); budget.cancel(replacementA)
+        check(budget.reservedBytes == 40, "cancelled and superseded imports release their reservations")
+        budget.synchronize([ownerB: 40]); budget.cancel(requestB)
+        check(budget.reservedBytes == 40, "committed decoded audio remains counted after its request finishes")
+        budget.synchronize([:]); check(budget.reservedBytes == 0, "removing a decoded row returns its memory budget")
+        var muted = Array(repeating: false, count: 12), solo = muted
+        let all = (UInt64(1) << 12) - 1
+        check(KnockController.padMask(muted: muted, solo: solo) == all, "rack mask includes all twelve channels")
+        muted[11] = true
+        check(KnockController.padMask(muted: muted, solo: solo) == all ^ (UInt64(1) << 11), "rack mute silences the last channel")
+        solo[0] = true; solo[11] = true
+        check(KnockController.padMask(muted: muted, solo: solo) == 1, "rack solo respects mute precedence")
+
+        let bar = PatternEdit.barTicks
+        var pattern = PatternData(name: "REASSIGNED MIDI", lengthTicks: bar * 2, events: [])
+        for slot in 1..<Pad.count { pattern.events.append(GrooveEvent(tick: Int32(slot * 12), pad: Int8(slot), velocity: 0.75)) }
+        pattern = PatternEdit.addNote(pattern, pad: 0, tick: 192, length: 72, velocity: 0.8, semis: -7, role: Pad.bass808.rawValue)
+        if let index = pattern.events.firstIndex(where: { $0.pad == 0 }) { pattern.events[index].glide = true }
+        let key = NoteKey(pattern.events.first { $0.pad == 0 }!)
+        let resized = PatternEdit.resize(pattern, key, length: bar * 3, role: Pad.bass808.rawValue).0
+        check(resized.events.first { $0.pad == 0 }.map { $0.length > 0 && $0.tick + $0.length == pattern.lengthTicks } == true,
+              "reassigned 808 resizing keeps a held note inside its phrase")
+        let filled = PatternEdit.fill(pattern, pad: 0, every: bar, velocity: 0.8, role: Pad.bass808.rawValue)
+        check(filled.events.filter { $0.pad == 0 }.count == 2 && filled.events.filter { $0.pad == 0 }.allSatisfy { $0.length > 24 },
+              "808 fill uses instrument role rather than its slot number")
+        let recorded = PatternEdit.addRecorded(pattern, pad: 0, tick: 47, velocity: 0.6, semis: 5, snap: 24, role: Pad.bass808.rawValue)
+        check(recorded.events.contains { $0.pad == 0 && $0.tick == 48 && $0.semis == 5 && $0.length > 0 },
+              "reassigned bass recording quantizes without losing pitch or gate")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("rack-selftest-\(UUID()).mid")
+        defer { try? FileManager.default.removeItem(at: url) }
+        var roles = Array(0..<12); roles[0] = Pad.bass808.rawValue
+        do {
+            try MIDIFile.write(pattern, tempo: 120, bounce: 0, bars: 2, to: url, roles: roles)
+            let back = MIDIFile.read(url)
+            check(back?.events.count == pattern.events.count && back?.lengthTicks == pattern.lengthTicks,
+                  "rack MIDI preserves every row and the trailing phrase length")
+            for expected in pattern.events {
+                let actual = back?.events.first { $0.pad == expected.pad && $0.tick == expected.tick }
+                check(actual.map { abs($0.velocity - expected.velocity) <= 1 / 127 + 0.0001 && $0.semis == expected.semis && $0.length == expected.length && $0.glide == expected.glide } == true,
+                      "rack MIDI preserves slot\(expected.pad) identity, pitch, gate and glide")
+            }
+            let reassigned = PatternData(name: "TWO BASS ROOTS", lengthTicks: bar,
+                                         events: [GrooveEvent(tick: 0, pad: 0, velocity: 0.8, length: 96, glide: true),
+                                                  GrooveEvent(tick: 0, pad: 6, velocity: 0.8, length: 192)])
+            try MIDIFile.write(reassigned, tempo: 120, bounce: 0, bars: 1, to: url, roles: roles)
+            let roots = MIDIFile.read(url)?.events ?? []
+            check(roots.count == 2 && roots.contains { $0.pad == 0 && $0.length == 96 && $0.glide } &&
+                  roots.contains { $0.pad == 6 && $0.length == 192 },
+                  "a reassigned row and original808 export simultaneous independent root notes")
+            let generated = GrooveGenerator.loops(fromMain: reassigned, style: .trap, seed: 5)
+            check(generated[0].events.contains { $0.pad == 0 && $0.length == 96 && $0.glide },
+                  "authored groove preparation preserves a reassigned bass gate and glide")
+            let moved = PatternData(name: "DAW MOVE", lengthTicks: bar,
+                                    events: [GrooveEvent(tick: 0, pad: 0, velocity: 1, semis: 7, length: 48, glide: true)])
+            try MIDIFile.write(moved, tempo: 120, bounce: 0, bars: 1, to: url, roles: roles)
+            var bytes = [UInt8](try Data(contentsOf: url))
+            if let marker = Data(bytes).range(of: Data("BBCR".utf8))?.lowerBound,
+               marker + 23 < bytes.count, bytes[marker + 17] == 0, bytes[marker + 18] == 0x90,
+               bytes[marker + 19] == 0, bytes[marker + 21] == 48, bytes[marker + 22] == 0x80 {
+                bytes[marker + 17] = 24; bytes[marker + 20] = 64; bytes[marker + 21] = 24
+                try Data(bytes).write(to: url)
+                let shifted = MIDIFile.read(url)?.events.first
+                check(shifted.map { $0.pad == 0 && $0.tick == 24 && $0.length == 24 && abs($0.velocity - Float(64) / 127) < 0.0001 && $0.semis == 0 && !$0.glide } == true,
+                      "DAW-edited rack MIDI uses actual note timing and velocity")
+            } else { check(false, "rack MIDI timing fixture contains expected vendor record and note") }
+            let foreign: [UInt8] = Array("MThd".utf8) + [0, 0, 0, 6, 0, 0, 0, 1, 0, 96] +
+                Array("MTrk".utf8) + [0, 0, 0, 12, 0, 0x90, 36, 127, 24, 0x80, 36, 0, 0, 0xFF, 0x2F, 0]
+            try Data(foreign).write(to: url)
+            check(MIDIFile.read(url)?.events.first?.pad == 0, "foreign channel-one note36 remains kick without rack metadata")
+        } catch { check(false, "rack MIDI round trip: \(error)") }
+    }
+
+    private static func rackMain(_ work: () -> Void) {
+        if Thread.isMainThread { work() } else { DispatchQueue.main.sync(execute: work) }
+    }
+
+    private static func rackWait(seconds: Double, until ready: () -> Bool) -> Bool {
+        let end = Date().addingTimeInterval(seconds)
+        while Date() < end {
+            if ready() { return true }
+            if Thread.isMainThread { RunLoop.current.run(until: Date().addingTimeInterval(0.01)) }
+            else { Thread.sleep(forTimeInterval: 0.01) }
+        }
+        return ready()
+    }
+
+    /// Uses the same NSItemProvider payload, library resolver, append API and background
+    /// decoder as a real browser drop. It neither synthesizes touch events nor starts audio hardware.
+    static func checkRackControllerImports() {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("rack-import-\(UUID()).wav")
+        let audio = (0..<4_800).map { Float(sin(Double($0) * 2 * .pi * 220 / 48_000)) * 0.1 }
+        do { try WavWriter.write(left: audio, right: audio, sampleRate: 48_000, to: file) }
+        catch { check(false, "rack import fixture writes: \(error)"); return }
+        defer { try? FileManager.default.removeItem(at: file) }
+        let sound = LibrarySound(id: "user:selftest-\(UUID())", url: file, name: "DUPLICATE 808", type: .bass, pack: "SELFTEST", user: true)
+        let engine = KnockEngine()
+        engine.prepare(sampleRate: 48_000, maxFrames: 128)
+        var controller: KnockController!
+        var slots: [Int] = []
+        var importedFiles: [String] = []
+        var accepted = true
+        rackMain {
+            controller = KnockController(engine: engine, isPlugin: true)
+            controller.removeRackChannel(slot: 0)
+            controller.removeRackChannel(slot: 1)
+            let inventory = RackSoundLibrary(preloadedSounds: [sound])
+            for _ in 0..<2 {
+                accepted = RackSoundDrag.load([RackSoundDrag.provider(sound)]) { id in
+                    guard let id, let resolved = inventory.sound(id: id), let slot = controller.appendRackSound(resolved) else { return }
+                    slots.append(slot)
+                } && accepted
+            }
+        }
+        defer {
+            rackMain {
+                if let controller { importedFiles += controller.state.pads.compactMap { $0.sampleFile } }
+                controller = nil
+            }
+            for name in Set(importedFiles) { try? FileManager.default.removeItem(at: SampleLoader.urlInSamples(name)) }
+        }
+        let loaded = rackWait(seconds: 15) {
+            var ready = false
+            rackMain {
+                ready = slots.count == 2 && !controller.loadingKit && slots.allSatisfy {
+                    controller.state.pads[$0].sampleFile != nil && controller.kitSamples.indices.contains($0) && controller.kitSamples[$0].length == audio.count
+                }
+            }
+            return ready
+        }
+        check(accepted && loaded, "browser drag payload resolves and decodes two independently appended rack sounds")
+        guard loaded else { return }
+        rackMain {
+            let first = slots[0], second = slots[1]
+            check(first != second && first < 12 && second < 12 && controller.rackChannelCount == 12, "dropping the same sound twice reserves independent slots within the twelve-channel cap")
+            check(controller.appendRackSound(sound) == nil && controller.addBlankRackChannel() == nil && controller.rackChannelCount == 12, "a full twelve-channel rack rejects another sound or blank row")
+            check(controller.kitSamples[first].length == audio.count && controller.kitSamples[second].length == audio.count &&
+                  controller.rackChannels.first { $0.slot == first }?.role == Pad.bass808.rawValue &&
+                  controller.rackChannels.first { $0.slot == second }?.role == Pad.bass808.rawValue,
+                  "duplicate source sounds load the same complete audio into two independently addressed bass rows")
+            check(controller.state.pads[first].sampleFile != nil && controller.state.pads[second].sampleFile != nil,
+                  "duplicate rows retain their imported audio references (immutable file data may be deduplicated)")
+            var settings = controller.state.pads[first]
+            settings.tune = 7; settings.pan = -0.6; settings.filter = 0.3
+            controller.setPadSettings(first, settings)
+            check(controller.state.pads[second].tune == 0 && controller.state.pads[second].pan == 0 && controller.state.pads[second].filter == 1,
+                  "editing one duplicate's tuning, pan and filter never changes the other")
+            let firstID = controller.rackChannels.first { $0.slot == first }!.id
+            var pattern = controller.loops[0]
+            pattern.events = [GrooveEvent(tick: 24, pad: Int8(first), velocity: 0.75), GrooveEvent(tick: 48, pad: Int8(second), velocity: 0.8)]
+            controller.setLoop(0, pattern)
+            let before = controller.loops[0].events
+            controller.moveRackChannel(from: IndexSet(integer: controller.rackChannels.firstIndex { $0.slot == first }!), to: 0)
+            check(controller.rackChannels[0].id == firstID && controller.rackChannels[0].slot == first && controller.loops[0].events == before,
+                  "reordering a real rack row preserves its stable instrument address and every event")
+            importedFiles += slots.compactMap { controller.state.pads[$0].sampleFile }
+            controller.removeRackChannel(slot: first)
+            check(controller.loops.allSatisfy { !$0.events.contains { Int($0.pad) == first } } &&
+                  controller.loops[0].events.contains { Int($0.pad) == second }, "removing a rack row clears its notes from every loop only")
+            let reused = controller.addBlankRackChannel(name: "REUSED", role: Pad.snare.rawValue)
+            check(reused == first && controller.rackChannels.first { $0.slot == first }?.id != firstID &&
+                  controller.loops.allSatisfy { !$0.events.contains { Int($0.pad) == first } },
+                  "a reused audio slot has a new row identity and cannot inherit the removed instrument's notes")
+            controller.clearRackChannels()
+            check(controller.rackChannels.isEmpty && controller.loops.allSatisfy { $0.events.isEmpty },
+                  "new empty rack clears every previous sequence and exposes the full channel capacity")
+            let snareA = controller.addBlankRackChannel(name: "SNARE A", role: Pad.snare.rawValue)
+            let snareB = controller.addBlankRackChannel(name: "SNARE B", role: Pad.snare.rawValue)
+            if let preset = PatternBank.preset(named: "TRAP 1 ATL BOUNCE"), let snareA, let snareB {
+                controller.loadPatternPreset(preset)
+                let source = preset.pattern.events.filter { Int($0.pad) == Pad.snare.rawValue }.map { $0.tick }
+                check(!source.isEmpty && controller.loops[0].events.filter { Int($0.pad) == snareA }.map { $0.tick } == source &&
+                      controller.loops[0].events.filter { Int($0.pad) == snareB }.map { $0.tick } == source,
+                      "factory patterns route snare notes independently to both custom snare rows")
+            } else { check(false, "role-routing fixture has two blank snare rows and its factory pattern") }
+            controller.clearRackChannels()
+            controller.setRackWorkspaceOpen(false)
+            controller.selectPlayMode(.oneShot)
+        }
+        let fallbackLoaded = rackWait(seconds: 15) {
+            var ready = false
+            rackMain { ready = !controller.loadingKit && controller.kitSamples.count == Pad.count && controller.kitSamples[0].length > 1 }
+            return ready
+        }
+        check(fallbackLoaded, "empty rack still prepares the original twelve physical instrument sounds")
+        if fallbackLoaded {
+            engine.setParam(.soundMode, 0); engine.setParam(.noise, 0)
+            engine.send(KEvent(kind: .allOff)); _ = rackRender(engine, frames: 8192)
+            let before = engine.padHits[0]
+            rackMain { controller.padDown(0, velocity: 1) }
+            let home = rackRender(engine, frames: 4096)
+            check(engine.padHits[0] == before + 1 && home.left.contains { abs($0) > 0.0005 },
+                  "clearing the step rack preserves one-shot pad playback on the original instrument surface")
+            engine.send(KEvent(kind: .allOff)); _ = rackRender(engine, frames: 8192)
+            rackMain { controller.setRackWorkspaceOpen(true); controller.padDown(0, velocity: 1) }
+            let gated = rackRender(engine, frames: 4096)
+            check(engine.padHits[0] == before + 1 && gated.left.allSatisfy { abs($0) < 0.0001 },
+                  "opening an empty rack gates inactive channels without generating hidden drum hits")
+            rackMain { controller.setRackWorkspaceOpen(false); controller.padDown(0, velocity: 1) }
+            _ = rackRender(engine, frames: 4096)
+            check(engine.padHits[0] == before + 2, "returning to the instrument restores physical pad routing")
+        }
+    }
+
+    static func checkRackFileIdentity() {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("rack-file-identity-\(UUID())")
+        let a = directory.appendingPathComponent("A"), b = directory.appendingPathComponent("B")
+        let filename = "rack-collision-\(UUID()).wav"
+        var copied: [String] = []
+        defer {
+            try? FileManager.default.removeItem(at: directory)
+            for name in Set(copied) { try? FileManager.default.removeItem(at: SampleLoader.urlInSamples(name)) }
+        }
+        do {
+            try FileManager.default.createDirectory(at: a, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: b, withIntermediateDirectories: true)
+            let left = (0..<2048).map { Float(sin(Double($0) * 2 * .pi * 220 / 48_000)) * 0.1 }
+            let different = (0..<2048).map { Float(sin(Double($0) * 2 * .pi * 440 / 48_000)) * 0.1 }
+            let sourceA = a.appendingPathComponent(filename), sourceB = b.appendingPathComponent(filename)
+            try WavWriter.write(left: left, right: left, sampleRate: 48_000, to: sourceA)
+            try WavWriter.write(left: different, right: different, sampleRate: 48_000, to: sourceB)
+            check(try Data(contentsOf: sourceA).count == Data(contentsOf: sourceB).count, "import collision fixture has identical filenames and byte sizes")
+            let first = try SampleLoader.copyIntoSamples(sourceA); copied.append(first)
+            let second = try SampleLoader.copyIntoSamples(sourceB); copied.append(second)
+            let repeated = try SampleLoader.copyIntoSamples(sourceA); copied.append(repeated)
+            check(first != second && first == repeated, "audio import distinguishes different content while deduplicating identical source bytes")
+            check(FileManager.default.contentsEqual(atPath: sourceA.path, andPath: SampleLoader.urlInSamples(first).path) &&
+                  FileManager.default.contentsEqual(atPath: sourceB.path, andPath: SampleLoader.urlInSamples(second).path),
+                  "same-name same-size imports retain both original waveforms")
+        } catch { check(false, "rack import file identity: \(error)") }
+    }
+
+    private static func rackRender(_ engine: KnockEngine, frames: Int, block: Int = 128) -> (left: [Float], right: [Float]) {
+        var left = [Float](repeating: 0, count: frames), right = left
+        var offset = 0
+        while offset < frames {
+            let size = min(block, frames - offset)
+            left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in
+                engine.render(frames: size, left: l.baseAddress! + offset, right: r.baseAddress! + offset, host: nil)
+            } }
+            offset += size
+        }
+        return (left, right)
+    }
+
+    static func checkRackAudioAndMIDI() {
+        let count = RackLimits.maxChannels
+        let silent = SampleBuffer(left: [0], sampleRate: 48_000)
+        let tone = SampleBuffer(left: (0..<24_000).map { Float(sin(Double($0) * 2 * .pi * 110 / 48_000)) * 0.025 }, sampleRate: 48_000)
+        var samples = Array(repeating: silent, count: count)
+        var settings = Array(repeating: PadSettings(), count: count)
+        var roles = Array(repeating: Pad.perc1.rawValue, count: count)
+        samples[6] = tone; samples[0] = tone
+        settings[6].pan = -1; settings[0].pan = 1
+        roles[6] = Pad.bass808.rawValue; roles[0] = Pad.bass808.rawValue
+        let kit = KitBuffers(name: "TWELVE CHANNEL REGRESSION", samples: samples, settings: settings, bassHz: 110, roles: roles)
+        func make(_ kit: KitBuffers) -> KnockEngine {
+            let e = KnockEngine()
+            e.prepare(sampleRate: 48_000, maxFrames: 512)
+            e.setParam(.playMode, 0); e.setParam(.followDAW, 0); e.setParam(.tempoSync, 0)
+            e.setParam(.soundMode, 0); e.setParam(.boost, 0); e.setParam(.punch, 0)
+            e.setParam(.grit, 0); e.setParam(.shine, 0); e.setParam(.noise, 0); e.setParam(.tighten, 0)
+            e.setParam(.clipper, 0); e.setParam(.clipDrive, 0); e.setParam(.filter, 1)
+            e.kitHandoff.publish(kit)
+            return e
+        }
+        let reference = make(kit), both = make(kit)
+        for e in [reference, both] { e.send(KEvent(kind: .pad, a: 6, value: 1)); _ = rackRender(e, frames: 512) }
+        both.send(KEvent(kind: .pad, a: 0, value: 1, semis: 7))
+        let a = rackRender(reference, frames: 2048), b = rackRender(both, frames: 2048)
+        let difference = zip(a.left, b.left).reduce(Float(0)) { max($0, abs($1.0 - $1.1)) }
+        check(a.left.contains { abs($0) > 0.005 } && b.right.contains { abs($0) > 0.005 } && difference < 0.000_01,
+              "two 808 rows sound independently instead of choking or gliding each other")
+        check(both.padHits[6] == 1 && both.padHits[0] == 1, "audition updates both independent channel hit counters")
+
+        let muted = make(kit)
+        muted.send(KEvent(kind: .padMask, mask: UInt64(1) << 0))
+        muted.send(KEvent(kind: .pad, a: 6, value: 1)); muted.send(KEvent(kind: .pad, a: 0, value: 1))
+        let high = rackRender(muted, frames: 1024)
+        check(muted.padHits[6] == 0 && muted.padHits[0] == 1 && high.left.allSatisfy { abs($0) < 0.000_01 } && high.right.contains { abs($0) > 0.005 },
+              "engine mute/solo silences only the selected channel")
+
+        func trace(block: Int) -> [Float] {
+            let e = make(kit)
+            e.send(KEvent(kind: .pad, a: 0, value: 0.8, semis: -5))
+            return rackRender(e, frames: 4096, block: block).right
+        }
+        let small = trace(block: 128), large = trace(block: 512)
+        let boundaryError = zip(small, large).reduce(Float(0)) { max($0, abs($1.0 - $1.1)) }
+        check(small.allSatisfy { $0.isFinite } && small.contains { abs($0) > 0.005 } && boundaryError < 0.000_01,
+              "reassigned slot0 pitch and audio are identical at 128- and 512-frame callback sizes")
+        check(KnockEngine.maxVoices == 40, "twelve rack channels retain the bounded forty-voice realtime pool")
+
+        let recording = make(kit)
+        recording.setParam(.playMode, 1); recording.setTempo(120)
+        let empty = PatternData(name: "RACK RECORD", lengthTicks: 384, events: [])
+        recording.patternHandoff.publish(PatternSet(Array(repeating: empty, count: Pad.count)))
+        _ = rackRender(recording, frames: 128)
+        recording.send(KEvent(kind: .loopPad, a: 0)); recording.send(KEvent(kind: .recordArm, a: 1))
+        _ = rackRender(recording, frames: 256)
+        recording.send(KEvent(kind: .pad, a: 0, value: 0.8, semis: 5))
+        _ = rackRender(recording, frames: 128)
+        let hits = recording.collectRecorded()
+        recording.send(KEvent(kind: .padMask, mask: 0))
+        recording.send(KEvent(kind: .pad, a: 0, value: 0.5))
+        _ = rackRender(recording, frames: 128)
+        check(recording.collectRecorded().count == 1, "monitor mute does not discard a live recorded note")
+        recording.send(KEvent(kind: .padMask, mask: .max))
+        check(hits.count == 1 && hits[0].pad == 0 && hits[0].loop == 0 && hits[0].semis == 5 && hits[0].tick > 0,
+              "record ring captures an auditioned reassigned slot0 note with its pattern time and pitch")
+        recording.send(KEvent(kind: .pad, a: 0, value: 0.7))
+        _ = rackRender(recording, frames: 128)
+        recording.send(KEvent(kind: .channelOff, a: 0))
+        check(recording.collectRecorded().isEmpty, "retiring a row invalidates pending recorded hits before its slot is reused")
+        _ = rackRender(recording, frames: 128)
+        recording.send(KEvent(kind: .pad, a: 0, value: 0.6))
+        _ = rackRender(recording, frames: 128)
+        check(recording.collectRecorded().count == 1, "new notes on a reused slot record under its new generation")
+        recording.send(KEvent(kind: .recordArm, a: 0))
+        recording.send(KEvent(kind: .channelOff, a: 0))
+        let stopped = rackRender(recording, frames: 4096)
+        check(stopped.right.suffix(128).allSatisfy { abs($0) < 0.000_1 } && recording.status[0] == 1,
+              "removing a rack channel releases its voice without stopping the running pattern")
+
+        let midi = make(kit)
+        midi.send(KEvent(kind: .midiOut, a: 0, value: 15 * 128 + 60))
+        midi.send(KEvent(kind: .midiOut, a: -1, value: 1))
+        midi.send(KEvent(kind: .pad, a: 0, value: 1, semis: 7))
+        _ = rackRender(midi, frames: 128)
+        var messages: [(UInt8, UInt8, UInt8)] = []
+        midi.forEachMIDIOut { _, status, note, velocity in messages.append((status, note, velocity)) }
+        check(messages.contains { $0.0 == 0x9F && $0.1 == 67 && $0.2 == 127 }, "reassigned slot0 emits its independently routed pitched MIDI note")
+        midi.send(KEvent(kind: .channelOff, a: 0)); _ = rackRender(midi, frames: 128)
+        messages.removeAll()
+        midi.forEachMIDIOut { _, status, note, velocity in messages.append((status, note, velocity)) }
+        check(messages.contains { $0.0 == 0x8F && $0.1 == 67 }, "removing reassigned slot0 sends its own pending MIDI note-off")
+
+        // Reassigned hat channels use their role's choke family, with a short release rather
+        // than a discontinuous cut. The closed-hat fixture is silent to isolate that tail.
+        samples[10] = tone
+        samples[9] = SampleBuffer(left: Array(repeating: 0, count: 8), sampleRate: 48_000)
+        roles[10] = Pad.openHat.rawValue; roles[9] = Pad.hat.rawValue
+        settings[10].pan = -1
+        let hats = KitBuffers(name: "RACK HAT CHOKE", samples: samples, settings: settings, bassHz: 110, roles: roles)
+        let open = make(hats), choked = make(hats)
+        for e in [open, choked] { e.send(KEvent(kind: .pad, a: 10, value: 1)); _ = rackRender(e, frames: 1024) }
+        choked.send(KEvent(kind: .pad, a: 9, value: 1))
+        let continuing = rackRender(open, frames: 4096).left
+        let tail = rackRender(choked, frames: 4096).left
+        check(continuing.suffix(256).contains { abs($0) > 0.005 } && tail.suffix(256).allSatisfy { abs($0) < 0.000_1 },
+              "a reassigned closed-hat row chokes the reassigned open-hat row by instrument role")
+        let jump = zip(tail, tail.dropFirst()).reduce(Float(0)) { max($0, abs($1.0 - $1.1)) }
+        check(tail.allSatisfy { $0.isFinite } && jump < 0.005, "reassigned hat choke remains continuous across128-frame callbacks")
     }
 
     static func checkTextureControls() {
