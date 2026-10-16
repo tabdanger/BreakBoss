@@ -1,7 +1,12 @@
-New in this build:
-- MIDI round trip: BreakBoss MIDI recorded in your DAW plays BreakBoss back like an instrument (each pad on its own MIDI channel, the 808 pitched on channel 7), in ONE-SHOT and LOOP mode.
-- Drum roll: pinch or trackpad-spread to zoom; SNAP gets finer as you zoom in. New 2-bar pattern length.
-- Record pads MPC style: hold PLAY on the faceplate to arm recording (red ring), then finger-play the pads.
-- SELECT tool note trimming, the IMPORT sound library on each channel, and FOLLOW DAW play/stop.
+BreakBoss: rebuilt FL-style step sequencer (original instrument faceplate is unchanged).
 
-Please try recording BreakBoss into your DAW and playing it back, zooming the drum roll, and finger-recording on the pads.
+Please test:
+- From the original faceplate, open the step sequencer. Verify three panels: generation/MIDI on the left, channel rack in the center, and searchable sound browser on the right.
+- Swipe left/right or use arrows to browse KICKS, SNARES, CLAPS, RIMS, HATS, 808s and other categories; verify all factory and imported sounds appear.
+- Drag a sample onto the channel rack (or tap its + button). Check that its new track name animates from a circle to an oval. Add the same sample twice: both tracks should have independent notes and MUTE/SOLO/level/pan/tune/decay.
+- Add up to 12 tracks, try a 13th, remove a track, then add another. Check that no notes leak between channels.
+- Tap 16-step buttons, change bars, edit velocity, and expand the left track arrow to edit pitched notes in the inline piano roll. Verify audio, playback and MIDI output.
+- Switch the original instrument faceplate: Modern = red active steps on dark, Platinum = red on silver, Vintage = pale yellow on cream, Texture = blue on blue. Check that the control positions do not move.
+- Verify the existing faceplate PLAY/record, DAW FOLLOW, MIDI playback and AUv3 in Logic Pro for iPad still work, with low CPU.
+
+Report any sound loading delays, stuck notes, crashes, wrong sample types or visual jumps.
