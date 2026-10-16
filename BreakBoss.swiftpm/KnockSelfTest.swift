@@ -37,6 +37,7 @@ enum KnockSelfTest {
         phase("checkMIDIPadMap", checkMIDIPadMap)
         phase("checkRecordingTrim", checkRecordingTrim)
         phase("checkDrumRoll", checkDrumRoll)
+        phase("checkWorkspaceChannels", checkWorkspaceChannels)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -931,6 +932,46 @@ enum KnockSelfTest {
             check(false, "record: trim test ran (\(error.localizedDescription))")
         }
         #endif
+    }
+
+    static func checkWorkspaceChannels() {
+        let sharedSound = "stock:bb-test-kick.wav"
+        let first = WorkspaceChannel(id: UUID(), pad: 0, soundID: sharedSound,
+                                     name: "KICK A", category: SoundType.kick.rawValue)
+        let second = WorkspaceChannel(id: UUID(), pad: 1, soundID: sharedSound,
+                                      name: "KICK B", category: SoundType.kick.rawValue)
+        var state = KnockState()
+        state.workspaceChannels = [first, second]
+        let normalized = state.normalized()
+        check(normalized.workspaceChannels?.count == 2 &&
+              normalized.workspaceChannels?[0].soundID == normalized.workspaceChannels?[1].soundID &&
+              normalized.workspaceChannels?[0].pad != normalized.workspaceChannels?[1].pad,
+              "rack: the same library sound may occupy independent engine slots")
+        let restored = (try? JSONEncoder().encode(state)).flatMap {
+            try? JSONDecoder().decode(KnockState.self, from: $0)
+        }
+        check(restored?.workspaceChannels == state.workspaceChannels,
+              "rack: duplicate sounds and track identity survive project saving")
+        state.workspaceChannels?.append(WorkspaceChannel(id: UUID(), pad: 1, soundID: sharedSound,
+                                                          name: "DUPLICATE PAD", category: SoundType.kick.rawValue))
+        check(state.normalized().workspaceChannels?.count == 2,
+              "rack: invalid duplicate audio slots are removed on migration")
+        for p in 2..<Pad.count {
+            state.workspaceChannels?.append(WorkspaceChannel(id: UUID(), pad: p,
+                soundID: "stock:sample-\(p)", name: "SAMPLE \(p)", category: SoundType.perc.rawValue))
+        }
+        check(state.normalized().workspaceChannels?.count == Pad.count,
+              "rack: up to 12 independent sound channels")
+        check(KnockState().normalized().workspaceChannels == nil,
+              "rack: old sessions open without losing their faceplate or saved pads")
+        var pattern = PatternData(name: "RACK", lengthTicks: PatternEdit.barTicks,
+                                  events: [])
+        pattern = PatternEdit.toggle(pattern, pad: first.pad, tick: 0, cell: PatternData.stepTicks)
+        check(pattern.events.count == 1 && Int(pattern.events[0].pad) == first.pad,
+              "rack: first channel has its own sequenced steps")
+        pattern = PatternEdit.toggle(pattern, pad: second.pad, tick: 0, cell: PatternData.stepTicks)
+        check(pattern.events.count == 2 && Set(pattern.events.map(\.pad)).count == 2,
+              "rack: identical sounds never share their MIDI events")
     }
 
     static func checkDrumRoll() {

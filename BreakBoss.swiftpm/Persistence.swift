@@ -42,6 +42,16 @@ enum KnockFolders {
     }
 }
 
+// A rack channel has its own audio slot and identity, so dragging the same
+// sound twice creates two independently editable tracks.
+struct WorkspaceChannel: Codable, Equatable, Identifiable {
+    var id: UUID
+    var pad: Int
+    var soundID: String
+    var name: String
+    var category: String
+}
+
 // MARK: - Everything on the faceplate, saved
 
 struct KnockState: Codable, Equatable {
@@ -67,6 +77,9 @@ struct KnockState: Codable, Equatable {
     /// Drum roll channel MUTE / SOLO (index = pad).
     var mutedPads: [Bool]? = nil
     var soloPads: [Bool]? = nil
+    /// nil = never opened the step rack, [] = an intentionally empty rack.
+    /// Optional for backwards compatibility with saved projects.
+    var workspaceChannels: [WorkspaceChannel]? = nil
     var pads: [PadSettings] = Array(repeating: PadSettings(), count: Pad.count)
     /// Loops you edited or imported (nil = the generated one).
     var editedLoops: [PatternData?] = Array(repeating: nil, count: Pad.count)
@@ -126,6 +139,13 @@ struct KnockState: Codable, Equatable {
         s.version = 2
         s.bpm = s.bpm.isFinite ? s.bpm.clamped(40, 240) : 140
         s.pads = Self.normalizedPads(s.pads)
+        if let rows = s.workspaceChannels {
+            var assigned = Set<Int>(), ids = Set<UUID>()
+            s.workspaceChannels = Array(rows.filter { row in
+                (0..<Pad.count).contains(row.pad) &&
+                    assigned.insert(row.pad).inserted && ids.insert(row.id).inserted
+            }.prefix(Pad.count))
+        }
         s.editedLoops = Array(s.editedLoops.prefix(Pad.count))
         while s.editedLoops.count < Pad.count { s.editedLoops.append(nil) }
         for i in s.editedLoops.indices {
