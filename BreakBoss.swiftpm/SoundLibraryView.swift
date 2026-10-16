@@ -1,8 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-}
-
 
 // MARK: - Every sound in BreakBoss, by type
 
