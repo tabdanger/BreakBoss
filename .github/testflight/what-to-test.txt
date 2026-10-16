@@ -1,12 +1,7 @@
-BreakBoss: rebuilt FL-style step sequencer (original instrument faceplate is unchanged).
-
-Please test:
-- From the original faceplate, open the step sequencer. Verify three panels: generation/MIDI on the left, channel rack in the center, and searchable sound browser on the right.
-- Swipe left/right or use arrows to browse KICKS, SNARES, CLAPS, RIMS, HATS, 808s and other categories; verify all factory and imported sounds appear.
-- Drag a sample onto the channel rack (or tap its + button). Check that its new track name animates from a circle to an oval. Add the same sample twice: both tracks should have independent notes and MUTE/SOLO/level/pan/tune/decay.
-- Add up to 12 tracks, try a 13th, remove a track, then add another. Check that no notes leak between channels.
-- Tap 16-step buttons, change bars, edit velocity, and expand the left track arrow to edit pitched notes in the inline piano roll. Verify audio, playback and MIDI output.
-- Switch the original instrument faceplate: Modern = red active steps on dark, Platinum = red on silver, Vintage = pale yellow on cream, Texture = blue on blue. Check that the control positions do not move.
-- Verify the existing faceplate PLAY/record, DAW FOLLOW, MIDI playback and AUv3 in Logic Pro for iPad still work, with low CPU.
-
-Report any sound loading delays, stuck notes, crashes, wrong sample types or visual jumps.
+New in this build: the rebuilt DRUM SEQUENCER, the only sequencer / piano roll screen in the app.
+- Left: the sound library (every sound by type, search, import sounds or packs). Drag a sound onto the channel rack to add a channel; drop it on a channel to swap its sound; tap to load it onto the selected channel.
+- Channel rack (up to 12): the triangle opens each track's piano roll in place, LEVEL and PAN knobs, the on/off lamp, and a dice per track that randomizes only that track.
+- Step grid with 16 steps a bar, velocity lane, SNAP, SNAP TO SCALE, SWING, HUMANIZE, pinch to zoom.
+- GENERATE panel: a new pattern in any genre. MIDI panel: MIDI out routing.
+- PATTERN and KIT pickers with arrows at the bottom.
+Please try dragging sounds onto the rack, opening a track's piano roll, and each dice.
