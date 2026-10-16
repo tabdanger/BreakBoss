@@ -12,28 +12,37 @@ struct ScopeView: View {
 
     static let red = Color(red: 1, green: 0.30, blue: 0.20)
 
+    @State private var tracer = ScopeTracer()
+
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
+        // Redraw at 60 Hz straight from the audio ring (not the 30 Hz meter copy), so the trace
+        // moves smoothly without spending ProMotion's 120 Hz on it.
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !controller.scopeActive)) { context in
             let now = context.date
             ZStack(alignment: .topLeading) {
                 Canvas { ctx, size in
-                    let scope = controller.meters.scope
-                    let n = MasterBus.scopeSize
-                    let count = 300
-                    let end = controller.meters.scopeWrite
-                    var path = Path()
+                    let points = tracer.advance(meters: controller.engine.meters, now: now)
                     let mid = size.height / 2
-                    for i in 0..<count {
-                        let idx = (end - count + i + n) & (n - 1)
-                        let v = CGFloat(max(-1, min(1, scope[idx])))
-                        let x = CGFloat(i) / CGFloat(count - 1) * size.width
-                        let y = mid - v * mid * 0.85
-                        if i == 0 { path.move(to: CGPoint(x: x, y: y)) } else { path.addLine(to: CGPoint(x: x, y: y)) }
+                    let count = points.count
+                    func pt(_ i: Int) -> CGPoint {
+                        CGPoint(x: CGFloat(i) / CGFloat(count - 1) * size.width,
+                                y: mid - CGFloat(max(-1, min(1, points[i]))) * mid * 0.85)
                     }
-                    var glow = ctx
-                    glow.addFilter(.blur(radius: 3 * scale))
-                    glow.stroke(path, with: .color(ScopeView.red.opacity(0.55)), lineWidth: 4 * scale)
-                    ctx.stroke(path, with: .color(Color(red: 1, green: 0.55, blue: 0.42)), lineWidth: 1.6 * scale)
+                    // Smooth curve through the midpoints, so there are no sharp corners.
+                    var path = Path()
+                    path.move(to: pt(0))
+                    for i in 1..<count - 1 {
+                        let p = pt(i), q = pt(i + 1)
+                        path.addQuadCurve(to: CGPoint(x: (p.x + q.x) / 2, y: (p.y + q.y) / 2), control: p)
+                    }
+                    path.addLine(to: pt(count - 1))
+                    // Glow from two soft wide strokes; a blur filter every frame costs far more.
+                    let round = StrokeStyle(lineWidth: 7 * scale, lineCap: .round, lineJoin: .round)
+                    ctx.stroke(path, with: .color(ScopeView.red.opacity(0.14)), style: round)
+                    ctx.stroke(path, with: .color(ScopeView.red.opacity(0.32)),
+                               style: StrokeStyle(lineWidth: 3.5 * scale, lineCap: .round, lineJoin: .round))
+                    ctx.stroke(path, with: .color(Color(red: 1, green: 0.55, blue: 0.42)),
+                               style: StrokeStyle(lineWidth: 1.6 * scale, lineCap: .round, lineJoin: .round))
                 }
                 VStack(alignment: .leading, spacing: 2 * scale) {
                     if let r = controller.readout, now.timeIntervalSince(r.time) < 1.8 {
@@ -82,6 +91,52 @@ struct ScopeView: View {
     }
 }
 
+/// Keeps the trace steady and fluid: each frame it lines the wave up on a rising zero
+/// crossing (so it doesn't jump sideways), then eases every point toward the new shape.
+final class ScopeTracer {
+    static let pointCount = 160
+    /// About 45 ms of audio across the screen (the ring holds roughly 6,000 values a second).
+    static let window = 272
+    private var ring = [Float](repeating: 0, count: MasterBus.scopeSize)
+    private var shown = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var target = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var last: Date?
+
+    func advance(meters: SharedMeters, now: Date) -> [Float] {
+        let n = MasterBus.scopeSize
+        let end = meters.copyScope(into: &ring)
+        let dt = min(0.1, max(0.001, now.timeIntervalSince(last ?? now.addingTimeInterval(-1.0 / 60))))
+        last = now
+
+        // Look back up to one window for a rising crossing to start from.
+        let latestStart = end - Self.window
+        var start = latestStart
+        for back in 0..<Self.window {
+            let i = latestStart - back
+            let a = ring[(i - 1 + n * 2) & (n - 1)], b = ring[(i + n * 2) & (n - 1)]
+            if a < 0 && b >= 0 && b - a > 0.002 { start = i; break }
+        }
+        let step = Float(Self.window) / Float(Self.pointCount)
+        for p in 0..<Self.pointCount {
+            // Average the values each point covers, which also takes out fizz.
+            let from = Float(p) * step, to = from + step
+            var sum: Float = 0
+            var c: Float = 0
+            var k = Int(from)
+            while Float(k) < to {
+                sum += ring[(start + k + n * 2) & (n - 1)]
+                c += 1
+                k += 1
+            }
+            target[p] = c > 0 ? sum / c : 0
+        }
+        // Ease toward the new frame (about 30 ms), the same at 60 or 120 Hz.
+        let ease = Float(1 - exp(-dt / 0.03))
+        for p in 0..<Self.pointCount { shown[p] += (target[p] - shown[p]) * ease }
+        return shown
+    }
+}
+
 // MARK: - Pads
 
 /// One pad. Touch plays it straight away (higher on the pad = softer, lower = harder).
@@ -115,13 +170,16 @@ struct PadView: View {
             let current = Int(controller.meters.status[1]) == pad && controller.meters.status[0] > 0.5
             let queued = Int(controller.meters.status[2]) == pad
             let blink = queued && Int(now.timeIntervalSinceReferenceDate * 4) % 2 == 0
+            let light = PadView.lightColor(controller.mode)
+            let lit = loopMode && current
             ZStack {
                 Rectangle().fill(Color.black.opacity(pressed ? 0.12 : 0))
-                Rectangle().fill(Color.white.opacity(Double(flash) * 0.32))
-                if loopMode && (current || blink) {
+                // Each mode lights its pads in its own colour: hits flash, the playing loop's pad glows.
+                Rectangle().fill(light.opacity(max(Double(flash) * 0.5, lit ? 0.2 : 0)))
+                if lit || blink || flash > 0.01 {
                     Rectangle()
-                        .strokeBorder(ScopeView.red.opacity(current ? 0.9 : 0.6), lineWidth: 3 * scale)
-                        .shadow(color: ScopeView.red.opacity(0.7), radius: 6 * scale)
+                        .strokeBorder(light.opacity(lit ? 0.9 : blink ? 0.6 : Double(flash) * 0.8), lineWidth: 3 * scale)
+                        .shadow(color: light.opacity(0.7), radius: 6 * scale)
                 }
                 if dropping {
                     Rectangle().strokeBorder(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 3 * scale, dash: [8 * scale, 5 * scale]))
@@ -167,13 +225,22 @@ struct PadView: View {
         }
     }
 
+    /// Modern red, Vintage light yellow, Texture blue.
+    static func lightColor(_ mode: SoundMode) -> Color {
+        switch mode {
+        case .modern: return Color(red: 1, green: 0.20, blue: 0.14)
+        case .vintage: return Color(red: 1, green: 0.93, blue: 0.62)
+        case .texture: return Color(red: 0.25, green: 0.62, blue: 1)
+        }
+    }
+
     private func flashAmount(hits: UInt32, now: Date) -> Float {
         if hits != memory.count {
             memory.count = hits
             memory.time = now
         }
         let dt = Float(now.timeIntervalSince(memory.time))
-        return max(0, 1 - dt / 0.16)
+        return max(0, 1 - dt / 0.22)
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {

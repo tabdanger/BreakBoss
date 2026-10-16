@@ -42,6 +42,8 @@ struct FaceplateLayout: Decodable {
     let saveRect: [Double]
     let exportRect: [Double]
     let menuRect: [Double]
+    /// Pattern editor (piano keys) button, left of EXPORT.
+    let editorRect: [Double]?
     let modeButtons: [String: [Double]]
     /// Artwork positions in reading order. Pad IDs are independent of the device layout.
     let pads: [[Double]]
@@ -53,6 +55,14 @@ struct FaceplateLayout: Decodable {
 
     func plateImageName(for mode: SoundMode) -> String {
         "\(isPhone ? "PhonePlate" : "Plate")_\(mode.assetSuffix)"
+    }
+
+    /// Plate image for a face key ("modern", "vintage", "texture" or "platinum").
+    func plateImageName(face: String) -> String { "\(isPhone ? "PhonePlate" : "Plate")_\(face)" }
+
+    /// State overlays cut from the same plate: "oneshot_on_modern" or "phone_oneshot_on_modern".
+    func overlayName(_ kind: String, _ suffix: String) -> String {
+        "\(isPhone ? "phone_" : "")\(kind)_\(suffix)"
     }
 
     static func rect(_ r: [Double]) -> CGRect {
@@ -85,6 +95,11 @@ struct FaceplateLayout: Decodable {
 
     static func forMode(_ mode: SoundMode, device: Device = .tablet) -> FaceplateLayout? {
         (device == .phone ? phone : all)[mode.assetSuffix]
+    }
+
+    /// Layout for a face key; Platinum is Modern's alternate face, lined up with Modern.
+    static func forFace(_ face: String, device: Device = .tablet) -> FaceplateLayout? {
+        (device == .phone ? phone : all)[face]
     }
 }
 

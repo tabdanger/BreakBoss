@@ -56,6 +56,9 @@ struct StockSampleLibrary {
 
     func sample(kitID: String, pad: Int) -> Sample? { samples[kitID]?[pad] }
 
+    /// Every kit that has stock audio for this pad (the home-screen dice draws from these).
+    func kits(withPad pad: Int) -> [String] { samples.keys.sorted().filter { samples[$0]?[pad] != nil } }
+
     /// All file names are relative basenames in the manifest's directory. Audio decoding and
     /// per-file failures are handled off the main thread by the normal kit loader.
     static func load(manifestURL: URL, knownKitIDs: Set<String>, padCount: Int) throws -> StockSampleLibrary {

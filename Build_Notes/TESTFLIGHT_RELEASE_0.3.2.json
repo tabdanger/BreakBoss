@@ -1,0 +1,31 @@
+{
+  "version": "0.3.2",
+  "testFlightBuild": 13,
+  "sourceBaseBuild": 9,
+  "releaseCommit": "f868b6881df7f7df814049363d9762920276f701",
+  "runID": 38289954939,
+  "runURL": "https://github.com/tabdanger/BreakBoss/actions/runs/38289954939",
+  "processingState": "VALID",
+  "internalBuildState": "IN_BETA_TESTING",
+  "devices": {
+    "iPhone": {
+      "checks": 23903,
+      "seconds": 4.1,
+      "layouts": 6
+    },
+    "iPad": {
+      "checks": 23903,
+      "seconds": 5.5,
+      "layouts": 6
+    }
+  },
+  "stock": {
+    "kits": 34,
+    "assignments": 544,
+    "uniqueWavs": 318,
+    "sourceHits": 42
+  },
+  "factoryPresets": 61,
+  "tutorialVideoTranscriptions": "Blocked: no playback or captions recovered; source evidence required",
+  "physical128FrameCPUMeasured": false
+}

@@ -1,5 +1,6 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import Foundation
+import AVFoundation
 
 // MARK: - Self-test
 //
@@ -32,6 +33,11 @@ enum KnockSelfTest {
         phase("checkMigration", checkMigration)
         phase("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence)
         phase("checkTextureControls", checkTextureControls)
+        phase("checkPatternEditor", checkPatternEditor)
+        phase("checkMIDIPadMap", checkMIDIPadMap)
+        phase("checkRecordingTrim", checkRecordingTrim)
+        phase("checkDrumRoll", checkDrumRoll)
+        phase("checkWorkspaceChannels", checkWorkspaceChannels)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -75,7 +81,7 @@ enum KnockSelfTest {
 
     static func checkKits() {
         for def in KitLibrary.factory {
-            check(def.pads.count == Pad.count, "\(def.name): 16 pads")
+            check(def.pads.count == Pad.count, "\(def.name): 12 pads")
             for (i, r) in def.pads.enumerated() {
                 let b = DrumSynth.render(r, sampleRate: 48_000, seed: 7)
                 var peak: Float = 0
@@ -123,8 +129,21 @@ enum KnockSelfTest {
                 }
             }
         }
-        check(assignments == 544, "stock audio covers all 544 factory pad assignments")
-        check(urls.count == 318, "stock audio contains 318 distinct assigned WAV files")
+        check(assignments == 1176, "stock audio covers all 1176 factory pad assignments")
+        check(urls.count == 703, "stock audio contains 703 distinct assigned WAV files")
+        // Home dice draws each pad's sound from every kit's sound for that pad.
+        check(Pad.allCases.allSatisfy { library.kits(withPad: $0.rawValue).count == KitLibrary.factory.count }, "dice: every pad has a sound in every kit")
+        var picked = KnockState(); picked.stockPicks = Array(repeating: nil, count: Pad.count); picked.stockPicks?[0] = "detroit"
+        check(KnockController.stockPick(picked, pad: 0) == "detroit" && KnockController.stockPick(picked, pad: 1) == nil, "dice: per-pad picks")
+        check(picked.selectingKit(KitLibrary.drumMastery).stockPicks == nil, "dice: choosing a kit brings its own sounds back")
+        let detroitKick = library.sample(kitID: "detroit", pad: 0)
+        check(detroitKick?.url.lastPathComponent.hasPrefix("bb_kp2-") == true, "Detroit kit plays Tyrone's new pack")
+        // Vintage kits play Tyrone's Vintage pack (kicks, snares/claps, hats).
+        for kit in KitLibrary.kits(for: .vintage) {
+            let kick = library.sample(kitID: kit.id, pad: Pad.kick.rawValue)
+            let file = kick?.url.lastPathComponent ?? ""
+            check(["bb_vtg-", "bb_g-", "bb_kp2-"].contains { file.hasPrefix($0) }, "\(kit.name): kick from Tyrone's packs")
+        }
         for url in urls.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             autoreleasepool {
                 do {
@@ -152,7 +171,7 @@ enum KnockSelfTest {
         for style in GrooveStyle.allCases {
             for seed: UInt32 in [1, 2, 77, 12345] {
                 let loops = GrooveGenerator.loops(style: style, seed: seed)
-                check(loops.count == Pad.count, "\(style) seed \(seed): 16 loops")
+                check(loops.count == Pad.count, "\(style) seed \(seed): 12 loops")
                 for (i, p) in loops.enumerated() {
                     check(!p.events.isEmpty, "\(style) loop \(i + 1) has hits")
                     check(p.lengthTicks % (PatternData.ppq * 4) == 0, "\(style) loop \(i + 1) whole bars")
@@ -183,8 +202,6 @@ enum KnockSelfTest {
                 check(loops[LoopSlot.kick808.rawValue].events.allSatisfy {
                     $0.pad == Int8(Pad.kick.rawValue) || $0.pad == Int8(Pad.bass808.rawValue)
                 }, "\(style): Kick + 808 has only its two lanes")
-                check(loops[LoopSlot.shakerGroove.rawValue].events.allSatisfy { $0.pad == Int8(Pad.shaker.rawValue) },
-                      "\(style): shaker slot keeps its role")
                 // The main groove has a backbeat (snare or clap or rim) and a kick.
                 let a = loops[0]
                 check(a.events.contains { $0.pad == Int8(Pad.kick.rawValue) }, "\(style) main A has a kick")
@@ -325,7 +342,7 @@ enum KnockSelfTest {
             for i in a.indices { difference = max(difference, abs(a[i] - b[i])) }
             return difference
         }
-        for note: UInt8 in [36, 48, 51, 52, 60, 85] {
+        for note: UInt8 in [36, 47, 48, 52, 60, 84] {
             let e = engine()
             e.hostMIDI(offset: 73, status: 0x90, data1: note, data2: 127)
             let actual = block(e, 128)
@@ -431,7 +448,7 @@ enum KnockSelfTest {
             return left
         }
         func energy(_ values: [Float]) -> Float { values.reduce(0) { $0 + $1 * $1 } }
-        for note in (36...51).map({ UInt8($0) }) + [52, 60, 84] {
+        for note in (36...47).map({ UInt8($0) }) + [48, 60, 84] {
             let short = engine(), held = engine()
             for e in [short, held] { e.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 127) }
             // An immediate key release must leave the first sample, attack and entire tail
@@ -454,7 +471,7 @@ enum KnockSelfTest {
             _ = block(short)
             check(short.padHits[pad] == 2, "One-Shot MIDI \(note): another programmed note creates the next strike")
         }
-        for note: UInt8 in [36, 37, 42, 48, 51, 60] {
+        for note: UInt8 in [36, 37, 42, 47, 48, 60] {
             let soft = engine(), hard = engine()
             soft.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 32)
             hard.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 127)
@@ -624,6 +641,26 @@ enum KnockSelfTest {
         check(!heardWhileStopped, "FOLLOW DAW: silent while the DAW is stopped")
         check(heard, "FOLLOW DAW: plays when the DAW plays")
         check(abs(engine.status[4] - tempo) < 0.01, "TEMPO SYNC: uses the DAW's tempo")
+        // BreakBoss's own STOP / PLAY still work while the DAW runs.
+        func run(_ blocks: Int) -> Bool {
+            var loud = false
+            for _ in 0..<blocks {
+                l.withUnsafeMutableBufferPointer { lp in
+                    r.withUnsafeMutableBufferPointer { rp in
+                        engine.render(frames: 512, left: lp.baseAddress!, right: rp.baseAddress!,
+                                      host: HostTiming(tempo: tempo, beat: beat, playing: true))
+                    }
+                }
+                beat += 512 / 48_000 * tempo / 60
+                if l.contains(where: { abs($0) > 0.01 }) { loud = true }
+            }
+            return loud
+        }
+        engine.send(KEvent(kind: .stop))
+        _ = run(40)
+        check(!run(200), "FOLLOW DAW: BreakBoss STOP mutes the pattern while the DAW keeps playing")
+        engine.send(KEvent(kind: .play))
+        check(run(200), "FOLLOW DAW: BreakBoss PLAY brings the pattern back on the DAW's beat")
     }
 
     /// Nothing playing: silence (and after a while the chain stops running).
@@ -663,7 +700,7 @@ enum KnockSelfTest {
                 check(back.events.count == loops[0].events.count, "MIDI round trip keeps every hit (\(back.events.count)/\(loops[0].events.count))")
                 check(back.lengthTicks == loops[0].lengthTicks, "MIDI round trip keeps the length")
             }
-            let allPads = PatternData(name: "ALL 16 MIDI PADS", lengthTicks: PatternData.ppq * 4,
+            let allPads = PatternData(name: "ALL 12 MIDI PADS", lengthTicks: PatternData.ppq * 4,
                                       events: Pad.allCases.map { pad in
                 GrooveEvent(tick: Int32(pad.rawValue * 12), pad: Int8(pad.rawValue), velocity: 0.75,
                             length: pad == .bass808 ? 12 : 0)
@@ -672,14 +709,14 @@ enum KnockSelfTest {
             let allPadsBack = MIDIFile.read(url)
             check(allPadsBack?.events.count == Pad.count &&
                   Set(allPadsBack?.events.map { Int($0.pad) } ?? []) == Set(Pad.allCases.map { $0.rawValue }),
-                  "MIDI export and import preserve all 16 sequential drum pads")
+                  "MIDI export and import preserve all 12 sequential drum pads")
             let lowBass = PatternData(name: "LOW 808 MIDI", lengthTicks: PatternData.ppq * 4,
                                       events: [GrooveEvent(tick: 0, pad: Int8(Pad.bass808.rawValue), velocity: 1,
                                                            semis: -12, length: 96)])
             try MIDIFile.write(lowBass, tempo: 95, bounce: 0, bars: 1, to: url)
             let bassBack = MIDIFile.read(url)?.events.first
-            check(bassBack?.pad == Int8(Pad.bass808.rawValue) && bassBack?.semis == -8 && bassBack?.length == 96,
-                  "MIDI export bounds low 808 pitch to note 52 instead of colliding with pad 13")
+            check(bassBack?.pad == Int8(Pad.bass808.rawValue) && bassBack?.semis == -12 && bassBack?.length == 96,
+                  "MIDI export keeps a low 808 on note 48, just above the pads")
             check(lowBass.events[0].semis == -12, "MIDI pitch bounding leaves authored and audio-export bass pitch unchanged")
         } catch {
             check(false, "MIDI file writes: \(error)")
@@ -727,7 +764,7 @@ enum KnockSelfTest {
         e.receiveMIDI(status: 0x90, data1: 36, data2: 0, time: 0)
         renderBlock(e)
         check(e.status[0] == 0 && e.status[1] == -1, "zero velocity note-on releases final loop")
-        for note in 36...51 {
+        for note in 36...47 {
             e.receiveMIDI(status: 0x90, data1: UInt8(note), data2: 100, time: 0)
             renderBlock(e)
             check(e.status[0] == 1 && e.status[1] == Double(note - 36), "MIDI note \(note) holds full loop \(note - 35)")
@@ -735,9 +772,9 @@ enum KnockSelfTest {
             renderBlock(e)
             check(e.status[0] == 0 && e.status[1] == -1, "releasing MIDI note \(note) stops its held loop")
         }
-        e.receiveMIDI(status: 0x90, data1: 88, data2: 127, time: 0)
+        e.receiveMIDI(status: 0x90, data1: 47, data2: 127, time: 0)
         renderBlock(e)
-        check(e.status[1] == 15, "MIDI reaches loop 16")
+        check(e.status[1] == 11, "MIDI reaches loop 12")
         e.receiveMIDI(status: 0xB0, data1: 123, data2: 0, time: 0)
         renderBlock(e)
         check(e.status[0] == 0, "all notes off stops loop sequencing")
@@ -748,14 +785,10 @@ enum KnockSelfTest {
             renderBlock(e)
             check(e.padHits[pad.rawValue] > before, "MIDI plays pad \(pad.rawValue + 1)")
         }
-        let shakerBefore = e.padHits[Pad.shaker.rawValue]
+        let bassBefore = e.padHits[Pad.bass808.rawValue]
         e.receiveMIDI(status: 0x90, data1: 48, data2: 100, time: 0)
         renderBlock(e)
-        check(e.padHits[Pad.shaker.rawValue] > shakerBefore, "MIDI note 48 plays sequential pad 13")
-        let bassBefore = e.padHits[Pad.bass808.rawValue]
-        e.receiveMIDI(status: 0x90, data1: 52, data2: 100, time: 0)
-        renderBlock(e)
-        check(e.padHits[Pad.bass808.rawValue] > bassBefore, "MIDI note 52 plays the lowest chromatic 808 without overlapping pads")
+        check(e.padHits[Pad.bass808.rawValue] > bassBefore, "MIDI note 48 plays the lowest chromatic 808 without overlapping pads")
         e.setParam(.playMode, 1)
         for _ in 0..<1200 { e.receiveMIDI(status: 0x90, data1: 36, data2: 100, time: 0) }
         renderBlock(e)
@@ -769,30 +802,376 @@ enum KnockSelfTest {
         check(e.status[7] > 0, "rapid kit switches keep rendering")
     }
 
+    static func checkPatternEditor() {
+        let bar = PatternData.ppq * 4, cell = PatternData.stepTicks
+        var p = PatternData(name: "T", lengthTicks: bar * 2, events: [])
+        p = PatternEdit.toggle(p, pad: Pad.snare.rawValue, tick: cell * 4, cell: cell)
+        check(p.events.count == 1 && p.events[0].tick == cell * 4 && Int(p.events[0].pad) == Pad.snare.rawValue,
+              "editor: tap adds a hit on the step")
+        p = PatternEdit.toggle(p, pad: Pad.snare.rawValue, tick: cell * 4, cell: cell)
+        check(p.events.isEmpty, "editor: tapping the same step removes it")
+        var swung = PatternData(name: "S", lengthTicks: bar, events: [GrooveEvent(tick: cell * 2 + 5, pad: Int8(Pad.hat.rawValue), velocity: 0.4)])
+        swung = PatternEdit.toggle(swung, pad: Pad.hat.rawValue, tick: cell * 2, cell: cell)
+        check(swung.events.isEmpty, "editor: removing a step also removes a swung hit inside it")
+        let kept = PatternEdit.toggle(PatternData(name: "K", lengthTicks: bar, events: [GrooveEvent(tick: 0, pad: 0, velocity: 0.33)]),
+                                      pad: Pad.hat.rawValue, tick: cell * 8, cell: cell)
+        check(kept.events.contains { $0.tick == 0 && $0.velocity == 0.33 }, "editor: untouched hits keep their velocity")
+        let bass = PatternEdit.longBass(PatternData(name: "B", lengthTicks: bar, events: []), from: cell * 2, cells: 6, cell: cell)
+        check(bass.events.count == 1 && bass.events[0].length == cell * 6 && Int(bass.events[0].pad) == Pad.bass808.rawValue,
+              "editor: dragging on the 808 row draws one long note")
+        let edge = PatternEdit.longBass(PatternData(name: "E", lengthTicks: bar, events: []), from: bar - cell * 2, cells: 6, cell: cell)
+        check(edge.events.first.map { $0.tick + $0.length <= bar } == true, "editor: long 808 stays inside the loop")
+        var source = PatternData(name: "C", lengthTicks: bar * 2, events: [
+            GrooveEvent(tick: 0, pad: 0, velocity: 1), GrooveEvent(tick: bar + cell * 4, pad: 1, velocity: 1)])
+        source = PatternEdit.copyNext(source, fromBar: 0, bars: 2)
+        check(source.bars == 4 && source.events.count == 4 && source.events.contains { $0.tick == bar * 2 } &&
+              source.events.contains { $0.tick == bar * 3 + cell * 4 }, "editor: COPY NEXT copies bars 1-2 into 3-4")
+        let longer = PatternEdit.setLength(PatternData(name: "L", lengthTicks: bar, events: [GrooveEvent(tick: cell, pad: 0, velocity: 1)]), bars: 4)
+        check(longer.bars == 4 && longer.events.map { $0.tick } == [cell, bar + cell, bar * 2 + cell, bar * 3 + cell],
+              "editor: longer length repeats the pattern")
+        let shorter = PatternEdit.setLength(longer, bars: 1)
+        check(shorter.bars == 1 && shorter.events.count == 1, "editor: shorter length drops hits past the end")
+        let capped = PatternEdit.copyNext(PatternData(name: "M", lengthTicks: bar * 16, events: [GrooveEvent(tick: bar * 14, pad: 0, velocity: 1)]),
+                                          fromBar: 14, bars: 2)
+        check(capped.bars == 16 && capped.events.count == 1, "editor: COPY NEXT never goes past 16 bars")
+        let sixteen = PatternEdit.setLength(PatternData(name: "X", lengthTicks: bar * 4, events: [GrooveEvent(tick: 0, pad: 0, velocity: 1)]), bars: 16)
+        check(sixteen.bars == 16 && sixteen.events.count == 4, "drum roll: 16 bars repeats a 4-bar pattern four times")
+        check(PatternEdit.setLength(sixteen, bars: 32).bars == 16, "drum roll: patterns stop at 16 bars")
+        var saved16 = KnockState()
+        saved16.editedLoops[0] = sixteen
+        check(saved16.normalized().editedLoops[0]?.bars == 16, "a 16-bar pattern is saved and restored at full length")
+        let mid16 = FileManager.default.temporaryDirectory.appendingPathComponent("selftest-16.mid")
+        if (try? MIDIFile.write(sixteen, tempo: 120, bounce: 0, bars: 16, to: mid16)) != nil {
+            check(MIDIFile.read(mid16)?.bars == 16, "a 16-bar pattern exports and re-imports as MIDI at full length")
+        }
+        // Edits reach the engine as a valid loop.
+        let set = PatternSet([source])
+        check(set.loops[0].count == source.events.count && set.loops[0].lengthTicks == Int(source.lengthTicks),
+              "editor: edited pattern loads into the engine unchanged")
+    }
+
+    static func checkMIDIPadMap() {
+        let e = KnockEngine()
+        e.prepare(sampleRate: 48_000, maxFrames: 256)
+        e.setParam(.playMode, 0)
+        e.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        renderBlock(e)
+        func hits(_ note: UInt8) -> [UInt32] {
+            let before = (0..<Pad.count).map { e.padHits[$0] }
+            e.receiveMIDI(status: 0x90, data1: note, data2: 100, time: 0)
+            renderBlock(e)
+            e.receiveMIDI(status: 0x80, data1: note, data2: 0, time: 0)
+            renderBlock(e)
+            return (0..<Pad.count).map { e.padHits[$0] - before[$0] }
+        }
+        func onlyPad(_ d: [UInt32], _ pad: Int) -> Bool { d.enumerated().allSatisfy { $0.offset == pad ? $0.element > 0 : $0.element == 0 } }
+        check(onlyPad(hits(36), 0) && onlyPad(hits(47), 11), "MIDI map: standard notes 36-47 by default")
+        // MPC Classic, sent the way the controller sends it.
+        e.send(KEvent(kind: .mapNote, a: -1))
+        for (pad, note) in MIDIPadMap.mpcClassicNotes.enumerated() { e.send(KEvent(kind: .mapNote, a: Int32(note), value: Double(pad))) }
+        renderBlock(e)
+        for (pad, note) in MIDIPadMap.mpcClassicNotes.enumerated() {
+            check(onlyPad(hits(UInt8(note)), pad), "MIDI map: MPC Classic note \(note) plays pad \(pad + 1)")
+        }
+        check(hits(39).allSatisfy { $0 == 0 } && hits(41).allSatisfy { $0 == 0 }, "MIDI map: notes not on an MPC pad play nothing")
+        let bass808 = hits(60)
+        check(bass808[Pad.bass808.rawValue] > 0 && bass808.enumerated().allSatisfy { $0.offset == Pad.bass808.rawValue || $0.element == 0 },
+              "MIDI map: the chromatic 808 still plays on notes the map doesn't use")
+        let learned = MIDIPadMap.learn(MIDIPadMap.standardNotes, pad: 2, note: 36)
+        check(learned[2] == 36 && learned[0] == -1 && learned.count == Pad.count, "MIDI learn moves a note to the new pad only")
+        check(MIDIPadMap.clean([200, -5]) == [-1, -1] + Array(repeating: -1, count: Pad.count - 2), "MIDI map cleans bad notes")
+        var saved = KnockState()
+        saved.midiMap = .mpcClassic
+        let round = try? JSONDecoder().decode(KnockState.self, from: JSONEncoder().encode(saved))
+        check(round?.midiMap == .mpcClassic, "MIDI map is saved with the session / AUv3 project")
+        let old = try? JSONDecoder().decode(KnockState.self, from: JSONEncoder().encode(KnockState()))
+        check(old != nil && old?.midiMap == nil, "sessions without a MIDI map still load (standard map)")
+        check(e.lastNoteOn.pointee & 0x7F == 60 && e.lastNoteOn.pointee >> 8 > 0, "MIDI learn sees the last note played")
+    }
+
+    static func checkRecordingTrim() {
+        #if canImport(AVFoundation)
+        do {
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("selftest take.wav")
+            try? FileManager.default.removeItem(at: url)
+            let settings: [String: Any] = [AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 48_000,
+                                           AVNumberOfChannelsKey: 1, AVLinearPCMBitDepthKey: 24,
+                                           AVLinearPCMIsFloatKey: false, AVLinearPCMIsBigEndianKey: false]
+            let format = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1)!
+            let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 48_000)!
+            buffer.frameLength = 48_000
+            let d = buffer.floatChannelData![0]
+            for i in 0..<48_000 { d[i] = i < 24_000 ? 0.001 : 0.5 * sinf(Float(i) * 0.05) * expf(-Float(i - 24_000) / 4_000) }
+            do {
+                let w = try AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
+                try w.write(from: buffer)
+            }
+            let trimmed = try PadRecorder.trimLeadingSilence(url)
+            check(trimmed != nil, "record: a take with sound is kept")
+            if let trimmed {
+                let f = try AVAudioFile(forReading: trimmed)
+                check(f.length > 23_000 && f.length < 24_400, "record: silence before the hit is trimmed (\(f.length) frames)")
+                let b = AVAudioPCMBuffer(pcmFormat: f.processingFormat, frameCapacity: AVAudioFrameCount(f.length))!
+                try f.read(into: b)
+                check(abs(b.floatChannelData![0][0]) < 0.0001, "record: the trimmed take starts without a click")
+                let back = try SampleLoader.load(trimmed)
+                check(back.length > 0, "record: the take loads like an imported sample")
+                try? FileManager.default.removeItem(at: trimmed)
+            }
+            let silent = FileManager.default.temporaryDirectory.appendingPathComponent("selftest silent.wav")
+            try? FileManager.default.removeItem(at: silent)
+            for i in 0..<48_000 { d[i] = 0.0005 }
+            do {
+                let w = try AVAudioFile(forWriting: silent, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
+                try w.write(from: buffer)
+            }
+            check(try PadRecorder.trimLeadingSilence(silent) == nil, "record: a silent take is not put on the pad")
+            try? FileManager.default.removeItem(at: url)
+            try? FileManager.default.removeItem(at: silent)
+        } catch {
+            check(false, "record: trim test ran (\(error.localizedDescription))")
+        }
+        #endif
+    }
+
+    static func checkWorkspaceChannels() {
+        let sharedSound = "stock:bb-test-kick.wav"
+        let first = WorkspaceChannel(id: UUID(), pad: 0, soundID: sharedSound,
+                                     name: "KICK A", category: SoundType.kick.rawValue)
+        let second = WorkspaceChannel(id: UUID(), pad: 1, soundID: sharedSound,
+                                      name: "KICK B", category: SoundType.kick.rawValue)
+        var state = KnockState()
+        state.workspaceChannels = [first, second]
+        let normalized = state.normalized()
+        check(normalized.workspaceChannels?.count == 2 &&
+              normalized.workspaceChannels?[0].soundID == normalized.workspaceChannels?[1].soundID &&
+              normalized.workspaceChannels?[0].pad != normalized.workspaceChannels?[1].pad,
+              "rack: the same library sound may occupy independent engine slots")
+        let restored = (try? JSONEncoder().encode(state)).flatMap {
+            try? JSONDecoder().decode(KnockState.self, from: $0)
+        }
+        check(restored?.workspaceChannels == state.workspaceChannels,
+              "rack: duplicate sounds and track identity survive project saving")
+        state.workspaceChannels?.append(WorkspaceChannel(id: UUID(), pad: 1, soundID: sharedSound,
+                                                          name: "DUPLICATE PAD", category: SoundType.kick.rawValue))
+        check(state.normalized().workspaceChannels?.count == 2,
+              "rack: invalid duplicate audio slots are removed on migration")
+        for p in 2..<Pad.count {
+            state.workspaceChannels?.append(WorkspaceChannel(id: UUID(), pad: p,
+                soundID: "stock:sample-\(p)", name: "SAMPLE \(p)", category: SoundType.perc.rawValue))
+        }
+        check(state.normalized().workspaceChannels?.count == Pad.count,
+              "rack: up to 12 independent sound channels")
+        check(KnockState().normalized().workspaceChannels == nil,
+              "rack: old sessions open without losing their faceplate or saved pads")
+        var pattern = PatternData(name: "RACK", lengthTicks: PatternEdit.barTicks,
+                                  events: [])
+        pattern = PatternEdit.toggle(pattern, pad: first.pad, tick: 0, cell: PatternData.stepTicks)
+        check(pattern.events.count == 1 && Int(pattern.events[0].pad) == first.pad,
+              "rack: first channel has its own sequenced steps")
+        pattern = PatternEdit.toggle(pattern, pad: second.pad, tick: 0, cell: PatternData.stepTicks)
+        check(pattern.events.count == 2 && Set(pattern.events.map(\.pad)).count == 2,
+              "rack: identical sounds never share their MIDI events")
+    }
+
+    static func checkDrumRoll() {
+        let bar = PatternEdit.barTicks, step = PatternData.stepTicks
+        // Note operations.
+        var p = PatternData(name: "D", lengthTicks: bar * 2, events: [])
+        p = PatternEdit.addNote(p, pad: Pad.kick.rawValue, tick: 0, velocity: 0.9)
+        p = PatternEdit.addNote(p, pad: Pad.kick.rawValue, tick: 1, velocity: 0.5)
+        check(p.events.count == 1 && p.events[0].velocity == 0.5, "drum roll: drawing on an existing hit replaces it")
+        p = PatternEdit.addNote(p, pad: Pad.bass808.rawValue, tick: step * 4, length: step * 6, velocity: 1, semis: 5)
+        check(p.events.contains { Int($0.pad) == Pad.bass808.rawValue && $0.length == step * 6 && $0.semis == 5 }, "drum roll: long 808 note with pitch")
+        let drums = PatternEdit.addNote(p, pad: Pad.snare.rawValue, tick: step * 4, length: 99, velocity: 1)
+        check(drums.events.first { Int($0.pad) == Pad.snare.rawValue }?.length == 0, "drum roll: drum hits have no length")
+        let kickKey = NoteKey(p.events.first { Int($0.pad) == Pad.kick.rawValue }!)
+        let (moved, movedKeys) = PatternEdit.move(p, [kickKey], by: step * 2)
+        check(moved.events.contains { Int($0.pad) == Pad.kick.rawValue && $0.tick == kickKey.tick + step * 2 } && movedKeys.count == 1, "drum roll: move")
+        let (clampedMove, _) = PatternEdit.move(p, [kickKey], by: -500)
+        check(clampedMove.events.contains { Int($0.pad) == Pad.kick.rawValue && $0.tick == 0 }, "drum roll: notes can't move before the start")
+        let bassKey = NoteKey(p.events.first { Int($0.pad) == Pad.bass808.rawValue }!)
+        let (resized, _) = PatternEdit.resize(p, bassKey, length: bar * 4)
+        check(resized.events.first { Int($0.pad) == Pad.bass808.rawValue }.map { $0.tick + $0.length <= bar * 2 } == true, "drum roll: 808 stretch stays inside")
+        let vel = PatternEdit.setVelocity(p, [kickKey], 0.2)
+        check(vel.events.first { NoteKey($0) == kickKey }?.velocity == 0.2, "drum roll: velocity lane")
+        let (pitched, pitchedKeys) = PatternEdit.setPitch(p, [kickKey], 30)
+        check(pitched.events.first { Int($0.pad) == Pad.kick.rawValue }?.semis == 12 && pitchedKeys.count == 1, "drum roll: drum pitch limited to +12")
+        let (dup, dupKeys) = PatternEdit.duplicate(p, [kickKey, bassKey])
+        check(dupKeys.count == 2 && dup.events.count == p.events.count + 2, "drum roll: DUPLICATE copies the selection")
+        let removed = PatternEdit.remove(p, [kickKey])
+        check(!removed.events.contains { NoteKey($0) == kickKey } && removed.events.count == p.events.count - 1, "drum roll: erase")
+        var loose = PatternData(name: "Q", lengthTicks: bar, events: [GrooveEvent(tick: 29, pad: 0, velocity: 1), GrooveEvent(tick: 383, pad: 1, velocity: 1)])
+        loose = PatternEdit.quantize(loose, nil, grid: step)
+        check(loose.events.map { $0.tick }.sorted() == [0, 24], "drum roll: quantize (and wrap at the end)")
+        let rec = PatternEdit.addRecorded(PatternData(name: "R", lengthTicks: bar, events: []), pad: 2, tick: 47, velocity: 0.6, semis: 0, snap: step)
+        check(rec.events.first?.tick == 48, "drum roll: recorded hits snap to the grid")
+        // Channel long-press menu: fill every N.
+        let filled = PatternEdit.fill(p, pad: Pad.hat.rawValue, every: PatternData.ppq, velocity: 0.7)
+        check(filled.events.filter { Int($0.pad) == Pad.hat.rawValue }.map { $0.tick } == [0, 96, 192, 288, 384, 480, 576, 672],
+              "drum roll: fill every 1/4 puts a hit on every beat")
+        check(filled.events.filter { Int($0.pad) != Pad.hat.rawValue }.count == p.events.count, "drum roll: fill leaves other channels alone")
+        let halfStep = PatternEdit.fill(p, pad: Pad.hat.rawValue, every: step / 2, velocity: 0.7)
+        check(halfStep.events.filter { Int($0.pad) == Pad.hat.rawValue }.count == Int(bar * 2 / (step / 2)), "drum roll: fill every 1/2 step")
+        let barFill = PatternEdit.fill(p, pad: Pad.bass808.rawValue, every: bar, velocity: 1)
+        check(barFill.events.filter { Int($0.pad) == Pad.bass808.rawValue }.map { $0.tick } == [0, bar]
+              && barFill.events.allSatisfy { Int($0.pad) != Pad.bass808.rawValue || $0.length > step }, "drum roll: fill every bar (808 holds)")
+        check(!PatternEdit.clearChannel(filled, pad: Pad.hat.rawValue).events.contains { Int($0.pad) == Pad.hat.rawValue }, "drum roll: clear channel")
+        // Snap to scale (FL's list).
+        let minor = MusicScale.named("Minor (Aeolian)")
+        check(MusicScale.all.count == 23 && minor.steps == [0, 2, 3, 5, 7, 8, 10], "scales: FL list and C minor")
+        check(minor.snap(61, root: 0) == 60 && minor.snap(64, root: 0) == 63 && minor.snap(66, root: 0) == 65, "scales: snap to nearest (ties go down)")
+        check(MusicScale.named("Major (Ionian)").snap(66, root: 7) == 66 && !MusicScale.named("Major (Ionian)").contains(65, root: 7), "scales: G major has F# not F")
+        check(MusicScale.midiNote(hz: 55) == 33 && MusicScale.noteName(33) == "A1" && MusicScale.noteName(60) == "C4", "scales: 808 root note names")
+        check(MusicScale.all.allSatisfy { sc in (0..<128).allSatisfy { sc.contains(sc.snap($0, root: 3), root: 3) } }, "scales: every snap lands in the scale")
+        // Mute / solo.
+        var muted = Array(repeating: false, count: Pad.count), solo = muted
+        check(KnockController.padMask(muted: muted, solo: solo) == 0x0FFF, "mute/solo: everything plays by default")
+        muted[1] = true
+        check(KnockController.padMask(muted: muted, solo: solo) == 0x0FFD, "mute/solo: mute silences one channel")
+        solo[0] = true; solo[1] = true
+        check(KnockController.padMask(muted: muted, solo: solo) == 0x0001, "mute/solo: solo plays only soloed channels, mutes still win")
+        // Humanize is repeatable and doesn't touch the notes you see.
+        var h = PatternData(name: "H", lengthTicks: bar, events: (0..<16).map { GrooveEvent(tick: Int32($0) * step, pad: 4, velocity: 0.7) })
+        h.humanize = 0.8
+        let h1 = PatternSet.humanized(h), h2 = PatternSet.humanized(h)
+        check(h1 == h2 && h1.events != h.events, "humanize: same pattern, same feel")
+        check(h1.events.allSatisfy { abs($0.velocity - 0.7) < 0.2 } && zip(h1.events, h.events).allSatisfy { abs($0.0.tick - $0.1.tick) <= 6 },
+              "humanize: small timing and velocity changes")
+        // Engine: per-hit pitch, mute mask, record ring, playhead.
+        let e = KnockEngine()
+        e.prepare(sampleRate: 48_000, maxFrames: 256)
+        e.setParam(.playMode, 1)
+        e.setParam(.followDAW, 0)
+        e.setParam(.tempoSync, 0)
+        e.setTempo(120)
+        e.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        var rp = PatternData(name: "REC", lengthTicks: bar, events: [GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1)])
+        e.patternHandoff.publish(PatternSet([rp] + Array(repeating: rp, count: Pad.count - 1)))
+        renderBlock(e)
+        e.send(KEvent(kind: .loopPad, a: 0))
+        for _ in 0..<20 { renderBlock(e) }
+        check(e.playheadTick.pointee > 0 && e.playheadTick.pointee < Double(bar), "drum roll: playhead follows the pattern")
+        e.send(KEvent(kind: .recordArm, a: 1))
+        e.send(KEvent(kind: .pad, a: Int32(Pad.snare.rawValue), value: 0.8))
+        renderBlock(e)
+        let hits = e.collectRecorded()
+        check(hits.count == 1 && Int(hits[0].pad) == Pad.snare.rawValue && hits[0].tick > 0 && hits[0].loop == 0,
+              "drum roll: RECORD captures a live hit at its place in the pattern")
+        e.receiveMIDI(status: 0x90, data1: 38, data2: 100, time: 0)
+        renderBlock(e)
+        check(Int(e.status[1]) == 0 && e.collectRecorded().count == 1, "drum roll: while recording, MIDI notes play drums instead of switching loops")
+        e.send(KEvent(kind: .recordArm, a: 0))
+        let kickBefore = e.padHits[Pad.kick.rawValue]
+        e.send(KEvent(kind: .padMask, a: Int32(0x0FFF & ~1)))
+        e.send(KEvent(kind: .pad, a: Int32(Pad.kick.rawValue), value: 1))
+        renderBlock(e)
+        check(e.padHits[Pad.kick.rawValue] == kickBefore, "mute: a muted channel doesn't sound")
+        e.send(KEvent(kind: .padMask, a: 0x0FFF))
+        renderBlock(e)
+        rp.events = [GrooveEvent(tick: 0, pad: Int8(Pad.snare.rawValue), velocity: 1, semis: 7)]
+        let set = PatternSet([rp])
+        check(set.loops[0].events[0].semis == 7, "drum roll: drum hits keep their own pitch for the engine")
+        // Metronome: silent kit, playing → clicks; off → silence.
+        let m = KnockEngine()
+        m.prepare(sampleRate: 48_000, maxFrames: 256)
+        m.setParam(.playMode, 1); m.setParam(.followDAW, 0); m.setParam(.tempoSync, 0); m.setTempo(120)
+        m.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        m.patternHandoff.publish(PatternSet(Array(repeating: PatternData(name: "E", lengthTicks: bar, events: []), count: Pad.count)))
+        renderBlock(m)
+        m.send(KEvent(kind: .loopPad, a: 0))
+        m.send(KEvent(kind: .metronome, a: 1))
+        var clickEnergy: Float = 0
+        for _ in 0..<200 {
+            var l = [Float](repeating: 0, count: 256), r = l
+            l.withUnsafeMutableBufferPointer { lp in r.withUnsafeMutableBufferPointer { rp in m.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+            clickEnergy += l.reduce(0) { $0 + $1 * $1 }
+        }
+        check(clickEnergy > 0.5, "metronome clicks while playing (\(clickEnergy))")
+        // MIDI out (multi-out): kick on channel 1 note 36, snare on channel 2 note 38, off by default.
+        let mo = KnockEngine()
+        mo.prepare(sampleRate: 48_000, maxFrames: 256)
+        mo.setParam(.playMode, 1); mo.setParam(.followDAW, 0); mo.setParam(.tempoSync, 0); mo.setTempo(120)
+        mo.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        var loopsMO = Array(repeating: PatternData(name: "E", lengthTicks: bar, events: []), count: Pad.count)
+        loopsMO[0] = PatternData(name: "M", lengthTicks: bar, events: [GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1),
+                                                                       GrooveEvent(tick: PatternData.ppq, pad: Int8(Pad.snare.rawValue), velocity: 0.5)])
+        mo.patternHandoff.publish(PatternSet(loopsMO))
+        renderBlock(mo)
+        func collect(_ blocks: Int) -> [(Int, UInt8, UInt8, UInt8)] {
+            var got: [(Int, UInt8, UInt8, UInt8)] = []
+            for _ in 0..<blocks {
+                var l = [Float](repeating: 0, count: 256), r = l
+                l.withUnsafeMutableBufferPointer { lp in r.withUnsafeMutableBufferPointer { rp in mo.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+                mo.forEachMIDIOut { got.append(($0, $1, $2, $3)) }
+            }
+            return got
+        }
+        mo.send(KEvent(kind: .loopPad, a: 0))
+        check(collect(120).isEmpty, "MIDI out: nothing is sent while it's off")
+        mo.send(KEvent(kind: .midiOut, a: Int32(Pad.kick.rawValue), value: 0 * 128 + 36))
+        mo.send(KEvent(kind: .midiOut, a: Int32(Pad.snare.rawValue), value: 1 * 128 + 38))
+        mo.send(KEvent(kind: .midiOut, a: -1, value: 1))
+        let sent = collect(800)          // two full bars at 120 BPM (4.3 s), so every hit comes round again
+        check(sent.contains { $0.1 == 0x90 && $0.2 == 36 && $0.3 == 127 }, "MIDI out: kick note on, channel 1, note 36")
+        check(sent.contains { $0.1 == 0x91 && $0.2 == 38 && $0.3 == 64 }, "MIDI out: snare on its own channel (2), note 38, velocity")
+        check(sent.contains { $0.1 == 0x80 && $0.2 == 36 }, "MIDI out: note off follows")
+        check(sent.allSatisfy { $0.0 >= 0 && $0.0 < 256 }, "MIDI out: messages fall inside their buffer")
+        mo.send(KEvent(kind: .stop))
+        _ = collect(40)
+        // Round trip: the DAW playing the recorded part back plays the drum itself (LOOP mode too), no echo.
+        mo.hostMIDI(offset: 0, status: 0x91, data1: 38, data2: 100)
+        var l3 = [Float](repeating: 0, count: 256), r3 = l3
+        l3.withUnsafeMutableBufferPointer { lp in r3.withUnsafeMutableBufferPointer { rp in mo.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+        var echoed = 0
+        mo.forEachMIDIOut { _, _, _, _ in echoed += 1 }
+        check(l3.contains { abs($0) > 0.01 }, "MIDI in: the recorded snare (channel 2, note 38) plays the snare in LOOP mode")
+        check(echoed == 0, "MIDI in: notes from the DAW don't go back out")
+        _ = rp
+    }
+
     static func checkMigration() {
         var old = KnockState()
-        old.pads = Array(repeating: PadSettings(), count: 12)
+        old.pads = Array(repeating: PadSettings(), count: 16)
         old.pads[0].tune = 7
-        old.editedLoops = Array(repeating: nil, count: 12)
+        old.editedLoops = Array(repeating: nil, count: 16)
         old.editedLoops[2] = PatternData(name: "KEEP", lengthTicks: 384, events: [])
         let new = old.normalized()
-        check(new.pads.count == 16 && new.pads[0].tune == 7, "12-pad kits migrate without losing pad settings")
-        check(new.editedLoops.count == 16 && new.editedLoops[2]?.name == "KEEP", "12-loop presets preserve edits")
-        check(KitLibrary.core.count == 17 && KitLibrary.textures.count == 7 && KitLibrary.legacy.count == 10 && KitLibrary.factory.count == 34,
-              "34 factory kits include 17 core, seven textures, and ten original kits")
+        check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
+        check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
+        check(KitLibrary.core.count == 24 && KitLibrary.textures.count == 8 && KitLibrary.legacy.count == 10 && KitLibrary.genres.count == 56 && KitLibrary.factory.count == 98,
+              "98 factory kits: 24 core, eight textures, ten originals and 56 genre and artist-style kits")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")
         check(Pad.allCases.allSatisfy { Pad.index(forMIDINote: $0.midiNote) == $0.rawValue }, "all pad MIDI mappings round trip")
-        check(Pad.allCases.map { $0.midiNote } == Array(36...51), "16 factory pads use consecutive MIDI notes 36 through 51")
-        check((36...51).allSatisfy { !Pad.bassNoteRange.contains($0) } &&
+        check(Pad.count == 12 && Pad.allCases.map { $0.midiNote } == Array(36...47), "12 pads use consecutive MIDI notes 36 through 47")
+        check((36...47).allSatisfy { !Pad.bassNoteRange.contains($0) } &&
               Pad.bassNoteRange.allSatisfy { Pad.index(forMIDINote: $0) == nil }, "drum pad and chromatic 808 MIDI ranges do not overlap")
     }
 
     static func checkFactoryPresetsAndKitIndependence() {
-        let presets = FactoryPresets.all
-        check(presets.count >= 50 && Set(presets.map { $0.name }).count == presets.count,
-              "50+ factory presets have unique browser names")
-        for mode in SoundMode.allCases {
-            check(presets.filter { $0.mode == mode }.count >= 16, "\(mode.title) has a complete bank of factory presets")
+        let presets = PatternBank.all
+        check(presets.count >= 150 && Set(presets.map { $0.name }).count == presets.count, "pattern bank loads with unique names (\(presets.count))")
+        let wanted = ["Trap", "Dark Trap", "West Coast", "Drill", "Amapiano", "South African RnB", "RnB", "90s RnB",
+                      "80s RnB", "80s Pop", "80s Funk", "EDM", "House", "Techno",
+                      "Boom Bap", "Jazz", "Neo Soul", "Soul RnB", "Detroit", "Toronto Nights", "Late Night RnB", "ATL Wave",
+                      "Rockstar Bounce", "Vamp Rage", "Carolina Soul", "LA Lyricist", "Soft Soul", "Houston Queen"]
+        for style in wanted { check(PatternBank.presets(in: style).count >= 10, "\(style): at least 10 presets") }
+        check(PatternBank.styles.first == "Danger Patterns" && PatternBank.presets(in: "Danger Patterns").count >= 13, "Danger Patterns come first")
+        for p in presets {
+            let pat = p.pattern
+            check(!pat.events.isEmpty && pat.events.allSatisfy { $0.tick >= 0 && $0.tick < pat.lengthTicks && Int($0.pad) < Pad.count },
+                  "\(p.name): pattern decodes inside its length")
+        }
+        if let hh = PatternBank.preset(named: "80s HIP HOP 1") {
+            let kicks = hh.pattern.events.filter { Int($0.pad) == Pad.kick.rawValue }.map { $0.tick / PatternData.stepTicks }
+            check(kicks == [0, 3, 6, 10, 13] && hh.bpm == 87 && hh.swing == 54, "Danger Pattern 80s HIP HOP 1 matches the cheat sheet")
+        } else {
+            check(false, "Danger Pattern 80s HIP HOP 1 is present")
+        }
+        if let trap = PatternBank.preset(named: "TRAP 2 TRIPLET HATS") {
+            let hats = trap.pattern.events.filter { Int($0.pad) == Pad.hat.rawValue }.map { $0.tick }
+            check(hats.contains(4 * 24) && hats.contains(4 * 24 + 16) && hats.contains(4 * 24 + 32), "triplet hats decode at 1/3-step spacing")
+            check(trap.pattern.events.contains { Int($0.pad) == Pad.bass808.rawValue && $0.length > 24 }, "808 lines decode with their length")
         }
         check(KitLibrary.kits(for: .modern).count >= 6 && KitLibrary.kits(for: .vintage).count >= 6 &&
               KitLibrary.kits(for: .texture).count >= 4, "mode browsers cover six Modern, six Vintage, and four Texture factory kits")
@@ -815,56 +1194,56 @@ enum KnockSelfTest {
         }
         source.editedLoops[0] = PatternData(name: "CUSTOM LOOP", lengthTicks: 384, events: [])
         source = source.normalized()
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        source.grooveSeed = 777
+        source.bpm = 101
         let changedKit = source.selectingKit(KitLibrary.west90s)
         var expectedPads = source.pads
         for i in expectedPads.indices { expectedPads[i].sampleFile = nil }
         check(changedKit.kitID == KitLibrary.west90s.id && changedKit.kitName == KitLibrary.west90s.name &&
-              changedKit.userKit == nil, "switching kits replaces the raw audio identity")
+              changedKit.userKit == nil, "switching kits replaces the drum sounds")
         check(changedKit.values == source.values && changedKit.mode == source.mode &&
               changedKit.playMode == source.playMode && changedKit.presetName == source.presetName,
               "switching kits preserves active mode, FX knobs, clipper, transport and preset identity")
         check(changedKit.pads == expectedPads, "switching kits preserves per-pad pitch, decay, filter, level and pan")
-        check(changedKit.editedLoops.allSatisfy { $0 == nil }, "switching kits regenerates the kit's factory patterns")
+        check(changedKit.editedLoops == source.editedLoops && changedKit.grooveSeed == 777 && changedKit.bpm == 101 &&
+              changedKit.patternStyle == KitLibrary.kit(id: source.kitID).style,
+              "switching kits keeps the pattern, its edits and the tempo")
+        let twice = changedKit.selectingKit(KitLibrary.neoSoul)
+        check(twice.patternStyle == changedKit.patternStyle, "cycling kits never changes the pattern")
 
-        var distinctSnapshots = Set<Data>()
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys]
         for preset in presets {
-            let kit = KitLibrary.kit(id: preset.kitID)
             let state = preset.applying(to: source)
-            check(kit.id == preset.kitID && state.kitID == preset.kitID,
-                  "\(preset.name): loads its matching factory kit")
-            check(state.mode == preset.mode && state.values[KParam.soundMode.id] == Float(preset.mode.rawValue) &&
-                  state.presetName == preset.name, "\(preset.name): restores the preset mode and name")
-            check(state.pads.count == Pad.count && state.pads == preset.pads && state.pads.allSatisfy { $0.sampleFile == nil },
-                  "\(preset.name): restores all 16 pad settings and stock sample identities")
-            check(state.values[KParam.playMode.id] == 0 && state.values[KParam.tempoSync.id] == 1 &&
-                  state.values[KParam.followDAW.id] == 0, "\(preset.name): preserves player and host transport choices")
-            for p in KParam.allCases where p.isKnob || p == .clipper {
-                check(state.values[p.id] == (preset.values[p] ?? p.defaultValue),
-                      "\(preset.name): restores \(p.name) without inheriting previous FX")
+            check(state.kitID == source.kitID && state.mode == source.mode && state.pads == source.pads,
+                  "\(preset.name): keeps the current kit, mode and pad sounds")
+            for p in KParam.allCases where (p.isKnob || p == .clipper) && p != .bounce {
+                check(state.values[p.id] == source.values[p.id], "\(preset.name): keeps \(p.name)")
             }
-            check(state.pads.allSatisfy {
-                $0.tune.isFinite && (-24...24).contains($0.tune) && $0.decay.isFinite && (0.05...1).contains($0.decay) &&
-                $0.filter.isFinite && (0...1).contains($0.filter) && $0.level.isFinite && (0...1).contains($0.level) &&
-                $0.pan.isFinite && (-1...1).contains($0.pan)
-            }, "\(preset.name): pad controls are finite and bounded")
-            let data = try? encoder.encode(state)
-            let restored = data.flatMap { try? JSONDecoder().decode(KnockState.self, from: $0) }
-            check(restored == state, "\(preset.name): full mode, kit, FX and pad snapshot round-trips")
-            // Changing a name alone does not create another sound. Exclude the name when
-            // counting authored audio snapshots, while retaining kit and processing choices.
-            var sound = state
-            sound.presetName = ""
-            if let soundData = try? encoder.encode(sound) { distinctSnapshots.insert(soundData) }
-            let sameKitSource = source.selectingKit(kit)
-            check(preset.applying(to: sameKitSource) == state, "\(preset.name): applying the current kit still restores all FX and pad controls")
+            check(state.basePattern == preset.pattern && state.editedLoops.allSatisfy { $0 == nil } && state.presetName == preset.name &&
+                  abs((state.values[KParam.bounce.id] ?? 0) - preset.bounce) < 0.0001, "\(preset.name): loads its pattern and swing")
+            check(state.values[KParam.playMode.id] == 0 && state.values[KParam.tempoSync.id] == 1 &&
+                  state.values[KParam.followDAW.id] == 0 && state.bpm == source.bpm,
+                  "\(preset.name): preserves player and host transport choices (tempo sync keeps the tempo)")
+            let loops = GrooveGenerator.loops(fromMain: preset.pattern, style: preset.grooveStyle, seed: 1)
+            check(loops.count == Pad.count && !loops[0].events.isEmpty && loops.allSatisfy { $0.lengthTicks >= PatternData.ppq * 4 },
+                  "\(preset.name): 12 loops built from its pattern")
+            check(loops[0].events.count >= preset.pattern.events.count, "\(preset.name): MAIN A keeps every authored hit")
         }
-        check(distinctSnapshots.count >= 50, "50+ factory presets contain distinct authored audio snapshots")
-        let crossMode = presets.first { $0.name == "GATED DREAM" }?.applying(to: source)
-        check(crossMode?.mode == .texture && crossMode?.kitID == KitLibrary.heavyBreak.id &&
-              KitLibrary.heavyBreak.preferredMode == .vintage,
-              "a Vintage-home break kit can play through a Texture preset")
+        var unsynced = source
+        unsynced.values[KParam.tempoSync.id] = 0
+        if let first = presets.first { check(first.applying(to: unsynced).bpm == first.bpm, "a preset sets its tempo when not synced") }
+        let old = try? JSONDecoder().decode(KnockState.self, from: encoder.encode(KnockState()))
+        check(old?.patternStyle == nil && old?.basePattern == nil, "older saves load and follow their kit's patterns")
+        // Randomize stays in style and only touches what it should.
+        let r1 = PatternRandomizer.randomPattern(style: "House", length: PatternData.ppq * 8, seed: 5)
+        let r2 = PatternRandomizer.randomPattern(style: "House", length: PatternData.ppq * 8, seed: 5)
+        check(r1 == r2 && r1.events.contains { Int($0.pad) == Pad.kick.rawValue }, "randomize: same seed, same pattern, still has a kick")
+        if let base = PatternBank.preset(named: "TRAP 1 ATL BOUNCE")?.pattern {
+            let changed = PatternRandomizer.randomChannel(base, pad: Pad.hat.rawValue, style: "Trap", seed: 9)
+            check(changed.events.filter { Int($0.pad) != Pad.hat.rawValue } == base.events.filter { Int($0.pad) != Pad.hat.rawValue },
+                  "channel dice changes only that channel")
+        }
     }
 
     static func checkTextureControls() {

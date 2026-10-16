@@ -27,6 +27,10 @@ final class KnockController: ObservableObject {
     @Published private(set) var loadingKit = false
     /// A short message for the screen (errors, "saved", ...).
     @Published var notice: String?
+    /// True while there's sound (plus a second to let the trace settle). The screen only
+    /// animates while it's true, so a silent app doesn't redraw it 60 times a second.
+    @Published private(set) var scopeActive = false
+    private var lastSound = Date.distantPast
 
     /// The 12 loops as the engine has them (generated, with your edits on top).
     @Published private(set) var loops: [PatternData] = []
@@ -38,6 +42,8 @@ final class KnockController: ObservableObject {
 
     private let kitQueue = DispatchQueue(label: "breakboss.kit", qos: .userInitiated)
     private let stockLibrary = StockSampleLibrary.bundled
+    /// Temporary rack gating; original home pad routing remains available.
+    private var workspaceIsOpen = false
     private var kitGeneration = 0
     private var timers: [Timer] = []
     private var saveWork: DispatchWorkItem?
@@ -64,9 +70,23 @@ final class KnockController: ObservableObject {
         }
         RunLoop.main.add(collect, forMode: .common)
         timers.append(collect)
+        // RECORD (MPC style): finger-played pad hits land in the playing pattern, on the
+        // record grid, from the faceplate as well as the drum roll.
+        let rec = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard let self, self.recording else { return }
+            self.mergeRecorded(snap: self.recordSnap)
+        }
+        RunLoop.main.add(rec, forMode: .common)
+        timers.append(rec)
         let metering = Timer(timeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.meters = self.engine.meters.snapshot()
+            let m = self.meters
+            if m.status[0] > 0.5 || m.scope.contains(where: { abs($0) > 0.0003 }) { self.lastSound = Date() }
+            // Knob / pad readouts on the screen need the clock to fade out too.
+            let showingReadout = self.readout.map { Date().timeIntervalSince($0.time) < 2.0 } ?? false
+            let active = showingReadout || Date().timeIntervalSince(self.lastSound) < 1.0
+            if active != self.scopeActive { self.scopeActive = active }
         }
         RunLoop.main.add(metering, forMode: .common)
         timers.append(metering)
@@ -123,6 +143,42 @@ final class KnockController: ObservableObject {
     private func pushAllToEngine() {
         for p in KParam.allCases { engine.setParam(p, value(p)) }
         engine.setTempo(state.bpm)
+        pushMIDIMap()
+        pushPadMask()
+        pushMIDIOut()
+    }
+
+    // MARK: MIDI pad map (hardware controllers such as an MPC)
+
+    var midiMap: MIDIPadMap { state.midiMap ?? .standard }
+    var midiPadNotes: [Int] { MIDIPadMap.notes(midiMap, custom: state.midiCustomNotes) }
+
+    func setMIDIMap(_ map: MIDIPadMap) {
+        if map == .custom && state.midiCustomNotes == nil { state.midiCustomNotes = midiPadNotes }
+        state.midiMap = map
+        pushMIDIMap()
+        scheduleSave()
+    }
+
+    /// MIDI learn: the next note becomes this pad's note (switches to the custom map).
+    func learnMIDINote(pad: Int, note: Int) {
+        state.midiCustomNotes = MIDIPadMap.learn(midiPadNotes, pad: pad, note: note)
+        state.midiMap = .custom
+        pushMIDIMap()
+        scheduleSave()
+    }
+
+    /// The last note-on the engine received: (counter, note).
+    var lastMIDINoteOn: (count: Int32, note: Int) {
+        let v = engine.lastNoteOn.pointee
+        return (v >> 8, Int(v & 0x7F))
+    }
+
+    private func pushMIDIMap() {
+        engine.send(KEvent(kind: .mapNote, a: -1))
+        for (pad, note) in midiPadNotes.enumerated() where note >= 0 {
+            engine.send(KEvent(kind: .mapNote, a: Int32(note), value: Double(pad)))
+        }
     }
 
     /// AUv3: host automation writes the engine directly; bring the faceplate along.
@@ -171,6 +227,174 @@ final class KnockController: ObservableObject {
         }
     }
 
+    // MARK: Drum roll
+
+    /// Plays a pad's sound in any mode (drum roll ▶ buttons, previews). While RECORD is armed
+    /// and the pattern runs, the engine also writes the hit into the pattern.
+    func auditionPad(_ pad: Int, velocity: Float = 0.85, semis: Float = 0) {
+        guard pad >= 0 && pad < Pad.count else { return }
+        if pad == Pad.bass808.rawValue {
+            engine.send(KEvent(kind: .bass, a: Int32(semis.rounded()), value: Double(velocity)))
+        } else {
+            engine.send(KEvent(kind: .pad, a: Int32(pad), value: Double(velocity)))
+        }
+    }
+
+    var mutedPads: [Bool] { state.mutedPads ?? Array(repeating: false, count: Pad.count) }
+    var soloPads: [Bool] { state.soloPads ?? Array(repeating: false, count: Pad.count) }
+
+    func toggleMute(_ pad: Int) {
+        guard (0..<Pad.count).contains(pad) else { return }
+        var m = mutedPads; m[pad].toggle(); state.mutedPads = m
+        pushPadMask(); scheduleSave()
+    }
+
+    func toggleSolo(_ pad: Int) {
+        guard (0..<Pad.count).contains(pad) else { return }
+        var m = soloPads; m[pad].toggle(); state.soloPads = m
+        pushPadMask(); scheduleSave()
+    }
+
+    /// FL-style: with any solo on, only soloed channels sound; mutes always silence.
+    static func padMask(muted: [Bool], solo: [Bool]) -> UInt16 {
+        let anySolo = solo.contains(true)
+        var mask: UInt16 = 0
+        for pad in 0..<Pad.count {
+            let audible = (anySolo ? (pad < solo.count && solo[pad]) : true) && !(pad < muted.count && muted[pad])
+            if audible { mask |= 1 << UInt16(pad) }
+        }
+        return mask
+    }
+
+    // MARK: MIDI out (multi-out)
+
+    static let defaultMIDIOutChannels = Array(0..<Pad.count)          // pad n on MIDI channel n + 1
+    static let defaultMIDIOutNotes = Array(36..<(36 + Pad.count))      // C1 up, like the input map
+    /// On by default in the plug-in, so a DAW's armed MIDI track records the pads and pattern.
+    var midiOutOn: Bool { state.midiOut ?? isPlugin }
+    var midiOutChannels: [Int] { (state.midiOutChannels ?? KnockController.defaultMIDIOutChannels).count == Pad.count ? state.midiOutChannels ?? KnockController.defaultMIDIOutChannels : KnockController.defaultMIDIOutChannels }
+    var midiOutNotes: [Int] { (state.midiOutNotes ?? KnockController.defaultMIDIOutNotes).count == Pad.count ? state.midiOutNotes ?? KnockController.defaultMIDIOutNotes : KnockController.defaultMIDIOutNotes }
+
+    func setMIDIOut(_ on: Bool) { state.midiOut = on; pushMIDIOut(); scheduleSave() }
+    func setMIDIOutChannel(pad: Int, _ channel: Int) {
+        var ch = midiOutChannels; guard ch.indices.contains(pad) else { return }
+        ch[pad] = max(-1, min(15, channel)); state.midiOutChannels = ch; pushMIDIOut(); scheduleSave()
+    }
+    func setMIDIOutNote(pad: Int, _ note: Int) {
+        var n = midiOutNotes; guard n.indices.contains(pad) else { return }
+        n[pad] = max(0, min(127, note)); state.midiOutNotes = n; pushMIDIOut(); scheduleSave()
+    }
+    /// Quick setups: every channel on its own MIDI channel, or all on channel 10 (GM drums).
+    func setMIDIOutLayout(multi: Bool) {
+        // One channel: the drums on channel 10 (GM drum notes); the 808 keeps its own channel (7)
+        // so its pitches never land on a drum note.
+        var one = Array(repeating: 9, count: Pad.count); one[Pad.bass808.rawValue] = Pad.bass808.rawValue
+        state.midiOutChannels = multi ? KnockController.defaultMIDIOutChannels : one
+        state.midiOutNotes = multi ? KnockController.defaultMIDIOutNotes : [36, 38, 39, 37, 42, 46, 35, 56, 54, 45, 50, 49]
+        pushMIDIOut(); scheduleSave()
+    }
+
+    func pushMIDIOut() {
+        let ch = midiOutChannels, notes = midiOutNotes
+        for pad in 0..<Pad.count {
+            engine.send(KEvent(kind: .midiOut, a: Int32(pad), value: ch[pad] < 0 ? -1 : Double(ch[pad] * 128 + notes[pad])))
+        }
+        engine.send(KEvent(kind: .midiOut, a: -1, value: midiOutOn ? 1 : 0))
+    }
+
+    private func pushPadMask() {
+        var mask = KnockController.padMask(muted: mutedPads, solo: soloPads)
+        if workspaceIsOpen {
+            var onlyVisible: UInt16 = 0
+            for row in workspaceChannels { onlyVisible |= UInt16(1) << UInt16(row.pad) }
+            mask &= onlyVisible
+        }
+        engine.send(KEvent(kind: .padMask, a: Int32(mask)))
+    }
+
+    func setWorkspaceOpen(_ open: Bool) {
+        workspaceIsOpen = open
+        pushPadMask()
+    }
+
+    @Published private(set) var recording = false
+    @Published private(set) var metronome = false
+
+    /// Platinum: Modern's alternate faceplate (free while testing; will be a paid unlock).
+    @Published private(set) var platinumFace: Bool = UserDefaults.standard.bool(forKey: "breakboss.platinumFace")
+    func setPlatinumFace(_ on: Bool) {
+        platinumFace = on
+        UserDefaults.standard.set(on, forKey: "breakboss.platinumFace")
+    }
+    /// Which faceplate is showing: Platinum replaces Modern only.
+    var faceKey: String { mode == .modern && platinumFace ? "platinum" : mode.assetSuffix }
+
+    /// Drum roll metronome: a click on every beat while the pattern plays.
+    func setMetronome(_ on: Bool) {
+        metronome = on
+        engine.send(KEvent(kind: .metronome, a: on ? 1 : 0))
+    }
+
+    /// Record quantize (ticks; 0 = as played). 1/16 by default, like an MPC's TC 16.
+    var recordSnap: Int32 = PatternData.stepTicks
+
+    /// Faceplate: hold PLAY to record pads like an MPC (starts the pattern if it isn't playing);
+    /// hold it again to stop recording. Works in ONE-SHOT and LOOP mode.
+    func toggleRecordPads() {
+        if recording {
+            setRecording(false)
+            readout = Readout(title: "RECORD", value: "OFF", time: Date())
+        } else {
+            setRecording(true)
+            if !isPlaying { playPressed() }
+            readout = Readout(title: "RECORD", value: "PLAY THE PADS", time: Date())
+        }
+    }
+
+    func setRecording(_ on: Bool) {
+        recording = on
+        engine.send(KEvent(kind: .recordArm, a: on ? 1 : 0))
+        _ = engine.collectRecorded()   // drop anything older
+    }
+
+    /// Plays the given pattern from its start (or keeps it going if it's already the one playing).
+    func playPattern(_ loop: Int) {
+        guard loops.indices.contains(loop) else { return }
+        if isPlaying && Int(meters.status[1]) == loop { return }
+        if isPlaying { engine.send(KEvent(kind: .stop)) }
+        engine.send(KEvent(kind: .loopPad, a: Int32(loop)))
+    }
+
+    func stopPlayback() { engine.send(KEvent(kind: .stop)) }
+
+    /// Space bar / play button: start the pattern on screen, or stop.
+    func togglePlayback(pattern: Int) {
+        if isPlaying { stopPlayback() } else { playPattern(pattern) }
+    }
+
+    /// Where the playing pattern is, in ticks (nil when stopped).
+    var playheadTick: Double? {
+        let t = engine.playheadTick.pointee
+        return t >= 0 ? t : nil
+    }
+
+    /// Moves recorded hits into their patterns (snapped when `snap` > 0). Returns how many.
+    @discardableResult
+    func mergeRecorded(snap: Int32) -> Int {
+        let hits = engine.collectRecorded()
+        guard !hits.isEmpty else { return 0 }
+        var touched: [Int: PatternData] = [:]
+        for h in hits {
+            let loop = Int(h.loop)
+            guard loops.indices.contains(loop) else { continue }
+            var p = touched[loop] ?? loops[loop]
+            p = PatternEdit.addRecorded(p, pad: Int(h.pad), tick: h.tick, velocity: h.velocity, semis: h.semis, snap: snap)
+            touched[loop] = p
+        }
+        for (loop, p) in touched { setLoop(loop, p) }
+        return hits.count
+    }
+
     func gateDown(_ pad: Int, velocity: Float) {
         guard (0..<Pad.count).contains(pad) else { return }
         if playMode == .loop {
@@ -192,33 +416,34 @@ final class KnockController: ObservableObject {
     var isPlaying: Bool { meters.status[0] > 0.5 }
 
     func playPressed() {
-        if value(.followDAW) > 0.5 && meters.status[5] > 0 {
-            readout = Readout(title: "FOLLOW DAW", value: "START IT FROM THE DAW", time: Date())
-            return
-        }
         engine.send(KEvent(kind: isPlaying ? .stop : .play))
     }
 
     // MARK: Dice
 
     /// LOOP mode: new grooves for this kit. ONE-SHOT mode: new variations of the kit's sounds.
+    /// The kit whose stock sound this pad plays after a dice roll (nil = the kit's own).
+    static func stockPick(_ s: KnockState, pad: Int) -> String? {
+        guard let picks = s.stockPicks, picks.indices.contains(pad) else { return nil }
+        return picks[pad]
+    }
+
+    /// Home-screen dice (any mode): every pad gets a random sound of its own kind from all the
+    /// stock sounds (every kit's kicks for the kick pad, and so on). The 808 only picks 808s tuned
+    /// to this kit's root, so it stays in key. Pads holding your own samples are left alone.
     func dice() {
-        let seed = UInt32.random(in: 2...UInt32.max)
-        if playMode == .loop {
-            state.grooveSeed = seed
-            rebuildLoops()
-            readout = Readout(title: "DICE", value: "NEW GROOVES", time: Date())
-        } else {
-            state.soundSeed = seed
-            for i in state.pads.indices where state.pads[i].sampleFile != nil || stockLibrary.sample(kitID: state.kitID, pad: i) != nil {
-                var rng = KRandom(seed: seed &* 2_654_435_761 &+ UInt32(i * 977))
-                state.pads[i].tune = rng.range(-3, 3)
-                state.pads[i].pan = rng.range(-0.2, 0.2)
-                state.pads[i].decay = rng.range(0.65, 1)
-            }
-            rebuildKit()
-            readout = Readout(title: "DICE", value: "NEW SOUNDS", time: Date())
+        var picks = state.stockPicks ?? Array(repeating: nil, count: Pad.count)
+        while picks.count < Pad.count { picks.append(nil) }
+        let root = kitDefinition.bassHz
+        for pad in 0..<Pad.count where state.pads[pad].sampleFile == nil {
+            var pool = stockLibrary.kits(withPad: pad)
+            if pad == Pad.bass808.rawValue { pool = pool.filter { abs(KitLibrary.kit(id: $0).bassHz - root) < 0.5 } }
+            pool.removeAll { $0 == (picks[pad] ?? state.kitID) }          // always a change
+            if let pick = pool.randomElement() { picks[pad] = pick }
         }
+        state.stockPicks = picks
+        rebuildKit()
+        readout = Readout(title: "DICE", value: "NEW SOUNDS", time: Date())
         scheduleSave()
     }
 
@@ -237,13 +462,13 @@ final class KnockController: ObservableObject {
 
     func selectUserKit(_ name: String) {
         guard let kit = KnockStore.loadUserKit(name) else { notice = "Couldn't open the kit \(name)."; return }
+        if state.patternStyle == nil { state.patternStyle = kitDefinition.style }   // sounds change, the pattern stays
         let def = KitLibrary.kit(id: kit.baseKitID)
         state.kitID = def.id
         state.kitName = kit.name.uppercased()
         state.userKit = kit.name
         state.soundSeed = kit.soundSeed
         state.pads = KnockState.normalizedPads(kit.pads)
-        if value(.tempoSync) < 0.5 { setBPM(def.tempo) }
         rebuildKit()
         rebuildLoops()
         readout = Readout(title: "KIT", value: state.kitName, time: Date())
@@ -296,7 +521,8 @@ final class KnockController: ObservableObject {
                         continue
                     }
                     failed.append(file)
-                } else if let sample = stock.sample(kitID: def.id, pad: pad) {
+                } else if let sample = KnockController.stockPick(s, pad: pad).flatMap({ stock.sample(kitID: $0, pad: pad) })
+                            ?? stock.sample(kitID: def.id, pad: pad) {
                     if let buffer = try? SampleLoader.load(sample.url) {
                         samples.append(buffer)
                         stockNames[pad] = sample.displayName
@@ -387,10 +613,133 @@ final class KnockController: ObservableObject {
         return kitDefinition.pads[pad].label
     }
 
+    // MARK: New channel rack (the original instrument faceplate is unchanged)
+
+    var workspaceChannels: [WorkspaceChannel] { state.workspaceChannels ?? [] }
+
+    func ensureWorkspace(loop: Int) {
+        guard state.workspaceChannels == nil else { return }
+        state.workspaceChannels = []
+        // A new rack starts blank instead of silently playing all generated kit
+        // channels. Existing explicitly edited loops are never discarded.
+        if loops.indices.contains(loop) && state.editedLoops[loop] == nil {
+            var blank = loops[loop]
+            blank.events = []
+            setLoop(loop, blank)
+        }
+        scheduleSave()
+    }
+
+    @discardableResult
+    func addWorkspaceChannel(_ sound: LibrarySound, loop: Int) -> WorkspaceChannel? {
+        ensureWorkspace(loop: loop)
+        let occupied = Set(workspaceChannels.map(\.pad))
+        guard let pad = (0..<Pad.count).first(where: { !occupied.contains($0) }) else {
+            notice = "Only 12 channels fit in the rack."
+            return nil
+        }
+        let row = WorkspaceChannel(id: UUID(), pad: pad, soundID: sound.id,
+                                   name: sound.name, category: sound.type.rawValue)
+        // A new track must start with no ghost steps from an older kit/pattern.
+        if loops.indices.contains(loop) {
+            var cleared = loops[loop]
+            cleared.events.removeAll { Int($0.pad) == pad }
+            setLoop(loop, cleared)
+        }
+        state.workspaceChannels?.append(row)
+        pushPadMask()
+        // Reuse the off-audio-thread sample loader; every drop gets its own pad.
+        importSample(sound.url, toPad: pad)
+        scheduleSave()
+        return row
+    }
+
+    func removeWorkspaceChannel(_ id: UUID, loop: Int) {
+        guard let row = workspaceChannels.first(where: { $0.id == id }) else { return }
+        state.workspaceChannels?.removeAll { $0.id == id }
+        pushPadMask()
+        // Track deletion removes its notes across every pattern, not only this
+        // page. Reused audio slots cannot accidentally inherit hidden old steps.
+        for index in loops.indices {
+            let data = loops[index]
+            guard data.events.contains(where: { Int($0.pad) == row.pad }) else { continue }
+            var edited = data
+            edited.events.removeAll { Int($0.pad) == row.pad }
+            setLoop(index, edited)
+        }
+        scheduleSave()
+    }
+
+    /// Make genre-aware steps by sound category, not by the slot number chosen
+    /// when a sound was dropped into the rack.
+    func generateWorkspace(loop: Int) {
+        guard loops.indices.contains(loop) else { return }
+        let style = PatternRandomizer.style(for: state.presetName)
+        for row in workspaceChannels {
+            let sourcePad: Int
+            switch SoundType(rawValue: row.category) {
+            case .kick: sourcePad = 0
+            case .snare: sourcePad = 1
+            case .clap: sourcePad = 2
+            case .rim: sourcePad = 3
+            case .hat: sourcePad = 4
+            case .open: sourcePad = 5
+            case .bass: sourcePad = 6
+            case .perc: sourcePad = 7
+            case .tom: sourcePad = 9
+            case .cymbal: sourcePad = 11
+            default: sourcePad = 8
+            }
+            let current = loops[loop]
+            let made = PatternRandomizer.randomChannel(current, pad: sourcePad,
+                style: style, seed: UInt32.random(in: 2...UInt32.max))
+            var changed = current
+            changed.events.removeAll { Int($0.pad) == row.pad }
+            for event in made.events where Int(event.pad) == sourcePad {
+                var e = event
+                e.pad = Int8(row.pad)
+                changed.events.append(e)
+            }
+            changed.sort()
+            setLoop(loop, changed)
+        }
+    }
+
+    func toggleWorkspaceStep(loop: Int, pad: Int, step: Int, bar: Int = 0) {
+        guard workspaceChannels.contains(where: { $0.pad == pad }),
+              loops.indices.contains(loop), (0..<16).contains(step) else { return }
+        let tick = (Int32(bar) * 16 + Int32(step)) * PatternData.stepTicks
+        setLoop(loop, PatternEdit.toggle(loops[loop], pad: pad, tick: tick,
+                                         cell: PatternData.stepTicks))
+    }
+
+    func toggleWorkspacePianoNote(loop: Int, pad: Int, step: Int, bar: Int,
+                                  semitones: Int) {
+        guard workspaceChannels.contains(where: { $0.pad == pad }),
+              loops.indices.contains(loop), (0..<16).contains(step),
+              (-24...24).contains(semitones) else { return }
+        let tick = (Int32(bar) * 16 + Int32(step)) * PatternData.stepTicks
+        var data = loops[loop]
+        let before = data.events.count
+        data.events.removeAll { Int($0.pad) == pad && $0.tick == tick &&
+            Int($0.semis.rounded()) == semitones }
+        if data.events.count == before {
+            data.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: 0.85,
+                                          semis: Float(semitones),
+                                          length: pad == Pad.bass808.rawValue ? PatternData.stepTicks : 0))
+        }
+        data.sort()
+        setLoop(loop, data)
+    }
+
     // MARK: Loops
 
+    /// The groove family the patterns come from (PRESETS set it; KITS don't).
+    var patternStyle: GrooveStyle { state.patternStyle ?? kitDefinition.style }
+
     func rebuildLoops() {
-        let generated = GrooveGenerator.loops(style: kitDefinition.style, seed: state.grooveSeed)
+        let generated = state.basePattern.map { GrooveGenerator.loops(fromMain: $0, style: patternStyle, seed: state.grooveSeed) }
+            ?? GrooveGenerator.loops(style: patternStyle, seed: state.grooveSeed)
         var merged = generated
         for i in 0..<min(merged.count, state.editedLoops.count) {
             if let edit = state.editedLoops[i] { merged[i] = edit }
@@ -434,7 +783,7 @@ final class KnockController: ObservableObject {
     }
 
     func regenerateLoop(_ index: Int) {
-        let fresh = GrooveGenerator.loops(style: kitDefinition.style, seed: UInt32.random(in: 2...UInt32.max))
+        let fresh = GrooveGenerator.loops(style: patternStyle, seed: UInt32.random(in: 2...UInt32.max))
         guard index >= 0 && index < fresh.count else { return }
         setLoop(index, fresh[index])
     }
@@ -464,11 +813,44 @@ final class KnockController: ObservableObject {
         readout = Readout(title: "PRESET", value: "INIT", time: Date())
     }
 
-    func loadFactoryPreset(_ fp: FactoryPreset) {
-        // Always apply the complete snapshot, even when the matching kit is already loaded.
-        // This resets pad edits/imports as well as FX, rather than depending on the previous kit.
-        restore(fp.applying(to: state))
-        readout = Readout(title: "PRESET", value: fp.name, time: Date())
+    /// PRESETS: load a pattern (and its tempo and swing). Sounds, mode and knobs stay.
+    func loadPatternPreset(_ preset: PatternPreset) {
+        restore(preset.applying(to: state), keepPlaying: true)   // the beat carries on with the new pattern
+        readout = Readout(title: "PATTERN", value: preset.name, time: Date())
+    }
+
+    // MARK: Snap to scale (piano roll)
+
+    func setScale(root: Int? = nil, name: String? = nil, snap: Bool? = nil) {
+        if let root { state.scaleRoot = ((root % 12) + 12) % 12 }
+        if let name { state.scaleName = name; if snap == nil { state.snapToScale = true } }   // picking a scale turns snap on, like FL
+        if let snap { state.snapToScale = snap }
+        scheduleSave()
+    }
+
+    // MARK: Randomize
+
+    /// A new pattern in the current preset's style, built from that style's presets.
+    func randomizePattern() {
+        let style = PatternRandomizer.style(for: state.presetName)
+        let length = loops.first?.lengthTicks ?? PatternData.ppq * 8
+        let seed = UInt32.random(in: 2...UInt32.max)
+        var s = state
+        s.basePattern = PatternRandomizer.randomPattern(style: style, length: max(length, PatternData.ppq * 8), seed: seed)
+        s.patternStyle = PatternBank.presets(in: style).first?.grooveStyle ?? patternStyle
+        s.grooveSeed = seed
+        s.editedLoops = Array(repeating: nil, count: Pad.count)
+        state = s
+        rebuildLoops()
+        scheduleSave()
+        readout = Readout(title: "RANDOMIZE", value: "NEW \(style.uppercased()) PATTERN", time: Date())
+    }
+
+    /// New notes for one channel of one loop; every other channel stays as it is.
+    func randomizeChannel(loop: Int, pad: Int) {
+        guard loops.indices.contains(loop) else { return }
+        let style = PatternRandomizer.style(for: state.presetName)
+        setLoop(loop, PatternRandomizer.randomChannel(loops[loop], pad: pad, style: style, seed: UInt32.random(in: 2...UInt32.max)))
     }
 
     func savePreset(as name: String) {
@@ -488,7 +870,13 @@ final class KnockController: ObservableObject {
 
     func loadUserPreset(_ name: String) {
         guard let preset = KnockStore.loadUserPreset(name) else { notice = "Couldn't open the preset \(name)."; return }
-        restore(preset.state)
+        var s = preset.state
+        s.midiMap = state.midiMap          // the MIDI controller setup isn't part of a sound preset
+        s.midiCustomNotes = state.midiCustomNotes
+        s.midiOut = state.midiOut               // MIDI out routing is a studio setting too
+        s.midiOutChannels = state.midiOutChannels
+        s.midiOutNotes = state.midiOutNotes
+        restore(s, keepPlaying: true)
         readout = Readout(title: "PRESET", value: preset.state.presetName, time: Date())
     }
 
@@ -506,9 +894,10 @@ final class KnockController: ObservableObject {
         restore(s)
     }
 
-    func restore(_ s: KnockState) {
+    /// keepPlaying: switching presets swaps the pattern under the running transport instead of stopping it.
+    func restore(_ s: KnockState, keepPlaying: Bool = false) {
         let s = s.normalized()
-        engine.send(KEvent(kind: .allOff))
+        if !keepPlaying { engine.send(KEvent(kind: .allOff)) }
         state = s
         pushAllToEngine()
         rebuildKit()

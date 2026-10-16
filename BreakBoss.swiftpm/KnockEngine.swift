@@ -39,7 +39,7 @@ extension PadSettings {
     }
 }
 
-/// The sounds on the 16 pads, ready for the audio thread (read-only once published).
+/// The sounds on the 12 pads, ready for the audio thread (read-only once published).
 final class KitBuffers {
     let name: String
     let samples: [SampleBuffer]
@@ -139,18 +139,87 @@ final class KnockEngine {
     private var queuedLoop = -2      // -2 = nothing queued
     private var loopStartBeat: Double = 0
     private var wasHostPlaying = false
+    /// FOLLOW DAW: BreakBoss's own STOP mutes the pattern while the DAW keeps running (PLAY brings it
+    /// back on the DAW's beat); with the DAW stopped, PLAY runs BreakBoss on its own at the DAW's tempo.
+    private var userArmed = true
+    private var localRun = false
     private var clockTempo: Double = 0
     private var lastClockTime: Double = 0
     private var clockCount: Int = 0
     private var clockRunning = false
     private var midiClockBeat: Double = 0
 
+    /// Live MIDI note -> pad (-1 = not a pad). Written only by the audio thread, from .mapNote
+    /// events, so it never changes in the middle of a block. MIDI files keep notes 36-47.
+    private let midiPadTable = UnsafeMutablePointer<Int8>.allocate(capacity: 128)
+    /// The last live note-on: (count << 8) | note, so the MIDI learn screen can see it.
+    let lastNoteOn = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
+
+    /// Drum roll RECORD: hits played while the pattern runs are written here (audio thread)
+    /// and collected by the main thread. Single writer, single reader, fixed size.
+    struct RecordedHit { var loop: Int16 = 0; var pad: Int8 = 0; var tick: Int32 = 0; var velocity: Float = 0; var semis: Float = 0 }
+    static let recordCapacity = 512
+    let recordRing = UnsafeMutablePointer<RecordedHit>.allocate(capacity: KnockEngine.recordCapacity)
+    let recordWrite = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+    private var recordRead = 0
+    private var recordArmed = false
+    /// Where the playing pattern is, in ticks from its start (for the drum roll's playhead).
+    let playheadTick = UnsafeMutablePointer<Double>.allocate(capacity: 1)
+    private var lastBeatsPerSample: Double = 0
+    private var blockBeat0: Double = 0
+    // Metronome (drum roll): a short sine click, accented on the bar. Mixed after the master
+    // section so the clipper and effects never touch it.
+    private var metronomeOn = false
+    private var clickPhase: Double = 0
+    private var clickRemaining = 0
+    private var clickFreq: Double = 1500
+    private var clickGain: Float = 0
+
     /// Pads that sound (bit per pad). The export renderer uses it for stems.
     var padMask: UInt16 = 0xFFFF
+
+    // MIDI OUT (drum roll): the pattern's hits as MIDI, each drum channel on its own MIDI
+    // channel and note. Collected per render call with sample offsets into fixed storage;
+    // the plug-in hands them to the host, the app to CoreMIDI. Nothing allocates here.
+    struct MIDIOutMessage { var frame: Int32 = 0; var status: UInt8 = 0; var data1: UInt8 = 0; var data2: UInt8 = 0 }
+    static let midiOutCapacity = 256
+    let midiOut = UnsafeMutablePointer<MIDIOutMessage>.allocate(capacity: KnockEngine.midiOutCapacity)
+    /// Messages from the last render call (read right after render() on the same thread).
+    private(set) var midiOutCount = 0
+    /// Hands the last render call's MIDI out to `send` (frame offset, status, data1, data2).
+    @inline(__always)
+    func forEachMIDIOut(_ send: (Int, UInt8, UInt8, UInt8) -> Void) {
+        for i in 0..<midiOutCount { let m = midiOut[i]; send(Int(m.frame), m.status, m.data1, m.data2) }
+    }
+    private var midiOutOn = false
+    /// True while a note from the DAW is being played: those hits don't go back out (no MIDI thru).
+    private var playingHostNote = false
+    private let midiOutChannel = UnsafeMutablePointer<Int16>.allocate(capacity: Pad.count)   // -1 = off
+    private let midiOutNote = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)
+    private let midiOffDue = UnsafeMutablePointer<Int64>.allocate(capacity: Pad.count)       // -1 = none
+    private let midiOffChannel = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)
+    private let midiOffNote = UnsafeMutablePointer<UInt8>.allocate(capacity: Pad.count)
+    private var sampleClock: Int64 = 0
+    /// When each channel*128+note was last sent by MIDI OUT (loop-back guard).
+    private let midiSentAt = UnsafeMutablePointer<Int64>.allocate(capacity: 2048)
+    private var renderBase = 0
 
     init() {
         precondition(KParam.count <= UInt32.bitWidth)
         heldLoops.initialize(repeating: 0, count: 2064)
+        midiPadTable.initialize(repeating: -1, count: 128)
+        midiOut.initialize(repeating: MIDIOutMessage(), count: KnockEngine.midiOutCapacity)
+        midiOutChannel.initialize(repeating: -1, count: Pad.count)
+        midiOutNote.initialize(repeating: 36, count: Pad.count)
+        midiOffDue.initialize(repeating: -1, count: Pad.count)
+        midiOffChannel.initialize(repeating: 0, count: Pad.count)
+        midiOffNote.initialize(repeating: 0, count: Pad.count)
+        midiSentAt.initialize(repeating: Int64.min / 2, count: 2048)
+        for pad in 0..<Pad.count { midiPadTable[MIDIPadMap.standardNotes[pad]] = Int8(pad) }
+        lastNoteOn.initialize(to: 0)
+        recordRing.initialize(repeating: RecordedHit(), count: KnockEngine.recordCapacity)
+        recordWrite.initialize(to: 0)
+        playheadTick.initialize(to: -1)
         params = .allocate(capacity: KParam.count)
         hostParams = .allocate(capacity: KParam.count)
         for p in KParam.allCases { (params + p.rawValue).initialize(to: p.defaultValue) }
@@ -176,7 +245,14 @@ final class KnockEngine {
     }
 
     deinit {
+        midiOut.deallocate(); midiOutChannel.deallocate(); midiOutNote.deallocate()
+        midiOffDue.deallocate(); midiOffChannel.deallocate(); midiOffNote.deallocate(); midiSentAt.deallocate()
         heldLoops.deallocate()
+        midiPadTable.deallocate()
+        lastNoteOn.deallocate()
+        recordRing.deallocate()
+        recordWrite.deallocate()
+        playheadTick.deallocate()
         params.deallocate()
         hostParams.deallocate()
         displayBPM.deallocate()
@@ -241,10 +317,32 @@ final class KnockEngine {
         }
     }
 
+    @inline(__always)
+    /// MIDI shaped like BreakBoss's own MIDI OUT (each pad on its channel and note, the 808 on its
+    /// channel from C2 to C5): which pad it is, and the 808's pitch. Nil for anything else (a
+    /// controller), which keeps the normal pad map and LOOP launching.
+    private func outRoute(channel: Int, note: Int) -> (pad: Int, semis: Int)? {
+        guard midiOutOn, channel >= 0, channel < 16 else { return nil }
+        let bass = Pad.bass808.rawValue
+        for p in 0..<Pad.count where p != bass && midiOutChannel[p] == Int16(channel) && Int(midiOutNote[p]) == note {
+            return (p, 0)
+        }
+        if midiOutChannel[bass] == Int16(channel) && Pad.bassNoteRange.contains(note) {
+            return (bass, note - Pad.bassRootNote)
+        }
+        return nil
+    }
+
+    private func livePad(_ note: Int) -> Int? {
+        guard note >= 0 && note < 128 else { return nil }
+        let pad = Int(midiPadTable[note])
+        return pad >= 0 && pad < Pad.count ? pad : nil
+    }
+
     private func noteEvent(note: Int, velocity: UInt8) -> KEvent {
         let v = Double(velocity) / 127
-        if let pad = Pad.index(forMIDINote: note) {
-            if params[KParam.playMode.rawValue] > 0.5 { return KEvent(kind: .loopPad, a: Int32(pad), value: v) }
+        if let pad = livePad(note) {
+            if params[KParam.playMode.rawValue] > 0.5 && !recordArmed { return KEvent(kind: .loopPad, a: Int32(pad), value: v) }
             return KEvent(kind: .pad, a: Int32(pad), value: v)
         }
         if Pad.bassNoteRange.contains(note) { return KEvent(kind: .bass, a: Int32(note - Pad.bassRootNote), value: v) }
@@ -290,8 +388,10 @@ final class KnockEngine {
                 dirty &= dirty - 1
             }
         }
+        midiOutCount = 0
         var done = 0
         while done < total {
+            renderBase = done
             // A loop gate must change transport before its part of the block is scheduled.
             // Splitting at that exact boundary also keeps stop/release fades at the correct
             // sample. Ordinary pad and bass notes remain inexpensive segmented BlockEvents.
@@ -300,6 +400,8 @@ final class KnockEngine {
                         host: done == 0 ? host : advanced(host, by: done))
             done += n
         }
+        flushMIDIOffs(frames: total)
+        sampleClock += Int64(total)
         status[7] += 1
     }
 
@@ -307,8 +409,8 @@ final class KnockEngine {
     private func isHostTransport(_ event: KEvent) -> Bool {
         switch event.kind {
         case .midiNoteOn, .noteOff:
-            return params[KParam.playMode.rawValue] > 0.5 && event.a >= 0 &&
-                Pad.index(forMIDINote: Int(event.a) % 128) != nil
+            return params[KParam.playMode.rawValue] > 0.5 && !recordArmed && event.a >= 0 &&
+                livePad(Int(event.a) % 128) != nil
         case .allOff:
             return true
         default:
@@ -433,6 +535,7 @@ final class KnockEngine {
         ms.output = params[KParam.output.rawValue]
         ms.clipperOn = params[KParam.clipper.rawValue] > 0.5
         master.process(mixL, mixR, count: frames, ms)
+        if metronomeOn || clickRemaining > 0 { addClicks(frames: frames) }
 
         left.update(from: mixL, count: frames)
         right.update(from: mixR, count: frames)
@@ -488,9 +591,30 @@ final class KnockEngine {
 
     private func apply(_ e: KEvent, offset: Int) {
         switch e.kind {
+        case .mapNote:
+            if e.a < 0 {
+                midiPadTable.update(repeating: -1, count: 128)
+            } else if e.a < 128 {
+                midiPadTable[Int(e.a)] = Int8(clamping: Int(e.value))
+            }
         case .midiNoteOn:
+            // Our own MIDI OUT coming back in (a loop-back route): ignore it, or every hit retriggers itself.
+            if midiOutOn, e.a >= 0, e.a < 2048, sampleClock - midiSentAt[Int(e.a)] < Int64(sampleRate * 0.05) { break }
             let note = Int(e.a) % 128
-            if params[KParam.playMode.rawValue] > 0.5, Pad.index(forMIDINote: note) != nil {
+            lastNoteOn.pointee = (lastNoteOn.pointee &+ 256) & ~0xFF | Int32(note)
+            // The DAW playing back what BreakBoss recorded into it (same channels and notes as
+            // MIDI OUT): always the drum itself, in ONE-SHOT and LOOP mode alike.
+            if e.a >= 0, let r = outRoute(channel: Int(e.a) / 128, note: note) {
+                playingHostNote = true
+                if r.pad == Pad.bass808.rawValue {
+                    apply(KEvent(kind: .bass, a: Int32(r.semis), value: e.value), offset: offset)
+                } else {
+                    apply(KEvent(kind: .pad, a: Int32(r.pad), value: e.value), offset: offset)
+                }
+                playingHostNote = false
+                break
+            }
+            if params[KParam.playMode.rawValue] > 0.5, !recordArmed, livePad(note) != nil {
                 beginGate(Int(e.a))
             } else {
                 let event = noteEvent(note: note, velocity: UInt8(clamping: Int(e.value * 127)))
@@ -502,9 +626,44 @@ final class KnockEngine {
             endGate(Int(e.a))
         case .pad:
             trigger(pad: Int(e.a), velocity: Float(e.value), semis: 0, lengthSamples: 0, glide: false)
+            midiOutHit(pad: Int(e.a), velocity: Float(e.value), semis: 0, length: 0, offset: offset)   // pad taps reach the DAW
+            record(pad: Int(e.a), velocity: Float(e.value), semis: 0, offset: offset)
         case .bass:
             trigger(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), lengthSamples: 0, glide: false, heldNote: Int(e.a) + Pad.bassRootNote)
+            midiOutHit(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), length: 0, offset: offset)
+            record(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), offset: offset)
+        case .padMask:
+            padMask = UInt16(truncatingIfNeeded: e.a)
+        case .recordArm:
+            recordArmed = e.a != 0
+        case .metronome:
+            metronomeOn = e.a != 0
+        case .midiOut:
+            if e.a < 0 {
+                let on = e.value > 0.5
+                if !on { midiOutAllOff(offset: offset) }
+                midiOutOn = on
+            } else if e.a < Int32(Pad.count) {
+                let pad = Int(e.a)
+                if midiOffDue[pad] >= 0 { midiOutAllOff(offset: offset) }
+                if e.value < 0 { midiOutChannel[pad] = -1 } else {
+                    let v = Int(e.value)
+                    midiOutChannel[pad] = Int16((v / 128).clamped(0, 15))
+                    midiOutNote[pad] = UInt8((v % 128).clamped(0, 127))
+                }
+            }
         case .noteOff:
+            // A recorded part playing back: the 808 note ends where the DAW's note ends (its
+            // length as recorded); drums are one-shots and ring out.
+            if e.a >= 0, let r = outRoute(channel: Int(e.a) / 128, note: Int(e.a) % 128) {
+                if r.pad == Pad.bass808.rawValue {
+                    let note = Int(e.a) % 128
+                    for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].heldNote == note {
+                        voices[v].release(samples: Int(sampleRate * 0.03))
+                    }
+                }
+                break
+            }
             // One-shot duration belongs to the sample and DECAY control, even for a
             // chromatic 808. Only Loop mode treats MIDI note length as a gate.
             guard params[KParam.playMode.rawValue] > 0.5 else { break }
@@ -516,14 +675,17 @@ final class KnockEngine {
         case .loopPad:
             clearGates()
             let pad = Int(e.a)
+            let armedBefore = userArmed
+            if pad >= 0 { userArmed = true }
             let following = followingHost
-            if pad < 0 || (pad == currentLoop && (playing || following)) {
+            if pad < 0 || (pad == currentLoop && (playing || (following && armedBefore))) {
                 // Same pad again (or -1): stop at the end of the bar.
                 queuedLoop = -1
                 if !playing && !following { currentLoop = -1; queuedLoop = -2 }
             } else if !playing && !following {
                 currentLoop = pad
                 queuedLoop = -2
+                localRun = true
                 startTransport(at: 0)
             } else if currentLoop < 0 {
                 currentLoop = pad
@@ -535,9 +697,18 @@ final class KnockEngine {
         case .play:
             clearGates()
             if currentLoop < 0 { currentLoop = 0 }
-            startTransport(at: 0)
+            userArmed = true
+            if followingHost && wasHostPlaying {
+                playing = true                  // back in on the DAW's own beat
+            } else {
+                localRun = true
+                startTransport(at: 0)
+            }
         case .stop:
+            midiOutAllOff(offset: offset)
             clearGates()
+            userArmed = false
+            localRun = false
             playing = false
             queuedLoop = -2
             releaseAll()
@@ -566,7 +737,9 @@ final class KnockEngine {
             midiClockBeat = Double(e.a) / 4
             if params[KParam.followDAW.rawValue] > 0.5 { beat = midiClockBeat }
         case .allOff:
+            midiOutAllOff(offset: offset)
             clearGates()
+            localRun = false
             playing = false
             currentLoop = -1
             queuedLoop = -2
@@ -577,7 +750,7 @@ final class KnockEngine {
     private func loopForToken(_ token: Int) -> Int? {
         if token >= 2048 && token < 2064 { return token - 2048 }
         guard token >= 0 && token < 2048 else { return nil }
-        return Pad.index(forMIDINote: token % 128)
+        return livePad(token % 128)
     }
 
     private func clearGates() {
@@ -633,6 +806,123 @@ final class KnockEngine {
 
     private func releaseAll() {
         for v in 0..<KnockEngine.maxVoices where voices[v].active { voices[v].release(samples: Int(sampleRate * 0.03)) }
+    }
+
+    /// Drum roll RECORD: note a live hit at its place in the playing pattern.
+    @inline(__always)
+    private func record(pad: Int, velocity: Float, semis: Float, offset: Int) {
+        guard recordArmed, playing, let patterns, currentLoop >= 0, currentLoop < patterns.loops.count else { return }
+        let len = Double(max(patterns.loops[currentLoop].lengthTicks, 1))
+        let b = beat + Double(offset) * lastBeatsPerSample
+        var t = ((b - loopStartBeat) * Double(PatternData.ppq)).truncatingRemainder(dividingBy: len)
+        if t < 0 { t += len }
+        let w = recordWrite.pointee
+        recordRing[w % KnockEngine.recordCapacity] = RecordedHit(loop: Int16(currentLoop), pad: Int8(pad), tick: Int32(t),
+                                                                  velocity: velocity, semis: semis)
+        recordWrite.pointee = w &+ 1
+    }
+
+    /// Main thread: the hits recorded since the last call.
+    func collectRecorded() -> [RecordedHit] {
+        let w = recordWrite.pointee
+        var out: [RecordedHit] = []
+        if w &- recordRead > KnockEngine.recordCapacity { recordRead = w &- KnockEngine.recordCapacity }
+        while recordRead != w {
+            out.append(recordRing[recordRead % KnockEngine.recordCapacity])
+            recordRead &+= 1
+        }
+        return out
+    }
+
+    /// Metronome clicks for this block: one on every beat the transport crosses.
+    private func addClicks(frames: Int) {
+        let clickLength = Int(sampleRate * 0.035)
+        var nextClick = -1, accent = false
+        if metronomeOn && playing && lastBeatsPerSample > 0 {
+            let first = (blockBeat0 - 1e-9).rounded(.up)
+            let offset = Int(((first - blockBeat0) / lastBeatsPerSample).rounded(.down))
+            if offset >= 0 && offset < frames {
+                nextClick = offset
+                accent = Int((first - loopStartBeat).rounded()) % 4 == 0
+            }
+        }
+        for i in 0..<frames {
+            if i == nextClick {
+                clickRemaining = clickLength
+                clickPhase = 0
+                clickFreq = accent ? 2_200 : 1_500
+                clickGain = accent ? 0.42 : 0.28
+                // A second beat inside one block (very long buffers / fast tempos).
+                let after = blockBeat0 + Double(i + 1) * lastBeatsPerSample
+                let next = (after - 1e-9).rounded(.up)
+                let o = Int(((next - blockBeat0) / lastBeatsPerSample).rounded(.down))
+                if o > i && o < frames { nextClick = o; accent = Int((next - loopStartBeat).rounded()) % 4 == 0 }
+            }
+            guard clickRemaining > 0 else { continue }
+            let env = Float(clickRemaining) / Float(clickLength)
+            let s = Float(sin(clickPhase)) * clickGain * env * env
+            clickPhase += 2 * .pi * clickFreq / sampleRate
+            clickRemaining -= 1
+            mixL[i] = (mixL[i] + s).clamped(-1, 1)
+            mixR[i] = (mixR[i] + s).clamped(-1, 1)
+        }
+    }
+
+    // MARK: MIDI out
+
+    @inline(__always)
+    private func pushMIDIOut(frame: Int, _ status: UInt8, _ d1: UInt8, _ d2: UInt8) {
+        guard midiOutCount < KnockEngine.midiOutCapacity else { return }
+        midiOut[midiOutCount] = MIDIOutMessage(frame: Int32(frame), status: status, data1: d1, data2: d2)
+        midiOutCount += 1
+    }
+
+    /// A pattern hit as MIDI on its channel's own MIDI channel. The 808 sends its played pitch.
+    @inline(__always)
+    private func midiOutHit(pad: Int, velocity: Float, semis: Float, length: Int, offset: Int) {
+        guard midiOutOn, !playingHostNote, pad >= 0, pad < Pad.count, padMask & (1 << UInt16(pad)) != 0 else { return }
+        let ch = midiOutChannel[pad]
+        guard ch >= 0 else { return }
+        var note = Int(midiOutNote[pad])
+        // The 808 plays chromatically around C3 (60), the same range BreakBoss reads back in.
+        if pad == Pad.bass808.rawValue { note = Pad.bassRootNote + Int(semis.rounded()) }
+        note = note.clamped(0, 127)
+        let frame = renderBase + max(0, offset)
+        if midiOffDue[pad] >= 0 {
+            pushMIDIOut(frame: frame, 0x80 | midiOffChannel[pad], midiOffNote[pad], 0)
+            midiOffDue[pad] = -1
+        }
+        let vel = UInt8((Int((velocity * 127).rounded())).clamped(1, 127))
+        pushMIDIOut(frame: frame, 0x90 | UInt8(ch), UInt8(note), vel)
+        midiSentAt[Int(ch) * 128 + note] = sampleClock + Int64(frame)
+        let gate = length > 0 ? length : (pad == Pad.bass808.rawValue ? Int(sampleRate * 0.3) : Int(sampleRate * 0.06))
+        midiOffDue[pad] = sampleClock + Int64(frame + max(1, gate))
+        midiOffChannel[pad] = UInt8(ch)
+        midiOffNote[pad] = UInt8(note)
+    }
+
+    /// Note-offs that fall inside this render call, then the call's messages in time order.
+    private func flushMIDIOffs(frames: Int) {
+        let end = sampleClock + Int64(frames)
+        for pad in 0..<Pad.count where midiOffDue[pad] >= 0 && midiOffDue[pad] < end {
+            pushMIDIOut(frame: Int(max(0, midiOffDue[pad] - sampleClock)), 0x80 | midiOffChannel[pad], midiOffNote[pad], 0)
+            midiOffDue[pad] = -1
+        }
+        guard midiOutCount > 1 else { return }
+        for i in 1..<midiOutCount {      // insertion sort: a handful of messages per call
+            let m = midiOut[i]
+            var j = i - 1
+            while j >= 0 && midiOut[j].frame > m.frame { midiOut[j + 1] = midiOut[j]; j -= 1 }
+            midiOut[j + 1] = m
+        }
+    }
+
+    /// Stop / all off: release every MIDI note still held.
+    private func midiOutAllOff(offset: Int) {
+        for pad in 0..<Pad.count where midiOffDue[pad] >= 0 {
+            pushMIDIOut(frame: renderBase + max(0, offset), 0x80 | midiOffChannel[pad], midiOffNote[pad], 0)
+            midiOffDue[pad] = -1
+        }
     }
 
     // MARK: Pads
@@ -728,7 +1018,7 @@ final class KnockEngine {
         let sync = params[KParam.tempoSync.rawValue] > 0.5
         let loopMode = params[KParam.playMode.rawValue] > 0.5
         let hostHasTransport = host?.beat != nil && host?.playing != nil
-        followingHost = follow && (hostHasTransport || clockRunning)
+        followingHost = follow && ((hostHasTransport && host?.playing == true) || clockRunning)
         status[5] = host?.tempo != nil ? 1 : 0
         status[6] = clockTempo
 
@@ -741,29 +1031,45 @@ final class KnockEngine {
         status[4] = tempo
 
         let beatsPerSample = tempo / 60 / sampleRate
+        lastBeatsPerSample = beatsPerSample
         var b0: Double
         if follow, hostHasTransport, let hb = host?.beat, let hp = host?.playing {
             if hp && !wasHostPlaying {
                 releaseAll()
                 if currentLoop < 0 && loopMode { currentLoop = 0 }
+                userArmed = true            // the DAW starting brings BreakBoss in
+                localRun = false
             }
-            if !hp && wasHostPlaying { releaseAll() }
+            if !hp && wasHostPlaying { releaseAll(); localRun = false }
             wasHostPlaying = hp
-            playing = hp && currentLoop >= 0
-            b0 = hb
-            loopStartBeat = 0
+            if hp {
+                playing = userArmed && currentLoop >= 0
+                b0 = hb
+                loopStartBeat = 0
+            } else {
+                playing = localRun && currentLoop >= 0
+                b0 = beat
+            }
         } else if follow && clockRunning {
             b0 = beat
         } else {
             b0 = beat
         }
         let b1 = b0 + Double(frames) * beatsPerSample
+        blockBeat0 = b0
         defer {
             beat = b1
             status[0] = playing ? 1 : 0
             status[1] = Double(currentLoop)
             status[2] = Double(queuedLoop)
             status[3] = b1
+            if playing, let patterns, currentLoop >= 0, currentLoop < patterns.loops.count {
+                let len = Double(max(patterns.loops[currentLoop].lengthTicks, 1))
+                let t = ((b1 - loopStartBeat) * Double(PatternData.ppq)).truncatingRemainder(dividingBy: len)
+                playheadTick.pointee = t < 0 ? t + len : t
+            } else {
+                playheadTick.pointee = -1
+            }
         }
         guard playing, let patterns, currentLoop >= 0 else { return }
 
@@ -828,7 +1134,7 @@ final class KnockEngine {
                 if e.kind == .bass { e.a = Int32(ev.semis.rounded()) }
                 let lengthSamples = ev.length > 0 ? Int(Double(ev.length) * samplesPerTick) : 0
                 addBlockEvent(BlockEvent(offset: min(max(offset, 0), frames - 1), event: e, length: lengthSamples,
-                                         glide: ev.glide, fromLoop: true, pad: Int(ev.pad)))
+                                         glide: ev.glide, fromLoop: true, pad: Int(ev.pad), semis: ev.semis))
             }
             cycle += 1
         }
@@ -869,16 +1175,23 @@ final class KnockEngine {
         var glide = false
         var fromLoop = false
         var pad: Int = 0
+        /// Per-hit pitch from the drum roll (0 for generated drum hits).
+        var semis: Float = 0
     }
 
     // Loop hits use the same trigger with length and glide.
     private func apply(_ b: BlockEvent, offset: Int) {
         if b.fromLoop {
             if b.event.kind == .bass {
+                midiOutHit(pad: Pad.bass808.rawValue, velocity: Float(b.event.value), semis: Float(b.event.a), length: b.length, offset: offset)
+            } else {
+                midiOutHit(pad: b.pad, velocity: Float(b.event.value), semis: b.semis, length: b.length, offset: offset)
+            }
+            if b.event.kind == .bass {
                 trigger(pad: Pad.bass808.rawValue, velocity: Float(b.event.value), semis: Float(b.event.a),
                         lengthSamples: b.length, glide: b.glide)
             } else {
-                trigger(pad: b.pad, velocity: Float(b.event.value), semis: 0, lengthSamples: 0, glide: false)
+                trigger(pad: b.pad, velocity: Float(b.event.value), semis: b.semis, lengthSamples: b.length, glide: false)
             }
         } else {
             apply(b.event, offset: offset)

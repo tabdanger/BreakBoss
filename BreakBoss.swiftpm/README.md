@@ -1,4 +1,6 @@
-# BreakBoss 0.3.2 · Build 9
+# BreakBoss 0.3.2 · Source build 9
+
+TestFlight release: **0.3.2 (build 13)**, available to the existing internal testers. Both iPhone and iPad passed 23,903 automated checks. The upload pipeline sets the native build number above the source package’s base number.
 
 Universal iPhone and iPad app for iOS 16 and later. The existing Xcode pipeline also builds its AUv3 extension.
 

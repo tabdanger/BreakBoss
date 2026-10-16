@@ -57,7 +57,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             guard let p = KParam(rawValue: Int(parameter.address)) else { return "" }
             return p.text(valuePointer?.pointee ?? parameter.value)
         }
-        factory = FactoryPresets.all.enumerated().map { index, preset in
+        factory = PatternBank.all.enumerated().map { index, preset in
             let item = AUAudioUnitPreset()
             item.number = index
             item.name = preset.name
@@ -77,6 +77,19 @@ public final class BreakBossAudioUnit: AUAudioUnit {
     // MARK: Busses, parameters, presets
 
     public override var outputBusses: AUAudioUnitBusArray { outputBusArray }
+
+    /// MIDI OUT: the pattern's hits go to the host's MIDI output (route them to other plug-ins
+    /// or external gear), each drum channel on its own MIDI channel.
+    public override var midiOutputNames: [String] { ["BreakBoss MIDI Out"] }
+    /// The host's MIDI output block, read by the render block (set before rendering starts).
+    private final class MIDIOutHolder { var block: AUMIDIOutputEventBlock? }
+    private let midiOutHolder = MIDIOutHolder()
+
+    /// Hosts (Logic Pro for iPad among them) can hand over their MIDI output block after rendering
+    /// has started, or swap it when the routing changes; keep the render block's copy current.
+    public override var midiOutputEventBlock: AUMIDIOutputEventBlock? {
+        didSet { midiOutHolder.block = midiOutputEventBlock }
+    }
 
     public override var parameterTree: AUParameterTree? {
         get { tree }
@@ -98,8 +111,8 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             let controller = self.controller
             if preset.number >= 0 {
                 Self.onMain {
-                    guard FactoryPresets.all.indices.contains(preset.number) else { return }
-                    controller.loadFactoryPreset(FactoryPresets.all[preset.number])
+                    guard PatternBank.all.indices.contains(preset.number) else { return }
+                    controller.loadPatternPreset(PatternBank.all[preset.number])
                 }
             } else if let state = try? presetState(for: preset), let data = state[Self.stateKey] as? Data {
                 Self.onMain { controller.restore(data) }
@@ -129,6 +142,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
 
     public override func allocateRenderResources() throws {
         try super.allocateRenderResources()
+        midiOutHolder.block = midiOutputEventBlock
         let format = outputBus.format
         ownBuffers.prepare(format: format, frames: maximumFramesToRender)
         let rate = format.sampleRate
@@ -145,6 +159,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
         let own = ownBuffers
         let musical = musicalContextBlock
         let transport = transportStateBlock
+        let midiOut = midiOutHolder
         return { _, timestamp, frameCount, _, outputData, events, _ in
             own.fillIfEmpty(outputData, frames: frameCount)
             let list = UnsafeMutableAudioBufferListPointer(outputData)
@@ -186,6 +201,15 @@ public final class BreakBossAudioUnit: AUAudioUnit {
                 engine.render(frames: Int(frameCount), left: l, right: own.scratch(frames: frameCount), host: host)
             } else {
                 engine.render(frames: Int(frameCount), left: l, right: r, host: host)
+            }
+            if engine.midiOutCount > 0, let send = midiOut.block {
+                engine.forEachMIDIOut { frame, status, d1, d2 in
+                    var bytes = (status, d1, d2)
+                    withUnsafeBytes(of: &bytes) { raw in
+                        _ = send(AUEventSampleTime(start) + AUEventSampleTime(frame), 0, 3,
+                                 raw.baseAddress!.assumingMemoryBound(to: UInt8.self))
+                    }
+                }
             }
             return noErr
         }

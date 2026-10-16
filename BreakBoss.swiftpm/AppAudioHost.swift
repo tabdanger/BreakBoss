@@ -20,6 +20,9 @@ final class AppAudioHost {
     private var source: AVAudioSourceNode?
     private var midiClient = MIDIClientRef()
     private var midiPort = MIDIPortRef()
+    /// "BreakBoss Out": a virtual MIDI source other apps and interfaces can listen to (MIDI OUT).
+    private var midiSource = MIDIEndpointRef()
+    private let outList = UnsafeMutableRawPointer.allocate(byteCount: 4096, alignment: 8)
     private var observers: [NSObjectProtocol] = []
     private var hostTicksToSeconds: Double = 1e-9
 
@@ -78,6 +81,7 @@ final class AppAudioHost {
                   let l = list[0].mData?.assumingMemoryBound(to: Float.self),
                   let r = list[1].mData?.assumingMemoryBound(to: Float.self) else { return noErr }
             engine.render(frames: Int(frameCount), left: l, right: r, host: nil)
+            if engine.midiOutCount > 0 { self.sendMIDIOut(rate: rate) }
             return noErr
         }
         if let old = source { audio.detach(old) }
@@ -101,6 +105,22 @@ final class AppAudioHost {
     }
 
     // MARK: MIDI
+
+    /// Audio thread: the hits the engine just rendered, timed by their frame in this buffer.
+    /// Fixed buffer, no allocation.
+    private func sendMIDIOut(rate: Double) {
+        guard midiSource != 0 else { return }
+        let list = outList.assumingMemoryBound(to: MIDIEventList.self)
+        let now = mach_absolute_time()
+        let ticksPerFrame = 1 / rate / hostTicksToSeconds
+        var packet = MIDIEventListInit(list, ._1_0)
+        engine.forEachMIDIOut { frame, status, d1, d2 in
+            var word: UInt32 = 0x2000_0000 | UInt32(status) << 16 | UInt32(d1) << 8 | UInt32(d2)
+            let time = now + UInt64(Double(frame) * ticksPerFrame)
+            packet = MIDIEventListAdd(list, 4096, packet, time, 1, &word)
+        }
+        MIDIReceivedEventList(midiSource, list)
+    }
 
     private func startMIDI() {
         let notify: MIDINotifyBlock = { [weak self] message in
@@ -129,7 +149,14 @@ final class AppAudioHost {
             }
         }
         guard status == noErr else { return }
+        MIDISourceCreateWithProtocol(midiClient, "BreakBoss Out" as CFString, ._1_0, &midiSource)
         connectSources()
+    }
+
+    private func isOwnSource(_ endpoint: MIDIEndpointRef) -> Bool {
+        var name: Unmanaged<CFString>?
+        guard MIDIObjectGetStringProperty(endpoint, kMIDIPropertyName, &name) == noErr, let n = name?.takeRetainedValue() else { return false }
+        return (n as String) == "BreakBoss Out"
     }
 
     private func connectSources() {
@@ -139,6 +166,9 @@ final class AppAudioHost {
         connectedSources.formIntersection(available)
         for i in 0..<MIDIGetNumberOfSources() {
             let endpoint = MIDIGetSource(i)
+            // Never listen to our own "BreakBoss Out": the hits we send would come straight back in,
+            // retrigger the pads / loops every audio block and turn the beat into a buzzing tone.
+            if endpoint == midiSource || isOwnSource(endpoint) { continue }
             if !connectedSources.contains(endpoint), MIDIPortConnectSource(midiPort, endpoint, nil) == noErr {
                 connectedSources.insert(endpoint)
             }

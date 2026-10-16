@@ -138,7 +138,7 @@ struct PortablePresetView: View {
         NavigationView {
             Form {
                 Section {
-                    Text("Share your current kit, all 16 pad settings, imported audio, patterns, and processing controls in one .bbpack file.")
+                    Text("Share your current kit, all 12 pad settings, imported audio, patterns, and processing controls in one .bbpack file.")
                     Button(working ? "Preparing…" : "Prepare complete preset") { makePackage() }.disabled(working)
                     if let url { ShareLink(item: url) { Label("Share / save preset", systemImage: "square.and.arrow.up") } }
                     Button("Import .bbpack preset") { importing = true }.disabled(working)
@@ -174,7 +174,7 @@ struct PortablePresetView: View {
             DispatchQueue.main.async {
                 working = false
                 switch result {
-                case .success(let state): controller.restore(state); controller.notice = "Portable preset loaded."
+                case .success(var state): state.midiMap = controller.state.midiMap; state.midiCustomNotes = controller.state.midiCustomNotes; controller.restore(state); controller.notice = "Portable preset loaded."
                 case .failure(let failure): error = failure.localizedDescription
                 }
             }

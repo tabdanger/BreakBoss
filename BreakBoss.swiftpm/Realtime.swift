@@ -79,6 +79,12 @@ struct KEvent {
         case midiClock    // value: time in seconds
         case songPosition // a: MIDI beats (16ths)
         case allOff
+        case mapNote      // a: MIDI note (-1 = clear the whole map), value: pad 0...11 or -1
+        case padMask      // a: bit per pad that may sound (drum roll mute / solo)
+        case recordArm    // a: 1 = record pad / MIDI hits into the playing pattern, 0 = off
+        case metronome    // a: 1 = click on every beat while playing, 0 = off
+        case midiOut      // a: pad 0...11, value: channel (0...15) * 128 + note, or -1 = channel off;
+                          // a: -1 = MIDI out on (value 1) / off (value 0)
     }
     var kind: Kind
     var a: Int32 = 0
@@ -215,6 +221,16 @@ final class SharedMeters {
         scopeWrite = master.scopeWrite
         os_unfair_lock_unlock(lock)
     }
+    /// The scope ring and its write position, copied into a buffer the screen reuses
+    /// (no allocation, so it can run every display frame).
+    func copyScope(into buffer: inout [Float]) -> Int {
+        if buffer.count != MasterBus.scopeSize { buffer = [Float](repeating: 0, count: MasterBus.scopeSize) }
+        os_unfair_lock_lock(lock)
+        defer { os_unfair_lock_unlock(lock) }
+        buffer.withUnsafeMutableBufferPointer { $0.baseAddress!.update(from: scope, count: MasterBus.scopeSize) }
+        return scopeWrite
+    }
+
     func snapshot() -> MeterSnapshot {
         os_unfair_lock_lock(lock)
         defer { os_unfair_lock_unlock(lock) }

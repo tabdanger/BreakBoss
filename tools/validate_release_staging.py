@@ -59,7 +59,7 @@ def main():
         require(manifest["version"] == 1, f"{target}: unsupported stock manifest")
         require(len({(item["kitID"], item["pad"]) for item in assignments}) == len(assignments), f"{target}: duplicate stock pad")
         for item in assignments:
-            require(0 <= item["pad"] < 16, f"{target}: invalid stock pad")
+            require(0 <= item["pad"] < 12, f"{target}: invalid stock pad")
             require(Path(item["file"]).name == item["file"], f"{target}: non-flat stock filename")
             require(manifest_path.with_name(item["file"]).is_file(), f"{target}: missing stock WAV {item['file']}")
 

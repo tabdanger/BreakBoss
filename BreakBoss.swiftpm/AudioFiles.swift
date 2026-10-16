@@ -52,6 +52,9 @@ enum SampleLoader {
             return url.path.replacingOccurrences(of: folder.standardizedFileURL.path + "/", with: "")
         }
         var dest = folder.appendingPathComponent(url.lastPathComponent)
+        // The same sound again (a library pick, say): reuse the copy that's already there.
+        let size = { (u: URL) in (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? -1 }
+        if FileManager.default.fileExists(atPath: dest.path) && size(dest) == size(url) { return dest.lastPathComponent }
         var n = 2
         while FileManager.default.fileExists(atPath: dest.path) {
             let base = url.deletingPathExtension().lastPathComponent
@@ -96,7 +99,7 @@ enum WavWriter {
 // MARK: - MIDI files
 
 enum MIDIFile {
-    /// One track, channel 10. Pads are notes 36...51; chromatic 808 notes are 52...84
+    /// One track, channel 10. Pads are notes 36...47; chromatic 808 notes are 48...84
     /// (60 = its tuning). MIDI export bounds bass pitches to that chromatic range so they
     /// cannot be mistaken for drum pads on import; audio rendering keeps the full pitch.
     static func write(_ pattern: PatternData, tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
@@ -140,7 +143,7 @@ enum MIDIFile {
         try Data(data).write(to: url, options: .atomic)
     }
 
-    /// Reads a MIDI file into a loop. Notes 36...51 land on the pads, 52...84 on the 808.
+    /// Reads a MIDI file into a loop. Notes 36...47 land on the pads, 48...84 on the 808.
     static func read(_ url: URL) -> PatternData? {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
@@ -229,13 +232,13 @@ enum MIDIFile {
                 let off = offs.first { $0.note == on.note && $0.tick > on.tick }
                 let len = off.map { Int((Double($0.tick - on.tick) * scale).rounded()) } ?? Int(PatternData.ppq)
                 events.append(GrooveEvent(tick: Int32(t), pad: Int8(Pad.bass808.rawValue), velocity: Float(on.vel) / 127,
-                                          semis: Float(on.note - Pad.bassRootNote), length: Int32(len.clamped(0, 3072))))
+                                          semis: Float(on.note - Pad.bassRootNote), length: Int32(len.clamped(0, Int(PatternEdit.barTicks) * PatternEdit.maxBars))))
             }
         }
         guard !events.isEmpty else { return nil }
         let bar = Int(PatternData.ppq) * 4
         let endTick = max(lastTick + 1, Int((Double(trackEndTick) * scale).rounded()))
-        let bars = min(8, max(1, Int(ceil(Double(endTick) / Double(bar)))))
+        let bars = min(PatternEdit.maxBars, max(1, Int(ceil(Double(endTick) / Double(bar)))))
         var p = PatternData(name: url.deletingPathExtension().lastPathComponent.uppercased(), lengthTicks: Int32(bars * bar), events: events)
         let limit = p.lengthTicks
         p.events.removeAll { $0.tick >= limit }

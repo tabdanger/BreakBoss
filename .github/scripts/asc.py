@@ -312,6 +312,8 @@ def upsert(list_path, item_type, match, attributes, create_relationships):
         s2, j2 = call("PATCH", f"/v1/{item_type}/{existing['id']}",
                       {"data": {"type": item_type, "id": existing["id"], "attributes": attributes}})
         return s2 == 200, f"HTTP {s2} {problem(j2)}"
+    if item_type in ("betaAppLocalizations", "betaBuildLocalizations"):
+        attributes = {"locale": "en-US", **attributes}          # Apple needs the language on a new one
     s2, j2 = call("POST", f"/v1/{item_type}", {"data": {"type": item_type, "attributes": attributes,
                                                          "relationships": create_relationships}})
     return s2 == 201, f"HTTP {s2} {problem(j2)}"
@@ -347,6 +349,23 @@ def external(build_number):
     for key in contact:
         if not contact[key]:
             contact[key] = (saved.get(key) or "").strip()
+    if not feedback or not all(contact.values()):
+        # Same details as Tyrone's other apps (MS26, Console E): copy them from the first app on the
+        # team that already has a complete Beta App Review contact and feedback email.
+        sa, ja = call("GET", "/v1/apps?limit=50")
+        for other in (ja.get("data", []) if sa == 200 else []):
+            if other["id"] == app_id: continue
+            so, jo = call("GET", f"/v1/apps/{other['id']}/betaAppReviewDetail")
+            oc = jo.get("data", {}).get("attributes", {}) if so == 200 else {}
+            sl, jl = call("GET", f"/v1/apps/{other['id']}/betaAppLocalizations")
+            ol = next((d for d in jl.get("data", []) if str(d["attributes"].get("locale", "")).startswith("en")), None) if sl == 200 else None
+            ofb = ((ol or {}).get("attributes", {}).get("feedbackEmail") or "").strip()
+            if all((oc.get(k) or "").strip() for k in contact) and (feedback or ofb):
+                for k in contact:
+                    if not contact[k]: contact[k] = oc[k].strip()
+                feedback = feedback or ofb
+                say("notice", "Review contact", f"Using the same review contact and feedback email as {other['attributes'].get('name')}.")
+                break
     if not feedback or not all(contact.values()):
         say("error", "External testing", "Feedback email and the review contact (name, phone, email) are all needed, and App Store Connect doesn't have them yet.")
         sys.exit(1)
@@ -388,7 +407,19 @@ def external(build_number):
     status, js = call("GET", f"/v1/apps/{app_id}/betaGroups?limit=50")
     groups = [g for g in js.get("data", []) if not g["attributes"].get("isInternalGroup")] if status == 200 else []
     if not groups:
-        say("error", "External group", "There is no external tester group.")
+        # First time: make the external group (with a public link, like MS26's)
+        app_name = "BreakBoss"
+        for attrs in ({"name": f"{app_name} Beta", "publicLinkEnabled": True, "publicLinkLimitEnabled": False},
+                      {"name": f"{app_name} Beta"}):
+            sc, jc = call("POST", "/v1/betaGroups", {"data": {"type": "betaGroups", "attributes": attrs,
+                          "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+            if sc == 201:
+                groups = [jc["data"]]
+                say("notice", "External group", f"Made the external group \"{attrs['name']}\"" + (" with a public link." if attrs.get("publicLinkEnabled") else "."))
+                break
+            say("warning", "External group", f"Couldn't make the group ({attrs}): HTTP {sc} {problem(jc)}")
+    if not groups:
+        say("error", "External group", "There is no external tester group and one couldn't be made.")
         sys.exit(1)
     for group in groups:
         s0, j0 = call("GET", f"/v1/betaGroups/{group['id']}/builds?limit=50")
@@ -407,6 +438,23 @@ def external(build_number):
     s4, j4 = call("POST", "/v1/betaAppReviewSubmissions",
                   {"data": {"type": "betaAppReviewSubmissions",
                             "relationships": {"build": {"data": {"type": "builds", "id": build["id"]}}}}})
+    if s4 == 422 and "review" in problem(j4).lower():
+        # Apple reviews one build at a time: retire the older build that's still waiting (Tyrone's call:
+        # the newest build goes out now), then submit this one.
+        sb, jb = call("GET", f"/v1/builds?filter[app]={app_id}&sort=-uploadedDate&limit=20&include=buildBetaDetail")
+        details = {d["id"]: d for d in jb.get("included", []) if d.get("type") == "buildBetaDetails"} if sb == 200 else {}
+        for old in (jb.get("data", []) if sb == 200 else []):
+            if old["id"] == build["id"]: continue
+            rel = old.get("relationships", {}).get("buildBetaDetail", {}).get("data") or {}
+            state = details.get(rel.get("id"), {}).get("attributes", {}).get("externalBuildState")
+            if state in ("WAITING_FOR_BETA_REVIEW", "IN_BETA_REVIEW"):
+                se, je = call("PATCH", f"/v1/builds/{old['id']}", {"data": {"type": "builds", "id": old["id"], "attributes": {"expired": True}}})
+                say("notice" if se == 200 else "warning", "Beta App Review",
+                    f"Build {old['attributes'].get('version')} ({state}) " + ("retired so the new build can go in." if se == 200 else f"couldn't be retired: HTTP {se} {problem(je)}"))
+        time.sleep(20)
+        s4, j4 = call("POST", "/v1/betaAppReviewSubmissions",
+                      {"data": {"type": "betaAppReviewSubmissions",
+                                "relationships": {"build": {"data": {"type": "builds", "id": build["id"]}}}}})
     if s4 == 201:
         say("notice", "Beta App Review", f"Build {number} was sent to Apple for Beta App Review.")
     else:

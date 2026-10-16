@@ -23,6 +23,8 @@ struct FaceplateView: View {
     @State private var editor: EditorTarget?
     @State private var showExport = false
     @State private var showMenu = false
+    @State private var patternEditor: PatternTarget?
+    @State private var browser: BrowserView.Kind?
     @State private var namePrompt: NamePrompt?
     @State private var nameText = ""
 
@@ -30,6 +32,11 @@ struct FaceplateView: View {
         let pad: Int
         let loop: Bool
         var id: Int { pad * 2 + (loop ? 1 : 0) }
+    }
+
+    struct PatternTarget: Identifiable {
+        let loop: Int
+        var id: Int { loop }
     }
 
     enum NamePrompt: Identifiable {
@@ -41,7 +48,7 @@ struct FaceplateView: View {
         GeometryReader { geo in
             let mode = controller.mode
             let device = deviceOverride ?? (UIDevice.current.userInterfaceIdiom == .phone ? .phone : .tablet)
-            if let layout = FaceplateLayout.forMode(mode, device: device) {
+            if let layout = FaceplateLayout.forFace(controller.faceKey, device: device) ?? FaceplateLayout.forMode(mode, device: device) {
                 if layout.isPhone && geo.size.width > geo.size.height {
                     // Keep the portrait instrument large enough to use after rotation.
                     // The artwork stays proportional and every row remains reachable.
@@ -63,7 +70,9 @@ struct FaceplateView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .bbMenuHost()
         .background(Color.black.ignoresSafeArea())
+        .background(spaceBar)
         .sheet(item: $editor) { target in
             if target.loop {
                 LoopEditorView(controller: controller, loop: target.pad)
@@ -73,6 +82,8 @@ struct FaceplateView: View {
         }
         .sheet(isPresented: $showExport) { ExportView(controller: controller) }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
+        .fullScreenCover(item: $patternEditor) { target in SequencerWorkspaceView(controller: controller, loop: target.loop) }
+        .fullScreenCover(item: $browser) { kind in BrowserView(controller: controller, kind: kind) }
         .alert(namePrompt == .kit ? "Save Kit" : "Save Preset", isPresented: Binding(
             get: { namePrompt != nil }, set: { if !$0 { namePrompt = nil } })) {
             TextField("Name", text: $nameText)
@@ -82,8 +93,18 @@ struct FaceplateView: View {
             }
             Button("Cancel", role: .cancel) { namePrompt = nil }
         } message: {
-            Text(namePrompt == .kit ? "Saves the 16 pads (your samples and pad settings) as a kit."
+            Text(namePrompt == .kit ? "Saves the 12 pads (your samples and pad settings) as a kit."
                                     : "Saves the whole faceplate: mode, knobs, kit and loops.")
+        }
+    }
+
+    /// Space bar (hardware keyboard) = PLAY / STOP in the standalone app. In a DAW the space
+    /// bar belongs to the DAW, so the plug-in leaves it alone.
+    @ViewBuilder private var spaceBar: some View {
+        if !controller.isPlugin && patternEditor == nil {
+            Button("") { controller.playPressed() }
+                .keyboardShortcut(.space, modifiers: [])
+                .opacity(0).frame(width: 0, height: 0).accessibilityHidden(true)
         }
     }
 
@@ -91,9 +112,9 @@ struct FaceplateView: View {
 
     @ViewBuilder
     private func plate(_ L: FaceplateLayout, mode: SoundMode, s: CGFloat) -> some View {
-        let sfx = mode.assetSuffix
+        let sfx = controller.faceKey
         ZStack(alignment: .topLeading) {
-            Image(L.plateImageName(for: mode))
+            Image(L.plateImageName(face: sfx))
                 .resizable()
                 .interpolation(.high)
                 .frame(width: L.width * s, height: L.height * s)
@@ -108,18 +129,11 @@ struct FaceplateView: View {
     /// Screen, ONE-SHOT / LOOP and the three mode buttons (each mode is its own faceplate).
     @ViewBuilder
     private func topLeft(_ L: FaceplateLayout, sfx: String, s: CGFloat) -> some View {
-        if L.isPhone {
-            // Clear the photographed idle trace. The screen's bezel stays in the JPEG.
-            Rectangle().fill(Color.black).place(L.scope, s).allowsHitTesting(false)
-        }
-        ScopeView(controller: controller, scale: L.isPhone ? s * 1.4 : s)
+        ScopeView(controller: controller, scale: L.isPhone ? s * 1.3 : s)
             .place(L.scope, s)
-        if L.isPhone {
-            phonePlayModeLED(L, button: L.oneShotButton, active: controller.playMode == .oneShot, s: s)
-            phonePlayModeLED(L, button: L.loopButton, active: controller.playMode == .loop, s: s)
-        } else if controller.playMode == .oneShot {
-            Image("oneshot_on_\(sfx)").resizable().place(L.oneShotButton, s)
-            Image("loop_off_\(sfx)").resizable().place(L.loopButton, s)
+        if controller.playMode == .oneShot {
+            Image(L.overlayName("oneshot_on", sfx)).resizable().place(L.oneShotButton, s)
+            Image(L.overlayName("loop_off", sfx)).resizable().place(L.loopButton, s)
         }
         hit(L.oneShotButton, s) { controller.selectPlayMode(.oneShot) }
         hit(L.loopButton, s) { controller.selectPlayMode(.loop) }
@@ -133,54 +147,39 @@ struct FaceplateView: View {
     private func knobs(_ L: FaceplateLayout, sfx: String, s: CGFloat) -> some View {
         ForEach(KnobControl.order, id: \.rawValue) { p in
             if let k = L.knobs[p.id] {
-                if L.isPhone, let cleanLayout = FaceplateLayout.all[sfx], let cleanKnob = cleanLayout.knobs[p.id] {
-                    PhoneKnobRepair(image: "Plate_\(sfx)", layout: cleanLayout,
-                                    sourceKnob: cleanKnob, knob: k, scale: s)
-                }
                 KnobControl(controller: controller, param: p, knob: k, scale: s)
             }
         }
-        if L.isPhone {
-            PhoneClipperIndicator(active: controller.value(.clipper) >= 0.5, scale: s)
-                .place(L.clipperRect, s)
-        } else if controller.value(.clipper) < 0.5 {
-            Image("clipper_off_\(sfx)").resizable().place(L.clipperRect, s)
+        if controller.value(.clipper) < 0.5 {
+            Image(L.overlayName("clipper_off", sfx)).resizable().place(L.clipperRect, s)
         }
         hit(L.clipperRect, s) { controller.toggle(.clipper) }
         hit(L.exportRect, s) { showExport = true }
+        if let r = L.editorRect {
+            hit(r, s) {
+                // Opens on the loop that's playing, otherwise loop 1.
+                let current = Int(controller.meters.status[1])
+                patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : 0)
+            }
+        }
         hit(L.menuRect, s) { showMenu = true }
     }
 
     /// PLAY, BPM, TEMPO SYNC, FOLLOW DAW, dice.
     @ViewBuilder
     private func transport(_ L: FaceplateLayout, sfx: String, s: CGFloat) -> some View {
-        if L.isPhone {
-            PhonePlayButton(controller: controller, rect: L.playRect, scale: s)
-        } else {
-            PlayButtonView(controller: controller, image: "play_on_\(sfx)", rect: L.playRect, scale: s)
-        }
+        PlayButtonView(controller: controller, image: L.overlayName("play_on", sfx), rect: L.playRect, scale: s)
         BPMDisplay(controller: controller, layout: L, scale: s)
-        if L.isPhone {
-            PhoneLED(active: controller.value(.tempoSync) >= 0.5, mode: controller.mode, scale: s)
-                .place(L.leds.tempoSyncRect, s)
-            PhoneLED(active: controller.value(.followDAW) >= 0.5, mode: controller.mode, scale: s)
-                .place(L.leds.followDAWRect, s)
-        } else {
-            if controller.value(.tempoSync) < 0.5 { Image("led_off_\(sfx)").resizable().place(L.leds.tempoSyncRect, s) }
-            if controller.value(.followDAW) < 0.5 { Image("led_off_\(sfx)").resizable().place(L.leds.followDAWRect, s) }
-        }
-        hit(ledHitRect(L.leds.tempoSyncRect), s) { controller.toggle(.tempoSync) }
-        hit(ledHitRect(L.leds.followDAWRect), s) { controller.toggle(.followDAW) }
+        if controller.value(.tempoSync) < 0.5 { Image(L.overlayName("led_off", sfx)).resizable().place(L.leds.tempoSyncRect, s) }
+        if controller.value(.followDAW) < 0.5 { Image(L.overlayName("led_off", sfx)).resizable().place(L.leds.followDAWRect, s) }
+        hit(ledHitRect(L, L.leds.tempoSyncRect), s) { controller.toggle(.tempoSync) }
+        hit(ledHitRect(L, L.leds.followDAWRect), s) { controller.toggle(.followDAW) }
         hit(L.diceRect, s) { controller.dice() }
     }
 
     /// KITS and PRESETS windows, and SAVE.
     @ViewBuilder
     private func windows(_ L: FaceplateLayout, s: CGFloat) -> some View {
-        if L.isPhone {
-            phoneWindowClear(L.kitText, s: s)
-            phoneWindowClear(L.presetText, s: s)
-        }
         NameWindow(text: controller.loadingKit ? "LOADING..." : controller.kitDisplayName,
                    textRect: L.kitText, color: L.textColor, scale: s)
         if !FaceplateView.snapshotMode { kitsMenu.place(L.kitBox, s) }
@@ -200,32 +199,20 @@ struct FaceplateView: View {
             PadView(controller: controller, pad: L.padIndex(forLayoutPosition: i), rect: L.pads[i], scale: s) { loopEditor in
                 editor = EditorTarget(pad: L.padIndex(forLayoutPosition: i), loop: loopEditor)
             }
+            // Drop a sound file (Files, a sample app, Split View) onto a pad to load it there.
+            .onDrop(of: [UTType.fileURL, UTType.audio], isTargeted: nil) { providers in
+                controller.importDropped(providers, toPad: L.padIndex(forLayoutPosition: i))
+            }
         }
     }
 
     private func width(_ r: [Double], _ s: CGFloat) -> CGFloat { (r[2] - r[0]) * s }
     private func height(_ r: [Double], _ s: CGFloat) -> CGFloat { (r[3] - r[1]) * s }
 
-    /// LED plus its printed label.
-    private func ledHitRect(_ r: [Double]) -> [Double] { [r[0] - 4, r[1] - 1, r[0] + 132, r[3] + 1] }
-
-    private func phoneWindowClear(_ r: [Double], s: CGFloat) -> some View {
-        Rectangle().fill(Color.black)
-            .place([r[0] - 4, r[1] - 5, r[2] + 4, r[3] + 5], s)
-            .allowsHitTesting(false)
-    }
-
-    private func phonePlayModeLED(_ L: FaceplateLayout, button r: [Double], active: Bool, s: CGFloat) -> some View {
-        let center = (r[0] + r[2]) / 2
-        return ZStack {
-            Rectangle().fill(Color(white: 0.055))
-            RoundedRectangle(cornerRadius: s)
-                .fill(active ? Color(red: 1, green: 0.12, blue: 0.10) : Color(white: 0.35))
-                .frame(width: 20 * s, height: 3 * s)
-                .shadow(color: active ? .red : .clear, radius: 3 * s)
-        }
-        .place([center - 16, 65, center + 16, 79], s)
-        .allowsHitTesting(false)
+    /// LED plus its printed label (the overlay rect plus label is about 5 overlay-widths).
+    private func ledHitRect(_ L: FaceplateLayout, _ r: [Double]) -> [Double] {
+        let w = r[2] - r[0]
+        return [r[0], r[1], r[0] + w * 5, r[3]]
     }
 
     private func hit(_ r: [Double], _ s: CGFloat, action: @escaping () -> Void) -> some View {
@@ -236,68 +223,91 @@ struct FaceplateView: View {
 
     // MARK: Menus
 
-    private var kitsMenu: some View {
-        Menu {
-            ForEach(SoundMode.allCases, id: \.rawValue) { mode in
-                Section("\(mode.title) · \(KitLibrary.kits(for: mode).count) kits") {
-                    ForEach(KitLibrary.kits(for: mode)) { def in
-                        Button { controller.selectKit(def) } label: {
-                            Text("\(def.name)   \(Int(def.tempo)) BPM")
-                        }
+    /// KITS: the drum sounds, grouped by mode, plus your own kits. (BreakBoss menu, not Apple's.)
+    func kitMenuItems() -> [BBMenuItem] {
+        var items: [BBMenuItem] = []
+        for mode in SoundMode.allCases {
+            items.append(.submenu("\(mode.title) kits", icon: "square.grid.3x3",
+                KitLibrary.kits(for: mode).map { def in
+                    BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) {
+                        controller.selectKit(def)
                     }
-                }
-            }
-            if !controller.userKits.isEmpty {
-                Section("My kits") {
-                    ForEach(controller.userKits, id: \.self) { name in
-                        Button(name) { controller.selectUserKit(name) }
-                    }
-                }
-            }
-            Section {
-                Button { nameText = controller.state.userKit ?? ""; namePrompt = .kit } label: {
-                    Label("Save Kit As…", systemImage: "square.and.arrow.down")
-                }
-                if !controller.userKits.isEmpty {
-                    Menu("Delete a Kit") {
-                        ForEach(controller.userKits, id: \.self) { name in
-                            Button(name, role: .destructive) { controller.deleteUserKit(name) }
-                        }
-                    }
-                }
-            }
-        } label: {
-            Color.white.opacity(0.001)
+                }))
         }
-        .menuStyle(.borderlessButton)
+        items.append(.submenu("Genre kits", icon: "music.note.list", KitLibrary.genreGroups.map { g in
+            BBMenuItem.submenu(g.genre, icon: "square.grid.3x3", g.kits.map { def in
+                BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) {
+                    controller.selectKit(def)
+                }
+            })
+        }))
+        if !controller.userKits.isEmpty {
+            items.append(.submenu("My kits", icon: "person.crop.square", controller.userKits.map { name in
+                BBMenuItem.item(name, checked: controller.state.userKit == name) { controller.selectUserKit(name) }
+            }))
+        }
+        items.append(.item("Save Kit As…", icon: "square.and.arrow.down") {
+            nameText = controller.state.userKit ?? ""; namePrompt = .kit
+        })
+        if !controller.userKits.isEmpty {
+            items.append(.submenu("Delete a Kit", icon: "trash", controller.userKits.map { name in
+                BBMenuItem.item(name, destructive: true) { controller.deleteUserKit(name) }
+            }))
+        }
+        return items
+    }
+
+    /// PRESETS: patterns, grouped by style (Danger Patterns first), plus your own presets.
+    func presetMenuItems() -> [BBMenuItem] {
+        var items: [BBMenuItem] = [.item("INIT", checked: controller.state.presetName == "INIT") { controller.loadInit() }]
+        for style in PatternBank.styles {
+            items.append(.submenu(style, icon: style == "Danger Patterns" ? "bolt.fill" : "music.note.list",
+                PatternBank.presets(in: style).map { p in
+                    BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
+                          checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p) }
+                }))
+        }
+        if !controller.userPresets.isEmpty {
+            items.append(.submenu("My presets", icon: "person.crop.square", controller.userPresets.map { name in
+                BBMenuItem.item(name) { controller.loadUserPreset(name) }
+            }))
+            items.append(.submenu("Delete a Preset", icon: "trash", controller.userPresets.map { name in
+                BBMenuItem.item(name, destructive: true) { controller.deleteUserPreset(name) }
+            }))
+        }
+        return items
+    }
+
+    private var kitsMenu: some View {
+        Color.white.opacity(0.001).contentShape(Rectangle()).onTapGesture { browser = .kits }
     }
 
     private var presetsMenu: some View {
-        Menu {
-            Button("INIT") { controller.loadInit() }
-            ForEach(SoundMode.allCases, id: \.rawValue) { mode in
-                Section("\(mode.title) presets") {
-                    ForEach(FactoryPresets.all.filter { $0.mode == mode }, id: \.name) { fp in
-                        Button(fp.name) { controller.loadFactoryPreset(fp) }
-                    }
-                }
+        Color.white.opacity(0.001).contentShape(Rectangle()).onTapGesture { browser = .presets }
+    }
+}
+
+// MARK: - Dropping sound files on pads (faceplate pads and drum roll channels)
+
+extension KnockController {
+    /// Loads a dropped audio file onto a pad (WAV, AIFF, CAF, MP3, M4A, FLAC…).
+    func importDropped(_ providers: [NSItemProvider], toPad pad: Int) -> Bool {
+        guard let provider = providers.first else { return false }
+        if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+            _ = provider.loadObject(ofClass: URL.self) { [weak self] url, _ in
+                if let url { DispatchQueue.main.async { self?.importSample(url, toPad: pad) } }
             }
-            if !controller.userPresets.isEmpty {
-                Section("My presets") {
-                    ForEach(controller.userPresets, id: \.self) { name in
-                        Button(name) { controller.loadUserPreset(name) }
-                    }
-                }
-                Menu("Delete a Preset") {
-                    ForEach(controller.userPresets, id: \.self) { name in
-                        Button(name, role: .destructive) { controller.deleteUserPreset(name) }
-                    }
-                }
-            }
-        } label: {
-            Color.white.opacity(0.001)
+            return true
         }
-        .menuStyle(.borderlessButton)
+        guard provider.hasItemConformingToTypeIdentifier(UTType.audio.identifier) else { return false }
+        provider.loadFileRepresentation(forTypeIdentifier: UTType.audio.identifier) { [weak self] url, _ in
+            guard let url else { return }
+            let copy = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+            try? FileManager.default.removeItem(at: copy)
+            try? FileManager.default.copyItem(at: url, to: copy)
+            DispatchQueue.main.async { self?.importSample(copy, toPad: pad) }
+        }
+        return true
     }
 }
 
@@ -315,8 +325,11 @@ extension View {
 
 /// An invisible button that darkens a little while pressed (like a real button going in).
 struct PressableArea: View {
+    /// Held for half a second (optional): this instead of `action`.
+    var longAction: (() -> Void)? = nil
     let action: () -> Void
     @State private var down = false
+    @State private var downAt = Date()
 
     var body: some View {
         Rectangle()
@@ -324,10 +337,11 @@ struct PressableArea: View {
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
-                    .onChanged { _ in if !down { down = true } }
+                    .onChanged { _ in if !down { down = true; downAt = Date() } }
                     .onEnded { g in
                         down = false
-                        if abs(g.translation.width) < 40 && abs(g.translation.height) < 40 { action() }
+                        guard abs(g.translation.width) < 40 && abs(g.translation.height) < 40 else { return }
+                        if let longAction, Date().timeIntervalSince(downAt) > 0.5 { longAction() } else { action() }
                     }
             )
     }
@@ -397,108 +411,6 @@ struct KnobPointer: Shape {
     }
 }
 
-/// The supplied phone photos include static pointer notches. Cover the metal-cap circle
-/// with the corresponding clean photographic cap already present in the approved tablet
-/// artwork, then draw the live pointer above it. Rings, shadows and labels stay on the
-/// original phone photograph; all bundled artwork files remain unchanged.
-private struct PhoneKnobRepair: View {
-    let image: String
-    let layout: FaceplateLayout
-    let sourceKnob: FaceplateLayout.Knob
-    let knob: FaceplateLayout.Knob
-    let scale: CGFloat
-
-    var body: some View {
-        let diameter = knob.r * 2 * scale
-        let sourceScale = knob.r / sourceKnob.r * scale
-        Image(image)
-            .resizable()
-            .interpolation(.high)
-            .frame(width: layout.width * sourceScale, height: layout.height * sourceScale)
-            .offset(x: -(sourceKnob.x - sourceKnob.r) * sourceScale,
-                    y: -(sourceKnob.y - sourceKnob.r) * sourceScale)
-            .frame(width: diameter, height: diameter, alignment: .topLeading)
-            .clipShape(Circle())
-            .position(x: knob.x * scale, y: knob.y * scale)
-            .allowsHitTesting(false)
-    }
-}
-
-private struct PhoneClipperIndicator: View {
-    let active: Bool
-    let scale: CGFloat
-
-    var body: some View {
-        ZStack {
-            if active {
-                Color.clear // The photograph is already the correct illuminated ON button.
-            } else {
-                RoundedRectangle(cornerRadius: 2 * scale)
-                    .fill(LinearGradient(colors: [Color(white: 0.10), Color(white: 0.015)],
-                                         startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .overlay(RoundedRectangle(cornerRadius: 2 * scale)
-                        .stroke(Color(white: 0.24), lineWidth: 2 * scale))
-                Text("OFF")
-                    .font(.system(size: 15 * scale, weight: .regular))
-                    .foregroundColor(Color(white: 0.65))
-            }
-        }
-        .allowsHitTesting(false)
-    }
-}
-
-private struct PhoneLED: View {
-    let active: Bool
-    let mode: SoundMode
-    let scale: CGFloat
-
-    private var panelColor: Color {
-        switch mode {
-        case .modern: return Color(red: 0.09, green: 0.10, blue: 0.10)
-        case .vintage: return Color(red: 0.86, green: 0.86, blue: 0.85)
-        case .texture: return Color(red: 0.01, green: 0.25, blue: 0.40)
-        }
-    }
-
-    var body: some View {
-        ZStack {
-            Circle().fill(panelColor).frame(width: 23 * scale, height: 23 * scale)
-            Circle().stroke(Color.red.opacity(0.8), lineWidth: 1.5 * scale)
-            if active {
-                Circle().fill(Color(red: 1, green: 0.18, blue: 0.13))
-                    .shadow(color: .red.opacity(0.75), radius: 3 * scale)
-                Circle().fill(Color.white.opacity(0.95))
-                    .padding(3 * scale)
-            }
-        }
-        .allowsHitTesting(false)
-    }
-}
-
-private struct PhonePlayButton: View {
-    @ObservedObject var controller: KnockController
-    let rect: [Double]
-    let scale: CGFloat
-
-    var body: some View {
-        let centerX = (rect[0] + rect[2]) / 2
-        let centerY = (rect[1] + rect[3]) / 2
-        ZStack(alignment: .topLeading) {
-            TimelineView(.periodic(from: .now, by: 0.1)) { _ in
-                ZStack {
-                    Rectangle().fill(Color(white: 0.055))
-                    Image(systemName: controller.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 26 * scale, weight: .regular))
-                        .foregroundColor(controller.isPlaying ? ScopeView.red : .white)
-                }
-                .place([centerX - 21, centerY - 18, centerX + 21, centerY + 18], scale)
-            }
-            .allowsHitTesting(false)
-            PressableArea { controller.playPressed() }.place(rect, scale)
-        }
-    }
-}
-
 // MARK: - Name windows (KITS / PRESETS)
 
 struct NameWindow: View {
@@ -534,12 +446,6 @@ struct BPMDisplay: View {
         let box = layout.bpmBox
         let color = Color(red: layout.textColor[0] / 255, green: layout.textColor[1] / 255, blue: layout.textColor[2] / 255)
         ZStack(alignment: .topLeading) {
-            if layout.isPhone {
-                // Remove the photographed "121" while retaining the original BPM label.
-                Rectangle().fill(Color.black)
-                    .place([d[0] - 5, d[1] - 4, layout.bpmLabelX - 6, d[3] + 4], scale)
-                    .allowsHitTesting(false)
-            }
             TimelineView(.periodic(from: .now, by: 0.2)) { _ in
                 let bpm = Int(controller.liveTempo.rounded())
                 // Right-aligned up to just before the printed "BPM".
@@ -631,7 +537,13 @@ struct PlayButtonView: View {
                 }
             }
             .allowsHitTesting(false)
-            PressableArea { controller.playPressed() }.place(rect, scale)
+            // RECORD armed: a red ring round PLAY (hold PLAY to arm / disarm, MPC style)
+            if controller.recording {
+                RoundedRectangle(cornerRadius: 6 * scale).stroke(Color(red: 1, green: 0.16, blue: 0.12), lineWidth: 3 * scale)
+                    .shadow(color: Color.red.opacity(0.8), radius: 6 * scale)
+                    .place(rect, scale).allowsHitTesting(false)
+            }
+            PressableArea(longAction: { controller.toggleRecordPads() }) { controller.playPressed() }.place(rect, scale)
         }
     }
 }
