@@ -112,7 +112,7 @@ struct SequencerWorkspaceView: View {
         GeometryReader { geo in
             // On iPhone the panels scroll horizontally instead of shrinking the 16 steps
             // into untappable pixels. iPad gets the true simultaneous three-panel layout.
-            let narrow = geo.size.width < 840
+            let narrow = geo.size.width < 920
             let leftWidth: CGFloat = narrow ? 174 : 192
             let rightWidth: CGFloat = narrow ? 254 : 268
             let centerWidth: CGFloat = narrow ? 615 : max(450, geo.size.width - leftWidth - rightWidth - 2)
@@ -162,7 +162,7 @@ struct SequencerWorkspaceView: View {
 
             sectionHeader("GENERATION")
             commandButton("GENERATE", icon: "dice.fill") {
-                for row in rows { controller.randomizeChannel(loop: loop, pad: row.pad) }
+                controller.generateWorkspace(loop: loop)
                 status = "Generated \(rows.count) channels"
             }
             .disabled(rows.isEmpty)
