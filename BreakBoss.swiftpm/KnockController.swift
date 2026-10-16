@@ -42,8 +42,6 @@ final class KnockController: ObservableObject {
 
     private let kitQueue = DispatchQueue(label: "breakboss.kit", qos: .userInitiated)
     private let stockLibrary = StockSampleLibrary.bundled
-    /// Temporary rack gating; original home pad routing remains available.
-    private var workspaceIsOpen = false
     private var kitGeneration = 0
     private var timers: [Timer] = []
     private var saveWork: DispatchWorkItem?
@@ -303,18 +301,7 @@ final class KnockController: ObservableObject {
     }
 
     private func pushPadMask() {
-        var mask = KnockController.padMask(muted: mutedPads, solo: soloPads)
-        if workspaceIsOpen {
-            var onlyVisible: UInt16 = 0
-            for row in workspaceChannels { onlyVisible |= UInt16(1) << UInt16(row.pad) }
-            mask &= onlyVisible
-        }
-        engine.send(KEvent(kind: .padMask, a: Int32(mask)))
-    }
-
-    func setWorkspaceOpen(_ open: Bool) {
-        workspaceIsOpen = open
-        pushPadMask()
+        engine.send(KEvent(kind: .padMask, a: Int32(KnockController.padMask(muted: mutedPads, solo: soloPads))))
     }
 
     @Published private(set) var recording = false
@@ -613,123 +600,91 @@ final class KnockController: ObservableObject {
         return kitDefinition.pads[pad].label
     }
 
-    // MARK: New channel rack (the original instrument faceplate is unchanged)
+    // MARK: Channel rack (the sequencer screen's channels; the faceplate's 12 pads underneath)
 
-    var workspaceChannels: [WorkspaceChannel] { state.workspaceChannels ?? [] }
-
-    func ensureWorkspace(loop: Int) {
-        guard state.workspaceChannels == nil else { return }
-        state.workspaceChannels = []
-        // A new rack starts blank instead of silently playing all generated kit
-        // channels. Existing explicitly edited loops are never discarded.
-        if loops.indices.contains(loop) && state.editedLoops[loop] == nil {
-            var blank = loops[loop]
-            blank.events = []
-            setLoop(loop, blank)
+    /// The rack's channels. Until you change the rack it mirrors the kit: one channel per pad.
+    var rackChannels: [WorkspaceChannel] {
+        if let rows = state.workspaceChannels { return rows }
+        return (0..<Pad.count).map { pad in
+            WorkspaceChannel(id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", pad)) ?? UUID(), pad: pad, soundID: "kit",
+                             name: Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)", category: SoundType.forPad(pad).rawValue)
         }
-        scheduleSave()
     }
 
+    /// Drop a library sound on the rack: a new channel on the first free pad slot (12 at most).
     @discardableResult
-    func addWorkspaceChannel(_ sound: LibrarySound, loop: Int) -> WorkspaceChannel? {
-        ensureWorkspace(loop: loop)
-        let occupied = Set(workspaceChannels.map(\.pad))
-        guard let pad = (0..<Pad.count).first(where: { !occupied.contains($0) }) else {
-            notice = "Only 12 channels fit in the rack."
+    func addRackChannel(_ sound: LibrarySound, load: Bool = true) -> WorkspaceChannel? {
+        var rows = rackChannels
+        let used = Set(rows.map(\.pad))
+        guard let pad = (0..<Pad.count).first(where: { !used.contains($0) }) else {
+            notice = "The rack is full (12 channels). Delete one to add another."
             return nil
         }
-        let row = WorkspaceChannel(id: UUID(), pad: pad, soundID: sound.id,
-                                   name: sound.name, category: sound.type.rawValue)
-        // A new track must start with no ghost steps from an older kit/pattern.
-        if loops.indices.contains(loop) {
-            var cleared = loops[loop]
-            cleared.events.removeAll { Int($0.pad) == pad }
-            setLoop(loop, cleared)
+        let row = WorkspaceChannel(id: UUID(), pad: pad, soundID: sound.id, name: sound.name, category: sound.type.rawValue)
+        rows.append(row)
+        state.workspaceChannels = rows
+        for i in loops.indices where loops[i].events.contains(where: { Int($0.pad) == pad }) {   // a fresh channel starts empty
+            var p = loops[i]; p.events.removeAll { Int($0.pad) == pad }; setLoop(i, p)
         }
-        state.workspaceChannels?.append(row)
-        pushPadMask()
-        // Reuse the off-audio-thread sample loader; every drop gets its own pad.
-        importSample(sound.url, toPad: pad)
+        if load { importSample(sound.url, toPad: pad) }
         scheduleSave()
         return row
     }
 
-    func removeWorkspaceChannel(_ id: UUID, loop: Int) {
-        guard let row = workspaceChannels.first(where: { $0.id == id }) else { return }
-        state.workspaceChannels?.removeAll { $0.id == id }
-        pushPadMask()
-        // Track deletion removes its notes across every pattern, not only this
-        // page. Reused audio slots cannot accidentally inherit hidden old steps.
-        for index in loops.indices {
-            let data = loops[index]
-            guard data.events.contains(where: { Int($0.pad) == row.pad }) else { continue }
-            var edited = data
-            edited.events.removeAll { Int($0.pad) == row.pad }
-            setLoop(index, edited)
-        }
+    /// Drop a sound on a channel: that channel plays it from now on (its steps stay).
+    func replaceRackSound(_ id: UUID, with sound: LibrarySound) {
+        var rows = rackChannels
+        guard let i = rows.firstIndex(where: { $0.id == id }) else { return }
+        rows[i].soundID = sound.id; rows[i].name = sound.name; rows[i].category = sound.type.rawValue
+        state.workspaceChannels = rows
+        importSample(sound.url, toPad: rows[i].pad)
         scheduleSave()
     }
 
-    /// Make genre-aware steps by sound category, not by the slot number chosen
-    /// when a sound was dropped into the rack.
-    func generateWorkspace(loop: Int) {
-        guard loops.indices.contains(loop) else { return }
-        let style = PatternRandomizer.style(for: state.presetName)
-        for row in workspaceChannels {
-            let sourcePad: Int
-            switch SoundType(rawValue: row.category) {
-            case .kick: sourcePad = 0
-            case .snare: sourcePad = 1
-            case .clap: sourcePad = 2
-            case .rim: sourcePad = 3
-            case .hat: sourcePad = 4
-            case .open: sourcePad = 5
-            case .bass: sourcePad = 6
-            case .perc: sourcePad = 7
-            case .tom: sourcePad = 9
-            case .cymbal: sourcePad = 11
-            default: sourcePad = 8
-            }
-            let current = loops[loop]
-            let made = PatternRandomizer.randomChannel(current, pad: sourcePad,
-                style: style, seed: UInt32.random(in: 2...UInt32.max))
-            var changed = current
-            changed.events.removeAll { Int($0.pad) == row.pad }
-            for event in made.events where Int(event.pad) == sourcePad {
-                var e = event
-                e.pad = Int8(row.pad)
-                changed.events.append(e)
-            }
-            changed.sort()
-            setLoop(loop, changed)
-        }
+    func renameRackChannel(_ id: UUID, _ name: String) {
+        var rows = rackChannels
+        guard let i = rows.firstIndex(where: { $0.id == id }) else { return }
+        rows[i].name = name.uppercased()
+        state.workspaceChannels = rows
+        scheduleSave()
     }
 
-    func toggleWorkspaceStep(loop: Int, pad: Int, step: Int, bar: Int = 0) {
-        guard workspaceChannels.contains(where: { $0.pad == pad }),
-              loops.indices.contains(loop), (0..<16).contains(step) else { return }
-        let tick = (Int32(bar) * 16 + Int32(step)) * PatternData.stepTicks
-        setLoop(loop, PatternEdit.toggle(loops[loop], pad: pad, tick: tick,
-                                         cell: PatternData.stepTicks))
+    /// Delete a channel: its steps go from every pattern and its pad slot is free again.
+    func removeRackChannel(_ id: UUID) {
+        var rows = rackChannels
+        guard let i = rows.firstIndex(where: { $0.id == id }) else { return }
+        let pad = rows[i].pad
+        rows.remove(at: i)
+        state.workspaceChannels = rows
+        for k in loops.indices where loops[k].events.contains(where: { Int($0.pad) == pad }) {
+            var p = loops[k]; p.events.removeAll { Int($0.pad) == pad }; setLoop(k, p)
+        }
+        revertPad(pad)
+        scheduleSave()
     }
 
-    func toggleWorkspacePianoNote(loop: Int, pad: Int, step: Int, bar: Int,
-                                  semitones: Int) {
-        guard workspaceChannels.contains(where: { $0.pad == pad }),
-              loops.indices.contains(loop), (0..<16).contains(step),
-              (-24...24).contains(semitones) else { return }
-        let tick = (Int32(bar) * 16 + Int32(step)) * PatternData.stepTicks
-        var data = loops[loop]
-        let before = data.events.count
-        data.events.removeAll { Int($0.pad) == pad && $0.tick == tick &&
-            Int($0.semis.rounded()) == semitones }
-        if data.events.count == before {
-            data.events.append(GrooveEvent(tick: tick, pad: Int8(pad), velocity: 0.85,
-                                          semis: Float(semitones),
-                                          length: pad == Pad.bass808.rawValue ? PatternData.stepTicks : 0))
-        }
-        data.sort()
-        setLoop(loop, data)
+    /// Back to the kit's own 12 channels.
+    func resetRack() {
+        state.workspaceChannels = nil
+        for pad in 0..<Pad.count where state.pads[pad].sampleFile != nil { state.pads[pad] = PadSettings() }
+        rebuildKit()
+        scheduleSave()
+    }
+
+    /// GENERATE: a new pattern in a chosen style (the preset's style when nil).
+    func randomizePattern(style chosen: String? = nil) {
+        let style = chosen ?? PatternRandomizer.style(for: state.presetName)
+        let length = loops.first?.lengthTicks ?? PatternData.ppq * 8
+        let seed = UInt32.random(in: 2...UInt32.max)
+        var s = state
+        s.basePattern = PatternRandomizer.randomPattern(style: style, length: max(length, PatternData.ppq * 8), seed: seed)
+        s.patternStyle = PatternBank.presets(in: style).first?.grooveStyle ?? patternStyle
+        s.grooveSeed = seed
+        s.editedLoops = Array(repeating: nil, count: Pad.count)
+        state = s
+        rebuildLoops()
+        scheduleSave()
+        readout = Readout(title: "GENERATE", value: "NEW \(style.uppercased()) PATTERN", time: Date())
     }
 
     // MARK: Loops
@@ -830,21 +785,6 @@ final class KnockController: ObservableObject {
 
     // MARK: Randomize
 
-    /// A new pattern in the current preset's style, built from that style's presets.
-    func randomizePattern() {
-        let style = PatternRandomizer.style(for: state.presetName)
-        let length = loops.first?.lengthTicks ?? PatternData.ppq * 8
-        let seed = UInt32.random(in: 2...UInt32.max)
-        var s = state
-        s.basePattern = PatternRandomizer.randomPattern(style: style, length: max(length, PatternData.ppq * 8), seed: seed)
-        s.patternStyle = PatternBank.presets(in: style).first?.grooveStyle ?? patternStyle
-        s.grooveSeed = seed
-        s.editedLoops = Array(repeating: nil, count: Pad.count)
-        state = s
-        rebuildLoops()
-        scheduleSave()
-        readout = Readout(title: "RANDOMIZE", value: "NEW \(style.uppercased()) PATTERN", time: Date())
-    }
 
     /// New notes for one channel of one loop; every other channel stays as it is.
     func randomizeChannel(loop: Int, pad: Int) {

@@ -964,6 +964,22 @@ enum KnockSelfTest {
               "rack: up to 12 independent sound channels")
         check(KnockState().normalized().workspaceChannels == nil,
               "rack: old sessions open without losing their faceplate or saved pads")
+        // The rack mirrors the kit until it's changed: one channel per pad, kit names.
+        let rcEngine = KnockEngine(); rcEngine.prepare(sampleRate: 48_000, maxFrames: 512)
+        let rc = KnockController(engine: rcEngine, isPlugin: true)
+        check(rc.rackChannels.count == Pad.count && rc.rackChannels.map(\.pad) == Array(0..<Pad.count) && rc.rackChannels[0].name == "KICK",
+              "rack: starts as the kit's 12 channels")
+        if let last = rc.rackChannels.last {
+            rc.removeRackChannel(last.id)
+            check(rc.rackChannels.count == Pad.count - 1, "rack: a channel can be deleted")
+            let sound = LibrarySound(id: "test", url: URL(fileURLWithPath: "/"), name: "TEST SNARE", type: .snare, pack: "TEST", user: true)
+            let added = rc.addRackChannel(sound, load: false)
+            check(added?.pad == last.pad && rc.rackChannels.count == Pad.count && rc.rackChannels.last?.name == "TEST SNARE",
+                  "rack: a dropped sound takes the free pad slot")
+            check(rc.addRackChannel(sound, load: false) == nil, "rack: 12 channels at most")
+            rc.resetRack()
+            check(rc.rackChannels.count == Pad.count && rc.rackChannels[0].soundID == "kit", "rack: back to the kit's channels")
+        }
         var pattern = PatternData(name: "RACK", lengthTicks: PatternEdit.barTicks,
                                   events: [])
         pattern = PatternEdit.toggle(pattern, pad: first.pad, tick: 0, cell: PatternData.stepTicks)
