@@ -958,7 +958,7 @@ enum KnockSelfTest {
               "rack: invalid duplicate audio slots are removed on migration")
         for p in 2..<Pad.count {
             state.workspaceChannels?.append(WorkspaceChannel(id: UUID(), pad: p,
-                soundID: "stock:sample-\\(p)", name: "SAMPLE \\(p)", category: SoundType.perc.rawValue))
+                soundID: "stock:sample-\(p)", name: "SAMPLE \(p)", category: SoundType.perc.rawValue))
         }
         check(state.normalized().workspaceChannels?.count == Pad.count,
               "rack: up to 12 independent sound channels")
@@ -970,7 +970,7 @@ enum KnockSelfTest {
         check(pattern.events.count == 1 && Int(pattern.events[0].pad) == first.pad,
               "rack: first channel has its own sequenced steps")
         pattern = PatternEdit.toggle(pattern, pad: second.pad, tick: 0, cell: PatternData.stepTicks)
-        check(pattern.events.count == 2 && Set(pattern.events.map(\\.pad)).count == 2,
+        check(pattern.events.count == 2 && Set(pattern.events.map(\.pad)).count == 2,
               "rack: identical sounds never share their MIDI events")
     }
 
