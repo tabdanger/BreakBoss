@@ -1,7 +1,7 @@
-New in this build: the rebuilt DRUM SEQUENCER, the only sequencer / piano roll screen in the app.
-- Left: the sound library (every sound by type, search, import sounds or packs). Drag a sound onto the channel rack to add a channel; drop it on a channel to swap its sound; tap to load it onto the selected channel.
-- Channel rack (up to 12): the triangle opens each track's piano roll in place, LEVEL and PAN knobs, the on/off lamp, and a dice per track that randomizes only that track.
-- Step grid with 16 steps a bar, velocity lane, SNAP, SNAP TO SCALE, SWING, HUMANIZE, pinch to zoom.
-- GENERATE panel: a new pattern in any genre. MIDI panel: MIDI out routing.
-- PATTERN and KIT pickers with arrows at the bottom.
-Please try dragging sounds onto the rack, opening a track's piano roll, and each dice.
+Fixes to the DRUM SEQUENCER from the last build's recording:
+- Menus open on the button you tapped (the KIT menu no longer pops up at the corner on every tap, and the screen no longer dims on its own).
+- Every button presses in with a short animation; menus and the GENERAL / GENERATE / MIDI sections open and close with animations.
+- The grid opens blank, with every other beat's buttons in the darker grey. A pressed step lights its inner slot in the faceplate's colour: MODERN red, VINTAGE cream, TEXTURE blue.
+- Space bar (hardware keyboard) starts and stops the sequence.
+Still there: sound library on the left (drag a sound onto the rack to add a channel), 12-channel rack with per-track piano roll and dice, SNAP, SNAP TO SCALE, SWING, HUMANIZE, velocity lane, GENERATE, MIDI, PATTERN and KIT pickers.
+Please try tapping steps, every top-bar button and menu, the sections on the left, and the pads button to get back to the faceplate.
