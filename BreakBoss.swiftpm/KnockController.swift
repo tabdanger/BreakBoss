@@ -640,6 +640,12 @@ final class KnockController: ObservableObject {
         }
         let row = WorkspaceChannel(id: UUID(), pad: pad, soundID: sound.id,
                                    name: sound.name, category: sound.type.rawValue)
+        // A new track must start with no ghost steps from an older kit/pattern.
+        if loops.indices.contains(loop) {
+            var cleared = loops[loop]
+            cleared.events.removeAll { Int($0.pad) == pad }
+            setLoop(loop, cleared)
+        }
         state.workspaceChannels?.append(row)
         pushPadMask()
         // Reuse the off-audio-thread sample loader; every drop gets its own pad.
@@ -652,12 +658,51 @@ final class KnockController: ObservableObject {
         guard let row = workspaceChannels.first(where: { $0.id == id }) else { return }
         state.workspaceChannels?.removeAll { $0.id == id }
         pushPadMask()
-        if loops.indices.contains(loop) {
-            var data = loops[loop]
-            data.events.removeAll { Int($0.pad) == row.pad }
-            setLoop(loop, data)
+        // Track deletion removes its notes across every pattern, not only this
+        // page. Reused audio slots cannot accidentally inherit hidden old steps.
+        for index in loops.indices {
+            let data = loops[index]
+            guard data.events.contains(where: { Int($0.pad) == row.pad }) else { continue }
+            var edited = data
+            edited.events.removeAll { Int($0.pad) == row.pad }
+            setLoop(index, edited)
         }
         scheduleSave()
+    }
+
+    /// Make genre-aware steps by sound category, not by the slot number chosen
+    /// when a sound was dropped into the rack.
+    func generateWorkspace(loop: Int) {
+        guard loops.indices.contains(loop) else { return }
+        let style = PatternRandomizer.style(for: state.presetName)
+        for row in workspaceChannels {
+            let sourcePad: Int
+            switch SoundType(rawValue: row.category) {
+            case .kick: sourcePad = 0
+            case .snare: sourcePad = 1
+            case .clap: sourcePad = 2
+            case .rim: sourcePad = 3
+            case .hat: sourcePad = 4
+            case .open: sourcePad = 5
+            case .bass: sourcePad = 6
+            case .perc: sourcePad = 7
+            case .tom: sourcePad = 9
+            case .cymbal: sourcePad = 11
+            default: sourcePad = 8
+            }
+            let current = loops[loop]
+            let made = PatternRandomizer.randomChannel(current, pad: sourcePad,
+                style: style, seed: UInt32.random(in: 2...UInt32.max))
+            var changed = current
+            changed.events.removeAll { Int($0.pad) == row.pad }
+            for event in made.events where Int(event.pad) == sourcePad {
+                var e = event
+                e.pad = Int8(row.pad)
+                changed.events.append(e)
+            }
+            changed.sort()
+            setLoop(loop, changed)
+        }
     }
 
     func toggleWorkspaceStep(loop: Int, pad: Int, step: Int, bar: Int = 0) {
