@@ -394,7 +394,7 @@ struct SequencerWorkspaceView: View {
                     get: { Double(controller.state.pads[row.pad].level) },
                     set: { value in updatePad(row.pad) { $0.level = Float(value) } }
                 ), in: 0...1)
-                Text("\\(Int(settings.level * 100))%").frame(width: 34)
+                Text("\(Int(settings.level * 100))%").frame(width: 34)
                 Text("PAN").frame(width: 26)
                 Slider(value: Binding(
                     get: { Double(controller.state.pads[row.pad].pan) },
@@ -407,7 +407,7 @@ struct SequencerWorkspaceView: View {
                     get: { Double(controller.state.pads[row.pad].tune) },
                     set: { value in updatePad(row.pad) { $0.tune = Float(value) } }
                 ), in: -24...24, step: 1)
-                Text("\\(Int(settings.tune)) ST").frame(width: 55)
+                Text("\(Int(settings.tune)) ST").frame(width: 55)
                 Text("DECAY").frame(width: 42)
                 Slider(value: Binding(
                     get: { Double(controller.state.pads[row.pad].decay) },
