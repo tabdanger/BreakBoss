@@ -1144,6 +1144,106 @@ enum KnockSelfTest {
         check(l3.contains { abs($0) > 0.01 }, "MIDI in: the recorded snare (channel 2, note 38) plays the snare in LOOP mode")
         check(echoed == 0, "MIDI in: notes from the DAW don't go back out")
         _ = rp
+        checkCountInAndPitchedMIDI()
+    }
+
+    /// RECORD's count-in, and a drum on its own MIDI channel sending / taking its pitch as the note.
+    static func checkCountInAndPitchedMIDI() {
+        let bar = Int32(PatternData.ppq) * 4
+        let e = KnockEngine()
+        e.prepare(sampleRate: 48_000, maxFrames: 256)
+        e.setParam(.playMode, 1); e.setParam(.followDAW, 0); e.setParam(.tempoSync, 0); e.setTempo(120)
+        e.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        var loops = Array(repeating: PatternData(name: "E", lengthTicks: bar, events: []), count: Pad.count)
+        loops[0] = PatternData(name: "C", lengthTicks: bar, events: [GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1)])
+        e.patternHandoff.publish(PatternSet(loops))
+        renderBlock(e)
+        let kick0 = e.padHits[Pad.kick.rawValue]
+        e.send(KEvent(kind: .recordArm, a: 1))
+        e.send(KEvent(kind: .countIn, a: 4, value: 0))           // one bar of count-in at 120 BPM = 2 s = 375 blocks
+        var click: Float = 0
+        for _ in 0..<300 {
+            var l = [Float](repeating: 0, count: 256), r = l
+            l.withUnsafeMutableBufferPointer { lp in r.withUnsafeMutableBufferPointer { rp in e.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+            click += l.reduce(0) { $0 + $1 * $1 }
+        }
+        check(e.status[0] > 0.5 && e.status[8] > 0 && e.status[8] <= 4, "count-in: the transport runs and counts the beats down (\(e.status[8]) left)")
+        check(e.padHits[Pad.kick.rawValue] == kick0, "count-in: the pattern stays silent while counting in")
+        check(click > 0.2, "count-in: the metronome clicks through the count-in (\(click))")
+        check(e.playheadTick.pointee < 0, "count-in: no playhead until the pattern starts")
+        e.send(KEvent(kind: .pad, a: Int32(Pad.snare.rawValue), value: 0.9))
+        renderBlock(e)
+        check(e.collectRecorded().isEmpty, "count-in: a pad hit during the count-in isn't recorded")
+        for _ in 0..<120 { renderBlock(e) }
+        check(e.status[8] == 0 && e.padHits[Pad.kick.rawValue] > kick0, "count-in: after the count the pattern plays (\(e.padHits[Pad.kick.rawValue] - kick0) kicks)")
+        e.send(KEvent(kind: .pad, a: Int32(Pad.snare.rawValue), value: 0.9))
+        renderBlock(e)
+        let rec = e.collectRecorded()
+        check(rec.count == 1 && Int(rec[0].pad) == Pad.snare.rawValue, "count-in: after the count, pad hits record")
+        e.send(KEvent(kind: .recordArm, a: 0))
+        e.send(KEvent(kind: .stop))
+        renderBlock(e)
+
+        // Pitched MIDI on a channel of its own: snare on channel 2 note 38; a hit pitched +3 goes out as 41,
+        // and note 41 coming back in plays the snare 3 semitones up (recorded with its pitch).
+        let mo = KnockEngine()
+        mo.prepare(sampleRate: 48_000, maxFrames: 256)
+        mo.setParam(.playMode, 1); mo.setParam(.followDAW, 0); mo.setParam(.tempoSync, 0); mo.setTempo(120)
+        mo.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        var lp = Array(repeating: PatternData(name: "E", lengthTicks: bar, events: []), count: Pad.count)
+        lp[0] = PatternData(name: "P", lengthTicks: bar, events: [GrooveEvent(tick: 0, pad: Int8(Pad.snare.rawValue), velocity: 0.8, semis: 3)])
+        mo.patternHandoff.publish(PatternSet(lp))
+        renderBlock(mo)
+        for p in 0..<Pad.count { mo.send(KEvent(kind: .midiOut, a: Int32(p), value: Double(p * 128 + 36 + p))) }
+        mo.send(KEvent(kind: .midiOut, a: -1, value: 1))
+        mo.send(KEvent(kind: .loopPad, a: 0))
+        var got: [(UInt8, UInt8, UInt8)] = []
+        for _ in 0..<400 {
+            var l = [Float](repeating: 0, count: 256), r = l
+            l.withUnsafeMutableBufferPointer { lp in r.withUnsafeMutableBufferPointer { rp in mo.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+            mo.forEachMIDIOut { got.append(($1, $2, $3)) }
+        }
+        let snareCh = UInt8(Pad.snare.rawValue)
+        check(got.contains { $0.0 == 0x90 | snareCh && $0.1 == 36 + snareCh + 3 }, "MIDI out: a pitched drum on its own channel sends its pitch as the note")
+        mo.send(KEvent(kind: .stop))
+        for _ in 0..<40 { renderBlock(mo) }
+        mo.send(KEvent(kind: .recordArm, a: 1))
+        mo.send(KEvent(kind: .loopPad, a: 0))
+        for _ in 0..<10 { renderBlock(mo) }
+        _ = mo.collectRecorded()
+        mo.hostMIDI(offset: 0, status: 0x90 | snareCh, data1: 36 + snareCh + 5, data2: 100)
+        var l4 = [Float](repeating: 0, count: 256), r4 = l4
+        l4.withUnsafeMutableBufferPointer { lp in r4.withUnsafeMutableBufferPointer { rp in mo.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+        let back = mo.collectRecorded()
+        check(l4.contains { abs($0) > 0.01 }, "MIDI in: any note on a drum's own channel plays that drum")
+        check(back.count == 1 && Int(back[0].pad) == Pad.snare.rawValue && back[0].semis == 5, "MIDI in: the note's pitch is kept (+5) and recorded with the hit")
+        mo.send(KEvent(kind: .recordArm, a: 0))
+        mo.send(KEvent(kind: .stop))
+
+        // The 12-channel MIDI file: a track per pad, pitch and velocity intact, and it reads back.
+        var p12 = PatternData(name: "TWELVE", lengthTicks: bar, events: [
+            GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1),
+            GrooveEvent(tick: 48, pad: Int8(Pad.snare.rawValue), velocity: 0.5, semis: -2),
+            GrooveEvent(tick: 96, pad: Int8(Pad.bass808.rawValue), velocity: 0.9, semis: 7, length: 72)])
+        p12.sort()
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("selftest twelve.mid")
+        do {
+            try MIDIFile.writeChannels(p12, names: (0..<Pad.count).map { "CH \($0 + 1)" }, tempo: 120, bounce: 0, bars: 1, to: url)
+            let data = [UInt8]((try? Data(contentsOf: url)) ?? Data())
+            check(data.count > 100 && data[9] == 1 && data[11] == UInt8(Pad.count + 1), "MIDI file: 12 channels = a type 1 file with a track per pad")
+            check(data.contains(0x90 | UInt8(Pad.snare.rawValue)), "MIDI file: the snare is on its own channel")
+            if let back = MIDIFile.read(url) {
+                let s = back.events.first { Int($0.pad) == Pad.snare.rawValue }
+                let b = back.events.first { Int($0.pad) == Pad.bass808.rawValue }
+                check(back.events.count == 3 && s?.semis == -2 && abs((s?.velocity ?? 0) - 0.5) < 0.02, "MIDI file: 12 channels read back with pitch and velocity")
+                check(b?.semis == 7 && b?.length == 72, "MIDI file: the 808's note and length come back")
+            } else {
+                check(false, "MIDI file: the 12-channel file reads back")
+            }
+            try? FileManager.default.removeItem(at: url)
+        } catch {
+            check(false, "MIDI file: 12-channel export wrote (\(error))")
+        }
     }
 
     static func checkMigration() {

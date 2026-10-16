@@ -98,12 +98,13 @@ struct SeqGlyph: View {
     var size: CGFloat = 17
     var scale: CGFloat = 1
     var enabled = true
+    var color: Color = Color(white: 0.1)
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Image(systemName: symbol).font(.system(size: size * scale, weight: .semibold))
-                .foregroundColor(Color(white: enabled ? 0.1 : 0.55))
+                .foregroundColor(color.opacity(enabled ? 1 : 0.4))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .buttonStyle(SeqPress())

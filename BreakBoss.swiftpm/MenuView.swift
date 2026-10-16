@@ -41,6 +41,17 @@ struct MenuView: View {
                 } footer: {
                     Text("Platinum is Modern's alternate face: same sound and controls, brushed-silver plate. Free while we test.")
                 }
+                Section {
+                    Picker("Count-in", selection: Binding(get: { controller.countInBars }, set: { controller.setCountInBars($0) })) {
+                        Text("1 bar").tag(1)
+                        Text("2 bars").tag(2)
+                    }
+                    Toggle(isOn: Binding(get: { controller.metronome }, set: { controller.setMetronome($0) })) { Text("Metronome while playing") }
+                } header: {
+                    Text("Record")
+                } footer: {
+                    Text("The RECORD button (top right) counts in with the metronome, then the pattern plays and every pad you hit lands in it on that pad's own channel. Open the sequencer to see and edit the notes in each pad's piano roll.")
+                }
                 Section("Performance") {
                     Button("Open the 12 performance pads") { performance = true }
                     Button("Engine controls") { engineControls = true }

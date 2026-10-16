@@ -85,6 +85,8 @@ struct KEvent {
         case metronome    // a: 1 = click on every beat while playing, 0 = off
         case midiOut      // a: pad 0...11, value: channel (0...15) * 128 + note, or -1 = channel off;
                           // a: -1 = MIDI out on (value 1) / off (value 0)
+        case countIn      // a: beats of metronome count-in, then the pattern (value: loop 0...11, or -1 = the current one)
+        case padPitched   // a: pad + 128 * (semitones + 64), value: velocity (a drum played at a pitch)
     }
     var kind: Kind
     var a: Int32 = 0
@@ -234,7 +236,7 @@ final class SharedMeters {
     func snapshot() -> MeterSnapshot {
         os_unfair_lock_lock(lock)
         defer { os_unfair_lock_unlock(lock) }
-        return MeterSnapshot(status: Array(UnsafeBufferPointer(start: status, count: 8)),
+        return MeterSnapshot(status: Array(UnsafeBufferPointer(start: status, count: 10)),
                              padHits: Array(UnsafeBufferPointer(start: hits, count: Pad.count)),
                              scope: Array(UnsafeBufferPointer(start: scope, count: MasterBus.scopeSize)), scopeWrite: scopeWrite)
     }

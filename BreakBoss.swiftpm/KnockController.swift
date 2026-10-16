@@ -325,17 +325,34 @@ final class KnockController: ObservableObject {
     /// Record quantize (ticks; 0 = as played). 1/16 by default, like an MPC's TC 16.
     var recordSnap: Int32 = PatternData.stepTicks
 
-    /// Faceplate: hold PLAY to record pads like an MPC (starts the pattern if it isn't playing);
-    /// hold it again to stop recording. Works in ONE-SHOT and LOOP mode.
-    func toggleRecordPads() {
+    /// RECORD's count-in, in bars (1 or 2), with the metronome clicking.
+    @Published private(set) var countInBars: Int = max(1, min(2, UserDefaults.standard.integer(forKey: "breakboss.countInBars") == 0 ? 1 : UserDefaults.standard.integer(forKey: "breakboss.countInBars")))
+    func setCountInBars(_ bars: Int) {
+        countInBars = max(1, min(2, bars))
+        UserDefaults.standard.set(countInBars, forKey: "breakboss.countInBars")
+    }
+    /// Beats of count-in still to go (0 when the pattern is running or stopped).
+    var countInBeatsLeft: Int { Int(meters.status.count > 8 ? meters.status[8].rounded(.up) : 0) }
+    var countingIn: Bool { recording && countInBeatsLeft > 0 }
+
+    /// RECORD (faceplate and sequencer): a 1- or 2-bar metronome count-in, then the pattern plays
+    /// and every pad you play lands in it, on that pad's own channel. Press again to stop
+    /// recording (the pattern keeps playing). If the pattern is already running, recording just
+    /// starts on the next hit, no count-in.
+    func toggleRecordPads(loop: Int? = nil) {
         if recording {
             setRecording(false)
             readout = Readout(title: "RECORD", value: "OFF", time: Date())
-        } else {
-            setRecording(true)
-            if !isPlaying { playPressed() }
-            readout = Readout(title: "RECORD", value: "PLAY THE PADS", time: Date())
+            return
         }
+        setRecording(true)
+        if isPlaying {
+            readout = Readout(title: "RECORD", value: "PLAY THE PADS", time: Date())
+            return
+        }
+        let target = loop ?? (Int(meters.status[1]) >= 0 ? Int(meters.status[1]) : 0)
+        engine.send(KEvent(kind: .countIn, a: Int32(countInBars * 4), value: Double(target)))
+        readout = Readout(title: "RECORD", value: "COUNT-IN \(countInBars) BAR\(countInBars == 1 ? "" : "S")", time: Date())
     }
 
     func setRecording(_ on: Bool) {

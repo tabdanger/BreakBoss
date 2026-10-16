@@ -143,7 +143,61 @@ enum MIDIFile {
         try Data(data).write(to: url, options: .atomic)
     }
 
-    /// Reads a MIDI file into a loop. Notes 36...47 land on the pads, 48...84 on the 808.
+    /// Twelve channels: a track per pad, pad n on MIDI channel n + 1 (the same layout as MIDI OUT's
+    /// multi-out), every note around C3 (60 = the pad's own pitch, the 808's tuning) so a DAW's
+    /// piano roll has full control of each hit's pitch and velocity. Tracks carry the channel names.
+    static func writeChannels(_ pattern: PatternData, names: [String], tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
+        let ppq = Int(PatternData.ppq)
+        let loopLen = max(1, Int(pattern.lengthTicks))
+        let repeats = max(1, Int(ceil(Double(bars * ppq * 4) / Double(loopLen))))
+        let total = bars * ppq * 4
+        var tracks: [[UInt8]] = []
+        // Track 0: tempo, time signature, the name
+        var meta: [UInt8] = []
+        let usPerQuarter = Int(60_000_000 / max(tempo, 1))
+        meta += [0x00, 0xFF, 0x51, 0x03, UInt8(usPerQuarter >> 16 & 0xFF), UInt8(usPerQuarter >> 8 & 0xFF), UInt8(usPerQuarter & 0xFF)]
+        meta += [0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08]
+        let title = Array("BreakBoss".utf8)
+        meta += [0x00, 0xFF, 0x03, UInt8(title.count)] + title
+        meta += varLen(total) + [0xFF, 0x2F, 0x00]
+        tracks.append(meta)
+        for pad in 0..<Pad.count {
+            var events: [(tick: Int, bytes: [UInt8])] = []
+            let ch = UInt8(pad & 0x0F)
+            for r in 0..<repeats {
+                for e in pattern.events where Int(e.pad) == pad {
+                    var tk = r * loopLen + Int(e.tick) + Int(swing(tick: Int(e.tick), pad: pad, bounce: bounce).rounded())
+                    tk = max(0, tk)
+                    guard tk < total else { continue }
+                    let note = UInt8((Pad.bassRootNote + Int(e.semis.rounded())).clamped(0, 127))
+                    let vel = UInt8(clamping: max(1, Int((e.velocity * 127).rounded())))
+                    var len = Int(e.length)
+                    if len <= 0 { len = pad == Pad.bass808.rawValue ? ppq : 12 }
+                    events.append((tk, [0x90 | ch, note, vel]))
+                    events.append((min(tk + len, total), [0x80 | ch, note, 0]))
+                }
+            }
+            events.sort { $0.tick == $1.tick ? $0.bytes[0] < $1.bytes[0] : $0.tick < $1.tick }
+            var track: [UInt8] = []
+            let name = Array((pad < names.count ? names[pad] : "PAD \(pad + 1)").prefix(60).utf8)
+            track += [0x00, 0xFF, 0x03, UInt8(name.count)] + name
+            var last = 0
+            for e in events {
+                track += varLen(e.tick - last)
+                track += e.bytes
+                last = e.tick
+            }
+            track += varLen(max(0, total - last)) + [0xFF, 0x2F, 0x00]
+            tracks.append(track)
+        }
+        var data: [UInt8] = Array("MThd".utf8) + be32(6) + be16(1) + be16(UInt16(tracks.count)) + be16(UInt16(ppq))
+        for track in tracks { data += Array("MTrk".utf8) + be32(UInt32(track.count)) + track }
+        try Data(data).write(to: url, options: .atomic)
+    }
+
+    /// Reads a MIDI file into a loop. A BreakBoss 12-channel file (notes on channels other than
+    /// 10) puts channel n + 1 on pad n, pitched around C3; otherwise notes 36...47 land on the
+    /// pads and 48...84 on the 808 (channel 10, GM style).
     static func read(_ url: URL) -> PatternData? {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
@@ -155,8 +209,8 @@ enum MIDIFile {
         let division = Int(bytes[12]) << 8 | Int(bytes[13])
         guard division > 0 && division < 0x8000 else { return nil }
         var pos = 8 + (Int(bytes[4]) << 24 | Int(bytes[5]) << 16 | Int(bytes[6]) << 8 | Int(bytes[7]))
-        var ons: [(tick: Int, note: Int, vel: Int)] = []
-        var offs: [(tick: Int, note: Int)] = []
+        var ons: [(tick: Int, note: Int, vel: Int, ch: Int)] = []
+        var offs: [(tick: Int, note: Int, ch: Int)] = []
         var trackEndTick = 0
         while pos + 8 <= bytes.count {
             let id = String(bytes: bytes[pos..<pos + 4], encoding: .ascii)
@@ -208,8 +262,8 @@ enum MIDIFile {
                         let d1 = Int(bytes[p]), d2 = size > 1 ? Int(bytes[p + 1]) : 0
                         p += size
                         guard ons.count + offs.count < 32768, d1 < 128, d2 < 128 else { return nil }
-                        if kind == 0x90 && d2 > 0 { ons.append((tick, d1, d2)) }
-                        else if kind == 0x80 || kind == 0x90 { offs.append((tick, d1)) }
+                        if kind == 0x90 && d2 > 0 { ons.append((tick, d1, d2, Int(st & 0x0F))) }
+                        else if kind == 0x80 || kind == 0x90 { offs.append((tick, d1, Int(st & 0x0F))) }
                     }
                 }
                 // Keep the declared timeline, including note releases and a silent tail
@@ -222,17 +276,27 @@ enum MIDIFile {
         let scale = Double(PatternData.ppq) / Double(division)
         var events: [GrooveEvent] = []
         var lastTick = 0
+        let maxLen = Int(PatternEdit.barTicks) * PatternEdit.maxBars
+        let multiChannel = ons.contains { $0.ch != 9 }      // BreakBoss's 12-channel export (or any multi-channel part)
         for on in ons {
             let t = Int((Double(on.tick) * scale).rounded())
             guard t >= 0 && t < 8 * Int(PatternData.ppq) * 4 else { continue }
             lastTick = max(lastTick, t)
-            if let pad = Pad.index(forMIDINote: on.note) {
+            if multiChannel {
+                guard on.ch < Pad.count else { continue }
+                let pad = on.ch
+                let off = offs.first { $0.note == on.note && $0.ch == on.ch && $0.tick > on.tick }
+                let len = off.map { Int((Double($0.tick - on.tick) * scale).rounded()) } ?? (pad == Pad.bass808.rawValue ? Int(PatternData.ppq) : 0)
+                let semis = (on.note - Pad.bassRootNote).clamped(-24, 24)
+                events.append(GrooveEvent(tick: Int32(t), pad: Int8(pad), velocity: Float(on.vel) / 127, semis: Float(semis),
+                                          length: Int32((pad == Pad.bass808.rawValue || len > 12 ? len : 0).clamped(0, maxLen))))
+            } else if let pad = Pad.index(forMIDINote: on.note) {
                 events.append(GrooveEvent(tick: Int32(t), pad: Int8(pad), velocity: Float(on.vel) / 127))
             } else if Pad.bassNoteRange.contains(on.note) {
                 let off = offs.first { $0.note == on.note && $0.tick > on.tick }
                 let len = off.map { Int((Double($0.tick - on.tick) * scale).rounded()) } ?? Int(PatternData.ppq)
                 events.append(GrooveEvent(tick: Int32(t), pad: Int8(Pad.bass808.rawValue), velocity: Float(on.vel) / 127,
-                                          semis: Float(on.note - Pad.bassRootNote), length: Int32(len.clamped(0, Int(PatternEdit.barTicks) * PatternEdit.maxBars))))
+                                          semis: Float(on.note - Pad.bassRootNote), length: Int32(len.clamped(0, maxLen))))
             }
         }
         guard !events.isEmpty else { return nil }

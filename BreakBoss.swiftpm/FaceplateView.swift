@@ -163,6 +163,11 @@ struct FaceplateView: View {
             }
         }
         hit(L.menuRect, s) { showMenu = true }
+        // RECORD (left of the piano-roll button): a 1- or 2-bar count-in, then the pads record
+        if let r = L.editorRect {
+            let gap = L.exportRect[0] - r[2]
+            RecordButtonView(controller: controller, scale: s).place([r[0] - gap - (r[2] - r[0]), r[1], r[0] - gap, r[3]], s)
+        }
     }
 
     /// PLAY, BPM, TEMPO SYNC, FOLLOW DAW, dice.
@@ -320,6 +325,42 @@ extension View {
         return self
             .frame(width: rect.width * s, height: rect.height * s)
             .position(x: rect.midX * s, y: rect.midY * s)
+    }
+}
+
+/// RECORD on the faceplate: a small button like its neighbours, with a red dot. Tap: count-in
+/// (1 or 2 bars of clicks), then the pattern plays and every pad you hit lands in it. Red ring
+/// while recording; the beats of the count-in show on the button. Tap again to stop recording.
+struct RecordButtonView: View {
+    @ObservedObject var controller: KnockController
+    let scale: CGFloat
+
+    var body: some View {
+        let red = Color(red: 1, green: 0.16, blue: 0.12)
+        let counting = controller.countingIn
+        Button {
+            controller.toggleRecordPads()
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 6 * scale)
+                    .fill(LinearGradient(colors: [Color(white: 0.22), Color(white: 0.06)], startPoint: .top, endPoint: .bottom))
+                RoundedRectangle(cornerRadius: 6 * scale).stroke(Color.black.opacity(0.8), lineWidth: 1.2 * scale)
+                RoundedRectangle(cornerRadius: 5 * scale).stroke(Color.white.opacity(0.12), lineWidth: 1).padding(1.5 * scale)
+                if counting {
+                    Text("\(controller.countInBeatsLeft)").font(.system(size: 17 * scale, weight: .bold, design: .rounded)).foregroundColor(red)
+                } else {
+                    Circle().fill(red).frame(width: 13 * scale, height: 13 * scale)
+                        .shadow(color: controller.recording ? red : .clear, radius: 5 * scale)
+                }
+                if controller.recording {
+                    RoundedRectangle(cornerRadius: 6 * scale).stroke(red, lineWidth: 2.5 * scale)
+                        .shadow(color: red.opacity(0.8), radius: 6 * scale)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(SeqPress())
+        .accessibilityLabel("Record")
     }
 }
 

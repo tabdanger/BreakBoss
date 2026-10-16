@@ -180,6 +180,12 @@ struct SequencerView: View {
     private var placeTicks: Int32 { snapTicks > 0 ? snapTicks : 6 }
     private var theme: DrumRollTheme { DrumRollTheme.forFace(controller.faceKey) }
     private var noteColor: Color { PadView.lightColor(controller.mode) }
+    /// Face 2 wears the same finish as Face 1: platinum / black (MODERN), cream (VINTAGE), blue (TEXTURE).
+    private var finish: String { controller.faceKey }
+    private var plateSprite: String { finish == "platinum" ? "SeqPlate" : "SeqPlate_\(finish)" }
+    private var rowSprite: String { finish == "platinum" ? "SeqRow" : "SeqRow_\(finish)" }
+    /// Printing on the metal: black on the light finishes, white on the black one.
+    private var inkColor: Color { finish == "modern" ? Color(white: 0.9) : Color(white: 0.1) }
     private var isThisPlaying: Bool { controller.isPlaying && Int(controller.meters.status[1]) == loop }
 
     // MARK: Rack rows
@@ -193,7 +199,13 @@ struct SequencerView: View {
     /// Where every row sits in the grid: collapsed rows are one step row; the expanded track is one
     /// row per semitone (its piano roll).
     /// An expanded track keeps its step row (the band) on top; its piano roll's pitch rows start at pitchTop.
-    struct RowLayout { let channel: WorkspaceChannel; let y: CGFloat; let height: CGFloat; let pitch: ClosedRange<Int>?; let pitchRowH: CGFloat; let pitchTop: CGFloat }
+    struct RowLayout {
+        let channel: WorkspaceChannel; let y: CGFloat; let height: CGFloat; let pitch: ClosedRange<Int>?; let pitchRowH: CGFloat; let pitchTop: CGFloat
+        /// The step row's height (an open track keeps its step row on top; its toolbar sits under it).
+        let bandH: CGFloat
+    }
+    /// The open track's scale toolbar (KEY · SCALE · SNAP · FIT), between its steps and its keys.
+    private func toolbarH(_ rowH: CGFloat) -> CGFloat { rowH * 0.72 }
     private func layouts(rowH: CGFloat) -> [RowLayout] {
         let pitchRowH = rowH * 0.3
         var y: CGFloat = 0
@@ -201,10 +213,10 @@ struct SequencerView: View {
         for ch in channels {
             if ch.id == expandedID {
                 let range = pitchRange(ch.pad)
-                let h = rowH + CGFloat(range.count) * pitchRowH
-                out.append(RowLayout(channel: ch, y: y, height: h, pitch: range, pitchRowH: pitchRowH, pitchTop: y + rowH)); y += h
+                let h = rowH + toolbarH(rowH) + CGFloat(range.count) * pitchRowH
+                out.append(RowLayout(channel: ch, y: y, height: h, pitch: range, pitchRowH: pitchRowH, pitchTop: y + rowH + toolbarH(rowH), bandH: rowH)); y += h
             } else {
-                out.append(RowLayout(channel: ch, y: y, height: rowH, pitch: nil, pitchRowH: pitchRowH, pitchTop: y)); y += rowH
+                out.append(RowLayout(channel: ch, y: y, height: rowH, pitch: nil, pitchRowH: pitchRowH, pitchTop: y, bandH: rowH)); y += rowH
             }
         }
         return out
@@ -218,7 +230,9 @@ struct SequencerView: View {
         return Float((range.upperBound - row).clamped(range.lowerBound, range.upperBound))
     }
     /// The expanded track's step band on top of its piano roll (its own steps, like a closed row).
-    private func inBand(_ y: CGFloat, _ l: RowLayout) -> Bool { l.pitch != nil && y < l.pitchTop }
+    private func inBand(_ y: CGFloat, _ l: RowLayout) -> Bool { l.pitch != nil && y < l.y + l.bandH }
+    /// The open track's toolbar strip (no notes there).
+    private func inToolbar(_ y: CGFloat, _ l: RowLayout) -> Bool { l.pitch != nil && y >= l.y + l.bandH && y < l.pitchTop }
 
     // MARK: Body — Tyrone's picture is the plate; the live controls sit on it at measured spots
 
@@ -247,7 +261,7 @@ struct SequencerView: View {
         GeometryReader { geo in
             let s = min(geo.size.width / Self.artW, geo.size.height / Self.artH)
             ZStack(alignment: .topLeading) {
-                Image("SeqPlate").resizable().frame(width: Self.artW * s, height: Self.artH * s)
+                Image(plateSprite).resizable().frame(width: Self.artW * s, height: Self.artH * s)
                 topBar(s)
                 leftPanel(s)
                 editor(s)
@@ -337,7 +351,7 @@ struct SequencerView: View {
     }
     /// The picture's knob, turned to the value (drag up or right to turn it up).
     private func artKnob(_ r: [Double], _ s: CGFloat, value: Float, change: @escaping (Float, Bool) -> Void) -> some View {
-        ArtKnob(value: value, change: change).place(r, s)
+        ArtKnob(value: value, grip: 10 * s, change: change).place([r[0] - 10, r[1] - 10, r[2] + 10, r[3] + 10], s)
     }
 
     // MARK: Top bar
@@ -367,9 +381,9 @@ struct SequencerView: View {
         }
         .place(A.redo, s)
         // bars pager
-        artText(pageLabel, A.pageText, s, size: 17, weight: .medium, color: Color(white: 0.1))
-        SeqGlyph(symbol: "chevron.left", scale: s, enabled: page > 0) { page = max(0, page - 1); follow = false }.place(A.pageBack, s)
-        SeqGlyph(symbol: "chevron.right", scale: s, enabled: page < pages - 1) { page = min(pages - 1, page + 1); follow = false }.place(A.pageForward, s)
+        artText(pageLabel, A.pageText, s, size: 17, weight: .medium, color: inkColor)
+        SeqGlyph(symbol: "chevron.left", scale: s, enabled: page > 0, color: inkColor) { page = max(0, page - 1); follow = false }.place(A.pageBack, s)
+        SeqGlyph(symbol: "chevron.right", scale: s, enabled: page < pages - 1, color: inkColor) { page = min(pages - 1, page + 1); follow = false }.place(A.pageForward, s)
         // transport
         SeqButton("SeqBtnTransport", scale: s, action: { controller.stopPlayback() }) {
             RoundedRectangle(cornerRadius: 2 * s).fill(Color.white).frame(width: 15 * s, height: 15 * s)
@@ -379,12 +393,12 @@ struct SequencerView: View {
             Image(systemName: "play.fill").font(.system(size: 17 * s)).foregroundColor(S.green)
         }
         .place(A.play, s)
-        SeqButton("SeqBtnTransport", lit: controller.recording ? S.red : nil, scale: s, action: {
-            let on = !controller.recording
-            controller.setRecording(on)
-            if on && !isThisPlaying { controller.playPattern(loop) }
-        }) {
-            Circle().fill(S.red).frame(width: 17 * s, height: 17 * s).shadow(color: controller.recording ? S.red : .clear, radius: 5 * s)
+        SeqButton("SeqBtnTransport", lit: controller.recording ? S.red : nil, scale: s, action: { controller.toggleRecordPads(loop: loop) }) {
+            if controller.countingIn {
+                Text("\(controller.countInBeatsLeft)").font(.system(size: 20 * s, weight: .bold, design: .rounded)).foregroundColor(S.red)
+            } else {
+                Circle().fill(S.red).frame(width: 17 * s, height: 17 * s).shadow(color: controller.recording ? S.red : .clear, radius: 5 * s)
+            }
         }
         .place(A.rec, s)
         // tempo, bars, pattern, gear, cloud
@@ -393,10 +407,6 @@ struct SequencerView: View {
         SeqChip(sprite: "SeqChipBars", text: "\(bars) BARS", scale: s)
             .bbMenuPlaced(A.bars, s, title: "Pattern length") {
                 [2, 4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
-            }
-        SeqChip(sprite: "SeqChipMain", text: controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN", scale: s)
-            .bbMenuPlaced(A.main, s, title: "Patterns in this preset", width: 260) {
-                controller.loops.indices.map { i in BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i } }
             }
         SeqArt(sprite: "SeqBtnGear", scale: s) { EmptyView() }
             .bbMenuPlaced(A.gear, s, title: "Sequencer", width: 330) { settingsItems() }
@@ -417,14 +427,26 @@ struct SequencerView: View {
         Image(systemName: "tuningfork").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(controller.snapToScale ? S.green : Color(white: 0.45))
             .bbMenu(title: "Snap to scale", width: 300) { scaleItems(selectedPad) }
             .place([A.snap[0] + 2, A.snap[1], A.snap[0] + 22, A.snap[3]], s)
-        SeqArt(sprite: "SeqChipSwing", scale: s) { EmptyView() }.place(A.swing, s).allowsHitTesting(false)
-        artText(controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%", [A.swing[0] + 76, A.swing[1], A.swing[2] - 46, A.swing[3]], s, size: 13, align: .leading)
+        SeqChip(sprite: "SeqChipSwing", text: swingLabel, size: 13, leading: 76, trailing: 46, scale: s).place(A.swing, s).allowsHitTesting(false)
+        PressGlow().bbPanelPlaced([A.swing[0], A.swing[1], A.swingKnob[0] - 4, A.swing[3]], s, title: "Swing", width: 320) {
+                BBSlider(value: Double(50 + controller.value(.bounce) * 22), range: 50...72, step: 1, label: { $0 <= 50 ? "OFF" : "\(Int($0))%" }) {
+                    controller.set(.bounce, Float(($0 - 50) / 22))
+                }
+            }
         artKnob(A.swingKnob, s, value: controller.value(.bounce)) { v, ended in
             if swingStart == nil { swingStart = controller.value(.bounce) }
             controller.set(.bounce, v)
             if ended { swingStart = nil }
         }
         SeqArt(sprite: "SeqChipHumanize", scale: s) { EmptyView() }.place(A.humanize, s).allowsHitTesting(false)
+        PressGlow().bbPanelPlaced([A.humanize[0], A.humanize[1], A.humanizeKnob[0] - 4, A.humanize[3]], s, title: "Humanize", width: 320) {
+                BBSlider(value: Double((pattern.humanize ?? 0) * 100), range: 0...100, step: 1, label: { $0 < 1 ? "OFF" : "\(Int($0))%" }) { v in
+                    var p = pattern
+                    p.humanize = v < 1 ? nil : Float(v / 100)
+                    controller.setLoop(loop, p)
+                }
+            }
+        artText((pattern.humanize ?? 0) < 0.01 ? "" : "\(Int((pattern.humanize ?? 0) * 100))%", [A.humanize[0] + 96, A.humanize[1], A.humanizeKnob[0] - 2, A.humanize[3]], s, size: 11, color: S.green, align: .trailing)
         artKnob(A.humanizeKnob, s, value: pattern.humanize ?? 0) { v, ended in
             if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(pattern); redoStack = [] }
             var p = pattern
@@ -438,7 +460,13 @@ struct SequencerView: View {
         [
             .item("BreakBoss menu…", icon: "line.3.horizontal") { showMenu = true },
             .item("Follow playhead", icon: "arrow.right.to.line", checked: follow) { follow.toggle() },
+            .submenu("Loop on screen: \(loop + 1)", icon: "repeat", controller.loops.indices.map { i in
+                BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i }
+            }),
             .item("Metronome", icon: "metronome", checked: controller.metronome) { controller.setMetronome(!controller.metronome) },
+            .submenu("Record count-in", icon: "record.circle", [1, 2].map { b in
+                BBMenuItem.item("\(b) bar\(b == 1 ? "" : "s")", checked: controller.countInBars == b) { controller.setCountInBars(b) }
+            }),
             .item("Duplicate \(selection.isEmpty ? "the pattern" : "selection")", icon: "plus.square.on.square") { duplicate() },
             .item("Copy these bars to the next ones", icon: "doc.on.doc") {
                 commit(PatternEdit.copyNext(pattern, fromBar: Int(pageStart / PatternEdit.barTicks), bars: max(1, Int(pageTicks / PatternEdit.barTicks))))
@@ -451,6 +479,8 @@ struct SequencerView: View {
             .item("Clear \(selection.isEmpty ? "the pattern" : "selection")", icon: "trash", destructive: true) { clear() }
         ]
     }
+
+    private var swingLabel: String { controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%" }
 
     private var pageLabel: String {
         let bar = Int(pageStart / PatternEdit.barTicks) + 1
@@ -737,9 +767,10 @@ struct SequencerView: View {
         // beat numbers
         ruler(width: gridW).place([A.gridX0, A.labelsY - 10, A.gridX1, A.labelsY + 10], s)
         // the rows: rack column and the grid, scrolling together
+        ScrollViewReader { proxy in
         ScrollView(.vertical, showsIndicators: false) {
             ZStack(alignment: .topLeading) {
-                Color.clear.frame(width: (A.panelX1 - A.rackX0) * s, height: contentH)
+                Color.clear.frame(width: (A.panelX1 - A.rackX0) * s, height: contentH).id("rackTop")
                 rackColumn(L, rowH: rowH, s: s).frame(width: (A.rackX1 - A.rackX0) * s, height: contentH, alignment: .top)
                 grid(L, width: gridW, rowH: rowH).frame(width: gridW, height: contentH)
                     .offset(x: (A.gridX0 - A.rackX0) * s)
@@ -752,6 +783,8 @@ struct SequencerView: View {
                     .offset(x: (A.gridX1 + 10 - A.rackX0) * s, y: l.y + (min(l.height, rowH) - 30 * s) / 2)
                 }
             }
+        }
+        .onAppear { proxy.scrollTo("rackTop", anchor: .top) }      // the first row at the top, always
         }
         .frame(width: (A.panelX1 - A.rackX0) * s, height: (A.rowsY1 - A.rowsY0) * s)
         .position(x: (A.rackX0 + A.panelX1) / 2 * s, y: (A.rowsY0 + A.rowsY1) / 2 * s)
@@ -807,18 +840,19 @@ struct SequencerView: View {
         // art offsets inside the row sprite (298, 334): triangle 303-312, oval 321-524, name 335-425, knobs 440 / 478, lamp 509
         let X = { (ax: Double) in CGFloat(ax - A.rackX0) * s }
         return ZStack(alignment: .topLeading) {
-            Image("SeqRow").resizable().frame(width: 240 * s, height: 58 * s)
+            Image(rowSprite).resizable().frame(width: 240 * s, height: 58 * s)
                 .scaleEffect(newborn.contains(ch.id) ? 0.3 : 1).opacity(newborn.contains(ch.id) ? 0 : 1)
             // the lit oval of the selected track
             if isSel {
-                Capsule().stroke(S.green, lineWidth: 1.5 * s).frame(width: 203 * s, height: 45 * s).offset(x: X(321), y: 5 * s).allowsHitTesting(false)
+                Capsule().stroke(noteColor, lineWidth: 1.5 * s).shadow(color: noteColor.opacity(0.6), radius: 3 * s)
+                    .frame(width: 203 * s, height: 45 * s).offset(x: X(321), y: 5 * s).allowsHitTesting(false)
             }
-            Text(ch.name).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(muted ? Color(white: 0.5) : .white).lineLimit(1).minimumScaleFactor(0.6)
+            Text(ch.name).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? noteColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 92 * s, height: 45 * s, alignment: .leading).offset(x: X(335), y: 5 * s)
                 .allowsHitTesting(false)
             // the triangle opens the piano roll
             if expandedID == ch.id {
-                Image(systemName: "triangle.fill").font(.system(size: 8 * s)).foregroundColor(S.green).rotationEffect(.degrees(180))
+                Image(systemName: "triangle.fill").font(.system(size: 8 * s)).foregroundColor(noteColor).rotationEffect(.degrees(180))
                     .frame(width: 18 * s, height: 20 * s).background(Color(red: 0.86, green: 0.86, blue: 0.87)).offset(x: X(300), y: 17 * s).allowsHitTesting(false)
             }
             PressableArea { withAnimation(.easeInOut(duration: 0.2)) { expandedID = expandedID == ch.id ? nil : ch.id }; selectedID = ch.id }
@@ -831,13 +865,49 @@ struct SequencerView: View {
             // the lamp: on / off
             if muted { Circle().fill(Color(white: 0.12)).frame(width: 9 * s, height: 9 * s).offset(x: X(504.5), y: 23.5 * s).allowsHitTesting(false) }
             PressableArea { controller.toggleMute(pad) }.frame(width: 22 * s, height: 30 * s).offset(x: X(498), y: 13 * s)
-            if l.pitch != nil { pitchKeys(l, s: s).offset(y: rowH) }
+            if l.pitch != nil {
+                scaleToolbar(l, s: s).offset(y: rowH)
+                pitchKeys(l, s: s).offset(y: rowH + toolbarH(rowH))
+            }
         }
         .frame(width: (A.rackX1 - A.rackX0) * s, height: l.height, alignment: .topLeading)
         .background(rowTargeted == ch.id ? S.green.opacity(0.25) : Color.clear)
         .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: Binding(get: { rowTargeted == ch.id }, set: { rowTargeted = $0 ? ch.id : nil })) { providers in
             dropOnRack(providers, channel: ch)
         }
+    }
+
+    /// KEY · SCALE · SNAP · FIT for the open track's piano roll.
+    private func scaleToolbar(_ l: RowLayout, s: CGFloat) -> some View {
+        let pad = l.channel.pad
+        let h = toolbarH(A.rowH * s)
+        func chip<Content: View>(_ w: CGFloat, lit: Bool = false, @ViewBuilder _ c: () -> Content) -> some View {
+            c().font(.system(size: 9 * s, weight: .semibold)).foregroundColor(lit ? .black : .white).lineLimit(1).minimumScaleFactor(0.6)
+                .frame(width: w * s, height: h - 10 * s)
+                .background(RoundedRectangle(cornerRadius: 5 * s).fill(lit ? noteColor : Color(white: 0.14)))
+                .overlay(RoundedRectangle(cornerRadius: 5 * s).stroke(lit ? noteColor : Color(white: 0.3), lineWidth: 1))
+                .contentShape(Rectangle())
+        }
+        return HStack(spacing: 4 * s) {
+            chip(56) { Text("KEY \(MusicScale.noteNames[controller.scaleRoot])") }
+                .bbMenu(title: "Key", width: 200) { MusicScale.noteNames.enumerated().map { i, n in BBMenuItem.item(n, checked: controller.scaleRoot == i) { controller.setScale(root: i) } } }
+            chip(78) { Text(controller.scale.name.components(separatedBy: " ").first ?? controller.scale.name) }
+                .bbMenu(title: "Scale", width: 260) { MusicScale.all.map { sc in BBMenuItem.item(sc.name, checked: controller.scale.name == sc.name) { controller.setScale(name: sc.name) } } }
+            Button { controller.setScale(snap: !controller.snapToScale) } label: { chip(44, lit: controller.snapToScale) { Text("SNAP") } }.buttonStyle(SeqPress())
+            Button {
+                let base = controller.baseNote(pad: pad)
+                let top: Float = pad == Pad.bass808.rawValue ? 24 : 12
+                var p = pattern
+                for i in p.events.indices where Int(p.events[i].pad) == pad {
+                    let n = controller.scale.snap(base + Int(p.events[i].semis.rounded()), root: controller.scaleRoot)
+                    p.events[i].semis = Float(n - base).clamped(-12, top)
+                }
+                commit(p)
+            } label: { chip(36) { Text("FIT") } }.buttonStyle(SeqPress())
+        }
+        .padding(.leading, 6 * s)
+        .frame(width: (A.rackX1 - A.rackX0) * s, height: h, alignment: .leading)
+        .background(Color(white: 0.06))
     }
 
     private func pitchKeys(_ l: RowLayout, s: CGFloat) -> some View {
@@ -1005,10 +1075,11 @@ struct SequencerView: View {
                 if let range = l.pitch {
                     // the band: the track's steps, lit where it has notes (any pitch)
                     ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: l.pitchTop - l.y)), with: .color(S.greenDark.opacity(0.5)))
+                    ctx.fill(Path(CGRect(x: 0, y: l.y + l.bandH, width: size.width, height: l.pitchTop - l.y - l.bandH)), with: .color(Color(white: 0.06)))
                     for c in 0..<cells {
                         let at = pageStart + Int32(c) * cellTicks
                         let lit = pattern.events.contains { Int($0.pad) == l.channel.pad && $0.tick >= at && $0.tick < at + cellTicks }
-                        let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.pitchTop - l.y)
+                        let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.bandH)
                         ctx.draw(cell, in: r)
                         if (Int(at / PatternData.ppq) % 2) == 1 { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.32))) }
                         if lit { ctx.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 2), cornerRadius: 3), with: .color(noteColor.opacity(0.8))) }
@@ -1140,6 +1211,7 @@ struct SequencerView: View {
             let start = g.startLocation
             guard let l = layout(at: start.y, L) else { return }
             if inBand(start.y, l) { selectedID = l.channel.id; return }
+            if inToolbar(start.y, l) { return }
             let pad = l.channel.pad
             let sem = controller.scaleSnapped(semis(at: start.y, in: l), pad: pad)
             let hit = noteAt(start, w: w, L: L)
@@ -1275,6 +1347,10 @@ struct SequencerView: View {
 
     // MARK: Velocity / pitch lane
 
+    /// The track whose velocity / pitch the lane edits: the one opened with its arrow.
+    private var laneChannel: WorkspaceChannel? { channels.first { $0.id == expandedID } }
+    private var lanePad: Int? { laneChannel?.pad }
+
     private func laneHeader(_ s: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 4 * s) {
             HStack(spacing: 6 * s) {
@@ -1289,13 +1365,14 @@ struct SequencerView: View {
                 .bbMenu(title: "Lane", width: 200) { Lane.allCases.map { l in BBMenuItem.item(l.rawValue, checked: lane == l) { lane = l } } }
                 // velocity dice: new velocities only (selected notes, or the selected track, or all)
                 Button {
-                    commit(PatternEdit.randomizeVelocity(pattern, pad: selectedPad, keys: selection, seed: UInt64.random(in: 1...UInt64.max)))
+                    commit(PatternEdit.randomizeVelocity(pattern, pad: lanePad ?? selectedPad, keys: selection, seed: UInt64.random(in: 1...UInt64.max)))
                 } label: {
                     Image(systemName: "dice.fill").font(.system(size: 14 * s)).foregroundColor(.white)
                         .frame(width: 40 * s, height: 36 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
                 }
             }
-            if let ch = selected { Text(ch.name).font(.system(size: 9 * s, design: .monospaced)).foregroundColor(Color(white: 0.25)).lineLimit(1) }
+            Text(laneChannel?.name ?? "OPEN A TRACK (▸) TO EDIT").font(.system(size: 9 * s, weight: .semibold, design: .monospaced))
+                .foregroundColor(laneChannel == nil ? Color(white: 0.4) : noteColor).lineLimit(1)
             Spacer(minLength: 0)
         }
         .padding(.top, 6 * s)
@@ -1324,7 +1401,7 @@ struct SequencerView: View {
                 ctx.draw(Text(m.0).font(.system(size: 10, design: .monospaced)).foregroundColor(Color.white.opacity(0.55)),
                          at: CGPoint(x: size.width - 4, y: m.1 == 1 ? y + 2 : (m.1 == 0 ? y - 2 : y)), anchor: m.2)
             }
-            for e in pattern.events where visible(e) && (selectedPad == nil || Int(e.pad) == selectedPad) {
+            for e in pattern.events where visible(e) && lanePad != nil && Int(e.pad) == lanePad {
                 let sel = selection.contains(NoteKey(e))
                 let v: CGFloat = lane == .velocity ? CGFloat(e.velocity) : CGFloat((e.semis.clamped(-12, 12) + 12) / 24)
                 let bx = x(e.tick, size.width) + 3
@@ -1345,11 +1422,12 @@ struct SequencerView: View {
     @State private var laneOrigin: PatternData?
 
     private func laneChanged(_ g: DragGesture.Value, w: CGFloat, h: CGFloat) {
+        guard let lanePad else { return }      // the lane edits the track opened with its arrow
         if laneOrigin == nil { laneOrigin = pattern; undoStack.append(pattern); redoStack = [] }
         let v = Float(1 - (g.location.y - 4) / (h - 8)).clamped(0, 1)
         let keys = Set(pattern.events.filter { e in
             visible(e) && abs(x(e.tick, w) + 5 - g.location.x) <= 8 && (selection.isEmpty || selection.contains(NoteKey(e)))
-                && (selectedPad == nil || Int(e.pad) == selectedPad)
+                && Int(e.pad) == lanePad
         }.map(NoteKey.init))
         guard !keys.isEmpty else { return }
         if lane == .velocity {
@@ -1358,7 +1436,7 @@ struct SequencerView: View {
             lastVelocity = value
         } else {
             let raw = (v * 24 - 12).rounded()
-            let (p, newKeys) = PatternEdit.setPitch(pattern, keys, selectedPad.map { controller.scaleSnapped(raw, pad: $0) } ?? raw)
+            let (p, newKeys) = PatternEdit.setPitch(pattern, keys, controller.scaleSnapped(raw, pad: lanePad))
             work = p
             if !selection.isEmpty { selection = selection.subtracting(keys).union(newKeys) }
         }
@@ -1374,7 +1452,7 @@ struct SequencerView: View {
         SeqButton("SeqBtnGrid", corner: 6, scale: s) { }.place(A.gridButton, s)
         SeqButton("SeqBtnPads", corner: 6, scale: s) { dismiss() }.place(A.padsButton, s)
         // Drum Track: MPC-style pad recording
-        SeqButton("SeqDrumTrack", lit: controller.recording ? S.red : nil, corner: 12, scale: s, action: { controller.toggleRecordPads() }) {
+        SeqButton("SeqDrumTrack", lit: controller.recording ? S.red : nil, corner: 12, scale: s, action: { controller.toggleRecordPads(loop: loop) }) {
             if controller.recording {
                 HStack {
                     Circle().stroke(S.red, lineWidth: 3 * s).shadow(color: S.red, radius: 6 * s)
@@ -1465,7 +1543,9 @@ struct SequencerView: View {
         let name = (controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN").replacingOccurrences(of: "/", with: "-")
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("BreakBoss \(controller.state.kitName) \(name).mid")
         do {
-            try MIDIFile.write(stored, tempo: controller.liveTempo, bounce: controller.value(.bounce), bars: bars, to: url)
+            // Twelve channels, one per pad (the same layout as MIDI OUT), each note's pitch and velocity intact.
+            let names = (0..<Pad.count).map { pad in channels.first { $0.pad == pad }?.name ?? (Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)") }
+            try MIDIFile.writeChannels(stored, names: names, tempo: controller.liveTempo, bounce: controller.value(.bounce), bars: bars, to: url)
             return url
         } catch {
             return nil
@@ -1574,9 +1654,9 @@ struct TempoPanel: View {
                 Text("Tempo follows the DAW / MIDI clock: \(Int(controller.liveTempo.rounded())) BPM")
                     .font(.system(size: 13, design: .monospaced)).foregroundColor(BBMenuStyle.dim)
             } else {
-                BBSlider(value: controller.state.bpm, range: 40...240, step: 1, label: { "\(Int($0)) BPM" }) { controller.setBPM($0) }
+                BBSlider(value: controller.state.bpm, range: 40...280, step: 1, label: { "\(Int($0)) BPM" }) { controller.setBPM($0) }
                 HStack(spacing: 6) {
-                    ForEach([70, 90, 100, 120, 140, 160], id: \.self) { b in
+                    ForEach([80, 90, 100, 120, 140, 150, 160, 170], id: \.self) { b in
                         Button { controller.setBPM(Double(b)) } label: {
                             Text("\(b)").font(.system(size: 13, weight: .medium, design: .monospaced))
                                 .foregroundColor(Int(controller.state.bpm) == b ? .black : BBMenuStyle.text)
@@ -1593,14 +1673,18 @@ struct TempoPanel: View {
 /// The picture's knob, turned to its value: drag up or right to turn it up.
 struct ArtKnob: View {
     let value: Float
+    /// Extra touchable margin round the knob (it's small in the picture).
+    var grip: CGFloat = 0
     let change: (Float, Bool) -> Void
     @State private var start: Float?
 
     var body: some View {
         Image("SeqKnob").resizable().aspectRatio(contentMode: .fit)
             .rotationEffect(.degrees(KnobControl.angle(value)))
-            .contentShape(Circle())
-            .gesture(DragGesture(minimumDistance: 1)
+            .padding(grip)
+            .contentShape(Rectangle())
+            // high priority: the rack's knobs turn instead of scrolling the rack
+            .highPriorityGesture(DragGesture(minimumDistance: 0)
                 .onChanged { g in
                     if start == nil { start = value }
                     let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
