@@ -980,6 +980,7 @@ struct SequencerView: View {
                         let lit = pattern.events.contains { Int($0.pad) == l.channel.pad && $0.tick >= at && $0.tick < at + cellTicks }
                         let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.pitchTop - l.y)
                         ctx.draw(cell, in: r)
+                        if (Int(at / PatternData.ppq) % 2) == 1 { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.32))) }
                         if lit { ctx.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 2), cornerRadius: 3), with: .color(noteColor.opacity(0.8))) }
                     }
                     // the piano roll: a stripe per semitone (scale notes lighter, the root greener)
@@ -1001,6 +1002,8 @@ struct SequencerView: View {
                         let at = pageStart + Int32(c) * cellTicks
                         let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.height)
                         ctx.draw(cell, in: r)
+                        // every other beat's buttons are the darker grey (Tyrone's picture)
+                        if (Int(at / PatternData.ppq) % 2) == 1 { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.32))) }
                         if at >= pattern.lengthTicks { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.55))) }
                     }
                 }
@@ -1022,8 +1025,18 @@ struct SequencerView: View {
                 let sel = selection.contains(NoteKey(e))
                 let base = sel ? Color.white : noteColor
                 let shade = 0.55 + 0.45 * Double(e.velocity)
-                ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(base.opacity(shade)))
-                ctx.fill(Path(roundedRect: CGRect(x: r.minX + 2, y: r.minY + 2, width: r.width - 4, height: max(2, r.height * 0.12)), cornerRadius: 1.5), with: .color(Color.white.opacity(0.35)))
+                if layout(for: Int(e.pad), L)?.pitch == nil {
+                    // A step button keeps its shape: the inner slot lights up in the faceplate's colour
+                    // (MODERN red, VINTAGE cream, TEXTURE blue) and the button body takes a tint.
+                    ctx.fill(Path(roundedRect: r.insetBy(dx: 0.5, dy: 0.5), cornerRadius: 3), with: .color(base.opacity(0.14 + 0.16 * Double(e.velocity))))
+                    let slot = CGRect(x: r.minX + r.width * 0.12, y: r.minY + r.height * 0.09, width: r.width * 0.76, height: max(3, r.height * 0.14))
+                    ctx.fill(Path(roundedRect: slot.insetBy(dx: -2, dy: -2), cornerRadius: 4), with: .color(base.opacity(0.35 * shade)))
+                    ctx.fill(Path(roundedRect: slot, cornerRadius: slot.height / 2), with: .color(base.opacity(shade)))
+                    ctx.fill(Path(roundedRect: CGRect(x: slot.minX + 1, y: slot.minY + 1, width: slot.width - 2, height: max(1, slot.height * 0.35)), cornerRadius: 1), with: .color(Color.white.opacity(0.3)))
+                } else {
+                    ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(base.opacity(shade)))
+                    ctx.fill(Path(roundedRect: CGRect(x: r.minX + 2, y: r.minY + 2, width: r.width - 4, height: max(2, r.height * 0.12)), cornerRadius: 1.5), with: .color(Color.white.opacity(0.35)))
+                }
                 if sel { ctx.stroke(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.white), lineWidth: 1.5) }
                 if sel && tool == .select {
                     ctx.fill(Path(roundedRect: CGRect(x: r.maxX - 4, y: r.minY + 2, width: 3, height: max(2, r.height - 4)), cornerRadius: 1.5),
