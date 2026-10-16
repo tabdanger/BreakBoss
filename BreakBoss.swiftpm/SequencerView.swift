@@ -41,27 +41,14 @@ enum DrumRollStyle {
     static let cellBeat = Color(red: 70 / 255, green: 72 / 255, blue: 75 / 255)
 }
 
-/// The sequencer wears the faceplate it was opened from: the plate's material around the panels,
-/// its side cheeks, and ink that reads on that material. Every control is the same on all four.
+/// The approved design: a brushed-silver slab (the Platinum plate's material) with dark inset panels,
+/// the same in every mode. Dark ink prints on the silver, light ink inside the panels.
 struct DrumRollTheme {
-    let plate: String
-    let side: String
-    let ink: Color
-    let inkDim: Color
-    let light: Bool
-
-    static func forFace(_ key: String) -> DrumRollTheme {
-        switch key {
-        case "platinum": return DrumRollTheme(plate: "DrumRollPlate_platinum", side: "DrumRollSide_platinum",
-                                              ink: Color(white: 0.12), inkDim: Color(white: 0.3), light: true)
-        case "vintage": return DrumRollTheme(plate: "DrumRollPlate_vintage", side: "DrumRollSide_vintage",
-                                             ink: Color(red: 0.13, green: 0.11, blue: 0.09), inkDim: Color(red: 0.34, green: 0.3, blue: 0.25), light: true)
-        case "texture": return DrumRollTheme(plate: "DrumRollPlate_texture", side: "DrumRollSide_texture",
-                                             ink: Color(white: 0.95), inkDim: Color(white: 0.8), light: false)
-        default: return DrumRollTheme(plate: "DrumRollPlate_modern", side: "DrumRollSide_modern",
-                                      ink: DrumRollStyle.text, inkDim: DrumRollStyle.dim, light: false)
-        }
-    }
+    let plate = "DrumRollPlate_platinum"
+    let ink = Color(white: 0.13)
+    let inkDim = Color(white: 0.36)
+    let light = true
+    static func forFace(_ key: String) -> DrumRollTheme { DrumRollTheme() }
 }
 
 extension Pad {
@@ -95,7 +82,7 @@ struct SequencerView: View {
 
     enum Tool { case draw, select, erase }
     enum Lane: String, CaseIterable { case velocity = "VELOCITY", pitch = "PITCH" }
-    enum Panel { case sounds, generate, midi }
+    enum Panel { case general, generate, midi }
 
     @State private var tool: Tool = .draw
     @State private var snap: Int32 = PatternData.stepTicks   // grid in ticks (0 = none)
@@ -126,7 +113,10 @@ struct SequencerView: View {
     @State private var rackTargeted = false
     @State private var rowTargeted: UUID?
     @State private var showLibrary = false      // iPhone: the library slides over the rack
-    @State private var section: Panel = .sounds
+    @State private var section: Panel = .general
+    @State private var updateSounds = false
+    @State private var updateTempo = true
+    @State private var trackSettingsID: UUID?
     @State private var libraryType: SoundType? = .kick
     @State private var search = ""
     @State private var userSounds: [LibrarySound] = UserSoundLibrary.sounds()
@@ -235,29 +225,26 @@ struct SequencerView: View {
 
     var body: some View {
         GeometryReader { geo in
-            HStack(spacing: 0) {
-                side(flip: false)
-                VStack(spacing: 0) {
+            ZStack(alignment: .leading) {
+                VStack(spacing: compact ? 4 : 8) {
                     header
-                    toolbar
-                    if let ch = selected, !compact { channelStrip(ch) }
-                    HStack(spacing: 0) {
+                    HStack(spacing: compact ? 4 : 8) {
                         if !compact { leftPanel.frame(width: 232) }
                         editor
                     }
                     footer
                 }
-                .background(plate)
-                side(flip: true)
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .overlay(alignment: .leading) {
+                .padding(compact ? 6 : 12)
+                .background(slab)
+                .padding(compact ? 2 : 10)
                 if compact && showLibrary {
                     leftPanel.frame(width: min(300, geo.size.width * 0.8))
-                        .background(S.channel).shadow(color: .black.opacity(0.6), radius: 12)
+                        .background(darkPanel).shadow(color: .black.opacity(0.6), radius: 12)
+                        .padding(.leading, 12)
                         .transition(.move(edge: .leading))
                 }
             }
+            .frame(width: geo.size.width, height: geo.size.height)
         }
         .bbMenuHost()
         .background(Color.black.ignoresSafeArea())
@@ -273,6 +260,14 @@ struct SequencerView: View {
         .onDisappear { if controller.recording { controller.setRecording(false) } }
         .task(id: stored) { exportURL = writeMIDI() }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
+        .sheet(item: Binding(get: { trackSettingsID.flatMap { id in channels.first { $0.id == id } } }, set: { trackSettingsID = $0?.id })) { ch in
+            VStack(spacing: 0) {
+                Text("TRACK SETTINGS").font(.system(size: 12, weight: .semibold, design: .monospaced)).foregroundColor(S.dim).padding(.top, 16)
+                channelStrip(ch).padding(.vertical, 12)
+                Spacer()
+            }
+            .background(S.header.ignoresSafeArea()).preferredColorScheme(.dark).presentationDetents([.height(180)])
+        }
         .sheet(item: Binding(get: { recordPad.map { PadID(pad: $0) } }, set: { recordPad = $0?.pad })) { target in
             ChannelRecordSheet(controller: controller, pad: target.pad)
         }
@@ -299,52 +294,85 @@ struct SequencerView: View {
         }
     }
 
-    private func side(flip: Bool) -> some View {
-        Image(theme.side).resizable().scaleEffect(x: flip ? -1 : 1, y: 1)
-            .frame(width: compact ? 10 : 24).ignoresSafeArea()
+    /// The silver body (Platinum's brushed plate) with its rounded edge and shadow.
+    private var slab: some View {
+        RoundedRectangle(cornerRadius: compact ? 14 : 24)
+            .fill(ImagePaint(image: Image(theme.plate), scale: 1))
+            .overlay(RoundedRectangle(cornerRadius: compact ? 14 : 24).stroke(LinearGradient(colors: [Color.white.opacity(0.7), Color.black.opacity(0.5)], startPoint: .top, endPoint: .bottom), lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.8), radius: 18, y: 10)
     }
 
-    // MARK: Header (logo, tools, transport, tempo, bars, pattern, settings, export)
+    /// A dark inset panel on the silver.
+    private var darkPanel: some View {
+        RoundedRectangle(cornerRadius: 10)
+            .fill(Color(white: 0.08))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.8), lineWidth: 1.5))
+            .shadow(color: .white.opacity(0.35), radius: 0.5, y: 1)
+    }
+
+    // MARK: Top bar (the approved layout): logo · tools / bars · transport · tempo, bars, pattern, gear / snap, swing, humanize · cloud
 
     private var header: some View {
-        HStack(spacing: compact ? 6 : 10) {
+        HStack(alignment: .top, spacing: compact ? 6 : 12) {
+            VStack(alignment: .leading, spacing: 0) {
+                Image(systemName: "crown.fill").font(.system(size: 14)).foregroundColor(theme.ink)
+                Image("DrumRollLogo").resizable().scaledToFit().frame(height: compact ? 18 : 24).colorMultiply(Color(white: 0.1))
+                Text("DRUM SEQUENCER").font(.system(size: 8, weight: .semibold)).tracking(2.5).foregroundColor(theme.inkDim)
+            }
+            .fixedSize()
+            .padding(.top, 4)
             if compact {
                 Button { withAnimation(.easeOut(duration: 0.2)) { showLibrary.toggle() } } label: { iconBox(showLibrary ? "xmark" : "music.note.list") }
-            } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    Image("DrumRollLogo").resizable().scaledToFit().frame(height: 24)
-                        .colorMultiply(theme.light ? Color(white: 0.1) : .white)
-                    Text("DRUM SEQUENCER").font(.system(size: 9, weight: .semibold)).tracking(2).foregroundColor(theme.inkDim)
+            }
+            // tools and the bars pager, in their own dark panel
+            VStack(spacing: 6) {
+                HStack(spacing: 6) {
+                    toolButton(.draw, "pencil", compact ? nil : "DRAW")
+                    toolButton(.select, "rectangle.dashed", compact ? nil : "SELECT")
+                    toolButton(.erase, "eraser", compact ? nil : "ERASE")
+                    Button { undo() } label: { labelBox("arrow.uturn.backward", compact ? nil : "UNDO", enabled: !undoStack.isEmpty) }.disabled(undoStack.isEmpty)
+                    Button { redo() } label: { labelBox("arrow.uturn.forward", compact ? nil : "REDO", enabled: !redoStack.isEmpty) }.disabled(redoStack.isEmpty)
                 }
-                .fixedSize()
+                pageControl
             }
-            if !compact {
-                toolButton(.draw, "pencil", "DRAW")
-                toolButton(.select, "rectangle.dashed", "SELECT")
-                toolButton(.erase, "eraser", "ERASE")
-                Button { undo() } label: { labelBox("arrow.uturn.backward", "UNDO", enabled: !undoStack.isEmpty) }.disabled(undoStack.isEmpty)
-                Button { redo() } label: { labelBox("arrow.uturn.forward", "REDO", enabled: !redoStack.isEmpty) }.disabled(redoStack.isEmpty)
-            }
-            Spacer(minLength: 4)
-            transport
-            Spacer(minLength: 4)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    bpmMenu
-                    barsMenu
-                    loopMenu
-                    settingsMenu
-                    if let url = exportURL {
-                        ShareLink(item: url) { iconBox("icloud.and.arrow.up") }
-                            .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
+            .padding(6).background(darkPanel)
+            transport.padding(6).background(darkPanel)
+            VStack(spacing: 6) {
+                HStack(spacing: 6) { bpmMenu; barsMenu; loopMenu; settingsMenu }
+                HStack(spacing: 6) {
+                    chip("SNAP  \(snapLabel)", width: compact ? 140 : 176)
+                        .bbMenu(title: "Snap", width: 300) {
+                            Self.snapChoices.flatMap { group -> [BBMenuItem] in
+                                [.header(group.section)] + group.items.map { item in BBMenuItem.item(item.0, checked: item.1 == snap) { snap = item.1 } }
+                            }
+                        }
+                    labelBox("tuningfork", nil, lit: controller.snapToScale)
+                        .bbMenu(title: "Snap to scale", width: 300) { scaleItems(selectedPad) }
+                    knobBlock(title: "SWING", value: controller.value(.bounce),
+                              text: controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%",
+                              menu: AnyView(swingMenu)) { v, ended in
+                        if swingStart == nil { swingStart = controller.value(.bounce) }
+                        controller.set(.bounce, v)
+                        if ended { swingStart = nil }
+                    }
+                    knobBlock(title: "HUMANIZE", value: pattern.humanize ?? 0, text: nil, menu: nil) { v, ended in
+                        if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(pattern); redoStack = [] }
+                        var p = pattern
+                        p.humanize = v < 0.01 ? nil : v
+                        work = p
+                        if ended { humanizeStart = nil; work = nil; controller.setLoop(loop, p) }
                     }
                 }
             }
-            .frame(maxWidth: compact ? 200 : 520)
-            Button { dismiss() } label: { iconBox("xmark") }
+            .padding(6).background(darkPanel)
+            Spacer(minLength: 0)
+            if let url = exportURL {
+                ShareLink(item: url) { iconBox("icloud.and.arrow.up") }
+                    .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
+                    .padding(6).background(darkPanel)
+            }
         }
-        .padding(.horizontal, 10)
-        .frame(height: compact ? 56 : 68)
+        .frame(height: compact ? 96 : 108)
     }
 
     private var transport: some View {
@@ -392,6 +420,7 @@ struct SequencerView: View {
     private var settingsMenu: some View {
         iconBox("gearshape.fill").bbMenu(title: "Sequencer", width: 330) {
             [
+                .item("BreakBoss menu…", icon: "line.3.horizontal") { showMenu = true },
                 .item("Follow playhead", icon: "arrow.right.to.line", checked: follow) { follow.toggle() },
                 .item("Metronome", icon: "metronome", checked: controller.metronome) { controller.setMetronome(!controller.metronome) },
                 .item("Duplicate \(selection.isEmpty ? "the pattern" : "selection")", icon: "plus.square.on.square") { duplicate() },
@@ -406,51 +435,6 @@ struct SequencerView: View {
                 .item("Clear \(selection.isEmpty ? "the pattern" : "selection")", icon: "trash", destructive: true) { clear() }
             ]
         }
-    }
-
-    // MARK: Toolbar (bars, snap, scale, swing, humanize)
-
-    private var toolbar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                if compact {
-                    toolButton(.draw, "pencil", nil); toolButton(.select, "rectangle.dashed", nil); toolButton(.erase, "eraser", nil)
-                    Button { undo() } label: { labelBox("arrow.uturn.backward", nil, enabled: !undoStack.isEmpty) }.disabled(undoStack.isEmpty)
-                    Button { redo() } label: { labelBox("arrow.uturn.forward", nil, enabled: !redoStack.isEmpty) }.disabled(redoStack.isEmpty)
-                    divider
-                }
-                pageControl
-                divider
-                chip("SNAP  \(snapLabel)", width: 180)
-                    .bbMenu(title: "Snap", width: 300) {
-                        Self.snapChoices.flatMap { group -> [BBMenuItem] in
-                            [.header(group.section)] + group.items.map { item in BBMenuItem.item(item.0, checked: item.1 == snap) { snap = item.1 } }
-                        }
-                    }
-                labelBox("tuningfork", compact ? nil : (controller.snapToScale
-                         ? "\(MusicScale.noteNames[controller.scaleRoot]) \(controller.scale.name.uppercased())" : "SNAP TO SCALE"),
-                         lit: controller.snapToScale)
-                    .bbMenu(title: "Snap to scale", width: 300) { scaleItems(selectedPad) }
-                divider
-                knobBlock(title: "SWING", value: controller.value(.bounce),
-                          text: controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%",
-                          menu: AnyView(swingMenu)) { v, ended in
-                    if swingStart == nil { swingStart = controller.value(.bounce) }
-                    controller.set(.bounce, v)
-                    if ended { swingStart = nil }
-                }
-                knobBlock(title: "HUMANIZE", value: pattern.humanize ?? 0, text: nil, menu: nil) { v, ended in
-                    if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(pattern); redoStack = [] }
-                    var p = pattern
-                    p.humanize = v < 0.01 ? nil : v
-                    work = p
-                    if ended { humanizeStart = nil; work = nil; controller.setLoop(loop, p) }
-                }
-            }
-            .padding(.horizontal, 10)
-        }
-        .frame(height: compact ? 52 : 60)
-        .overlay(Rectangle().fill(Color.black.opacity(0.22)).frame(height: 1), alignment: .bottom)
     }
 
     private var swingMenu: some View {
@@ -515,15 +499,16 @@ struct SequencerView: View {
 
     private var leftPanel: some View {
         VStack(spacing: 6) {
-            sectionHeader("SOUNDS", .sounds)
-            if section == .sounds { soundsPanel }
+            sectionHeader("GENERAL", .general)
+            if section == .general { soundsPanel }
             sectionHeader("GENERATE", .generate)
             if section == .generate { generatePanel }
             sectionHeader("MIDI", .midi)
             if section == .midi { midiPanel }
-            if section != .sounds { Spacer() }
+            if section != .general { Spacer() }
         }
         .padding(8)
+        .background(darkPanel)
     }
 
     private func sectionHeader(_ title: String, _ s: Panel) -> some View {
@@ -533,7 +518,8 @@ struct SequencerView: View {
                 Spacer()
                 Image(systemName: section == s ? "chevron.up" : "chevron.down").font(.system(size: 11, weight: .semibold)).foregroundColor(S.dim)
             }
-            .padding(.horizontal, 12).frame(height: 38).background(box(lit: false))
+            .padding(.horizontal, 12).frame(height: 40)
+            .background(RoundedRectangle(cornerRadius: 8).fill(section == s ? Color(white: 0.11) : S.button).overlay(RoundedRectangle(cornerRadius: 8).stroke(S.border, lineWidth: 1)))
         }
     }
 
@@ -570,7 +556,7 @@ struct SequencerView: View {
                 }
             }
             if !libraryNote.isEmpty { Text(libraryNote).font(.system(size: 10, design: .monospaced)).foregroundColor(S.dim).lineLimit(1) }
-            Text("DRAG A SOUND ONTO THE RACK").font(.system(size: 9, weight: .semibold, design: .monospaced)).foregroundColor(theme.inkDim)
+            Text("DRAG A SOUND ONTO THE RACK").font(.system(size: 9, weight: .semibold, design: .monospaced)).foregroundColor(S.dim)
         }
     }
 
@@ -620,28 +606,66 @@ struct SequencerView: View {
         .foregroundColor(S.text).frame(maxWidth: .infinity).frame(height: 32).background(box(lit: false))
     }
 
-    /// GENERATE: a new pattern in any style (the preset's style by default).
+    /// GENERATE (the approved panel): GENRE, UPDATE SOUNDS, UPDATE TEMPO, Generate and Clear.
     private var generatePanel: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("GENRE").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundColor(S.dim)
-            chip(generateStyle ?? PatternRandomizer.style(for: controller.state.presetName), width: 216)
-                .bbMenu(title: "Genre", width: 280) {
-                    [BBMenuItem.item("This preset's style", checked: generateStyle == nil) { generateStyle = nil }]
-                    + PatternBank.styles.map { st in BBMenuItem.item(st, checked: generateStyle == st) { generateStyle = st } }
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("GENRE").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundColor(S.dim)
+                HStack {
+                    Text(generateStyle ?? PatternRandomizer.style(for: controller.state.presetName)).font(.system(size: 15)).foregroundColor(S.text).lineLimit(1)
+                    Spacer()
+                    Image(systemName: "chevron.down").font(.system(size: 12, weight: .semibold)).foregroundColor(S.text)
                 }
-            HStack(spacing: 6) {
-                Button { controller.randomizePattern(style: generateStyle); selection = [] } label: {
-                    HStack(spacing: 6) { Image(systemName: "dice.fill"); Text("GENERATE").font(.system(size: 12, weight: .bold, design: .monospaced)) }
-                        .foregroundColor(.white).frame(maxWidth: .infinity).frame(height: 40)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(Color(red: 0.62, green: 0.06, blue: 0.08)))
-                }
-                Button { clear() } label: { smallLabel("xmark", "CLEAR").frame(width: 80) }
             }
-            Button { controller.dice() } label: { smallLabel("dice", "NEW SOUNDS ON EVERY PAD") }
-            Text("GENERATE keeps the channels' sounds and writes new steps in the chosen genre.")
-                .font(.system(size: 10)).foregroundColor(S.dim)
+            .padding(.horizontal, 10).padding(.vertical, 6).contentShape(Rectangle())
+            .bbMenu(title: "Genre", width: 280) {
+                [BBMenuItem.item("This preset's style", checked: generateStyle == nil) { generateStyle = nil }]
+                + PatternBank.styles.map { st in BBMenuItem.item(st, checked: generateStyle == st) { generateStyle = st } }
+            }
+            Rectangle().fill(S.border).frame(height: 1)
+            HStack(spacing: 0) {
+                toggleCell("UPDATE SOUNDS", on: updateSounds) { updateSounds.toggle() }
+                Rectangle().fill(S.border).frame(width: 1, height: 40)
+                toggleCell("UPDATE TEMPO", on: updateTempo) { updateTempo.toggle() }
+            }
+            Rectangle().fill(S.border).frame(height: 1)
+            HStack(spacing: 8) {
+                Button { generate() } label: {
+                    HStack(spacing: 6) { Image(systemName: "dice.fill"); Text("Generate").font(.system(size: 14, weight: .semibold)) }
+                        .foregroundColor(.white).padding(.horizontal, 16).frame(height: 40)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(LinearGradient(colors: [Color(red: 0.75, green: 0.08, blue: 0.1), Color(red: 0.5, green: 0.03, blue: 0.05)], startPoint: .top, endPoint: .bottom)))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.red.opacity(0.5), lineWidth: 1))
+                }
+                Button { clear() } label: {
+                    HStack(spacing: 6) { Image(systemName: "xmark"); Text("Clear").font(.system(size: 14)) }.foregroundColor(S.text)
+                }
+            }
+            .padding(.horizontal, 6).padding(.bottom, 4)
         }
-        .padding(10).background(RoundedRectangle(cornerRadius: 6).fill(S.lane.opacity(0.7)))
+        .padding(6).background(RoundedRectangle(cornerRadius: 8).fill(Color(white: 0.11)).overlay(RoundedRectangle(cornerRadius: 8).stroke(S.border, lineWidth: 1)))
+    }
+
+    private func toggleCell(_ title: String, on: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 9, weight: .semibold, design: .monospaced)).foregroundColor(S.dim)
+                Text(on ? "On" : "Off").font(.system(size: 14)).foregroundColor(on ? S.text : S.dim)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10)
+        }
+    }
+
+    /// Generate: new steps in the chosen genre; UPDATE SOUNDS rolls new sounds on every channel too;
+    /// UPDATE TEMPO sets the genre's tempo.
+    private func generate() {
+        let style = generateStyle ?? PatternRandomizer.style(for: controller.state.presetName)
+        controller.randomizePattern(style: style)
+        if updateSounds { controller.dice() }
+        if updateTempo, !controller.tempoIsExternal {
+            let bpms = PatternBank.presets(in: style).map(\.bpm)
+            if !bpms.isEmpty { controller.setBPM((bpms.reduce(0, +) / Double(bpms.count)).rounded()) }
+        }
+        selection = []
     }
 
     private var midiPanel: some View {
@@ -656,7 +680,7 @@ struct SequencerView: View {
         .padding(10).background(RoundedRectangle(cornerRadius: 6).fill(S.lane.opacity(0.7)))
     }
 
-    // MARK: The selected track's strip (sound, knobs)
+    // MARK: Track settings (sound, tune, decay, filter, reverse, solo, MIDI): from the channel's menu
 
     private func channelStrip(_ ch: WorkspaceChannel) -> some View {
         let pad = ch.pad
@@ -681,9 +705,8 @@ struct SequencerView: View {
             }
             .padding(.horizontal, 10)
         }
-        .frame(height: 54)
+        .frame(height: 64)
         .background(S.channel)
-        .overlay(Rectangle().fill(S.green.opacity(0.6)).frame(height: 1), alignment: .bottom)
     }
 
     private func channelSampleItems(_ ch: WorkspaceChannel) -> [BBMenuItem] {
@@ -722,8 +745,7 @@ struct SequencerView: View {
             let gridH = max(L.last.map { $0.y + $0.height } ?? 0, geo.size.height - rulerH - laneH - 8)
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
-                    Text("CHANNEL RACK").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundColor(theme.inkDim)
-                        .frame(width: rackW, height: rulerH)
+                    Color.clear.frame(width: rackW, height: rulerH)
                     ruler(width: gridW).frame(width: gridW, height: rulerH)
                 }
                 ScrollView(.vertical, showsIndicators: false) {
@@ -738,6 +760,8 @@ struct SequencerView: View {
                     laneView(width: gridW, height: laneH).frame(width: gridW, height: laneH)
                 }
             }
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .background(darkPanel)
         }
     }
 
@@ -777,9 +801,9 @@ struct SequencerView: View {
             ZStack {
                 if channels.count < Pad.count {
                     VStack(spacing: 4) {
-                        Image(systemName: "plus.circle.dashed").font(.system(size: 18)).foregroundColor(rackTargeted ? S.green : theme.inkDim)
+                        Image(systemName: "plus.circle.dashed").font(.system(size: 18)).foregroundColor(rackTargeted ? S.green : S.dim)
                         Text(rackTargeted ? "DROP FOR A NEW CHANNEL" : "DROP A SOUND HERE").font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .foregroundColor(rackTargeted ? S.green : theme.inkDim).multilineTextAlignment(.center)
+                            .foregroundColor(rackTargeted ? S.green : S.dim).multilineTextAlignment(.center)
                     }
                     .padding(8)
                 }
@@ -789,7 +813,7 @@ struct SequencerView: View {
             .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: $rackTargeted) { providers in dropOnRack(providers, channel: nil) }
         }
         .frame(height: height, alignment: .top)
-        .background(Color.black.opacity(theme.light ? 0.06 : 0.25))
+        .background(Color(white: 0.16))
     }
 
     private func channelRow(_ l: RowLayout, rowH: CGFloat) -> some View {
@@ -805,7 +829,7 @@ struct SequencerView: View {
                     withAnimation(.easeInOut(duration: 0.2)) { expandedID = expandedID == ch.id ? nil : ch.id }
                     selectedID = ch.id
                 } label: {
-                    Image(systemName: "triangle.fill").font(.system(size: 9)).foregroundColor(expandedID == ch.id ? S.green : theme.inkDim)
+                    Image(systemName: "triangle.fill").font(.system(size: 9)).foregroundColor(expandedID == ch.id ? S.green : S.dim)
                         .rotationEffect(.degrees(expandedID == ch.id ? 180 : 90))
                         .frame(width: 16, height: 28)
                 }
@@ -842,8 +866,8 @@ struct SequencerView: View {
             }
         }
         .frame(height: l.height)
-        .background(isSel ? S.green.opacity(theme.light ? 0.3 : 0.14) : Color.clear)
-        .overlay(Rectangle().fill(Color.black.opacity(theme.light ? 0.18 : 0.45)).frame(height: 1), alignment: .bottom)
+        .background(isSel ? S.green.opacity(0.14) : Color.clear)
+        .overlay(Rectangle().fill(Color.black.opacity(0.45)).frame(height: 1), alignment: .bottom)
         .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: Binding(get: { rowTargeted == ch.id }, set: { rowTargeted = $0 ? ch.id : nil })) { providers in
             dropOnRack(providers, channel: ch)
         }
@@ -931,6 +955,7 @@ struct SequencerView: View {
         items.append(BBMenuItem.item(expandedID == ch.id ? "Close the piano roll" : "Open the piano roll", icon: "pianokeys") {
             withAnimation { expandedID = expandedID == ch.id ? nil : ch.id }
         })
+        items.append(BBMenuItem.item("Track settings… (tune, decay, filter, MIDI)", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id })
         items.append(BBMenuItem.item(controller.soloPads[pad] ? "Solo off" : "Solo", icon: "s.square", checked: controller.soloPads[pad]) { controller.toggleSolo(pad) })
         items.append(BBMenuItem.item("Load a sample from Files…", icon: "folder") { importPad = pad })
         items.append(BBMenuItem.item("Clear its steps", icon: "xmark", destructive: true) { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
@@ -1282,7 +1307,7 @@ struct SequencerView: View {
                 } label: { iconBox("dice.fill") }
             }
             if let ch = selected {
-                Text(ch.name).font(.system(size: 10, design: .monospaced)).foregroundColor(theme.ink).lineLimit(1)
+                Text(ch.name).font(.system(size: 10, design: .monospaced)).foregroundColor(S.dim).lineLimit(1)
             }
             Spacer(minLength: 0)
         }
@@ -1355,25 +1380,36 @@ struct SequencerView: View {
     private var orderedKits: [KitDefinition] { SoundMode.allCases.flatMap { KitLibrary.kits(for: $0) } + KitLibrary.genres }
 
     private var footer: some View {
-        HStack(spacing: 8) {
-            Button { showMenu = true } label: { iconBox("line.3.horizontal") }
-            Button { controller.toggleRecordPads() } label: {
-                HStack(spacing: 8) {
-                    Circle().stroke(S.red, lineWidth: 2).frame(width: 18, height: 18)
-                        .overlay(Circle().fill(S.red).frame(width: 8, height: 8).opacity(controller.recording ? 1 : 0))
-                    if !compact { Text("Drum Track").font(.system(size: 13, weight: .medium)).foregroundColor(S.text) }
+        HStack(spacing: 10) {
+            // sequencer / pads: the pad button goes back to the faceplate
+            HStack(spacing: 2) {
+                Image(systemName: "square.grid.3x3.fill").font(.system(size: 15)).foregroundColor(.white)
+                    .frame(width: 38, height: 36).background(RoundedRectangle(cornerRadius: 6).fill(Color(white: 0.2)))
+                Button { dismiss() } label: {
+                    Image(systemName: "square.fill").font(.system(size: 15)).foregroundColor(Color(red: 0.95, green: 0.92, blue: 0.8))
+                        .frame(width: 38, height: 36).background(RoundedRectangle(cornerRadius: 6).fill(Color(white: 0.92)))
                 }
-                .padding(.horizontal, 12).frame(height: 40).background(box(lit: controller.recording, color: S.red))
+            }
+            .padding(4).background(darkPanel)
+            Button { controller.toggleRecordPads() } label: {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle().stroke(S.red, lineWidth: 2.5).frame(width: 30, height: 30)
+                            .shadow(color: controller.recording ? S.red : .clear, radius: 6)
+                        if controller.recording { Circle().fill(S.red).frame(width: 12, height: 12) }
+                        else { Text("1").font(.system(size: 12, weight: .semibold)).foregroundColor(S.text) }
+                    }
+                    if !compact { Text("Drum Track").font(.system(size: 14, weight: .medium)).foregroundColor(S.text) }
+                }
+                .padding(.horizontal, 12).frame(height: 44).background(darkPanel)
             }
             Spacer(minLength: 4)
             picker("PATTERN", chip: patternMenu, back: { cycleLoop(-1) }, forward: { cycleLoop(1) })
-            if !compact { Rectangle().fill(S.border).frame(width: 1, height: 36) }
+            if !compact { Rectangle().fill(theme.inkDim.opacity(0.5)).frame(width: 1, height: 44) }
             picker("KIT", chip: kitMenu, back: { cycleKit(-1) }, forward: { cycleKit(1) })
             Spacer(minLength: 4)
         }
-        .padding(.horizontal, 12)
-        .frame(height: compact ? 58 : 72)
-        .overlay(Rectangle().fill(Color.black.opacity(0.22)).frame(height: 1), alignment: .top)
+        .frame(height: compact ? 54 : 66)
     }
 
     private func picker<C: View>(_ title: String, chip: C, back: @escaping () -> Void, forward: @escaping () -> Void) -> some View {
