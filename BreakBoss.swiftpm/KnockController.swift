@@ -42,6 +42,8 @@ final class KnockController: ObservableObject {
 
     private let kitQueue = DispatchQueue(label: "breakboss.kit", qos: .userInitiated)
     private let stockLibrary = StockSampleLibrary.bundled
+    /// Temporary rack gating; original home pad routing remains available.
+    private var workspaceIsOpen = false
     private var kitGeneration = 0
     private var timers: [Timer] = []
     private var saveWork: DispatchWorkItem?
@@ -301,7 +303,18 @@ final class KnockController: ObservableObject {
     }
 
     private func pushPadMask() {
-        engine.send(KEvent(kind: .padMask, a: Int32(KnockController.padMask(muted: mutedPads, solo: soloPads))))
+        var mask = KnockController.padMask(muted: mutedPads, solo: soloPads)
+        if workspaceIsOpen {
+            var onlyVisible: UInt16 = 0
+            for row in workspaceChannels { onlyVisible |= UInt16(1) << UInt16(row.pad) }
+            mask &= onlyVisible
+        }
+        engine.send(KEvent(kind: .padMask, a: Int32(mask)))
+    }
+
+    func setWorkspaceOpen(_ open: Bool) {
+        workspaceIsOpen = open
+        pushPadMask()
     }
 
     @Published private(set) var recording = false
@@ -628,6 +641,7 @@ final class KnockController: ObservableObject {
         let row = WorkspaceChannel(id: UUID(), pad: pad, soundID: sound.id,
                                    name: sound.name, category: sound.type.rawValue)
         state.workspaceChannels?.append(row)
+        pushPadMask()
         // Reuse the off-audio-thread sample loader; every drop gets its own pad.
         importSample(sound.url, toPad: pad)
         scheduleSave()
@@ -637,6 +651,7 @@ final class KnockController: ObservableObject {
     func removeWorkspaceChannel(_ id: UUID, loop: Int) {
         guard let row = workspaceChannels.first(where: { $0.id == id }) else { return }
         state.workspaceChannels?.removeAll { $0.id == id }
+        pushPadMask()
         if loops.indices.contains(loop) {
             var data = loops[loop]
             data.events.removeAll { Int($0.pad) == row.pad }
