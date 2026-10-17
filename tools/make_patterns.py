@@ -611,11 +611,273 @@ pat(HQ, "HOUSTON QUEEN 8 SLOW BOUNCE", 72, 60, k=st(32, 0, 3, 10, 16, 19), c=HAL
 pat(HQ, "HOUSTON QUEEN 9 THIRD WARD", 98, 56, k=st(32, 0, 6, 9, 16, 22, 25), c=BACK, s=BACK, h=rep("x.x.x.x.x.x.x.x."), o=st(32, 30))
 pat(HQ, "HOUSTON QUEEN 10 RODEO", 105, 55, k=st(32, 0, 10, 16, 26), s=BACK, h=rep("x.x.x.x.x.x.x.x."), p2=st(32, 3, 7, 19, 23, ch="o"))
 
+# ================= LIVE DRUMMER STYLES (Oct 17): written the way a drummer plays =================
+# Velocity carries the feel: X accent, x normal, o medium, g ghost. Hats lean on the quarter notes
+# and fall away on the 16ths, snares get ghost notes around the backbeat, and the 4-bar phrases
+# change a little each bar and end in a fill, with the crash on the 1 coming back around.
+# Breaks are "in the style of" the famous records (the rhythm, not a transcription).
+def bars(*b):
+    for x in b: assert len(x) % 16 == 0 and x, x
+    return "".join(b)
+def phrase(main, b2=None, b3=None, fill=None):
+    """Four bars: the groove, a variation, the groove again, then a fill bar."""
+    return bars(main, b2 or main, b3 or main, fill or b2 or main)
+HAT16 = "XgogxgogXgogxgog"        # 16ths, loud on the beat, soft in between
+HAT8 = "X.o.x.o.X.o.x.o."         # 8ths, leaning on the beat
+CRASH4 = st(64, 0)                # crash on the 1 of the phrase (lands after the fill)
+
+# ---------------- Dilla Time (MPC 3000 feel: lazy kicks that land early or late, doubled kicks,
+# uneven hats, snare ghosts; set HUMANIZE up for the drunk timing) ----------------
+DL = "Dilla Time"
+pat(DL, "DILLA TIME 1 DRUNK KICKS", 90, 62, k="X.....x..x.x...xX......xx..x...x", s=BACK, h=two("x.ogx.goxgo.x.og"))
+pat(DL, "DILLA TIME 2 LATE CLAP", 88, 64, k="X......x.x......X.....x...x.x...", s=BACK, c=st(32, 5, 13, 21, 29, ch="o"), h=two("xgx.xgxgx.xgxgx."))
+pat(DL, "DILLA TIME 3 DONUT", 92, 60, k="X.x.......x..x..X.x.....x..x....", s=put(BACK, (7, "g"), (23, "g"), (31, "g")), h=two("x.x.xox.x.x.xox."))
+pat(DL, "DILLA TIME 4 RIM CRACK", 86, 62, k="X......xx.......X.....x...xx....", s=BACK, r=st(32, 10, 26, 30, ch="g"), h=two("xoxgxoxgxoxgxoxg"))
+pat(DL, "DILLA TIME 5 PUSHED ONE", 94, 58, k="X.....x...x....xX.....x...x....x", s=put(BACK, (14, "g")), h=two("x.x.x.x.x.x.x..o"), o=st(32, 14, 30, ch="o"))
+pat(DL, "DILLA TIME 6 STUMBLE", 90, 66, k="X..x.x....x.....X..x.....xx.....", s=put(BACK, (9, "g"), (25, "g")), h=two("xg.gxg.gxg.gxg.g"))
+pat(DL, "DILLA TIME 7 SHAKER STAGGER", 84, 62, k="X......x..x.x...X......x...x....", s=BACK, p1=two("ogxgogxgogxgogxg"), h=two("..x...x...x...x."))
+pat(DL, "DILLA TIME 8 SOFT KNOCK", 88, 60, k="X.......x.xx....X.......x..x..x.", s=st(32, 4, 12, 20, 28, ch="x"), c=st(32, 12, 28, ch="o"), h=two("xgxgxgxgxgxgxgxg"))
+pat(DL, "DILLA TIME 9 HALF DRUNK", 76, 64, k="X......x..x.....X.....x.x.......", s=st(32, 8, 24, ch="X"), r=st(32, 3, 14, 19, 30, ch="g"), h=two("x.ox.ox.x.ox.ox."))
+pat(DL, "DILLA TIME 10 DETROIT LOOP", 95, 58, k=phrase("X.....x..x.x....", "X.....x...x..x.x", "X.....x..x.x....", "X.....x...x.x.x."),
+    s=phrase("....X.......X...", "....X..g....X..g", "....X.......X...", "....X..g.g..X.gg"), h=phrase("x.ogx.ogx.ogx.og", "x.ogx.ogx.ogx.o."))
+
+# ---------------- 90s Rap (golden era NY plus West and South: MPC / SP-1200 swing, chopped breaks,
+# hard snares, kicks that knock off the beat) ----------------
+NR = "90s Rap"
+pat(NR, "90S RAP 1 HARD CHOP", 94, 56, k="X......x..X.....X......x..x.....", s=BACK, h=two("x.x.x.x.x.x.x.x."), p2=st(32, 30, ch="o"))
+pat(NR, "90S RAP 2 SOUL BROTHER", 94, 60, k="X.....x...x..x..X.......x.x.....", s=put(BACK, (15, "g")), h=two("xgxoxgxoxgxoxg.o"), o=st(32, 14, 30, ch="o"))
+pat(NR, "90S RAP 3 QUEENSBRIDGE", 92, 54, k="X.........x.....X.......x.x.....", s=BACK, r=st(32, 7, 23, ch="g"), h=two("x...x...x...x..."))
+pat(NR, "90S RAP 4 SHAOLIN DUST", 92, 58, k="X..x......x.....X.....x...x..x..", s=put(BACK, (7, "g"), (25, "g")), h=two("x.xox.xox.xox.xo"))
+pat(NR, "90S RAP 5 G-FUNK ROLL", 92, 54, k="X.....x.x.......X.....x.x.x.....", s=BACK, c=BACK, h=two("xoxoxoxoxoxoxoxo"), o=st(32, 30))
+pat(NR, "90S RAP 6 JAZZ TONGUES", 94, 60, k="X......x..x.....X..x......x.....", s=BACK, cr=two("x.x.x.x.x.x.x.x."), r=st(32, 10, 26, ch="g"))
+pat(NR, "90S RAP 7 BACKPACK", 92, 58, k="X.x.......x..x..X.x.......x.....", s=put(BACK, (9, "g"), (31, "g")), h=two("x.x.x.x.x.x.x.x."), p1=two("..g...g...g...g."))
+pat(NR, "90S RAP 8 DIRTY SOUTH", 96, 54, k="X.....x.x..x....X.....x...x.x...", s=BACK, h=two("xoxoxoxoxoxoxoxo"), p1=st(32, 6, 22, ch="o"))
+pat(NR, "90S RAP 9 SHINY SUIT", 98, 54, k="X......x..x.....X..x...x..x.....", s=BACK, c=BACK, h=two("x.x.x.x.x.x.x.x."), o=st(32, 14))
+pat(NR, "90S RAP 10 MEMPHIS TAPE", 140, k="X.....x...x.....X.x.....x.......", c=HALF, h="x.x.t.x.x.x.x.x.x.x.t.x.x.x.x.x.", p2=two("x..x..x...x..x.."), b=bass((0, "0", 6), (6, "0", 4), (10, "3", 6), (16, "0", 8), (24, "5", 8)))
+
+# ---------------- 70s Soul (the drummers behind the samples: JB funk ghosts, Purdie shuffle,
+# Stax and Motown backbeats, Philly disco, New Orleans syncopation; 4-bar phrases with fills) ----------------
+SO = "70s Soul"
+pat(SO, "70S SOUL 1 FUNKY GHOSTS", 100, 52, k=phrase("X.x...x...x..x..", fill="X.x...x...x....."),
+    s=phrase("....X..g.g.gX..g", "....X..g.g.gX.g.", fill="....X..g.g.gXgXX"), h=phrase("xgxgxg.gxgxgx.xg", fill="xgxgxg.gxgxg...."), o=phrase("......o......o..", fill="......o........."), cr=CRASH4)
+pat(SO, "70S SOUL 2 HALF SHUFFLE", 88, 66, k=phrase("X.......x.....x.", "X.....x.x......."), s=phrase("..g..g..X..g..g.", "..g..g..X..g.gg.", fill="..g..g..X..gXgXg"),
+    h=phrase("x.x.x.x.x.x.x.x."), cr=CRASH4)
+pat(SO, "70S SOUL 3 MEMPHIS BACKBEAT", 98, 52, k=phrase("X.......X.x.....", "X.......X.x...x."), s=phrase("....X.......X...", fill="....X.......XoXo"),
+    h=phrase("x.o.x.o.x.o.x.o."), p1=phrase("....x.......x..."), cr=CRASH4)
+pat(SO, "70S SOUL 4 HITSVILLE", 120, 50, k=phrase("x...x...x...x..."), s=phrase("X...X...X...X...", fill="X...X...X.X.XXXX"), p1=phrase("....x.......x..."),
+    h=phrase("x.x.x.x.x.x.x.x."))
+pat(SO, "70S SOUL 5 PHILLY FLOOR", 112, 50, k=phrase("X...x...X...x..."), s=phrase("....X.......X...", fill="....X.......XoXX"), h=phrase("xgx.xgx.xgx.xgx."),
+    o=phrase("..o...o...o...o.", fill="..o...o...o....."), cr=CRASH4)
+pat(SO, "70S SOUL 6 SECOND LINE", 100, 54, k=phrase("X..x..x...x..x..", "X..x....x.x..x.."), s=phrase("..g.X..g.gx.X.g.", fill="..g.X..g.gx.XoXo"),
+    h=phrase("x.x.x.xox.x.x.xo"), cr=CRASH4)
+pat(SO, "70S SOUL 7 QUIET BALLAD", 70, 58, k=phrase("X.......x..x....", "X......x..x....."), r=phrase("....x.......x...", fill="....x..........."),
+    cr=phrase("x.o.x.o.x.o.x.o."), h=phrase("....g.......g..."), s=bars("." * 16, "." * 16, "." * 16, "............ooxX"))
+pat(SO, "70S SOUL 8 SOUL POWER", 108, 54, k=phrase("X..x..x...x.....", "X..x......x..x.."), s=phrase("....X..g.g..X..g", fill="....X..g.g..XgXg"),
+    h=phrase("xoxoxoxoxoxoxoxo"), p1=phrase("x.x.x.x.x.x.x.x."), cr=CRASH4)
+pat(SO, "70S SOUL 9 SUPERFLY", 104, 54, k=phrase("X.....x.x.....x.", "X.....x...x....."), s=phrase("....X.......X..g"),
+    o=phrase("x.o.x.o.x.o.x.o."), h=phrase(".g.g.g.g.g.g.g.g"), p2=phrase("..x.....x.x.....", "..x...x.....x..."), cr=CRASH4)
+pat(SO, "70S SOUL 10 CHURCH CHOPS", 96, 60, k=phrase("X......x..x.....", "X..x...x..x....."), s=phrase("....X..g...gX...", fill="....X..g.ggXgXgX"),
+    h=phrase("x.oxx.oxx.oxx.o.", fill="x.oxx.oxx......."), lt=bars("." * 48, "............o.xx"), cr=CRASH4)
+
+# ---------------- 80s Breaks (the records every 80s hip hop DJ cut up; rhythm in the style of each break) ----------------
+BR = "80s Breaks"
+pat(BR, "BREAKS 1 AMEN STYLE", 136, 52, k=phrase("X.x.......xx....", fill="..x.......x....."),
+    s=phrase("....X..g.g..X..g", "....X..g.g..X..g", "....X..g.g....X.", ".g..X..g.g....X."), cr=phrase("x.x.x.x.x.x.x.x.", fill="x.x.x.x.x.X.x.x."))
+pat(BR, "BREAKS 2 THINK STYLE", 114, 52, k=phrase("X.....x...X.....", "X.....x...X..x.."), s=phrase("....X..x.x..X..x", "....X..x.x..X..."),
+    h=phrase("x.x.x.x.x.x.x.x."), o=phrase(".............o..", "................"))
+pat(BR, "BREAKS 3 IMPEACH STYLE", 98, 56, k=phrase("X......X..x.....", "X......X........"), s=phrase("....X.......X..."),
+    h=phrase("x.x.x...x.x.x..."), o=phrase("......o.......o."), cr=CRASH4)
+pat(BR, "BREAKS 4 SUBSTITUTION STYLE", 102, 54, k=phrase("X.x....x..xx....", "X.x....x..x....."), s=phrase("....X.......X..."), h=phrase("x.x.x.x.x.x.x.x."))
+pat(BR, "BREAKS 5 BONGO ROCK STYLE", 112, 54, k=phrase("X.....x...x....."), s=phrase("....X.......X..."), h=phrase("x.x.x.x.x.x.x.x."),
+    p1=phrase("x.ox.ox.x.ox.oxo"), p2=phrase("..x...x...x..xx.", "..x...x.x.x...x."))
+pat(BR, "BREAKS 6 SKULL SNAP STYLE", 96, 56, k=phrase("X.x.......xx....", "X.x.......x....."), s=phrase("....X..g....X...", "....X..g....X..g"),
+    h=phrase("x.x.x.x.x.x.x.x."), o=phrase("..............o."))
+pat(BR, "BREAKS 7 ROACH CLIP STYLE", 98, 54, k=phrase("X..x......x.....", "X..x....x.x....."), s=phrase("....X.......X...", fill="....X.......X.XX"),
+    h=phrase("xoxoxoxoxoxoxoxo"))
+pat(BR, "BREAKS 8 BIG BEAT STYLE", 98, 50, k=phrase("X.....x.x.......", "X.....x.x.....x."), s=phrase("....X.......X..."), cr=CRASH4)
+pat(BR, "BREAKS 9 LEVEE STYLE", 72, 52, k=phrase("X.x.......xx....", "X.x.......x....."), s=phrase("....X.......X..."),
+    h=phrase("x.x.x.x.x.x.x.x."), o=phrase("..............o."))
+pat(BR, "BREAKS 10 PRESIDENT STYLE", 100, 54, k=phrase("X.....x...x..x..", "X.....x...x....."), s=phrase("....X..g.g..X...", "....X..g.g..X..g"),
+    h=phrase("x.x.x.xox.x.x.xo"), cr=CRASH4)
+
+# ---------------- Rock (8th-note hats or ride, kick and snare trading, tom fills into a crash) ----------------
+RK = "Rock"
+pat(RK, "ROCK 1 STRAIGHT EIGHTS", 120, k=phrase("X.......X.x.....", fill="X.......X......."), s=phrase("....X.......X...", fill="....X.......xxXX"),
+    h=phrase("X.x.X.x.X.x.X.x.", fill="X.x.X.x.X......."), ht=bars("." * 48, "........xx......"), lt=bars("." * 48, "..........xx...."), cr=CRASH4)
+pat(RK, "ROCK 2 HALF TIME", 140, k=phrase("X.....x.........", "X.....x...x....."), s=phrase("........X.......", fill="........X...xxXX"),
+    h=phrase("x.x.x.x.x.x.x.x."), cr=CRASH4)
+pat(RK, "ROCK 3 DANCE FLOOR", 126, k=phrase("X...X...X...X..."), s=phrase("....X.......X...", fill="....X.......XXXX"),
+    h=phrase("x.o.x.o.x.o.x.o."), o=phrase("..o...o...o...o.", fill="..o...o........."), cr=CRASH4)
+pat(RK, "ROCK 4 HEAVY ROOM", 74, k=phrase("X.x.......xx....", "X.x.......x....."), s=phrase("....X.......X..."),
+    h=phrase("x.x.x.x.x.x.x.x.", fill="x.x.x.x........."), ht=bars("." * 48, "........XX......"), lt=bars("." * 48, "..........XXX..."), cr=CRASH4)
+pat(RK, "ROCK 5 PUNK", 176, k=phrase("X.x.X.x.X.x.X.x."), s=phrase("..X...X...X...X.", fill="..X...X...XxXXXX"), h=phrase("x.x.x.x.x.x.x.x."), cr=CRASH4)
+pat(RK, "ROCK 6 POP PUNK", 160, k=phrase("X......xX.x.....", "X.x....xX......."), s=phrase("....X.......X...", fill="....X...xxxxXXXX"),
+    h=phrase("x.x.x.x.x.x.x.x.", fill="x.x.x.x........."), lt=bars("." * 48, "........o.o....."), cr=CRASH4)
+pat(RK, "ROCK 7 FUNK ROCK", 100, 54, k=phrase("X..x..x...x.....", "X..x....x.x..x.."), s=phrase("....X..g.g..X..g", fill="....X..g.g..XgXX"),
+    h=phrase("xoxoxoxoxoxoxoxo"), o=phrase("..............o.", fill="................"), cr=CRASH4)
+pat(RK, "ROCK 8 FLOOR TOM", 108, k=phrase("X.......X.......", "X.......X.x....."), s=phrase("....X.......X..."), lt=phrase("x.x.x.x.x.x.x.x.", fill="x.x.x.x.X.X.XXXX"), cr=CRASH4)
+pat(RK, "ROCK 9 RIDE GROOVE", 112, k=phrase("X.....x.X.......", "X.....x.X.x....."), s=phrase("....X.......X...", fill="....X.......X.XX"),
+    cr=phrase("x.o.x.o.x.o.x.o."), h=phrase("....g.......g..."))
+pat(RK, "ROCK 10 POWER BALLAD", 72, k=phrase("X.......X.x.....", "X......xX......."), s=phrase("....X.......X...", fill="....X...xxoxXxXX"),
+    h=phrase("x.o.x.o.x.o.x.o.", fill="x.o.x.o........."), ht=bars("." * 48, "........oo......"), lt=bars("." * 48, "..........oo...."), cr=CRASH4)
+
+# ---------------- Alt Trap (rage, plugg, pluggnb: sparse drums, the 808 leads, hats in clumps,
+# rolls only at the end of a phrase, drop-outs used as rhythm) ----------------
+AT = "Alt Trap"
+pat(AT, "ALT TRAP 1 RAGE ARENA", 160, k=st(32, 0, 10, 16), c=HALF, h=put(rep("x...x...x...x..."), (28, "t"), (30, "t")),
+    b=bass((0, "0", 10), (10, "0", 6), (16, "c", 6), (22, "0", 10)), glide=True)
+pat(AT, "ALT TRAP 2 PLUGGNB", 150, c=HALF, r=rep("...x.......x...."), h=rep("x.x...x.x.x....."), s=st(32, 30, ch="q"),
+    p1=rep("x.......", 32), b=bass((0, "0", 6), (6, "4", 4), (10, "0", 6), (16, "5", 6), (22, "4", 4), (26, "0", 6)), glide=True)
+pat(AT, "ALT TRAP 3 PLUGG CLUMPS", 145, 56, k=st(32, 0, 16), c=BACK, h=rep("xxx.....xx.x....", 32), r=st(32, 11, 27, ch="o"),
+    cr=st(32, 0), b=bass((0, "0", 8), (8, "7", 4), (12, "5", 4), (16, "0", 8), (24, "3", 8)))
+pat(AT, "ALT TRAP 4 TERROR PLUGG", 150, c=st(32, 8, 24, ch="o"), r=rep("...x......x....."), h=rep("x...x.x.x...x..."), o=st(32, 14),
+    b=bass((0, "0", 4), (4, "0", 4), (8, "A", 8), (16, "0", 4), (20, "0", 4), (24, "B", 8)), glide=True)
+pat(AT, "ALT TRAP 5 CLIPPED", 155, k=st(32, 0, 7, 16, 23), s=HALF, c=HALF, h=rep("x.x.x.x.x.x.x.x."), p2=st(32, 15, 31, ch="X"),
+    b=bass((0, "0", 7), (7, "0", 9), (16, "0", 7), (23, "7", 9)))
+pat(AT, "ALT TRAP 6 OPIUM BOUNCE", 158, k=st(32, 0, 3, 10, 16, 19, 26), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (30, "r")),
+    b=bass((0, "0", 3), (3, "0", 7), (10, "c", 6), (16, "0", 3), (19, "0", 7), (26, "a", 6)), glide=True)
+pat(AT, "ALT TRAP 7 HYPERPLUGG", 155, c=HALF, s=put(st(32, 24, ch="X"), (14, "g"), (15, "g")), h=rep("x.xx..x.x.xx..x."), p1=st(32, 6, 22, ch="o"),
+    b=bass((0, "0", 2), (2, "0", 2), (4, "7", 4), (8, "5", 8), (16, "0", 2), (18, "0", 2), (20, "7", 4), (24, "a", 8)))
+pat(AT, "ALT TRAP 8 GAME BOUNCE", 145, k=st(32, 0, 6, 16, 22, 27), c=HALF, h=put(rep("x.x.x.x.x.x.x.x."), (12, "t"), (14, "t")), o=st(32, 26),
+    b=bass((0, "0", 6), (6, "0", 10), (16, "3", 6), (22, "0", 5), (27, "5", 5)), glide=True)
+pat(AT, "ALT TRAP 9 DROP OUT", 152, k=st(32, 0, 10), c=st(32, 8, ch="X"), h=rep("x.x.x.x.........", 32), s=st(32, 28, 29, 30, 31, ch="o"),
+    b=bass((0, "0", 10), (10, "0", 6), (16, "3", 16)))
+pat(AT, "ALT TRAP 10 ETHEREAL RAGE", 156, k=st(32, 0, 16, 26), c=HALF, h=rep("x...x...x...x..."), cr=st(32, 0), p1=rep("..o...o.", 32),
+    b=bass((0, "0", 16), (16, "5", 10), (26, "7", 6)), glide=True)
+
+# ---------------- Bay Area 2026 (mobb and hyphy roots: 808 bounce, slapping claps on 2 and 4,
+# light-swung 8th hats with few rolls, long melodic 808s that jump octaves, chant / FX percussion) ----------------
+BA = "Bay Area 2026"
+pat(BA, "BAY AREA 1 SLAP", 100, 56, k="X..x..x...x.....X..x..x...x..x..", c=BACK, s=st(32, 4, 12, 20, 28, ch="o"), h=rep("x.o.x.o.x.o.x.o."),
+    p1=st(32, 7, 14, 23, 30, ch="o"), b=bass((0, "0", 3), (3, "0", 3), (6, "c", 4), (10, "0", 6), (16, "0", 3), (19, "0", 3), (22, "c", 4), (26, "5", 6)))
+pat(BA, "BAY AREA 2 HYPHY", 106, 54, k="X..x..x.x.x.....X..x..x.x..x.x..", c=BACK, h=rep("xoxoxoxoxoxoxoxo"), p2=st(32, 15, 31, ch="X"), o=st(32, 14, 30),
+    b=bass((0, "0", 3), (3, "0", 3), (6, "0", 2), (8, "3", 2), (10, "5", 6), (16, "0", 3), (19, "0", 3), (22, "c", 10)))
+pat(BA, "BAY AREA 3 MOBB SLOW", 86, 58, k="X......x..x.....X......x.x......", c=BACK, h=rep("x.x.x.x.x.x.x.x."), r=st(32, 14, 30, ch="g"),
+    b=bass((0, "0", 7), (7, "0", 3), (10, "7", 6), (16, "0", 7), (23, "5", 2), (25, "3", 7)), glide=True)
+pat(BA, "BAY AREA 4 LO-FI HYPHY", 98, 58, k="X.....x...x.....X.....x...x.....", c=BACK, h=rep("x...x...x...x..."), p1=rep("..g...g.", 32),
+    b=bass((0, "0", 6), (6, "0", 4), (10, "5", 6), (16, "0", 6), (22, "0", 4), (26, "3", 6)))
+pat(BA, "BAY AREA 5 HEAVY BASS", 96, 56, k="X..x......x..x..X..x......x.....", c=BACK, s=st(32, 15, 31, ch="g"), h=rep("x.x.x.x.x.x.x.x."), o=st(32, 6, 22, ch="o"),
+    b=bass((0, "0", 3), (3, "c", 7), (10, "0", 3), (13, "5", 3), (16, "0", 3), (19, "c", 7), (26, "3", 6)))
+pat(BA, "BAY AREA 6 SIDESHOW", 104, 54, k="X.x...x.x.x...x.X.x...x.x.x.x...", c=BACK, h=rep("x.x.x.x.x.x.x.xr"), p2=st(32, 3, 19, ch="o"),
+    b=bass((0, "0", 2), (2, "0", 4), (6, "0", 2), (8, "c", 2), (10, "0", 4), (14, "3", 2), (16, "0", 2), (18, "0", 4), (22, "0", 2), (24, "c", 2), (26, "5", 6)))
+pat(BA, "BAY AREA 7 SOUL CRUISE", 88, 60, k="X......x..x.....X..x......x.....", s=BACK, h=rep("xgxgxgxgxgxgxgxg"), o=st(32, 14, 30, ch="o"), r=st(32, 10, 26, ch="g"))
+pat(BA, "BAY AREA 8 SNAP BOUNCE", 102, 56, k="X..x..x...x..x..X..x..x...x.....", c=BACK, p1=st(32, 4, 12, 20, 28, ch="o"), h=rep("x.o.x.o.x.o.x.o."),
+    b=bass((0, "0", 3), (3, "0", 3), (6, "7", 4), (10, "0", 3), (13, "5", 3), (16, "0", 3), (19, "0", 3), (22, "c", 4), (26, "7", 6)))
+pat(BA, "BAY AREA 9 VALLEJO", 94, 58, k="X.....x.x.....x.X.....x.x.......", c=BACK, h=rep("x.x.x.x.x.x.x.x."), p2=st(32, 7, 23, ch="g"),
+    b=bass((0, "0", 6), (6, "3", 2), (8, "5", 6), (14, "7", 2), (16, "0", 6), (22, "3", 2), (24, "5", 8)), glide=True)
+pat(BA, "BAY AREA 10 TURF", 108, 54, k="X..x..x...x.x...X..x..x...x.x.x.", c=BACK, h=rep("xoxoxoxoxoxoxoxo"), o=st(32, 14), cr=st(32, 0),
+    b=bass((0, "0", 3), (3, "0", 3), (6, "c", 4), (10, "0", 2), (12, "5", 4), (16, "0", 3), (19, "0", 3), (22, "c", 4), (26, "0", 2), (28, "7", 4)))
+
+# ---------------- Detroit 2026 (the half-time bounce at 92-100: soft or pitched-up snare, the second backbeat
+# pushed half a beat late, the 808 is the kick with quick octave rolls, quiet hats, piano stabs as drums) ----------------
+DN = "Detroit 2026"
+LATE2 = st(32, 4, 14, 20, 30, ch="x")                  # beat 2, then beat 4 pushed late (the bounce)
+pat(DN, "DETROIT 2026 1 BOUNCE", 96, 56, k="X..x..x...x.x..xX..x..x...x.x..x", s=LATE2, c=st(32, 3, 19, ch="o"), o=st(32, 6, 22, ch="o"), h=rep("g.g.g.g.g.g.g.g."),
+    b=bass((0, "0", 3), (3, "0", 3), (6, "0", 4), (10, "0", 2), (12, "3", 3), (15, "c", 1), (16, "0", 3), (19, "0", 3), (22, "0", 4), (26, "0", 2), (28, "5", 3), (31, "c", 1)))
+pat(DN, "DETROIT 2026 2 SPIN ROLL", 98, 56, k="X..x..x...x.....X..x..x...x.....", r=BACK, h=rep("o.g.o.g.o.g.o.g."), o=st(32, 14, 30, ch="o"),
+    b="0..0..0...0.0c0c0..0..0...0.5c5c")
+pat(DN, "DETROIT 2026 3 PIANO DRUMS", 94, 58, k="X.....x...x.....X.....x..x......", s=BACK, p2=rep("x.x.x.x.x.x.x.x."), h=rep("g...g...g...g..."),
+    b=bass((0, "0", 6), (6, "0", 4), (10, "3", 6), (16, "0", 6), (22, "0", 3), (25, "5", 7)))
+pat(DN, "DETROIT 2026 4 SCAM SYNTH", 100, 54, k="X.x..x..x.x..x..X.x..x..x...x...", s=st(32, 4, 12, 20, 28, ch="o"), c=BACK, h=rep("xgxgxgxgxgxgxgxg"),
+    b="0.0..0..3.3..5..0.0..0..7...5...")
+pat(DN, "DETROIT 2026 5 MUTTER LOW", 92, 58, k="X......x..x.....X......x.x......", r=LATE2, h=rep("g.g.g.g.g.g.g.g."), o=st(32, 15, 31, ch="g"),
+    b=bass((0, "0", 7), (7, "0", 3), (10, "A", 6), (16, "0", 7), (23, "0", 2), (25, "B", 7)), glide=True)
+pat(DN, "DETROIT 2026 6 HYPE", 100, 54, k="X..x..x..x..x...X..x..x..x.x.x..", s=BACK, c=BACK, h=rep("o.o.o.o.o.o.o.o."), cr=st(32, 0), p1=st(32, 3, 11, 19, 27, ch="o"),
+    b="0..0..0..0..3...0..0..5..3.3.cc.")
+pat(DN, "DETROIT 2026 7 PITCHED SNARE", 96, 56, k="X..x......x..x..X..x....x.x.....", s=LATE2, h=rep("g.g.g.g.g.g.g.g."), o=st(32, 6, 16, 22),
+    b=bass((0, "0", 3), (3, "0", 7), (10, "3", 3), (13, "5", 3), (16, "0", 3), (19, "0", 5), (24, "c", 2), (26, "0", 6)))
+pat(DN, "DETROIT 2026 8 FLINT BLOWN", 98, 56, k="X..x..x...x..x..X..x..x...xx....", s=st(32, 4, 12, 20, 28, ch="X"), r=st(32, 7, 23, ch="g"), h=rep("g...g...g...g..."),
+    b="0..0..0...0..0..0..0..0...00.c.c")
+pat(DN, "DETROIT 2026 9 FREESTYLE SAMPLE", 98, 54, k="X..x..x...x.....X..x..x...x.x...", c=BACK, p1=rep("x.x.x.x.x.x.x.x."), o=st(32, 14, 30, ch="o"),
+    b=bass((0, "0", 3), (3, "0", 3), (6, "0", 4), (10, "5", 6), (16, "0", 3), (19, "0", 3), (22, "0", 4), (26, "7", 6)))
+pat(DN, "DETROIT 2026 10 RIO GLIDE", 94, 58, k="X......x..x.....X......x..x.....", s=LATE2, h=rep("o.g.o.g.o.g.o.g."), p2=st(32, 11, 27, ch="o"),
+    b=bass((0, "0", 7), (7, "0", 3), (10, "5", 6), (16, "0", 7), (23, "0", 3), (26, "7", 6)), glide=True)
+
+# ---------------- UK Drill (London, 138-146: tresillo hats on 16ths 1, 4, 7 with holes, snare on beat 3 of
+# bar 1 and beat 4 of bar 2, kicks on 1 and the last 8th, gliding 808s, rim ticks, one open hat) ----------------
+UK = "UK Drill"
+UKS = st(32, 8, 28, ch="X")
+pat(UK, "UK DRILL 1 TEMPLATE", 142, k=st(32, 0, 14, 16, 19, 22, 30), s=UKS, h=put(st(32, 0, 3, 6, 16, 19, 22), (15, "g"), (3, "o"), (19, "o")), p1=st(32, 0, 24, 30, ch="o"),
+    b=bass((0, "0", 14), (14, "0", 2), (16, "3", 3), (19, "0", 3), (22, "5", 8), (30, "7", 2)), glide=True)
+pat(UK, "UK DRILL 2 SKIPPY", 140, 52, k=st(32, 0, 10, 14, 16, 19, 22, 30), s=put(UKS, (22, "g")), h=put(st(32, 0, 3, 6, 8, 10, 11, 16, 19, 22, 24, 26, 27), (11, "g"), (27, "g")),
+    r=st(32, 13, 29, ch="o"), b=bass((0, "0", 10), (10, "3", 4), (14, "0", 5), (19, "0", 3), (22, "A", 8), (30, "0", 2)), glide=True)
+pat(UK, "UK DRILL 3 SLIDE", 144, k=st(32, 0, 14, 16, 22, 30), s=UKS, h=put(st(32, 0, 3, 6, 10, 16, 19, 22, 26), (12, "t"), (28, "t")), o=st(32, 20),
+    b=bass((0, "0", 6), (6, "c", 8), (14, "0", 8), (22, "7", 8), (30, "5", 2)), glide=True)
+pat(UK, "UK DRILL 4 DARK KEYS", 140, k=st(32, 0, 14, 16, 19, 30), s=put(UKS, (15, "g"), (31, "g")), h=st(32, 0, 3, 6, 16, 19, 22, 24), p1=st(32, 4, 20, ch="g"),
+    b=bass((0, "0", 14), (14, "B", 2), (16, "0", 3), (19, "0", 11), (30, "3", 2)), glide=True)
+pat(UK, "UK DRILL 5 GARAGE TOUCH", 140, 54, k=st(32, 0, 10, 14, 16, 26, 30), s=UKS, h=put(rep("x..x..x...x..x.."), (13, "o")), r=st(32, 7, 23, ch="o"),
+    b=bass((0, "0", 10), (10, "0", 4), (14, "5", 2), (16, "0", 10), (26, "3", 4), (30, "0", 2)), glide=True)
+pat(UK, "UK DRILL 6 RIPPLE KICKS", 142, k="x.........x.xx..x..x..x.....x.xx", s=UKS, h=st(32, 0, 3, 6, 16, 19, 22), o=st(32, 12),
+    b=bass((0, "0", 10), (10, "0", 6), (16, "3", 6), (22, "0", 6), (28, "7", 4)), glide=True)
+pat(UK, "UK DRILL 7 CINEMATIC", 138, k=st(32, 0, 14, 16, 22), s=UKS, h=st(32, 0, 3, 6, 9, 16, 19, 22, 25), cr=st(32, 0), p2=st(32, 30, ch="o"),
+    b=bass((0, "0", 14), (14, "0", 2), (16, "A", 6), (22, "0", 10)), glide=True)
+pat(UK, "UK DRILL 8 SPLIT SNARE", 144, k=st(32, 0, 14, 16, 19, 22), s=put(st(32, 8, 20, 28, ch="X"), (20, "x")), h=put(st(32, 0, 3, 6, 10, 16, 19, 22, 26), (30, "r")),
+    b=bass((0, "0", 8), (8, "3", 6), (14, "0", 5), (19, "0", 3), (22, "5", 10)), glide=True)
+pat(UK, "UK DRILL 9 RIM WORK", 142, k=st(32, 0, 14, 16, 19, 22, 30), s=UKS, r=rep("..x..x....x..x..", 32), h=st(32, 0, 6, 16, 22),
+    b=bass((0, "0", 14), (14, "0", 2), (16, "0", 3), (19, "3", 3), (22, "5", 10)), glide=True)
+pat(UK, "UK DRILL 10 STRIPPED", 140, k=st(32, 0, 14, 16, 30), s=UKS, h=put(st(32, 0, 3, 6, 16, 19, 22), (15, "g")),
+    b=bass((0, "0", 14), (14, "0", 2), (16, "c", 14), (30, "0", 2)), glide=True)
+
+# ---------------- NY Drill (Brooklyn / Bronx, 140-148: the UK skeleton with heavier kicks and 808s,
+# long slides, sample drill and Jersey club crossovers) ----------------
+NY = "NY Drill"
+pat(NY, "NY DRILL 1 BROOKLYN", 144, k=st(32, 0, 10, 16, 19, 22, 30), s=UKS, h=put(st(32, 0, 3, 6, 8, 10, 12, 16, 19, 22, 24), (6, "t")), o=st(32, 26),
+    b=bass((0, "0", 10), (10, "0", 6), (16, "c", 3), (19, "0", 3), (22, "A", 8), (30, "0", 2)), glide=True)
+pat(NY, "NY DRILL 2 WOO", 146, k=st(32, 0, 3, 10, 16, 19, 22, 28), s=put(UKS, (12, "o")), c=UKS, h=put(st(32, 0, 3, 6, 10, 12, 16, 19, 22, 26), (28, "t")),
+    b=bass((0, "0", 3), (3, "0", 7), (10, "3", 6), (16, "0", 3), (19, "0", 3), (22, "c", 6), (28, "0", 4)), glide=True)
+pat(NY, "NY DRILL 3 SAMPLE DRILL", 142, k=st(32, 0, 10, 14, 16, 22, 26, 30), s=UKS, h=put(st(32, 0, 3, 6, 9, 12, 16, 19, 22, 25), (14, "r")), p1=st(32, 6, 22, ch="o"),
+    b=bass((0, "0", 10), (10, "0", 4), (14, "5", 2), (16, "0", 6), (22, "0", 4), (26, "7", 6)), glide=True)
+pat(NY, "NY DRILL 4 SEXY DRILL", 140, 54, k=st(32, 0, 10, 16, 26), c=UKS, s=st(32, 4, 20, ch="g"), h=rep("x..x..x.x..x..x."), o=st(32, 14, 30, ch="o"),
+    b=bass((0, "0", 10), (10, "3", 6), (16, "5", 10), (26, "3", 6)), glide=True)
+pat(NY, "NY DRILL 5 JERSEY CLUB", 142, k="X..X..X.X..X..X.X..X..X.X.X.X.X.", s=UKS, c=st(32, 4, 12, 20, 28, ch="o"), h=st(32, 0, 3, 6, 16, 19, 22),
+    b=bass((0, "0", 6), (6, "0", 2), (8, "3", 8), (16, "0", 6), (22, "0", 2), (24, "5", 8)))
+pat(NY, "NY DRILL 6 BRONX DARK", 144, k=st(32, 0, 14, 16, 19, 22, 30), s=UKS, h=st(32, 0, 3, 6, 16, 19, 22), r=st(32, 11, 27, ch="o"), p2=st(32, 24, ch="X"),
+    b=bass((0, "0", 14), (14, "B", 2), (16, "0", 3), (19, "0", 3), (22, "C", 8), (30, "0", 2)), glide=True)
+pat(NY, "NY DRILL 7 HEAVY 808", 146, k=st(32, 0, 3, 6, 16, 19, 22, 30), s=UKS, h=put(st(32, 0, 3, 6, 10, 16, 19, 22, 26), (12, "q")),
+    b=bass((0, "0", 3), (3, "0", 3), (6, "c", 10), (16, "0", 3), (19, "0", 3), (22, "7", 8), (30, "c", 2)), glide=True)
+pat(NY, "NY DRILL 8 PIANO", 140, k=st(32, 0, 10, 16, 22, 30), s=put(UKS, (31, "g")), h=st(32, 0, 3, 6, 9, 16, 19, 22, 25, 28), cr=st(32, 0),
+    b=bass((0, "0", 10), (10, "5", 6), (16, "0", 6), (22, "3", 8), (30, "0", 2)), glide=True)
+pat(NY, "NY DRILL 9 ROLL CALL", 144, k=st(32, 0, 10, 16, 19, 22), s=UKS, h=put(st(32, 0, 3, 6, 10, 16, 19, 22), (12, "t"), (14, "t"), (26, "r"), (27, "r")),
+    b=bass((0, "0", 10), (10, "0", 6), (16, "3", 3), (19, "0", 3), (22, "A", 10)), glide=True)
+pat(NY, "NY DRILL 10 BLOCK", 148, k=st(32, 0, 7, 10, 16, 19, 26, 30), s=UKS, c=UKS, h=st(32, 0, 3, 6, 16, 19, 22, 24), p1=st(32, 13, 29, ch="o"), o=st(32, 10),
+    b=bass((0, "0", 7), (7, "0", 3), (10, "7", 6), (16, "0", 3), (19, "0", 7), (26, "5", 4), (30, "0", 2)), glide=True)
+
+# ---------------- UK RnB (2-step garage swing, afroswing, drill-R&B, and live London soul) ----------------
+UR = "UK RnB"
+SHK = rep("ogxgogxgogxgogxg")
+pat(UR, "UK RNB 1 TWO STEP", 132, 62, k="X.........x.....X.........x..x..", s=BACK, h=rep("..x...x...x...x."), p1=SHK)
+pat(UR, "UK RNB 2 GARAGE SWING", 134, 64, k="X.......x.x.....X.........x.....", s=put(BACK, (15, "g")), r=st(32, 7, 23, ch="g"), h=rep("..x...x...x..xx."), p1=SHK)
+pat(UR, "UK RNB 3 AFROSWING", 102, 58, k="X..x..x...x.....X..x..x...x.....", r=rep("..x..x....x..x.."), c=BACK, h=rep("x.x.x.x.x.x.x.x."), p1=SHK)
+pat(UR, "UK RNB 4 AFRO SLOW", 98, 60, k="X.....x...x.....X.....x...x..x..", c=st(32, 4, 12, 20, 28, ch="o"), r=rep("...x..x....x..x."), p2=st(32, 14, 30, ch="o"), h=rep("x.o.x.o.x.o.x.o."),
+    b=bass((0, "0", 6), (6, "0", 4), (10, "5", 6), (16, "0", 6), (22, "0", 4), (26, "3", 6)))
+pat(UR, "UK RNB 5 DRILL RNB", 142, k=st(32, 0, 14, 16, 22), s=st(32, 8, 28, ch="x"), h=st(32, 0, 3, 6, 16, 19, 22), r=st(32, 12, ch="g"),
+    b=bass((0, "0", 14), (14, "0", 2), (16, "3", 6), (22, "5", 10)), glide=True)
+pat(UR, "UK RNB 6 LONDON SOUL", 82, 60, k=phrase("X......x..x.....", "X......x....x..."), r=phrase("....x.......x...", fill="....x..........."),
+    s=bars("." * 16, "." * 16, "." * 16, "............ggoX"), h=phrase("xgogxgogxgogxgog", fill="xgogxgogxgog...."), cr=CRASH4)
+pat(UR, "UK RNB 7 LATE NIGHT", 76, 62, k="X.......x..x....X.......x.......", c=st(32, 8, 24, ch="o"), s=st(32, 8, 24, ch="x"), h=rep("x.xgx.xgx.xgx.xg"), o=st(32, 30, ch="o"),
+    b=bass((0, "0", 8), (8, "5", 3), (11, "3", 5), (16, "0", 8), (24, "7", 8)), glide=True)
+pat(UR, "UK RNB 8 SPEED GARAGE", 130, 58, k="X...X...X...X...X...X...X...X...", s=BACK, o=rep("..x...x...x...x."), p1=SHK, b=bass((2, "0", 2), (6, "0", 2), (10, "3", 2), (14, "5", 2), (18, "0", 2), (22, "0", 2), (26, "7", 2), (30, "5", 2)))
+pat(UR, "UK RNB 9 BEDROOM", 88, 58, k="X......x..x.....X......x....x...", s=BACK, h=rep("x.o.x.o.x.o.x.o."), r=st(32, 14, 30, ch="g"), p2=st(32, 6, 22, ch="g"))
+pat(UR, "UK RNB 10 PIRATE RADIO", 136, 62, k="X.........x..x..X.......x.x.....", s=put(BACK, (7, "g"), (23, "g")), h=rep("..x...x...x...x."), o=st(32, 14, 30), p1=SHK)
+
+# ---------------- live 4-bar additions to the existing acoustic styles ----------------
+pat(N, "NEO SOUL 11 LIVE POCKET", 84, 62, k=phrase("X......x..x.....", "X.....x...x..x..", "X......x..x.....", "X.....x...x....."),
+    s=phrase("....X..g...gX..g", "....X..g.g..X..g", "....X..g...gX..g", "....X..g.g..XgXg"), h=phrase("xgogxgogxgogxgo.", fill="xgogxgogxgog...."), o=phrase("...............o", fill="................"), cr=CRASH4)
+pat(N, "NEO SOUL 12 CROSS STICK", 78, 64, k=phrase("X.......x..x....", "X......x..x....."), r=phrase("....x.......x...", fill="....x..........."), s=phrase("..g......g....g.", fill="..g......g..ggoX"),
+    h=phrase("x.oxx.oxx.oxx.ox", fill="x.oxx.oxx.ox...."), cr=CRASH4)
+pat(N, "NEO SOUL 13 BROKEN TIME", 90, 60, k=phrase("X..x...x..x.....", "X..x.....x..x..."), s=phrase("....X.g...g.X...", "....X.g..g..X.g."),
+    h=phrase("x.x.x.x.x.x.x.x."), p1=phrase("gogogogogogogogo"), cr=CRASH4)
+pat(BB, "BOOM BAP 11 LIVE BREAK", 92, 58, k=phrase("X.x.......x..x..", "X.x....x..x....."), s=phrase("....X..g.g..X...", "....X..g.g..X..g", fill="....X..g.g..XgXX"),
+    h=phrase("x.x.x.x.x.x.x.x."), o=phrase("..............o.", fill="................"), cr=CRASH4)
+pat(BB, "BOOM BAP 12 SP DUST", 90, 62, k=phrase("X......x..x.....", "X......x..x..x.."), s=phrase("....X.......X..."), h=phrase("x.ogx.ogx.ogx.og"), r=phrase("..........g.....", "......g.........g"[:16]))
+pat(BB, "BOOM BAP 13 HARD KNOCK", 94, 56, k=phrase("X......x..X.....", "X.x....x..X....."), s=phrase("....X.......X...", fill="....X.......X.XX"), h=phrase("x...x...x...x..."), p2=phrase("..............o."))
+
+
 from collections import Counter
 cnt = Counter(p["style"] for p in P)
 for st, n in cnt.items():
     if st != D: assert n >= 10, (st, n)
-assert len(cnt) == 29, cnt
+assert len(cnt) == 40, cnt
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)
 VALID = set(".xXogrqt")

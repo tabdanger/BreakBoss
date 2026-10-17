@@ -9,6 +9,8 @@ import Foundation
 // Styles: Tyrone's Danger Patterns plus 10 presets each of Trap, Dark Trap, West Coast, Drill,
 // Amapiano, South African RnB, RnB, 90s RnB, 80s RnB, 80s Pop, 80s Funk, EDM, House, Techno, and the
 // Vintage styles Boom Bap, Jazz, Neo Soul and Soul RnB.
+// Live-drummer styles (written with accents, ghosts and 4-bar fills): Dilla Time, 90s Rap, 70s Soul,
+// 80s Breaks, Rock, plus Alt Trap, Bay Area 2026, Detroit 2026, UK Drill, NY Drill and UK RnB.
 
 struct PatternPreset: Decodable, Equatable {
     let style: String
@@ -50,6 +52,14 @@ struct PatternPreset: Decodable, Equatable {
         case "LA Lyricist": return .westBounce
         case "Soft Soul": return .neoSoul
         case "Houston Queen": return .rnb
+        case "Dilla Time": return .neoSoul
+        case "90s Rap": return .boomBap
+        case "70s Soul": return .funkBreak
+        case "80s Breaks", "Rock": return .heavyBreak
+        case "Alt Trap", "Detroit 2026": return .trapAtlanta
+        case "Bay Area 2026": return .baySlap
+        case "UK Drill", "NY Drill": return .trapMemphis
+        case "UK RnB": return .rnb
         default:
             if name.contains("AFRO") { return .afrobeats }
             if name.contains("BREAK") { return .funkBreak }
