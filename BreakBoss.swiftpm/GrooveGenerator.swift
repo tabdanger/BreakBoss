@@ -280,6 +280,10 @@ enum GrooveGenerator {
             case .tops: p = keep(b, [.hat, .openHat, .perc1, .perc2, .rim, .cymbal])
             case .roll: p = rollUp(style, &rng)
             }
+            // A pattern without those sounds (no hats for the INTRO, say) still plays something:
+            // the breakdown, then the main groove. A pattern never loads silent.
+            if p.events.isEmpty { p = breakdown(a, style) }
+            if p.events.isEmpty { p = a }
             p.name = slot.title
             p = finish(p)
             out.append(p)
@@ -322,6 +326,10 @@ enum GrooveGenerator {
             case .tops: p = keep(a, [.hat, .openHat, .perc1, .perc2, .rim, .cymbal])
             case .roll: p = rollUp(style, &rng)
             }
+            // A pattern without those sounds (no hats for the INTRO, say) still plays something:
+            // the breakdown, then the main groove. A pattern never loads silent.
+            if p.events.isEmpty { p = breakdown(a, style) }
+            if p.events.isEmpty { p = a }
             p.name = slot.title
             p = finishKeepingLength(p)
             out.append(p)

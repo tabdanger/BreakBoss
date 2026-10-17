@@ -1,6 +1,7 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import SwiftUI
 import UniformTypeIdentifiers
+import UIKit
 
 // MARK: - BreakBoss DRUM SEQUENCER (the piano-keys button on the faceplate)
 //
@@ -179,11 +180,11 @@ struct SequencerView: View {
     @State private var undoStack: [PatternData] = []
     @State private var redoStack: [PatternData] = []
     @State private var rememberedAt: Date?
-    /// Hold a track header: the tracks wiggle and can be dragged up and down (DONE ends it).
-    @State private var reordering = false
-    @State private var wiggle = false
+    /// The grip left of a track header: drag it and the track moves up or down the rack, the others
+    /// making room as it passes (no hold, no wiggle). movingTop is where the dragged track sits.
     @State private var movingPad: Int?
-    @State private var movingDY: CGFloat = 0
+    @State private var movingTop: CGFloat = 0
+    @State private var movingFrom: CGFloat = 0
     @State private var work: PatternData?
     @State private var drag: GridDrag = .none
     @State private var lastVelocity: Float = 0.78
@@ -357,6 +358,8 @@ struct SequencerView: View {
         static let tempoSync: [Double] = [580, 245, 722, 279], followDAW: [Double] = [728, 245, 870, 279]
         static let pageBack: [Double] = [400, 246, 436, 280], pageText: [Double] = [436, 248, 534, 278], pageForward: [Double] = [534, 246, 572, 280]
         static let leftPanel: [Double] = [33, 300, 285, 693]
+        /// The grips sit in the strip between the SOUNDS panel and the track headers.
+        static let gripX0: Double = 285
         static let rackX0: Double = 298, rackX1: Double = 534, gridX0: Double = 549, gridX1: Double = 1445, panelX1: Double = 1495
         static let rowsY0: Double = 341, rowsY1: Double = 682, rowH: Double = 56.5, labelsY: Double = 325
         static let power: [Double] = [156, 715, 213, 772]
@@ -915,24 +918,14 @@ struct SequencerView: View {
         let contentH = max((L.last.map { $0.y + $0.height } ?? 0) + (channels.count < Pad.count ? rowH : 0) + 12 * s, (A.rowsY1 - A.rowsY0) * s)
         // beat numbers
         ruler(width: gridW).place([A.gridX0, A.labelsY - 14, A.gridX1, A.rowsY0 - 1], s)
-        if reordering {
-            Button { stopReordering() } label: {
-                Text("DONE · DRAG TRACKS UP OR DOWN").font(.system(size: 11 * s, weight: .bold)).foregroundColor(.black)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Capsule().fill(noteColor))
-            }
-            .buttonStyle(SeqPress())
-            .accessibilityIdentifier("reorderDone")
-            .place([A.rackX0 + 4, A.labelsY - 16, A.rackX1 - 4, A.rowsY0 - 3], s)
-        }
         // the rows: rack column and the grid, scrolling together
         ScrollViewReader { proxy in
         ScrollView(.vertical, showsIndicators: false) {
             ZStack(alignment: .topLeading) {
-                Color.clear.frame(width: (A.panelX1 - A.rackX0) * s, height: contentH).id("rackTop")
-                rackColumn(L, rowH: rowH, s: s).frame(width: (A.rackX1 - A.rackX0) * s, height: contentH, alignment: .top)
+                Color.clear.frame(width: (A.panelX1 - A.gripX0) * s, height: contentH).id("rackTop")
+                rackColumn(L, rowH: rowH, s: s).frame(width: (A.rackX1 - A.gripX0) * s, height: contentH, alignment: .top)
                 grid(L, width: gridW, rowH: rowH).frame(width: gridW, height: contentH)
-                    .offset(x: (A.gridX0 - A.rackX0) * s)
+                    .offset(x: (A.gridX0 - A.gripX0) * s)
                 // the dice at the end of every track: that track's steps only
                 ForEach(L, id: \.channel.id) { l in
                     // dice: new steps for this track only; ✕: clear this track in one tap
@@ -950,14 +943,14 @@ struct SequencerView: View {
                         }
                         .buttonStyle(SeqPress())
                     }
-                    .offset(x: (A.gridX1 + 10 - A.rackX0) * s, y: l.y + (min(l.height, rowH) - 51 * s) / 2)
+                    .offset(x: (A.gridX1 + 10 - A.gripX0) * s, y: l.y + (min(l.height, rowH) - 51 * s) / 2)
                 }
             }
         }
         .onAppear { proxy.scrollTo("rackTop", anchor: .top) }      // the first row at the top, always
         }
-        .frame(width: (A.panelX1 - A.rackX0) * s, height: (A.rowsY1 - A.rowsY0) * s)
-        .position(x: (A.rackX0 + A.panelX1) / 2 * s, y: (A.rowsY0 + A.rowsY1) / 2 * s)
+        .frame(width: (A.panelX1 - A.gripX0) * s, height: (A.rowsY1 - A.rowsY0) * s)
+        .position(x: (A.gripX0 + A.panelX1) / 2 * s, y: (A.rowsY0 + A.rowsY1) / 2 * s)
         .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: $rackTargeted) { providers in dropOnRack(providers, channel: nil) }
         if rackTargeted {
             RoundedRectangle(cornerRadius: 8 * s).stroke(S.green, lineWidth: 2 * s).place([A.rackX0, A.rowsY0 - 4, A.rackX1, A.rowsY1], s).allowsHitTesting(false)
@@ -1039,12 +1032,15 @@ struct SequencerView: View {
     private func rackColumn(_ L: [RowLayout], rowH: CGFloat, s: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
             ForEach(L, id: \.channel.id) { l in
-                channelRow(l, L, rowH: rowH, s: s)
-                    .rotationEffect(.degrees(reordering && movingPad != l.channel.pad ? (wiggle ? 0.8 : -0.8) * (l.channel.pad % 2 == 0 ? 1 : -1) : 0))
-                    .scaleEffect(movingPad == l.channel.pad ? 1.04 : 1)
-                    .shadow(color: .black.opacity(movingPad == l.channel.pad ? 0.6 : 0), radius: 8 * s, y: 4 * s)
-                    .offset(y: l.y + (movingPad == l.channel.pad ? movingDY : 0))
-                    .zIndex(movingPad == l.channel.pad ? 1 : 0)
+                let moving = movingPad == l.channel.pad
+                HStack(alignment: .top, spacing: 0) {
+                    trackGrip(l, s: s).frame(width: (A.rackX0 - A.gripX0) * s, height: l.bandH)
+                    channelRow(l, rowH: rowH, s: s)
+                }
+                .scaleEffect(moving ? 1.03 : 1)
+                .shadow(color: .black.opacity(moving ? 0.6 : 0), radius: 8 * s, y: 4 * s)
+                .offset(y: moving ? movingTop : l.y)
+                .zIndex(moving ? 1 : 0)
             }
             if channels.count < Pad.count {
                 let y = (L.last.map { $0.y + $0.height } ?? 0)
@@ -1052,20 +1048,9 @@ struct SequencerView: View {
                     Image(systemName: "plus.circle.dashed").font(.system(size: 16 * s)).foregroundColor(rackTargeted ? S.green : Color(white: 0.45))
                     Text(rackTargeted ? "DROP FOR A NEW CHANNEL" : "DROP A SOUND HERE").font(.system(size: 8 * s, weight: .semibold)).foregroundColor(rackTargeted ? S.green : Color(white: 0.45))
                 }
-                .frame(width: (A.rackX1 - A.rackX0) * s, height: rowH).offset(y: y)
+                .frame(width: (A.rackX1 - A.rackX0) * s, height: rowH).offset(x: (A.rackX0 - A.gripX0) * s, y: y)
             }
         }
-    }
-
-    private func startReordering() {
-        reordering = true
-        wiggle = false
-        withAnimation(.easeInOut(duration: 0.13).repeatForever(autoreverses: true)) { wiggle = true }
-    }
-
-    private func stopReordering() {
-        withAnimation(.easeOut(duration: 0.15)) { reordering = false; wiggle = false }
-        movingPad = nil; movingDY = 0
     }
 
     /// Where a dragged track lands: after every other track whose middle is above its middle.
@@ -1073,9 +1058,58 @@ struct SequencerView: View {
         L.filter { $0.channel.pad != pad && $0.y + $0.height / 2 < centre }.count
     }
 
-    private func channelRow(_ l: RowLayout, _ L: [RowLayout], rowH: CGFloat, s: CGFloat) -> some View {
+    /// The pull tab left of a track header: brushed silver with three grooves, like the reorder bars
+    /// of an iPad list. Drag it up or down and the track goes with your finger straight away; the
+    /// other tracks (and their steps) slide out of its way, and it settles where you let go.
+    private func trackGrip(_ l: RowLayout, s: CGFloat) -> some View {
+        let pad = l.channel.pad
+        let moving = movingPad == pad
+        return ZStack {
+            RoundedRectangle(cornerRadius: 3 * s)
+                .fill(LinearGradient(colors: [Color(white: 0.93), Color(white: 0.72), Color(white: 0.84)], startPoint: .leading, endPoint: .trailing))
+                .overlay(RoundedRectangle(cornerRadius: 3 * s).stroke(moving ? noteColor : Color(white: 0.45), lineWidth: (moving ? 1.4 : 0.8) * s))
+                .shadow(color: moving ? noteColor.opacity(0.7) : .black.opacity(0.35), radius: (moving ? 4 : 1.5) * s, y: moving ? 0 : 1 * s)
+                .frame(width: 11 * s, height: 40 * s)
+            VStack(spacing: 3.5 * s) {
+                ForEach(0..<3, id: \.self) { _ in
+                    VStack(spacing: 0) {
+                        Rectangle().fill(Color(white: 0.3)).frame(height: 1.2 * s)
+                        Rectangle().fill(Color.white.opacity(0.85)).frame(height: 0.8 * s)
+                    }
+                    .frame(width: 7 * s)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
+            .onChanged { g in
+                if movingPad != pad {
+                    movingPad = pad; movingFrom = l.y; movingTop = l.y
+                    selectedID = l.channel.id
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                }
+                movingTop = movingFrom + g.translation.height
+                // the others make room as soon as the track passes their middle
+                let to = dropIndex(pad: pad, centre: movingTop + l.bandH / 2, layouts(rowH: A.rowH * s))   // where the tracks are now
+                if to != controller.rackOrder.firstIndex(of: pad) {
+                    UISelectionFeedbackGenerator().selectionChanged()
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) { controller.moveRackChannel(pad: pad, to: to) }
+                }
+            }
+            .onEnded { _ in
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { movingPad = nil }
+            })
+        .accessibilityElement()
+        .accessibilityLabel("Move \(l.channel.name) up or down")
+        .accessibilityIdentifier("trackGrip\(pad)")
+    }
+
+    private func channelRow(_ l: RowLayout, rowH: CGFloat, s: CGFloat) -> some View {
         let ch = l.channel, pad = ch.pad
-        let muted = controller.mutedPads[pad]
+        // a SOLO on another track silences this one too: its lamp goes dark the same as a mute
+        let soloedOut = controller.soloPads.contains(true) && !controller.soloPads[pad]
+        let muted = controller.mutedPads[pad] || soloedOut
         let isSel = selectedID == ch.id
         let ps = controller.state.pads[pad]
         func set(_ change: (inout PadSettings) -> Void) { var v = controller.state.pads[pad]; change(&v); controller.setPadSettings(pad, v) }
@@ -1101,39 +1135,15 @@ struct SequencerView: View {
             Text(ch.name).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? noteColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 92 * s, height: 45 * s, alignment: .leading).offset(x: X(335), y: 5 * s)
                 .allowsHitTesting(false)
-            if reordering {
-                // wiggling: drag the track up or down; ⋯ is its menu
-                Color.clear.contentShape(Rectangle()).frame(width: 240 * s, height: rowH)
-                    .highPriorityGesture(DragGesture(minimumDistance: 2, coordinateSpace: .global)
-                        .onChanged { g in movingPad = pad; movingDY = g.translation.height }
-                        .onEnded { g in
-                            let to = dropIndex(pad: pad, centre: l.y + l.bandH / 2 + g.translation.height, L)
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                controller.moveRackChannel(pad: pad, to: to)
-                                movingPad = nil; movingDY = 0
-                            }
-                        })
-                    .accessibilityElement().accessibilityLabel("Drag \(ch.name) up or down")
-                    .accessibilityIdentifier("trackMove\(pad)")
-                Image(systemName: "ellipsis.circle.fill").font(.system(size: 20 * s)).foregroundColor(Color(white: 0.85))
-                    .frame(width: 34 * s, height: 34 * s).contentShape(Rectangle())
-                    .bbMenu(title: ch.name, width: 270) { channelMenu(ch) }
-                    .offset(x: X(428), y: 11 * s)
-                Image(systemName: "line.3.horizontal").font(.system(size: 16 * s, weight: .semibold)).foregroundColor(Color(white: 0.7))
-                    .frame(width: 30 * s, height: 30 * s).offset(x: X(466), y: 13 * s).allowsHitTesting(false)
-            } else {
-                // the oval: tap selects the track, hold makes the tracks wiggle so you can drag them
-                Color.clear.contentShape(Capsule()).frame(width: 105 * s, height: 45 * s).offset(x: X(321), y: 5 * s)
-                    .onTapGesture { selectedID = ch.id }
-                    .onLongPressGesture(minimumDuration: 0.45) { selectedID = ch.id; startReordering() }
-                    .accessibilityElement().accessibilityAddTraits(.isButton).accessibilityLabel("Hold to move tracks")
-                    .accessibilityIdentifier("trackHeader\(pad)")
-                ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 30 * s, height: 30 * s).offset(x: X(425), y: 13 * s)
-                ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 30 * s, height: 30 * s).offset(x: X(463), y: 13 * s)
-            }
+            // the oval: tap selects the track, hold for its menu (the grip on its left moves it)
+            Color.clear.contentShape(Capsule()).frame(width: 105 * s, height: 45 * s).offset(x: X(321), y: 5 * s)
+                .bbLongPressMenu(title: ch.name, width: 270, tap: { selectedID = ch.id }) { channelMenu(ch) }
+                .accessibilityIdentifier("trackHeader\(pad)")
+            ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 30 * s, height: 30 * s).offset(x: X(425), y: 13 * s)
+            ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 30 * s, height: 30 * s).offset(x: X(463), y: 13 * s)
             // the lamp: on / off
             if muted { Circle().fill(Color(white: 0.12)).frame(width: 9 * s, height: 9 * s).offset(x: X(504.5), y: 23.5 * s).allowsHitTesting(false) }
-            Button { controller.toggleMute(pad) } label: { Color.clear.frame(width: 22 * s, height: 30 * s).contentShape(Rectangle()) }
+            Button { if soloedOut { controller.clearSolos() } else { controller.toggleMute(pad) } } label: { Color.clear.frame(width: 22 * s, height: 30 * s).contentShape(Rectangle()) }
                 .buttonStyle(SeqPress()).offset(x: X(498), y: 13 * s)
             // the arrow: opens and closes this track's VELOCITY graph (or its PITCH piano roll) under its steps
             let isOpen = openID == ch.id
@@ -1954,7 +1964,7 @@ struct SequencerView: View {
             items.append(.header(style))
             for p in PatternBank.presets(in: style) {
                 items.append(BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
-                                             checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p); selection = [] })
+                                             checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p); loop = 0; selection = [] })
             }
         }
         if !controller.userPresets.isEmpty {
@@ -1998,7 +2008,7 @@ struct SequencerView: View {
         let all = PatternBank.all
         guard !all.isEmpty else { return }
         let i = all.firstIndex { $0.name == controller.state.presetName } ?? -1
-        controller.loadPatternPreset(all[(i + step + all.count) % all.count]); selection = []
+        controller.loadPatternPreset(all[(i + step + all.count) % all.count]); loop = 0; selection = []
     }
 
     private func duplicate() {

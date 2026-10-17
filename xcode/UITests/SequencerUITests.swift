@@ -141,21 +141,16 @@ final class SequencerUITests: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()   // close the panel
         sleep(1)
 
-        // hold a track header: the tracks wiggle; drag the first one down two places, then DONE
+        // drag the grip left of the first track down two places: it moves straight away, no hold
         let kickY = app.buttons["trackArrow0"].frame.midY
-        any("trackHeader0").press(forDuration: 1.0)
-        XCTAssertTrue(app.buttons["reorderDone"].waitForExistence(timeout: 3), "holding a track header starts moving tracks")
-        snap("tracks-wiggle")
-        let handle = any("trackMove0")
+        let grip = any("trackGrip0")
+        XCTAssertTrue(grip.exists, "every track has a grip on its left")
         let rowH = app.buttons["trackArrow1"].frame.midY - kickY
-        handle.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.5))
-            .press(forDuration: 0.2, thenDragTo: handle.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.5)).withOffset(CGVector(dx: 0, dy: rowH * 2.2)))
+        grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .press(forDuration: 0.05, thenDragTo: grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: rowH * 2.2)))
         sleep(1)
         XCTAssertGreaterThan(app.buttons["trackArrow0"].frame.midY, kickY + rowH, "the dragged track moved down the rack")
         snap("track-moved")
-        app.buttons["reorderDone"].tap()
-        sleep(1)
-        XCTAssertFalse(app.buttons["reorderDone"].exists, "DONE stops moving tracks")
 
         // slide the platinum knob to the right: back to Face 1
         let slider = any("faceSlider")
