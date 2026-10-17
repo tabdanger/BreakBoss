@@ -18,8 +18,8 @@ PACKAGE = os.path.join(PACKAGE_DIR, "Package.swift")
 EXTRA = os.path.join(PACKAGE_DIR, "Info.plist")
 OUT = os.path.join(ROOT, "xcode", "build")
 
-# Files only the standalone app uses (its entry point, audio / MIDI hardware, the self-test).
-APP_ONLY = {"BreakBossApp.swift", "AppAudioHost.swift", "KnockSelfTest.swift"}
+# Files only the standalone app uses (its entry point, audio / MIDI hardware, the self-test, crash catching).
+APP_ONLY = {"BreakBossApp.swift", "AppAudioHost.swift", "KnockSelfTest.swift", "BugCatcher.swift"}
 
 
 def package_value(name):
