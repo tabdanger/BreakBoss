@@ -72,7 +72,7 @@ struct StockSampleLibrary {
     /// All file names are relative basenames in the manifest's directory. Audio decoding and
     /// per-file failures are handled off the main thread by the normal kit loader.
     static func load(manifestURL: URL, knownKitIDs: Set<String>, padCount: Int) throws -> StockSampleLibrary {
-        let maxBytes = 256 * 1024
+        let maxBytes = 1024 * 1024  // 362 kits x 12 pads is about 400 KB
         guard let size = try? manifestURL.resourceValues(forKeys: [.fileSizeKey]).fileSize else { throw ManifestError.invalid }
         guard size <= maxBytes else { throw ManifestError.tooLarge }
         let data: Data

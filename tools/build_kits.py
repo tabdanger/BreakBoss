@@ -193,7 +193,7 @@ def main():
     with open(os.path.join(STOCK, "manifest.json"), "w") as out:
         # "sounds": the whole library (the sound menu lists them all, even those in no kit)
         sounds = [{"file": x["file"], "name": x["name"]} for x in SOUNDS]
-        json.dump({"version": 1, "assignments": assignments, "sounds": sounds}, out, indent=1)
+        json.dump({"version": 1, "assignments": assignments, "sounds": sounds}, out, separators=(",", ":"))
     ids = [k[0] for k in kits]
     assert len(set(ids)) == len(ids) and len({k[1] for k in kits}) == len(kits), "kit ids and names are unique"
     for mode in kit_catalog.MODE_LIKES:
