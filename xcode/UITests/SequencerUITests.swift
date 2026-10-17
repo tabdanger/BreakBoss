@@ -101,5 +101,16 @@ final class SequencerUITests: XCTestCase {
         chip.tap()
         XCTAssertTrue(app.staticTexts["TEMPO"].waitForExistence(timeout: 3), "a tap on the BPM chip opens the tempo panel")
         snap("tempo-panel")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()   // close the panel
+        sleep(1)
+
+        // slide the platinum knob to the right: back to Face 1
+        let slider = any("faceSlider")
+        XCTAssertTrue(slider.exists, "there is the Face 1 slider")
+        slider.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+            .press(forDuration: 0.1, thenDragTo: slider.coordinate(withNormalizedOffset: CGVector(dx: 1.0, dy: 0.5)))
+        sleep(2)
+        XCTAssertFalse(arrow.exists, "sliding right goes back to Face 1")
+        snap("back-to-face-1")
     }
 }

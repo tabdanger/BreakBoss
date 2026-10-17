@@ -279,7 +279,6 @@ struct SequencerView: View {
         static let leftPanel: [Double] = [33, 300, 285, 693]
         static let rackX0: Double = 298, rackX1: Double = 534, gridX0: Double = 549, gridX1: Double = 1445, panelX1: Double = 1495
         static let rowsY0: Double = 341, rowsY1: Double = 682, rowH: Double = 56.5, labelsY: Double = 325
-        static let padsButton: [Double] = [97, 725, 137, 760], gridButton: [Double] = [47, 727, 87, 760]
         static let drumTrack: [Double] = [158, 715, 348, 768], drumCircle: [Double] = [164, 719, 212, 767]
         static let patternBack: [Double] = [602, 732, 640, 772], patternForward: [Double] = [640, 732, 677, 772], patternChip: [Double] = [677, 732, 841, 772]
         static let kitBack: [Double] = [889, 732, 927, 772], kitForward: [Double] = [927, 732, 964, 772], kitChip: [Double] = [964, 732, 1129, 772]
@@ -1557,9 +1556,8 @@ struct SequencerView: View {
 
     @ViewBuilder private func footer(_ s: CGFloat) -> some View {
         // pads / sequencer switch: the pad button goes back to the faceplate
-        Image("SeqSwitchBox").resizable().place([38, 715, 147, 772], s).allowsHitTesting(false)
-        SeqButton("SeqBtnGrid", corner: 6, scale: s) { }.place(A.gridButton, s)
-        SeqButton("SeqBtnPads", corner: 6, scale: s) { dismiss() }.place(A.padsButton, s)
+        // the way back to Face 1: slide the platinum knob (the sequencer's 9 squares) to the right
+        FaceSlider(scale: s, color: noteColor) { dismiss() }.place([38, 715, 147, 772], s)
         // Drum Track: MPC-style pad recording
         SeqButton("SeqDrumTrack", lit: controller.recording ? S.red : nil, corner: 12, scale: s, action: { controller.toggleRecordPads(loop: loop) }) {
             if controller.recording {
