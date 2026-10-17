@@ -335,6 +335,10 @@ final class KnockEngine {
         for p in 0..<Pad.count where p != bass && midiOutChannel[p] == Int16(channel) && Int(midiOutNote[p]) == note {
             return (p, 0)
         }
+        // A pad controller on the GM drum channel (an MPK Mini's pads send notes 36-43 on
+        // channel 10 out of the box): a note on the live pad map plays its mapped pad, even
+        // though channel 10 also belongs to pad 10 in the multi-out layout.
+        if channel == 9 && livePad(note) != nil { return nil }
         if midiOutChannel[bass] == Int16(channel) && Pad.bassNoteRange.contains(note) {
             return (bass, note - Pad.bassRootNote)
         }
