@@ -1167,7 +1167,7 @@ enum KnockSelfTest {
         check(loose.events.map { $0.tick }.sorted() == [0, 24], "drum roll: quantize (and wrap at the end)")
         let rec = PatternEdit.addRecorded(PatternData(name: "R", lengthTicks: bar, events: []), pad: 2, tick: 47, velocity: 0.6, semis: 0, snap: step)
         check(rec.events.first?.tick == 48, "drum roll: recorded hits snap to the grid")
-        // Channel long-press menu: fill every N.
+        // Channel menu (two-finger tap): fill every N.
         let filled = PatternEdit.fill(p, pad: Pad.hat.rawValue, every: PatternData.ppq, velocity: 0.7)
         check(filled.events.filter { Int($0.pad) == Pad.hat.rawValue }.map { $0.tick } == [0, 96, 192, 288, 384, 480, 576, 672],
               "drum roll: fill every 1/4 puts a hit on every beat")
@@ -1595,6 +1595,7 @@ enum KnockSelfTest {
         var unsynced = source
         unsynced.values[KParam.tempoSync.id] = 0
         if let first = presets.first { check(first.applying(to: unsynced).bpm == first.bpm, "a preset sets its tempo when not synced") }
+        if let first = presets.first { check(first.applying(to: source, hosted: false).bpm == first.bpm, "standalone: a pattern brings its tempo even with TEMPO SYNC on") }
         let old = try? JSONDecoder().decode(KnockState.self, from: encoder.encode(KnockState()))
         check(old?.patternStyle == nil && old?.basePattern == nil, "older saves load and follow their kit's patterns")
         // Randomize stays in style and only touches what it should.

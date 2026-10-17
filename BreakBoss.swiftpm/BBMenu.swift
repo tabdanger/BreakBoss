@@ -69,11 +69,11 @@ extension View {
         modifier(BBMenuTrigger(title: title, width: width, items: items, custom: nil))
     }
 
-    /// Opens a BreakBoss menu on a long press (or a right-click with a trackpad or mouse);
-    /// a normal tap still runs `tap`.
-    func bbLongPressMenu(title: String? = nil, width: CGFloat = 280, tap: @escaping () -> Void,
+    /// Opens a BreakBoss menu on a two-finger tap (or a right-click with a trackpad or mouse);
+    /// a normal tap still runs `tap`. Holding does nothing (Tyrone, Oct 17: no hold menus).
+    func bbTwoFingerMenu(title: String? = nil, width: CGFloat = 280, tap: @escaping () -> Void,
                          items: @escaping () -> [BBMenuItem]) -> some View {
-        modifier(BBMenuTrigger(title: title, width: width, items: items, custom: nil, tap: tap, longPress: true))
+        modifier(BBMenuTrigger(title: title, width: width, items: items, custom: nil, tap: tap, twoFinger: true))
     }
 
     /// A menu trigger placed over a painted button (faceplate pixels): the menu goes on BEFORE the
@@ -100,7 +100,7 @@ private struct BBMenuTrigger: ViewModifier {
     let items: () -> [BBMenuItem]
     let custom: (() -> AnyView)?
     var tap: (() -> Void)? = nil
-    var longPress = false
+    var twoFinger = false
     @State private var frame: CGRect = .zero
 
     private func open() {
@@ -115,12 +115,11 @@ private struct BBMenuTrigger: ViewModifier {
                     .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
             })
             .contentShape(Rectangle())
-        if longPress {
-            // A real button: tap runs `tap`, holding opens the menu (works inside a scrolling rack too).
+        if twoFinger {
+            // A real button: one finger runs `tap`, two fingers (or a right-click) open the menu.
             Button(action: { tap?() }) { measured }
                 .buttonStyle(SeqPress())
-                .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in open() })
-                .background(SecondaryClickCatcher { open() })
+                .background(TwoFingerTapCatcher { open() })
         } else {
             // A real button: a press-and-hold DragGesture next to onTapGesture swallowed the taps on
             // newer iPadOS, so none of these menus opened. The button goes in while your finger is on it.
@@ -145,23 +144,61 @@ struct PressGlow: View {
     var body: some View { Color.clear.contentShape(Rectangle()) }
 }
 
-/// A trackpad / mouse right-click on the view (iPadOS pointer), for the long-press menus.
-private struct SecondaryClickCatcher: UIViewRepresentable {
+/// A two-finger tap (or a trackpad / mouse right-click) on the view. SwiftUI has no touch count
+/// on a tap, so the recognizers sit on the window, where every finger arrives whatever is on top
+/// (the button, the scrolling rack), and only fire when the fingers land on this view.
+private struct TwoFingerTapCatcher: UIViewRepresentable {
     let action: () -> Void
-    func makeCoordinator() -> Coordinator { Coordinator(action: action) }
-    func makeUIView(context: Context) -> UIView {
-        let v = UIView()
+    func makeUIView(context: Context) -> CatcherView {
+        let v = CatcherView()
         v.backgroundColor = .clear
-        let g = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.fire))
-        g.buttonMaskRequired = .secondary
-        v.addGestureRecognizer(g)
+        v.isUserInteractionEnabled = false     // never takes a touch from the button it sits under
+        v.action = action
         return v
     }
-    func updateUIView(_ uiView: UIView, context: Context) { context.coordinator.action = action }
-    final class Coordinator: NSObject {
-        var action: () -> Void
-        init(action: @escaping () -> Void) { self.action = action }
-        @objc func fire() { action() }
+    func updateUIView(_ uiView: CatcherView, context: Context) { uiView.action = action }
+
+    final class CatcherView: UIView, UIGestureRecognizerDelegate {
+        var action: (() -> Void)?
+        private var recognizers: [UIGestureRecognizer] = []
+        private weak var host: UIWindow?
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            recognizers.forEach { host?.removeGestureRecognizer($0) }
+            recognizers = []
+            host = window
+            guard let window else { return }
+            let two = UITapGestureRecognizer(target: self, action: #selector(fire(_:)))
+            two.numberOfTouchesRequired = 2
+            let right = UITapGestureRecognizer(target: self, action: #selector(fire(_:)))
+            right.buttonMaskRequired = .secondary
+            for g in [two, right] {
+                g.cancelsTouchesInView = false
+                g.delaysTouchesEnded = false
+                g.delegate = self
+                window.addGestureRecognizer(g)
+            }
+            recognizers = [two, right]
+        }
+
+        @objc private func fire(_ g: UITapGestureRecognizer) {
+            guard g.state == .ended, isOnScreen(g) else { return }
+            action?()
+        }
+
+        /// The fingers' middle is on this view and it isn't scrolled out of sight.
+        private func isOnScreen(_ g: UIGestureRecognizer) -> Bool {
+            guard !isHidden, bounds.insetBy(dx: -10, dy: -6).contains(g.location(in: self)) else { return false }
+            var v = superview
+            while let s = v {
+                if s.clipsToBounds && !s.bounds.contains(g.location(in: s)) { return false }
+                v = s.superview
+            }
+            return true
+        }
+
+        func gestureRecognizer(_ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
     }
 }
 
