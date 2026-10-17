@@ -8,9 +8,11 @@ import Foundation
 //          rolled-off top like an old sampler.
 // TEXTURE  the same knobs, plus a downsampled (lower sample rate, 12-bit) sound, instability
 //          (tape wow and flutter, and the warp below), a tempo-synced delay and a gated reverb.
-//          WARP is part of the algorithm, not a knob: every bar or two it rolls a new scene (how
-//          far the pitch swings up and down, how fast it wobbles, its shape, how hard the
-//          resonant filter sweeps against it), and some 1/16s stutter. INSTABILITY sets how much.
+//          WARP: every bar or two it rolls a new scene (how far the pitch swings up and down, how
+//          fast it wobbles, its shape, how hard the resonant filter sweeps against it). GLITCH: some
+//          1/16s stutter. Oct 17 (Face 2's Texture knobs): WARP and GLITCH have their own knobs
+//          (they used to follow INSTABILITY), the reverb has DECAY and PRE-DELAY, and a double tap on
+//          DELAY frees it from the tempo (300 ms) or locks it back to a dotted 1/8.
 //
 // BOOST    low-end and level push into the chain.
 // PUNCH    transient shaper: louder attacks, a little less sustain.
@@ -196,6 +198,11 @@ final class BusProcessor {
         var delay: Float = 0.32
         var reverb: Float = 0.5
         var drive: Float = 0
+        var warp: Float = 0.5
+        var glitch: Float = 0.5
+        var reverbDecay: Float = 0.5
+        var reverbPredelay: Float = 0
+        var delaySync = true
         /// The transport's beat at this block's first sample, while playing (stutters land on its 1/16s).
         var beat: Double?
     }
@@ -216,18 +223,22 @@ final class BusProcessor {
         let gritMix = min(1, gritAmount * 2.2)
         let shineAmount = s.shine * 0.55
         let noiseLevel = s.noise * s.noise * 0.06
-        // Texture delay: dotted 1/8 at the current tempo
+        // Texture delay: dotted 1/8 at the current tempo, or 300 ms when it's freed from the tempo
         let beat = 60.0 / max(s.tempo, 40)
-        delaySamples.set(Float(min(Double(delaySize - 4), beat * 0.75 * Double(sr))))
+        let delaySeconds = s.delaySync ? beat * 0.75 : 0.3
+        delaySamples.set(Float(min(Double(delaySize - 4), delaySeconds * Double(sr))))
+        verb.set(decay: s.reverbDecay, predelay: s.reverbPredelay)
         let dsStep = texture ? min(1, (sr * powf(18_900 / sr, s.resample * 2)) / sr) : 1   // hold-and-sample down to ~19 kHz
         let wowDepth: Float = sr * 0.0022 * s.instability, flutterDepth: Float = sr * 0.00024 * s.instability
         let quantization = powf(2, 15 - s.resample * 8)
-        // WARP follows INSTABILITY: more instability, wider swings, more resonance, more stutters.
-        let warp = texture ? s.instability.clamped(0, 1) : 0
-        if warp <= 0.001 { warpMix.set(0); stutterOn = false; sceneSteps = 0 }
+        // WARP: wider swings and more resonance; GLITCH: more stutters.
+        let warp = texture ? s.warp.clamped(0, 1) : 0
+        let glitch = texture ? s.glitch.clamped(0, 1) : 0
+        if warp <= 0.001 { warpMix.set(0); sceneSteps = 0 }
+        if glitch <= 0.001 { stutterOn = false }
         let beatsPerSample = max(s.tempo, 40) / 60 / Double(sr)
         let warpQ = 0.8 + warp * 3
-        let stutterChance = warp * warp * 0.4
+        let stutterChance = glitch * glitch * 0.4
         if let b = s.beat { glitchBeat = b }
 
         for i in 0..<count {
@@ -320,7 +331,7 @@ final class BusProcessor {
                         sceneSteps -= 1
                         if sceneSteps <= 0 { rollScene(warp) }
                     }
-                    stutterOn = warp > 0.001 && glitchRNG.unit() < stutterChance
+                    stutterOn = glitch > 0.001 && glitchRNG.unit() < stutterChance
                     if stutterOn {
                         let pick = glitchRNG.int(4)
                         let fraction = pick < 2 ? 0.125 : (pick == 2 ? 1.0 / 12 : 0.0625)   // of a beat
@@ -466,7 +477,8 @@ final class BusProcessor {
 }
 
 /// A small reverb (four combs, two all-passes per side) whose output is gated: it opens on each
-/// hit, holds about 170 ms, then shuts quickly. The 80s "gated" sound, used by TEXTURE.
+/// hit, holds (DECAY: about 60 to 600 ms, 170 ms in the middle), then shuts quickly. The 80s
+/// "gated" sound, used by TEXTURE. PRE-DELAY (0 to 120 ms) holds the hit back before it reaches the room.
 struct GatedReverb {
     private var combs: [[Float]] = []
     private var combIndex = [Int](repeating: 0, count: 8)
@@ -478,6 +490,11 @@ struct GatedReverb {
     private var gate: Float = 0
     private var holdSamples = 8_000
     private var closeCoef: Float = 0.999
+    private var feedback: Float = 0.82
+    private var sr: Float = 48_000
+    private var pre: [Float] = []
+    private var preIndex = 0
+    private var preSamples = 0
 
     mutating func prepare(sampleRate sr: Float) {
         let combMs: [Float] = [25.3, 26.9, 28.9, 30.7, 25.9, 27.7, 29.5, 31.9]
@@ -487,13 +504,28 @@ struct GatedReverb {
         combIndex = [Int](repeating: 0, count: 8)
         apIndex = [Int](repeating: 0, count: 4)
         env.set(attackMs: 1, releaseMs: 40, sr: sr)
+        self.sr = sr
         holdSamples = Int(0.17 * sr)
         closeCoef = expf(-1 / (0.025 * sr))
+        pre = [Float](repeating: 0, count: max(2, Int(0.125 * sr)))
+        preIndex = 0
+    }
+
+    /// DECAY and PRE-DELAY knobs, 0...1. Decay 0.5 is the original sound (170 ms hold, 0.82 feedback).
+    mutating func set(decay: Float, predelay: Float) {
+        let d = decay.clamped(0, 1)
+        holdSamples = Int(sr * 0.06 * powf(10, d * 1.0))                 // 60 ms ... 600 ms (190 at 0.5)
+        if abs(d - 0.5) < 0.01 { holdSamples = Int(0.17 * sr) }
+        feedback = 0.7 + 0.24 * d                                          // 0.70 ... 0.94 (0.82 at 0.5)
+        closeCoef = expf(-1 / ((0.015 + 0.06 * d) * sr))                   // shuts in 15 ... 75 ms
+        if abs(d - 0.5) < 0.01 { closeCoef = expf(-1 / (0.025 * sr)) }
+        preSamples = min(pre.count - 1, Int(predelay.clamped(0, 1) * 0.12 * sr))
     }
 
     mutating func reset() {
         for i in combs.indices { for j in combs[i].indices { combs[i][j] = 0 } }
         for i in aps.indices { for j in aps[i].indices { aps[i][j] = 0 } }
+        for i in pre.indices { pre[i] = 0 }
         combLP = [Float](repeating: 0, count: 8)
         gate = 0
         hold = 0
@@ -501,7 +533,15 @@ struct GatedReverb {
 
     mutating func process(_ l: Float, _ r: Float) -> (Float, Float) {
         guard combs.count == 8 else { return (0, 0) }
-        let input = (l + r) * 0.5
+        var input = (l + r) * 0.5
+        if preSamples > 0, !pre.isEmpty {
+            pre[preIndex] = input
+            var at = preIndex - preSamples
+            if at < 0 { at += pre.count }
+            input = pre[at]
+            preIndex += 1
+            if preIndex == pre.count { preIndex = 0 }
+        }
         let e = env.process(input)
         if e > 0.12 { hold = holdSamples; gate = 1 }
         if hold > 0 { hold -= 1 } else { gate *= closeCoef }
@@ -510,7 +550,7 @@ struct GatedReverb {
             let n = combs[c].count
             let y = combs[c][combIndex[c]]
             combLP[c] = y + 0.3 * (combLP[c] - y)
-            combs[c][combIndex[c]] = input + combLP[c] * 0.82
+            combs[c][combIndex[c]] = input + combLP[c] * feedback
             combIndex[c] += 1
             if combIndex[c] == n { combIndex[c] = 0 }
             if c < 4 { outs.0 += y * 0.25 } else { outs.1 += y * 0.25 }

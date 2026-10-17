@@ -1671,8 +1671,17 @@ enum KnockSelfTest {
             check(difference > 0.1, "\(parameter.name) changes texture output")
             check(b.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "\(parameter.name) stays finite and clipped")
         }
-        // WARP (part of INSTABILITY) moves the sound bar to bar but stays in level.
-        let (warped, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 8) { $0.setParam(.instability, 1) }
+        // Face 2's Texture knobs (Oct 17): WARP, GLITCH, reverb DECAY / PRE-DELAY and DELAY's tempo lock each change the sound.
+        for parameter in [KParam.warp, .glitch, .reverbDecay, .reverbPredelay, .delaySync] {
+            let (a, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 90, seconds: 3) { $0.setParam(.textureDelay, 0.8); $0.setParam(.gatedReverb, 0.8); $0.setParam(parameter, 0) }
+            let (b, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 90, seconds: 3) { $0.setParam(.textureDelay, 0.8); $0.setParam(.gatedReverb, 0.8); $0.setParam(parameter, 1) }
+            var difference: Double = 0
+            for i in a.indices { difference += Double(abs(a[i] - b[i])) }
+            check(difference > 0.1, "\(parameter.name) changes texture output")
+            check(b.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "\(parameter.name) stays finite and clipped")
+        }
+        // WARP moves the sound bar to bar but stays in level.
+        let (warped, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 8) { $0.setParam(.warp, 1); $0.setParam(.glitch, 1) }
         check(warped.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "WARP stays finite and clipped")
         check(warped[(warped.count - 48_000)...].contains { abs($0) > 0.01 }, "WARP keeps sounding over many scenes")
     }

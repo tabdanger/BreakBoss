@@ -559,6 +559,11 @@ final class KnockEngine {
         bs.delay = params[KParam.textureDelay.rawValue]
         bs.reverb = params[KParam.gatedReverb.rawValue]
         bs.drive = params[KParam.drive.rawValue]
+        bs.warp = params[KParam.warp.rawValue]
+        bs.glitch = params[KParam.glitch.rawValue]
+        bs.reverbDecay = params[KParam.reverbDecay.rawValue]
+        bs.reverbPredelay = params[KParam.reverbPredelay.rawValue]
+        bs.delaySync = params[KParam.delaySync.rawValue] > 0.5
         bs.beat = playing ? blockBeat0 : nil
         bus.process(mixL, mixR, count: frames, bs)
 

@@ -165,6 +165,11 @@ struct KnockState: Codable, Equatable {
             }
             loop.sort(); s.editedLoops[i] = loop
         }
+        // Oct 17: WARP and GLITCH got their own knobs; before that they both followed INSTABILITY.
+        if s.values[KParam.warp.id] == nil, let instability = s.values[KParam.instability.id] {
+            s.values[KParam.warp.id] = instability
+            s.values[KParam.glitch.id] = instability
+        }
         for p in KParam.allCases {
             let value = s.values[p.id] ?? p.defaultValue
             let finite = value.isFinite ? value : p.defaultValue

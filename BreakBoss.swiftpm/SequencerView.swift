@@ -212,6 +212,7 @@ struct SequencerView: View {
     @State private var importKind: ImportKind?
     @State private var generateStyle: String?
     @State private var libraryNote = ""
+    @State private var fxTurning: KParam?
     private let ticker = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     private static let factorySounds: [LibrarySound] = StockSampleLibrary.bundled.librarySounds()
 
@@ -284,8 +285,21 @@ struct SequencerView: View {
     private var finish: String { controller.faceKey }
     private var plateSprite: String { "SeqPlate_\(finish)" }
     private var rowSprite: String { "SeqRow_\(finish)" }
-    /// Printing on the metal: black on the light finishes, white on the black one.
-    private var inkColor: Color { finish == "modern" ? Color(white: 0.9) : Color(white: 0.1) }
+    /// Printing on the metal: black on platinum and cream, white on black and blue (Tyrone's renders).
+    private var inkColor: Color { finish == "modern" || finish == "texture" ? Color(white: 0.93) : Color(white: 0.1) }
+    /// What lights up on each face (Tyrone's Face 2 renders, Oct 17): the tools, PLAY, the power ring,
+    /// the type chip and the track lamps. Platinum green, black red, vintage amber, texture blue.
+    private var accent: Color {
+        switch finish {
+        case "modern": return Color(red: 1, green: 0.2, blue: 0.16)
+        case "vintage": return Color(red: 1, green: 0.74, blue: 0.2)
+        case "texture": return Color(red: 0.25, green: 0.6, blue: 1)
+        default: return S.green
+        }
+    }
+    /// The selected track (red in every render) and the open graph's lane chip (blue on Texture).
+    private var selectColor: Color { Color(red: 1, green: 0.22, blue: 0.16) }
+    private var laneColor: Color { finish == "texture" ? Color(red: 0.25, green: 0.6, blue: 1) : selectColor }
     private var isThisPlaying: Bool { controller.isPlaying && Int(controller.meters.status[1]) == loop }
 
     // MARK: Rack rows
@@ -345,36 +359,42 @@ struct SequencerView: View {
 
     // MARK: Body — Tyrone's picture is the plate; the live controls sit on it at measured spots
 
-    static let artW: CGFloat = 1536, artH: CGFloat = 1024
-    /// Art rectangles (px in the picture): [x0, y0, x1, y1]
+    static let artW: CGFloat = 1672, artH: CGFloat = 941
+    /// Art rectangles (px in Tyrone's Face 2 renders, Oct 17 2026, the locked design): [x0, y0, x1, y1].
+    /// The same numbers are in tools/sequencer_art/face2/rects.py, which cuts the plates and buttons.
     enum A {
-        static let tools: [[Double]] = [[305, 194, 393, 239], [397, 194, 485, 239], [489, 194, 576, 239]]
-        static let undo: [Double] = [580, 194, 667, 239], redo: [Double] = [672, 194, 760, 239]
-        static let stop: [Double] = [792, 193, 845, 240], play: [Double] = [849, 193, 902, 240], rec: [Double] = [904, 193, 957, 240]
-        static let bpm: [Double] = [983, 194, 1102, 239], bars: [Double] = [1109, 194, 1222, 239], main: [Double] = [1230, 194, 1351, 239]
-        static let gear: [Double] = [1356, 194, 1402, 239], cloud: [Double] = [1430, 193, 1484, 241]
-        static let snap: [Double] = [877, 245, 1047, 279], swing: [Double] = [1059, 244, 1219, 279], humanize: [Double] = [1230, 244, 1368, 279]
-        static let swingKnob: [Double] = [1188, 247, 1216, 275], humanizeKnob: [Double] = [1337, 247, 1365, 275]
-        static let tempoSync: [Double] = [580, 245, 722, 279], followDAW: [Double] = [728, 245, 870, 279]
-        static let pageBack: [Double] = [400, 246, 436, 280], pageText: [Double] = [436, 248, 534, 278], pageForward: [Double] = [534, 246, 572, 280]
-        static let leftPanel: [Double] = [33, 300, 285, 693]
-        /// The grips sit in the strip between the SOUNDS panel and the track headers.
-        static let gripX0: Double = 285
-        /// The rack oval's left end (the sprite's is at 321; drawn wider since Oct 17).
-        static let ovalX0: Double = 311
-        static let rackX0: Double = 298, rackX1: Double = 534, gridX0: Double = 549, gridX1: Double = 1445, panelX1: Double = 1495
-        static let rowsY0: Double = 341, rowsY1: Double = 682, rowH: Double = 56.5, labelsY: Double = 325
-        static let power: [Double] = [156, 715, 213, 772]
-        static let patternBack: [Double] = [602, 732, 640, 772], patternForward: [Double] = [640, 732, 677, 772], patternChip: [Double] = [677, 732, 841, 772]
-        static let kitBack: [Double] = [889, 732, 927, 772], kitForward: [Double] = [927, 732, 964, 772], kitChip: [Double] = [964, 732, 1129, 772]
+        static let tools: [[Double]] = [[325, 94, 427, 150], [430, 94, 529, 150], [532, 94, 630, 150]]
+        static let undo: [Double] = [633, 94, 730, 150], redo: [Double] = [732, 94, 830, 150]
+        static let stop: [Double] = [858, 94, 925, 150], play: [Double] = [928, 94, 995, 150], rec: [Double] = [997, 94, 1064, 150]
+        static let bpm: [Double] = [1082, 94, 1238, 150], bars: [Double] = [1242, 94, 1382, 150]
+        static let gear: [Double] = [1465, 95, 1528, 150], cloud: [Double] = [1542, 93, 1605, 152]
+        static let snap: [Double] = [957, 159, 1171, 205], swing: [Double] = [1183, 161, 1369, 205], humanize: [Double] = [1375, 161, 1530, 205]
+        static let snapScale: [Double] = [960, 163, 988, 201]
+        static let swingKnob: [Double] = [1327, 165, 1358, 196], humanizeKnob: [Double] = [1490, 165, 1521, 196]
+        static let tempoSync: [Double] = [636, 160, 790, 205], followDAW: [Double] = [796, 160, 950, 205]
+        static let pageBack: [Double] = [432, 162, 466, 202], pageText: [Double] = [466, 164, 594, 200], pageForward: [Double] = [592, 162, 626, 202]
+        static let leftPanel: [Double] = [45, 218, 334, 707]
+        static let headerH: Double = 46
+        /// The track headers (silver tab + dark body), the steps, and the per-track buttons' column.
+        static let rackX0: Double = 347, rackX1: Double = 607, gridX0: Double = 626, gridX1: Double = 1576, panelX1: Double = 1622
+        static let rowsY0: Double = 266, rowsY1: Double = 690, rowH: Double = 62.5, labelsY: Double = 247
+        static let slider: [Double] = [67, 728, 184, 790], power: [Double] = [197, 726, 263, 792]
+        // PATTERN and KIT moved left (Tyrone, Oct 17); their labels and dividers are printed on the plate
+        static let patternBack: [Double] = [312, 741, 361, 785], patternForward: [Double] = [361, 741, 410, 785], patternChip: [Double] = [411, 740, 641, 785]
+        static let kitBack: [Double] = [690, 741, 738, 785], kitForward: [Double] = [738, 741, 787, 785], kitChip: [Double] = [789, 740, 1004, 785]
+        /// The FX knobs on the right of the bottom rail: 8 places, labels over the knobs.
+        static let fxX0: Double = 1045, fxX1: Double = 1598, fxLabelY0: Double = 709, fxLabelY1: Double = 733, fxKnobY0: Double = 740, fxKnobY1: Double = 786
     }
 
     var body: some View {
         GeometryReader { geo in
             let s = min(geo.size.width / Self.artW, geo.size.height / Self.artH)
             ZStack(alignment: .topLeading) {
+                // the plate carries the BreaKing logo, as in the renders
                 Image(plateSprite).resizable().frame(width: Self.artW * s, height: Self.artH * s)
-                BrandLogo(dark: finish != "modern", tagline: "DRUM SEQUENCER", scale: s).place([62, 182, 276, 274], s)
+                Rectangle().fill(Color.white.opacity(0.001)).place([92, 88, 296, 190], s)
+                    .allowsHitTesting(false)
+                    .accessibilityElement(children: .ignore).accessibilityLabel(BrandLogo.name).accessibilityIdentifier("brandLogo")
                 topBar(s)
                 leftPanel(s)
                 editor(s)
@@ -473,64 +493,62 @@ struct SequencerView: View {
     // MARK: Top bar
 
     @ViewBuilder private func topBar(_ s: CGFloat) -> some View {
-        // DRAW / SELECT / ERASE: real buttons from the picture, the active one lit green
+        // DRAW / SELECT / ERASE: real buttons from the picture, the active one lit in the face's colour
         ForEach(0..<3, id: \.self) { i in
             let t: Tool = [.draw, .select, .erase][i]
             let on = tool == t
-            SeqButton("SeqBtnTool", lit: on ? S.green : nil, scale: s, action: { tool = t }) {
-                HStack(spacing: 4 * s) {
-                    Image(systemName: ["pencil", "rectangle.dashed", "eraser"][i]).font(.system(size: 13 * s, weight: .medium))
-                    Text(["DRAW", "SELECT", "ERASE"][i]).font(.system(size: 13 * s, weight: .medium))
+            SeqButton("SeqBtnTool", lit: on ? accent : nil, corner: 8, scale: s, action: { tool = t }) {
+                HStack(spacing: 6 * s) {
+                    Image(systemName: ["pencil", "rectangle.dashed", "eraser"][i]).font(.system(size: 16 * s, weight: .medium))
+                    Text(["DRAW", "SELECT", "ERASE"][i]).font(.system(size: 16 * s, weight: .medium))
                 }
-                .foregroundColor(on ? S.green : .white)
+                .foregroundColor(on ? accent : .white)
             }
             .place(A.tools[i], s)
         }
-        SeqButton("SeqBtnTool", scale: s, action: { undo() }) {
-            HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.backward").font(.system(size: 13 * s, weight: .medium)); Text("UNDO").font(.system(size: 13 * s, weight: .medium)) }
+        SeqButton("SeqBtnTool", corner: 8, scale: s, action: { undo() }) {
+            HStack(spacing: 6 * s) { Image(systemName: "arrow.uturn.backward").font(.system(size: 16 * s, weight: .medium)); Text("UNDO").font(.system(size: 16 * s, weight: .medium)) }
                 .foregroundColor(undoStack.isEmpty ? Color(white: 0.5) : .white)
         }
         .keyboardShortcut("z", modifiers: .command)
         .accessibilityIdentifier("undoButton")
         .place(A.undo, s)
-        SeqButton("SeqBtnTool", scale: s, action: { redo() }) {
-            HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.forward").font(.system(size: 13 * s, weight: .medium)); Text("REDO").font(.system(size: 13 * s, weight: .medium)) }
+        SeqButton("SeqBtnTool", corner: 8, scale: s, action: { redo() }) {
+            HStack(spacing: 6 * s) { Image(systemName: "arrow.uturn.forward").font(.system(size: 16 * s, weight: .medium)); Text("REDO").font(.system(size: 16 * s, weight: .medium)) }
                 .foregroundColor(redoStack.isEmpty ? Color(white: 0.5) : .white)
         }
         .keyboardShortcut("z", modifiers: [.command, .shift])
         .accessibilityIdentifier("redoButton")
         .place(A.redo, s)
         // bars pager
-        artText(pageLabel, A.pageText, s, size: 17, weight: .medium, color: inkColor).accessibilityIdentifier("pageLabel")
-        SeqGlyph(symbol: "chevron.left", scale: s, enabled: pageStart > 0, color: inkColor) { scroll(to: pageStart - windowTicks) }.place(A.pageBack, s)
-        SeqGlyph(symbol: "chevron.right", scale: s, enabled: pageStart < maxStart, color: inkColor) { scroll(to: pageStart + windowTicks) }.place(A.pageForward, s)
+        artText(pageLabel, A.pageText, s, size: 21, weight: .medium, color: inkColor).accessibilityIdentifier("pageLabel")
+        SeqGlyph(symbol: "chevron.left", size: 21, scale: s, enabled: pageStart > 0, color: inkColor) { scroll(to: pageStart - windowTicks) }.place(A.pageBack, s)
+        SeqGlyph(symbol: "chevron.right", size: 21, scale: s, enabled: pageStart < maxStart, color: inkColor) { scroll(to: pageStart + windowTicks) }.place(A.pageForward, s)
         // transport
-        SeqButton("SeqBtnTransport", scale: s, action: { controller.stopPlayback() }) {
-            RoundedRectangle(cornerRadius: 2 * s).fill(Color.white).frame(width: 15 * s, height: 15 * s)
+        SeqButton("SeqBtnTransport", corner: 8, scale: s, action: { controller.stopPlayback() }) {
+            RoundedRectangle(cornerRadius: 2 * s).fill(Color(white: 0.92)).frame(width: 21 * s, height: 21 * s)
         }
         .place(A.stop, s)
-        SeqButton("SeqBtnTransport", lit: isThisPlaying ? S.green : nil, scale: s, action: { controller.playPattern(loop) }) {
-            Image(systemName: "play.fill").font(.system(size: 17 * s)).foregroundColor(S.green)
+        SeqButton("SeqBtnTransport", lit: isThisPlaying ? accent : nil, corner: 8, scale: s, action: { controller.playPattern(loop) }) {
+            Image(systemName: "play.fill").font(.system(size: 24 * s)).foregroundColor(isThisPlaying ? accent : Color(white: 0.92))
+                .shadow(color: isThisPlaying ? accent : .clear, radius: 5 * s)
         }
         .place(A.play, s)
-        SeqButton("SeqBtnTransport", lit: controller.recording ? S.red : nil, scale: s, action: { if !controller.recording { remember() }; controller.toggleRecordPads(loop: loop) }) {
+        SeqButton("SeqBtnTransport", lit: controller.recording ? S.red : nil, corner: 8, scale: s, action: { if !controller.recording { remember() }; controller.toggleRecordPads(loop: loop) }) {
             if controller.countingIn {
-                Text("\(controller.countInBeatsLeft)").font(.system(size: 20 * s, weight: .bold, design: .rounded)).foregroundColor(S.red)
+                Text("\(controller.countInBeatsLeft)").font(.system(size: 24 * s, weight: .bold, design: .rounded)).foregroundColor(S.red)
             } else {
-                Circle().fill(S.red).frame(width: 17 * s, height: 17 * s).shadow(color: controller.recording ? S.red : .clear, radius: 5 * s)
+                Circle().fill(RadialGradient(colors: [Color(red: 1, green: 0.35, blue: 0.3), S.red], center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: 14 * s))
+                    .frame(width: 25 * s, height: 25 * s).shadow(color: controller.recording ? S.red : .clear, radius: 6 * s)
             }
         }
         .place(A.rec, s)
-        // TEMPO SYNC and FOLLOW DAW (the same switches as Face 1's LEDs): lit green when on
+        // TEMPO SYNC and FOLLOW DAW (the same switches as Face 1's LEDs): lit when on
         hostSwitch("TEMPO SYNC", .tempoSync, A.tempoSync, s)
         hostSwitch("FOLLOW DAW", .followDAW, A.followDAW, s)
-        // tempo, bars, pattern, gear, cloud
+        // tempo, bars, gear, cloud
         // tempo: slide up for faster, down for slower; a tap opens the tempo panel
-        SeqChip(sprite: "SeqChipBpm", text: "\(Int(controller.liveTempo.rounded())) BPM", scale: s, color: tempoDragStart == nil ? .white : S.green)
-            .overlay(alignment: .trailing) {
-                Image(systemName: "chevron.up.chevron.down").font(.system(size: 10 * s, weight: .bold)).foregroundColor(Color(white: 0.75))
-                    .padding(.trailing, 8 * s).allowsHitTesting(false)
-            }
+        SeqChip(sprite: "SeqChipBpm", text: "\(Int(controller.liveTempo.rounded())) BPM", size: 17, leading: 24, trailing: 52, scale: s, color: tempoDragStart == nil ? .white : accent)
             .simultaneousGesture(DragGesture(minimumDistance: 6)
                 .onChanged { g in
                     guard !controller.tempoIsExternal else { return }
@@ -541,12 +559,12 @@ struct SequencerView: View {
                 .onEnded { _ in tempoDragStart = nil })
             .accessibilityIdentifier("tempoChip")
             .bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
-        SeqChip(sprite: "SeqChipBars", text: "\(bars) BARS", scale: s)
+        SeqChip(sprite: "SeqChipBars", text: "\(bars) BARS", size: 17, leading: 18, trailing: 52, scale: s)
             .accessibilityIdentifier("barsChip")
             .bbMenuPlaced(A.bars, s, title: "Pattern length") {
                 [2, 4, 8, 16].map { b in BBMenuItem.item("\(b) BARS", checked: bars == b) { commit(PatternEdit.setLength(pattern, bars: b)) } }
             }
-        SeqArt(sprite: "SeqBtnGear", scale: s) { EmptyView() }
+        SeqArt(sprite: "SeqBtnGear", corner: 8, scale: s) { EmptyView() }
             .bbMenuPlaced(A.gear, s, title: "Sequencer", width: 330) { settingsItems() }
         SeqArt(sprite: "SeqBtnCloud", corner: 9, scale: s) { EmptyView() }
             .bbMenuPlaced(A.cloud, s, title: "MIDI", width: 360) {
@@ -555,17 +573,18 @@ struct SequencerView: View {
                  .header("MIDI out")] + midiOutItems()
             }
         // snap, scale, swing, humanize
-        SeqChip(sprite: "SeqChipSnap", text: snapLabel, size: 13, leading: 64, trailing: 28, scale: s)
+        SeqChip(sprite: "SeqChipSnap", text: snapLabel, size: 16, leading: 87, trailing: 44, scale: s)
             .bbMenuPlaced(A.snap, s, title: "Snap", width: 300) {
                 Self.snapChoices.flatMap { group -> [BBMenuItem] in
                     [.header(group.section)] + group.items.map { item in BBMenuItem.item(item.0, checked: item.1 == snap) { snap = item.1 } }
                 }
             }
-        // SNAP TO SCALE: a tuning fork on the SNAP chip's left edge (green when on)
-        Image(systemName: "tuningfork").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(controller.snapToScale ? S.green : Color(white: 0.45))
+        // SNAP TO SCALE: a tuning fork on the SNAP chip's left end (lit when on)
+        Image(systemName: "tuningfork").font(.system(size: 14 * s, weight: .semibold)).foregroundColor(controller.snapToScale ? accent : Color(white: 0.55))
+            .frame(maxWidth: .infinity, maxHeight: .infinity).contentShape(Rectangle())
             .bbMenu(title: "Snap to scale", width: 300) { scaleItems(selectedPad) }
-            .place([A.snap[0] + 2, A.snap[1], A.snap[0] + 22, A.snap[3]], s)
-        SeqChip(sprite: "SeqChipSwing", text: swingLabel, size: 13, leading: 76, trailing: 46, scale: s).place(A.swing, s).allowsHitTesting(false)
+            .place(A.snapScale, s)
+        SeqChip(sprite: "SeqChipSwing", text: swingLabel, size: 16, leading: 89, trailing: 52, scale: s).place(A.swing, s).allowsHitTesting(false)
         PressGlow().bbPanelPlaced([A.swing[0], A.swing[1], A.swingKnob[0] - 4, A.swing[3]], s, title: "Swing", width: 320) {
                 BBSlider(value: Double(50 + controller.value(.bounce) * 22), range: 50...72, step: 1, label: { $0 <= 50 ? "OFF" : "\(Int($0))%" }) {
                     controller.set(.bounce, Float(($0 - 50) / 22))
@@ -576,7 +595,7 @@ struct SequencerView: View {
             controller.set(.bounce, v)
             if ended { swingStart = nil }
         }
-        SeqArt(sprite: "SeqChipHumanize", scale: s) { EmptyView() }.place(A.humanize, s).allowsHitTesting(false)
+        SeqArt(sprite: "SeqChipHumanize", corner: 8, scale: s) { EmptyView() }.place(A.humanize, s).allowsHitTesting(false)
         PressGlow().bbPanelPlaced([A.humanize[0], A.humanize[1], A.humanizeKnob[0] - 4, A.humanize[3]], s, title: "Humanize", width: 320) {
                 BBSlider(value: Double((pattern.humanize ?? 0) * 100), range: 0...100, step: 1, label: { $0 < 1 ? "OFF" : "\(Int($0))%" }) { v in
                     remember(coalescing: true)
@@ -585,7 +604,7 @@ struct SequencerView: View {
                     controller.setLoop(loop, p)
                 }
             }
-        artText((pattern.humanize ?? 0) < 0.01 ? "" : "\(Int((pattern.humanize ?? 0) * 100))%", [A.humanize[0] + 96, A.humanize[1], A.humanizeKnob[0] - 2, A.humanize[3]], s, size: 11, color: S.green, align: .trailing)
+        artText((pattern.humanize ?? 0) < 0.01 ? "" : "\(Int((pattern.humanize ?? 0) * 100))%", [A.humanizeKnob[0] - 22, A.humanize[1], A.humanizeKnob[0] - 2, A.humanize[3]], s, size: 10, color: accent, align: .trailing)
         artKnob(A.humanizeKnob, s, value: pattern.humanize ?? 0) { v, ended in
             if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(pattern); redoStack = [] }
             var p = pattern
@@ -598,13 +617,14 @@ struct SequencerView: View {
     /// A host transport switch on the top rail: its lamp and name, green when on.
     private func hostSwitch(_ title: String, _ p: KParam, _ r: [Double], _ s: CGFloat) -> some View {
         let on = controller.value(p) > 0.5
-        return SeqButton("SeqBtnTool", lit: on ? S.green : nil, scale: s, action: { controller.toggle(p) }) {
-            HStack(spacing: 6 * s) {
-                Circle().fill(on ? S.green : Color(white: 0.28)).frame(width: 7 * s, height: 7 * s)
-                    .shadow(color: on ? S.green : .clear, radius: 3 * s)
-                Text(title).font(.system(size: 12 * s, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7)
+        return SeqButton("SeqBtnHost", lit: on ? accent : nil, corner: 8, scale: s, action: { controller.toggle(p) }) {
+            HStack(spacing: 7 * s) {
+                Circle().fill(on ? accent : Color(white: 0.42)).frame(width: 9 * s, height: 9 * s)
+                    .overlay(Circle().stroke(Color(white: 0.65), lineWidth: on ? 0 : 1 * s))
+                    .shadow(color: on ? accent : .clear, radius: 3 * s)
+                Text(title).font(.system(size: 15 * s, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7)
             }
-            .foregroundColor(on ? S.green : .white)
+            .foregroundColor(on ? accent : .white)
         }
         .accessibilityIdentifier(p == .tempoSync ? "tempoSyncButton" : "followDAWButton")
         .place(r, s)
@@ -662,23 +682,23 @@ struct SequencerView: View {
         return list
     }
 
-    /// A section header: a plate of platinum (the slider knob's metal) the full width of the panel,
-    /// square and flush against the well under it. Tap it to slide the panels over.
+    /// A section header: the render's header plate (SeqHeader_<face>, the face's own metal) the full
+    /// width of the panel, flush against the well under it. Tap it to slide the panels over.
     private func sectionHeader(_ title: String, open: Bool, _ s: CGFloat) -> some View {
         Button {
             withAnimation(.easeInOut(duration: 0.3)) { section = section == .sounds ? .generate : .sounds }
         } label: {
             ZStack {
-                PlatinumPlate()
+                Image("SeqHeader_\(finish)").resizable()
                 HStack {
-                    Text(title).font(.system(size: 15 * s, weight: .semibold)).foregroundColor(MetalTone.of(finish).ink).kerning(0.5)
+                    Text(title).font(.system(size: 19 * s, weight: .semibold)).foregroundColor(inkColor)
                     Spacer()
-                    Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(MetalTone.of(finish).ink)
+                    Image(systemName: "chevron.down").font(.system(size: 17 * s, weight: .semibold)).foregroundColor(inkColor)
                         .rotationEffect(.degrees(open ? 180 : 0))
                 }
-                .padding(.leading, 18 * s).padding(.trailing, 18 * s)
+                .padding(.leading, 19 * s).padding(.trailing, 18 * s)
             }
-            .frame(height: 44 * s)
+            .frame(height: A.headerH * s)
         }
         .buttonStyle(PlatePress())
         .accessibilityIdentifier(title == "SOUNDS" ? "soundsHeader" : "generateHeader")
@@ -688,7 +708,7 @@ struct SequencerView: View {
     /// slides the GENERATE plate up or down like a piece of metal, closing the other well under it.
     @ViewBuilder private func leftPanel(_ s: CGFloat) -> some View {
         let r = A.leftPanel
-        let headerH = 44.0 * s
+        let headerH = A.headerH * s
         let wellH = CGFloat(r[3] - r[1]) * s - 2 * headerH
         VStack(spacing: 0) {
             sectionHeader("SOUNDS", open: section == .sounds, s)
@@ -696,8 +716,8 @@ struct SequencerView: View {
             sectionHeader("GENERATE", open: section == .generate, s)
             well(generatePanel(s), height: wellH, open: section == .generate, s)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 8 * s))
-        .overlay(RoundedRectangle(cornerRadius: 8 * s).strokeBorder(Color.black.opacity(0.55), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 9 * s))
+        .overlay(RoundedRectangle(cornerRadius: 9 * s).strokeBorder(Color.black.opacity(0.55), lineWidth: 1))
         .place(r, s)
     }
 
@@ -705,7 +725,7 @@ struct SequencerView: View {
     private func well<Content: View>(_ content: Content, height: CGFloat, open: Bool, _ s: CGFloat) -> some View {
         content
             .frame(height: height, alignment: .top)
-            .background(Color(white: 0.04))
+            .background(Color(white: 0.035))
             .overlay(alignment: .top) {
                 // the plate above throws its shadow into the well
                 LinearGradient(colors: [.black.opacity(0.7), .clear], startPoint: .top, endPoint: .bottom).frame(height: 6 * s).allowsHitTesting(false)
@@ -771,49 +791,50 @@ struct SequencerView: View {
 
     /// The sound library (SOUNDS open): type chips, search, the list, import. Drag a sound to the rack.
     private func soundsPanel(_ s: CGFloat) -> some View {
-        VStack(spacing: 5 * s) {
+        VStack(spacing: 7 * s) {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 3 * s) {
+                HStack(spacing: 4 * s) {
                     typeChip("ALL", on: libraryType == nil, s) { libraryType = nil }
                     ForEach(SoundType.allCases) { t in typeChip(t.rawValue, on: libraryType == t, s) { libraryType = t } }
                 }
             }
             HStack(spacing: 5 * s) {
-                Image(systemName: "magnifyingglass").font(.system(size: 11 * s)).foregroundColor(S.dim)
-                TextField("Search", text: $search).font(.system(size: 13 * s)).foregroundColor(.white).autocorrectionDisabled()
-                if !search.isEmpty { Button { search = "" } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 12 * s)).foregroundColor(S.dim) } }
+                Image(systemName: "magnifyingglass").font(.system(size: 16 * s)).foregroundColor(Color(white: 0.78))
+                TextField("Search", text: $search).font(.system(size: 16 * s)).foregroundColor(.white).autocorrectionDisabled()
+                if !search.isEmpty { Button { search = "" } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 14 * s)).foregroundColor(S.dim) } }
             }
-            .padding(.horizontal, 8 * s).frame(height: 30 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.12)))
+            .padding(.horizontal, 10 * s).frame(height: 33 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.11)))
             ScrollView {
                 LazyVStack(spacing: 2 * s) {
                     ForEach(shownSounds) { sound in soundRow(sound, s) }
                     if shownSounds.isEmpty { Text("Nothing here yet.").font(.system(size: 12 * s)).foregroundColor(S.dim).padding(16 * s) }
                 }
             }
-            HStack(spacing: 5 * s) {
+            HStack(spacing: 8 * s) {
                 Button { importKind = .sounds } label: { smallLabel("square.and.arrow.down", "SOUNDS", s) }
                 Button { importKind = .pack } label: { smallLabel("folder.badge.plus", "PACK", s) }
                 if let pad = selectedPad, !controller.isPlugin { Button { recordPad = pad } label: { smallLabel("record.circle", "REC", s) } }
             }
             Text(libraryNote.isEmpty ? "DRAG A SOUND ONTO THE RACK" : libraryNote).font(.system(size: 8 * s, weight: .semibold)).foregroundColor(S.dim).lineLimit(1)
         }
-        .padding(.horizontal, 8 * s).padding(.top, 10 * s).padding(.bottom, 8 * s)
+        .padding(.horizontal, 8 * s).padding(.top, 9 * s).padding(.bottom, 6 * s)
     }
 
     private func soundRow(_ sound: LibrarySound, _ s: CGFloat) -> some View {
         let onSelected = selected?.soundID == sound.id
         return HStack(spacing: 6 * s) {
-            Image(systemName: "waveform").font(.system(size: 10 * s)).foregroundColor(onSelected ? S.green : S.dim).frame(width: 14 * s)
-            VStack(alignment: .leading, spacing: 0) {
-                Text(sound.name).font(.system(size: 12 * s, weight: .medium)).foregroundColor(onSelected ? S.green : .white).lineLimit(1)
-                Text(sound.pack).font(.system(size: 8 * s)).foregroundColor(S.dim).lineLimit(1)
+            Image(systemName: "waveform").font(.system(size: 16 * s)).foregroundColor(onSelected ? accent : Color(white: 0.8)).frame(width: 26 * s)
+            VStack(alignment: .leading, spacing: 1 * s) {
+                Text(sound.name).font(.system(size: 15 * s, weight: .medium)).foregroundColor(onSelected ? accent : .white).lineLimit(1).minimumScaleFactor(0.7)
+                Text(sound.pack).font(.system(size: 11 * s)).foregroundColor(Color(white: 0.72)).lineLimit(1)
             }
             Spacer(minLength: 0)
-            if sound.user { Text("YOURS").font(.system(size: 7 * s, weight: .bold)).foregroundColor(S.orange) }
-            Image(systemName: "line.3.horizontal").font(.system(size: 10 * s)).foregroundColor(S.dim.opacity(0.6))
+            if sound.user { Text("YOURS").font(.system(size: 8 * s, weight: .bold)).foregroundColor(S.orange) }
+            Image(systemName: "line.3.horizontal").font(.system(size: 14 * s)).foregroundColor(Color(white: 0.75))
         }
-        .padding(.horizontal, 6 * s).frame(height: 34 * s)
-        .background(RoundedRectangle(cornerRadius: 5 * s).fill(onSelected ? S.green.opacity(0.12) : Color.clear))
+        .padding(.horizontal, 6 * s).frame(height: 49 * s)
+        .background(RoundedRectangle(cornerRadius: 5 * s).fill(onSelected ? accent.opacity(0.12) : Color.clear))
+        .overlay(alignment: .bottom) { Rectangle().fill(Color(white: 0.16)).frame(height: 1).allowsHitTesting(false) }
         .contentShape(Rectangle())
         .onTapGesture {
             guard let ch = selected else { return }
@@ -825,25 +846,28 @@ struct SequencerView: View {
             NSItemProvider(object: (soundDragPrefix + sound.id) as NSString)
         } preview: {
             Text(sound.name).font(.system(size: 12, weight: .semibold)).foregroundColor(.black)
-                .padding(.horizontal, 12).frame(height: 30).background(Capsule().fill(S.green))
+                .padding(.horizontal, 12).frame(height: 30).background(Capsule().fill(accent))
         }
     }
 
     private func typeChip(_ title: String, on: Bool, _ s: CGFloat, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.system(size: 9 * s, weight: .semibold))
-                .foregroundColor(on ? .black : .white).padding(.horizontal, 7 * s).frame(height: 22 * s)
-                .background(RoundedRectangle(cornerRadius: 4 * s).fill(on ? S.green : Color(white: 0.2)))
+            Text(title).font(.system(size: 11 * s, weight: .semibold))
+                .foregroundColor(on ? .black : .white).padding(.horizontal, 8 * s).frame(height: 26 * s)
+                .background(RoundedRectangle(cornerRadius: 4 * s).fill(on ? accent : Color(white: 0.14)))
+                .overlay(RoundedRectangle(cornerRadius: 4 * s).stroke(on ? accent : Color(white: 0.34), lineWidth: 1))
+                .shadow(color: on ? accent.opacity(0.7) : .clear, radius: 4 * s)
         }
     }
 
     private func smallLabel(_ icon: String, _ title: String, _ s: CGFloat) -> some View {
         HStack(spacing: 3 * s) {
-            Image(systemName: icon).font(.system(size: 10 * s, weight: .medium))
-            Text(title).font(.system(size: 9 * s, weight: .semibold))
+            Image(systemName: icon).font(.system(size: 14 * s, weight: .medium))
+            Text(title).font(.system(size: 13 * s, weight: .medium))
         }
-        .foregroundColor(.white).frame(maxWidth: .infinity).frame(height: 28 * s)
-        .background(RoundedRectangle(cornerRadius: 5 * s).fill(Color(white: 0.2)).overlay(RoundedRectangle(cornerRadius: 5 * s).stroke(Color(white: 0.3), lineWidth: 1)))
+        .foregroundColor(.white).frame(maxWidth: .infinity).frame(height: 40 * s)
+        .background(RoundedRectangle(cornerRadius: 6 * s).fill(LinearGradient(colors: [Color(white: 0.2), Color(white: 0.08)], startPoint: .top, endPoint: .bottom))
+            .overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.4), lineWidth: 1)))
     }
 
     /// Generate: new steps in the chosen genre; UPDATE SOUNDS rolls new sounds on every channel too;
@@ -926,38 +950,35 @@ struct SequencerView: View {
         ScrollViewReader { proxy in
         ScrollView(.vertical, showsIndicators: false) {
             ZStack(alignment: .topLeading) {
-                Color.clear.frame(width: (A.panelX1 - A.gripX0) * s, height: contentH).id("rackTop")
-                rackColumn(L, rowH: rowH, s: s).frame(width: (A.rackX1 - A.gripX0) * s, height: contentH, alignment: .top)
+                Color.clear.frame(width: (A.panelX1 - A.rackX0) * s, height: contentH).id("rackTop")
+                rackColumn(L, rowH: rowH, s: s).frame(width: (A.rackX1 - A.rackX0) * s, height: contentH, alignment: .top)
                 grid(L, width: gridW, rowH: rowH).frame(width: gridW, height: contentH)
-                    .offset(x: (A.gridX0 - A.gripX0) * s)
+                    .offset(x: (A.gridX0 - A.rackX0) * s)
                 // the dice at the end of every track: that track's steps only
                 ForEach(L, id: \.channel.id) { l in
                     // dice: new steps for this track only; ✕: clear this track in one tap
+                    // (the render's square buttons beside each track)
                     VStack(spacing: 3 * s) {
-                        Button { selectedID = l.channel.id; remember(); controller.randomizeChannel(loop: loop, pad: l.channel.pad); selection = [] } label: {
-                            Image(systemName: "dice").font(.system(size: 12 * s)).foregroundColor(Color(white: 0.8))
-                                .frame(width: 30 * s, height: 24 * s).background(RoundedRectangle(cornerRadius: 5 * s).fill(Color(white: 0.14)))
-                                .contentShape(Rectangle())
+                        SeqButton("SeqRowBtn", corner: 6, scale: s, action: { selectedID = l.channel.id; remember(); controller.randomizeChannel(loop: loop, pad: l.channel.pad); selection = [] }) {
+                            Image(systemName: "dice").font(.system(size: 15 * s)).foregroundColor(Color(white: 0.9))
                         }
-                        .buttonStyle(SeqPress())
-                        Button { selectedID = l.channel.id; commit(PatternEdit.clearChannel(pattern, pad: l.channel.pad)); selection = [] } label: {
-                            Image(systemName: "xmark").font(.system(size: 11 * s, weight: .bold)).foregroundColor(Color(white: 0.8))
-                                .frame(width: 30 * s, height: 24 * s).background(RoundedRectangle(cornerRadius: 5 * s).fill(Color(white: 0.14)))
-                                .contentShape(Rectangle())
+                        .frame(width: 30 * s, height: 29 * s)
+                        SeqButton("SeqRowBtn", corner: 6, scale: s, action: { selectedID = l.channel.id; commit(PatternEdit.clearChannel(pattern, pad: l.channel.pad)); selection = [] }) {
+                            Image(systemName: "xmark").font(.system(size: 14 * s, weight: .semibold)).foregroundColor(Color(white: 0.9))
                         }
-                        .buttonStyle(SeqPress())
+                        .frame(width: 30 * s, height: 29 * s)
                     }
-                    .offset(x: (A.gridX1 + 10 - A.gripX0) * s, y: l.y + (min(l.height, rowH) - 51 * s) / 2)
+                    .offset(x: (A.gridX1 + 9 - A.rackX0) * s, y: l.y + (min(l.height, rowH) - 61 * s) / 2)
                 }
             }
         }
         .onAppear { proxy.scrollTo("rackTop", anchor: .top) }      // the first row at the top, always
         }
-        .frame(width: (A.panelX1 - A.gripX0) * s, height: (A.rowsY1 - A.rowsY0) * s)
-        .position(x: (A.gripX0 + A.panelX1) / 2 * s, y: (A.rowsY0 + A.rowsY1) / 2 * s)
+        .frame(width: (A.panelX1 - A.rackX0) * s, height: (A.rowsY1 - A.rowsY0) * s)
+        .position(x: (A.rackX0 + A.panelX1) / 2 * s, y: (A.rowsY0 + A.rowsY1) / 2 * s)
         .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: $rackTargeted) { providers in dropOnRack(providers, channel: nil) }
         if rackTargeted {
-            RoundedRectangle(cornerRadius: 8 * s).stroke(S.green, lineWidth: 2 * s).place([A.rackX0, A.rowsY0 - 4, A.rackX1, A.rowsY1], s).allowsHitTesting(false)
+            RoundedRectangle(cornerRadius: 8 * s).stroke(accent, lineWidth: 2 * s).place([A.rackX0, A.rowsY0 - 4, A.rackX1, A.rowsY1], s).allowsHitTesting(false)
         }
     }
 
@@ -984,7 +1005,7 @@ struct SequencerView: View {
         for e in pattern.events where visible(e) && Int(e.pad) == pad {
             let sel = selection.contains(NoteKey(e))
             let bx = x(e.tick, width) + 2
-            let color = (sel ? Color.white : noteColor).opacity(selection.isEmpty || sel ? 0.95 : 0.35)
+            let color = (sel ? Color.white : glowColor).opacity(selection.isEmpty || sel ? 0.95 : 0.35)
             let y = top + 4 + (1 - lane.value(e)) * (h - 8)
             if !lane.centred {
                 ctx.fill(Path(roundedRect: CGRect(x: bx, y: y, width: 6, height: top + h - 4 - y), cornerRadius: 1.5), with: .color(color))
@@ -1016,7 +1037,7 @@ struct SequencerView: View {
                 let x0 = CGFloat(pageStart) / CGFloat(totalTicks) * size.width
                 let w = max(24, CGFloat(windowTicks) / CGFloat(totalTicks) * size.width)
                 ctx.fill(Path(roundedRect: CGRect(x: 0, y: size.height - 3, width: size.width, height: 3), cornerRadius: 1.5), with: .color(Color.white.opacity(0.12)))
-                ctx.fill(Path(roundedRect: CGRect(x: x0, y: size.height - 3, width: w, height: 3), cornerRadius: 1.5), with: .color(noteColor))
+                ctx.fill(Path(roundedRect: CGRect(x: x0, y: size.height - 3, width: w, height: 3), cornerRadius: 1.5), with: .color(glowColor))
             }
             _ = tick
         }
@@ -1037,10 +1058,7 @@ struct SequencerView: View {
         ZStack(alignment: .topLeading) {
             ForEach(L, id: \.channel.id) { l in
                 let moving = movingPad == l.channel.pad
-                HStack(alignment: .top, spacing: 0) {
-                    trackGrip(l, s: s).frame(width: (A.rackX0 - A.gripX0) * s, height: l.bandH)
-                    channelRow(l, rowH: rowH, s: s)
-                }
+                channelRow(l, rowH: rowH, s: s)
                 .scaleEffect(moving ? 1.03 : 1)
                 .shadow(color: .black.opacity(moving ? 0.6 : 0), radius: 8 * s, y: 4 * s)
                 .offset(y: moving ? movingTop : l.y)
@@ -1049,10 +1067,10 @@ struct SequencerView: View {
             if channels.count < Pad.count {
                 let y = (L.last.map { $0.y + $0.height } ?? 0)
                 VStack(spacing: 3 * s) {
-                    Image(systemName: "plus.circle.dashed").font(.system(size: 16 * s)).foregroundColor(rackTargeted ? S.green : Color(white: 0.45))
-                    Text(rackTargeted ? "DROP FOR A NEW CHANNEL" : "DROP A SOUND HERE").font(.system(size: 8 * s, weight: .semibold)).foregroundColor(rackTargeted ? S.green : Color(white: 0.45))
+                    Image(systemName: "plus.circle.dashed").font(.system(size: 18 * s)).foregroundColor(rackTargeted ? accent : inkColor.opacity(0.55))
+                    Text(rackTargeted ? "DROP FOR A NEW CHANNEL" : "DROP A SOUND HERE").font(.system(size: 9 * s, weight: .semibold)).foregroundColor(rackTargeted ? accent : inkColor.opacity(0.55))
                 }
-                .frame(width: (A.rackX1 - A.rackX0) * s, height: rowH).offset(x: (A.rackX0 - A.gripX0) * s, y: y)
+                .frame(width: (A.rackX1 - A.rackX0) * s, height: rowH).offset(y: y)
             }
         }
     }
@@ -1062,35 +1080,31 @@ struct SequencerView: View {
         L.filter { $0.channel.pad != pad && $0.y + $0.height / 2 < centre }.count
     }
 
-    /// The pull tab left of a track header: brushed silver with three grooves, like the reorder bars
-    /// of an iPad list. Drag it up or down and the track goes with your finger straight away; the
-    /// other tracks (and their steps) slide out of its way, and it settles where you let go.
-    private func trackGrip(_ l: RowLayout, s: CGFloat) -> some View {
-        let pad = l.channel.pad
+    /// The silver tab on the left of a track header (Tyrone's Face 2 render): its ▶ opens the track's
+    /// VELOCITY graph (or its piano roll); drag the tab up or down and the track goes with your finger,
+    /// the others (and their steps) sliding out of its way.
+    private func trackTab(_ l: RowLayout, s: CGFloat) -> some View {
+        let ch = l.channel, pad = ch.pad
         let moving = movingPad == pad
+        let isOpen = openID == ch.id || expandedID == ch.id
         return ZStack {
-            RoundedRectangle(cornerRadius: 3 * s)
-                .fill(LinearGradient(colors: [Color(white: 0.93), Color(white: 0.72), Color(white: 0.84)], startPoint: .leading, endPoint: .trailing))
-                .overlay(RoundedRectangle(cornerRadius: 3 * s).stroke(moving ? noteColor : Color(white: 0.45), lineWidth: (moving ? 1.4 : 0.8) * s))
-                .shadow(color: moving ? noteColor.opacity(0.7) : .black.opacity(0.35), radius: (moving ? 4 : 1.5) * s, y: moving ? 0 : 1 * s)
-                .frame(width: 11 * s, height: 40 * s)
-            VStack(spacing: 3.5 * s) {
-                ForEach(0..<3, id: \.self) { _ in
-                    VStack(spacing: 0) {
-                        Rectangle().fill(Color(white: 0.3)).frame(height: 1.2 * s)
-                        Rectangle().fill(Color.white.opacity(0.85)).frame(height: 0.8 * s)
-                    }
-                    .frame(width: 7 * s)
-                }
+            Image(systemName: "play.fill").font(.system(size: 17 * s, weight: .bold))
+                .foregroundColor(isOpen ? selectColor : Color(white: 0.1))
+                .rotationEffect(.degrees(isOpen ? 90 : 0))
+                .shadow(color: isOpen ? selectColor.opacity(0.8) : .clear, radius: 3 * s)
+            if moving {
+                RoundedRectangle(cornerRadius: 6 * s).stroke(selectColor, lineWidth: 1.5 * s).shadow(color: selectColor.opacity(0.7), radius: 4 * s)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
         .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
             .onChanged { g in
+                // a tap opens the graph; a drag of more than a few points moves the track
+                guard movingPad == pad || abs(g.translation.height) > 6 else { return }
                 if movingPad != pad {
                     movingPad = pad; movingFrom = l.y; movingTop = l.y
-                    selectedID = l.channel.id
+                    selectedID = ch.id
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 }
                 movingTop = movingFrom + g.translation.height
@@ -1101,12 +1115,18 @@ struct SequencerView: View {
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) { controller.moveRackChannel(pad: pad, to: to) }
                 }
             }
-            .onEnded { _ in
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { movingPad = nil }
+            .onEnded { g in
+                if movingPad == pad {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { movingPad = nil }
+                } else if abs(g.translation.width) < 10 && abs(g.translation.height) < 10 {
+                    toggleOpen(ch)
+                }
             })
         .accessibilityElement()
-        .accessibilityLabel("Move \(l.channel.name) up or down")
-        .accessibilityIdentifier("trackGrip\(pad)")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(isOpen ? "Close \(ch.name)'s graph; drag to move the track" : "Open \(ch.name)'s graph; drag to move the track")
+        .accessibilityIdentifier("trackArrow\(pad)")
+        .accessibilityAction { toggleOpen(ch) }
     }
 
     private func channelRow(_ l: RowLayout, rowH: CGFloat, s: CGFloat) -> some View {
@@ -1117,116 +1137,72 @@ struct SequencerView: View {
         let isSel = selectedID == ch.id
         let ps = controller.state.pads[pad]
         func set(_ change: (inout PadSettings) -> Void) { var v = controller.state.pads[pad]; change(&v); controller.setPadSettings(pad, v) }
-        // art offsets inside the row sprite (298, 334): triangle 303-312, oval 321-524, name 335-425, knobs 440 / 478, lamp 509.
-        // The oval is drawn wider than the sprite's (ovalX0, Oct 17): the small arrow left of it needs less room.
-        let X = { (ax: Double) in CGFloat(ax - A.rackX0) * s }
-        let ovalX0 = A.ovalX0, ovalW = CGFloat(524 - ovalX0)
+        // spots inside the row sprite (260 x 59, from the render's CLAP row): tab 1-33, dark body 33-259
+        // (y 4-56), name from 43, LEVEL knob at 153, PAN knob at 202, lamp at 238 (all centred on y 29.5)
         return ZStack(alignment: .topLeading) {
-            rowArt(s: s)
+            Image(rowSprite).resizable().frame(width: 260 * s, height: 59 * s)
                 .opacity(newborn.contains(ch.id) ? 0 : 1)
-            // a dropped sound: a dot in the faceplate's colour grows into the track's oval, then settles
+                .allowsHitTesting(false)
+            // a dropped sound: a pill in the face's colour grows into the track's body, then settles
             if newborn.contains(ch.id) || settling.contains(ch.id) {
-                Capsule().fill(noteColor)
-                    .frame(width: (newborn.contains(ch.id) ? 45 : ovalW) * s, height: 45 * s)
-                    .shadow(color: noteColor.opacity(0.8), radius: 8 * s)
+                RoundedRectangle(cornerRadius: 7 * s).fill(accent)
+                    .frame(width: (newborn.contains(ch.id) ? 52 : 226) * s, height: 52 * s)
+                    .shadow(color: accent.opacity(0.8), radius: 8 * s)
                     .opacity(settling.contains(ch.id) && !newborn.contains(ch.id) ? 0.0 : 1)
-                    .offset(x: X(ovalX0), y: 5 * s)
+                    .offset(x: 33 * s, y: 4 * s)
                     .allowsHitTesting(false)
             }
-            // the lit oval of the selected track
+            // the selected track: lit all round (red, as in the renders)
             if isSel {
-                Capsule().stroke(noteColor, lineWidth: 1.5 * s).shadow(color: noteColor.opacity(0.6), radius: 3 * s)
-                    .frame(width: ovalW * s, height: 45 * s).offset(x: X(ovalX0), y: 5 * s).allowsHitTesting(false)
+                RoundedRectangle(cornerRadius: 7 * s).stroke(selectColor, lineWidth: 1.6 * s).shadow(color: selectColor.opacity(0.7), radius: 4 * s)
+                    .frame(width: 258 * s, height: 53 * s).offset(x: 1 * s, y: 3.5 * s).allowsHitTesting(false)
             }
-            Text(ch.name).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? noteColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
-                .frame(width: CGFloat(427 - ovalX0 - 14) * s, height: 45 * s, alignment: .leading).offset(x: X(ovalX0 + 14), y: 5 * s)
+            Text(ch.name).font(.system(size: 16 * s, weight: .medium)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? selectColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
+                .frame(width: 89 * s, height: 52 * s, alignment: .leading).offset(x: 43 * s, y: 4 * s)
                 .allowsHitTesting(false)
-            // the oval: tap selects the track, a two-finger tap opens its menu (the grip on its left moves it)
-            Color.clear.contentShape(Capsule()).frame(width: CGFloat(426 - ovalX0) * s, height: 45 * s).offset(x: X(ovalX0), y: 5 * s)
+            // the body: tap selects the track, a two-finger tap opens its menu (the tab on its left moves it)
+            Color.clear.contentShape(Rectangle()).frame(width: 100 * s, height: 52 * s).offset(x: 33 * s, y: 4 * s)
                 .bbTwoFingerMenu(title: ch.name, width: 270, tap: { selectedID = ch.id }) { channelMenu(ch) }
                 .accessibilityIdentifier("trackHeader\(pad)")
-            ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 30 * s, height: 30 * s).offset(x: X(425), y: 13 * s)
-            ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 30 * s, height: 30 * s).offset(x: X(463), y: 13 * s)
+            ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 36 * s, height: 36 * s).offset(x: 135 * s, y: 11.5 * s)
+            ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 36 * s, height: 36 * s).offset(x: 184 * s, y: 11.5 * s)
             // the lamp: on / off
-            if muted { Circle().fill(Color(white: 0.12)).frame(width: 9 * s, height: 9 * s).offset(x: X(504.5), y: 23.5 * s).allowsHitTesting(false) }
-            Button { if soloedOut { controller.clearSolos() } else { controller.toggleMute(pad) } } label: { Color.clear.frame(width: 22 * s, height: 30 * s).contentShape(Rectangle()) }
-                .buttonStyle(SeqPress()).offset(x: X(498), y: 13 * s)
-            // the arrow: opens and closes this track's VELOCITY graph (or its PITCH piano roll) under its steps
-            let isOpen = openID == ch.id
-            Button { toggleOpen(ch) } label: {
-                ZStack {
-                    // small (Tyrone, Oct 17): it sits in the gap left of the wider oval; the touch area stays full height
-                    RoundedRectangle(cornerRadius: 3 * s).fill(isOpen ? noteColor.opacity(0.25) : Color(red: 0.86, green: 0.86, blue: 0.87))
-                        .overlay(RoundedRectangle(cornerRadius: 3 * s).stroke(isOpen ? noteColor : Color(white: 0.55), lineWidth: 1 * s))
-                        .frame(width: 11 * s, height: 22 * s)
-                    Image(systemName: "triangle.fill").font(.system(size: 7 * s, weight: .bold)).foregroundColor(isOpen ? noteColor : Color(white: 0.2))
-                        .rotationEffect(.degrees(isOpen ? 180 : 90))
-                        .shadow(color: isOpen ? noteColor.opacity(0.8) : .clear, radius: 2 * s)
-                }
-                .frame(width: CGFloat(ovalX0 - A.rackX0) * s, height: rowH)
-                .frame(width: CGFloat(ovalX0 - A.rackX0 + 7) * s, alignment: .leading)   // a finger's width: reaches onto the oval's end
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(SeqPress())
-            .accessibilityIdentifier("trackArrow\(pad)")
-            .accessibilityLabel(isOpen ? "Close \(ch.name)'s graph" : "Open \(ch.name)'s graph")
+            if muted { Circle().fill(Color(white: 0.12)).overlay(Circle().stroke(Color.black, lineWidth: 1)).frame(width: 13 * s, height: 13 * s).offset(x: 231.5 * s, y: 23 * s).allowsHitTesting(false) }
+            Button { if soloedOut { controller.clearSolos() } else { controller.toggleMute(pad) } } label: { Color.clear.frame(width: 30 * s, height: 40 * s).contentShape(Rectangle()) }
+                .buttonStyle(SeqPress()).offset(x: 223 * s, y: 9.5 * s)
+            // the tab: ▶ opens and closes this track's VELOCITY graph (or its PITCH piano roll); drag it to move the track
+            trackTab(l, s: s).frame(width: 33 * s, height: 52 * s).offset(x: 1 * s, y: 4 * s)
             if l.pitch != nil {
                 scaleToolbar(l, s: s).offset(y: rowH)
                 pitchKeys(l, s: s).offset(y: rowH + toolbarH(rowH))
             }
             if l.graphH > 0 {
                 // the graph's header: VELOCITY | PITCH | OFFSET | CHANCE (PITCH opens the piano roll); the dice gives new velocities
-                // (four lanes take the track's width, so the hint and the dice share the line under them)
-                VStack(alignment: .leading, spacing: 6 * s) {
+                VStack(alignment: .leading, spacing: 10 * s) {
                     laneSwitch(ch, s: s)
                     HStack(spacing: 6 * s) {
-                        Text(lane.hint).font(.system(size: 7 * s, weight: .semibold, design: .monospaced)).foregroundColor(Color(white: 0.45)).lineLimit(1)
+                        Text(lane.hint).font(.system(size: 9 * s, weight: .medium)).foregroundColor(Color(white: 0.55)).lineLimit(1).minimumScaleFactor(0.7)
                         Spacer(minLength: 0)
-                        Button {
+                        SeqButton("SeqRowBtn", corner: 6, scale: s, action: {
                             commit(PatternEdit.randomizeVelocity(pattern, pad: pad, keys: selection, seed: UInt64.random(in: 1...UInt64.max)))
-                        } label: {
-                            Image(systemName: "dice.fill").font(.system(size: 12 * s)).foregroundColor(.white)
-                                .frame(width: 36 * s, height: 26 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
-                                .contentShape(Rectangle())
+                        }) {
+                            Image(systemName: "dice.fill").font(.system(size: 14 * s)).foregroundColor(.white)
                         }
-                        .buttonStyle(SeqPress())
+                        .frame(width: 36 * s, height: 30 * s)
                     }
                 }
                 .padding(.horizontal, 10 * s)
-                .frame(width: (A.rackX1 - A.rackX0) * s, height: l.graphH, alignment: .leading)
-                .background(Color(white: 0.06))
+                .frame(width: 260 * s, height: l.graphH - 6 * s, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 7 * s).fill(Color(white: 0.04))
+                    .overlay(RoundedRectangle(cornerRadius: 7 * s).stroke(Color(white: 0.3), lineWidth: 1)))
                 .offset(y: rowH)
             }
         }
         .frame(width: (A.rackX1 - A.rackX0) * s, height: l.height, alignment: .topLeading)
-        .background(rowTargeted == ch.id ? S.green.opacity(0.25) : Color.clear)
+        .background(rowTargeted == ch.id ? accent.opacity(0.25) : Color.clear)
         .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: Binding(get: { rowTargeted == ch.id }, set: { rowTargeted = $0 ? ch.id : nil })) { providers in
             dropOnRack(providers, channel: ch)
         }
-    }
-
-    /// The row sprite with its oval stretched left to A.ovalX0: the sprite's painted triangle is wiped
-    /// with its own metal, the oval's left cap moves over and its flat middle is stretched to meet it.
-    /// Built from the finish's own pixels, so every finish (and any repaint of it) keeps its look.
-    private func rowArt(s: CGFloat) -> some View {
-        let w = CGFloat(321 - A.ovalX0)              // how much wider than the sprite's oval
-        func slice(_ x0: CGFloat, _ x1: CGFloat, to d0: CGFloat, _ d1: CGFloat) -> some View {
-            let k: CGFloat = (d1 - d0) / (x1 - x0)
-            return Image(rowSprite).resizable()
-                .frame(width: 240 * k * s, height: 58 * s)
-                .offset(x: -x0 * k * s)
-                .frame(width: (d1 - d0) * s, height: 58 * s, alignment: .leading)
-                .clipped()
-                .offset(x: d0 * s)
-        }
-        return ZStack(alignment: .topLeading) {
-            Image(rowSprite).resizable().frame(width: 240 * s, height: 58 * s)
-            slice(16, 18, to: 3, 18)                     // plain metal over the painted triangle
-            slice(18, 50, to: 18 - w, 50 - w)            // the oval's left end, moved left
-            slice(50, 62, to: 50 - w, 62)                // its flat middle, stretched to close the gap
-        }
-        .frame(width: 240 * s, height: 58 * s, alignment: .topLeading)
-        .allowsHitTesting(false)
     }
 
     /// The arrow: open this track (closing any other), or close it.
@@ -1252,22 +1228,21 @@ struct SequencerView: View {
     }
 
     private func laneSwitch(_ ch: WorkspaceChannel, s: CGFloat) -> some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 5 * s) {
             ForEach(Lane.allCases, id: \.self) { l in
                 let on = lane == l && openID == ch.id
                 Button { setLane(l, ch) } label: {
-                    Text(l.short).font(.system(size: 9.5 * s, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
+                    Text(l.short).font(.system(size: 11 * s, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
                         .foregroundColor(on ? .black : .white)
-                        .frame(width: 54 * s, height: 30 * s)
-                        .background(on ? noteColor : Color(white: 0.12))
+                        .frame(width: 55 * s, height: 26 * s)
+                        .background(RoundedRectangle(cornerRadius: 4 * s).fill(on ? laneColor : Color(white: 0.1)))
+                        .overlay(RoundedRectangle(cornerRadius: 4 * s).stroke(on ? laneColor : Color(white: 0.38), lineWidth: 1))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(SeqPress())
                 .accessibilityIdentifier(l.testID)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 6 * s))
-        .overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.35), lineWidth: 1))
     }
 
     /// KEY · SCALE · SNAP · FIT for the open track's piano roll.
@@ -1277,8 +1252,8 @@ struct SequencerView: View {
         func chip<Content: View>(_ w: CGFloat, lit: Bool = false, @ViewBuilder _ c: () -> Content) -> some View {
             c().font(.system(size: 9 * s, weight: .semibold)).foregroundColor(lit ? .black : .white).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: w * s, height: A.rowH * s * 0.62 - 6 * s)
-                .background(RoundedRectangle(cornerRadius: 5 * s).fill(lit ? noteColor : Color(white: 0.14)))
-                .overlay(RoundedRectangle(cornerRadius: 5 * s).stroke(lit ? noteColor : Color(white: 0.3), lineWidth: 1))
+                .background(RoundedRectangle(cornerRadius: 5 * s).fill(lit ? glowColor : Color(white: 0.14)))
+                .overlay(RoundedRectangle(cornerRadius: 5 * s).stroke(lit ? glowColor : Color(white: 0.3), lineWidth: 1))
                 .contentShape(Rectangle())
         }
         return VStack(alignment: .leading, spacing: 5 * s) {
@@ -1511,13 +1486,13 @@ struct SequencerView: View {
                     // the band: the track's steps, lit where it has notes (any pitch)
                     ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: l.pitchTop - l.y)), with: .color(S.greenDark.opacity(0.5)))
                     ctx.fill(Path(CGRect(x: 0, y: l.y + l.bandH, width: size.width, height: l.pitchTop - l.y - l.bandH)), with: .color(Color(white: 0.06)))
-                    drawMetalCells(ctx, (0..<cells).map { CGRect(x: CGFloat($0) * cw + 1, y: l.y, width: cw - 2, height: l.bandH) })
+                    drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l) })
                     for c in 0..<cells {
                         let at = pageStart + Int32(c) * cellTicks
                         let lit = pattern.events.contains { Int($0.pad) == l.channel.pad && $0.tick >= at && $0.tick < at + cellTicks }
-                        let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.bandH)
+                        let r = cellRect(c, cw, l)
                         if (Int(at / PatternData.ppq) % 2) == 1 { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.32))) }
-                        if lit { ctx.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 2), cornerRadius: 3), with: .color(noteColor.opacity(0.8))) }
+                        if lit { ctx.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 2), cornerRadius: 3), with: .color(glowColor.opacity(0.8))) }
                     }
                     // the piano roll: a stripe per semitone (scale notes lighter, the root greener)
                     let base = controller.baseNote(pad: l.channel.pad)
@@ -1536,10 +1511,10 @@ struct SequencerView: View {
                     ctx.fill(Path(CGRect(x: 0, y: l.y + l.height - 1, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
                 } else {
                     // the step buttons (the picture's)
-                    drawMetalCells(ctx, (0..<cells).map { CGRect(x: CGFloat($0) * cw + 1, y: l.y, width: cw - 2, height: l.bandH) })
+                    drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l) })
                     for c in 0..<cells {
                         let at = pageStart + Int32(c) * cellTicks
-                        let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.bandH)
+                        let r = cellRect(c, cw, l)
                         // every other beat's buttons are the darker grey (Tyrone's picture)
                         if (Int(at / PatternData.ppq) % 2) == 1 { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.32))) }
                         if at >= pattern.lengthTicks { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.55))) }
@@ -1576,7 +1551,7 @@ struct SequencerView: View {
             }
             let lit: [(StepKey, CGRect, [GrooveEvent])] = steps.compactMap { key, hits in
                 guard let l = layout(for: key.pad, L) else { return nil }
-                return (key, CGRect(x: CGFloat(key.cell) * cw + 1, y: l.y, width: cw - 2, height: l.bandH), hits.sorted { $0.tick < $1.tick })
+                return (key, cellRect(key.cell, cw, l), hits.sorted { $0.tick < $1.tick })
             }
             // the glow: one blurred layer for every lit slot (and every piano-roll note)
             ctx.drawLayer { g in
@@ -1633,7 +1608,7 @@ struct SequencerView: View {
             if isThisPlaying, let t = controller.playheadTick {
                 let px = x(Int32(t), size.width)
                 if px >= 0 && px <= size.width {
-                    ctx.fill(Path(CGRect(x: px - 1, y: 0, width: 2, height: size.height)), with: .color(noteColor))
+                    ctx.fill(Path(CGRect(x: px - 1, y: 0, width: 2, height: size.height)), with: .color(glowColor))
                 }
             }
             _ = tick
@@ -1668,8 +1643,21 @@ struct SequencerView: View {
         CGRect(x: r.minX + r.width * 0.16, y: r.minY + r.height * 0.15, width: r.width * 0.68, height: max(3, r.height * 0.1))
     }
 
-    /// The lit slot's colour: the mode's light (VINTAGE glows yellow rather than its cream).
-    private var glowColor: Color { controller.mode == .vintage ? Color(red: 1, green: 0.8, blue: 0.25) : noteColor }
+    /// A step button inside its cell: gaps between the steps and between the rows, as in the render.
+    private func cellRect(_ c: Int, _ cw: CGFloat, _ l: RowLayout) -> CGRect {
+        let gx = min(2.5, cw * 0.09), gy = l.bandH * 0.05
+        return CGRect(x: CGFloat(c) * cw + gx, y: l.y + gy, width: cw - 2 * gx, height: l.bandH - 1.6 * gy)
+    }
+
+    /// The ON notes' glow (Tyrone, Oct 17): Platinum and Modern Black red, Vintage yellow, Texture blue.
+    /// The buttons themselves stay silver on every face.
+    private var glowColor: Color {
+        switch finish {
+        case "vintage": return Color(red: 1, green: 0.82, blue: 0.22)
+        case "texture": return Color(red: 0.25, green: 0.62, blue: 1)
+        default: return Color(red: 1, green: 0.2, blue: 0.14)
+        }
+    }
 
     private struct StepKey: Hashable { let pad: Int; let cell: Int }
 
@@ -1972,21 +1960,85 @@ struct SequencerView: View {
     private var orderedKits: [KitDefinition] { KitLibrary.browserOrder }
 
     @ViewBuilder private func footer(_ s: CGFloat) -> some View {
-        // pads / sequencer switch: the pad button goes back to the faceplate
-        // the way back to Face 1: slide the platinum knob (the sequencer's 9 squares) to the right
-        FaceSlider(scale: s, color: noteColor) { dismiss() }.place([38, 715, 147, 772], s)
+        // the way back to Face 1: slide the knob (the pads' squares) to the right
+        FaceSlider(scale: s, color: accent) { dismiss() }.place(A.slider, s)
         // power: the sequencer and pads all the way on or off
-        PowerButton(on: controller.powerOn, scale: s, color: S.green) { controller.togglePower() }.place(A.power, s)
-        // PATTERN
-        SeqButton("SeqArrowBack", corner: 8, scale: s) { cycleLoop(-1) }.place(A.patternBack, s)
-        SeqButton("SeqArrowFwd", corner: 0, scale: s) { cycleLoop(1) }.place(A.patternForward, s)
-        SeqChip(sprite: "SeqChipPattern", text: controller.state.presetName, size: 14, leading: 6, trailing: 30, scale: s)
+        PowerButton(on: controller.powerOn, scale: s, color: accent) { controller.togglePower() }.place(A.power, s)
+        // PATTERN (moved left, Oct 17; the label and dividers are printed on the plate)
+        SeqButton("SeqArrowBack", corner: 7, scale: s) { cycleLoop(-1) }.place(A.patternBack, s)
+        SeqButton("SeqArrowFwd", corner: 7, scale: s) { cycleLoop(1) }.place(A.patternForward, s)
+        SeqChip(sprite: "SeqChipPattern", text: controller.state.presetName, size: 17, leading: 16, trailing: 44, scale: s)
             .bbMenuPlaced(A.patternChip, s, title: "Presets", width: 340) { presetItems() }
         // KIT
-        SeqButton("SeqArrowBack", corner: 8, scale: s) { cycleKit(-1) }.place(A.kitBack, s)
-        SeqButton("SeqArrowFwd", corner: 0, scale: s) { cycleKit(1) }.place(A.kitForward, s)
-        SeqChip(sprite: "SeqChipKit", text: controller.state.kitName, size: 14, leading: 6, trailing: 30, scale: s)
+        SeqButton("SeqArrowBack", corner: 7, scale: s) { cycleKit(-1) }.place(A.kitBack, s)
+        SeqButton("SeqArrowFwd", corner: 7, scale: s) { cycleKit(1) }.place(A.kitForward, s)
+        SeqChip(sprite: "SeqChipKit", text: controller.state.kitName, size: 17, leading: 16, trailing: 44, scale: s)
             .bbMenuPlaced(A.kitChip, s, title: "Kits · drum sounds", width: 320) { kitItems() }
+        fxKnobs(s)
+    }
+
+    /// The FX knobs on the bottom rail. They morph with the mode (Tyrone, Oct 17):
+    /// MODERN   clean analog punch: BOOST, PUNCH, ANALOG EQ, TIGHTEN, GRIT, SHINE, NOISE
+    /// VINTAGE  retro hardware: BOOST becomes DRIVE (warm saturation), the same shaping knobs
+    /// TEXTURE  resampled and lo-fi: RESAMPLE, INSTABILITY, DELAY (double tap: locked to the tempo or
+    ///          free), REVERB (wet / dry), DECAY, PRE-DELAY, WARP, GLITCH
+    static func fxParams(_ mode: SoundMode) -> [KParam] {
+        switch mode {
+        case .modern: return [.boost, .punch, .analogEQ, .tighten, .grit, .shine, .noise]
+        case .vintage: return [.drive, .punch, .analogEQ, .tighten, .grit, .shine, .noise]
+        case .texture: return [.resample, .instability, .textureDelay, .gatedReverb, .reverbDecay, .reverbPredelay, .warp, .glitch]
+        }
+    }
+
+    /// A double tap on DELAY: locked to the tempo (a dotted 1/8) or free (300 ms).
+    private func toggleDelaySync() {
+        controller.set(.delaySync, controller.value(.delaySync) > 0.5 ? 0 : 1, show: false)
+    }
+
+    static func fxLabel(_ p: KParam) -> String {
+        switch p {
+        case .analogEQ: return "ANALOG EQ"
+        case .textureDelay: return "DELAY"
+        case .gatedReverb: return "REVERB"
+        case .reverbDecay: return "DECAY"
+        case .reverbPredelay: return "PRE-DELAY"
+        default: return p.name.uppercased()
+        }
+    }
+
+    @ViewBuilder private func fxKnobs(_ s: CGFloat) -> some View {
+        let params = Self.fxParams(controller.mode)
+        let slot = (A.fxX1 - A.fxX0) / 8
+        let x0 = A.fxX0 + Double(8 - params.count) * slot / 2          // seven knobs sit centred in the eight places
+        ForEach(Array(params.enumerated()), id: \.element.rawValue) { i, p in
+            let cx = x0 + slot * (Double(i) + 0.5)
+            let turning = fxTurning == p
+            let synced = controller.value(.delaySync) > 0.5
+            HStack(spacing: 4 * s) {
+                if p == .textureDelay {
+                    // DELAY's tempo lamp: lit while it's locked to the tempo (double tap the knob)
+                    Circle().fill(synced ? accent : Color(white: 0.3)).frame(width: 6 * s, height: 6 * s)
+                        .shadow(color: synced ? accent : .clear, radius: 2 * s)
+                }
+                Text(turning ? p.text(controller.value(p)) : Self.fxLabel(p))
+                    .font(.system(size: 12 * s, weight: .semibold)).foregroundColor(turning ? accent : inkColor)
+                    .lineLimit(1).minimumScaleFactor(0.55)
+            }
+            .frame(width: (slot - 2) * s, height: (A.fxLabelY1 - A.fxLabelY0) * s)
+            .place([cx - slot / 2 + 1, A.fxLabelY0, cx + slot / 2 - 1, A.fxLabelY1], s)
+            .allowsHitTesting(false)
+            let h = A.fxKnobY1 - A.fxKnobY0
+            ArtKnob(value: controller.value(p), grip: 8 * s,
+                    doubleTap: p == .textureDelay ? toggleDelaySync : nil) { v, ended in
+                fxTurning = ended ? nil : p
+                controller.set(p, v)
+            }
+            .place([cx - h / 2 - 8, A.fxKnobY0 - 8, cx + h / 2 + 8, A.fxKnobY1 + 8], s)
+            .accessibilityElement()
+            .accessibilityLabel(Self.fxLabel(p))
+            .accessibilityValue(p.text(controller.value(p)))
+            .accessibilityIdentifier("fx_\(p.id)")
+        }
     }
 
     /// PRESETS: every preset pattern by style, and your own.
@@ -2212,6 +2264,8 @@ struct ArtKnob: View {
     var grip: CGFloat = 0
     /// A double tap puts the knob back here (pan: centre).
     var reset: Float? = nil
+    /// Or a double tap does this instead (DELAY: tempo lock on / off).
+    var doubleTap: (() -> Void)? = nil
     let change: (Float, Bool) -> Void
     @State private var start: Float?
     @State private var lastTap: Date?
@@ -2232,8 +2286,8 @@ struct ArtKnob: View {
                 }
                 .onEnded { g in
                     let isTap = abs(g.translation.width) < 6 && abs(g.translation.height) < 6
-                    if isTap, let reset, let t = lastTap, Date().timeIntervalSince(t) < 0.35 {
-                        change(reset, true)
+                    if isTap, reset != nil || doubleTap != nil, let t = lastTap, Date().timeIntervalSince(t) < 0.35 {
+                        if let doubleTap { doubleTap(); change(start ?? value, true) } else if let reset { change(reset, true) }
                         lastTap = nil
                     } else {
                         let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
