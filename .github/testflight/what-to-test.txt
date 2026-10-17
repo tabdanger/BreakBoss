@@ -1,6 +1,8 @@
-Every button on the DRUM SEQUENCER is now its own real control, cut out of the approved picture (no more press areas over a painting):
-- DRAW / SELECT / ERASE / UNDO / REDO, the bars arrows, STOP / PLAY / REC, BPM / BARS / MAIN A chips, the gear, the cloud, SNAP, the GENERAL / GENERATE / MIDI headers, Generate / Clear, the pads switch, Drum Track, and the PATTERN / KIT arrows and chips all press in and spring back, and light up when they're on (DRAW green, PLAY green, REC red, Drum Track red while recording).
-- Menus open on the button you tapped and close with an animation.
-- The grid opens blank with every other beat darker grey; a pressed step lights its inner slot in the faceplate's colour (MODERN red, VINTAGE cream, TEXTURE blue).
-- Space bar on a hardware keyboard starts and stops the sequence.
-Please press everything and tell me what still feels dead or out of place.
+New in this build:
+- RECORD on the pad faceplate (top right, next to the piano-roll button) and REC on the sequencer: a 1- or 2-bar metronome count-in (the count shows on the button), then the pattern plays and every pad you hit lands in it on that pad's own channel. Tap again to stop recording. Count-in length and metronome are in the menu.
+- Each pad is its own MIDI channel. A pitched hit goes out as a pitched note, so a DAW piano roll has full control of pitch and velocity; played back into BreakBoss it plays that pad at that pitch and records it. The cloud exports a 12-track MIDI file (one track per channel).
+- The sequencer wears the faceplate's finish: platinum / black for MODERN, cream for VINTAGE, blue for TEXTURE. Notes and the selected track light in the same colour.
+- MAIN A is gone. BPM slider goes to 280 with + / -. SWING and HUMANIZE open sliders when tapped; the knobs have a bigger grip and turn instead of scrolling the rack.
+- Tap a track header to select it. The arrow opens that track's piano roll with KEY / SCALE / SNAP / FIT buttons. The velocity / pitch lane edits the open track only.
+- The grid opens blank with every other beat darker; a pressed step lights its inner slot. Every button is a real control that presses in.
+Please try: RECORD from the pads with a count-in, then open the sequencer and look at each pad's piano roll; the finish in each mode; the swing and humanize sliders.
