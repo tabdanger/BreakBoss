@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Sorts every stock sound by category and gives it a new name (Oct 17, run once).
 
-Ran once on Oct 17 (it reads the manifest from before then, now in git history).
+Ran once on Oct 17 (it reads the manifest from before then, now in git history). The names it gave were
+replaced the same day by tools/name_stock_sounds.py, which names each sound after its original pack folder.
 
   python3 tools/sort_stock_sounds.py            # dry run: prints the new names
   python3 tools/sort_stock_sounds.py --apply    # renames the WAVs (git mv), drops exact duplicates
