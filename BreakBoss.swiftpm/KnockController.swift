@@ -49,6 +49,7 @@ final class KnockController: ObservableObject {
     init(engine: KnockEngine, isPlugin: Bool) {
         self.engine = engine
         self.isPlugin = isPlugin
+        engine.standalone = !isPlugin
         var s = KnockState()
         for p in KParam.allCases { s.values[p.id] = p.defaultValue }
         if !isPlugin, let data = UserDefaults.standard.data(forKey: KnockController.sessionKey),
@@ -203,8 +204,9 @@ final class KnockController: ObservableObject {
     var liveTempo: Double { meters.status[4] > 0 ? meters.status[4] : state.bpm }
 
     /// True when the tempo comes from the DAW or MIDI clock (the display can't be dragged).
+    /// Only the AUv3 inside a DAW follows a host; the standalone app keeps its own tempo.
     var tempoIsExternal: Bool {
-        (value(.tempoSync) > 0.5 || value(.followDAW) > 0.5) && (meters.status[5] > 0 || meters.status[6] > 0)
+        isPlugin && (value(.tempoSync) > 0.5 || value(.followDAW) > 0.5) && (meters.status[5] > 0 || meters.status[6] > 0)
     }
 
     func setBPM(_ bpm: Double) {
@@ -872,7 +874,7 @@ final class KnockController: ObservableObject {
     /// INTRO or TOPS a LOOP pad picked) it played only some of its drums, or none.
     func loadPatternPreset(_ preset: PatternPreset) {
         let playingLoop = Int(meters.status[1])
-        restore(preset.applying(to: state), keepPlaying: true)   // the beat carries on with the new pattern
+        restore(preset.applying(to: state, hosted: isPlugin), keepPlaying: true)   // the beat carries on with the new pattern
         screenPattern = 0
         if !isPlaying { engine.send(KEvent(kind: .cue, a: 0)) }
         else if playingLoop != 0 { engine.send(KEvent(kind: .loopPad, a: 0)) }   // over to MAIN A at the bar

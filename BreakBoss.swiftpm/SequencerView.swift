@@ -360,6 +360,8 @@ struct SequencerView: View {
         static let leftPanel: [Double] = [33, 300, 285, 693]
         /// The grips sit in the strip between the SOUNDS panel and the track headers.
         static let gripX0: Double = 285
+        /// The rack oval's left end (the sprite's is at 321; drawn wider since Oct 17).
+        static let ovalX0: Double = 311
         static let rackX0: Double = 298, rackX1: Double = 534, gridX0: Double = 549, gridX1: Double = 1445, panelX1: Double = 1495
         static let rowsY0: Double = 341, rowsY1: Double = 682, rowH: Double = 56.5, labelsY: Double = 325
         static let power: [Double] = [156, 715, 213, 772]
@@ -1115,31 +1117,33 @@ struct SequencerView: View {
         let isSel = selectedID == ch.id
         let ps = controller.state.pads[pad]
         func set(_ change: (inout PadSettings) -> Void) { var v = controller.state.pads[pad]; change(&v); controller.setPadSettings(pad, v) }
-        // art offsets inside the row sprite (298, 334): triangle 303-312, oval 321-524, name 335-425, knobs 440 / 478, lamp 509
+        // art offsets inside the row sprite (298, 334): triangle 303-312, oval 321-524, name 335-425, knobs 440 / 478, lamp 509.
+        // The oval is drawn wider than the sprite's (ovalX0, Oct 17): the small arrow left of it needs less room.
         let X = { (ax: Double) in CGFloat(ax - A.rackX0) * s }
+        let ovalX0 = A.ovalX0, ovalW = CGFloat(524 - ovalX0)
         return ZStack(alignment: .topLeading) {
-            Image(rowSprite).resizable().frame(width: 240 * s, height: 58 * s)
+            rowArt(s: s)
                 .opacity(newborn.contains(ch.id) ? 0 : 1)
             // a dropped sound: a dot in the faceplate's colour grows into the track's oval, then settles
             if newborn.contains(ch.id) || settling.contains(ch.id) {
                 Capsule().fill(noteColor)
-                    .frame(width: (newborn.contains(ch.id) ? 45 : 203) * s, height: 45 * s)
+                    .frame(width: (newborn.contains(ch.id) ? 45 : ovalW) * s, height: 45 * s)
                     .shadow(color: noteColor.opacity(0.8), radius: 8 * s)
                     .opacity(settling.contains(ch.id) && !newborn.contains(ch.id) ? 0.0 : 1)
-                    .offset(x: X(321), y: 5 * s)
+                    .offset(x: X(ovalX0), y: 5 * s)
                     .allowsHitTesting(false)
             }
             // the lit oval of the selected track
             if isSel {
                 Capsule().stroke(noteColor, lineWidth: 1.5 * s).shadow(color: noteColor.opacity(0.6), radius: 3 * s)
-                    .frame(width: 203 * s, height: 45 * s).offset(x: X(321), y: 5 * s).allowsHitTesting(false)
+                    .frame(width: ovalW * s, height: 45 * s).offset(x: X(ovalX0), y: 5 * s).allowsHitTesting(false)
             }
             Text(ch.name).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? noteColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
-                .frame(width: 92 * s, height: 45 * s, alignment: .leading).offset(x: X(335), y: 5 * s)
+                .frame(width: CGFloat(427 - ovalX0 - 14) * s, height: 45 * s, alignment: .leading).offset(x: X(ovalX0 + 14), y: 5 * s)
                 .allowsHitTesting(false)
-            // the oval: tap selects the track, hold for its menu (the grip on its left moves it)
-            Color.clear.contentShape(Capsule()).frame(width: 105 * s, height: 45 * s).offset(x: X(321), y: 5 * s)
-                .bbLongPressMenu(title: ch.name, width: 270, tap: { selectedID = ch.id }) { channelMenu(ch) }
+            // the oval: tap selects the track, a two-finger tap opens its menu (the grip on its left moves it)
+            Color.clear.contentShape(Capsule()).frame(width: CGFloat(426 - ovalX0) * s, height: 45 * s).offset(x: X(ovalX0), y: 5 * s)
+                .bbTwoFingerMenu(title: ch.name, width: 270, tap: { selectedID = ch.id }) { channelMenu(ch) }
                 .accessibilityIdentifier("trackHeader\(pad)")
             ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 30 * s, height: 30 * s).offset(x: X(425), y: 13 * s)
             ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 30 * s, height: 30 * s).offset(x: X(463), y: 13 * s)
@@ -1151,14 +1155,17 @@ struct SequencerView: View {
             let isOpen = openID == ch.id
             Button { toggleOpen(ch) } label: {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 4 * s).fill(isOpen ? noteColor.opacity(0.25) : Color(red: 0.86, green: 0.86, blue: 0.87))
-                        .overlay(RoundedRectangle(cornerRadius: 4 * s).stroke(isOpen ? noteColor : Color(white: 0.55), lineWidth: 1.2 * s))
-                        .frame(width: 26 * s, height: 38 * s)
-                    Image(systemName: "triangle.fill").font(.system(size: 14 * s, weight: .bold)).foregroundColor(isOpen ? noteColor : Color(white: 0.2))
+                    // small (Tyrone, Oct 17): it sits in the gap left of the wider oval; the touch area stays full height
+                    RoundedRectangle(cornerRadius: 3 * s).fill(isOpen ? noteColor.opacity(0.25) : Color(red: 0.86, green: 0.86, blue: 0.87))
+                        .overlay(RoundedRectangle(cornerRadius: 3 * s).stroke(isOpen ? noteColor : Color(white: 0.55), lineWidth: 1 * s))
+                        .frame(width: 11 * s, height: 22 * s)
+                    Image(systemName: "triangle.fill").font(.system(size: 7 * s, weight: .bold)).foregroundColor(isOpen ? noteColor : Color(white: 0.2))
                         .rotationEffect(.degrees(isOpen ? 180 : 90))
-                        .shadow(color: isOpen ? noteColor.opacity(0.8) : .clear, radius: 3 * s)
+                        .shadow(color: isOpen ? noteColor.opacity(0.8) : .clear, radius: 2 * s)
                 }
-                .frame(width: 34 * s, height: rowH).contentShape(Rectangle())
+                .frame(width: CGFloat(ovalX0 - A.rackX0) * s, height: rowH)
+                .frame(width: CGFloat(ovalX0 - A.rackX0 + 7) * s, alignment: .leading)   // a finger's width: reaches onto the oval's end
+                .contentShape(Rectangle())
             }
             .buttonStyle(SeqPress())
             .accessibilityIdentifier("trackArrow\(pad)")
@@ -1196,6 +1203,30 @@ struct SequencerView: View {
         .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: Binding(get: { rowTargeted == ch.id }, set: { rowTargeted = $0 ? ch.id : nil })) { providers in
             dropOnRack(providers, channel: ch)
         }
+    }
+
+    /// The row sprite with its oval stretched left to A.ovalX0: the sprite's painted triangle is wiped
+    /// with its own metal, the oval's left cap moves over and its flat middle is stretched to meet it.
+    /// Built from the finish's own pixels, so every finish (and any repaint of it) keeps its look.
+    private func rowArt(s: CGFloat) -> some View {
+        let w = CGFloat(321 - A.ovalX0)              // how much wider than the sprite's oval
+        func slice(_ x0: CGFloat, _ x1: CGFloat, to d0: CGFloat, _ d1: CGFloat) -> some View {
+            let k: CGFloat = (d1 - d0) / (x1 - x0)
+            return Image(rowSprite).resizable()
+                .frame(width: 240 * k * s, height: 58 * s)
+                .offset(x: -x0 * k * s)
+                .frame(width: (d1 - d0) * s, height: 58 * s, alignment: .leading)
+                .clipped()
+                .offset(x: d0 * s)
+        }
+        return ZStack(alignment: .topLeading) {
+            Image(rowSprite).resizable().frame(width: 240 * s, height: 58 * s)
+            slice(16, 18, to: 3, 18)                     // plain metal over the painted triangle
+            slice(18, 50, to: 18 - w, 50 - w)            // the oval's left end, moved left
+            slice(50, 62, to: 50 - w, 62)                // its flat middle, stretched to close the gap
+        }
+        .frame(width: 240 * s, height: 58 * s, alignment: .topLeading)
+        .allowsHitTesting(false)
     }
 
     /// The arrow: open this track (closing any other), or close it.
@@ -1349,7 +1380,7 @@ struct SequencerView: View {
         }
     }
 
-    /// Long-press menu on a channel: fills, clear, randomize, rename, delete.
+    /// The menu a two-finger tap opens on a channel: fills, clear, randomize, rename, delete.
     private func channelMenu(_ ch: WorkspaceChannel) -> [BBMenuItem] {
         let pad = ch.pad
         let step = PatternData.stepTicks
@@ -2183,6 +2214,7 @@ struct ArtKnob: View {
     var reset: Float? = nil
     let change: (Float, Bool) -> Void
     @State private var start: Float?
+    @State private var lastTap: Date?
 
     var body: some View {
         MetalKnob().aspectRatio(1, contentMode: .fit)
@@ -2190,8 +2222,8 @@ struct ArtKnob: View {
             .animation(.easeOut(duration: 0.15), value: value)
             .padding(grip)
             .contentShape(Rectangle())
-            .onTapGesture(count: 2) { if let reset { change(reset, true) } }
-            // high priority: the rack's knobs turn instead of scrolling the rack
+            // high priority: the rack's knobs turn instead of scrolling the rack. That drag takes every
+            // touch, so an onTapGesture(count: 2) beside it never saw a tap: the double tap is counted here.
             .highPriorityGesture(DragGesture(minimumDistance: 0)
                 .onChanged { g in
                     if start == nil { start = value }
@@ -2199,8 +2231,15 @@ struct ArtKnob: View {
                     change(((start ?? value) + d).clamped(0, 1), false)
                 }
                 .onEnded { g in
-                    let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
-                    change(((start ?? value) + d).clamped(0, 1), true)
+                    let isTap = abs(g.translation.width) < 6 && abs(g.translation.height) < 6
+                    if isTap, let reset, let t = lastTap, Date().timeIntervalSince(t) < 0.35 {
+                        change(reset, true)
+                        lastTap = nil
+                    } else {
+                        let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
+                        change(((start ?? value) + d).clamped(0, 1), true)
+                        lastTap = isTap ? Date() : nil
+                    }
                     start = nil
                 })
     }

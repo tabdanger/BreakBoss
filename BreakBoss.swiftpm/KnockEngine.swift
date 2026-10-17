@@ -97,6 +97,10 @@ final class KnockEngine {
     private var hostParamMask: UInt32 = 0
     /// Tempo of the BPM display (the engine reads it; the controller sets it).
     private let displayBPM: UnsafeMutablePointer<Double>
+    /// The standalone app: TEMPO SYNC and FOLLOW DAW only mean something inside a DAW (AUv3), so
+    /// here the display's tempo and the app's own transport are always in charge. Set once, before audio runs.
+    var standalone = false
+    private var followsHost: Bool { !standalone && params[KParam.followDAW.rawValue] > 0.5 }
 
     // What the faceplate shows (written by the audio thread).
     /// 0 playing, 1 current loop (-1 none), 2 queued loop, 3 beat, 4 tempo, 5 host connected,
@@ -779,13 +783,13 @@ final class KnockEngine {
             clockRunning = true
             clockCount = 0
             midiClockBeat = 0
-            if params[KParam.followDAW.rawValue] > 0.5 { if currentLoop < 0 { currentLoop = 0 }; startTransport(at: 0) }
+            if followsHost { if currentLoop < 0 { currentLoop = 0 }; startTransport(at: 0) }
         case .midiContinue:
             clockRunning = true
-            if params[KParam.followDAW.rawValue] > 0.5 { if currentLoop < 0 { currentLoop = 0 }; playing = true }
+            if followsHost { if currentLoop < 0 { currentLoop = 0 }; playing = true }
         case .midiStop:
             clockRunning = false
-            if params[KParam.followDAW.rawValue] > 0.5 { playing = false; releaseAll() }
+            if followsHost { playing = false; releaseAll() }
         case .midiClock:
             if lastClockTime > 0 {
                 let dt = e.value - lastClockTime
@@ -798,7 +802,7 @@ final class KnockEngine {
             clockCount += 1
         case .songPosition:
             midiClockBeat = Double(e.a) / 4
-            if params[KParam.followDAW.rawValue] > 0.5 { beat = midiClockBeat }
+            if followsHost { beat = midiClockBeat }
         case .allOff:
             midiOutAllOff(offset: offset)
             clearGates()
@@ -1094,8 +1098,8 @@ final class KnockEngine {
 
     /// Works out where the transport is this block and puts the loop's hits into it.
     private func scheduleLoops(frames: Int, host: HostTiming?) {
-        let follow = params[KParam.followDAW.rawValue] > 0.5
-        let sync = params[KParam.tempoSync.rawValue] > 0.5
+        let follow = followsHost
+        let sync = !standalone && params[KParam.tempoSync.rawValue] > 0.5
         let loopMode = params[KParam.playMode.rawValue] > 0.5
         let hostHasTransport = host?.beat != nil && host?.playing != nil
         followingHost = follow && ((hostHasTransport && host?.playing == true) || clockRunning)

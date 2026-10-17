@@ -117,14 +117,15 @@ struct PatternPreset: Decodable, Equatable {
     }
 
     /// PRESETS change the pattern only (and its tempo and swing). Kit, mode, knobs and pad
-    /// sounds stay put. With TEMPO SYNC on, the DAW's tempo stays in charge.
-    func applying(to source: KnockState) -> KnockState {
+    /// sounds stay put. Inside a DAW with TEMPO SYNC on, the DAW's tempo stays in charge; the
+    /// standalone app has no host, so the pattern's tempo always comes with it (Tyrone, Oct 17).
+    func applying(to source: KnockState, hosted: Bool = true) -> KnockState {
         var s = source
         s.basePattern = pattern
         s.patternStyle = grooveStyle
         s.grooveSeed = PatternPreset.seed(name)
         s.editedLoops = Array(repeating: nil, count: Pad.count)
-        if (s.values[KParam.tempoSync.id] ?? KParam.tempoSync.defaultValue) < 0.5 { s.bpm = bpm }
+        if !hosted || (s.values[KParam.tempoSync.id] ?? KParam.tempoSync.defaultValue) < 0.5 { s.bpm = bpm }
         s.values[KParam.bounce.id] = bounce
         s.presetName = name
         return s.normalized()
