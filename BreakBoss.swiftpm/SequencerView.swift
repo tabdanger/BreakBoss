@@ -105,6 +105,7 @@ struct SequencerView: View {
     @State private var selection = Set<NoteKey>()
     @State private var undoStack: [PatternData] = []
     @State private var redoStack: [PatternData] = []
+    @State private var rememberedAt: Date?
     @State private var work: PatternData?
     @State private var drag: GridDrag = .none
     @State private var lastVelocity: Float = 0.78
@@ -402,11 +403,15 @@ struct SequencerView: View {
             HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.backward").font(.system(size: 13 * s, weight: .medium)); Text("UNDO").font(.system(size: 13 * s, weight: .medium)) }
                 .foregroundColor(undoStack.isEmpty ? Color(white: 0.5) : .white)
         }
+        .keyboardShortcut("z", modifiers: .command)
+        .accessibilityIdentifier("undoButton")
         .place(A.undo, s)
         SeqButton("SeqBtnTool", scale: s, action: { redo() }) {
             HStack(spacing: 4 * s) { Image(systemName: "arrow.uturn.forward").font(.system(size: 13 * s, weight: .medium)); Text("REDO").font(.system(size: 13 * s, weight: .medium)) }
                 .foregroundColor(redoStack.isEmpty ? Color(white: 0.5) : .white)
         }
+        .keyboardShortcut("z", modifiers: [.command, .shift])
+        .accessibilityIdentifier("redoButton")
         .place(A.redo, s)
         // bars pager
         artText(pageLabel, A.pageText, s, size: 17, weight: .medium, color: inkColor).accessibilityIdentifier("pageLabel")
@@ -421,7 +426,7 @@ struct SequencerView: View {
             Image(systemName: "play.fill").font(.system(size: 17 * s)).foregroundColor(S.green)
         }
         .place(A.play, s)
-        SeqButton("SeqBtnTransport", lit: controller.recording ? S.red : nil, scale: s, action: { controller.toggleRecordPads(loop: loop) }) {
+        SeqButton("SeqBtnTransport", lit: controller.recording ? S.red : nil, scale: s, action: { if !controller.recording { remember() }; controller.toggleRecordPads(loop: loop) }) {
             if controller.countingIn {
                 Text("\(controller.countInBeatsLeft)").font(.system(size: 20 * s, weight: .bold, design: .rounded)).foregroundColor(S.red)
             } else {
@@ -484,6 +489,7 @@ struct SequencerView: View {
         SeqArt(sprite: "SeqChipHumanize", scale: s) { EmptyView() }.place(A.humanize, s).allowsHitTesting(false)
         PressGlow().bbPanelPlaced([A.humanize[0], A.humanize[1], A.humanizeKnob[0] - 4, A.humanize[3]], s, title: "Humanize", width: 320) {
                 BBSlider(value: Double((pattern.humanize ?? 0) * 100), range: 0...100, step: 1, label: { $0 < 1 ? "OFF" : "\(Int($0))%" }) { v in
+                    remember(coalescing: true)
                     var p = pattern
                     p.humanize = v < 1 ? nil : Float(v / 100)
                     controller.setLoop(loop, p)
@@ -517,7 +523,7 @@ struct SequencerView: View {
             .item("Quantize \(selection.isEmpty ? "all notes" : "selection")", icon: "squareshape.split.3x3") {
                 commit(PatternEdit.quantize(pattern, selection.isEmpty ? nil : selection, grid: snapTicks > 0 ? snapTicks : PatternData.stepTicks))
             },
-            .item("Back to the preset's pattern", icon: "arrow.uturn.backward") { controller.useGeneratedLoop(loop); selection = [] },
+            .item("Back to the preset's pattern", icon: "arrow.uturn.backward") { remember(); controller.useGeneratedLoop(loop); selection = [] },
             .item("Kit's 12 channels back in the rack", icon: "square.grid.3x3") { controller.resetRack(); expandedID = nil; openID = nil; selectedID = nil },
             .item("Clear \(selection.isEmpty ? "the pattern" : "selection")", icon: "trash", destructive: true) { clear() }
         ]
@@ -684,6 +690,7 @@ struct SequencerView: View {
     /// UPDATE TEMPO sets the genre's tempo.
     private func generate() {
         let style = generateStyle ?? PatternRandomizer.style(for: controller.state.presetName)
+        remember()
         controller.randomizePattern(style: style)
         if updateSounds { controller.dice() }
         if updateTempo, !controller.tempoIsExternal {
@@ -767,7 +774,7 @@ struct SequencerView: View {
                 ForEach(L, id: \.channel.id) { l in
                     // dice: new steps for this track only; ✕: clear this track in one tap
                     VStack(spacing: 3 * s) {
-                        Button { selectedID = l.channel.id; controller.randomizeChannel(loop: loop, pad: l.channel.pad); selection = [] } label: {
+                        Button { selectedID = l.channel.id; remember(); controller.randomizeChannel(loop: loop, pad: l.channel.pad); selection = [] } label: {
                             Image(systemName: "dice").font(.system(size: 12 * s)).foregroundColor(Color(white: 0.8))
                                 .frame(width: 30 * s, height: 24 * s).background(RoundedRectangle(cornerRadius: 5 * s).fill(Color(white: 0.14)))
                                 .contentShape(Rectangle())
@@ -1136,7 +1143,7 @@ struct SequencerView: View {
             BBMenuItem.item(f.0, icon: "square.grid.4x3.fill") { commit(PatternEdit.fill(pattern, pad: pad, every: f.1, velocity: lastVelocity)) }
         }
         items.append(.header("This channel"))
-        items.append(BBMenuItem.item("Randomize its steps", icon: "dice") { controller.randomizeChannel(loop: loop, pad: pad) })
+        items.append(BBMenuItem.item("Randomize its steps", icon: "dice") { remember(); controller.randomizeChannel(loop: loop, pad: pad) })
         items.append(BBMenuItem.item("Track settings… (tune, decay, filter, MIDI)", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id })
         items.append(BBMenuItem.item(controller.soloPads[pad] ? "Solo off" : "Solo", icon: "s.square", checked: controller.soloPads[pad]) { controller.toggleSolo(pad) })
         items.append(BBMenuItem.item("Load a sample from Files…", icon: "folder") { importPad = pad })
@@ -1269,23 +1276,27 @@ struct SequencerView: View {
                 var st = pageStart
                 while st < pageStart + pageTicks { ctx.fill(Path(CGRect(x: x(st, size.width), y: 0, width: 1, height: size.height)), with: .color(S.stepLine)); st += snapTicks }
             }
-            for e in pattern.events where visible(e) {
-                guard let r = noteRect(e, w: size.width, L) else { continue }
+            // the notes: silver buttons that glow the mode's colour. The shadow under them and the glow
+            // are one blurred layer each, so the canvas blurs twice however many notes are on screen.
+            let lit: [(GrooveEvent, CGRect)] = pattern.events.filter(visible).compactMap { e in noteRect(e, w: size.width, L).map { (e, $0) } }
+            ctx.drawLayer { g in
+                g.addFilter(.shadow(color: Color.black.opacity(0.75), radius: 2.5, x: 0, y: 2))
+                for (_, r) in lit { g.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(.black)) }
+            }
+            ctx.drawLayer { g in
+                g.addFilter(.shadow(color: noteColor, radius: 6))
+                for (e, r) in lit {
+                    let glow = selection.contains(NoteKey(e)) ? Color.white : noteColor
+                    g.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3), with: .color(glow.opacity(0.3 + 0.6 * Double(e.velocity))))
+                }
+            }
+            for (e, r) in lit {
                 let sel = selection.contains(NoteKey(e))
                 let base = sel ? Color.white : noteColor
                 let shade = 0.55 + 0.45 * Double(e.velocity)
-                if layout(for: Int(e.pad), L)?.pitch == nil {
-                    // A step button keeps its shape: the inner slot lights up in the faceplate's colour
-                    // (MODERN red, VINTAGE cream, TEXTURE blue) and the button body takes a tint.
-                    ctx.fill(Path(roundedRect: r.insetBy(dx: 0.5, dy: 0.5), cornerRadius: 3), with: .color(base.opacity(0.14 + 0.16 * Double(e.velocity))))
-                    let slot = CGRect(x: r.minX + r.width * 0.12, y: r.minY + r.height * 0.09, width: r.width * 0.76, height: max(3, r.height * 0.14))
-                    ctx.fill(Path(roundedRect: slot.insetBy(dx: -2, dy: -2), cornerRadius: 4), with: .color(base.opacity(0.35 * shade)))
-                    ctx.fill(Path(roundedRect: slot, cornerRadius: slot.height / 2), with: .color(base.opacity(shade)))
-                    ctx.fill(Path(roundedRect: CGRect(x: slot.minX + 1, y: slot.minY + 1, width: slot.width - 2, height: max(1, slot.height * 0.35)), cornerRadius: 1), with: .color(Color.white.opacity(0.3)))
-                } else {
-                    ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(base.opacity(shade)))
-                    ctx.fill(Path(roundedRect: CGRect(x: r.minX + 2, y: r.minY + 2, width: r.width - 4, height: max(2, r.height * 0.12)), cornerRadius: 1.5), with: .color(Color.white.opacity(0.35)))
-                }
+                let step = layout(for: Int(e.pad), L)?.pitch == nil
+                // A step button keeps its shape (and its slot); the piano roll's notes keep theirs.
+                drawMetalNote(ctx, r, tint: base, level: shade, slot: step)
                 if sel { ctx.stroke(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.white), lineWidth: 1.5) }
                 if sel && tool == .select {
                     ctx.fill(Path(roundedRect: CGRect(x: r.maxX - 4, y: r.minY + 2, width: 3, height: max(2, r.height - 4)), cornerRadius: 1.5),
@@ -1310,6 +1321,9 @@ struct SequencerView: View {
             _ = tick
         }
         .contentShape(Rectangle())
+        .accessibilityElement()
+        .accessibilityIdentifier("grid")
+        .accessibilityValue("\(pattern.events.count) notes")
         .highPriorityGesture(DragGesture(minimumDistance: 0)
             .onChanged { g in if !pinching && !twoFinger { gridChanged(g, w: w, L: L) } }
             .onEnded { g in
@@ -1317,17 +1331,52 @@ struct SequencerView: View {
             })
         .simultaneousGesture(pinch)
         .background(GridScrollHook(
-            began: {
+            began: { trackpad in
+                panStart = pageStart
+                if trackpad { return }
                 switch drag {
                 case .paint, .erase, .graph: _ = undoStack.popLast()
                 default: break
                 }
                 drag = .none; work = nil; laneOrigin = nil
                 twoFinger = true
-                panStart = pageStart
             },
             sideways: { dx in scroll(to: (panStart ?? pageStart) - Int32(dx / max(1, w) * CGFloat(windowTicks))) },
             ended: { panStart = nil }))
+    }
+
+    /// One note as a brushed-silver button: bevelled, lit from above, tinted and rimmed with the mode's
+    /// colour (brighter the harder it's hit). A step button's slot glows that colour.
+    private func drawMetalNote(_ ctx: GraphicsContext, _ r: CGRect, tint: Color, level: Double, slot: Bool) {
+        let shape = Path(roundedRect: r, cornerRadius: 3)
+        let top = CGPoint(x: r.midX, y: r.minY), bottom = CGPoint(x: r.midX, y: r.maxY)
+        ctx.fill(shape, with: .linearGradient(Gradient(stops: [
+            .init(color: Color(white: 0.97), location: 0), .init(color: Color(white: 0.82), location: 0.18),
+            .init(color: Color(white: 0.6), location: 0.55), .init(color: Color(white: 0.7), location: 0.8),
+            .init(color: Color(white: 0.86), location: 1)]), startPoint: top, endPoint: bottom))
+        // brushed grain
+        var grain = Path()
+        var y = r.minY + 1.5
+        while y < r.maxY - 1 { grain.addRect(CGRect(x: r.minX + 1, y: y, width: r.width - 2, height: 0.5)); y += 2 }
+        var c = ctx
+        c.clip(to: shape)
+        c.fill(grain, with: .color(Color.black.opacity(0.07)))
+        c.fill(Path(CGRect(x: r.minX, y: r.minY, width: r.width, height: r.height)), with: .color(tint.opacity(0.12 + 0.2 * level)))
+        // the bevel: a lit top edge, a dark bottom edge
+        ctx.stroke(Path(roundedRect: r.insetBy(dx: 0.75, dy: 0.75), cornerRadius: 2.5), with: .linearGradient(Gradient(stops: [
+            .init(color: Color.white.opacity(0.95), location: 0), .init(color: Color.white.opacity(0), location: 0.4),
+            .init(color: Color.black.opacity(0), location: 0.6), .init(color: Color.black.opacity(0.5), location: 1)]), startPoint: top, endPoint: bottom), lineWidth: 1.2)
+        ctx.stroke(shape, with: .color(tint.opacity(0.5 + 0.4 * level)), lineWidth: 1)
+        if slot {
+            let s = CGRect(x: r.minX + r.width * 0.12, y: r.minY + r.height * 0.09, width: r.width * 0.76, height: max(3, r.height * 0.14))
+            ctx.fill(Path(roundedRect: s.insetBy(dx: -1.5, dy: -1.5), cornerRadius: s.height / 2 + 1.5), with: .color(Color.black.opacity(0.55)))
+            ctx.fill(Path(roundedRect: s, cornerRadius: s.height / 2), with: .linearGradient(Gradient(colors: [tint.opacity(level), tint.opacity(level * 0.75)]),
+                                                                                         startPoint: CGPoint(x: s.midX, y: s.minY), endPoint: CGPoint(x: s.midX, y: s.maxY)))
+            ctx.fill(Path(roundedRect: CGRect(x: s.minX + 1, y: s.minY + 0.5, width: s.width - 2, height: max(1, s.height * 0.4)), cornerRadius: 1), with: .color(Color.white.opacity(0.55)))
+        } else {
+            // a highlight across the top, like light on a polished cap
+            ctx.fill(Path(roundedRect: CGRect(x: r.minX + 2, y: r.minY + 1.5, width: max(0, r.width - 4), height: max(1.5, r.height * 0.16)), cornerRadius: 1.5), with: .color(Color.white.opacity(0.6)))
+        }
     }
 
     private func setZoom(_ level: Int) {
@@ -1559,7 +1608,7 @@ struct SequencerView: View {
         // the way back to Face 1: slide the platinum knob (the sequencer's 9 squares) to the right
         FaceSlider(scale: s, color: noteColor) { dismiss() }.place([38, 715, 147, 772], s)
         // Drum Track: MPC-style pad recording
-        SeqButton("SeqDrumTrack", lit: controller.recording ? S.red : nil, corner: 12, scale: s, action: { controller.toggleRecordPads(loop: loop) }) {
+        SeqButton("SeqDrumTrack", lit: controller.recording ? S.red : nil, corner: 12, scale: s, action: { if !controller.recording { remember() }; controller.toggleRecordPads(loop: loop) }) {
             if controller.recording {
                 HStack {
                     Circle().stroke(S.red, lineWidth: 3 * s).shadow(color: S.red, radius: 6 * s)
@@ -1682,6 +1731,17 @@ struct SequencerView: View {
         if undoStack.count > 100 { undoStack.removeFirst() }
         redoStack = []
         controller.setLoop(loop, p)
+    }
+
+    /// Keeps the pattern as it is now so UNDO brings it back: for changes made outside the grid (the dice,
+    /// generate, recording, the presets' pattern). A slider coalesces its moves into one undo.
+    private func remember(coalescing: Bool = false) {
+        let now = Date()
+        defer { rememberedAt = coalescing ? now : nil }
+        if coalescing, let at = rememberedAt, now.timeIntervalSince(at) < 1 { return }
+        undoStack.append(stored)
+        if undoStack.count > 100 { undoStack.removeFirst() }
+        redoStack = []
     }
 
     private func undo() {

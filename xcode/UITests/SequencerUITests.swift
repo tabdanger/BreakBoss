@@ -46,6 +46,23 @@ final class SequencerUITests: XCTestCase {
         sleep(1)
         snap("sequencer")
 
+        // draw a note, then UNDO takes it away and REDO brings it back
+        let grid = any("grid")
+        let notes = { grid.value as? String ?? "" }
+        let blank = notes()
+        grid.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 20, dy: 14)).tap()
+        sleep(1)
+        let drawn = notes()
+        XCTAssertNotEqual(drawn, blank, "a tap on the grid draws a note (still \(blank))")
+        snap("note-drawn")
+        app.buttons["undoButton"].tap()
+        sleep(1)
+        XCTAssertEqual(notes(), blank, "UNDO takes the note away")
+        app.buttons["redoButton"].tap()
+        sleep(1)
+        XCTAssertEqual(notes(), drawn, "REDO puts it back")
+        snap("undo-redo")
+
         // the arrow opens the track's VELOCITY graph
         arrow.tap()
         XCTAssertTrue(app.buttons["laneVelocity"].waitForExistence(timeout: 3), "the arrow opens the velocity graph")
