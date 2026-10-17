@@ -44,6 +44,39 @@ struct GrooveEvent: Codable, Equatable {
     var length: Int32 = 0
     /// 808 slides into this note from the one still sounding.
     var glide: Bool = false
+    /// NOTE OFFSET: played this many ticks early (-) or late (+) of its step (96 ticks a beat).
+    var offset: Int8 = 0
+    /// CHANCE: how often the note plays, 0...1 (1 = every time).
+    var chance: Float = 1
+}
+
+// Saves and patterns from before NOTE OFFSET and CHANCE load with every note on its step, always playing.
+extension GrooveEvent {
+    private enum CodingKeys: String, CodingKey { case tick, pad, velocity, semis, length, glide, offset, chance }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        tick = try c.decode(Int32.self, forKey: .tick)
+        pad = try c.decode(Int8.self, forKey: .pad)
+        velocity = try c.decode(Float.self, forKey: .velocity)
+        semis = try c.decodeIfPresent(Float.self, forKey: .semis) ?? 0
+        length = try c.decodeIfPresent(Int32.self, forKey: .length) ?? 0
+        glide = try c.decodeIfPresent(Bool.self, forKey: .glide) ?? false
+        offset = try c.decodeIfPresent(Int8.self, forKey: .offset) ?? 0
+        chance = try c.decodeIfPresent(Float.self, forKey: .chance) ?? 1
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(tick, forKey: .tick)
+        try c.encode(pad, forKey: .pad)
+        try c.encode(velocity, forKey: .velocity)
+        try c.encode(semis, forKey: .semis)
+        try c.encode(length, forKey: .length)
+        try c.encode(glide, forKey: .glide)
+        if offset != 0 { try c.encode(offset, forKey: .offset) }
+        if chance < 1 { try c.encode(chance, forKey: .chance) }
+    }
 }
 
 struct PatternData: Codable, Equatable {
@@ -53,11 +86,79 @@ struct PatternData: Codable, Equatable {
     /// Drum roll HUMANIZE, 0...1: small timing and velocity changes added when the pattern is
     /// handed to the engine. The notes you see and export stay exactly where you put them.
     var humanize: Float? = nil
+    /// Each track's own SWING, 0...1 like the SWING knob (50-72%); below 0 (or nil) the track follows the knob.
+    var trackSwing: [Float]? = nil
+    /// Each track pushed early (-) or pulled late (+), in ticks, on top of its notes' own offsets.
+    var trackShift: [Float]? = nil
 
     static let ppq: Int32 = 96
     static let stepTicks: Int32 = 24  // one 16th
+    /// The furthest a note's own offset reaches either side of its step (one 16th).
+    static let maxOffset: Int8 = 24
+    /// The furthest a track's push / pull reaches either side.
+    static let maxShift: Float = 24
 
     var bars: Int { Int(lengthTicks / (PatternData.ppq * 4)) }
+
+    /// A track's own swing, or -1 when it follows the SWING knob.
+    func swing(pad: Int) -> Float {
+        guard let v = trackSwing, pad >= 0, pad < v.count, v[pad] >= 0 else { return -1 }
+        return v[pad].clamped(0, 1)
+    }
+
+    func shift(pad: Int) -> Float {
+        guard let v = trackShift, pad >= 0, pad < v.count else { return 0 }
+        return v[pad].clamped(-PatternData.maxShift, PatternData.maxShift)
+    }
+
+    mutating func setSwing(pad: Int, _ value: Float) {
+        guard pad >= 0, pad < Pad.count else { return }
+        var v = trackSwing ?? Array(repeating: -1, count: Pad.count)
+        while v.count < Pad.count { v.append(-1) }
+        v[pad] = value < 0 ? -1 : value.clamped(0, 1)
+        trackSwing = v.allSatisfy { $0 < 0 } ? nil : v
+    }
+
+    mutating func setShift(pad: Int, _ value: Float) {
+        guard pad >= 0, pad < Pad.count else { return }
+        var v = trackShift ?? Array(repeating: 0, count: Pad.count)
+        while v.count < Pad.count { v.append(0) }
+        v[pad] = value.clamped(-PatternData.maxShift, PatternData.maxShift)
+        trackShift = v.allSatisfy { $0 == 0 } ? nil : v
+    }
+
+    /// How far a hit lands from its step, in ticks, from the swing alone. `own` is the track's
+    /// own swing (below 0: the SWING knob). The knob swings the off 16ths and, near the top, adds a
+    /// loose "late kick, early snare" feel; a track's own swing is the off-16th swing only.
+    @inline(__always)
+    static func swingTicks(tick: Int, pad: Int, bounce: Double, own: Double) -> Double {
+        let onOff16th = abs(tick % 48 - 24) <= 2
+        if own >= 0 { return onOff16th ? own * 8 : 0 }
+        guard bounce > 0.001 else { return 0 }
+        var o: Double = onOff16th ? bounce * 8 : 0
+        let loose = bounce * bounce
+        if pad == Pad.kick.rawValue { o += loose * 4 }
+        if pad == Pad.snare.rawValue || pad == Pad.clap.rawValue { o -= loose * 3 }
+        return o
+    }
+
+    /// Where a note plays, in ticks from the loop's start: its step, the swing, the track's
+    /// push / pull and the note's own offset.
+    func playTick(_ e: GrooveEvent, bounce: Double) -> Double {
+        let pad = Int(e.pad)
+        return Double(e.tick) + PatternData.swingTicks(tick: Int(e.tick), pad: pad, bounce: bounce, own: Double(swing(pad: pad)))
+            + Double(shift(pad: pad)) + Double(e.offset)
+    }
+
+    /// CHANCE: the same roll for a note on the same pass of the loop, a new one each pass.
+    @inline(__always)
+    static func chanceRoll(pass: Int, tick: Int32, pad: Int8) -> Float {
+        var h = UInt32(truncatingIfNeeded: pass) &* 0x9E37_79B1
+        h ^= UInt32(bitPattern: tick) &* 0x85EB_CA77
+        h ^= UInt32(truncatingIfNeeded: Int(pad)) &* 0xC2B2_AE3D
+        h ^= h >> 16; h &*= 0x7FEB_352D; h ^= h >> 15; h &*= 0x846C_A68B; h ^= h >> 16
+        return Float(h & 0xFF_FFFF) / Float(0x100_0000)
+    }
 
     mutating func sort() {
         events.sort { $0.tick == $1.tick ? $0.pad < $1.pad : $0.tick < $1.tick }
@@ -70,15 +171,25 @@ final class PatternSet {
     final class Loop {
         let events: UnsafeMutableBufferPointer<GrooveEvent>
         let lengthTicks: Int
+        /// Each track's own swing (below 0: the SWING knob).
+        let ownSwing: UnsafeMutableBufferPointer<Double>
+        let hasOwnSwing: Bool
+        /// The earliest and latest any note's offset (its own plus its track's push / pull) reaches.
+        let earliest: Double, latest: Double
         init(_ data: PatternData) {
             var sorted = PatternSet.humanized(data)
             sorted.sort()
             // Keep every hit inside the loop (micro-timing can push one past an edge).
             let len = Int(max(sorted.lengthTicks, PatternData.ppq))
+            var lo = 0, hi = 0
             for i in sorted.events.indices {
                 var t = Int(sorted.events[i].tick) % len
                 if t < 0 { t += len }
                 sorted.events[i].tick = Int32(t)
+                // The track's push / pull rides on each note's own offset.
+                let o = (Float(sorted.events[i].offset) + sorted.shift(pad: Int(sorted.events[i].pad))).rounded()
+                sorted.events[i].offset = Int8(o.clamped(-48, 48))
+                lo = min(lo, Int(sorted.events[i].offset)); hi = max(hi, Int(sorted.events[i].offset))
             }
             sorted.sort()
             let buffer = UnsafeMutableBufferPointer<GrooveEvent>.allocate(capacity: max(sorted.events.count, 1))
@@ -86,9 +197,14 @@ final class PatternSet {
             events = buffer
             lengthTicks = len
             count = sorted.events.count
+            let swings = (0..<Pad.count).map { Double(sorted.swing(pad: $0)) }
+            ownSwing = UnsafeMutableBufferPointer<Double>.allocate(capacity: Pad.count)
+            _ = ownSwing.initialize(from: swings)
+            hasOwnSwing = swings.contains { $0 >= 0 }
+            earliest = Double(lo); latest = Double(hi)
         }
         let count: Int
-        deinit { events.deallocate() }
+        deinit { events.deallocate(); ownSwing.deallocate() }
     }
 
     let loops: [Loop]
@@ -960,7 +1076,10 @@ enum GrooveGenerator {
         b.remove(.kick, from: 0, to: 1)
         b.hit(.cymbal, 0, 0.85)
         b.hit(.kick, 0, 1)
-        return b.data
+        var out = b.data
+        out.trackSwing = p.trackSwing      // the pattern's feel carries into its fills
+        out.trackShift = p.trackShift
+        return out
     }
 
     static func breakdown(_ p: PatternData, _ style: GrooveStyle) -> PatternData {

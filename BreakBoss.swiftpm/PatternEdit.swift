@@ -244,6 +244,7 @@ enum PatternEdit {
             var t = ((p.events[i].tick + grid / 2) / grid) * grid
             if t >= len { t = 0 }
             p.events[i].tick = t
+            p.events[i].offset = 0      // on the grid means on the grid: no push or pull left
         }
         var seen = Set<NoteKey>()
         p.events = p.events.filter { seen.insert(NoteKey(tick: $0.tick, pad: $0.pad, semis: 0)).inserted }
@@ -252,12 +253,43 @@ enum PatternEdit {
     }
 
     /// A hit played while recording: snapped to `snap` (0 = where it was played).
-    static func addRecorded(_ pattern: PatternData, pad: Int, tick: Int32, velocity: Float, semis: Float, snap: Int32) -> PatternData {
+    /// A pad hit from RECORD, snapped to the grid. With `keepFeel` the distance from the grid
+    /// is kept as the note's NOTE OFFSET: the note sits on its step and still plays the way you played it.
+    static func addRecorded(_ pattern: PatternData, pad: Int, tick: Int32, velocity: Float, semis: Float, snap: Int32,
+                            keepFeel: Bool = false, bounce: Double = 0) -> PatternData {
         let len = max(pattern.lengthTicks, 1)
         var t = tick
         if snap > 0 { t = ((tick + snap / 2) / snap) * snap }
+        // How far from where that step already plays (its swing and its track's push / pull).
+        let feel = Int32((Double(tick) - pattern.playTick(GrooveEvent(tick: t, pad: Int8(pad), velocity: 1), bounce: bounce)).rounded())
         if t >= len { t -= len }
-        return addNote(pattern, pad: pad, tick: max(0, t), length: 0, velocity: velocity, semis: semis)
+        var p = addNote(pattern, pad: pad, tick: max(0, t), length: 0, velocity: velocity, semis: semis)
+        if keepFeel && feel != 0 {
+            let placed = max(0, min(t, len - 1))
+            if let i = p.events.firstIndex(where: { Int($0.pad) == pad && $0.tick == placed }) {
+                p.events[i].offset = Int8(feel.clamped(-Int32(PatternData.maxOffset), Int32(PatternData.maxOffset)))
+            }
+        }
+        return p
+    }
+
+    /// NOTE OFFSET on the given notes, in ticks (early < 0 < late).
+    static func setOffset(_ pattern: PatternData, _ keys: Set<NoteKey>, _ ticks: Int8) -> PatternData {
+        var p = pattern
+        let m = PatternData.maxOffset
+        for i in p.events.indices where keys.contains(NoteKey(p.events[i])) { p.events[i].offset = ticks.clamped(-m, m) }
+        return p
+    }
+
+    /// CHANCE on the given notes (or every note of `pad` when no keys are given), 0...1.
+    static func setChance(_ pattern: PatternData, _ keys: Set<NoteKey>, pad: Int? = nil, _ chance: Float) -> PatternData {
+        var p = pattern
+        for i in p.events.indices {
+            let e = p.events[i]
+            if keys.isEmpty { if let pad, Int(e.pad) != pad { continue } } else if !keys.contains(NoteKey(e)) { continue }
+            p.events[i].chance = chance.clamped(0.05, 1)
+        }
+        return p
     }
 }
 

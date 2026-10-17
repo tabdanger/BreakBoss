@@ -73,34 +73,18 @@ struct BrowserView: View {
             var n = 0
             var out: [Item] = []
             for mode in SoundMode.allCases {
-                for def in KitLibrary.kits(for: mode) {
-                    n += 1
-                    out.append(Item(id: def.id, number: n, category: kitCategory(def.style), name: def.name,
-                                    detail: "\(mode.title.uppercased()) · \(Int(def.tempo)) BPM", bank: "\(mode.title.uppercased()) KITS", user: false))
-                }
-            }
-            for g in KitLibrary.genreGroups {
-                for def in g.kits {
-                    n += 1
-                    out.append(Item(id: def.id, number: n, category: g.genre, name: def.name,
-                                    detail: "\(Int(def.tempo)) BPM", bank: "GENRE KITS", user: false))
+                for g in KitLibrary.genreGroups(for: mode) {
+                    for def in g.kits {
+                        n += 1
+                        out.append(Item(id: def.id, number: n, category: g.genre, name: def.name,
+                                        detail: "\(mode.title.uppercased()) · \(Int(def.tempo)) BPM", bank: "\(mode.title.uppercased()) KITS", user: false))
+                    }
                 }
             }
             out += controller.userKits.enumerated().map { i, name in
                 Item(id: "user:" + name, number: i + 1, category: "USER", name: name.uppercased(), detail: "YOUR KIT", bank: Self.userBank, user: true)
             }
             return out
-        }
-    }
-
-    private func kitCategory(_ s: GrooveStyle) -> String {
-        if s.isTrap { return "TRAP" }
-        switch s {
-        case .westBounce, .baySlap, .west90s: return "WEST COAST"
-        case .neoSoul, .gospel, .rnb: return "SOUL & R&B"
-        case .funkBreak, .looseBreak, .heavyBreak, .boomBap, .loFi: return "BREAKS"
-        case .pop, .pop80s, .pop90s: return "POP"
-        default: return "WORLD"
         }
     }
 

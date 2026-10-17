@@ -53,19 +53,46 @@ enum SoundType: String, CaseIterable, Identifiable {
     }
 }
 
+extension SoundType {
+    /// Stock sounds are named by category ("KICK BOOM 07", "SHAKER 03"): the first word says which.
+    static func forStockName(_ name: String) -> SoundType? {
+        let words = name.split(separator: " ")
+        switch words.first.map(String.init) ?? "" {
+        case "KICK": return .kick
+        case "SNARE": return .snare
+        case "CLAP": return .clap
+        case "RIM", "SNAP": return .rim
+        case "HAT": return .hat
+        case "OPEN": return .open
+        case "808": return .bass
+        case "PERC", "SHAKER", "TAMB", "CLAVE", "TRIANGLE", "CONGA", "BONGO", "BELL", "BEADS": return .perc
+        case "TOM": return .tom
+        case "CYMBAL": return .cymbal
+        case "FX": return .fx
+        default: return nil
+        }
+    }
+}
+
 extension StockSampleLibrary {
-    /// Every stock sound once (sounds shared by several kits are listed once).
+    /// Every stock sound once, by category, with the first kit that plays it as its pack.
     func librarySounds() -> [LibrarySound] {
+        var kitOf: [String: String] = [:]
         var seen = Set<String>()
         var out: [LibrarySound] = []
         for kit in KitLibrary.factory {
             for pad in 0..<Pad.count {
                 guard let s = sample(kitID: kit.id, pad: pad) else { continue }
-                let key = s.url.lastPathComponent
-                guard seen.insert(key).inserted else { continue }
-                out.append(LibrarySound(id: "stock:" + key, url: s.url, name: s.displayName, type: SoundType.forPad(pad),
-                                        pack: kit.name, user: false))
+                if kitOf[s.url.lastPathComponent] == nil { kitOf[s.url.lastPathComponent] = kit.name }
+                guard allSounds.isEmpty, seen.insert(s.url.lastPathComponent).inserted else { continue }
+                out.append(LibrarySound(id: "stock:" + s.url.lastPathComponent, url: s.url, name: s.displayName,
+                                        type: SoundType.forStockName(s.displayName) ?? SoundType.forPad(pad), pack: kit.name, user: false))
             }
+        }
+        for s in allSounds where seen.insert(s.url.lastPathComponent).inserted {
+            out.append(LibrarySound(id: "stock:" + s.url.lastPathComponent, url: s.url, name: s.displayName,
+                                    type: SoundType.forStockName(s.displayName) ?? .fx,
+                                    pack: kitOf[s.url.lastPathComponent] ?? "MORE SOUNDS", user: false))
         }
         return out
     }
