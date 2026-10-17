@@ -7,7 +7,9 @@ import Foundation
 // VINTAGE  the same knobs, plus built-in drive and boost: tape saturation, a low-end bump and a
 //          rolled-off top like an old sampler.
 // TEXTURE  the same knobs, plus a downsampled (lower sample rate, 12-bit) sound, instability
-//          (tape wow and flutter), a tempo-synced delay and a gated reverb.
+//          (tape wow and flutter), a tempo-synced delay, a gated reverb, and WARP: pitch that
+//          sweeps up and down, a resonant filter sweeping back and forth, and tempo-synced
+//          stutters, at the WOBBLE rate.
 //
 // BOOST    low-end and level push into the chain.
 // PUNCH    transient shaper: louder attacks, a little less sustain.
@@ -60,6 +62,32 @@ final class BusProcessor {
     private var delaySamples = Smoothed(12_000)
     // Texture: gated reverb
     private var verb: GatedReverb
+    // Texture: WARP. A two-head pitch shifter whose pitch swings up and down, a resonant filter
+    // sweeping against it, and stutters that repeat the start of a 1/16.
+    private let warpSize = 16_384
+    private let warpL: UnsafeMutablePointer<Float>
+    private let warpR: UnsafeMutablePointer<Float>
+    private var warpIndex = 0
+    private var warpHead: Float = 0
+    private var warpWindow: Float = 2_400
+    private var warpRatio: Float = 1
+    private var wobblePhase: Double = 0
+    private var warpFilter = [StateVariableFilter(), StateVariableFilter()]
+    private var warpControl = 0
+    private var warpMix = Smoothed(0)
+    private let stutterSize = 131_072
+    private let stutterL: UnsafeMutablePointer<Float>
+    private let stutterR: UnsafeMutablePointer<Float>
+    private var stutterIndex = 0
+    private var glitchBeat: Double = 0
+    private var stutterStep = Int.min
+    private var stutterOn = false
+    private var stutterStart = 0
+    private var stutterLength = 1
+    private var stutterPos = 0
+    private var stutterReverse = false
+    private var stutterMix = Smoothed(0)
+    private var glitchRNG = KRandom(seed: 0x6A17C4)
     // Noise
     private var rng = KRandom(seed: 0xC0FFEE)
     private var noiseEnv = EnvelopeFollower()
@@ -79,6 +107,14 @@ final class BusProcessor {
         delayR = .allocate(capacity: delaySize)
         delayL.initialize(repeating: 0, count: delaySize)
         delayR.initialize(repeating: 0, count: delaySize)
+        warpL = .allocate(capacity: warpSize)
+        warpR = .allocate(capacity: warpSize)
+        warpL.initialize(repeating: 0, count: warpSize)
+        warpR.initialize(repeating: 0, count: warpSize)
+        stutterL = .allocate(capacity: stutterSize)
+        stutterR = .allocate(capacity: stutterSize)
+        stutterL.initialize(repeating: 0, count: stutterSize)
+        stutterR.initialize(repeating: 0, count: stutterSize)
         verb = GatedReverb()
         prepare(sampleRate: 48_000)
     }
@@ -87,6 +123,10 @@ final class BusProcessor {
         wow.deallocate()
         delayL.deallocate()
         delayR.deallocate()
+        warpL.deallocate()
+        warpR.deallocate()
+        stutterL.deallocate()
+        stutterR.deallocate()
     }
 
     func prepare(sampleRate: Double) {
@@ -106,6 +146,10 @@ final class BusProcessor {
         }
         delaySamples.configure(ms: 60, sr: sr)
         verb.prepare(sampleRate: sr)
+        warpWindow = min(Float(warpSize - 8), sr * 0.05)     // 50 ms grains
+        warpMix.configure(ms: 40, sr: sr)
+        stutterMix.configure(ms: 3, sr: sr)
+        for c in 0..<2 { warpFilter[c].set(1_200, q: 0.8, sr: sr) }
         lastBoost = -1; lastEQ = -1; lastShine = -1; lastMode = -1
         reset()
     }
@@ -120,6 +164,13 @@ final class BusProcessor {
         delayL.update(repeating: 0, count: delaySize)
         delayR.update(repeating: 0, count: delaySize)
         verb.reset()
+        warpL.update(repeating: 0, count: warpSize)
+        warpR.update(repeating: 0, count: warpSize)
+        stutterL.update(repeating: 0, count: stutterSize)
+        stutterR.update(repeating: 0, count: stutterSize)
+        for c in 0..<2 { warpFilter[c].reset() }
+        warpMix.jump(0); stutterMix.jump(0)
+        stutterOn = false; stutterStep = Int.min; warpHead = 0; warpRatio = 1
         fast.value = 0; slow.value = 0; noiseEnv.value = 0
     }
 
@@ -137,6 +188,10 @@ final class BusProcessor {
         var delay: Float = 0.32
         var reverb: Float = 0.5
         var drive: Float = 0
+        var warp: Float = 0
+        var wobble: Float = 0.6
+        /// The transport's beat at this block's first sample, while playing (stutters land on its 1/16s).
+        var beat: Double?
     }
 
     /// Processes `count` stereo samples in place.
@@ -161,6 +216,16 @@ final class BusProcessor {
         let dsStep = texture ? min(1, (sr * powf(18_900 / sr, s.resample * 2)) / sr) : 1   // hold-and-sample down to ~19 kHz
         let wowDepth: Float = sr * 0.0022 * s.instability, flutterDepth: Float = sr * 0.00024 * s.instability
         let quantization = powf(2, 15 - s.resample * 8)
+        // WARP: depth up to an octave either way; more warp, more resonance, more stutters.
+        let warp = texture ? s.warp.clamped(0, 1) : 0
+        warpMix.set(min(0.85, warp * 1.5))
+        if warp <= 0.001 { stutterOn = false }
+        let beatsPerSample = max(s.tempo, 40) / 60 / Double(sr)
+        let wobbleStep = KnockMath.wobbleRate(s.wobble) * beatsPerSample
+        let warpSemis = warp * 12
+        let warpQ = 0.8 + warp * 3.2
+        let stutterChance = warp * warp * 0.5
+        if let b = s.beat { glitchBeat = b }
 
         for i in 0..<count {
             var l = left[i] * boostGain, r = right[i] * boostGain
@@ -232,6 +297,45 @@ final class BusProcessor {
                 let readPos = Float(wowIndex) - (sr * 0.004 + mod)
                 let mid = readInterpolated(wow, wowSize, readPos)
                 if s.instability > 0.001 { l = mid + side; r = mid - side }
+                // WARP
+                warpL[warpIndex] = l; warpR[warpIndex] = r
+                if warpMix.target > 0 || warpMix.value > 0 {
+                    let (wl, wr) = warpSample(warpQ: warpQ, semis: warpSemis, depth: warp)
+                    let m = warpMix.next()
+                    l += (wl - l) * m
+                    r += (wr - r) * m
+                }
+                warpIndex = (warpIndex + 1) & (warpSize - 1)
+                wobblePhase += wobbleStep
+                if wobblePhase >= 1 { wobblePhase -= 1 }
+                // Stutters: on some 1/16s the first 1/32 (or 1/48, 1/64) repeats, sometimes backwards.
+                stutterL[stutterIndex] = l; stutterR[stutterIndex] = r
+                let step = Int((glitchBeat * 4).rounded(.down))
+                if step != stutterStep {
+                    stutterStep = step
+                    stutterOn = warp > 0.001 && glitchRNG.unit() < stutterChance
+                    if stutterOn {
+                        let pick = glitchRNG.int(4)
+                        let fraction = pick < 2 ? 0.125 : (pick == 2 ? 1.0 / 12 : 0.0625)   // of a beat
+                        stutterLength = Int(fraction / beatsPerSample).clamped(256, stutterSize / 4)
+                        stutterStart = stutterIndex
+                        stutterPos = 0
+                        stutterReverse = glitchRNG.chance(0.3)
+                    }
+                }
+                stutterMix.set(stutterOn && stutterPos >= stutterLength ? 1 : 0)
+                if stutterOn || stutterMix.value > 0 {
+                    let q = stutterPos % stutterLength
+                    let at = (stutterStart + (stutterReverse ? stutterLength - 1 - q : q)) & (stutterSize - 1)
+                    // A short fade at each repeat's edges keeps the loop seams from clicking.
+                    let edge = min(1, Float(min(q, stutterLength - 1 - q)) / 48)
+                    let m = stutterMix.next()
+                    l += (stutterL[at] * edge - l) * m
+                    r += (stutterR[at] * edge - r) * m
+                    stutterPos += 1
+                }
+                stutterIndex = (stutterIndex + 1) & (stutterSize - 1)
+                glitchBeat += beatsPerSample
                 // Gated reverb (send, then gate on the drums' envelope).
                 let (vl, vr) = verb.process(l, r)
                 // Delay: dotted 1/8, filtered feedback.
@@ -268,6 +372,38 @@ final class BusProcessor {
             left[i] = dcBlock[0].highPass(l)
             right[i] = dcBlock[1].highPass(r)
         }
+    }
+
+    /// One sample of WARP's wet signal: pitch shifted by the wobble, through the swept filter.
+    @inline(__always)
+    private func warpSample(warpQ: Float, semis: Float, depth: Float) -> (Float, Float) {
+        let lfo = Float(sin(2 * Double.pi * wobblePhase))
+        // Pitch and filter move at control rate (every 16 samples).
+        warpControl -= 1
+        if warpControl <= 0 {
+            warpControl = 16
+            warpRatio = exp2f(semis * lfo / 12)
+            // The filter sweeps a quarter-cycle behind the pitch: it opens as the pitch passes through the middle.
+            let sweep = Float(cos(2 * Double.pi * wobblePhase))
+            let cutoff = 300 * powf(9_000 / 300, 0.5 + 0.5 * sweep)
+            for c in 0..<2 { warpFilter[c].set(cutoff, q: warpQ, sr: sr) }
+        }
+        // Two read heads half a grain apart, each faded in and out (they sum to 1).
+        warpHead += (1 - warpRatio) / warpWindow
+        if warpHead >= 1 { warpHead -= 1 } else if warpHead < 0 { warpHead += 1 }
+        var wl: Float = 0, wr: Float = 0
+        for head in 0..<2 {
+            var p = warpHead + Float(head) * 0.5
+            if p >= 1 { p -= 1 }
+            let g = 0.5 - 0.5 * cosf(2 * .pi * p)
+            let at = Float(warpIndex) - (2 + p * warpWindow)
+            wl += readInterpolated(warpL, warpSize, at) * g
+            wr += readInterpolated(warpR, warpSize, at) * g
+        }
+        let (ll, lb) = warpFilter[0].process(wl)
+        let (rl, rb) = warpFilter[1].process(wr)
+        let band = depth * 0.6
+        return (Saturate.soft(ll * (1 - band * 0.5) + lb * band), Saturate.soft(rl * (1 - band * 0.5) + rb * band))
     }
 
     @inline(__always)

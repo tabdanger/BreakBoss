@@ -46,6 +46,9 @@ enum KParam: Int, CaseIterable {
 
     // Append-only addresses keep existing preset / host parameter IDs stable.
     case resample, instability, textureDelay, gatedReverb, drive
+    // TEXTURE's glitch: WARP is how much (pitch sweeping up and down, a swept filter, stutters),
+    // WOBBLE how fast it sweeps, in note values at the tempo.
+    case warp, wobble
 
     static let count = KParam.allCases.count
 
@@ -76,6 +79,8 @@ enum KParam: Int, CaseIterable {
         case .textureDelay: return "textureDelay"
         case .gatedReverb: return "gatedReverb"
         case .drive: return "drive"
+        case .warp: return "warp"
+        case .wobble: return "wobble"
         }
     }
 
@@ -105,6 +110,8 @@ enum KParam: Int, CaseIterable {
         case .textureDelay: return "Delay"
         case .gatedReverb: return "Gated Reverb"
         case .drive: return "Drive"
+        case .warp: return "Warp"
+        case .wobble: return "Wobble"
         }
     }
 
@@ -148,6 +155,8 @@ enum KParam: Int, CaseIterable {
         case .textureDelay: return 0.32
         case .gatedReverb: return 0.5
         case .drive: return 0
+        case .warp: return 0
+        case .wobble: return 0.6
         }
     }
 
@@ -177,6 +186,10 @@ enum KParam: Int, CaseIterable {
             return SoundMode(rawValue: Int(value.rounded()))?.title ?? "MODERN"
         case .playMode:
             return value > 0.5 ? "LOOP" : "ONE-SHOT"
+        case .warp:
+            return value < 0.005 ? "OFF" : "\(Int((value * 10).rounded()))"
+        case .wobble:
+            return KnockMath.wobbleNames[KnockMath.wobbleStep(value)]
         default:
             return "\(Int((value * 10).rounded()))"
         }
@@ -198,6 +211,11 @@ enum KnockMath {
         return 40 * log10f(v / 0.75)
     }
     static func dbToGain(_ db: Float) -> Float { powf(10, db / 20) }
+    /// WOBBLE snaps to six note values: one sweep per bar up to one per 1/32 note.
+    static let wobbleNames = ["1 BAR", "1/2", "1/4", "1/8", "1/16", "1/32"]
+    static func wobbleStep(_ v: Float) -> Int { Int((v.clamped(0, 1) * 5).rounded()) }
+    /// Sweeps per beat for a WOBBLE setting (0.25 = one per 4/4 bar).
+    static func wobbleRate(_ v: Float) -> Double { 0.25 * pow(2, Double(wobbleStep(v))) }
 }
 
 extension Comparable {

@@ -33,6 +33,7 @@ enum KnockSelfTest {
         phase("checkMigration", checkMigration)
         phase("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence)
         phase("checkTextureControls", checkTextureControls)
+        phase("checkLevelPanGlide", checkLevelPanGlide)
         phase("checkPatternEditor", checkPatternEditor)
         phase("checkMIDIPadMap", checkMIDIPadMap)
         phase("checkRecordingTrim", checkRecordingTrim)
@@ -1372,6 +1373,68 @@ enum KnockSelfTest {
             check(difference > 0.1, "\(parameter.name) changes texture output")
             check(b.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "\(parameter.name) stays finite and clipped")
         }
+        // WARP changes the sound; WOBBLE (its speed) does too once WARP is up.
+        for (parameter, low, high) in [(KParam.warp, Float(0), Float(1)), (KParam.wobble, Float(0), Float(1))] {
+            let (a, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 2) { e in
+                e.setParam(.warp, parameter == .warp ? low : 0.8); e.setParam(parameter, low)
+            }
+            let (b, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 2) { e in
+                e.setParam(.warp, parameter == .warp ? high : 0.8); e.setParam(parameter, high)
+            }
+            var difference: Double = 0
+            for i in a.indices { difference += Double(abs(a[i] - b[i])) }
+            check(difference > 0.1, "\(parameter.name) changes texture output")
+            check(b.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "\(parameter.name) stays finite and clipped")
+            check(b.contains { abs($0) > 0.01 }, "\(parameter.name) at full still sounds")
+        }
+        // WARP left at 0 leaves TEXTURE exactly as it was, and outside TEXTURE it does nothing.
+        let (plain, _) = render(kit: kit, style: .trap, mode: .modern, tempo: 120, seconds: 1)
+        let (warped, _) = render(kit: kit, style: .trap, mode: .modern, tempo: 120, seconds: 1) { $0.setParam(.warp, 1) }
+        check(plain == warped, "WARP only acts in TEXTURE")
+    }
+
+    /// Turning a channel's LEVEL or PAN while its sound rings: the note keeps playing and glides to
+    /// the new level, it isn't cut off (each cut was a click).
+    static func checkLevelPanGlide() {
+        let rate = 48_000.0
+        let sine = (0..<96_000).map { Float(sin(Double($0) * 2 * Double.pi * 220 / rate)) * 0.1 }
+        let sample = SampleBuffer(left: sine, sampleRate: rate)
+        let samples = Array(repeating: sample, count: Pad.count)
+        let before = Array(repeating: PadSettings(), count: Pad.count)
+        var after = before
+        after[Pad.kick.rawValue].level = 0.4
+        after[Pad.kick.rawValue].pan = 0.8
+        let engine = KnockEngine()
+        engine.prepare(sampleRate: rate, maxFrames: 512)
+        engine.setParam(.playMode, 0); engine.setParam(.followDAW, 0); engine.setParam(.tempoSync, 0)
+        engine.setParam(.boost, 0); engine.setParam(.clipper, 0)
+        engine.kitHandoff.publish(KitBuffers(name: "GLIDE", samples: samples, settings: before, bassHz: 110))
+        engine.send(KEvent(kind: .pad, a: Int32(Pad.kick.rawValue), value: 1))
+        let total = 24_576, swapAt = 8_192
+        var left = [Float](repeating: 0, count: total), right = left
+        var done = 0
+        while done < total {
+            if done == swapAt {
+                engine.kitHandoff.publish(KitBuffers(name: "GLIDE", samples: samples, settings: after, bassHz: 110))
+            }
+            left.withUnsafeMutableBufferPointer { l in
+                right.withUnsafeMutableBufferPointer { r in
+                    engine.render(frames: 128, left: l.baseAddress! + done, right: r.baseAddress! + done, host: nil)
+                }
+            }
+            done += 128
+        }
+        func peak(_ x: [Float], _ range: Range<Int>) -> Float { x[range].map { abs($0) }.max() ?? 0 }
+        let start = peak(left, (swapAt - 1_024)..<swapAt)
+        let justAfter = peak(left, swapAt..<(swapAt + 128))
+        let endL = peak(left, (total - 2_048)..<total), endR = peak(right, (total - 2_048)..<total)
+        var biggestStep: Float = 0
+        for i in 1..<total { biggestStep = max(biggestStep, abs(left[i] - left[i - 1]), abs(right[i] - right[i - 1])) }
+        check(start > 0.05, "glide test note sounds (\(start))")
+        check(justAfter > start * 0.6, "changing level keeps the ringing note (\(justAfter) vs \(start))")
+        check(endL > 0.005 && endL < start * 0.5, "the ringing note glides down to the new level (\(endL))")
+        check(endR > endL * 2, "the ringing note glides to the new pan (L \(endL), R \(endR))")
+        check(biggestStep < start * 0.08, "level and pan move without a step (\(biggestStep))")
     }
 
 }
