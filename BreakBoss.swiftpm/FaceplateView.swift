@@ -152,9 +152,9 @@ struct FaceplateView: View {
         hit(L.exportRect, s) { showExport = true }
         if let r = L.editorRect {
             hit(r, s) {
-                // Opens on the loop that's playing, otherwise loop 1.
+                // Opens on the loop that's playing, otherwise the one PLAY starts.
                 let current = Int(controller.meters.status[1])
-                patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : 0)
+                patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : controller.screenPattern)
             }
         }
         hit(L.menuRect, s) { showMenu = true }

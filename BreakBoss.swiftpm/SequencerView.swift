@@ -389,7 +389,7 @@ struct SequencerView: View {
             }
         }
         .modifier(SpaceBarKey { controller.togglePlayback(pattern: loop) })
-        .onChange(of: loop) { _ in viewStart = 0; selection = []; undoStack = []; redoStack = [] }
+        .onChange(of: loop) { _ in viewStart = 0; selection = []; undoStack = []; redoStack = []; controller.showPattern(loop) }
         .onDisappear { if controller.recording { controller.setRecording(false) } }
         .task(id: stored) { exportURL = writeMIDI() }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
