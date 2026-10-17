@@ -54,6 +54,9 @@ final class KnockController: ObservableObject {
         if !isPlugin, let data = UserDefaults.standard.data(forKey: KnockController.sessionKey),
            let saved = try? JSONDecoder().decode(KnockState.self, from: data) {
             s = saved.normalized()
+        } else {
+            // a fresh start is silent: blank loops until a pattern is loaded or drawn
+            s.editedLoops = (0..<Pad.count).map { i in PatternData(name: "LOOP \(i + 1)", lengthTicks: PatternData.ppq * 4 * 2, events: []) }
         }
         state = s
         pushAllToEngine()
@@ -781,6 +784,10 @@ final class KnockController: ObservableObject {
         }
         republishKit()
         state.presetName = "INIT"
+        // INIT is silent: every loop starts blank until a pattern is loaded or drawn (Tyrone, Oct 16)
+        state.basePattern = nil
+        state.editedLoops = (0..<Pad.count).map { i in PatternData(name: "LOOP \(i + 1)", lengthTicks: PatternData.ppq * 4 * 2, events: []) }
+        rebuildLoops()
         onStateReplaced?()
         readout = Readout(title: "PRESET", value: "INIT", time: Date())
     }

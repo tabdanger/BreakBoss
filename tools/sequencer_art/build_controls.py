@@ -129,3 +129,13 @@ for name in ("SeqSectionGeneral", "SeqGenerateHeader", "SeqSectionMidi"):
         for x in range(w - 54, w - 12):
             pxh[x, y] = c
     write(name, img)
+
+# A blank metal header (SOUNDS / GENERATE get their names in code, in the finish's ink colour)
+hdr = Image.open(HERE / "SeqSectionGeneral_base.png").convert("RGBA")
+w, h = hdr.size
+pxh = hdr.load()
+for y in range(3, h - 3):
+    c = pxh[190, y]
+    for x in range(8, w - 8):
+        pxh[x, y] = c
+write("SeqHeader", hdr)

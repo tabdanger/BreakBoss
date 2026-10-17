@@ -68,6 +68,7 @@ def write(name, img):
 
 plate = Image.open(assets / "SeqPlate.imageset" / "SeqPlate.png").convert("RGBA")
 row = Image.open(assets / "SeqRow.imageset" / "SeqRow.png").convert("RGBA")
+header = Image.open(assets / "SeqHeader.imageset" / "SeqHeader.png").convert("RGBA")
 PRINT = [(55, 175, 280, 293), (596, 706, 692, 730), (884, 706, 934, 730)]
 for kind in ("modern", "vintage", "texture"):
     p = finish(plate, kind)
@@ -75,4 +76,5 @@ for kind in ("modern", "vintage", "texture"):
         p = lighten_print(p, plate, PRINT)
     write(f"SeqPlate_{kind}", p)
     write(f"SeqRow_{kind}", finish(row, kind))
+    write(f"SeqHeader_{kind}", finish(header, kind))
 print("finishes written")

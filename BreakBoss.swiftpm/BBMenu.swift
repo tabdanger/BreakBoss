@@ -109,27 +109,29 @@ private struct BBMenuTrigger: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        let base = content
+        let measured = content
             .background(GeometryReader { g in
                 Color.clear
                     .onAppear { frame = g.frame(in: .named(bbSpace)) }
                     .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
             })
             .contentShape(Rectangle())
-            // The button goes in while your finger is on it (a quick darkening, back up on release).
-            .overlay(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(pressed ? 0.28 : 0)).allowsHitTesting(false))
-            .scaleEffect(pressed ? 0.97 : 1)
-            .animation(.easeOut(duration: 0.08), value: pressed)
-            .simultaneousGesture(DragGesture(minimumDistance: 0)
-                .onChanged { _ in pressed = true }
-                .onEnded { _ in pressed = false })
         if longPress {
-            base
-                .onTapGesture { tap?() }
-                .onLongPressGesture(minimumDuration: 0.4) { open() }
+            // A real button: tap runs `tap`, holding opens the menu (works inside a scrolling rack too).
+            Button(action: { tap?() }) { measured }
+                .buttonStyle(SeqPress())
+                .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in open() })
                 .background(SecondaryClickCatcher { open() })
         } else {
-            base.onTapGesture { open() }
+            measured
+                // The button goes in while your finger is on it (a quick darkening, back up on release).
+                .overlay(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(pressed ? 0.28 : 0)).allowsHitTesting(false))
+                .scaleEffect(pressed ? 0.97 : 1)
+                .animation(.easeOut(duration: 0.08), value: pressed)
+                .simultaneousGesture(DragGesture(minimumDistance: 0)
+                    .onChanged { _ in pressed = true }
+                    .onEnded { _ in pressed = false })
+                .onTapGesture { open() }
         }
     }
 }

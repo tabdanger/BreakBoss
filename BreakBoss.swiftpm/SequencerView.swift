@@ -81,8 +81,8 @@ struct SequencerView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     enum Tool { case draw, select, erase }
-    enum Lane: String, CaseIterable { case velocity = "VELOCITY", pitch = "PITCH" }
-    enum Panel { case general, generate, midi }
+    enum Lane: String, CaseIterable { case velocity = "VELOCITY", pitch = "PITCH", pianoRoll = "PIANO ROLL" }
+    enum Panel { case sounds, generate }
 
     @State private var tool: Tool = .draw
     @State private var snap: Int32 = PatternData.stepTicks   // grid in ticks (0 = none)
@@ -110,10 +110,13 @@ struct SequencerView: View {
     @State private var exportURL: URL?
     @State private var tick = Date()
     @State private var newborn = Set<UUID>()
+    @State private var settling = Set<UUID>()
     @State private var rackTargeted = false
     @State private var rowTargeted: UUID?
     @State private var showLibrary = false      // iPhone: the library slides over the rack
-    @State private var section: Panel = .general
+    @State private var section: Panel = .sounds
+    @State private var openID: UUID?                          // the track whose arrow is lit: the lane edits it
+    @State private var shareMIDI = false
     @State private var updateSounds = false
     @State private var updateTempo = true
     @State private var trackSettingsID: UUID?
@@ -293,6 +296,7 @@ struct SequencerView: View {
         .onDisappear { if controller.recording { controller.setRecording(false) } }
         .task(id: stored) { exportURL = writeMIDI() }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
+        .sheet(isPresented: $shareMIDI) { if let url = exportURL { ShareSheet(items: [url]) } }
         .sheet(item: Binding(get: { trackSettingsID.flatMap { id in channels.first { $0.id == id } } }, set: { trackSettingsID = $0?.id })) { ch in
             VStack(spacing: 0) {
                 Text("TRACK SETTINGS").font(.system(size: 12, weight: .semibold, design: .monospaced)).foregroundColor(S.dim).padding(.top, 16)
@@ -410,12 +414,12 @@ struct SequencerView: View {
             }
         SeqArt(sprite: "SeqBtnGear", scale: s) { EmptyView() }
             .bbMenuPlaced(A.gear, s, title: "Sequencer", width: 330) { settingsItems() }
-        if let url = exportURL {
-            ShareLink(item: url) { SeqArt(sprite: "SeqBtnCloud", corner: 9, scale: s) { EmptyView() } }
-                .buttonStyle(SeqPress()).place(A.cloud, s)
-        } else {
-            SeqArt(sprite: "SeqBtnCloud", corner: 9, scale: s) { EmptyView() }.place(A.cloud, s).allowsHitTesting(false)
-        }
+        SeqArt(sprite: "SeqBtnCloud", corner: 9, scale: s) { EmptyView() }
+            .bbMenuPlaced(A.cloud, s, title: "MIDI", width: 360) {
+                [.header("MIDI file"),
+                 BBMenuItem.item("Share this pattern as a MIDI file", detail: "12 tracks, one per channel, pitch and velocity", icon: "square.and.arrow.up", enabled: exportURL != nil) { shareMIDI = true },
+                 .header("MIDI out")] + midiOutItems()
+            }
         // snap, scale, swing, humanize
         SeqChip(sprite: "SeqChipSnap", text: snapLabel, size: 13, leading: 64, trailing: 28, scale: s)
             .bbMenuPlaced(A.snap, s, title: "Snap", width: 300) {
@@ -475,7 +479,7 @@ struct SequencerView: View {
                 commit(PatternEdit.quantize(pattern, selection.isEmpty ? nil : selection, grid: snapTicks > 0 ? snapTicks : PatternData.stepTicks))
             },
             .item("Back to the preset's pattern", icon: "arrow.uturn.backward") { controller.useGeneratedLoop(loop); selection = [] },
-            .item("Kit's 12 channels back in the rack", icon: "square.grid.3x3") { controller.resetRack(); expandedID = nil; selectedID = nil },
+            .item("Kit's 12 channels back in the rack", icon: "square.grid.3x3") { controller.resetRack(); expandedID = nil; openID = nil; selectedID = nil },
             .item("Clear \(selection.isEmpty ? "the pattern" : "selection")", icon: "trash", destructive: true) { clear() }
         ]
     }
@@ -506,63 +510,35 @@ struct SequencerView: View {
         return list
     }
 
+    private var headerSprite: String { finish == "platinum" ? "SeqHeader" : "SeqHeader_\(finish)" }
+
+    /// A section header on the panel: the finish's metal, the name in its ink, a chevron.
+    private func sectionHeader(_ title: String, open: Bool, _ r: [Double], _ s: CGFloat, action: @escaping () -> Void) -> some View {
+        SeqButton(headerSprite, corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { action() } }) {
+            HStack {
+                Text(title).font(.system(size: 15 * s, weight: .medium)).foregroundColor(inkColor).kerning(0.5)
+                Spacer()
+                Image(systemName: open ? "chevron.up" : "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(inkColor)
+            }
+            .padding(.leading, 26 * s).padding(.trailing, 28 * s)
+        }
+        .place(r, s)
+    }
+
     @ViewBuilder private func leftPanel(_ s: CGFloat) -> some View {
         let x0 = 33.0, x1 = 284.0, bx0 = 41.0, bx1 = 274.0
-        let top = 320.0, midiBottom = 686.0
-        // section headers (the picture's own), stacked by what's open
-        let headerH = 44.0, genHeaderH = 51.0, gap = 9.0
-        let generalBottom = top + headerH
+        let top = 320.0, bottom = 686.0
+        let headerH = 44.0, gap = 9.0
         switch section {
+        case .sounds:
+            sectionHeader("SOUNDS", open: true, [x0, top, x1, top + headerH], s) { section = .generate }
+            soundsPanel([bx0, top + headerH + gap, bx1, bottom - headerH - gap], s)
+            sectionHeader("GENERATE", open: false, [x0, bottom - headerH, x1, bottom], s) { section = .generate }
         case .generate:
-            SeqButton("SeqSectionGeneral", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .general } }) {
-                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
-            }
-            .place([x0, top, x1, generalBottom], s)
+            sectionHeader("SOUNDS", open: false, [x0, top, x1, top + headerH], s) { section = .sounds }
             Image("SeqSectionGenerate").resizable().place([bx0, 375, bx1, 632], s)
+            sectionHeader("GENERATE", open: true, [bx0, 375, bx1, 426], s) { section = .sounds }
             generateOverlay([bx0, 375, bx1, 632], s)
-            SeqButton("SeqSectionMidi", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .midi } }) {
-                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
-            }
-            .place([x0, 642, x1, midiBottom], s)
-        case .general:
-            SeqButton("SeqSectionGeneral", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }) {
-                Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
-            }
-            .place([x0, top, x1, generalBottom], s)
-            let genTop = 642 - gap - genHeaderH
-            soundsPanel([bx0, generalBottom + gap, bx1, genTop - gap], s)
-            SeqButton("SeqGenerateHeader", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }) {
-                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 24 * s)
-            }
-            .place([bx0, genTop, bx1, genTop + genHeaderH], s)
-            SeqButton("SeqSectionMidi", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .midi } }) {
-                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
-            }
-            .place([x0, 642, x1, midiBottom], s)
-        case .midi:
-            SeqButton("SeqSectionGeneral", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .general } }) {
-                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
-            }
-            .place([x0, top, x1, generalBottom], s)
-            let genTop = generalBottom + gap
-            SeqButton("SeqGenerateHeader", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }) {
-                Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 24 * s)
-            }
-            .place([bx0, genTop, bx1, genTop + genHeaderH], s)
-            let midiTop = genTop + genHeaderH + gap
-            SeqButton("SeqSectionMidi", corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { section = .generate } }) {
-                Image(systemName: "chevron.up").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 28 * s)
-            }
-            .place([x0, midiTop, x1, midiTop + headerH], s)
-            midiPanel([bx0, midiTop + headerH + gap, bx1, midiBottom], s)
         }
     }
 
@@ -678,33 +654,6 @@ struct SequencerView: View {
         selection = []
     }
 
-    private func midiPanel(_ r: [Double], _ s: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 8 * s) {
-            Button { controller.setMIDIOut(!controller.midiOutOn) } label: {
-                HStack(spacing: 6 * s) {
-                    Circle().fill(controller.midiOutOn ? S.green : Color(white: 0.3)).frame(width: 8 * s, height: 8 * s)
-                    Text(controller.midiOutOn ? "MIDI OUT ON" : "MIDI OUT OFF").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                }
-                .frame(maxWidth: .infinity).frame(height: 32 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.2)))
-            }
-            HStack {
-                Text("ROUTING").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
-                Spacer()
-                Image(systemName: "chevron.down").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(.white)
-            }
-            .padding(.horizontal, 10 * s).frame(height: 32 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.2)))
-            .contentShape(Rectangle()).bbMenu(title: "MIDI out", width: 340) { midiOutItems() }
-            Text(controller.isPlugin ? "Route the plug-in's MIDI output in your DAW. Each channel sends on its own MIDI channel; the 808 is pitched on channel 7."
-                                     : "Other apps see \"BreakBoss Out\" as a MIDI source.")
-                .font(.system(size: 9 * s)).foregroundColor(S.dim)
-            Spacer(minLength: 0)
-        }
-        .padding(8 * s)
-        .background(RoundedRectangle(cornerRadius: 12 * s).fill(Color(white: 0.04)).overlay(RoundedRectangle(cornerRadius: 12 * s).stroke(Color(white: 0.2), lineWidth: 1)))
-        .place(r, s)
-    }
-
-
     // MARK: Track settings (sound, tune, decay, filter, reverse, solo, MIDI): from the channel's menu
 
     private func channelStrip(_ ch: WorkspaceChannel) -> some View {
@@ -763,7 +712,8 @@ struct SequencerView: View {
         let rowH = A.rowH * s
         let gridW = (A.gridX1 - A.gridX0) * s
         let L = layouts(rowH: rowH)
-        let contentH = max(L.last.map { $0.y + $0.height } ?? 0, (A.rowsY1 - A.rowsY0) * s)
+        // room under the last track for the next sound (the drop slot), plus a little to scroll past it
+        let contentH = max((L.last.map { $0.y + $0.height } ?? 0) + (channels.count < Pad.count ? rowH : 0) + 12 * s, (A.rowsY1 - A.rowsY0) * s)
         // beat numbers
         ruler(width: gridW).place([A.gridX0, A.labelsY - 10, A.gridX1, A.labelsY + 10], s)
         // the rows: rack column and the grid, scrolling together
@@ -776,11 +726,22 @@ struct SequencerView: View {
                     .offset(x: (A.gridX0 - A.rackX0) * s)
                 // the dice at the end of every track: that track's steps only
                 ForEach(L, id: \.channel.id) { l in
-                    Button { selectedID = l.channel.id; controller.randomizeChannel(loop: loop, pad: l.channel.pad); selection = [] } label: {
-                        Image(systemName: "dice").font(.system(size: 13 * s)).foregroundColor(Color(white: 0.75))
-                            .frame(width: 30 * s, height: 30 * s).background(RoundedRectangle(cornerRadius: 5 * s).fill(Color(white: 0.14)))
+                    // dice: new steps for this track only; ✕: clear this track in one tap
+                    VStack(spacing: 3 * s) {
+                        Button { selectedID = l.channel.id; controller.randomizeChannel(loop: loop, pad: l.channel.pad); selection = [] } label: {
+                            Image(systemName: "dice").font(.system(size: 12 * s)).foregroundColor(Color(white: 0.8))
+                                .frame(width: 30 * s, height: 24 * s).background(RoundedRectangle(cornerRadius: 5 * s).fill(Color(white: 0.14)))
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(SeqPress())
+                        Button { selectedID = l.channel.id; commit(PatternEdit.clearChannel(pattern, pad: l.channel.pad)); selection = [] } label: {
+                            Image(systemName: "xmark").font(.system(size: 11 * s, weight: .bold)).foregroundColor(Color(white: 0.8))
+                                .frame(width: 30 * s, height: 24 * s).background(RoundedRectangle(cornerRadius: 5 * s).fill(Color(white: 0.14)))
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(SeqPress())
                     }
-                    .offset(x: (A.gridX1 + 10 - A.rackX0) * s, y: l.y + (min(l.height, rowH) - 30 * s) / 2)
+                    .offset(x: (A.gridX1 + 10 - A.rackX0) * s, y: l.y + (min(l.height, rowH) - 51 * s) / 2)
                 }
             }
         }
@@ -841,7 +802,16 @@ struct SequencerView: View {
         let X = { (ax: Double) in CGFloat(ax - A.rackX0) * s }
         return ZStack(alignment: .topLeading) {
             Image(rowSprite).resizable().frame(width: 240 * s, height: 58 * s)
-                .scaleEffect(newborn.contains(ch.id) ? 0.3 : 1).opacity(newborn.contains(ch.id) ? 0 : 1)
+                .opacity(newborn.contains(ch.id) ? 0 : 1)
+            // a dropped sound: a dot in the faceplate's colour grows into the track's oval, then settles
+            if newborn.contains(ch.id) || settling.contains(ch.id) {
+                Capsule().fill(noteColor)
+                    .frame(width: (newborn.contains(ch.id) ? 45 : 203) * s, height: 45 * s)
+                    .shadow(color: noteColor.opacity(0.8), radius: 8 * s)
+                    .opacity(settling.contains(ch.id) && !newborn.contains(ch.id) ? 0.0 : 1)
+                    .offset(x: X(321), y: 5 * s)
+                    .allowsHitTesting(false)
+            }
             // the lit oval of the selected track
             if isSel {
                 Capsule().stroke(noteColor, lineWidth: 1.5 * s).shadow(color: noteColor.opacity(0.6), radius: 3 * s)
@@ -850,21 +820,33 @@ struct SequencerView: View {
             Text(ch.name).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? noteColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 92 * s, height: 45 * s, alignment: .leading).offset(x: X(335), y: 5 * s)
                 .allowsHitTesting(false)
-            // the triangle opens the piano roll
-            if expandedID == ch.id {
-                Image(systemName: "triangle.fill").font(.system(size: 8 * s)).foregroundColor(noteColor).rotationEffect(.degrees(180))
-                    .frame(width: 18 * s, height: 20 * s).background(Color(red: 0.86, green: 0.86, blue: 0.87)).offset(x: X(300), y: 17 * s).allowsHitTesting(false)
+            // the arrow: this track's lane (velocity / pitch, and the piano roll from the lane's menu)
+            let isOpen = openID == ch.id
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    openID = isOpen ? nil : ch.id
+                    expandedID = (openID != nil && lane == .pianoRoll) ? openID : nil
+                }
+                selectedID = ch.id
+            } label: {
+                ZStack {
+                    Rectangle().fill(Color(red: 0.86, green: 0.86, blue: 0.87)).frame(width: 16 * s, height: 22 * s)
+                    Image(systemName: "triangle.fill").font(.system(size: 9 * s)).foregroundColor(isOpen ? noteColor : Color(white: 0.25))
+                        .rotationEffect(.degrees(isOpen ? 180 : 90))
+                        .shadow(color: isOpen ? noteColor.opacity(0.8) : .clear, radius: 3 * s)
+                }
+                .frame(width: 24 * s, height: 45 * s).contentShape(Rectangle())
             }
-            PressableArea { withAnimation(.easeInOut(duration: 0.2)) { expandedID = expandedID == ch.id ? nil : ch.id }; selectedID = ch.id }
-                .frame(width: 24 * s, height: 45 * s).offset(x: X(298), y: 5 * s)
-            // tap the name: select; long-press: the channel menu
-            Color.clear.contentShape(Rectangle()).frame(width: 105 * s, height: 45 * s).offset(x: X(321), y: 5 * s)
+            .buttonStyle(SeqPress()).offset(x: X(298), y: 5 * s)
+            // the oval: tap selects the track, hold for its menu
+            Color.clear.contentShape(Capsule()).frame(width: 105 * s, height: 45 * s).offset(x: X(321), y: 5 * s)
                 .bbLongPressMenu(title: ch.name, width: 270, tap: { selectedID = ch.id }) { channelMenu(ch) }
-            ArtKnob(value: ps.level) { v, _ in set { $0.level = v } }.frame(width: 30 * s, height: 30 * s).offset(x: X(425), y: 13 * s)
-            ArtKnob(value: (ps.pan + 1) / 2) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 30 * s, height: 30 * s).offset(x: X(463), y: 13 * s)
+            ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 30 * s, height: 30 * s).offset(x: X(425), y: 13 * s)
+            ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 30 * s, height: 30 * s).offset(x: X(463), y: 13 * s)
             // the lamp: on / off
             if muted { Circle().fill(Color(white: 0.12)).frame(width: 9 * s, height: 9 * s).offset(x: X(504.5), y: 23.5 * s).allowsHitTesting(false) }
-            PressableArea { controller.toggleMute(pad) }.frame(width: 22 * s, height: 30 * s).offset(x: X(498), y: 13 * s)
+            Button { controller.toggleMute(pad) } label: { Color.clear.frame(width: 22 * s, height: 30 * s).contentShape(Rectangle()) }
+                .buttonStyle(SeqPress()).offset(x: X(498), y: 13 * s)
             if l.pitch != nil {
                 scaleToolbar(l, s: s).offset(y: rowH)
                 pitchKeys(l, s: s).offset(y: rowH + toolbarH(rowH))
@@ -973,8 +955,13 @@ struct SequencerView: View {
 
     private func animateIn(_ id: UUID) {
         newborn.insert(id)
+        settling.insert(id)
         DispatchQueue.main.async {
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.55)) { _ = newborn.remove(id) }
+            // 1. the dot grows into the oval  2. the glow fades, the real row is underneath
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { _ = newborn.remove(id) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                withAnimation(.easeOut(duration: 0.35)) { _ = settling.remove(id) }
+            }
         }
     }
 
@@ -991,7 +978,10 @@ struct SequencerView: View {
         items.append(.header("This channel"))
         items.append(BBMenuItem.item("Randomize its steps", icon: "dice") { controller.randomizeChannel(loop: loop, pad: pad) })
         items.append(BBMenuItem.item(expandedID == ch.id ? "Close the piano roll" : "Open the piano roll", icon: "pianokeys") {
-            withAnimation { expandedID = expandedID == ch.id ? nil : ch.id }
+            withAnimation(.easeInOut(duration: 0.22)) {
+                if expandedID == ch.id { expandedID = nil; lane = .velocity }
+                else { openID = ch.id; lane = .pianoRoll; expandedID = ch.id }
+            }
         })
         items.append(BBMenuItem.item("Track settings… (tune, decay, filter, MIDI)", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id })
         items.append(BBMenuItem.item(controller.soloPads[pad] ? "Solo off" : "Solo", icon: "s.square", checked: controller.soloPads[pad]) { controller.toggleSolo(pad) })
@@ -999,6 +989,7 @@ struct SequencerView: View {
         items.append(BBMenuItem.item("Clear its steps", icon: "xmark", destructive: true) { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
         items.append(BBMenuItem.item("Delete channel", icon: "trash", destructive: true) {
             if expandedID == ch.id { expandedID = nil }
+            if openID == ch.id { openID = nil }
             if selectedID == ch.id { selectedID = nil }
             controller.removeRackChannel(ch.id)
         })
@@ -1181,6 +1172,7 @@ struct SequencerView: View {
     private var pinch: some Gesture {
         MagnificationGesture()
             .onChanged { scale in
+                guard expandedID != nil else { return }      // zoom belongs to the piano roll
                 if !pinching {
                     pinching = true
                     switch drag {
@@ -1348,7 +1340,7 @@ struct SequencerView: View {
     // MARK: Velocity / pitch lane
 
     /// The track whose velocity / pitch the lane edits: the one opened with its arrow.
-    private var laneChannel: WorkspaceChannel? { channels.first { $0.id == expandedID } }
+    private var laneChannel: WorkspaceChannel? { channels.first { $0.id == openID } }
     private var lanePad: Int? { laneChannel?.pad }
 
     private func laneHeader(_ s: CGFloat) -> some View {
@@ -1362,7 +1354,16 @@ struct SequencerView: View {
                 .padding(.horizontal, 10 * s).frame(width: 150 * s, height: 36 * s)
                 .background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
                 .contentShape(Rectangle())
-                .bbMenu(title: "Lane", width: 200) { Lane.allCases.map { l in BBMenuItem.item(l.rawValue, checked: lane == l) { lane = l } } }
+                .bbMenu(title: laneChannel?.name ?? "Lane", width: 220) {
+                    Lane.allCases.map { l in
+                        BBMenuItem.item(l.rawValue, icon: l == .pianoRoll ? "pianokeys" : (l == .velocity ? "waveform.path" : "arrow.up.and.down"), checked: lane == l) {
+                            withAnimation(.easeInOut(duration: 0.22)) {
+                                lane = l
+                                expandedID = l == .pianoRoll ? openID : nil
+                            }
+                        }
+                    }
+                }
                 // velocity dice: new velocities only (selected notes, or the selected track, or all)
                 Button {
                     commit(PatternEdit.randomizeVelocity(pattern, pad: lanePad ?? selectedPad, keys: selection, seed: UInt64.random(in: 1...UInt64.max)))
@@ -1371,7 +1372,7 @@ struct SequencerView: View {
                         .frame(width: 40 * s, height: 36 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
                 }
             }
-            Text(laneChannel?.name ?? "OPEN A TRACK (▸) TO EDIT").font(.system(size: 9 * s, weight: .semibold, design: .monospaced))
+            Text(laneChannel?.name ?? "TAP A TRACK'S ARROW TO EDIT IT HERE").font(.system(size: 9 * s, weight: .semibold, design: .monospaced))
                 .foregroundColor(laneChannel == nil ? Color(white: 0.4) : noteColor).lineLimit(1)
             Spacer(minLength: 0)
         }
@@ -1393,7 +1394,7 @@ struct SequencerView: View {
                 ctx.fill(Path(CGRect(x: bx, y: 0, width: bar ? 1.5 : 1, height: size.height)), with: .color(bar ? S.beatLine : S.stepLine))
                 lt += PatternData.ppq
             }
-            let marks: [(String, CGFloat, UnitPoint)] = lane == .velocity
+            let marks: [(String, CGFloat, UnitPoint)] = lane != .pitch
                 ? [("127", 1, .topTrailing), ("64", 0.5, .trailing), ("0", 0, .bottomTrailing)]
                 : [("+12", 1, .topTrailing), ("0", 0.5, .trailing), ("-12", 0, .bottomTrailing)]
             for m in marks {
@@ -1403,7 +1404,7 @@ struct SequencerView: View {
             }
             for e in pattern.events where visible(e) && lanePad != nil && Int(e.pad) == lanePad {
                 let sel = selection.contains(NoteKey(e))
-                let v: CGFloat = lane == .velocity ? CGFloat(e.velocity) : CGFloat((e.semis.clamped(-12, 12) + 12) / 24)
+                let v: CGFloat = lane != .pitch ? CGFloat(e.velocity) : CGFloat((e.semis.clamped(-12, 12) + 12) / 24)
                 let bx = x(e.tick, size.width) + 3
                 let top = 4 + (1 - v) * (size.height - 8)
                 ctx.fill(Path(CGRect(x: bx, y: top, width: 5, height: size.height - 4 - top)),
@@ -1430,7 +1431,7 @@ struct SequencerView: View {
                 && Int(e.pad) == lanePad
         }.map(NoteKey.init))
         guard !keys.isEmpty else { return }
-        if lane == .velocity {
+        if lane != .pitch {
             let value = max(0.05, v)
             work = PatternEdit.setVelocity(pattern, keys, value)
             lastVelocity = value
@@ -1477,32 +1478,46 @@ struct SequencerView: View {
 
     /// PRESETS: every preset pattern by style, and your own.
     private func presetItems() -> [BBMenuItem] {
+        // one vertical list: every style's patterns under its name
         var items: [BBMenuItem] = []
         for style in PatternBank.styles {
-            items.append(.submenu(style, icon: "music.note.list",
-                PatternBank.presets(in: style).map { p in
-                    BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
-                                    checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p); selection = [] }
-                }))
+            items.append(.header(style))
+            for p in PatternBank.presets(in: style) {
+                items.append(BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
+                                             checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p); selection = [] })
+            }
         }
         if !controller.userPresets.isEmpty {
-            items.append(.submenu("My presets", icon: "person.crop.square", controller.userPresets.map { name in
-                BBMenuItem.item(name) { controller.loadUserPreset(name); selection = [] }
-            }))
+            items.append(.header("My presets"))
+            for name in controller.userPresets {
+                items.append(BBMenuItem.item(name, checked: controller.state.presetName == name) { controller.loadUserPreset(name); selection = [] })
+            }
         }
         return items
     }
 
     private func kitItems() -> [BBMenuItem] {
-        SoundMode.allCases.map { mode in
-            BBMenuItem.submenu("\(mode.title) kits", icon: "square.grid.3x3", KitLibrary.kits(for: mode).map { def in
-                BBMenuItem.item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
-            })
-        } + [BBMenuItem.submenu("Genre kits", icon: "music.note.list", KitLibrary.genreGroups.map { g in
-            BBMenuItem.submenu(g.genre, icon: "square.grid.3x3", g.kits.map { def in
-                BBMenuItem.item(def.name, checked: def.id == controller.state.kitID) { controller.selectKit(def) }
-            })
-        })]
+        // one vertical list: MODERN / VINTAGE / TEXTURE kits, the genre kits, your kits
+        var items: [BBMenuItem] = []
+        for mode in SoundMode.allCases {
+            items.append(.header("\(mode.title) kits"))
+            for def in KitLibrary.kits(for: mode) {
+                items.append(BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) { controller.selectKit(def) })
+            }
+        }
+        for g in KitLibrary.genreGroups {
+            items.append(.header(g.genre))
+            for def in g.kits {
+                items.append(BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) { controller.selectKit(def) })
+            }
+        }
+        if !controller.userKits.isEmpty {
+            items.append(.header("My kits"))
+            for name in controller.userKits {
+                items.append(BBMenuItem.item(name, checked: controller.state.userKit == name) { controller.selectUserKit(name) })
+            }
+        }
+        return items
     }
 
 
@@ -1675,14 +1690,18 @@ struct ArtKnob: View {
     let value: Float
     /// Extra touchable margin round the knob (it's small in the picture).
     var grip: CGFloat = 0
+    /// A double tap puts the knob back here (pan: centre).
+    var reset: Float? = nil
     let change: (Float, Bool) -> Void
     @State private var start: Float?
 
     var body: some View {
         Image("SeqKnob").resizable().aspectRatio(contentMode: .fit)
             .rotationEffect(.degrees(KnobControl.angle(value)))
+            .animation(.easeOut(duration: 0.15), value: value)
             .padding(grip)
             .contentShape(Rectangle())
+            .onTapGesture(count: 2) { if let reset { change(reset, true) } }
             // high priority: the rack's knobs turn instead of scrolling the rack
             .highPriorityGesture(DragGesture(minimumDistance: 0)
                 .onChanged { g in
