@@ -59,6 +59,21 @@ targets:
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) BREAKBOSS_PLUGIN"
         APPLICATION_EXTENSION_API_ONLY: YES
         SKIP_INSTALL: YES
+  # Taps the sequencer on an iPad simulator (build.yml, "taps" job). Not part of the app or the upload.
+  BreakBossUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    settings:
+      base:
+        PRODUCT_NAME: BreakBossUITests
+        PRODUCT_BUNDLE_IDENTIFIER: com.tabdanger.BreakBoss.UITests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "2"
+        TEST_TARGET_NAME: BreakBoss
+    dependencies:
+      - target: BreakBoss
 schemes:
   BreakBoss:
     build:
@@ -67,3 +82,13 @@ schemes:
         BreakBossAU: all
     archive:
       config: Release
+  BreakBossUITests:
+    build:
+      targets:
+        BreakBoss: all
+        BreakBossAU: all
+        BreakBossUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - BreakBossUITests
