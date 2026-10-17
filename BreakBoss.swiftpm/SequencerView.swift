@@ -81,7 +81,9 @@ struct SequencerView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     enum Tool { case draw, select, erase }
-    enum Lane: String, CaseIterable { case velocity = "VELOCITY", pitch = "PITCH", pianoRoll = "PIANO ROLL" }
+    /// The lane's header: VELOCITY edits velocities in the lane; PITCH opens the track's piano roll,
+    /// where each note is dragged up or down for its pitch (the lane keeps showing velocity).
+    enum Lane: String, CaseIterable { case velocity = "VELOCITY", pitch = "PITCH" }
     enum Panel { case sounds, generate }
 
     @State private var tool: Tool = .draw
@@ -825,7 +827,7 @@ struct SequencerView: View {
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     openID = isOpen ? nil : ch.id
-                    expandedID = (openID != nil && lane == .pianoRoll) ? openID : nil
+                    expandedID = (openID != nil && lane == .pitch) ? openID : nil
                 }
                 selectedID = ch.id
             } label: {
@@ -980,7 +982,7 @@ struct SequencerView: View {
         items.append(BBMenuItem.item(expandedID == ch.id ? "Close the piano roll" : "Open the piano roll", icon: "pianokeys") {
             withAnimation(.easeInOut(duration: 0.22)) {
                 if expandedID == ch.id { expandedID = nil; lane = .velocity }
-                else { openID = ch.id; lane = .pianoRoll; expandedID = ch.id }
+                else { openID = ch.id; lane = .pitch; expandedID = ch.id }
             }
         })
         items.append(BBMenuItem.item("Track settings… (tune, decay, filter, MIDI)", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id })
@@ -1354,15 +1356,13 @@ struct SequencerView: View {
                 .padding(.horizontal, 10 * s).frame(width: 150 * s, height: 36 * s)
                 .background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
                 .contentShape(Rectangle())
-                .bbMenu(title: laneChannel?.name ?? "Lane", width: 220) {
-                    Lane.allCases.map { l in
-                        BBMenuItem.item(l.rawValue, icon: l == .pianoRoll ? "pianokeys" : (l == .velocity ? "waveform.path" : "arrow.up.and.down"), checked: lane == l) {
-                            withAnimation(.easeInOut(duration: 0.22)) {
-                                lane = l
-                                expandedID = l == .pianoRoll ? openID : nil
-                            }
-                        }
-                    }
+                .bbMenu(title: laneChannel?.name ?? "Lane", width: 240) {
+                    [BBMenuItem.item("VELOCITY", detail: "the bars under the grid", icon: "waveform.path", checked: lane == .velocity) {
+                        withAnimation(.easeInOut(duration: 0.22)) { lane = .velocity; expandedID = nil }
+                     },
+                     BBMenuItem.item("PITCH", detail: "opens the track's piano roll", icon: "pianokeys", checked: lane == .pitch) {
+                        withAnimation(.easeInOut(duration: 0.22)) { lane = .pitch; expandedID = openID }
+                     }]
                 }
                 // velocity dice: new velocities only (selected notes, or the selected track, or all)
                 Button {
@@ -1394,9 +1394,7 @@ struct SequencerView: View {
                 ctx.fill(Path(CGRect(x: bx, y: 0, width: bar ? 1.5 : 1, height: size.height)), with: .color(bar ? S.beatLine : S.stepLine))
                 lt += PatternData.ppq
             }
-            let marks: [(String, CGFloat, UnitPoint)] = lane != .pitch
-                ? [("127", 1, .topTrailing), ("64", 0.5, .trailing), ("0", 0, .bottomTrailing)]
-                : [("+12", 1, .topTrailing), ("0", 0.5, .trailing), ("-12", 0, .bottomTrailing)]
+            let marks: [(String, CGFloat, UnitPoint)] = [("127", 1, .topTrailing), ("64", 0.5, .trailing), ("0", 0, .bottomTrailing)]
             for m in marks {
                 let y = 4 + (1 - m.1) * (size.height - 8)
                 ctx.draw(Text(m.0).font(.system(size: 10, design: .monospaced)).foregroundColor(Color.white.opacity(0.55)),
@@ -1404,7 +1402,7 @@ struct SequencerView: View {
             }
             for e in pattern.events where visible(e) && lanePad != nil && Int(e.pad) == lanePad {
                 let sel = selection.contains(NoteKey(e))
-                let v: CGFloat = lane != .pitch ? CGFloat(e.velocity) : CGFloat((e.semis.clamped(-12, 12) + 12) / 24)
+                let v = CGFloat(e.velocity)
                 let bx = x(e.tick, size.width) + 3
                 let top = 4 + (1 - v) * (size.height - 8)
                 ctx.fill(Path(CGRect(x: bx, y: top, width: 5, height: size.height - 4 - top)),
@@ -1431,16 +1429,9 @@ struct SequencerView: View {
                 && Int(e.pad) == lanePad
         }.map(NoteKey.init))
         guard !keys.isEmpty else { return }
-        if lane != .pitch {
-            let value = max(0.05, v)
-            work = PatternEdit.setVelocity(pattern, keys, value)
-            lastVelocity = value
-        } else {
-            let raw = (v * 24 - 12).rounded()
-            let (p, newKeys) = PatternEdit.setPitch(pattern, keys, controller.scaleSnapped(raw, pad: lanePad))
-            work = p
-            if !selection.isEmpty { selection = selection.subtracting(keys).union(newKeys) }
-        }
+        let value = max(0.05, v)
+        work = PatternEdit.setVelocity(pattern, keys, value)
+        lastVelocity = value
     }
 
     // MARK: Footer (pattern, kit)
