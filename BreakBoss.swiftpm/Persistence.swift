@@ -80,6 +80,8 @@ struct KnockState: Codable, Equatable {
     /// nil = never opened the step rack, [] = an intentionally empty rack.
     /// Optional for backwards compatibility with saved projects.
     var workspaceChannels: [WorkspaceChannel]? = nil
+    /// The rack's top-to-bottom order of the 12 pads (hold a track to drag it); nil = pad order.
+    var rackOrder: [Int]? = nil
     var pads: [PadSettings] = Array(repeating: PadSettings(), count: Pad.count)
     /// Loops you edited or imported (nil = the generated one).
     var editedLoops: [PatternData?] = Array(repeating: nil, count: Pad.count)
