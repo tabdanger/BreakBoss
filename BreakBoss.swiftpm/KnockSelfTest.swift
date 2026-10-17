@@ -688,6 +688,34 @@ enum KnockSelfTest {
             }
         }
         check(l.contains { abs($0) > 0.05 }, "pad sounds after idle")
+        // An empty pattern on the sequencer is silent, even when the other patterns have notes:
+        // PLAY and the DAW start the pattern on screen (the cue), not the last one that played.
+        let cueEngine = KnockEngine()
+        cueEngine.prepare(sampleRate: 48_000, maxFrames: 512)
+        cueEngine.setParam(.followDAW, 0)
+        cueEngine.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        var cueLoops = GrooveGenerator.loops(style: .trap, seed: 1)
+        cueLoops[3] = PatternData(name: "EMPTY", lengthTicks: cueLoops[3].lengthTicks, events: [])
+        cueEngine.patternHandoff.publish(PatternSet(cueLoops))
+        func loud(_ e: KnockEngine, blocks: Int) -> Bool {
+            var heard = false
+            for _ in 0..<blocks {
+                l.withUnsafeMutableBufferPointer { lp in
+                    r.withUnsafeMutableBufferPointer { rp in
+                        e.render(frames: 512, left: lp.baseAddress!, right: rp.baseAddress!, host: nil)
+                    }
+                }
+                if l.contains(where: { abs($0) > 0.01 }) { heard = true }
+            }
+            return heard
+        }
+        cueEngine.send(KEvent(kind: .loopPad, a: 0))
+        check(loud(cueEngine, blocks: 100), "cue test: pattern 1 plays")
+        cueEngine.send(KEvent(kind: .stop))
+        _ = loud(cueEngine, blocks: 40)
+        cueEngine.send(KEvent(kind: .cue, a: 3))
+        cueEngine.send(KEvent(kind: .play))
+        check(!loud(cueEngine, blocks: 200), "an empty pattern on the sequencer plays nothing")
     }
 
     static func checkFiles() {
@@ -972,27 +1000,24 @@ enum KnockSelfTest {
               "rack: starts as the kit's 12 channels")
         if let last = rc.rackChannels.last {
             rc.removeRackChannel(last.id)
-            check(rc.rackChannels.count == Pad.count - 1, "rack: a channel can be deleted")
+            check(rc.rackChannels.count == Pad.count && rc.rackChannels.last?.soundID == "kit",
+                  "rack: deleting a channel puts the kit's sound back, all 12 pads stay on screen")
             let sound = LibrarySound(id: "test", url: URL(fileURLWithPath: "/"), name: "TEST SNARE", type: .snare, pack: "TEST", user: true)
             let added = rc.addRackChannel(sound, load: false)
             check(added?.pad == last.pad && rc.rackChannels.count == Pad.count && rc.rackChannels.last?.name == "TEST SNARE",
-                  "rack: a dropped sound takes the free pad slot")
-            check(rc.addRackChannel(sound, load: false) == nil, "rack: 12 channels at most")
+                  "rack: a dropped sound takes a free kit channel")
             rc.resetRack()
             check(rc.rackChannels.count == Pad.count && rc.rackChannels[0].soundID == "kit", "rack: back to the kit's channels")
-            // Face 1 and Face 2 stay in step: what a pattern plays is in the rack, a kit fills rack and pads.
-            if let kickRow = rc.rackChannels.first(where: { $0.pad == Pad.kick.rawValue }),
-               let preset = PatternBank.all.first(where: { $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } }) {
-                rc.removeRackChannel(kickRow.id)
-                check(!rc.rackChannels.contains { $0.pad == Pad.kick.rawValue } &&
-                      !rc.loops.contains { $0.events.contains { Int($0.pad) == Pad.kick.rawValue } },
+            // Face 1 and Face 2 stay in step: every pad is in the rack, a kit fills rack and pads.
+            if let preset = PatternBank.all.first(where: { $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } }) {
+                rc.removeRackChannel(rc.rackChannels[Pad.kick.rawValue].id)
+                check(!rc.loops.contains { $0.events.contains { Int($0.pad) == Pad.kick.rawValue } },
                       "rack: a deleted channel's notes go from every pattern")
                 rc.loadPatternPreset(preset)
-                check(rc.rackChannels.contains { $0.pad == Pad.kick.rawValue },
-                      "rack: a loaded pattern brings back the channels it plays")
+                _ = rc.addRackChannel(sound, load: false)
+                check(rc.rackChannels.map(\.pad) == Array(0..<Pad.count), "rack: always all 12 pads, in pad order")
                 rc.selectKit(KitLibrary.west90s)
-                check(rc.rackChannels.count == Pad.count && rc.rackChannels.allSatisfy { $0.soundID == "kit" },
-                      "rack: a kit loads into the rack as well as the pads")
+                check(rc.rackChannels.allSatisfy { $0.soundID == "kit" }, "rack: a kit loads into the rack as well as the pads")
             }
             rc.setLoop(3, rc.loops[3])
             check(rc.screenPattern == 3, "PLAY on the faceplate plays the pattern the sequencer shows")

@@ -671,6 +671,9 @@ final class KnockEngine {
             trigger(pad: pad, velocity: Float(e.value), semis: semis, lengthSamples: 0, glide: false)
             midiOutHit(pad: pad, velocity: Float(e.value), semis: semis, length: 0, offset: offset)
             record(pad: pad, velocity: Float(e.value), semis: semis, offset: offset)
+        case .cue:
+            // The sequencer's pattern: what plays next when nothing is playing (PLAY, the DAW, MIDI start).
+            if !playing && e.a >= 0 && e.a < Int32(Pad.count) { currentLoop = Int(e.a) }
         case .countIn:
             // RECORD with a count-in: the clicks run for `a` beats before the pattern's first
             // beat (the transport starts below zero; nothing plays until it reaches the top).
@@ -849,7 +852,7 @@ final class KnockEngine {
     @inline(__always)
     static func isTransport(_ k: KEvent.Kind) -> Bool {
         switch k {
-        case .midiNoteOn, .noteOff, .loopGateOn, .loopGateOff, .allOff, .loopPad, .play, .stop, .midiStart, .midiStop, .midiContinue, .midiClock, .songPosition, .countIn: return true
+        case .midiNoteOn, .noteOff, .loopGateOn, .loopGateOff, .allOff, .loopPad, .play, .stop, .midiStart, .midiStop, .midiContinue, .midiClock, .songPosition, .countIn, .cue: return true
         default: return false
         }
     }
