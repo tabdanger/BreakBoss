@@ -22,3 +22,12 @@ knob's metal) and slide over their wells. Order: build_controls.py, build_bays.p
 
     python3 tools/sequencer_art/build_bays.py BreakBoss.swiftpm
     python3 tools/sequencer_art/build_finishes.py BreakBoss.swiftpm
+
+Oct 17 (later): Face 2 wears Face 1's exact finish. `build_finishes.py` (with `metal.py`, shared with
+Face 1) writes `SeqPlate_<face>` / `SeqRow_<face>` for all four faces (the app no longer uses the bare
+`SeqPlate` / `SeqRow`, they're the sources): Vintage is Face 1's cream and Texture Face 1's blue with
+its pebble grain, every plate gets depth (top-left light, sunk wells, occlusion, grain). Each button /
+chip sprite gets `_modern` / `_vintage` / `_texture` copies with the plate showing round its edges in
+that metal, and `PlateGrain` is the grain tile the SwiftUI plates use. In Swift, `MetalTone` and the
+`seqFinish` environment value colour the SOUNDS / GENERATE headers, the Face slider, the power button,
+the knob rims and the buttons' lit edges. Needs scipy (`python3 -m pip install scipy`).

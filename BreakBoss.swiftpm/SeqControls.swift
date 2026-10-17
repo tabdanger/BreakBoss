@@ -7,6 +7,62 @@ import SwiftUI
 // `tools/sequencer_art/build_controls.py`), not a press area over a painting: it goes in while
 // your finger is on it, springs back when you let go, and lights up when it's on.
 
+// MARK: - The finish (Oct 17, Tyrone: headers, slider and control edges in the faceplate's metal)
+
+private struct SeqFinishKey: EnvironmentKey { static let defaultValue = "platinum" }
+
+extension EnvironmentValues {
+    /// Face 2's finish: "platinum", "modern" (black), "vintage" (cream) or "texture" (blue), the same as Face 1.
+    var seqFinish: String {
+        get { self[SeqFinishKey.self] }
+        set { self[SeqFinishKey.self] = newValue }
+    }
+}
+
+/// The faceplate's metal in each finish, matched to Face 1's plate: its bright, light, mid and dark
+/// tones (light caught in bands, as on the slider knob), the printing on it, and whether it wears
+/// Face 1's pebble grain.
+struct MetalTone {
+    let bright: Color, light: Color, mid: Color, dark: Color
+    let ink: Color
+    let pebbled: Bool
+
+    private static func rgb(_ r: Double, _ g: Double, _ b: Double) -> Color { Color(red: r / 255, green: g / 255, blue: b / 255) }
+
+    static func of(_ finish: String) -> MetalTone {
+        switch finish {
+        case "modern":
+            return MetalTone(bright: rgb(98, 98, 102), light: rgb(58, 58, 61), mid: rgb(40, 40, 42), dark: rgb(20, 20, 21),
+                             ink: Color(white: 0.9), pebbled: false)
+        case "vintage":
+            return MetalTone(bright: rgb(252, 247, 232), light: rgb(238, 227, 199), mid: rgb(222, 208, 174), dark: rgb(184, 166, 128),
+                             ink: Color(white: 0.13), pebbled: true)
+        case "texture":
+            return MetalTone(bright: rgb(118, 182, 244), light: rgb(28, 110, 196), mid: rgb(12, 86, 162), dark: rgb(6, 50, 104),
+                             ink: Color(white: 0.95), pebbled: true)
+        default:
+            return MetalTone(bright: Color(white: 0.96), light: Color(white: 0.88), mid: Color(white: 0.80), dark: Color(white: 0.62),
+                             ink: Color(white: 0.13), pebbled: false)
+        }
+    }
+
+    /// The spun metal of a knob cap or the slider knob: bright facets turning round it.
+    var spun: AngularGradient {
+        AngularGradient(colors: [bright, dark, light, dark, bright], center: .center)
+    }
+}
+
+/// Face 1's pebble grain (the `PlateGrain` tile from build_finishes.py) over a cream or blue plate.
+struct PebbleGrain: View {
+    var amount = 0.55
+
+    var body: some View {
+        Image("PlateGrain").resizable(resizingMode: .tile)
+            .blendMode(.overlay).opacity(amount)
+            .allowsHitTesting(false)
+    }
+}
+
 /// Pressed look for any Button on the sequencer: shrinks a little and darkens, then springs back.
 struct SeqPress: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -66,10 +122,17 @@ struct SeqArt<Label: View>: View {
     var corner: CGFloat = 7
     var scale: CGFloat = 1
     @ViewBuilder var label: () -> Label
+    @Environment(\.seqFinish) private var finish
+
+    /// The sprite in the finish (its edges in the plate's metal), when build_finishes.py made one.
+    private var art: String {
+        let name = "\(sprite)_\(finish)"
+        return finish != "platinum" && UIImage(named: name) != nil ? name : sprite
+    }
 
     var body: some View {
         ZStack {
-            Image(sprite).resizable()
+            Image(art).resizable()
             BrushedFinish(corner: corner * scale)
             if let lit {
                 RoundedRectangle(cornerRadius: corner * scale).fill(lit.opacity(0.16))
@@ -139,8 +202,10 @@ struct FaceSlider: View {
     let back: () -> Void
     @State private var travel: CGFloat = 0
     @State private var leaving = false
+    @Environment(\.seqFinish) private var finish
 
     var body: some View {
+        let tone = MetalTone.of(finish)
         GeometryReader { geo in
             let h = geo.size.height, w = geo.size.width
             let knob = h - 8 * scale
@@ -148,7 +213,7 @@ struct FaceSlider: View {
             ZStack(alignment: .leading) {
                 // the slot
                 Capsule().fill(LinearGradient(colors: [Color(white: 0.05), Color(white: 0.16)], startPoint: .top, endPoint: .bottom))
-                    .overlay(Capsule().stroke(Color(white: 0.6), lineWidth: 1))
+                    .overlay(Capsule().strokeBorder(LinearGradient(colors: [tone.dark, tone.bright], startPoint: .top, endPoint: .bottom), lineWidth: 1.5 * scale))
                     .overlay(Capsule().fill(color.opacity(0.25 * Double(travel / maxTravel))).padding(2))
                 // where it goes: Face 1's pads
                 Image(systemName: "square.fill").font(.system(size: 13 * scale, weight: .bold))
@@ -156,12 +221,13 @@ struct FaceSlider: View {
                     .frame(width: knob, height: knob).offset(x: w - knob - 4 * scale)
                 Image(systemName: "chevron.right.2").font(.system(size: 9 * scale, weight: .bold)).foregroundColor(Color(white: 0.45))
                     .offset(x: knob + 6 * scale).opacity(1 - Double(travel / maxTravel))
-                // the platinum knob
+                // the knob, in the faceplate's metal
                 ZStack {
-                    Circle().fill(AngularGradient(colors: [Color(white: 0.96), Color(white: 0.62), Color(white: 0.9), Color(white: 0.58), Color(white: 0.96)], center: .center))
+                    Circle().fill(tone.spun)
+                    if tone.pebbled { PebbleGrain(amount: 0.35).clipShape(Circle()) }
                     Circle().fill(RadialGradient(colors: [Color.white.opacity(0.55), .clear], center: .init(x: 0.35, y: 0.3), startRadius: 0, endRadius: knob * 0.6))
-                    Circle().stroke(Color(white: 0.35), lineWidth: 1)
-                    Image(systemName: "square.grid.3x3.fill").font(.system(size: knob * 0.42, weight: .bold)).foregroundColor(Color(white: 0.15))
+                    Circle().strokeBorder(LinearGradient(colors: [tone.bright, tone.dark.opacity(0.9), .black.opacity(0.6)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                    Image(systemName: "square.grid.3x3.fill").font(.system(size: knob * 0.42, weight: .bold)).foregroundColor(tone.ink)
                 }
                 .frame(width: knob, height: knob)
                 .shadow(color: .black.opacity(0.55), radius: 3 * scale, y: 2 * scale)
@@ -197,21 +263,32 @@ struct FaceSlider: View {
 /// Platinum laid flat: the Face 1 / Face 2 slider knob's metal (bright silver catching the light in
 /// bands) on a brushed plate with a bevelled edge, lit on top and shadowed underneath. The SOUNDS and
 /// GENERATE headers are plates of it; inside a panel they sit square and flush against each other.
+///
+/// Oct 17: in the faceplate's finish (Tyrone: Vintage cream, Texture blue, Modern black, with the
+/// plate's own texture), so it's the same metal as the plate around it.
 struct PlatinumPlate: View {
     var corner: CGFloat = 0
+    @Environment(\.seqFinish) private var finish
 
     var body: some View {
-        let w = { (v: Double) in Color(white: v) }
+        let tone = MetalTone.of(finish)
         ZStack {
-            LinearGradient(stops: [.init(color: w(0.95), location: 0), .init(color: w(0.80), location: 0.38),
-                                   .init(color: w(0.88), location: 0.62), .init(color: w(0.68), location: 1)],
+            LinearGradient(stops: [.init(color: tone.bright, location: 0), .init(color: tone.mid, location: 0.38),
+                                   .init(color: tone.light, location: 0.62), .init(color: tone.dark, location: 1)],
                            startPoint: .top, endPoint: .bottom)
+            if tone.pebbled { PebbleGrain() }
             // light caught across it, like the facets of the knob
             LinearGradient(stops: [.init(color: .white.opacity(0), location: 0.1), .init(color: .white.opacity(0.4), location: 0.27),
                                    .init(color: .white.opacity(0), location: 0.44), .init(color: .black.opacity(0.06), location: 0.6),
                                    .init(color: .white.opacity(0.22), location: 0.8), .init(color: .white.opacity(0), location: 0.95)],
                            startPoint: .leading, endPoint: .trailing)
             BrushedFinish(corner: corner)
+            // depth: a lit top lip and a shadowed bottom edge, like the bevels on the plate
+            VStack(spacing: 0) {
+                LinearGradient(colors: [tone.bright.opacity(0.9), tone.bright.opacity(0)], startPoint: .top, endPoint: .bottom).frame(height: 3)
+                Spacer(minLength: 0)
+                LinearGradient(colors: [.black.opacity(0), .black.opacity(0.35)], startPoint: .top, endPoint: .bottom).frame(height: 4)
+            }
         }
         .clipShape(RoundedRectangle(cornerRadius: corner))
         .allowsHitTesting(false)
@@ -225,25 +302,28 @@ struct PowerButton: View {
     var scale: CGFloat = 1
     var color: Color = .green
     let action: () -> Void
+    @Environment(\.seqFinish) private var finish
 
     var body: some View {
+        let tone = MetalTone.of(finish)
         Button(action: action) {
             GeometryReader { g in
                 let d = min(g.size.width, g.size.height)
                 ZStack {
                     // the slot it sits in
                     Circle().fill(LinearGradient(colors: [Color(white: 0.05), Color(white: 0.18)], startPoint: .top, endPoint: .bottom))
-                        .overlay(Circle().stroke(Color(white: 0.6), lineWidth: 1))
+                        .overlay(Circle().strokeBorder(LinearGradient(colors: [tone.dark, tone.bright], startPoint: .top, endPoint: .bottom), lineWidth: 1.5 * scale))
                     Circle().stroke(on ? color : Color(white: 0.25), lineWidth: 2 * scale)
                         .shadow(color: on ? color.opacity(0.8) : .clear, radius: 4 * scale)
                         .padding(2.5 * scale)
-                    // the platinum knob
+                    // the knob, in the faceplate's metal
                     ZStack {
-                        Circle().fill(AngularGradient(colors: [Color(white: 0.96), Color(white: 0.62), Color(white: 0.9), Color(white: 0.58), Color(white: 0.96)], center: .center))
+                        Circle().fill(tone.spun)
+                        if tone.pebbled { PebbleGrain(amount: 0.35).clipShape(Circle()) }
                         Circle().fill(RadialGradient(colors: [Color.white.opacity(0.55), .clear], center: .init(x: 0.35, y: 0.3), startRadius: 0, endRadius: d * 0.45))
-                        Circle().stroke(Color(white: 0.35), lineWidth: 1)
+                        Circle().strokeBorder(LinearGradient(colors: [tone.bright, tone.dark.opacity(0.9), .black.opacity(0.6)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
                         Image(systemName: "power").font(.system(size: d * 0.3, weight: .bold))
-                            .foregroundColor(on ? color : Color(white: 0.2))
+                            .foregroundColor(on ? color : tone.ink.opacity(0.85))
                             .shadow(color: on ? color.opacity(0.9) : .clear, radius: 3 * scale)
                     }
                     .padding(6 * scale)
@@ -264,8 +344,11 @@ struct PowerButton: View {
 /// bevelled edge (lit on top, shadowed underneath).
 struct BrushedFinish: View {
     var corner: CGFloat = 7
+    @Environment(\.seqFinish) private var finish
 
     var body: some View {
+        // the lit top edge is the plate's own metal catching the light (Tyrone: edges in the plate's colour)
+        let edge = finish == "platinum" ? Color.white.opacity(0.4) : MetalTone.of(finish).bright.opacity(0.75)
         let shape = RoundedRectangle(cornerRadius: corner)
         ZStack {
             Canvas { ctx, size in
@@ -282,22 +365,30 @@ struct BrushedFinish: View {
                            startPoint: .topLeading, endPoint: .bottomTrailing)
         }
         .clipShape(shape)
-        .overlay(shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.4), .white.opacity(0), .black.opacity(0.45)], startPoint: .top, endPoint: .bottom), lineWidth: 1))
+        .overlay(shape.strokeBorder(LinearGradient(colors: [edge, edge.opacity(0), .black.opacity(0.45)], startPoint: .top, endPoint: .bottom), lineWidth: 1))
         .allowsHitTesting(false)
     }
 }
 
 /// A machined knob: a spun-metal cap (concentric grain, light caught in its facets) sitting in a dark
 /// well, with a groove on the cap and a white tick on the rim to read it by.
+///
+/// Oct 17: the well's rim is a collar of the faceplate's metal (cream, blue, black), so the knob's edge
+/// matches the plate; the cap stays silver like Face 1's knobs.
 struct MetalKnob: View {
     var pointer = true
+    @Environment(\.seqFinish) private var finish
 
     var body: some View {
+        let tone = MetalTone.of(finish)
         GeometryReader { g in
             let d = min(g.size.width, g.size.height)
             let w = { (v: Double) in Color(white: v) }
             ZStack {
                 Circle().fill(RadialGradient(colors: [w(0.02), w(0.18)], center: .center, startRadius: d * 0.32, endRadius: d * 0.5))
+                if finish != "platinum" {
+                    Circle().strokeBorder(LinearGradient(colors: [tone.dark, tone.bright], startPoint: .top, endPoint: .bottom), lineWidth: max(1, d * 0.05))
+                }
                 ZStack {
                     Circle().fill(AngularGradient(colors: [w(0.96), w(0.6), w(0.9), w(0.52), w(0.96), w(0.58), w(0.9), w(0.55), w(0.96)], center: .center))
                     Canvas { ctx, size in

@@ -282,8 +282,8 @@ struct SequencerView: View {
     private var noteColor: Color { PadView.lightColor(controller.mode) }
     /// Face 2 wears the same finish as Face 1: platinum / black (MODERN), cream (VINTAGE), blue (TEXTURE).
     private var finish: String { controller.faceKey }
-    private var plateSprite: String { finish == "platinum" ? "SeqPlate" : "SeqPlate_\(finish)" }
-    private var rowSprite: String { finish == "platinum" ? "SeqRow" : "SeqRow_\(finish)" }
+    private var plateSprite: String { "SeqPlate_\(finish)" }
+    private var rowSprite: String { "SeqRow_\(finish)" }
     /// Printing on the metal: black on the light finishes, white on the black one.
     private var inkColor: Color { finish == "modern" ? Color(white: 0.9) : Color(white: 0.1) }
     private var isThisPlaying: Bool { controller.isPlaying && Int(controller.meters.status[1]) == loop }
@@ -382,6 +382,8 @@ struct SequencerView: View {
             }
             .frame(width: Self.artW * s, height: Self.artH * s)
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
+            // headers, slider, knob rims and control edges in the faceplate's metal
+            .environment(\.seqFinish, finish)
         }
         .bbMenuHost()
         .background(Color.black.ignoresSafeArea())
@@ -669,9 +671,9 @@ struct SequencerView: View {
             ZStack {
                 PlatinumPlate()
                 HStack {
-                    Text(title).font(.system(size: 15 * s, weight: .semibold)).foregroundColor(Color(white: 0.13)).kerning(0.5)
+                    Text(title).font(.system(size: 15 * s, weight: .semibold)).foregroundColor(MetalTone.of(finish).ink).kerning(0.5)
                     Spacer()
-                    Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(Color(white: 0.13))
+                    Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(MetalTone.of(finish).ink)
                         .rotationEffect(.degrees(open ? 180 : 0))
                 }
                 .padding(.leading, 18 * s).padding(.trailing, 18 * s)
