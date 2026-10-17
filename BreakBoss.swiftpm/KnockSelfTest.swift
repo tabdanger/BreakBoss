@@ -172,12 +172,53 @@ enum KnockSelfTest {
                     }
                     check(finite, "\(url.lastPathComponent): decoded stereo audio is finite")
                     check(peak > 0.005 && peak <= 1.000_01, "\(url.lastPathComponent): decoded stock audio is audible and bounded")
+                    // tools/level_stock_sounds.py: every sound at the same loudness, or (a tiny click) at full scale.
+                    let lufs = stockLoudness(buffer)
+                    let atCeiling = peak >= stockLoudnessCeiling * 0.99
+                    check(peak <= stockLoudnessCeiling * 1.002 && lufs <= stockLoudnessTarget + stockLoudnessTolerance + 0.15
+                          && (lufs >= stockLoudnessTarget - stockLoudnessTolerance - 0.15 || atCeiling),
+                          "\(url.lastPathComponent): levelled with the other stock sounds (\(String(format: "%.1f", lufs)) LUFS)")
                 } catch {
                     check(false, "\(url.lastPathComponent): stock audio decodes (\(error.localizedDescription))")
                 }
             }
         }
         #endif
+    }
+
+    // The loudness every stock sound is levelled to (tools/level_stock_sounds.py TARGET, TOLERANCE, CEILING).
+    static let stockLoudnessTarget = -10.0
+    static let stockLoudnessTolerance = 1.0
+    static let stockLoudnessCeiling: Float = 0.944  // -0.5 dBFS
+
+    /// LUFS of the loudest 100 ms (BS.1770 K-weighting at 48 kHz), the same measure as the levelling tool.
+    static func stockLoudness(_ buffer: SampleBuffer) -> Double {
+        func kWeighted(_ x: UnsafeMutablePointer<Float>) -> [Double] {
+            let stages: [([Double], [Double])] = [
+                ([1.53512485958697, -2.69169618940638, 1.19839281085285], [-1.69065929318241, 0.73248077421585]),
+                ([1.0, -2.0, 1.0], [-1.99004745483398, 0.99007225036621]),
+            ]
+            var y = (0..<buffer.length).map { Double(x[$0]) }
+            for (b, a) in stages {
+                var x1 = 0.0, x2 = 0.0, y1 = 0.0, y2 = 0.0
+                for i in 0..<y.count {
+                    let v = y[i]
+                    let o = b[0] * v + b[1] * x1 + b[2] * x2 - a[0] * y1 - a[1] * y2
+                    x2 = x1; x1 = v; y2 = y1; y1 = o
+                    y[i] = o
+                }
+            }
+            return y
+        }
+        let l = kWeighted(buffer.left), r = kWeighted(buffer.right)
+        let window = 4_800
+        var sum = 0.0, loudest = 0.0
+        for i in 0..<buffer.length {
+            sum += l[i] * l[i] + r[i] * r[i]
+            if i >= window { sum -= l[i - window] * l[i - window] + r[i - window] * r[i - window] }
+            loudest = max(loudest, sum)
+        }
+        return -0.691 + 10 * log10(max(loudest / Double(window), 1e-12))
     }
 
     static func checkGrooves() {
