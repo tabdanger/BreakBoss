@@ -8,18 +8,8 @@
 # Signing and uploading to App Store Connect / TestFlight are in upload.yml.
 name: Build BreakBoss
 
+# Manual only (Tyrone, Oct 16: no automatic test builds; the TestFlight upload is the build check).
 on:
-  push:
-    branches: [main]
-    paths:
-      - "BreakBoss.swiftpm/**"
-      - "AUv3/**"
-      - "xcode/**"
-      - ".github/workflows/build.yml"
-      - ".github/scripts/annotate.py"
-      - ".github/scripts/simulate.py"
-      - ".github/scripts/test_release.py"
-      - ".github/scripts/asc.py"
   workflow_dispatch:
   workflow_call:
 
