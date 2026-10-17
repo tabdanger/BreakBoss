@@ -32,6 +32,7 @@ enum KnockSelfTest {
         phase("checkHeldLoops", checkHeldLoops)
         phase("checkMigration", checkMigration)
         phase("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence)
+        phase("checkEveryPatternAudible", checkEveryPatternAudible)
         phase("checkTextureControls", checkTextureControls)
         phase("checkLevelPanGlide", checkLevelPanGlide)
         phase("checkPatternEditor", checkPatternEditor)
@@ -1078,6 +1079,10 @@ enum KnockSelfTest {
             }
             rc.setLoop(3, rc.loops[3])
             check(rc.screenPattern == 3, "PLAY on the faceplate plays the pattern the sequencer shows")
+            if let preset = PatternBank.all.last {
+                rc.loadPatternPreset(preset)
+                check(rc.screenPattern == 0, "a new pattern opens on its MAIN A, not the part of the last one on screen")
+            }
         }
         var pattern = PatternData(name: "RACK", lengthTicks: PatternEdit.barTicks,
                                   events: [])
@@ -1559,6 +1564,58 @@ enum KnockSelfTest {
             let changed = PatternRandomizer.randomChannel(base, pad: Pad.hat.rawValue, style: "Trap", seed: 9)
             check(changed.events.filter { Int($0.pad) != Pad.hat.rawValue } == base.events.filter { Int($0.pad) != Pad.hat.rawValue },
                   "channel dice changes only that channel")
+        }
+    }
+
+    /// No preset pattern plays silent. Every kit's 12 pads are audible (checkKits, checkStockSamples)
+    /// and every pattern lane is one of those 12 pads, so what's left is the pattern: each of a preset's
+    /// 12 loops has notes (an INTRO with no hats to keep falls back on the groove) and, through a kit,
+    /// MAIN A makes sound and every other loop hits its pads.
+    static func checkEveryPatternAudible() {
+        let kit = kitBuffers(KitLibrary.drumMastery)
+        var l = [Float](repeating: 0, count: 512), r = l
+        func block(_ e: KnockEngine) -> Float {
+            l.withUnsafeMutableBufferPointer { lp in
+                r.withUnsafeMutableBufferPointer { rp in
+                    e.render(frames: 512, left: lp.baseAddress!, right: rp.baseAddress!, host: nil)
+                }
+            }
+            return max(l.map { abs($0) }.max() ?? 0, r.map { abs($0) }.max() ?? 0)
+        }
+        func hits(_ e: KnockEngine) -> UInt32 { (0..<Pad.count).reduce(0) { $0 + e.padHits[$1] } }
+        var silent: [String] = []
+        for preset in PatternBank.all {
+            let loops = GrooveGenerator.loops(fromMain: preset.pattern, style: preset.grooveStyle, seed: PatternPreset.seed(preset.name))
+            for loop in loops where !loop.events.contains(where: { $0.velocity >= 0.3 && (0..<Pad.count).contains(Int($0.pad)) }) {
+                silent.append("\(preset.name) \(loop.name) (no notes)")
+            }
+            let e = KnockEngine()
+            e.prepare(sampleRate: 48_000, maxFrames: 512)
+            e.setParam(.followDAW, 0)
+            e.setTempo(preset.bpm)
+            e.kitHandoff.publish(kit)
+            e.patternHandoff.publish(PatternSet(loops))
+            for (i, loop) in loops.enumerated() {
+                let blocks = Int(Double(loop.lengthTicks) / Double(PatternData.ppq) * 60 / preset.bpm * 48_000 / 512) + 2
+                e.send(KEvent(kind: .allOff))
+                _ = block(e)
+                let before = hits(e)
+                e.send(KEvent(kind: .play, value: Double(i + 1)))
+                var hit = false, loud: Float = 0
+                for _ in 0..<blocks {
+                    loud = max(loud, block(e))
+                    if hits(e) > before && (i > 0 || loud > 0.01) { hit = true; break }
+                }
+                if !hit { silent.append("\(preset.name) \(loop.name)") }
+            }
+            e.send(KEvent(kind: .allOff))
+        }
+        check(silent.isEmpty, "every preset pattern plays in every loop (silent: \(silent.prefix(12).joined(separator: ", ")))")
+        // A new pattern opens on its MAIN A, whatever part of the last one was on screen.
+        if let preset = PatternBank.preset(named: "BREAKS 1 AMEN STYLE") {
+            let loops = GrooveGenerator.loops(fromMain: preset.pattern, style: preset.grooveStyle, seed: 1)
+            check(loops[LoopSlot.intro.rawValue].events.contains { Int($0.pad) == Pad.kick.rawValue || Int($0.pad) == Pad.cymbal.rawValue },
+                  "a pattern with no hats still has an INTRO")
         }
     }
 
