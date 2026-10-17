@@ -119,7 +119,7 @@ private struct BBMenuTrigger: ViewModifier {
             // A real button: one finger runs `tap`, two fingers (or a right-click) open the menu.
             Button(action: { tap?() }) { measured }
                 .buttonStyle(SeqPress())
-                .background(TwoFingerTapCatcher { open() })
+                .twoFingerTap { open() }
         } else {
             // A real button: a press-and-hold DragGesture next to onTapGesture swallowed the taps on
             // newer iPadOS, so none of these menus opened. The button goes in while your finger is on it.
@@ -144,61 +144,34 @@ struct PressGlow: View {
     var body: some View { Color.clear.contentShape(Rectangle()) }
 }
 
-/// A two-finger tap (or a trackpad / mouse right-click) on the view. SwiftUI has no touch count
-/// on a tap, so the recognizers sit on the window, where every finger arrives whatever is on top
-/// (the button, the scrolling rack), and only fire when the fingers land on this view.
-private struct TwoFingerTapCatcher: UIViewRepresentable {
-    let action: () -> Void
-    func makeUIView(context: Context) -> CatcherView {
-        let v = CatcherView()
-        v.backgroundColor = .clear
-        v.isUserInteractionEnabled = false     // never takes a touch from the button it sits under
-        v.action = action
-        return v
+private extension View {
+    /// A two-finger tap or a trackpad / mouse right-click on this view. SwiftUI's own taps can't count
+    /// fingers, so these are UIKit recognizers handed to SwiftUI (iPadOS 18 and later; the app's
+    /// iPads run 26), which keeps them in SwiftUI's gesture system next to the button's own tap.
+    @ViewBuilder func twoFingerTap(_ action: @escaping () -> Void) -> some View {
+        if #available(iOS 18.0, *) {
+            gesture(TapRecognizer(touches: 2, action: action))
+                .gesture(TapRecognizer(secondaryClick: true, action: action))
+        } else {
+            self
+        }
     }
-    func updateUIView(_ uiView: CatcherView, context: Context) { uiView.action = action }
+}
 
-    final class CatcherView: UIView, UIGestureRecognizerDelegate {
-        var action: (() -> Void)?
-        private var recognizers: [UIGestureRecognizer] = []
-        private weak var host: UIWindow?
+@available(iOS 18.0, *)
+private struct TapRecognizer: UIGestureRecognizerRepresentable {
+    var touches = 1
+    var secondaryClick = false
+    let action: () -> Void
 
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            recognizers.forEach { host?.removeGestureRecognizer($0) }
-            recognizers = []
-            host = window
-            guard let window else { return }
-            let two = UITapGestureRecognizer(target: self, action: #selector(fire(_:)))
-            two.numberOfTouchesRequired = 2
-            let right = UITapGestureRecognizer(target: self, action: #selector(fire(_:)))
-            right.buttonMaskRequired = .secondary
-            for g in [two, right] {
-                g.cancelsTouchesInView = false
-                g.delaysTouchesEnded = false
-                g.delegate = self
-                window.addGestureRecognizer(g)
-            }
-            recognizers = [two, right]
-        }
+    func makeUIGestureRecognizer(context: Context) -> UITapGestureRecognizer {
+        let g = UITapGestureRecognizer()
+        if secondaryClick { g.buttonMaskRequired = .secondary } else { g.numberOfTouchesRequired = touches }
+        return g
+    }
 
-        @objc private func fire(_ g: UITapGestureRecognizer) {
-            guard g.state == .ended, isOnScreen(g) else { return }
-            action?()
-        }
-
-        /// The fingers' middle is on this view and it isn't scrolled out of sight.
-        private func isOnScreen(_ g: UIGestureRecognizer) -> Bool {
-            guard !isHidden, bounds.insetBy(dx: -10, dy: -6).contains(g.location(in: self)) else { return false }
-            var v = superview
-            while let s = v {
-                if s.clipsToBounds && !s.bounds.contains(g.location(in: s)) { return false }
-                v = s.superview
-            }
-            return true
-        }
-
-        func gestureRecognizer(_ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+    func handleUIGestureRecognizerAction(_ recognizer: UITapGestureRecognizer, context: Context) {
+        if recognizer.state == .ended { action() }
     }
 }
 
