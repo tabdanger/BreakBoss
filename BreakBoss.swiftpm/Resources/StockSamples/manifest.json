@@ -5,5335 +5,5335 @@
    "kitID": "trap-a",
    "pad": 0,
    "file": "bb_kick_knock_11.wav",
-   "displayName": "KICK KNOCK 11"
+   "displayName": "ASTRONOMY KICK"
   },
   {
    "kitID": "trap-a",
    "pad": 1,
    "file": "bb_snare_crack_37.wav",
-   "displayName": "SNARE CRACK 37"
+   "displayName": "CRYO V3 SNARE"
   },
   {
    "kitID": "trap-a",
    "pad": 2,
    "file": "bb_clap_wide_15.wav",
-   "displayName": "CLAP WIDE 15"
+   "displayName": "GALACTIC V4 CLAP"
   },
   {
    "kitID": "trap-a",
    "pad": 3,
    "file": "bb_rim_02.wav",
-   "displayName": "RIM 02"
+   "displayName": "OG 808 2 RIM"
   },
   {
    "kitID": "trap-a",
    "pad": 4,
    "file": "bb_hat_crisp_08.wav",
-   "displayName": "HAT CRISP 08"
+   "displayName": "DEMON 7 HAT"
   },
   {
    "kitID": "trap-a",
    "pad": 5,
    "file": "bb_open_hat_long_21.wav",
-   "displayName": "OPEN HAT LONG 21"
+   "displayName": "DEMON 6 OPEN HAT"
   },
   {
    "kitID": "trap-a",
    "pad": 6,
    "file": "bb_808_f1_long_02.wav",
-   "displayName": "808 F1 LONG 02"
+   "displayName": "CHOSEN F1 808"
   },
   {
    "kitID": "trap-a",
    "pad": 7,
-   "file": "bb_perc_hit_14.wav",
-   "displayName": "PERC HIT 14"
+   "file": "bb_perc_hit_12.wav",
+   "displayName": "DIAL PERC"
   },
   {
    "kitID": "trap-a",
    "pad": 8,
-   "file": "bb_perc_hit_12.wav",
-   "displayName": "PERC HIT 12"
+   "file": "bb_fx_hit_07.wav",
+   "displayName": "CLICKETY ENGINE PERC"
   },
   {
    "kitID": "trap-a",
    "pad": 9,
    "file": "bb_tom_low_03.wav",
-   "displayName": "TOM LOW 03"
+   "displayName": "DISTRESSED 909 01 2 TOM"
   },
   {
    "kitID": "trap-a",
    "pad": 10,
    "file": "bb_tom_high_07.wav",
-   "displayName": "TOM HIGH 07"
+   "displayName": "NO 3 V3 TOM"
   },
   {
    "kitID": "trap-a",
    "pad": 11,
    "file": "bb_cymbal_crash_05.wav",
-   "displayName": "CYMBAL CRASH 05"
+   "displayName": "REAL CYMBAL"
   },
   {
    "kitID": "trap-b",
    "pad": 0,
    "file": "bb_kick_knock_09.wav",
-   "displayName": "KICK KNOCK 09"
+   "displayName": "MECHANICS KICK"
   },
   {
    "kitID": "trap-b",
    "pad": 1,
    "file": "bb_snare_crack_05.wav",
-   "displayName": "SNARE CRACK 05"
+   "displayName": "GRAVITY V3 SNARE"
   },
   {
    "kitID": "trap-b",
    "pad": 2,
    "file": "bb_clap_tight_19.wav",
-   "displayName": "CLAP TIGHT 19"
+   "displayName": "RULERS CLAP"
   },
   {
    "kitID": "trap-b",
    "pad": 3,
    "file": "bb_rim_19.wav",
-   "displayName": "RIM 19"
+   "displayName": "METALS RIM"
   },
   {
    "kitID": "trap-b",
    "pad": 4,
    "file": "bb_hat_crisp_33.wav",
-   "displayName": "HAT CRISP 33"
+   "displayName": "CONTROL V4 HAT"
   },
   {
    "kitID": "trap-b",
    "pad": 5,
    "file": "bb_open_hat_short_15.wav",
-   "displayName": "OPEN HAT SHORT 15"
+   "displayName": "PATTERNS V4 OPEN HAT"
   },
   {
    "kitID": "trap-b",
    "pad": 6,
    "file": "bb_808_e1_long_02.wav",
-   "displayName": "808 E1 LONG 02"
+   "displayName": "GEO E1 808"
   },
   {
    "kitID": "trap-b",
    "pad": 7,
-   "file": "bb_perc_wood_25.wav",
-   "displayName": "PERC WOOD 25"
+   "file": "bb_perc_wood_01.wav",
+   "displayName": "BLOCKED PERC"
   },
   {
    "kitID": "trap-b",
    "pad": 8,
-   "file": "bb_perc_wood_10.wav",
-   "displayName": "PERC WOOD 10"
+   "file": "bb_perc_hit_21.wav",
+   "displayName": "LIGHT PERC"
   },
   {
    "kitID": "trap-b",
    "pad": 9,
    "file": "bb_tom_low_02.wav",
-   "displayName": "TOM LOW 02"
+   "displayName": "DISTRESSED 909 11 2 TOM"
   },
   {
    "kitID": "trap-b",
    "pad": 10,
    "file": "bb_tom_high_04.wav",
-   "displayName": "TOM HIGH 04"
+   "displayName": "NO 4 V4 TOM"
   },
   {
    "kitID": "trap-b",
    "pad": 11,
    "file": "bb_cymbal_crash_02.wav",
-   "displayName": "CYMBAL CRASH 02"
+   "displayName": "CLASSICS CYMBAL"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 0,
-   "file": "bb_kick_thump_07.wav",
-   "displayName": "KICK THUMP 07"
+   "file": "bb_tom_low_05.wav",
+   "displayName": "NETHER KICK"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 1,
    "file": "bb_snare_crack_33.wav",
-   "displayName": "SNARE CRACK 33"
+   "displayName": "DEMON 2 SNARE"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 2,
    "file": "bb_clap_room_02.wav",
-   "displayName": "CLAP ROOM 02"
+   "displayName": "TANK CLAP"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 3,
    "file": "bb_rim_19.wav",
-   "displayName": "RIM 19"
+   "displayName": "METALS RIM"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 4,
    "file": "bb_hat_dark_09.wav",
-   "displayName": "HAT DARK 09"
+   "displayName": "DEMON 1 V3 HAT"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 5,
    "file": "bb_open_hat_long_21.wav",
-   "displayName": "OPEN HAT LONG 21"
+   "displayName": "DEMON 6 OPEN HAT"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 6,
    "file": "bb_808_e1_long_05.wav",
-   "displayName": "808 E1 LONG 05"
+   "displayName": "SUKUNA E1 808"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 7,
    "file": "bb_perc_hit_20.wav",
-   "displayName": "PERC HIT 20"
+   "displayName": "WHOOPISH LAYER PERC"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 8,
-   "file": "bb_perc_hit_21.wav",
-   "displayName": "PERC HIT 21"
+   "file": "bb_perc_hit_08.wav",
+   "displayName": "DEMON 6 PERC"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 9,
    "file": "bb_tom_low_01.wav",
-   "displayName": "TOM LOW 01"
+   "displayName": "DISTRESSED 909 10 2 TOM"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 10,
-   "file": "bb_tom_high_10.wav",
-   "displayName": "TOM HIGH 10"
+   "file": "bb_tom_low_18.wav",
+   "displayName": "NO 1 V13 TOM"
   },
   {
    "kitID": "alt-trap-a",
    "pad": 11,
    "file": "bb_cymbal_crash_01.wav",
-   "displayName": "CYMBAL CRASH 01"
+   "displayName": "MARCHING CRASH"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 0,
-   "file": "bb_kick_thump_03.wav",
-   "displayName": "KICK THUMP 03"
+   "file": "bb_kick_thump_07.wav",
+   "displayName": "DEMON 3 KICK"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 1,
    "file": "bb_snare_crack_29.wav",
-   "displayName": "SNARE CRACK 29"
+   "displayName": "OG 12 SNARE"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 2,
    "file": "bb_clap_tight_33.wav",
-   "displayName": "CLAP TIGHT 33"
+   "displayName": "OG 8 CLAP"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 3,
    "file": "bb_rim_02.wav",
-   "displayName": "RIM 02"
+   "displayName": "OG 808 2 RIM"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 4,
    "file": "bb_hat_crisp_08.wav",
-   "displayName": "HAT CRISP 08"
+   "displayName": "DEMON 7 HAT"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 5,
    "file": "bb_open_hat_long_26.wav",
-   "displayName": "OPEN HAT LONG 26"
+   "displayName": "DISTORT OPEN HAT"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 6,
    "file": "bb_808_f1_long_05.wav",
-   "displayName": "808 F1 LONG 05"
+   "displayName": "SUKUNA F1 808"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 7,
-   "file": "bb_perc_hit_08.wav",
-   "displayName": "PERC HIT 08"
+   "file": "bb_fx_reverse_01.wav",
+   "displayName": "REVERSE KICK MADNESS PERC"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 8,
-   "file": "bb_perc_hit_07.wav",
-   "displayName": "PERC HIT 07"
+   "file": "bb_fx_hit_02.wav",
+   "displayName": "PAINT1 A PERC"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 9,
    "file": "bb_tom_low_03.wav",
-   "displayName": "TOM LOW 03"
+   "displayName": "DISTRESSED 909 01 2 TOM"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 10,
-   "file": "bb_tom_high_08.wav",
-   "displayName": "TOM HIGH 08"
+   "file": "bb_tom_high_10.wav",
+   "displayName": "NO 3 V6 TOM"
   },
   {
    "kitID": "alt-trap-b",
    "pad": 11,
    "file": "bb_cymbal_crash_05.wav",
-   "displayName": "CYMBAL CRASH 05"
+   "displayName": "REAL CYMBAL"
   },
   {
    "kitID": "drill-a",
    "pad": 0,
-   "file": "bb_kick_punch_01.wav",
-   "displayName": "KICK PUNCH 01"
+   "file": "bb_tom_low_04.wav",
+   "displayName": "SOFTER V3 KICK"
   },
   {
    "kitID": "drill-a",
    "pad": 1,
    "file": "bb_snare_room_15.wav",
-   "displayName": "SNARE ROOM 15"
+   "displayName": "INDUSTRIAL SNARE"
   },
   {
    "kitID": "drill-a",
    "pad": 2,
    "file": "bb_clap_tight_30.wav",
-   "displayName": "CLAP TIGHT 30"
+   "displayName": "HOME V2 CLAP"
   },
   {
    "kitID": "drill-a",
    "pad": 3,
-   "file": "bb_rim_09.wav",
-   "displayName": "RIM 09"
+   "file": "bb_perc_click_02.wav",
+   "displayName": "GUNDAM SNAP"
   },
   {
    "kitID": "drill-a",
    "pad": 4,
    "file": "bb_hat_crisp_30.wav",
-   "displayName": "HAT CRISP 30"
+   "displayName": "THOUGHTS HAT"
   },
   {
    "kitID": "drill-a",
    "pad": 5,
    "file": "bb_open_hat_long_24.wav",
-   "displayName": "OPEN HAT LONG 24"
+   "displayName": "SUBS OPEN HAT"
   },
   {
    "kitID": "drill-a",
    "pad": 6,
    "file": "bb_808_e1_short_04.wav",
-   "displayName": "808 E1 SHORT 04"
+   "displayName": "GO2ZAY E1 808"
   },
   {
    "kitID": "drill-a",
    "pad": 7,
    "file": "bb_perc_hit_12.wav",
-   "displayName": "PERC HIT 12"
+   "displayName": "DIAL PERC"
   },
   {
    "kitID": "drill-a",
    "pad": 8,
-   "file": "bb_perc_hit_10.wav",
-   "displayName": "PERC HIT 10"
+   "file": "bb_perc_hit_21.wav",
+   "displayName": "LIGHT PERC"
   },
   {
    "kitID": "drill-a",
    "pad": 9,
    "file": "bb_tom_low_06.wav",
-   "displayName": "TOM LOW 06"
+   "displayName": "DANGER 1 TOM"
   },
   {
    "kitID": "drill-a",
    "pad": 10,
    "file": "bb_tom_high_07.wav",
-   "displayName": "TOM HIGH 07"
+   "displayName": "NO 3 V3 TOM"
   },
   {
    "kitID": "drill-a",
    "pad": 11,
    "file": "bb_cymbal_crash_03.wav",
-   "displayName": "CYMBAL CRASH 03"
+   "displayName": "LOCKS CYMBAL"
   },
   {
    "kitID": "drill-b",
    "pad": 0,
-   "file": "bb_kick_knock_08.wav",
-   "displayName": "KICK KNOCK 08"
+   "file": "bb_kick_punch_01.wav",
+   "displayName": "STR8 UP ANALOG KICK"
   },
   {
    "kitID": "drill-b",
    "pad": 1,
    "file": "bb_snare_room_14.wav",
-   "displayName": "SNARE ROOM 14"
+   "displayName": "GHOUL SNARE"
   },
   {
    "kitID": "drill-b",
    "pad": 2,
    "file": "bb_clap_tight_17.wav",
-   "displayName": "CLAP TIGHT 17"
+   "displayName": "KIA CLAP"
   },
   {
    "kitID": "drill-b",
    "pad": 3,
-   "file": "bb_rim_27.wav",
-   "displayName": "RIM 27"
+   "file": "bb_rim_09.wav",
+   "displayName": "PRESSING RIM"
   },
   {
    "kitID": "drill-b",
    "pad": 4,
    "file": "bb_hat_crisp_25.wav",
-   "displayName": "HAT CRISP 25"
+   "displayName": "MIRAGE HAT"
   },
   {
    "kitID": "drill-b",
    "pad": 5,
    "file": "bb_open_hat_short_08.wav",
-   "displayName": "OPEN HAT SHORT 08"
+   "displayName": "KUNAI OPEN HAT"
   },
   {
    "kitID": "drill-b",
    "pad": 6,
    "file": "bb_808_f1_08.wav",
-   "displayName": "808 F1 08"
+   "displayName": "TOJI F1 808"
   },
   {
    "kitID": "drill-b",
    "pad": 7,
-   "file": "bb_perc_hit_21.wav",
-   "displayName": "PERC HIT 21"
+   "file": "bb_fx_reverse_01.wav",
+   "displayName": "REVERSE KICK MADNESS PERC"
   },
   {
    "kitID": "drill-b",
    "pad": 8,
-   "file": "bb_perc_wood_01.wav",
-   "displayName": "PERC WOOD 01"
+   "file": "bb_fx_hit_02.wav",
+   "displayName": "PAINT1 A PERC"
   },
   {
    "kitID": "drill-b",
    "pad": 9,
    "file": "bb_tom_low_12.wav",
-   "displayName": "TOM LOW 12"
+   "displayName": "NO 1 V7 TOM"
   },
   {
    "kitID": "drill-b",
    "pad": 10,
    "file": "bb_tom_high_04.wav",
-   "displayName": "TOM HIGH 04"
+   "displayName": "NO 4 V4 TOM"
   },
   {
    "kitID": "drill-b",
    "pad": 11,
    "file": "bb_cymbal_crash_09.wav",
-   "displayName": "CYMBAL CRASH 09"
+   "displayName": "EXPRESS CYMBAL"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 0,
-   "file": "bb_kick_boom_23.wav",
-   "displayName": "KICK BOOM 23"
+   "file": "bb_kick_knock_08.wav",
+   "displayName": "BRICK KICK"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 1,
    "file": "bb_snare_room_13.wav",
-   "displayName": "SNARE ROOM 13"
+   "displayName": "K9 SNARE"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 2,
    "file": "bb_clap_tight_06.wav",
-   "displayName": "CLAP TIGHT 06"
+   "displayName": "PLANETS V4 CLAP"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 3,
-   "file": "bb_rim_09.wav",
-   "displayName": "RIM 09"
+   "file": "bb_perc_hit_10.wav",
+   "displayName": "HELLSING SNAP"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 4,
    "file": "bb_hat_crisp_15.wav",
-   "displayName": "HAT CRISP 15"
+   "displayName": "ROCKET V4 HAT"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 5,
    "file": "bb_open_hat_long_25.wav",
-   "displayName": "OPEN HAT LONG 25"
+   "displayName": "WHITE NOISE OPEN HAT"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 6,
    "file": "bb_808_d1_long_04.wav",
-   "displayName": "808 D1 LONG 04"
+   "displayName": "CHOSEN D1 808"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 7,
    "file": "bb_perc_wood_01.wav",
-   "displayName": "PERC WOOD 01"
+   "displayName": "BLOCKED PERC"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 8,
-   "file": "bb_perc_click_02.wav",
-   "displayName": "PERC CLICK 02"
+   "file": "bb_perc_hit_12.wav",
+   "displayName": "DIAL PERC"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 9,
    "file": "bb_tom_low_08.wav",
-   "displayName": "TOM LOW 08"
+   "displayName": "NO 1 V3 TOM"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 10,
    "file": "bb_tom_high_07.wav",
-   "displayName": "TOM HIGH 07"
+   "displayName": "NO 3 V3 TOM"
   },
   {
    "kitID": "uk-drill-a",
    "pad": 11,
    "file": "bb_cymbal_crash_03.wav",
-   "displayName": "CYMBAL CRASH 03"
+   "displayName": "LOCKS CYMBAL"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 0,
-   "file": "bb_kick_thump_01.wav",
-   "displayName": "KICK THUMP 01"
+   "file": "bb_kick_boom_23.wav",
+   "displayName": "SUPERFREAK KICK"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 1,
    "file": "bb_snare_crack_22.wav",
-   "displayName": "SNARE CRACK 22"
+   "displayName": "DEMON 23 SNARE"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 2,
    "file": "bb_clap_room_03.wav",
-   "displayName": "CLAP ROOM 03"
+   "displayName": "GOTO CLAP"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 3,
-   "file": "bb_rim_14.wav",
-   "displayName": "RIM 14"
+   "file": "bb_rim_09.wav",
+   "displayName": "PRESSING RIM"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 4,
    "file": "bb_hat_crisp_33.wav",
-   "displayName": "HAT CRISP 33"
+   "displayName": "CONTROL V4 HAT"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 5,
    "file": "bb_open_hat_long_14.wav",
-   "displayName": "OPEN HAT LONG 14"
+   "displayName": "ANIGMA OPEN HAT"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 6,
    "file": "bb_808_e1_04.wav",
-   "displayName": "808 E1 04"
+   "displayName": "TOJI E1 808"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 7,
-   "file": "bb_perc_wood_14.wav",
-   "displayName": "PERC WOOD 14"
+   "file": "bb_perc_wood_03.wav",
+   "displayName": "DEMON 9 PERC"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 8,
-   "file": "bb_perc_wood_07.wav",
-   "displayName": "PERC WOOD 07"
+   "file": "bb_beads_02.wav",
+   "displayName": "BEADS HIT PERC"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 9,
-   "file": "bb_tom_low_04.wav",
-   "displayName": "TOM LOW 04"
+   "file": "bb_tom_low_06.wav",
+   "displayName": "DANGER 1 TOM"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 10,
    "file": "bb_tom_high_04.wav",
-   "displayName": "TOM HIGH 04"
+   "displayName": "NO 4 V4 TOM"
   },
   {
    "kitID": "uk-drill-b",
    "pad": 11,
    "file": "bb_cymbal_crash_06.wav",
-   "displayName": "CYMBAL CRASH 06"
+   "displayName": "PLANES CRASH"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 0,
    "file": "bb_kick_knock_08.wav",
-   "displayName": "KICK KNOCK 08"
+   "displayName": "BRICK KICK"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 1,
    "file": "bb_snare_room_08.wav",
-   "displayName": "SNARE ROOM 08"
+   "displayName": "AGENCY V3 SNARE"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 2,
-   "file": "bb_clap_wide_07.wav",
-   "displayName": "CLAP WIDE 07"
+   "file": "bb_clap_tight_29.wav",
+   "displayName": "MINDFUL V2 CLAP"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 3,
-   "file": "bb_rim_11.wav",
-   "displayName": "RIM 11"
+   "file": "bb_perc_click_02.wav",
+   "displayName": "GUNDAM SNAP"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 4,
    "file": "bb_hat_dark_32.wav",
-   "displayName": "HAT DARK 32"
+   "displayName": "EXPLORER V2 HAT"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 5,
    "file": "bb_open_hat_short_24.wav",
-   "displayName": "OPEN HAT SHORT 24"
+   "displayName": "ARCHITECTURE V2 OPEN HAT"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 6,
    "file": "bb_808_f1_long_03.wav",
-   "displayName": "808 F1 LONG 03"
+   "displayName": "GROUNDED F1 808"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 7,
    "file": "bb_perc_hit_21.wav",
-   "displayName": "PERC HIT 21"
+   "displayName": "LIGHT PERC"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 8,
-   "file": "bb_perc_hit_12.wav",
-   "displayName": "PERC HIT 12"
+   "file": "bb_fx_reverse_01.wav",
+   "displayName": "REVERSE KICK MADNESS PERC"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 9,
    "file": "bb_tom_low_06.wav",
-   "displayName": "TOM LOW 06"
+   "displayName": "DANGER 1 TOM"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 10,
-   "file": "bb_tom_high_10.wav",
-   "displayName": "TOM HIGH 10"
+   "file": "bb_tom_low_18.wav",
+   "displayName": "NO 1 V13 TOM"
   },
   {
    "kitID": "ny-drill-a",
    "pad": 11,
    "file": "bb_cymbal_crash_03.wav",
-   "displayName": "CYMBAL CRASH 03"
+   "displayName": "LOCKS CYMBAL"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 0,
    "file": "bb_kick_knock_13.wav",
-   "displayName": "KICK KNOCK 13"
+   "displayName": "WAVES V2 KICK"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 1,
    "file": "bb_snare_fat_08.wav",
-   "displayName": "SNARE FAT 08"
+   "displayName": "DEMON 6 SNARE"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 2,
-   "file": "bb_clap_tight_29.wav",
-   "displayName": "CLAP TIGHT 29"
+   "file": "bb_clap_tight_14.wav",
+   "displayName": "ASTEROIDS V2 CLAP"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 3,
-   "file": "bb_snare_crack_28.wav",
-   "displayName": "SNARE CRACK 28"
+   "file": "bb_rim_11.wav",
+   "displayName": "MY HERO RIM"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 4,
    "file": "bb_hat_dark_18.wav",
-   "displayName": "HAT DARK 18"
+   "displayName": "INTRO V3 HIHAT"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 5,
    "file": "bb_open_hat_short_21.wav",
-   "displayName": "OPEN HAT SHORT 21"
+   "displayName": "PARALLAX V3 OPEN HAT"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 6,
    "file": "bb_808_f1_long_02.wav",
-   "displayName": "808 F1 LONG 02"
+   "displayName": "CHOSEN F1 808"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 7,
-   "file": "bb_perc_wood_01.wav",
-   "displayName": "PERC WOOD 01"
+   "file": "bb_fx_hit_02.wav",
+   "displayName": "PAINT1 A PERC"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 8,
-   "file": "bb_perc_hit_05.wav",
-   "displayName": "PERC HIT 05"
+   "file": "bb_perc_wood_01.wav",
+   "displayName": "BLOCKED PERC"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 9,
-   "file": "bb_tom_low_18.wav",
-   "displayName": "TOM LOW 18"
+   "file": "bb_tom_low_16.wav",
+   "displayName": "NO 1 V11 TOM"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 10,
-   "file": "bb_tom_high_11.wav",
-   "displayName": "TOM HIGH 11"
+   "file": "bb_tom_high_10.wav",
+   "displayName": "NO 3 V6 TOM"
   },
   {
    "kitID": "ny-drill-b",
    "pad": 11,
    "file": "bb_cymbal_crash_07.wav",
-   "displayName": "CYMBAL CRASH 07"
+   "displayName": "ORGANIC CYMBAL"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 0,
    "file": "bb_kick_punch_04.wav",
-   "displayName": "KICK PUNCH 04"
+   "displayName": "REASON ANALOG KICK"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 1,
    "file": "bb_snare_crack_31.wav",
-   "displayName": "SNARE CRACK 31"
+   "displayName": "FLINT SNARE"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 2,
    "file": "bb_clap_tight_18.wav",
-   "displayName": "CLAP TIGHT 18"
+   "displayName": "KENZO CLAP"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 3,
    "file": "bb_rim_17.wav",
-   "displayName": "RIM 17"
+   "displayName": "BANGER RIM"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 4,
    "file": "bb_hat_crisp_35.wav",
-   "displayName": "HAT CRISP 35"
+   "displayName": "BASED HAT"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 5,
    "file": "bb_open_hat_long_07.wav",
-   "displayName": "OPEN HAT LONG 07"
+   "displayName": "BOUNCE OPEN HAT"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 6,
    "file": "bb_808_e1_long_04.wav",
-   "displayName": "808 E1 LONG 04"
+   "displayName": "GROUNDED E1 808"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 7,
-   "file": "bb_perc_wood_26.wav",
-   "displayName": "PERC WOOD 26"
+   "file": "bb_fx_hit_07.wav",
+   "displayName": "CLICKETY ENGINE PERC"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 8,
-   "file": "bb_perc_wood_13.wav",
-   "displayName": "PERC WOOD 13"
+   "file": "bb_fx_atmos_02.wav",
+   "displayName": "PAINT2 A PERC"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 9,
    "file": "bb_tom_low_06.wav",
-   "displayName": "TOM LOW 06"
+   "displayName": "DANGER 1 TOM"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 10,
    "file": "bb_tom_high_06.wav",
-   "displayName": "TOM HIGH 06"
+   "displayName": "NO 3 V2 TOM"
   },
   {
    "kitID": "detroit-2026-a",
    "pad": 11,
    "file": "bb_cymbal_crash_06.wav",
-   "displayName": "CYMBAL CRASH 06"
+   "displayName": "PLANES CRASH"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 0,
    "file": "bb_kick_knock_04.wav",
-   "displayName": "KICK KNOCK 04"
+   "displayName": "KNOCKGANG V2 KICK"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 1,
-   "file": "bb_snare_crack_36.wav",
-   "displayName": "SNARE CRACK 36"
+   "file": "bb_snare_crack_28.wav",
+   "displayName": "LUNAR V2 SNARE"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 2,
    "file": "bb_clap_tight_13.wav",
-   "displayName": "CLAP TIGHT 13"
+   "displayName": "INTERSTELLAR V2 CLAP"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 3,
-   "file": "bb_snare_fat_22.wav",
-   "displayName": "SNARE FAT 22"
+   "file": "bb_perc_wood_26.wav",
+   "displayName": "FUJI SNAP"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 4,
    "file": "bb_hat_crisp_17.wav",
-   "displayName": "HAT CRISP 17"
+   "displayName": "FLICKER V2 HAT"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 5,
    "file": "bb_open_hat_short_16.wav",
-   "displayName": "OPEN HAT SHORT 16"
+   "displayName": "VERSION OPEN HAT"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 6,
    "file": "bb_808_e1_long_03.wav",
-   "displayName": "808 E1 LONG 03"
+   "displayName": "JIRO E1 808"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 7,
-   "file": "bb_perc_hit_09.wav",
-   "displayName": "PERC HIT 09"
+   "file": "bb_perc_wood_22.wav",
+   "displayName": "ACTUALLY PERC"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 8,
-   "file": "bb_perc_hit_06.wav",
-   "displayName": "PERC HIT 06"
+   "file": "bb_perc_wood_04.wav",
+   "displayName": "DEMON 10 PERC"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 9,
-   "file": "bb_tom_low_16.wav",
-   "displayName": "TOM LOW 16"
+   "file": "bb_tom_low_02.wav",
+   "displayName": "DISTRESSED 909 11 2 TOM"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 10,
-   "file": "bb_tom_high_09.wav",
-   "displayName": "TOM HIGH 09"
+   "file": "bb_shaker_02.wav",
+   "displayName": "NO 3 TOM"
   },
   {
    "kitID": "detroit-2026-b",
    "pad": 11,
    "file": "bb_cymbal_crash_04.wav",
-   "displayName": "CYMBAL CRASH 04"
+   "displayName": "YOTO CRASH"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 0,
    "file": "bb_kick_knock_13.wav",
-   "displayName": "KICK KNOCK 13"
+   "displayName": "WAVES V2 KICK"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 1,
    "file": "bb_snare_crack_28.wav",
-   "displayName": "SNARE CRACK 28"
+   "displayName": "LUNAR V2 SNARE"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 2,
    "file": "bb_clap_wide_06.wav",
-   "displayName": "CLAP WIDE 06"
+   "displayName": "SORCERER V2 CLAP"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 3,
    "file": "bb_rim_04.wav",
-   "displayName": "RIM 04"
+   "displayName": "FLIGHTS V4 RIM"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 4,
    "file": "bb_hat_crisp_04.wav",
-   "displayName": "HAT CRISP 04"
+   "displayName": "TECH V2 HAT"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 5,
-   "file": "bb_open_hat_short_04.wav",
-   "displayName": "OPEN HAT SHORT 04"
+   "file": "bb_cymbal_short_04.wav",
+   "displayName": "HELIOSPHERE V3 OPEN HAT"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 6,
    "file": "bb_808_gs1_02.wav",
-   "displayName": "808 G#1 02"
+   "displayName": "DEMON 16 808"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 7,
-   "file": "bb_perc_hit_02.wav",
-   "displayName": "PERC HIT 02"
+   "file": "bb_fx_hit_07.wav",
+   "displayName": "CLICKETY ENGINE PERC"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 8,
-   "file": "bb_perc_wood_26.wav",
-   "displayName": "PERC WOOD 26"
+   "file": "bb_fx_hit_01.wav",
+   "displayName": "EARTHQUAKE V2 PERC"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 9,
-   "file": "bb_tom_low_18.wav",
-   "displayName": "TOM LOW 18"
+   "file": "bb_tom_low_07.wav",
+   "displayName": "NO 1 V2 TOM"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 10,
-   "file": "bb_tom_high_06.wav",
-   "displayName": "TOM HIGH 06"
+   "file": "bb_tom_low_18.wav",
+   "displayName": "NO 1 V13 TOM"
   },
   {
    "kitID": "bay-area-2026-a",
    "pad": 11,
    "file": "bb_cymbal_crash_05.wav",
-   "displayName": "CYMBAL CRASH 05"
+   "displayName": "REAL CYMBAL"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 0,
    "file": "bb_kick_punch_04.wav",
-   "displayName": "KICK PUNCH 04"
+   "displayName": "REASON ANALOG KICK"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 1,
    "file": "bb_snare_fat_14.wav",
-   "displayName": "SNARE FAT 14"
+   "displayName": "COOL CAT 1 SNARE"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 2,
    "file": "bb_clap_wide_10.wav",
-   "displayName": "CLAP WIDE 10"
+   "displayName": "ENGULFED CLAP"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 3,
-   "file": "bb_rim_17.wav",
-   "displayName": "RIM 17"
+   "file": "bb_perc_hit_05.wav",
+   "displayName": "LAWS RIM"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 4,
    "file": "bb_hat_dark_31.wav",
-   "displayName": "HAT DARK 31"
+   "displayName": "BLUE LOCK HAT"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 5,
-   "file": "bb_open_hat_short_24.wav",
-   "displayName": "OPEN HAT SHORT 24"
+   "file": "bb_open_hat_short_04.wav",
+   "displayName": "BETWEENUS OPEN HAT"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 6,
    "file": "bb_808_g1_short_05.wav",
-   "displayName": "808 G1 SHORT 05"
+   "displayName": "DOPE BOY V1 808"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 7,
-   "file": "bb_perc_hit_05.wav",
-   "displayName": "PERC HIT 05"
+   "file": "bb_perc_wood_02.wav",
+   "displayName": "DEMON 17 PERC"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 8,
-   "file": "bb_perc_wood_13.wav",
-   "displayName": "PERC WOOD 13"
+   "file": "bb_perc_hit_21.wav",
+   "displayName": "LIGHT PERC"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 9,
-   "file": "bb_tom_low_02.wav",
-   "displayName": "TOM LOW 02"
+   "file": "bb_shaker_03.wav",
+   "displayName": "NO 1 TOM"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 10,
-   "file": "bb_tom_high_04.wav",
-   "displayName": "TOM HIGH 04"
+   "file": "bb_tom_high_06.wav",
+   "displayName": "NO 3 V2 TOM"
   },
   {
    "kitID": "bay-area-2026-b",
    "pad": 11,
-   "file": "bb_cymbal_short_04.wav",
-   "displayName": "CYMBAL SHORT 04"
+   "file": "bb_cymbal_crash_06.wav",
+   "displayName": "PLANES CRASH"
   },
   {
    "kitID": "rnb-a",
    "pad": 0,
    "file": "bb_kick_boom_03.wav",
-   "displayName": "KICK BOOM 03"
+   "displayName": "TUBE KICK"
   },
   {
    "kitID": "rnb-a",
    "pad": 1,
-   "file": "bb_snare_room_01.wav",
-   "displayName": "SNARE ROOM 01"
+   "file": "bb_clap_tight_01.wav",
+   "displayName": "DRAMATIC CLAP SNARE"
   },
   {
    "kitID": "rnb-a",
    "pad": 2,
-   "file": "bb_clap_tight_01.wav",
-   "displayName": "CLAP TIGHT 01"
+   "file": "bb_clap_tight_08.wav",
+   "displayName": "RIVAL CLAP"
   },
   {
    "kitID": "rnb-a",
    "pad": 3,
    "file": "bb_rim_18.wav",
-   "displayName": "RIM 18"
+   "displayName": "BELL RIMSHOT"
   },
   {
    "kitID": "rnb-a",
    "pad": 4,
-   "file": "bb_hat_dark_04.wav",
-   "displayName": "HAT DARK 04"
+   "file": "bb_fx_reverse_05.wav",
+   "displayName": "CLICKED REV V2 HIHAT"
   },
   {
    "kitID": "rnb-a",
    "pad": 5,
    "file": "bb_open_hat_short_02.wav",
-   "displayName": "OPEN HAT SHORT 02"
+   "displayName": "LASTCALL OPEN HAT"
   },
   {
    "kitID": "rnb-a",
    "pad": 6,
    "file": "bb_808_ds1_long_01.wav",
-   "displayName": "808 D#1 LONG 01"
+   "displayName": "DEMONS FAVORITE 3 D#1 808"
   },
   {
    "kitID": "rnb-a",
    "pad": 7,
-   "file": "bb_perc_wood_03.wav",
-   "displayName": "PERC WOOD 03"
+   "file": "bb_fx_hit_01.wav",
+   "displayName": "EARTHQUAKE V2 PERC"
   },
   {
    "kitID": "rnb-a",
    "pad": 8,
-   "file": "bb_shaker_03.wav",
-   "displayName": "SHAKER 03"
+   "file": "bb_perc_wood_03.wav",
+   "displayName": "DEMON 9 PERC"
   },
   {
    "kitID": "rnb-a",
    "pad": 9,
    "file": "bb_tom_low_11.wav",
-   "displayName": "TOM LOW 11"
+   "displayName": "NO 1 V6 TOM"
   },
   {
    "kitID": "rnb-a",
    "pad": 10,
    "file": "bb_tom_high_01.wav",
-   "displayName": "TOM HIGH 01"
+   "displayName": "NO 4 TOM"
   },
   {
    "kitID": "rnb-a",
    "pad": 11,
    "file": "bb_cymbal_crash_08.wav",
-   "displayName": "CYMBAL CRASH 08"
+   "displayName": "BACKYARD CYMBAL"
   },
   {
    "kitID": "rnb-b",
    "pad": 0,
    "file": "bb_kick_boom_04.wav",
-   "displayName": "KICK BOOM 04"
+   "displayName": "SUPERPOWER KICK"
   },
   {
    "kitID": "rnb-b",
    "pad": 1,
-   "file": "bb_snare_fat_01.wav",
-   "displayName": "SNARE FAT 01"
+   "file": "bb_snare_room_01.wav",
+   "displayName": "BRITISH SNARE"
   },
   {
    "kitID": "rnb-b",
    "pad": 2,
-   "file": "bb_clap_tight_08.wav",
-   "displayName": "CLAP TIGHT 08"
+   "file": "bb_clap_tight_05.wav",
+   "displayName": "PLANETS V3 CLAP"
   },
   {
    "kitID": "rnb-b",
    "pad": 3,
    "file": "bb_rim_16.wav",
-   "displayName": "RIM 16"
+   "displayName": "SPECIAL RIM"
   },
   {
    "kitID": "rnb-b",
    "pad": 4,
-   "file": "bb_hat_dark_19.wav",
-   "displayName": "HAT DARK 19"
+   "file": "bb_hat_dark_04.wav",
+   "displayName": "DEMON 1 V2 HAT"
   },
   {
    "kitID": "rnb-b",
    "pad": 5,
-   "file": "bb_open_hat_short_19.wav",
-   "displayName": "OPEN HAT SHORT 19"
+   "file": "bb_shaker_13.wav",
+   "displayName": "HELIOSPHERE V8 OPEN HAT"
   },
   {
    "kitID": "rnb-b",
    "pad": 6,
    "file": "bb_808_d1_long_05.wav",
-   "displayName": "808 D1 LONG 05"
+   "displayName": "DEMON 3 D1 808"
   },
   {
    "kitID": "rnb-b",
    "pad": 7,
-   "file": "bb_shaker_02.wav",
-   "displayName": "SHAKER 02"
+   "file": "bb_shaker_16.wav",
+   "displayName": "FINESSE 2 V2 SHAKER"
   },
   {
    "kitID": "rnb-b",
    "pad": 8,
-   "file": "bb_shaker_16.wav",
-   "displayName": "SHAKER 16"
+   "file": "bb_shaker_12.wav",
+   "displayName": "SP 05 2 SHAKER"
   },
   {
    "kitID": "rnb-b",
    "pad": 9,
    "file": "bb_tom_low_01.wav",
-   "displayName": "TOM LOW 01"
+   "displayName": "DISTRESSED 909 10 2 TOM"
   },
   {
    "kitID": "rnb-b",
    "pad": 10,
    "file": "bb_tom_high_09.wav",
-   "displayName": "TOM HIGH 09"
+   "displayName": "NO 3 V5 TOM"
   },
   {
    "kitID": "rnb-b",
    "pad": 11,
    "file": "bb_cymbal_crash_04.wav",
-   "displayName": "CYMBAL CRASH 04"
+   "displayName": "YOTO CRASH"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 0,
    "file": "bb_kick_knock_15.wav",
-   "displayName": "KICK KNOCK 15"
+   "displayName": "ASTRONOMY V2 KICK"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 1,
-   "file": "bb_snare_fat_02.wav",
-   "displayName": "SNARE FAT 02"
+   "file": "bb_snare_fat_01.wav",
+   "displayName": "NEWEST LEAF SNARE"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 2,
-   "file": "bb_clap_tight_03.wav",
-   "displayName": "CLAP TIGHT 03"
+   "file": "bb_clap_tight_12.wav",
+   "displayName": "ASTEROIDS CLAP"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 3,
-   "file": "bb_snare_fat_23.wav",
-   "displayName": "SNARE FAT 23"
+   "file": "bb_perc_hit_10.wav",
+   "displayName": "HELLSING SNAP"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 4,
-   "file": "bb_hat_dark_22.wav",
-   "displayName": "HAT DARK 22"
+   "file": "bb_fx_reverse_05.wav",
+   "displayName": "CLICKED REV V2 HIHAT"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 5,
    "file": "bb_open_hat_short_14.wav",
-   "displayName": "OPEN HAT SHORT 14"
+   "displayName": "SHAWTY OPEN HAT"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 6,
    "file": "bb_808_f1_short_01.wav",
-   "displayName": "808 F1 SHORT 01"
+   "displayName": "GO2ZAY F1 808"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 7,
    "file": "bb_tamb_01.wav",
-   "displayName": "TAMB 01"
+   "displayName": "SMALL DOUBLE HIT 2 TAMB"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 8,
-   "file": "bb_shaker_13.wav",
-   "displayName": "SHAKER 13"
+   "file": "bb_perc_wood_22.wav",
+   "displayName": "ACTUALLY PERC"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 9,
    "file": "bb_tom_low_09.wav",
-   "displayName": "TOM LOW 09"
+   "displayName": "NO 1 V4 TOM"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 10,
    "file": "bb_tom_high_01.wav",
-   "displayName": "TOM HIGH 01"
+   "displayName": "NO 4 TOM"
   },
   {
    "kitID": "uk-rnb-a",
    "pad": 11,
    "file": "bb_cymbal_crash_04.wav",
-   "displayName": "CYMBAL CRASH 04"
+   "displayName": "YOTO CRASH"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 0,
-   "file": "bb_kick_boom_14.wav",
-   "displayName": "KICK BOOM 14"
+   "file": "bb_shaker_01.wav",
+   "displayName": "SPHERES V2 KICK"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 1,
-   "file": "bb_snare_fat_04.wav",
-   "displayName": "SNARE FAT 04"
+   "file": "bb_snare_fat_02.wav",
+   "displayName": "NEWEST LEAF V2 SNARE"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 2,
-   "file": "bb_clap_tight_05.wav",
-   "displayName": "CLAP TIGHT 05"
+   "file": "bb_clap_tight_08.wav",
+   "displayName": "RIVAL CLAP"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 3,
-   "file": "bb_snare_fat_15.wav",
-   "displayName": "SNARE FAT 15"
+   "file": "bb_snare_fat_23.wav",
+   "displayName": "OG 11 SNARE"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 4,
-   "file": "bb_hat_dark_28.wav",
-   "displayName": "HAT DARK 28"
+   "file": "bb_hat_dark_19.wav",
+   "displayName": "KNIGHT HIHAT"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 5,
-   "file": "bb_open_hat_short_12.wav",
-   "displayName": "OPEN HAT SHORT 12"
+   "file": "bb_shaker_13.wav",
+   "displayName": "HELIOSPHERE V8 OPEN HAT"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 6,
    "file": "bb_808_g1_05.wav",
-   "displayName": "808 G1 05"
+   "displayName": "VACUUM G1 V3 808"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 7,
-   "file": "bb_shaker_01.wav",
-   "displayName": "SHAKER 01"
+   "file": "bb_tamb_03.wav",
+   "displayName": "MINI ROLL TAMB"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 8,
-   "file": "bb_shaker_03.wav",
-   "displayName": "SHAKER 03"
+   "file": "bb_shaker_05.wav",
+   "displayName": "NO 1 V4 SHAKER"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 9,
-   "file": "bb_tom_low_20.wav",
-   "displayName": "TOM LOW 20"
+   "file": "bb_shaker_03.wav",
+   "displayName": "NO 1 TOM"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 10,
-   "file": "bb_tom_high_09.wav",
-   "displayName": "TOM HIGH 09"
+   "file": "bb_shaker_02.wav",
+   "displayName": "NO 3 TOM"
   },
   {
    "kitID": "uk-rnb-b",
    "pad": 11,
    "file": "bb_cymbal_crash_08.wav",
-   "displayName": "CYMBAL CRASH 08"
+   "displayName": "BACKYARD CYMBAL"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 0,
    "file": "bb_kick_boom_01.wav",
-   "displayName": "KICK BOOM 01"
+   "displayName": "POP KICK"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 1,
-   "file": "bb_snare_fat_06.wav",
-   "displayName": "SNARE FAT 06"
+   "file": "bb_clap_tight_09.wav",
+   "displayName": "MASSIVE CLAP SNARE"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 2,
-   "file": "bb_clap_tight_09.wav",
-   "displayName": "CLAP TIGHT 09"
+   "file": "bb_clap_room_01.wav",
+   "displayName": "HUSH CLAP"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 3,
    "file": "bb_rim_05.wav",
-   "displayName": "RIM 05"
+   "displayName": "WHOLE RIM"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 4,
    "file": "bb_hat_dusty_01.wav",
-   "displayName": "HAT DUSTY 01"
+   "displayName": "LOWPITCH HIHAT"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 5,
    "file": "bb_open_hat_long_06.wav",
-   "displayName": "OPEN HAT LONG 06"
+   "displayName": "THRONE OPEN HIHAT"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 6,
    "file": "bb_808_f1_long_01.wav",
-   "displayName": "808 F1 LONG 01"
+   "displayName": "DEMONS FAVORITE 3 F1 808"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 7,
    "file": "bb_tamb_04.wav",
-   "displayName": "TAMB 04"
+   "displayName": "CHA CHING TAMB"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 8,
    "file": "bb_shaker_09.wav",
-   "displayName": "SHAKER 09"
+   "displayName": "FINESSE V2 SHAKER"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 9,
    "file": "bb_tom_low_17.wav",
-   "displayName": "TOM LOW 17"
+   "displayName": "NO 1 V12 TOM"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 10,
-   "file": "bb_tom_high_03.wav",
-   "displayName": "TOM HIGH 03"
+   "file": "bb_tom_low_20.wav",
+   "displayName": "NO 1 V15 TOM"
   },
   {
    "kitID": "neo-soul-a",
    "pad": 11,
    "file": "bb_cymbal_ride_08.wav",
-   "displayName": "CYMBAL RIDE 08"
+   "displayName": "COMPRESSED V4 RIDE"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 0,
    "file": "bb_kick_boom_15.wav",
-   "displayName": "KICK BOOM 15"
+   "displayName": "NEVERMIND KICK"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 1,
-   "file": "bb_snare_fat_21.wav",
-   "displayName": "SNARE FAT 21"
+   "file": "bb_clap_wide_01.wav",
+   "displayName": "SPIRI CLAP SNARE"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 2,
-   "file": "bb_clap_room_01.wav",
-   "displayName": "CLAP ROOM 01"
+   "file": "bb_clap_wide_08.wav",
+   "displayName": "SOFT METAL CLAP"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 3,
-   "file": "bb_snare_crack_34.wav",
-   "displayName": "SNARE CRACK 34"
+   "file": "bb_snare_fat_21.wav",
+   "displayName": "QUICK KNOCK V3 SNARE"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 4,
    "file": "bb_hat_dusty_02.wav",
-   "displayName": "HAT DUSTY 02"
+   "displayName": "LOWPITCH V2 HIHAT"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 5,
    "file": "bb_open_hat_short_03.wav",
-   "displayName": "OPEN HAT SHORT 03"
+   "displayName": "OPINION OPEN HAT"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 6,
    "file": "bb_808_e1_long_01.wav",
-   "displayName": "808 E1 LONG 01"
+   "displayName": "DEMON 3 E1 808"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 7,
    "file": "bb_shaker_15.wav",
-   "displayName": "SHAKER 15"
+   "displayName": "FINESSE 2 SHAKER"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 8,
    "file": "bb_shaker_10.wav",
-   "displayName": "SHAKER 10"
+   "displayName": "FINESSE V3 SHAKER"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 9,
    "file": "bb_tom_low_15.wav",
-   "displayName": "TOM LOW 15"
+   "displayName": "NO 1 V10 TOM"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 10,
    "file": "bb_tom_high_11.wav",
-   "displayName": "TOM HIGH 11"
+   "displayName": "NO 3 V7 TOM"
   },
   {
    "kitID": "neo-soul-b",
    "pad": 11,
    "file": "bb_cymbal_ride_07.wav",
-   "displayName": "CYMBAL RIDE 07"
+   "displayName": "COMPRESSED V3 RIDE"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 0,
    "file": "bb_kick_boom_15.wav",
-   "displayName": "KICK BOOM 15"
+   "displayName": "NEVERMIND KICK"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 1,
-   "file": "bb_snare_room_02.wav",
-   "displayName": "SNARE ROOM 02"
+   "file": "bb_snare_fat_06.wav",
+   "displayName": "POUNCE SNARE"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 2,
-   "file": "bb_clap_wide_08.wav",
-   "displayName": "CLAP WIDE 08"
+   "file": "bb_clap_room_01.wav",
+   "displayName": "HUSH CLAP"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 3,
-   "file": "bb_rim_05.wav",
-   "displayName": "RIM 05"
+   "file": "bb_snare_crack_34.wav",
+   "displayName": "PIERCE SNARE"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 4,
    "file": "bb_hat_dark_07.wav",
-   "displayName": "HAT DARK 07"
+   "displayName": "GOLDEN HIHAT"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 5,
    "file": "bb_open_hat_long_05.wav",
-   "displayName": "OPEN HAT LONG 05"
+   "displayName": "CLICKED OPEN HIHAT"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 6,
    "file": "bb_808_f1_long_01.wav",
-   "displayName": "808 F1 LONG 01"
+   "displayName": "DEMONS FAVORITE 3 F1 808"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 7,
    "file": "bb_tamb_04.wav",
-   "displayName": "TAMB 04"
+   "displayName": "CHA CHING TAMB"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 8,
    "file": "bb_shaker_09.wav",
-   "displayName": "SHAKER 09"
+   "displayName": "FINESSE V2 SHAKER"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 9,
-   "file": "bb_tom_low_06.wav",
-   "displayName": "TOM LOW 06"
+   "file": "bb_tom_low_17.wav",
+   "displayName": "NO 1 V12 TOM"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 10,
-   "file": "bb_tom_high_05.wav",
-   "displayName": "TOM HIGH 05"
+   "file": "bb_tom_high_03.wav",
+   "displayName": "NO 4 V3 TOM"
   },
   {
    "kitID": "dilla-time-a",
    "pad": 11,
    "file": "bb_cymbal_ride_04.wav",
-   "displayName": "CYMBAL RIDE 04"
+   "displayName": "TRIPPY V4 RIDE"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 0,
    "file": "bb_kick_boom_08.wav",
-   "displayName": "KICK BOOM 08"
+   "displayName": "LOFI 1 KICK"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 1,
-   "file": "bb_snare_fat_21.wav",
-   "displayName": "SNARE FAT 21"
+   "file": "bb_clap_tight_09.wav",
+   "displayName": "MASSIVE CLAP SNARE"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 2,
-   "file": "bb_clap_tight_09.wav",
-   "displayName": "CLAP TIGHT 09"
+   "file": "bb_clap_wide_06.wav",
+   "displayName": "SORCERER V2 CLAP"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 3,
-   "file": "bb_snare_fat_06.wav",
-   "displayName": "SNARE FAT 06"
+   "file": "bb_rim_05.wav",
+   "displayName": "WHOLE RIM"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 4,
    "file": "bb_hat_dark_12.wav",
-   "displayName": "HAT DARK 12"
+   "displayName": "CLICKED HIHAT"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 5,
    "file": "bb_open_hat_long_04.wav",
-   "displayName": "OPEN HAT LONG 04"
+   "displayName": "POP OPEN HIHAT"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 6,
    "file": "bb_808_e1_long_01.wav",
-   "displayName": "808 E1 LONG 01"
+   "displayName": "DEMON 3 E1 808"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 7,
    "file": "bb_tamb_01.wav",
-   "displayName": "TAMB 01"
+   "displayName": "SMALL DOUBLE HIT 2 TAMB"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 8,
    "file": "bb_shaker_08.wav",
-   "displayName": "SHAKER 08"
+   "displayName": "FINESSE SHAKER"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 9,
-   "file": "bb_tom_low_19.wav",
-   "displayName": "TOM LOW 19"
+   "file": "bb_tom_low_15.wav",
+   "displayName": "NO 1 V10 TOM"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 10,
-   "file": "bb_tom_high_03.wav",
-   "displayName": "TOM HIGH 03"
+   "file": "bb_tom_low_19.wav",
+   "displayName": "NO 1 V14 TOM"
   },
   {
    "kitID": "dilla-time-b",
    "pad": 11,
    "file": "bb_cymbal_ride_03.wav",
-   "displayName": "CYMBAL RIDE 03"
+   "displayName": "TRIPPY V3 RIDE"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 0,
    "file": "bb_kick_boom_09.wav",
-   "displayName": "KICK BOOM 09"
+   "displayName": "SUPERPOWER V3 KICK"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 1,
    "file": "bb_snare_crack_34.wav",
-   "displayName": "SNARE CRACK 34"
+   "displayName": "PIERCE SNARE"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 2,
    "file": "bb_clap_room_01.wav",
-   "displayName": "CLAP ROOM 01"
+   "displayName": "HUSH CLAP"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 3,
-   "file": "bb_rim_16.wav",
-   "displayName": "RIM 16"
+   "file": "bb_snare_fat_21.wav",
+   "displayName": "QUICK KNOCK V3 SNARE"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 4,
    "file": "bb_hat_dark_15.wav",
-   "displayName": "HAT DARK 15"
+   "displayName": "THRONE HIHAT"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 5,
    "file": "bb_open_hat_long_05.wav",
-   "displayName": "OPEN HAT LONG 05"
+   "displayName": "CLICKED OPEN HIHAT"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 6,
    "file": "bb_808_g1_02.wav",
-   "displayName": "808 G1 02"
+   "displayName": "VACUUM G1 808"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 7,
    "file": "bb_tamb_01.wav",
-   "displayName": "TAMB 01"
+   "displayName": "SMALL DOUBLE HIT 2 TAMB"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 8,
    "file": "bb_shaker_09.wav",
-   "displayName": "SHAKER 09"
+   "displayName": "FINESSE V2 SHAKER"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 9,
    "file": "bb_tom_low_07.wav",
-   "displayName": "TOM LOW 07"
+   "displayName": "NO 1 V2 TOM"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 10,
    "file": "bb_tom_high_05.wav",
-   "displayName": "TOM HIGH 05"
+   "displayName": "NO 4 V5 TOM"
   },
   {
    "kitID": "boom-bap-a",
    "pad": 11,
    "file": "bb_cymbal_ride_08.wav",
-   "displayName": "CYMBAL RIDE 08"
+   "displayName": "COMPRESSED V4 RIDE"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 0,
-   "file": "bb_kick_boom_08.wav",
-   "displayName": "KICK BOOM 08"
+   "file": "bb_beads_01.wav",
+   "displayName": "BEADS KICK"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 1,
-   "file": "bb_snare_fat_03.wav",
-   "displayName": "SNARE FAT 03"
+   "file": "bb_snare_room_02.wav",
+   "displayName": "BRITISH V2 SNARE"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 2,
    "file": "bb_clap_wide_06.wav",
-   "displayName": "CLAP WIDE 06"
+   "displayName": "SORCERER V2 CLAP"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 3,
-   "file": "bb_snare_fat_16.wav",
-   "displayName": "SNARE FAT 16"
+   "file": "bb_snare_fat_06.wav",
+   "displayName": "POUNCE SNARE"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 4,
    "file": "bb_hat_dark_14.wav",
-   "displayName": "HAT DARK 14"
+   "displayName": "CLICKED V2 HIHAT"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 5,
    "file": "bb_open_hat_long_04.wav",
-   "displayName": "OPEN HAT LONG 04"
+   "displayName": "POP OPEN HIHAT"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 6,
    "file": "bb_808_e1_06.wav",
-   "displayName": "808 E1 06"
+   "displayName": "VACUUM E1 V2 808"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 7,
    "file": "bb_tamb_04.wav",
-   "displayName": "TAMB 04"
+   "displayName": "CHA CHING TAMB"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 8,
    "file": "bb_tamb_05.wav",
-   "displayName": "TAMB 05"
+   "displayName": "ROLL 1 TAMB"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 9,
-   "file": "bb_tom_low_19.wav",
-   "displayName": "TOM LOW 19"
+   "file": "bb_tom_low_06.wav",
+   "displayName": "DANGER 1 TOM"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 10,
-   "file": "bb_tom_high_06.wav",
-   "displayName": "TOM HIGH 06"
+   "file": "bb_tom_low_19.wav",
+   "displayName": "NO 1 V14 TOM"
   },
   {
    "kitID": "boom-bap-b",
    "pad": 11,
    "file": "bb_cymbal_ride_07.wav",
-   "displayName": "CYMBAL RIDE 07"
+   "displayName": "COMPRESSED V3 RIDE"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 0,
-   "file": "bb_kick_boom_06.wav",
-   "displayName": "KICK BOOM 06"
+   "file": "bb_beads_01.wav",
+   "displayName": "BEADS KICK"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 1,
-   "file": "bb_snare_room_11.wav",
-   "displayName": "SNARE ROOM 11"
+   "file": "bb_snare_fat_03.wav",
+   "displayName": "TRAPKNOCK SNARE"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 2,
-   "file": "bb_clap_wide_06.wav",
-   "displayName": "CLAP WIDE 06"
+   "file": "bb_clap_wide_10.wav",
+   "displayName": "ENGULFED CLAP"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 3,
    "file": "bb_snare_crack_34.wav",
-   "displayName": "SNARE CRACK 34"
+   "displayName": "PIERCE SNARE"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 4,
-   "file": "bb_hat_dark_23.wav",
-   "displayName": "HAT DARK 23"
+   "file": "bb_fx_reverse_06.wav",
+   "displayName": "TRIPPED REV HIHAT"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 5,
    "file": "bb_open_hat_long_06.wav",
-   "displayName": "OPEN HAT LONG 06"
+   "displayName": "THRONE OPEN HIHAT"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 6,
    "file": "bb_808_d1_long_01.wav",
-   "displayName": "808 D1 LONG 01"
+   "displayName": "TOJI D1 808"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 7,
    "file": "bb_shaker_09.wav",
-   "displayName": "SHAKER 09"
+   "displayName": "FINESSE V2 SHAKER"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 8,
-   "file": "bb_shaker_16.wav",
-   "displayName": "SHAKER 16"
+   "file": "bb_fx_hit_01.wav",
+   "displayName": "EARTHQUAKE V2 PERC"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 9,
    "file": "bb_tom_low_07.wav",
-   "displayName": "TOM LOW 07"
+   "displayName": "NO 1 V2 TOM"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 10,
    "file": "bb_tom_high_06.wav",
-   "displayName": "TOM HIGH 06"
+   "displayName": "NO 3 V2 TOM"
   },
   {
    "kitID": "90s-rap-a",
    "pad": 11,
    "file": "bb_cymbal_ride_08.wav",
-   "displayName": "CYMBAL RIDE 08"
+   "displayName": "COMPRESSED V4 RIDE"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 0,
    "file": "bb_kick_knock_25.wav",
-   "displayName": "KICK KNOCK 25"
+   "displayName": "SHAPED V3 KICK"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 1,
-   "file": "bb_snare_fat_03.wav",
-   "displayName": "SNARE FAT 03"
+   "file": "bb_snare_room_11.wav",
+   "displayName": "SHOUT SNARE"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 2,
-   "file": "bb_clap_wide_10.wav",
-   "displayName": "CLAP WIDE 10"
+   "file": "bb_clap_wide_06.wav",
+   "displayName": "SORCERER V2 CLAP"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 3,
-   "file": "bb_rim_21.wav",
-   "displayName": "RIM 21"
+   "file": "bb_snare_fat_16.wav",
+   "displayName": "COOL CAT 1 V2 SNARE"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 4,
-   "file": "bb_hat_dark_14.wav",
-   "displayName": "HAT DARK 14"
+   "file": "bb_fx_reverse_03.wav",
+   "displayName": "POP REV HIHAT"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 5,
    "file": "bb_open_hat_short_01.wav",
-   "displayName": "OPEN HAT SHORT 01"
+   "displayName": "ANTI OPEN HAT"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 6,
    "file": "bb_808_d1_08.wav",
-   "displayName": "808 D1 08"
+   "displayName": "GO2SPINZ D1 808"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 7,
-   "file": "bb_shaker_15.wav",
-   "displayName": "SHAKER 15"
+   "file": "bb_shaker_16.wav",
+   "displayName": "FINESSE 2 V2 SHAKER"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 8,
-   "file": "bb_perc_metal_01.wav",
-   "displayName": "PERC METAL 01"
+   "file": "bb_shaker_15.wav",
+   "displayName": "FINESSE 2 SHAKER"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 9,
-   "file": "bb_tom_low_19.wav",
-   "displayName": "TOM LOW 19"
+   "file": "bb_tom_low_14.wav",
+   "displayName": "NO 1 V9 TOM"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 10,
    "file": "bb_tom_high_05.wav",
-   "displayName": "TOM HIGH 05"
+   "displayName": "NO 4 V5 TOM"
   },
   {
    "kitID": "90s-rap-b",
    "pad": 11,
    "file": "bb_cymbal_ride_07.wav",
-   "displayName": "CYMBAL RIDE 07"
+   "displayName": "COMPRESSED V3 RIDE"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 0,
    "file": "bb_kick_knock_26.wav",
-   "displayName": "KICK KNOCK 26"
+   "displayName": "WAYY MORE THUMPIER KICK"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 1,
    "file": "bb_snare_crack_08.wav",
-   "displayName": "SNARE CRACK 08"
+   "displayName": "FORSHITSANDGIGGLES V2 SNARE"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 2,
-   "file": "bb_clap_wide_01.wav",
-   "displayName": "CLAP WIDE 01"
+   "file": "bb_clap_wide_04.wav",
+   "displayName": "SORCERER 3 CLAP"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 3,
-   "file": "bb_rim_18.wav",
-   "displayName": "RIM 18"
+   "file": "bb_rim_21.wav",
+   "displayName": "PAY RIM"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 4,
-   "file": "bb_hat_dark_11.wav",
-   "displayName": "HAT DARK 11"
+   "file": "bb_fx_reverse_03.wav",
+   "displayName": "POP REV HIHAT"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 5,
    "file": "bb_open_hat_long_10.wav",
-   "displayName": "OPEN HAT LONG 10"
+   "displayName": "TRIPPED OPEN HIHAT"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 6,
    "file": "bb_808_e1_03.wav",
-   "displayName": "808 E1 03"
+   "displayName": "HANDS E1 808"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 7,
    "file": "bb_tamb_02.wav",
-   "displayName": "TAMB 02"
+   "displayName": "DOUBLE HIT TAMB"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 8,
    "file": "bb_shaker_15.wav",
-   "displayName": "SHAKER 15"
+   "displayName": "FINESSE 2 SHAKER"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 9,
    "file": "bb_tom_low_14.wav",
-   "displayName": "TOM LOW 14"
+   "displayName": "NO 1 V9 TOM"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 10,
-   "file": "bb_tom_high_02.wav",
-   "displayName": "TOM HIGH 02"
+   "file": "bb_tom_low_20.wav",
+   "displayName": "NO 1 V15 TOM"
   },
   {
    "kitID": "70s-soul-a",
    "pad": 11,
    "file": "bb_cymbal_ride_04.wav",
-   "displayName": "CYMBAL RIDE 04"
+   "displayName": "TRIPPY V4 RIDE"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 0,
    "file": "bb_kick_boom_07.wav",
-   "displayName": "KICK BOOM 07"
+   "displayName": "WHOLE CLUB THUMP KICK"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 1,
-   "file": "bb_snare_room_12.wav",
-   "displayName": "SNARE ROOM 12"
+   "file": "bb_clap_wide_02.wav",
+   "displayName": "SPIRI CLAP V2 SNARE"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 2,
-   "file": "bb_clap_wide_02.wav",
-   "displayName": "CLAP WIDE 02"
+   "file": "bb_clap_wide_09.wav",
+   "displayName": "SOFT METAL V2 CLAP"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 3,
-   "file": "bb_snare_fat_18.wav",
-   "displayName": "SNARE FAT 18"
+   "file": "bb_rim_18.wav",
+   "displayName": "BELL RIMSHOT"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 4,
-   "file": "bb_hat_dark_15.wav",
-   "displayName": "HAT DARK 15"
+   "file": "bb_hat_dark_11.wav",
+   "displayName": "GOLDEN V4 HIHAT"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 5,
    "file": "bb_open_hat_long_03.wav",
-   "displayName": "OPEN HAT LONG 03"
+   "displayName": "SMITHER V3 OPEN HIHAT"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 6,
    "file": "bb_808_e1_02.wav",
-   "displayName": "808 E1 02"
+   "displayName": "ITADORI E1 808"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 7,
    "file": "bb_tamb_01.wav",
-   "displayName": "TAMB 01"
+   "displayName": "SMALL DOUBLE HIT 2 TAMB"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 8,
-   "file": "bb_beads_02.wav",
-   "displayName": "BEADS 02"
+   "file": "bb_tamb_05.wav",
+   "displayName": "ROLL 1 TAMB"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 9,
-   "file": "bb_tom_low_20.wav",
-   "displayName": "TOM LOW 20"
+   "file": "bb_tom_low_11.wav",
+   "displayName": "NO 1 V6 TOM"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 10,
    "file": "bb_tom_high_11.wav",
-   "displayName": "TOM HIGH 11"
+   "displayName": "NO 3 V7 TOM"
   },
   {
    "kitID": "70s-soul-b",
    "pad": 11,
    "file": "bb_cymbal_ride_03.wav",
-   "displayName": "CYMBAL RIDE 03"
+   "displayName": "TRIPPY V3 RIDE"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 0,
    "file": "bb_kick_knock_01.wav",
-   "displayName": "KICK KNOCK 01"
+   "displayName": "TRUE INDEED ANALOG KICK"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 1,
    "file": "bb_snare_room_12.wav",
-   "displayName": "SNARE ROOM 12"
+   "displayName": "SHOUT V2 SNARE"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 2,
-   "file": "bb_clap_tight_08.wav",
-   "displayName": "CLAP TIGHT 08"
+   "file": "bb_clap_wide_08.wav",
+   "displayName": "SOFT METAL CLAP"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 3,
-   "file": "bb_snare_fat_07.wav",
-   "displayName": "SNARE FAT 07"
+   "file": "bb_snare_fat_18.wav",
+   "displayName": "QUICK KNOCK V2 SNARE"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 4,
    "file": "bb_hat_dark_14.wav",
-   "displayName": "HAT DARK 14"
+   "displayName": "CLICKED V2 HIHAT"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 5,
    "file": "bb_open_hat_long_05.wav",
-   "displayName": "OPEN HAT LONG 05"
+   "displayName": "CLICKED OPEN HIHAT"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 6,
    "file": "bb_808_g1_02.wav",
-   "displayName": "808 G1 02"
+   "displayName": "VACUUM G1 808"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 7,
-   "file": "bb_beads_01.wav",
-   "displayName": "BEADS 01"
+   "file": "bb_tamb_02.wav",
+   "displayName": "DOUBLE HIT TAMB"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 8,
-   "file": "bb_tamb_02.wav",
-   "displayName": "TAMB 02"
+   "file": "bb_tamb_01.wav",
+   "displayName": "SMALL DOUBLE HIT 2 TAMB"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 9,
    "file": "bb_tom_low_07.wav",
-   "displayName": "TOM LOW 07"
+   "displayName": "NO 1 V2 TOM"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 10,
-   "file": "bb_tom_high_05.wav",
-   "displayName": "TOM HIGH 05"
+   "file": "bb_tom_low_19.wav",
+   "displayName": "NO 1 V14 TOM"
   },
   {
    "kitID": "80s-breaks-a",
    "pad": 11,
    "file": "bb_cymbal_crash_07.wav",
-   "displayName": "CYMBAL CRASH 07"
+   "displayName": "ORGANIC CYMBAL"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 0,
    "file": "bb_kick_knock_02.wav",
-   "displayName": "KICK KNOCK 02"
+   "displayName": "TIMELESS KICK"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 1,
-   "file": "bb_snare_crack_08.wav",
-   "displayName": "SNARE CRACK 08"
+   "file": "bb_snare_fat_03.wav",
+   "displayName": "TRAPKNOCK SNARE"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 2,
    "file": "bb_clap_room_01.wav",
-   "displayName": "CLAP ROOM 01"
+   "displayName": "HUSH CLAP"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 3,
-   "file": "bb_snare_crack_35.wav",
-   "displayName": "SNARE CRACK 35"
+   "file": "bb_snare_fat_07.wav",
+   "displayName": "FUNK V2 SNARE"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 4,
    "file": "bb_hat_dark_15.wav",
-   "displayName": "HAT DARK 15"
+   "displayName": "THRONE HIHAT"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 5,
    "file": "bb_open_hat_long_04.wav",
-   "displayName": "OPEN HAT LONG 04"
+   "displayName": "POP OPEN HIHAT"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 6,
    "file": "bb_808_e1_06.wav",
-   "displayName": "808 E1 06"
+   "displayName": "VACUUM E1 V2 808"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 7,
-   "file": "bb_tamb_01.wav",
-   "displayName": "TAMB 01"
+   "file": "bb_shaker_09.wav",
+   "displayName": "FINESSE V2 SHAKER"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 8,
-   "file": "bb_shaker_09.wav",
-   "displayName": "SHAKER 09"
+   "file": "bb_perc_metal_01.wav",
+   "displayName": "OYSTER LAYER PERC"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 9,
    "file": "bb_tom_low_14.wav",
-   "displayName": "TOM LOW 14"
+   "displayName": "NO 1 V9 TOM"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 10,
-   "file": "bb_tom_high_06.wav",
-   "displayName": "TOM HIGH 06"
+   "file": "bb_tom_high_05.wav",
+   "displayName": "NO 4 V5 TOM"
   },
   {
    "kitID": "80s-breaks-b",
    "pad": 11,
    "file": "bb_cymbal_ride_04.wav",
-   "displayName": "CYMBAL RIDE 04"
+   "displayName": "TRIPPY V4 RIDE"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 0,
    "file": "bb_kick_punch_09.wav",
-   "displayName": "KICK PUNCH 09"
+   "displayName": "NICE ASS V3 KICK"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 1,
    "file": "bb_snare_crack_06.wav",
-   "displayName": "SNARE CRACK 06"
+   "displayName": "PURE KNOCK V2 SNARE"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 2,
    "file": "bb_clap_wide_13.wav",
-   "displayName": "CLAP WIDE 13"
+   "displayName": "ALONE CLAP"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 3,
    "file": "bb_rim_01.wav",
-   "displayName": "RIM 01"
+   "displayName": "MACHINE RIM"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 4,
    "file": "bb_hat_crisp_24.wav",
-   "displayName": "HAT CRISP 24"
+   "displayName": "LAMP V2 HIHAT"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 5,
    "file": "bb_open_hat_short_14.wav",
-   "displayName": "OPEN HAT SHORT 14"
+   "displayName": "SHAWTY OPEN HAT"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 6,
    "file": "bb_808_f1_long_04.wav",
-   "displayName": "808 F1 LONG 04"
+   "displayName": "JIRO F1 808"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 7,
-   "file": "bb_shaker_12.wav",
-   "displayName": "SHAKER 12"
+   "file": "bb_fx_atmos_01.wav",
+   "displayName": "EARTHQUAKE PERC"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 8,
-   "file": "bb_beads_02.wav",
-   "displayName": "BEADS 02"
+   "file": "bb_fx_reverse_01.wav",
+   "displayName": "REVERSE KICK MADNESS PERC"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 9,
    "file": "bb_tom_low_09.wav",
-   "displayName": "TOM LOW 09"
+   "displayName": "NO 1 V4 TOM"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 10,
-   "file": "bb_tom_high_01.wav",
-   "displayName": "TOM HIGH 01"
+   "file": "bb_tom_high_09.wav",
+   "displayName": "NO 3 V5 TOM"
   },
   {
    "kitID": "90s-rnb-a",
    "pad": 11,
    "file": "bb_cymbal_ride_03.wav",
-   "displayName": "CYMBAL RIDE 03"
+   "displayName": "TRIPPY V3 RIDE"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 0,
    "file": "bb_kick_punch_07.wav",
-   "displayName": "KICK PUNCH 07"
+   "displayName": "NICE ASS V2 KICK"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 1,
-   "file": "bb_snare_fat_24.wav",
-   "displayName": "SNARE FAT 24"
+   "file": "bb_clap_tight_03.wav",
+   "displayName": "RIFT CLAP SNARE"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 2,
    "file": "bb_clap_wide_04.wav",
-   "displayName": "CLAP WIDE 04"
+   "displayName": "SORCERER 3 CLAP"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 3,
    "file": "bb_rim_18.wav",
-   "displayName": "RIM 18"
+   "displayName": "BELL RIMSHOT"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 4,
    "file": "bb_hat_crisp_10.wav",
-   "displayName": "HAT CRISP 10"
+   "displayName": "SHIFTED V2 HIHAT"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 5,
    "file": "bb_open_hat_long_06.wav",
-   "displayName": "OPEN HAT LONG 06"
+   "displayName": "THRONE OPEN HIHAT"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 6,
    "file": "bb_808_f1_03.wav",
-   "displayName": "808 F1 03"
+   "displayName": "SEALED F1 808"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 7,
-   "file": "bb_perc_hit_20.wav",
-   "displayName": "PERC HIT 20"
+   "file": "bb_fx_hit_07.wav",
+   "displayName": "CLICKETY ENGINE PERC"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 8,
-   "file": "bb_tamb_03.wav",
-   "displayName": "TAMB 03"
+   "file": "bb_beads_02.wav",
+   "displayName": "BEADS HIT PERC"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 9,
    "file": "bb_tom_low_11.wav",
-   "displayName": "TOM LOW 11"
+   "displayName": "NO 1 V6 TOM"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 10,
-   "file": "bb_tom_high_09.wav",
-   "displayName": "TOM HIGH 09"
+   "file": "bb_tom_high_01.wav",
+   "displayName": "NO 4 TOM"
   },
   {
    "kitID": "90s-rnb-b",
    "pad": 11,
    "file": "bb_cymbal_ride_07.wav",
-   "displayName": "CYMBAL RIDE 07"
+   "displayName": "COMPRESSED V3 RIDE"
   },
   {
    "kitID": "rock-a",
    "pad": 0,
    "file": "bb_kick_boom_10.wav",
-   "displayName": "KICK BOOM 10"
+   "displayName": "LOFI 1 V2 KICK"
   },
   {
    "kitID": "rock-a",
    "pad": 1,
-   "file": "bb_snare_room_02.wav",
-   "displayName": "SNARE ROOM 02"
+   "file": "bb_snare_crack_08.wav",
+   "displayName": "FORSHITSANDGIGGLES V2 SNARE"
   },
   {
    "kitID": "rock-a",
    "pad": 2,
-   "file": "bb_clap_wide_02.wav",
-   "displayName": "CLAP WIDE 02"
+   "file": "bb_clap_wide_04.wav",
+   "displayName": "SORCERER 3 CLAP"
   },
   {
    "kitID": "rock-a",
    "pad": 3,
    "file": "bb_rim_01.wav",
-   "displayName": "RIM 01"
+   "displayName": "MACHINE RIM"
   },
   {
    "kitID": "rock-a",
    "pad": 4,
    "file": "bb_hat_dark_11.wav",
-   "displayName": "HAT DARK 11"
+   "displayName": "GOLDEN V4 HIHAT"
   },
   {
    "kitID": "rock-a",
    "pad": 5,
    "file": "bb_open_hat_long_10.wav",
-   "displayName": "OPEN HAT LONG 10"
+   "displayName": "TRIPPED OPEN HIHAT"
   },
   {
    "kitID": "rock-a",
    "pad": 6,
    "file": "bb_808_e1_03.wav",
-   "displayName": "808 E1 03"
+   "displayName": "HANDS E1 808"
   },
   {
    "kitID": "rock-a",
    "pad": 7,
    "file": "bb_tamb_02.wav",
-   "displayName": "TAMB 02"
+   "displayName": "DOUBLE HIT TAMB"
   },
   {
    "kitID": "rock-a",
    "pad": 8,
    "file": "bb_shaker_09.wav",
-   "displayName": "SHAKER 09"
+   "displayName": "FINESSE V2 SHAKER"
   },
   {
    "kitID": "rock-a",
    "pad": 9,
-   "file": "bb_tom_low_06.wav",
-   "displayName": "TOM LOW 06"
+   "file": "bb_tom_low_13.wav",
+   "displayName": "NO 1 V8 TOM"
   },
   {
    "kitID": "rock-a",
    "pad": 10,
-   "file": "bb_tom_high_05.wav",
-   "displayName": "TOM HIGH 05"
+   "file": "bb_tom_low_19.wav",
+   "displayName": "NO 1 V14 TOM"
   },
   {
    "kitID": "rock-a",
    "pad": 11,
    "file": "bb_cymbal_crash_07.wav",
-   "displayName": "CYMBAL CRASH 07"
+   "displayName": "ORGANIC CYMBAL"
   },
   {
    "kitID": "rock-b",
    "pad": 0,
    "file": "bb_kick_boom_12.wav",
-   "displayName": "KICK BOOM 12"
+   "displayName": "LOFI 1 V3 KICK"
   },
   {
    "kitID": "rock-b",
    "pad": 1,
-   "file": "bb_snare_fat_12.wav",
-   "displayName": "SNARE FAT 12"
+   "file": "bb_snare_room_12.wav",
+   "displayName": "SHOUT V2 SNARE"
   },
   {
    "kitID": "rock-b",
    "pad": 2,
-   "file": "bb_clap_wide_01.wav",
-   "displayName": "CLAP WIDE 01"
+   "file": "bb_clap_room_02.wav",
+   "displayName": "TANK CLAP"
   },
   {
    "kitID": "rock-b",
    "pad": 3,
-   "file": "bb_snare_crack_13.wav",
-   "displayName": "SNARE CRACK 13"
+   "file": "bb_snare_crack_35.wav",
+   "displayName": "CAHONES 3 SNARE"
   },
   {
    "kitID": "rock-b",
    "pad": 4,
-   "file": "bb_hat_dark_25.wav",
-   "displayName": "HAT DARK 25"
+   "file": "bb_fx_reverse_05.wav",
+   "displayName": "CLICKED REV V2 HIHAT"
   },
   {
    "kitID": "rock-b",
    "pad": 5,
    "file": "bb_open_hat_long_19.wav",
-   "displayName": "OPEN HAT LONG 19"
+   "displayName": "BODY OPEN HAT"
   },
   {
    "kitID": "rock-b",
    "pad": 6,
    "file": "bb_808_e1_01.wav",
-   "displayName": "808 E1 01"
+   "displayName": "MADE E1 808"
   },
   {
    "kitID": "rock-b",
    "pad": 7,
-   "file": "bb_tamb_05.wav",
-   "displayName": "TAMB 05"
+   "file": "bb_tamb_03.wav",
+   "displayName": "MINI ROLL TAMB"
   },
   {
    "kitID": "rock-b",
    "pad": 8,
-   "file": "bb_tamb_03.wav",
-   "displayName": "TAMB 03"
+   "file": "bb_perc_wood_21.wav",
+   "displayName": "NO 1 V3 SHAKER"
   },
   {
    "kitID": "rock-b",
    "pad": 9,
-   "file": "bb_tom_low_14.wav",
-   "displayName": "TOM LOW 14"
+   "file": "bb_tom_low_10.wav",
+   "displayName": "NO 1 V5 TOM"
   },
   {
    "kitID": "rock-b",
    "pad": 10,
-   "file": "bb_tom_high_08.wav",
-   "displayName": "TOM HIGH 08"
+   "file": "bb_tom_high_06.wav",
+   "displayName": "NO 3 V2 TOM"
   },
   {
    "kitID": "rock-b",
    "pad": 11,
    "file": "bb_cymbal_ride_08.wav",
-   "displayName": "CYMBAL RIDE 08"
+   "displayName": "COMPRESSED V4 RIDE"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 0,
    "file": "bb_kick_knock_20.wav",
-   "displayName": "KICK KNOCK 20"
+   "displayName": "FACE KICK"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 1,
    "file": "bb_snare_room_13.wav",
-   "displayName": "SNARE ROOM 13"
+   "displayName": "K9 SNARE"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 2,
-   "file": "bb_clap_tight_11.wav",
-   "displayName": "CLAP TIGHT 11"
+   "file": "bb_shaker_07.wav",
+   "displayName": "ASTEROIDS V3 CLAP"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 3,
    "file": "bb_snare_crack_24.wav",
-   "displayName": "SNARE CRACK 24"
+   "displayName": "LUNAR SNARE"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 4,
-   "file": "bb_hat_crisp_34.wav",
-   "displayName": "HAT CRISP 34"
+   "file": "bb_shaker_14.wav",
+   "displayName": "EXPLORER V3 HAT"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 5,
    "file": "bb_open_hat_short_23.wav",
-   "displayName": "OPEN HAT SHORT 23"
+   "displayName": "ARCHITECTURE OPEN HAT"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 6,
    "file": "bb_808_fs1_01.wav",
-   "displayName": "808 F#1 01"
+   "displayName": "VACUUM F#1 808"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 7,
-   "file": "bb_shaker_14.wav",
-   "displayName": "SHAKER 14"
+   "file": "bb_perc_wood_18.wav",
+   "displayName": "NO 1 SHAKER"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 8,
-   "file": "bb_shaker_11.wav",
-   "displayName": "SHAKER 11"
+   "file": "bb_perc_wood_19.wav",
+   "displayName": "NO 1 V2 SHAKER"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 9,
-   "file": "bb_tom_low_20.wav",
-   "displayName": "TOM LOW 20"
+   "file": "bb_tom_low_09.wav",
+   "displayName": "NO 1 V4 TOM"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 10,
    "file": "bb_tom_high_01.wav",
-   "displayName": "TOM HIGH 01"
+   "displayName": "NO 4 TOM"
   },
   {
    "kitID": "afrobeats-a",
    "pad": 11,
    "file": "bb_cymbal_crash_08.wav",
-   "displayName": "CYMBAL CRASH 08"
+   "displayName": "BACKYARD CYMBAL"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 0,
    "file": "bb_kick_knock_12.wav",
-   "displayName": "KICK KNOCK 12"
+   "displayName": "WAVES KICK"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 1,
    "file": "bb_snare_room_10.wav",
-   "displayName": "SNARE ROOM 10"
+   "displayName": "RAGE SNARE"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 2,
-   "file": "bb_clap_tight_04.wav",
-   "displayName": "CLAP TIGHT 04"
+   "file": "bb_clap_tight_11.wav",
+   "displayName": "INTERSTELLAR CLAP"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 3,
-   "file": "bb_rim_13.wav",
-   "displayName": "RIM 13"
+   "file": "bb_shaker_11.wav",
+   "displayName": "CRYO SNARE"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 4,
-   "file": "bb_hat_crisp_31.wav",
-   "displayName": "HAT CRISP 31"
+   "file": "bb_hat_crisp_34.wav",
+   "displayName": "CASCADE V2 HAT"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 5,
    "file": "bb_open_hat_short_20.wav",
-   "displayName": "OPEN HAT SHORT 20"
+   "displayName": "PARALLAX V2 OPEN HAT"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 6,
    "file": "bb_808_e1_short_05.wav",
-   "displayName": "808 E1 SHORT 05"
+   "displayName": "CHOSEN E1 808"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 7,
-   "file": "bb_shaker_07.wav",
-   "displayName": "SHAKER 07"
+   "file": "bb_shaker_05.wav",
+   "displayName": "NO 1 V4 SHAKER"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 8,
-   "file": "bb_shaker_06.wav",
-   "displayName": "SHAKER 06"
+   "file": "bb_perc_wood_21.wav",
+   "displayName": "NO 1 V3 SHAKER"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 9,
-   "file": "bb_tom_low_09.wav",
-   "displayName": "TOM LOW 09"
+   "file": "bb_shaker_03.wav",
+   "displayName": "NO 1 TOM"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 10,
-   "file": "bb_tom_high_02.wav",
-   "displayName": "TOM HIGH 02"
+   "file": "bb_tom_low_20.wav",
+   "displayName": "NO 1 V15 TOM"
   },
   {
    "kitID": "afrobeats-b",
    "pad": 11,
-   "file": "bb_cymbal_crash_06.wav",
-   "displayName": "CYMBAL CRASH 06"
+   "file": "bb_cymbal_crash_04.wav",
+   "displayName": "YOTO CRASH"
   },
   {
    "kitID": "amapiano-a",
    "pad": 0,
    "file": "bb_kick_knock_24.wav",
-   "displayName": "KICK KNOCK 24"
+   "displayName": "TF KICK"
   },
   {
    "kitID": "amapiano-a",
    "pad": 1,
-   "file": "bb_snare_crack_23.wav",
-   "displayName": "SNARE CRACK 23"
+   "file": "bb_snare_fat_22.wav",
+   "displayName": "EMOTION SNARE"
   },
   {
    "kitID": "amapiano-a",
    "pad": 2,
    "file": "bb_clap_wide_16.wav",
-   "displayName": "CLAP WIDE 16"
+   "displayName": "LEVELS CLAP"
   },
   {
    "kitID": "amapiano-a",
    "pad": 3,
-   "file": "bb_snare_crack_03.wav",
-   "displayName": "SNARE CRACK 03"
+   "file": "bb_snare_crack_23.wav",
+   "displayName": "COOKED SNARE"
   },
   {
    "kitID": "amapiano-a",
    "pad": 4,
    "file": "bb_hat_dark_24.wav",
-   "displayName": "HAT DARK 24"
+   "displayName": "TWILIGHT V2 HAT"
   },
   {
    "kitID": "amapiano-a",
    "pad": 5,
    "file": "bb_open_hat_short_10.wav",
-   "displayName": "OPEN HAT SHORT 10"
+   "displayName": "PATTERNS V2 OPEN HAT"
   },
   {
    "kitID": "amapiano-a",
    "pad": 6,
    "file": "bb_808_g1_short_03.wav",
-   "displayName": "808 G1 SHORT 03"
+   "displayName": "JOGO G1 V2 808"
   },
   {
    "kitID": "amapiano-a",
    "pad": 7,
    "file": "bb_perc_wood_19.wav",
-   "displayName": "PERC WOOD 19"
+   "displayName": "NO 1 V2 SHAKER"
   },
   {
    "kitID": "amapiano-a",
    "pad": 8,
-   "file": "bb_perc_wood_09.wav",
-   "displayName": "PERC WOOD 09"
+   "file": "bb_perc_wood_18.wav",
+   "displayName": "NO 1 SHAKER"
   },
   {
    "kitID": "amapiano-a",
    "pad": 9,
    "file": "bb_tom_low_11.wav",
-   "displayName": "TOM LOW 11"
+   "displayName": "NO 1 V6 TOM"
   },
   {
    "kitID": "amapiano-a",
    "pad": 10,
    "file": "bb_tom_high_01.wav",
-   "displayName": "TOM HIGH 01"
+   "displayName": "NO 4 TOM"
   },
   {
    "kitID": "amapiano-a",
    "pad": 11,
    "file": "bb_cymbal_short_05.wav",
-   "displayName": "CYMBAL SHORT 05"
+   "displayName": "NEWS CYMBAL"
   },
   {
    "kitID": "amapiano-b",
    "pad": 0,
    "file": "bb_kick_knock_10.wav",
-   "displayName": "KICK KNOCK 10"
+   "displayName": "MECHANICS V2 KICK"
   },
   {
    "kitID": "amapiano-b",
    "pad": 1,
    "file": "bb_snare_crack_15.wav",
-   "displayName": "SNARE CRACK 15"
+   "displayName": "DRIFTERS SNARE"
   },
   {
    "kitID": "amapiano-b",
    "pad": 2,
    "file": "bb_clap_wide_12.wav",
-   "displayName": "CLAP WIDE 12"
+   "displayName": "GALACTIC V2 CLAP"
   },
   {
    "kitID": "amapiano-b",
    "pad": 3,
-   "file": "bb_rim_26.wav",
-   "displayName": "RIM 26"
+   "file": "bb_snare_crack_03.wav",
+   "displayName": "GRAVITY SNARE"
   },
   {
    "kitID": "amapiano-b",
    "pad": 4,
    "file": "bb_hat_dark_13.wav",
-   "displayName": "HAT DARK 13"
+   "displayName": "ENIGMA HAT"
   },
   {
    "kitID": "amapiano-b",
    "pad": 5,
    "file": "bb_open_hat_long_22.wav",
-   "displayName": "OPEN HAT LONG 22"
+   "displayName": "EXCUSES OPEN HAT"
   },
   {
    "kitID": "amapiano-b",
    "pad": 6,
    "file": "bb_808_g1_short_02.wav",
-   "displayName": "808 G1 SHORT 02"
+   "displayName": "GO2SPINZ G1 808"
   },
   {
    "kitID": "amapiano-b",
    "pad": 7,
-   "file": "bb_perc_click_02.wav",
-   "displayName": "PERC CLICK 02"
+   "file": "bb_perc_wood_20.wav",
+   "displayName": "DEMON 3 PERC"
   },
   {
    "kitID": "amapiano-b",
    "pad": 8,
-   "file": "bb_perc_wood_22.wav",
-   "displayName": "PERC WOOD 22"
+   "file": "bb_perc_wood_15.wav",
+   "displayName": "DEMON 2 PERC"
   },
   {
    "kitID": "amapiano-b",
    "pad": 9,
-   "file": "bb_tom_low_13.wav",
-   "displayName": "TOM LOW 13"
+   "file": "bb_tom_low_16.wav",
+   "displayName": "NO 1 V11 TOM"
   },
   {
    "kitID": "amapiano-b",
    "pad": 10,
-   "file": "bb_tom_high_10.wav",
-   "displayName": "TOM HIGH 10"
+   "file": "bb_tom_high_08.wav",
+   "displayName": "NO 3 V4 TOM"
   },
   {
    "kitID": "amapiano-b",
    "pad": 11,
-   "file": "bb_cymbal_short_03.wav",
-   "displayName": "CYMBAL SHORT 03"
+   "file": "bb_cymbal_short_02.wav",
+   "displayName": "STREAM CYMBAL"
   },
   {
    "kitID": "world-perc-a",
    "pad": 0,
    "file": "bb_kick_knock_05.wav",
-   "displayName": "KICK KNOCK 05"
+   "displayName": "PUNCH KICK"
   },
   {
    "kitID": "world-perc-a",
    "pad": 1,
    "file": "bb_snare_room_07.wav",
-   "displayName": "SNARE ROOM 07"
+   "displayName": "AGENCY V2 SNARE"
   },
   {
    "kitID": "world-perc-a",
    "pad": 2,
-   "file": "bb_clap_dusty_01.wav",
-   "displayName": "CLAP DUSTY 01"
+   "file": "bb_clap_tight_04.wav",
+   "displayName": "PLANETS V2 CLAP"
   },
   {
    "kitID": "world-perc-a",
    "pad": 3,
-   "file": "bb_rim_03.wav",
-   "displayName": "RIM 03"
+   "file": "bb_shaker_06.wav",
+   "displayName": "NEW LAND V5 RIM"
   },
   {
    "kitID": "world-perc-a",
    "pad": 4,
-   "file": "bb_hat_crisp_19.wav",
-   "displayName": "HAT CRISP 19"
+   "file": "bb_hat_crisp_31.wav",
+   "displayName": "CONTROL V2 HAT"
   },
   {
    "kitID": "world-perc-a",
    "pad": 5,
    "file": "bb_open_hat_short_05.wav",
-   "displayName": "OPEN HAT SHORT 05"
+   "displayName": "HELIOSPHERE V5 OPEN HAT"
   },
   {
    "kitID": "world-perc-a",
    "pad": 6,
    "file": "bb_808_e1_short_02.wav",
-   "displayName": "808 E1 SHORT 02"
+   "displayName": "GROUNDED E1 V2 808"
   },
   {
    "kitID": "world-perc-a",
    "pad": 7,
-   "file": "bb_shaker_05.wav",
-   "displayName": "SHAKER 05"
+   "file": "bb_shaker_04.wav",
+   "displayName": "NO 1 V10 COWBELL"
   },
   {
    "kitID": "world-perc-a",
    "pad": 8,
-   "file": "bb_shaker_04.wav",
-   "displayName": "SHAKER 04"
+   "file": "bb_perc_wood_12.wav",
+   "displayName": "NO 1 V8 COWBELL"
   },
   {
    "kitID": "world-perc-a",
    "pad": 9,
-   "file": "bb_tom_low_20.wav",
-   "displayName": "TOM LOW 20"
+   "file": "bb_shaker_03.wav",
+   "displayName": "NO 1 TOM"
   },
   {
    "kitID": "world-perc-a",
    "pad": 10,
-   "file": "bb_tom_high_01.wav",
-   "displayName": "TOM HIGH 01"
+   "file": "bb_shaker_02.wav",
+   "displayName": "NO 3 TOM"
   },
   {
    "kitID": "world-perc-a",
    "pad": 11,
-   "file": "bb_cymbal_crash_04.wav",
-   "displayName": "CYMBAL CRASH 04"
+   "file": "bb_cymbal_crash_03.wav",
+   "displayName": "LOCKS CYMBAL"
   },
   {
    "kitID": "world-perc-b",
    "pad": 0,
    "file": "bb_kick_boom_11.wav",
-   "displayName": "KICK BOOM 11"
+   "displayName": "HONEST KICK"
   },
   {
    "kitID": "world-perc-b",
    "pad": 1,
    "file": "bb_snare_room_13.wav",
-   "displayName": "SNARE ROOM 13"
+   "displayName": "K9 SNARE"
   },
   {
    "kitID": "world-perc-b",
    "pad": 2,
-   "file": "bb_clap_tight_18.wav",
-   "displayName": "CLAP TIGHT 18"
+   "file": "bb_clap_dusty_01.wav",
+   "displayName": "MOTIVE CLAP"
   },
   {
    "kitID": "world-perc-b",
    "pad": 3,
-   "file": "bb_rim_21.wav",
-   "displayName": "RIM 21"
+   "file": "bb_rim_13.wav",
+   "displayName": "LAWS V3 RIM"
   },
   {
    "kitID": "world-perc-b",
    "pad": 4,
-   "file": "bb_hat_crisp_03.wav",
-   "displayName": "HAT CRISP 03"
+   "file": "bb_hat_crisp_19.wav",
+   "displayName": "RADIANT HAT"
   },
   {
    "kitID": "world-perc-b",
    "pad": 5,
    "file": "bb_open_hat_long_15.wav",
-   "displayName": "OPEN HAT LONG 15"
+   "displayName": "GROOVE OPEN HAT"
   },
   {
    "kitID": "world-perc-b",
    "pad": 6,
    "file": "bb_808_d1_03.wav",
-   "displayName": "808 D1 03"
+   "displayName": "COSMIC D1 808"
   },
   {
    "kitID": "world-perc-b",
    "pad": 7,
-   "file": "bb_perc_wood_21.wav",
-   "displayName": "PERC WOOD 21"
+   "file": "bb_perc_wood_06.wav",
+   "displayName": "NO 1 V2 COWBELL"
   },
   {
    "kitID": "world-perc-b",
    "pad": 8,
-   "file": "bb_perc_wood_18.wav",
-   "displayName": "PERC WOOD 18"
+   "file": "bb_tamb_05.wav",
+   "displayName": "ROLL 1 TAMB"
   },
   {
    "kitID": "world-perc-b",
    "pad": 9,
-   "file": "bb_tom_low_10.wav",
-   "displayName": "TOM LOW 10"
+   "file": "bb_tom_low_09.wav",
+   "displayName": "NO 1 V4 TOM"
   },
   {
    "kitID": "world-perc-b",
    "pad": 10,
-   "file": "bb_tom_high_03.wav",
-   "displayName": "TOM HIGH 03"
+   "file": "bb_tom_high_09.wav",
+   "displayName": "NO 3 V5 TOM"
   },
   {
    "kitID": "world-perc-b",
    "pad": 11,
-   "file": "bb_cymbal_crash_03.wav",
-   "displayName": "CYMBAL CRASH 03"
+   "file": "bb_cymbal_crash_09.wav",
+   "displayName": "EXPRESS CYMBAL"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 0,
-   "file": "bb_kick_knock_19.wav",
-   "displayName": "KICK KNOCK 19"
+   "file": "bb_kick_thump_03.wav",
+   "displayName": "DEMON 10 KICK"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 1,
    "file": "bb_snare_room_06.wav",
-   "displayName": "SNARE ROOM 06"
+   "displayName": "AGENCY SNARE"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 2,
-   "file": "bb_clap_room_02.wav",
-   "displayName": "CLAP ROOM 02"
+   "file": "bb_clap_wide_11.wav",
+   "displayName": "GALACTIC CLAP"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 3,
-   "file": "bb_snare_fat_19.wav",
-   "displayName": "SNARE FAT 19"
+   "file": "bb_perc_hit_16.wav",
+   "displayName": "FANTASY SNAP"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 4,
    "file": "bb_hat_dark_02.wav",
-   "displayName": "HAT DARK 02"
+   "displayName": "WHATHAPPENED V2 HIHAT"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 5,
    "file": "bb_open_hat_short_17.wav",
-   "displayName": "OPEN HAT SHORT 17"
+   "displayName": "TIES OPEN HAT"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 6,
    "file": "bb_808_g1_06.wav",
-   "displayName": "808 G1 06"
+   "displayName": "VACUUM G1 V4 808"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 7,
-   "file": "bb_perc_hit_16.wav",
-   "displayName": "PERC HIT 16"
+   "file": "bb_perc_hit_20.wav",
+   "displayName": "WHOOPISH LAYER PERC"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 8,
-   "file": "bb_fx_hit_07.wav",
-   "displayName": "FX HIT 07"
+   "file": "bb_perc_wood_08.wav",
+   "displayName": "NO 1 V4 COWBELL"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 9,
-   "file": "bb_tom_low_05.wav",
-   "displayName": "TOM LOW 05"
+   "file": "bb_tom_low_13.wav",
+   "displayName": "NO 1 V8 TOM"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 10,
-   "file": "bb_tom_high_08.wav",
-   "displayName": "TOM HIGH 08"
+   "file": "bb_tom_high_02.wav",
+   "displayName": "NO 4 V2 TOM"
   },
   {
    "kitID": "fx-lab-a",
    "pad": 11,
    "file": "bb_cymbal_crash_01.wav",
-   "displayName": "CYMBAL CRASH 01"
+   "displayName": "MARCHING CRASH"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 0,
-   "file": "bb_kick_knock_18.wav",
-   "displayName": "KICK KNOCK 18"
+   "file": "bb_kick_knock_19.wav",
+   "displayName": "ANIGMA KICK"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 1,
-   "file": "bb_snare_fat_17.wav",
-   "displayName": "SNARE FAT 17"
+   "file": "bb_snare_fat_19.wav",
+   "displayName": "GRAVITY V4 SNARE"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 2,
-   "file": "bb_clap_wide_11.wav",
-   "displayName": "CLAP WIDE 11"
+   "file": "bb_clap_tight_16.wav",
+   "displayName": "SUNG JIN WOO CLAP"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 3,
-   "file": "bb_snare_crack_26.wav",
-   "displayName": "SNARE CRACK 26"
+   "file": "bb_snare_fat_17.wav",
+   "displayName": "VAMPIRES SNARE"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 4,
    "file": "bb_hat_crisp_28.wav",
-   "displayName": "HAT CRISP 28"
+   "displayName": "CONTROL HAT"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 5,
    "file": "bb_open_hat_short_09.wav",
-   "displayName": "OPEN HAT SHORT 09"
+   "displayName": "PATTERNS OPEN HAT"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 6,
    "file": "bb_808_g1_03.wav",
-   "displayName": "808 G1 03"
+   "displayName": "JOGO G1 808"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 7,
-   "file": "bb_perc_hit_11.wav",
-   "displayName": "PERC HIT 11"
+   "file": "bb_perc_wood_05.wav",
+   "displayName": "NO 1 COWBELL"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 8,
    "file": "bb_fx_hit_06.wav",
-   "displayName": "FX HIT 06"
+   "displayName": "GROANING WILD ANIMAL PERC"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 9,
-   "file": "bb_tom_low_13.wav",
-   "displayName": "TOM LOW 13"
+   "file": "bb_tom_low_10.wav",
+   "displayName": "NO 1 V5 TOM"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 10,
-   "file": "bb_tom_high_02.wav",
-   "displayName": "TOM HIGH 02"
+   "file": "bb_tom_high_08.wav",
+   "displayName": "NO 3 V4 TOM"
   },
   {
    "kitID": "fx-lab-b",
    "pad": 11,
    "file": "bb_cymbal_crash_02.wav",
-   "displayName": "CYMBAL CRASH 02"
+   "displayName": "CLASSICS CYMBAL"
   }
  ],
  "sounds": [
   {
-   "file": "bb_kick_boom_01.wav",
-   "name": "KICK BOOM 01"
-  },
-  {
-   "file": "bb_kick_boom_02.wav",
-   "name": "KICK BOOM 02"
-  },
-  {
-   "file": "bb_kick_boom_03.wav",
-   "name": "KICK BOOM 03"
-  },
-  {
-   "file": "bb_kick_boom_04.wav",
-   "name": "KICK BOOM 04"
-  },
-  {
-   "file": "bb_kick_boom_05.wav",
-   "name": "KICK BOOM 05"
-  },
-  {
-   "file": "bb_kick_boom_06.wav",
-   "name": "KICK BOOM 06"
-  },
-  {
-   "file": "bb_kick_boom_07.wav",
-   "name": "KICK BOOM 07"
-  },
-  {
-   "file": "bb_kick_boom_08.wav",
-   "name": "KICK BOOM 08"
-  },
-  {
-   "file": "bb_kick_boom_09.wav",
-   "name": "KICK BOOM 09"
-  },
-  {
-   "file": "bb_kick_boom_10.wav",
-   "name": "KICK BOOM 10"
-  },
-  {
-   "file": "bb_kick_boom_11.wav",
-   "name": "KICK BOOM 11"
-  },
-  {
-   "file": "bb_kick_boom_12.wav",
-   "name": "KICK BOOM 12"
-  },
-  {
-   "file": "bb_kick_boom_13.wav",
-   "name": "KICK BOOM 13"
-  },
-  {
-   "file": "bb_kick_boom_14.wav",
-   "name": "KICK BOOM 14"
-  },
-  {
-   "file": "bb_kick_boom_15.wav",
-   "name": "KICK BOOM 15"
-  },
-  {
-   "file": "bb_kick_boom_16.wav",
-   "name": "KICK BOOM 16"
-  },
-  {
-   "file": "bb_kick_boom_17.wav",
-   "name": "KICK BOOM 17"
-  },
-  {
-   "file": "bb_kick_boom_18.wav",
-   "name": "KICK BOOM 18"
-  },
-  {
-   "file": "bb_kick_boom_19.wav",
-   "name": "KICK BOOM 19"
-  },
-  {
-   "file": "bb_kick_boom_20.wav",
-   "name": "KICK BOOM 20"
-  },
-  {
-   "file": "bb_kick_boom_21.wav",
-   "name": "KICK BOOM 21"
-  },
-  {
-   "file": "bb_kick_boom_22.wav",
-   "name": "KICK BOOM 22"
-  },
-  {
-   "file": "bb_kick_boom_23.wav",
-   "name": "KICK BOOM 23"
-  },
-  {
-   "file": "bb_kick_boom_24.wav",
-   "name": "KICK BOOM 24"
-  },
-  {
-   "file": "bb_kick_boom_25.wav",
-   "name": "KICK BOOM 25"
-  },
-  {
-   "file": "bb_kick_knock_01.wav",
-   "name": "KICK KNOCK 01"
-  },
-  {
-   "file": "bb_kick_knock_02.wav",
-   "name": "KICK KNOCK 02"
-  },
-  {
-   "file": "bb_kick_knock_03.wav",
-   "name": "KICK KNOCK 03"
-  },
-  {
-   "file": "bb_kick_knock_04.wav",
-   "name": "KICK KNOCK 04"
-  },
-  {
-   "file": "bb_kick_knock_05.wav",
-   "name": "KICK KNOCK 05"
-  },
-  {
-   "file": "bb_kick_knock_06.wav",
-   "name": "KICK KNOCK 06"
-  },
-  {
-   "file": "bb_kick_knock_07.wav",
-   "name": "KICK KNOCK 07"
-  },
-  {
-   "file": "bb_kick_knock_08.wav",
-   "name": "KICK KNOCK 08"
-  },
-  {
-   "file": "bb_kick_knock_09.wav",
-   "name": "KICK KNOCK 09"
-  },
-  {
-   "file": "bb_kick_knock_10.wav",
-   "name": "KICK KNOCK 10"
-  },
-  {
-   "file": "bb_kick_knock_11.wav",
-   "name": "KICK KNOCK 11"
-  },
-  {
-   "file": "bb_kick_knock_12.wav",
-   "name": "KICK KNOCK 12"
-  },
-  {
-   "file": "bb_kick_knock_13.wav",
-   "name": "KICK KNOCK 13"
-  },
-  {
-   "file": "bb_kick_knock_14.wav",
-   "name": "KICK KNOCK 14"
-  },
-  {
-   "file": "bb_kick_knock_15.wav",
-   "name": "KICK KNOCK 15"
-  },
-  {
-   "file": "bb_kick_knock_16.wav",
-   "name": "KICK KNOCK 16"
-  },
-  {
-   "file": "bb_kick_knock_17.wav",
-   "name": "KICK KNOCK 17"
-  },
-  {
-   "file": "bb_kick_knock_18.wav",
-   "name": "KICK KNOCK 18"
-  },
-  {
-   "file": "bb_kick_knock_19.wav",
-   "name": "KICK KNOCK 19"
-  },
-  {
-   "file": "bb_kick_knock_20.wav",
-   "name": "KICK KNOCK 20"
-  },
-  {
-   "file": "bb_kick_knock_21.wav",
-   "name": "KICK KNOCK 21"
-  },
-  {
-   "file": "bb_kick_knock_22.wav",
-   "name": "KICK KNOCK 22"
-  },
-  {
-   "file": "bb_kick_knock_23.wav",
-   "name": "KICK KNOCK 23"
-  },
-  {
-   "file": "bb_kick_knock_24.wav",
-   "name": "KICK KNOCK 24"
-  },
-  {
-   "file": "bb_kick_knock_25.wav",
-   "name": "KICK KNOCK 25"
-  },
-  {
-   "file": "bb_kick_knock_26.wav",
-   "name": "KICK KNOCK 26"
-  },
-  {
-   "file": "bb_kick_punch_01.wav",
-   "name": "KICK PUNCH 01"
-  },
-  {
-   "file": "bb_kick_punch_02.wav",
-   "name": "KICK PUNCH 02"
-  },
-  {
-   "file": "bb_kick_punch_03.wav",
-   "name": "KICK PUNCH 03"
-  },
-  {
-   "file": "bb_kick_punch_04.wav",
-   "name": "KICK PUNCH 04"
-  },
-  {
-   "file": "bb_kick_punch_05.wav",
-   "name": "KICK PUNCH 05"
-  },
-  {
-   "file": "bb_kick_punch_06.wav",
-   "name": "KICK PUNCH 06"
-  },
-  {
-   "file": "bb_kick_punch_07.wav",
-   "name": "KICK PUNCH 07"
-  },
-  {
-   "file": "bb_kick_punch_08.wav",
-   "name": "KICK PUNCH 08"
-  },
-  {
-   "file": "bb_kick_punch_09.wav",
-   "name": "KICK PUNCH 09"
-  },
-  {
-   "file": "bb_kick_thump_01.wav",
-   "name": "KICK THUMP 01"
-  },
-  {
-   "file": "bb_kick_thump_02.wav",
-   "name": "KICK THUMP 02"
-  },
-  {
-   "file": "bb_kick_thump_03.wav",
-   "name": "KICK THUMP 03"
-  },
-  {
-   "file": "bb_kick_thump_04.wav",
-   "name": "KICK THUMP 04"
-  },
-  {
-   "file": "bb_kick_thump_05.wav",
-   "name": "KICK THUMP 05"
-  },
-  {
-   "file": "bb_kick_thump_06.wav",
-   "name": "KICK THUMP 06"
-  },
-  {
-   "file": "bb_kick_thump_07.wav",
-   "name": "KICK THUMP 07"
-  },
-  {
-   "file": "bb_kick_thump_08.wav",
-   "name": "KICK THUMP 08"
-  },
-  {
-   "file": "bb_kick_thump_09.wav",
-   "name": "KICK THUMP 09"
-  },
-  {
-   "file": "bb_kick_thump_10.wav",
-   "name": "KICK THUMP 10"
-  },
-  {
-   "file": "bb_kick_thump_11.wav",
-   "name": "KICK THUMP 11"
-  },
-  {
-   "file": "bb_kick_thump_12.wav",
-   "name": "KICK THUMP 12"
-  },
-  {
-   "file": "bb_snare_crack_01.wav",
-   "name": "SNARE CRACK 01"
-  },
-  {
-   "file": "bb_snare_crack_02.wav",
-   "name": "SNARE CRACK 02"
-  },
-  {
-   "file": "bb_snare_crack_03.wav",
-   "name": "SNARE CRACK 03"
-  },
-  {
-   "file": "bb_snare_crack_04.wav",
-   "name": "SNARE CRACK 04"
-  },
-  {
-   "file": "bb_snare_crack_05.wav",
-   "name": "SNARE CRACK 05"
-  },
-  {
-   "file": "bb_snare_crack_06.wav",
-   "name": "SNARE CRACK 06"
-  },
-  {
-   "file": "bb_snare_crack_07.wav",
-   "name": "SNARE CRACK 07"
-  },
-  {
-   "file": "bb_snare_crack_08.wav",
-   "name": "SNARE CRACK 08"
-  },
-  {
-   "file": "bb_snare_crack_09.wav",
-   "name": "SNARE CRACK 09"
-  },
-  {
-   "file": "bb_snare_crack_10.wav",
-   "name": "SNARE CRACK 10"
-  },
-  {
-   "file": "bb_snare_crack_11.wav",
-   "name": "SNARE CRACK 11"
-  },
-  {
-   "file": "bb_snare_crack_12.wav",
-   "name": "SNARE CRACK 12"
-  },
-  {
-   "file": "bb_snare_crack_13.wav",
-   "name": "SNARE CRACK 13"
-  },
-  {
-   "file": "bb_snare_crack_14.wav",
-   "name": "SNARE CRACK 14"
-  },
-  {
-   "file": "bb_snare_crack_15.wav",
-   "name": "SNARE CRACK 15"
-  },
-  {
-   "file": "bb_snare_crack_16.wav",
-   "name": "SNARE CRACK 16"
-  },
-  {
-   "file": "bb_snare_crack_17.wav",
-   "name": "SNARE CRACK 17"
-  },
-  {
-   "file": "bb_snare_crack_18.wav",
-   "name": "SNARE CRACK 18"
-  },
-  {
-   "file": "bb_snare_crack_19.wav",
-   "name": "SNARE CRACK 19"
-  },
-  {
-   "file": "bb_snare_crack_20.wav",
-   "name": "SNARE CRACK 20"
-  },
-  {
-   "file": "bb_snare_crack_21.wav",
-   "name": "SNARE CRACK 21"
-  },
-  {
-   "file": "bb_snare_crack_22.wav",
-   "name": "SNARE CRACK 22"
-  },
-  {
-   "file": "bb_snare_crack_23.wav",
-   "name": "SNARE CRACK 23"
-  },
-  {
-   "file": "bb_snare_crack_24.wav",
-   "name": "SNARE CRACK 24"
-  },
-  {
-   "file": "bb_snare_crack_25.wav",
-   "name": "SNARE CRACK 25"
-  },
-  {
-   "file": "bb_snare_crack_26.wav",
-   "name": "SNARE CRACK 26"
-  },
-  {
-   "file": "bb_snare_crack_27.wav",
-   "name": "SNARE CRACK 27"
-  },
-  {
-   "file": "bb_snare_crack_28.wav",
-   "name": "SNARE CRACK 28"
-  },
-  {
-   "file": "bb_snare_crack_29.wav",
-   "name": "SNARE CRACK 29"
-  },
-  {
-   "file": "bb_snare_crack_30.wav",
-   "name": "SNARE CRACK 30"
-  },
-  {
-   "file": "bb_snare_crack_31.wav",
-   "name": "SNARE CRACK 31"
-  },
-  {
-   "file": "bb_snare_crack_32.wav",
-   "name": "SNARE CRACK 32"
-  },
-  {
-   "file": "bb_snare_crack_33.wav",
-   "name": "SNARE CRACK 33"
-  },
-  {
-   "file": "bb_snare_crack_34.wav",
-   "name": "SNARE CRACK 34"
-  },
-  {
-   "file": "bb_snare_crack_35.wav",
-   "name": "SNARE CRACK 35"
-  },
-  {
-   "file": "bb_snare_crack_36.wav",
-   "name": "SNARE CRACK 36"
-  },
-  {
-   "file": "bb_snare_crack_37.wav",
-   "name": "SNARE CRACK 37"
-  },
-  {
-   "file": "bb_snare_dusty_01.wav",
-   "name": "SNARE DUSTY 01"
-  },
-  {
-   "file": "bb_snare_fat_01.wav",
-   "name": "SNARE FAT 01"
-  },
-  {
-   "file": "bb_snare_fat_02.wav",
-   "name": "SNARE FAT 02"
-  },
-  {
-   "file": "bb_snare_fat_03.wav",
-   "name": "SNARE FAT 03"
-  },
-  {
-   "file": "bb_snare_fat_04.wav",
-   "name": "SNARE FAT 04"
-  },
-  {
-   "file": "bb_snare_fat_05.wav",
-   "name": "SNARE FAT 05"
-  },
-  {
-   "file": "bb_snare_fat_06.wav",
-   "name": "SNARE FAT 06"
-  },
-  {
-   "file": "bb_snare_fat_07.wav",
-   "name": "SNARE FAT 07"
-  },
-  {
-   "file": "bb_snare_fat_08.wav",
-   "name": "SNARE FAT 08"
-  },
-  {
-   "file": "bb_snare_fat_09.wav",
-   "name": "SNARE FAT 09"
-  },
-  {
-   "file": "bb_snare_fat_10.wav",
-   "name": "SNARE FAT 10"
-  },
-  {
-   "file": "bb_snare_fat_11.wav",
-   "name": "SNARE FAT 11"
-  },
-  {
-   "file": "bb_snare_fat_12.wav",
-   "name": "SNARE FAT 12"
-  },
-  {
-   "file": "bb_snare_fat_13.wav",
-   "name": "SNARE FAT 13"
-  },
-  {
-   "file": "bb_snare_fat_14.wav",
-   "name": "SNARE FAT 14"
-  },
-  {
-   "file": "bb_snare_fat_15.wav",
-   "name": "SNARE FAT 15"
-  },
-  {
-   "file": "bb_snare_fat_16.wav",
-   "name": "SNARE FAT 16"
-  },
-  {
-   "file": "bb_snare_fat_17.wav",
-   "name": "SNARE FAT 17"
-  },
-  {
-   "file": "bb_snare_fat_18.wav",
-   "name": "SNARE FAT 18"
-  },
-  {
-   "file": "bb_snare_fat_19.wav",
-   "name": "SNARE FAT 19"
-  },
-  {
-   "file": "bb_snare_fat_20.wav",
-   "name": "SNARE FAT 20"
-  },
-  {
-   "file": "bb_snare_fat_21.wav",
-   "name": "SNARE FAT 21"
-  },
-  {
-   "file": "bb_snare_fat_22.wav",
-   "name": "SNARE FAT 22"
-  },
-  {
-   "file": "bb_snare_fat_23.wav",
-   "name": "SNARE FAT 23"
-  },
-  {
-   "file": "bb_snare_fat_24.wav",
-   "name": "SNARE FAT 24"
-  },
-  {
-   "file": "bb_snare_room_01.wav",
-   "name": "SNARE ROOM 01"
-  },
-  {
-   "file": "bb_snare_room_02.wav",
-   "name": "SNARE ROOM 02"
-  },
-  {
-   "file": "bb_snare_room_03.wav",
-   "name": "SNARE ROOM 03"
-  },
-  {
-   "file": "bb_snare_room_04.wav",
-   "name": "SNARE ROOM 04"
-  },
-  {
-   "file": "bb_snare_room_05.wav",
-   "name": "SNARE ROOM 05"
-  },
-  {
-   "file": "bb_snare_room_06.wav",
-   "name": "SNARE ROOM 06"
-  },
-  {
-   "file": "bb_snare_room_07.wav",
-   "name": "SNARE ROOM 07"
-  },
-  {
-   "file": "bb_snare_room_08.wav",
-   "name": "SNARE ROOM 08"
-  },
-  {
-   "file": "bb_snare_room_09.wav",
-   "name": "SNARE ROOM 09"
-  },
-  {
-   "file": "bb_snare_room_10.wav",
-   "name": "SNARE ROOM 10"
-  },
-  {
-   "file": "bb_snare_room_11.wav",
-   "name": "SNARE ROOM 11"
-  },
-  {
-   "file": "bb_snare_room_12.wav",
-   "name": "SNARE ROOM 12"
-  },
-  {
-   "file": "bb_snare_room_13.wav",
-   "name": "SNARE ROOM 13"
-  },
-  {
-   "file": "bb_snare_room_14.wav",
-   "name": "SNARE ROOM 14"
-  },
-  {
-   "file": "bb_snare_room_15.wav",
-   "name": "SNARE ROOM 15"
-  },
-  {
-   "file": "bb_clap_dusty_01.wav",
-   "name": "CLAP DUSTY 01"
-  },
-  {
-   "file": "bb_clap_room_01.wav",
-   "name": "CLAP ROOM 01"
-  },
-  {
-   "file": "bb_clap_room_02.wav",
-   "name": "CLAP ROOM 02"
-  },
-  {
-   "file": "bb_clap_room_03.wav",
-   "name": "CLAP ROOM 03"
-  },
-  {
-   "file": "bb_clap_room_04.wav",
-   "name": "CLAP ROOM 04"
-  },
-  {
-   "file": "bb_clap_room_05.wav",
-   "name": "CLAP ROOM 05"
-  },
-  {
-   "file": "bb_clap_room_06.wav",
-   "name": "CLAP ROOM 06"
-  },
-  {
-   "file": "bb_clap_tight_01.wav",
-   "name": "CLAP TIGHT 01"
-  },
-  {
-   "file": "bb_clap_tight_02.wav",
-   "name": "CLAP TIGHT 02"
-  },
-  {
-   "file": "bb_clap_tight_03.wav",
-   "name": "CLAP TIGHT 03"
-  },
-  {
-   "file": "bb_clap_tight_04.wav",
-   "name": "CLAP TIGHT 04"
-  },
-  {
-   "file": "bb_clap_tight_05.wav",
-   "name": "CLAP TIGHT 05"
-  },
-  {
-   "file": "bb_clap_tight_06.wav",
-   "name": "CLAP TIGHT 06"
-  },
-  {
-   "file": "bb_clap_tight_07.wav",
-   "name": "CLAP TIGHT 07"
-  },
-  {
-   "file": "bb_clap_tight_08.wav",
-   "name": "CLAP TIGHT 08"
-  },
-  {
-   "file": "bb_clap_tight_09.wav",
-   "name": "CLAP TIGHT 09"
-  },
-  {
-   "file": "bb_clap_tight_10.wav",
-   "name": "CLAP TIGHT 10"
-  },
-  {
-   "file": "bb_clap_tight_11.wav",
-   "name": "CLAP TIGHT 11"
-  },
-  {
-   "file": "bb_clap_tight_12.wav",
-   "name": "CLAP TIGHT 12"
-  },
-  {
-   "file": "bb_clap_tight_13.wav",
-   "name": "CLAP TIGHT 13"
-  },
-  {
-   "file": "bb_clap_tight_14.wav",
-   "name": "CLAP TIGHT 14"
-  },
-  {
-   "file": "bb_clap_tight_15.wav",
-   "name": "CLAP TIGHT 15"
-  },
-  {
-   "file": "bb_clap_tight_16.wav",
-   "name": "CLAP TIGHT 16"
-  },
-  {
-   "file": "bb_clap_tight_17.wav",
-   "name": "CLAP TIGHT 17"
-  },
-  {
-   "file": "bb_clap_tight_18.wav",
-   "name": "CLAP TIGHT 18"
-  },
-  {
-   "file": "bb_clap_tight_19.wav",
-   "name": "CLAP TIGHT 19"
-  },
-  {
-   "file": "bb_clap_tight_20.wav",
-   "name": "CLAP TIGHT 20"
-  },
-  {
-   "file": "bb_clap_tight_21.wav",
-   "name": "CLAP TIGHT 21"
-  },
-  {
-   "file": "bb_clap_tight_22.wav",
-   "name": "CLAP TIGHT 22"
-  },
-  {
-   "file": "bb_clap_tight_23.wav",
-   "name": "CLAP TIGHT 23"
-  },
-  {
-   "file": "bb_clap_tight_24.wav",
-   "name": "CLAP TIGHT 24"
-  },
-  {
-   "file": "bb_clap_tight_25.wav",
-   "name": "CLAP TIGHT 25"
-  },
-  {
-   "file": "bb_clap_tight_26.wav",
-   "name": "CLAP TIGHT 26"
-  },
-  {
-   "file": "bb_clap_tight_27.wav",
-   "name": "CLAP TIGHT 27"
-  },
-  {
-   "file": "bb_clap_tight_28.wav",
-   "name": "CLAP TIGHT 28"
-  },
-  {
-   "file": "bb_clap_tight_29.wav",
-   "name": "CLAP TIGHT 29"
-  },
-  {
-   "file": "bb_clap_tight_30.wav",
-   "name": "CLAP TIGHT 30"
-  },
-  {
-   "file": "bb_clap_tight_31.wav",
-   "name": "CLAP TIGHT 31"
-  },
-  {
-   "file": "bb_clap_tight_32.wav",
-   "name": "CLAP TIGHT 32"
-  },
-  {
-   "file": "bb_clap_tight_33.wav",
-   "name": "CLAP TIGHT 33"
-  },
-  {
-   "file": "bb_clap_wide_01.wav",
-   "name": "CLAP WIDE 01"
-  },
-  {
-   "file": "bb_clap_wide_02.wav",
-   "name": "CLAP WIDE 02"
-  },
-  {
-   "file": "bb_clap_wide_03.wav",
-   "name": "CLAP WIDE 03"
-  },
-  {
-   "file": "bb_clap_wide_04.wav",
-   "name": "CLAP WIDE 04"
-  },
-  {
-   "file": "bb_clap_wide_05.wav",
-   "name": "CLAP WIDE 05"
-  },
-  {
-   "file": "bb_clap_wide_06.wav",
-   "name": "CLAP WIDE 06"
-  },
-  {
-   "file": "bb_clap_wide_07.wav",
-   "name": "CLAP WIDE 07"
-  },
-  {
-   "file": "bb_clap_wide_08.wav",
-   "name": "CLAP WIDE 08"
-  },
-  {
-   "file": "bb_clap_wide_09.wav",
-   "name": "CLAP WIDE 09"
-  },
-  {
-   "file": "bb_clap_wide_10.wav",
-   "name": "CLAP WIDE 10"
-  },
-  {
-   "file": "bb_clap_wide_11.wav",
-   "name": "CLAP WIDE 11"
-  },
-  {
-   "file": "bb_clap_wide_12.wav",
-   "name": "CLAP WIDE 12"
-  },
-  {
-   "file": "bb_clap_wide_13.wav",
-   "name": "CLAP WIDE 13"
-  },
-  {
-   "file": "bb_clap_wide_14.wav",
-   "name": "CLAP WIDE 14"
-  },
-  {
-   "file": "bb_clap_wide_15.wav",
-   "name": "CLAP WIDE 15"
-  },
-  {
-   "file": "bb_clap_wide_16.wav",
-   "name": "CLAP WIDE 16"
-  },
-  {
-   "file": "bb_rim_01.wav",
-   "name": "RIM 01"
-  },
-  {
-   "file": "bb_rim_02.wav",
-   "name": "RIM 02"
-  },
-  {
-   "file": "bb_rim_03.wav",
-   "name": "RIM 03"
-  },
-  {
-   "file": "bb_rim_04.wav",
-   "name": "RIM 04"
-  },
-  {
-   "file": "bb_rim_05.wav",
-   "name": "RIM 05"
-  },
-  {
-   "file": "bb_rim_06.wav",
-   "name": "RIM 06"
-  },
-  {
-   "file": "bb_rim_07.wav",
-   "name": "RIM 07"
-  },
-  {
-   "file": "bb_rim_08.wav",
-   "name": "RIM 08"
-  },
-  {
-   "file": "bb_rim_09.wav",
-   "name": "RIM 09"
-  },
-  {
-   "file": "bb_rim_10.wav",
-   "name": "RIM 10"
-  },
-  {
-   "file": "bb_rim_11.wav",
-   "name": "RIM 11"
-  },
-  {
-   "file": "bb_rim_12.wav",
-   "name": "RIM 12"
-  },
-  {
-   "file": "bb_rim_13.wav",
-   "name": "RIM 13"
-  },
-  {
-   "file": "bb_rim_14.wav",
-   "name": "RIM 14"
-  },
-  {
-   "file": "bb_rim_15.wav",
-   "name": "RIM 15"
-  },
-  {
-   "file": "bb_rim_16.wav",
-   "name": "RIM 16"
-  },
-  {
-   "file": "bb_rim_17.wav",
-   "name": "RIM 17"
-  },
-  {
-   "file": "bb_rim_18.wav",
-   "name": "RIM 18"
-  },
-  {
-   "file": "bb_rim_19.wav",
-   "name": "RIM 19"
-  },
-  {
-   "file": "bb_rim_20.wav",
-   "name": "RIM 20"
-  },
-  {
-   "file": "bb_rim_21.wav",
-   "name": "RIM 21"
-  },
-  {
-   "file": "bb_rim_22.wav",
-   "name": "RIM 22"
-  },
-  {
-   "file": "bb_rim_23.wav",
-   "name": "RIM 23"
-  },
-  {
-   "file": "bb_rim_24.wav",
-   "name": "RIM 24"
-  },
-  {
-   "file": "bb_rim_25.wav",
-   "name": "RIM 25"
-  },
-  {
-   "file": "bb_rim_26.wav",
-   "name": "RIM 26"
-  },
-  {
-   "file": "bb_rim_27.wav",
-   "name": "RIM 27"
-  },
-  {
-   "file": "bb_rim_28.wav",
-   "name": "RIM 28"
-  },
-  {
-   "file": "bb_rim_29.wav",
-   "name": "RIM 29"
-  },
-  {
-   "file": "bb_hat_crisp_01.wav",
-   "name": "HAT CRISP 01"
-  },
-  {
-   "file": "bb_hat_crisp_02.wav",
-   "name": "HAT CRISP 02"
-  },
-  {
-   "file": "bb_hat_crisp_03.wav",
-   "name": "HAT CRISP 03"
-  },
-  {
-   "file": "bb_hat_crisp_04.wav",
-   "name": "HAT CRISP 04"
-  },
-  {
-   "file": "bb_hat_crisp_05.wav",
-   "name": "HAT CRISP 05"
-  },
-  {
-   "file": "bb_hat_crisp_06.wav",
-   "name": "HAT CRISP 06"
-  },
-  {
-   "file": "bb_hat_crisp_07.wav",
-   "name": "HAT CRISP 07"
-  },
-  {
-   "file": "bb_hat_crisp_08.wav",
-   "name": "HAT CRISP 08"
-  },
-  {
-   "file": "bb_hat_crisp_09.wav",
-   "name": "HAT CRISP 09"
-  },
-  {
-   "file": "bb_hat_crisp_10.wav",
-   "name": "HAT CRISP 10"
-  },
-  {
-   "file": "bb_hat_crisp_11.wav",
-   "name": "HAT CRISP 11"
-  },
-  {
-   "file": "bb_hat_crisp_12.wav",
-   "name": "HAT CRISP 12"
-  },
-  {
-   "file": "bb_hat_crisp_13.wav",
-   "name": "HAT CRISP 13"
-  },
-  {
-   "file": "bb_hat_crisp_14.wav",
-   "name": "HAT CRISP 14"
-  },
-  {
-   "file": "bb_hat_crisp_15.wav",
-   "name": "HAT CRISP 15"
-  },
-  {
-   "file": "bb_hat_crisp_16.wav",
-   "name": "HAT CRISP 16"
-  },
-  {
-   "file": "bb_hat_crisp_17.wav",
-   "name": "HAT CRISP 17"
-  },
-  {
-   "file": "bb_hat_crisp_18.wav",
-   "name": "HAT CRISP 18"
-  },
-  {
-   "file": "bb_hat_crisp_19.wav",
-   "name": "HAT CRISP 19"
-  },
-  {
-   "file": "bb_hat_crisp_20.wav",
-   "name": "HAT CRISP 20"
-  },
-  {
-   "file": "bb_hat_crisp_21.wav",
-   "name": "HAT CRISP 21"
-  },
-  {
-   "file": "bb_hat_crisp_22.wav",
-   "name": "HAT CRISP 22"
-  },
-  {
-   "file": "bb_hat_crisp_23.wav",
-   "name": "HAT CRISP 23"
-  },
-  {
-   "file": "bb_hat_crisp_24.wav",
-   "name": "HAT CRISP 24"
-  },
-  {
-   "file": "bb_hat_crisp_25.wav",
-   "name": "HAT CRISP 25"
-  },
-  {
-   "file": "bb_hat_crisp_26.wav",
-   "name": "HAT CRISP 26"
-  },
-  {
-   "file": "bb_hat_crisp_27.wav",
-   "name": "HAT CRISP 27"
-  },
-  {
-   "file": "bb_hat_crisp_28.wav",
-   "name": "HAT CRISP 28"
-  },
-  {
-   "file": "bb_hat_crisp_29.wav",
-   "name": "HAT CRISP 29"
-  },
-  {
-   "file": "bb_hat_crisp_30.wav",
-   "name": "HAT CRISP 30"
-  },
-  {
-   "file": "bb_hat_crisp_31.wav",
-   "name": "HAT CRISP 31"
-  },
-  {
-   "file": "bb_hat_crisp_32.wav",
-   "name": "HAT CRISP 32"
-  },
-  {
-   "file": "bb_hat_crisp_33.wav",
-   "name": "HAT CRISP 33"
-  },
-  {
-   "file": "bb_hat_crisp_34.wav",
-   "name": "HAT CRISP 34"
-  },
-  {
-   "file": "bb_hat_crisp_35.wav",
-   "name": "HAT CRISP 35"
-  },
-  {
-   "file": "bb_hat_dark_01.wav",
-   "name": "HAT DARK 01"
-  },
-  {
-   "file": "bb_hat_dark_02.wav",
-   "name": "HAT DARK 02"
-  },
-  {
-   "file": "bb_hat_dark_03.wav",
-   "name": "HAT DARK 03"
-  },
-  {
-   "file": "bb_hat_dark_04.wav",
-   "name": "HAT DARK 04"
-  },
-  {
-   "file": "bb_hat_dark_05.wav",
-   "name": "HAT DARK 05"
-  },
-  {
-   "file": "bb_hat_dark_06.wav",
-   "name": "HAT DARK 06"
-  },
-  {
-   "file": "bb_hat_dark_07.wav",
-   "name": "HAT DARK 07"
-  },
-  {
-   "file": "bb_hat_dark_08.wav",
-   "name": "HAT DARK 08"
-  },
-  {
-   "file": "bb_hat_dark_09.wav",
-   "name": "HAT DARK 09"
-  },
-  {
-   "file": "bb_hat_dark_10.wav",
-   "name": "HAT DARK 10"
-  },
-  {
-   "file": "bb_hat_dark_11.wav",
-   "name": "HAT DARK 11"
-  },
-  {
-   "file": "bb_hat_dark_12.wav",
-   "name": "HAT DARK 12"
-  },
-  {
-   "file": "bb_hat_dark_13.wav",
-   "name": "HAT DARK 13"
-  },
-  {
-   "file": "bb_hat_dark_14.wav",
-   "name": "HAT DARK 14"
-  },
-  {
-   "file": "bb_hat_dark_15.wav",
-   "name": "HAT DARK 15"
-  },
-  {
-   "file": "bb_hat_dark_16.wav",
-   "name": "HAT DARK 16"
-  },
-  {
-   "file": "bb_hat_dark_17.wav",
-   "name": "HAT DARK 17"
-  },
-  {
-   "file": "bb_hat_dark_18.wav",
-   "name": "HAT DARK 18"
-  },
-  {
-   "file": "bb_hat_dark_19.wav",
-   "name": "HAT DARK 19"
-  },
-  {
-   "file": "bb_hat_dark_20.wav",
-   "name": "HAT DARK 20"
-  },
-  {
-   "file": "bb_hat_dark_21.wav",
-   "name": "HAT DARK 21"
-  },
-  {
-   "file": "bb_hat_dark_22.wav",
-   "name": "HAT DARK 22"
-  },
-  {
-   "file": "bb_hat_dark_23.wav",
-   "name": "HAT DARK 23"
-  },
-  {
-   "file": "bb_hat_dark_24.wav",
-   "name": "HAT DARK 24"
-  },
-  {
-   "file": "bb_hat_dark_25.wav",
-   "name": "HAT DARK 25"
-  },
-  {
-   "file": "bb_hat_dark_26.wav",
-   "name": "HAT DARK 26"
-  },
-  {
-   "file": "bb_hat_dark_27.wav",
-   "name": "HAT DARK 27"
-  },
-  {
-   "file": "bb_hat_dark_28.wav",
-   "name": "HAT DARK 28"
-  },
-  {
-   "file": "bb_hat_dark_29.wav",
-   "name": "HAT DARK 29"
-  },
-  {
-   "file": "bb_hat_dark_30.wav",
-   "name": "HAT DARK 30"
-  },
-  {
-   "file": "bb_hat_dark_31.wav",
-   "name": "HAT DARK 31"
-  },
-  {
-   "file": "bb_hat_dark_32.wav",
-   "name": "HAT DARK 32"
-  },
-  {
-   "file": "bb_hat_dusty_01.wav",
-   "name": "HAT DUSTY 01"
-  },
-  {
-   "file": "bb_hat_dusty_02.wav",
-   "name": "HAT DUSTY 02"
-  },
-  {
-   "file": "bb_open_hat_long_01.wav",
-   "name": "OPEN HAT LONG 01"
-  },
-  {
-   "file": "bb_open_hat_long_02.wav",
-   "name": "OPEN HAT LONG 02"
-  },
-  {
-   "file": "bb_open_hat_long_03.wav",
-   "name": "OPEN HAT LONG 03"
-  },
-  {
-   "file": "bb_open_hat_long_04.wav",
-   "name": "OPEN HAT LONG 04"
-  },
-  {
-   "file": "bb_open_hat_long_05.wav",
-   "name": "OPEN HAT LONG 05"
-  },
-  {
-   "file": "bb_open_hat_long_06.wav",
-   "name": "OPEN HAT LONG 06"
-  },
-  {
-   "file": "bb_open_hat_long_07.wav",
-   "name": "OPEN HAT LONG 07"
-  },
-  {
-   "file": "bb_open_hat_long_08.wav",
-   "name": "OPEN HAT LONG 08"
-  },
-  {
-   "file": "bb_open_hat_long_09.wav",
-   "name": "OPEN HAT LONG 09"
-  },
-  {
-   "file": "bb_open_hat_long_10.wav",
-   "name": "OPEN HAT LONG 10"
-  },
-  {
-   "file": "bb_open_hat_long_11.wav",
-   "name": "OPEN HAT LONG 11"
-  },
-  {
-   "file": "bb_open_hat_long_12.wav",
-   "name": "OPEN HAT LONG 12"
-  },
-  {
-   "file": "bb_open_hat_long_13.wav",
-   "name": "OPEN HAT LONG 13"
-  },
-  {
-   "file": "bb_open_hat_long_14.wav",
-   "name": "OPEN HAT LONG 14"
-  },
-  {
-   "file": "bb_open_hat_long_15.wav",
-   "name": "OPEN HAT LONG 15"
-  },
-  {
-   "file": "bb_open_hat_long_16.wav",
-   "name": "OPEN HAT LONG 16"
-  },
-  {
-   "file": "bb_open_hat_long_17.wav",
-   "name": "OPEN HAT LONG 17"
-  },
-  {
-   "file": "bb_open_hat_long_18.wav",
-   "name": "OPEN HAT LONG 18"
-  },
-  {
-   "file": "bb_open_hat_long_19.wav",
-   "name": "OPEN HAT LONG 19"
-  },
-  {
-   "file": "bb_open_hat_long_20.wav",
-   "name": "OPEN HAT LONG 20"
-  },
-  {
-   "file": "bb_open_hat_long_21.wav",
-   "name": "OPEN HAT LONG 21"
-  },
-  {
-   "file": "bb_open_hat_long_22.wav",
-   "name": "OPEN HAT LONG 22"
-  },
-  {
-   "file": "bb_open_hat_long_23.wav",
-   "name": "OPEN HAT LONG 23"
-  },
-  {
-   "file": "bb_open_hat_long_24.wav",
-   "name": "OPEN HAT LONG 24"
-  },
-  {
-   "file": "bb_open_hat_long_25.wav",
-   "name": "OPEN HAT LONG 25"
-  },
-  {
-   "file": "bb_open_hat_long_26.wav",
-   "name": "OPEN HAT LONG 26"
-  },
-  {
-   "file": "bb_open_hat_short_01.wav",
-   "name": "OPEN HAT SHORT 01"
-  },
-  {
-   "file": "bb_open_hat_short_02.wav",
-   "name": "OPEN HAT SHORT 02"
-  },
-  {
-   "file": "bb_open_hat_short_03.wav",
-   "name": "OPEN HAT SHORT 03"
-  },
-  {
-   "file": "bb_open_hat_short_04.wav",
-   "name": "OPEN HAT SHORT 04"
-  },
-  {
-   "file": "bb_open_hat_short_05.wav",
-   "name": "OPEN HAT SHORT 05"
-  },
-  {
-   "file": "bb_open_hat_short_06.wav",
-   "name": "OPEN HAT SHORT 06"
-  },
-  {
-   "file": "bb_open_hat_short_07.wav",
-   "name": "OPEN HAT SHORT 07"
-  },
-  {
-   "file": "bb_open_hat_short_08.wav",
-   "name": "OPEN HAT SHORT 08"
-  },
-  {
-   "file": "bb_open_hat_short_09.wav",
-   "name": "OPEN HAT SHORT 09"
-  },
-  {
-   "file": "bb_open_hat_short_10.wav",
-   "name": "OPEN HAT SHORT 10"
-  },
-  {
-   "file": "bb_open_hat_short_11.wav",
-   "name": "OPEN HAT SHORT 11"
-  },
-  {
-   "file": "bb_open_hat_short_12.wav",
-   "name": "OPEN HAT SHORT 12"
-  },
-  {
-   "file": "bb_open_hat_short_13.wav",
-   "name": "OPEN HAT SHORT 13"
-  },
-  {
-   "file": "bb_open_hat_short_14.wav",
-   "name": "OPEN HAT SHORT 14"
-  },
-  {
-   "file": "bb_open_hat_short_15.wav",
-   "name": "OPEN HAT SHORT 15"
-  },
-  {
-   "file": "bb_open_hat_short_16.wav",
-   "name": "OPEN HAT SHORT 16"
-  },
-  {
-   "file": "bb_open_hat_short_17.wav",
-   "name": "OPEN HAT SHORT 17"
-  },
-  {
-   "file": "bb_open_hat_short_18.wav",
-   "name": "OPEN HAT SHORT 18"
-  },
-  {
-   "file": "bb_open_hat_short_19.wav",
-   "name": "OPEN HAT SHORT 19"
-  },
-  {
-   "file": "bb_open_hat_short_20.wav",
-   "name": "OPEN HAT SHORT 20"
-  },
-  {
-   "file": "bb_open_hat_short_21.wav",
-   "name": "OPEN HAT SHORT 21"
-  },
-  {
-   "file": "bb_open_hat_short_22.wav",
-   "name": "OPEN HAT SHORT 22"
-  },
-  {
-   "file": "bb_open_hat_short_23.wav",
-   "name": "OPEN HAT SHORT 23"
-  },
-  {
-   "file": "bb_open_hat_short_24.wav",
-   "name": "OPEN HAT SHORT 24"
-  },
-  {
-   "file": "bb_open_hat_short_25.wav",
-   "name": "OPEN HAT SHORT 25"
-  },
-  {
-   "file": "bb_808_a1_01.wav",
-   "name": "808 A1 01"
-  },
-  {
-   "file": "bb_808_a1_long_01.wav",
-   "name": "808 A1 LONG 01"
-  },
-  {
-   "file": "bb_808_a1_short_01.wav",
-   "name": "808 A1 SHORT 01"
-  },
-  {
-   "file": "bb_808_ds1_long_01.wav",
-   "name": "808 D#1 LONG 01"
-  },
-  {
-   "file": "bb_808_d1_01.wav",
-   "name": "808 D1 01"
-  },
-  {
-   "file": "bb_808_d1_02.wav",
-   "name": "808 D1 02"
-  },
-  {
-   "file": "bb_808_d1_03.wav",
-   "name": "808 D1 03"
-  },
-  {
-   "file": "bb_808_d1_04.wav",
-   "name": "808 D1 04"
-  },
-  {
-   "file": "bb_808_d1_05.wav",
-   "name": "808 D1 05"
-  },
-  {
-   "file": "bb_808_d1_06.wav",
-   "name": "808 D1 06"
-  },
-  {
-   "file": "bb_808_d1_07.wav",
-   "name": "808 D1 07"
-  },
-  {
-   "file": "bb_808_d1_08.wav",
-   "name": "808 D1 08"
-  },
-  {
-   "file": "bb_808_d1_09.wav",
-   "name": "808 D1 09"
-  },
-  {
-   "file": "bb_808_d1_long_01.wav",
-   "name": "808 D1 LONG 01"
-  },
-  {
-   "file": "bb_808_d1_long_02.wav",
-   "name": "808 D1 LONG 02"
-  },
-  {
-   "file": "bb_808_d1_long_03.wav",
-   "name": "808 D1 LONG 03"
-  },
-  {
    "file": "bb_808_d1_long_04.wav",
-   "name": "808 D1 LONG 04"
-  },
-  {
-   "file": "bb_808_d1_long_05.wav",
-   "name": "808 D1 LONG 05"
-  },
-  {
-   "file": "bb_808_d1_short_01.wav",
-   "name": "808 D1 SHORT 01"
-  },
-  {
-   "file": "bb_808_d1_short_02.wav",
-   "name": "808 D1 SHORT 02"
-  },
-  {
-   "file": "bb_808_d1_short_03.wav",
-   "name": "808 D1 SHORT 03"
-  },
-  {
-   "file": "bb_808_e1_01.wav",
-   "name": "808 E1 01"
-  },
-  {
-   "file": "bb_808_e1_02.wav",
-   "name": "808 E1 02"
-  },
-  {
-   "file": "bb_808_e1_03.wav",
-   "name": "808 E1 03"
-  },
-  {
-   "file": "bb_808_e1_04.wav",
-   "name": "808 E1 04"
-  },
-  {
-   "file": "bb_808_e1_05.wav",
-   "name": "808 E1 05"
-  },
-  {
-   "file": "bb_808_e1_06.wav",
-   "name": "808 E1 06"
-  },
-  {
-   "file": "bb_808_e1_07.wav",
-   "name": "808 E1 07"
-  },
-  {
-   "file": "bb_808_e1_08.wav",
-   "name": "808 E1 08"
-  },
-  {
-   "file": "bb_808_e1_09.wav",
-   "name": "808 E1 09"
-  },
-  {
-   "file": "bb_808_e1_10.wav",
-   "name": "808 E1 10"
-  },
-  {
-   "file": "bb_808_e1_long_01.wav",
-   "name": "808 E1 LONG 01"
-  },
-  {
-   "file": "bb_808_e1_long_02.wav",
-   "name": "808 E1 LONG 02"
-  },
-  {
-   "file": "bb_808_e1_long_03.wav",
-   "name": "808 E1 LONG 03"
-  },
-  {
-   "file": "bb_808_e1_long_04.wav",
-   "name": "808 E1 LONG 04"
-  },
-  {
-   "file": "bb_808_e1_long_05.wav",
-   "name": "808 E1 LONG 05"
-  },
-  {
-   "file": "bb_808_e1_short_01.wav",
-   "name": "808 E1 SHORT 01"
-  },
-  {
-   "file": "bb_808_e1_short_02.wav",
-   "name": "808 E1 SHORT 02"
-  },
-  {
-   "file": "bb_808_e1_short_03.wav",
-   "name": "808 E1 SHORT 03"
-  },
-  {
-   "file": "bb_808_e1_short_04.wav",
-   "name": "808 E1 SHORT 04"
+   "name": "CHOSEN D1 808"
   },
   {
    "file": "bb_808_e1_short_05.wav",
-   "name": "808 E1 SHORT 05"
-  },
-  {
-   "file": "bb_808_fs1_01.wav",
-   "name": "808 F#1 01"
-  },
-  {
-   "file": "bb_808_fs1_02.wav",
-   "name": "808 F#1 02"
-  },
-  {
-   "file": "bb_808_fs1_short_01.wav",
-   "name": "808 F#1 SHORT 01"
-  },
-  {
-   "file": "bb_808_fs1_short_02.wav",
-   "name": "808 F#1 SHORT 02"
-  },
-  {
-   "file": "bb_808_f1_01.wav",
-   "name": "808 F1 01"
-  },
-  {
-   "file": "bb_808_f1_02.wav",
-   "name": "808 F1 02"
-  },
-  {
-   "file": "bb_808_f1_03.wav",
-   "name": "808 F1 03"
-  },
-  {
-   "file": "bb_808_f1_04.wav",
-   "name": "808 F1 04"
-  },
-  {
-   "file": "bb_808_f1_05.wav",
-   "name": "808 F1 05"
-  },
-  {
-   "file": "bb_808_f1_06.wav",
-   "name": "808 F1 06"
-  },
-  {
-   "file": "bb_808_f1_07.wav",
-   "name": "808 F1 07"
-  },
-  {
-   "file": "bb_808_f1_08.wav",
-   "name": "808 F1 08"
-  },
-  {
-   "file": "bb_808_f1_09.wav",
-   "name": "808 F1 09"
-  },
-  {
-   "file": "bb_808_f1_10.wav",
-   "name": "808 F1 10"
-  },
-  {
-   "file": "bb_808_f1_long_01.wav",
-   "name": "808 F1 LONG 01"
+   "name": "CHOSEN E1 808"
   },
   {
    "file": "bb_808_f1_long_02.wav",
-   "name": "808 F1 LONG 02"
+   "name": "CHOSEN F1 808"
   },
   {
-   "file": "bb_808_f1_long_03.wav",
-   "name": "808 F1 LONG 03"
+   "file": "bb_808_d1_03.wav",
+   "name": "COSMIC D1 808"
   },
   {
-   "file": "bb_808_f1_long_04.wav",
-   "name": "808 F1 LONG 04"
+   "file": "bb_808_d1_06.wav",
+   "name": "COSMIC D1 V2 808"
   },
   {
-   "file": "bb_808_f1_long_05.wav",
-   "name": "808 F1 LONG 05"
+   "file": "bb_808_d1_02.wav",
+   "name": "CROWN D1 808"
   },
   {
-   "file": "bb_808_f1_short_01.wav",
-   "name": "808 F1 SHORT 01"
+   "file": "bb_808_d1_long_03.wav",
+   "name": "CROWN D1 V2 808"
+  },
+  {
+   "file": "bb_808_d1_05.wav",
+   "name": "DEMON 13 D1 808"
+  },
+  {
+   "file": "bb_808_f1_04.wav",
+   "name": "DEMON 13 F1 808"
   },
   {
    "file": "bb_808_gs1_01.wav",
-   "name": "808 G#1 01"
+   "name": "DEMON 14 808"
+  },
+  {
+   "file": "bb_808_d1_09.wav",
+   "name": "DEMON 15 D1 808"
+  },
+  {
+   "file": "bb_808_e1_10.wav",
+   "name": "DEMON 15 E1 808"
   },
   {
    "file": "bb_808_gs1_02.wav",
-   "name": "808 G#1 02"
+   "name": "DEMON 16 808"
   },
   {
-   "file": "bb_808_g1_01.wav",
-   "name": "808 G1 01"
+   "file": "bb_808_e1_short_03.wav",
+   "name": "DEMON 17 808"
   },
   {
-   "file": "bb_808_g1_02.wav",
-   "name": "808 G1 02"
+   "file": "bb_808_e1_08.wav",
+   "name": "DEMON 2 808"
   },
   {
-   "file": "bb_808_g1_03.wav",
-   "name": "808 G1 03"
+   "file": "bb_808_d1_long_05.wav",
+   "name": "DEMON 3 D1 808"
   },
   {
-   "file": "bb_808_g1_04.wav",
-   "name": "808 G1 04"
+   "file": "bb_808_e1_long_01.wav",
+   "name": "DEMON 3 E1 808"
   },
   {
-   "file": "bb_808_g1_05.wav",
-   "name": "808 G1 05"
+   "file": "bb_808_e1_09.wav",
+   "name": "DEMON 4 808"
   },
   {
-   "file": "bb_808_g1_06.wav",
-   "name": "808 G1 06"
-  },
-  {
-   "file": "bb_808_g1_long_01.wav",
-   "name": "808 G1 LONG 01"
+   "file": "bb_808_f1_10.wav",
+   "name": "DEMON 5 808"
   },
   {
    "file": "bb_808_g1_short_01.wav",
-   "name": "808 G1 SHORT 01"
+   "name": "DEMON 6 808"
   },
   {
-   "file": "bb_808_g1_short_02.wav",
-   "name": "808 G1 SHORT 02"
+   "file": "bb_808_d1_07.wav",
+   "name": "DEMON 9 808"
   },
   {
-   "file": "bb_808_g1_short_03.wav",
-   "name": "808 G1 SHORT 03"
+   "file": "bb_808_ds1_long_01.wav",
+   "name": "DEMONS FAVORITE 3 D#1 808"
   },
   {
-   "file": "bb_808_g1_short_04.wav",
-   "name": "808 G1 SHORT 04"
+   "file": "bb_808_f1_long_01.wav",
+   "name": "DEMONS FAVORITE 3 F1 808"
   },
   {
    "file": "bb_808_g1_short_05.wav",
-   "name": "808 G1 SHORT 05"
+   "name": "DOPE BOY V1 808"
   },
   {
-   "file": "bb_beads_01.wav",
-   "name": "BEADS 01"
+   "file": "bb_808_d1_short_03.wav",
+   "name": "DOPE BOY V3 808"
   },
   {
-   "file": "bb_beads_02.wav",
-   "name": "BEADS 02"
+   "file": "bb_808_e1_long_02.wav",
+   "name": "GEO E1 808"
   },
   {
-   "file": "bb_clave_01.wav",
-   "name": "CLAVE 01"
+   "file": "bb_808_fs1_short_01.wav",
+   "name": "GEO F#1 808"
   },
   {
-   "file": "bb_perc_click_01.wav",
-   "name": "PERC CLICK 01"
+   "file": "bb_808_d1_08.wav",
+   "name": "GO2SPINZ D1 808"
   },
   {
-   "file": "bb_perc_click_02.wav",
-   "name": "PERC CLICK 02"
+   "file": "bb_808_f1_09.wav",
+   "name": "GO2SPINZ F1 808"
   },
   {
-   "file": "bb_perc_hit_01.wav",
-   "name": "PERC HIT 01"
+   "file": "bb_808_g1_short_02.wav",
+   "name": "GO2SPINZ G1 808"
   },
   {
-   "file": "bb_perc_hit_02.wav",
-   "name": "PERC HIT 02"
+   "file": "bb_808_g1_short_04.wav",
+   "name": "GO2SPINZ G1 V2 808"
   },
   {
-   "file": "bb_perc_hit_03.wav",
-   "name": "PERC HIT 03"
+   "file": "bb_808_a1_short_01.wav",
+   "name": "GO2ZAY A1 808"
   },
   {
-   "file": "bb_perc_hit_04.wav",
-   "name": "PERC HIT 04"
+   "file": "bb_808_e1_short_04.wav",
+   "name": "GO2ZAY E1 808"
   },
   {
-   "file": "bb_perc_hit_05.wav",
-   "name": "PERC HIT 05"
+   "file": "bb_808_f1_short_01.wav",
+   "name": "GO2ZAY F1 808"
   },
   {
-   "file": "bb_perc_hit_06.wav",
-   "name": "PERC HIT 06"
+   "file": "bb_808_d1_short_01.wav",
+   "name": "GROUNDED D1 808"
   },
   {
-   "file": "bb_perc_hit_07.wav",
-   "name": "PERC HIT 07"
+   "file": "bb_808_e1_long_04.wav",
+   "name": "GROUNDED E1 808"
   },
   {
-   "file": "bb_perc_hit_08.wav",
-   "name": "PERC HIT 08"
+   "file": "bb_808_e1_short_02.wav",
+   "name": "GROUNDED E1 V2 808"
   },
   {
-   "file": "bb_perc_hit_09.wav",
-   "name": "PERC HIT 09"
+   "file": "bb_808_f1_long_03.wav",
+   "name": "GROUNDED F1 808"
   },
   {
-   "file": "bb_perc_hit_10.wav",
-   "name": "PERC HIT 10"
+   "file": "bb_808_d1_04.wav",
+   "name": "HANDS D1 808"
   },
   {
-   "file": "bb_perc_hit_11.wav",
-   "name": "PERC HIT 11"
+   "file": "bb_808_e1_03.wav",
+   "name": "HANDS E1 808"
   },
   {
-   "file": "bb_perc_hit_12.wav",
-   "name": "PERC HIT 12"
+   "file": "bb_808_f1_05.wav",
+   "name": "HANDS F1 808"
   },
   {
-   "file": "bb_perc_hit_13.wav",
-   "name": "PERC HIT 13"
+   "file": "bb_808_d1_long_02.wav",
+   "name": "ITADORI D1 808"
   },
   {
-   "file": "bb_perc_hit_14.wav",
-   "name": "PERC HIT 14"
+   "file": "bb_808_e1_02.wav",
+   "name": "ITADORI E1 808"
   },
   {
-   "file": "bb_perc_hit_15.wav",
-   "name": "PERC HIT 15"
+   "file": "bb_808_a1_long_01.wav",
+   "name": "JIRO A1 808"
   },
   {
-   "file": "bb_perc_hit_16.wav",
-   "name": "PERC HIT 16"
+   "file": "bb_808_e1_long_03.wav",
+   "name": "JIRO E1 808"
   },
   {
-   "file": "bb_perc_hit_17.wav",
-   "name": "PERC HIT 17"
+   "file": "bb_808_f1_long_04.wav",
+   "name": "JIRO F1 808"
   },
   {
-   "file": "bb_perc_hit_18.wav",
-   "name": "PERC HIT 18"
+   "file": "bb_808_fs1_short_02.wav",
+   "name": "JOGO F#1 808"
   },
   {
-   "file": "bb_perc_hit_19.wav",
-   "name": "PERC HIT 19"
+   "file": "bb_808_g1_03.wav",
+   "name": "JOGO G1 808"
   },
   {
-   "file": "bb_perc_hit_20.wav",
-   "name": "PERC HIT 20"
+   "file": "bb_808_g1_short_03.wav",
+   "name": "JOGO G1 V2 808"
   },
   {
-   "file": "bb_perc_hit_21.wav",
-   "name": "PERC HIT 21"
+   "file": "bb_808_e1_01.wav",
+   "name": "MADE E1 808"
   },
   {
-   "file": "bb_perc_metal_01.wav",
-   "name": "PERC METAL 01"
+   "file": "bb_808_f1_07.wav",
+   "name": "MADE F1 808"
   },
   {
-   "file": "bb_perc_metal_02.wav",
-   "name": "PERC METAL 02"
+   "file": "bb_808_d1_01.wav",
+   "name": "NEPTUNE 808"
   },
   {
-   "file": "bb_perc_metal_03.wav",
-   "name": "PERC METAL 03"
+   "file": "bb_808_f1_03.wav",
+   "name": "SEALED F1 808"
   },
   {
-   "file": "bb_perc_wood_01.wav",
-   "name": "PERC WOOD 01"
+   "file": "bb_808_g1_01.wav",
+   "name": "SEALED G1 808"
   },
   {
-   "file": "bb_perc_wood_02.wav",
-   "name": "PERC WOOD 02"
+   "file": "bb_808_e1_long_05.wav",
+   "name": "SUKUNA E1 808"
   },
   {
-   "file": "bb_perc_wood_03.wav",
-   "name": "PERC WOOD 03"
+   "file": "bb_808_f1_long_05.wav",
+   "name": "SUKUNA F1 808"
   },
   {
-   "file": "bb_perc_wood_04.wav",
-   "name": "PERC WOOD 04"
+   "file": "bb_808_g1_long_01.wav",
+   "name": "SUKUNA G1 808"
   },
   {
-   "file": "bb_perc_wood_05.wav",
-   "name": "PERC WOOD 05"
+   "file": "bb_808_d1_long_01.wav",
+   "name": "TOJI D1 808"
   },
   {
-   "file": "bb_perc_wood_06.wav",
-   "name": "PERC WOOD 06"
+   "file": "bb_808_d1_short_02.wav",
+   "name": "TOJI D1 V2 808"
   },
   {
-   "file": "bb_perc_wood_07.wav",
-   "name": "PERC WOOD 07"
+   "file": "bb_808_e1_04.wav",
+   "name": "TOJI E1 808"
   },
   {
-   "file": "bb_perc_wood_08.wav",
-   "name": "PERC WOOD 08"
+   "file": "bb_808_f1_08.wav",
+   "name": "TOJI F1 808"
   },
   {
-   "file": "bb_perc_wood_09.wav",
-   "name": "PERC WOOD 09"
+   "file": "bb_808_a1_01.wav",
+   "name": "VACUUM A1 808"
   },
   {
-   "file": "bb_perc_wood_10.wav",
-   "name": "PERC WOOD 10"
+   "file": "bb_808_e1_05.wav",
+   "name": "VACUUM E1 808"
   },
   {
-   "file": "bb_perc_wood_11.wav",
-   "name": "PERC WOOD 11"
+   "file": "bb_808_e1_06.wav",
+   "name": "VACUUM E1 V2 808"
   },
   {
-   "file": "bb_perc_wood_12.wav",
-   "name": "PERC WOOD 12"
+   "file": "bb_808_e1_07.wav",
+   "name": "VACUUM E1 V3 808"
   },
   {
-   "file": "bb_perc_wood_13.wav",
-   "name": "PERC WOOD 13"
+   "file": "bb_808_e1_short_01.wav",
+   "name": "VACUUM E1 V4 808"
   },
   {
-   "file": "bb_perc_wood_14.wav",
-   "name": "PERC WOOD 14"
+   "file": "bb_808_fs1_01.wav",
+   "name": "VACUUM F#1 808"
   },
   {
-   "file": "bb_perc_wood_15.wav",
-   "name": "PERC WOOD 15"
+   "file": "bb_808_fs1_02.wav",
+   "name": "VACUUM F#1 V2 808"
   },
   {
-   "file": "bb_perc_wood_16.wav",
-   "name": "PERC WOOD 16"
+   "file": "bb_808_f1_01.wav",
+   "name": "VACUUM F1 808"
   },
   {
-   "file": "bb_perc_wood_17.wav",
-   "name": "PERC WOOD 17"
+   "file": "bb_808_f1_02.wav",
+   "name": "VACUUM F1 V2 808"
   },
   {
-   "file": "bb_perc_wood_18.wav",
-   "name": "PERC WOOD 18"
+   "file": "bb_808_f1_06.wav",
+   "name": "VACUUM F1 V3 808"
   },
   {
-   "file": "bb_perc_wood_19.wav",
-   "name": "PERC WOOD 19"
+   "file": "bb_808_g1_02.wav",
+   "name": "VACUUM G1 808"
   },
   {
-   "file": "bb_perc_wood_20.wav",
-   "name": "PERC WOOD 20"
+   "file": "bb_808_g1_04.wav",
+   "name": "VACUUM G1 V2 808"
   },
   {
-   "file": "bb_perc_wood_21.wav",
-   "name": "PERC WOOD 21"
+   "file": "bb_808_g1_05.wav",
+   "name": "VACUUM G1 V3 808"
   },
   {
-   "file": "bb_perc_wood_22.wav",
-   "name": "PERC WOOD 22"
+   "file": "bb_808_g1_06.wav",
+   "name": "VACUUM G1 V4 808"
   },
   {
-   "file": "bb_perc_wood_23.wav",
-   "name": "PERC WOOD 23"
+   "file": "bb_clap_wide_13.wav",
+   "name": "ALONE CLAP"
   },
   {
-   "file": "bb_perc_wood_24.wav",
-   "name": "PERC WOOD 24"
+   "file": "bb_clap_tight_12.wav",
+   "name": "ASTEROIDS CLAP"
   },
   {
-   "file": "bb_perc_wood_25.wav",
-   "name": "PERC WOOD 25"
-  },
-  {
-   "file": "bb_perc_wood_26.wav",
-   "name": "PERC WOOD 26"
-  },
-  {
-   "file": "bb_shaker_01.wav",
-   "name": "SHAKER 01"
-  },
-  {
-   "file": "bb_shaker_02.wav",
-   "name": "SHAKER 02"
-  },
-  {
-   "file": "bb_shaker_03.wav",
-   "name": "SHAKER 03"
-  },
-  {
-   "file": "bb_shaker_04.wav",
-   "name": "SHAKER 04"
-  },
-  {
-   "file": "bb_shaker_05.wav",
-   "name": "SHAKER 05"
-  },
-  {
-   "file": "bb_shaker_06.wav",
-   "name": "SHAKER 06"
+   "file": "bb_clap_tight_14.wav",
+   "name": "ASTEROIDS V2 CLAP"
   },
   {
    "file": "bb_shaker_07.wav",
-   "name": "SHAKER 07"
+   "name": "ASTEROIDS V3 CLAP"
   },
   {
-   "file": "bb_shaker_08.wav",
-   "name": "SHAKER 08"
+   "file": "bb_clap_tight_10.wav",
+   "name": "CLOCK CLAP"
   },
   {
-   "file": "bb_shaker_09.wav",
-   "name": "SHAKER 09"
+   "file": "bb_clap_tight_20.wav",
+   "name": "DEMON 15 CLAP"
   },
   {
-   "file": "bb_shaker_10.wav",
-   "name": "SHAKER 10"
+   "file": "bb_clap_tight_23.wav",
+   "name": "DEMON 15 V2 CLAP"
   },
   {
-   "file": "bb_shaker_11.wav",
-   "name": "SHAKER 11"
+   "file": "bb_clap_room_04.wav",
+   "name": "DEMON 17 CLAP"
   },
   {
-   "file": "bb_shaker_12.wav",
-   "name": "SHAKER 12"
+   "file": "bb_clap_room_06.wav",
+   "name": "DEMON 17 V2 CLAP"
   },
   {
-   "file": "bb_shaker_13.wav",
-   "name": "SHAKER 13"
+   "file": "bb_clap_tight_22.wav",
+   "name": "DEMON 19 CLAP"
   },
   {
-   "file": "bb_shaker_14.wav",
-   "name": "SHAKER 14"
+   "file": "bb_clap_room_05.wav",
+   "name": "DEMON 2 CLAP"
   },
   {
-   "file": "bb_shaker_15.wav",
-   "name": "SHAKER 15"
+   "file": "bb_clap_tight_21.wav",
+   "name": "DEMON 3 CLAP"
   },
   {
-   "file": "bb_shaker_16.wav",
-   "name": "SHAKER 16"
+   "file": "bb_clap_wide_10.wav",
+   "name": "ENGULFED CLAP"
   },
   {
-   "file": "bb_tamb_01.wav",
-   "name": "TAMB 01"
+   "file": "bb_clap_wide_11.wav",
+   "name": "GALACTIC CLAP"
   },
   {
-   "file": "bb_tamb_02.wav",
-   "name": "TAMB 02"
+   "file": "bb_clap_wide_12.wav",
+   "name": "GALACTIC V2 CLAP"
   },
   {
-   "file": "bb_tamb_03.wav",
-   "name": "TAMB 03"
+   "file": "bb_clap_wide_14.wav",
+   "name": "GALACTIC V3 CLAP"
   },
   {
-   "file": "bb_tamb_04.wav",
-   "name": "TAMB 04"
+   "file": "bb_clap_wide_15.wav",
+   "name": "GALACTIC V4 CLAP"
   },
   {
-   "file": "bb_tamb_05.wav",
-   "name": "TAMB 05"
+   "file": "bb_clap_room_03.wav",
+   "name": "GOTO CLAP"
   },
   {
-   "file": "bb_triangle_01.wav",
-   "name": "TRIANGLE 01"
+   "file": "bb_clap_tight_27.wav",
+   "name": "HOME CLAP"
   },
   {
-   "file": "bb_tom_high_01.wav",
-   "name": "TOM HIGH 01"
+   "file": "bb_clap_tight_30.wav",
+   "name": "HOME V2 CLAP"
   },
   {
-   "file": "bb_tom_high_02.wav",
-   "name": "TOM HIGH 02"
+   "file": "bb_clap_room_01.wav",
+   "name": "HUSH CLAP"
   },
   {
-   "file": "bb_tom_high_03.wav",
-   "name": "TOM HIGH 03"
+   "file": "bb_clap_tight_24.wav",
+   "name": "IBIZA CLAP"
   },
   {
-   "file": "bb_tom_high_04.wav",
-   "name": "TOM HIGH 04"
+   "file": "bb_clap_tight_11.wav",
+   "name": "INTERSTELLAR CLAP"
   },
   {
-   "file": "bb_tom_high_05.wav",
-   "name": "TOM HIGH 05"
+   "file": "bb_clap_tight_13.wav",
+   "name": "INTERSTELLAR V2 CLAP"
   },
   {
-   "file": "bb_tom_high_06.wav",
-   "name": "TOM HIGH 06"
+   "file": "bb_clap_tight_18.wav",
+   "name": "KENZO CLAP"
   },
   {
-   "file": "bb_tom_high_07.wav",
-   "name": "TOM HIGH 07"
+   "file": "bb_clap_tight_17.wav",
+   "name": "KIA CLAP"
   },
   {
-   "file": "bb_tom_high_08.wav",
-   "name": "TOM HIGH 08"
+   "file": "bb_clap_wide_16.wav",
+   "name": "LEVELS CLAP"
   },
   {
-   "file": "bb_tom_high_09.wav",
-   "name": "TOM HIGH 09"
+   "file": "bb_clap_tight_26.wav",
+   "name": "MINDFUL CLAP"
   },
   {
-   "file": "bb_tom_high_10.wav",
-   "name": "TOM HIGH 10"
+   "file": "bb_clap_tight_29.wav",
+   "name": "MINDFUL V2 CLAP"
   },
   {
-   "file": "bb_tom_high_11.wav",
-   "name": "TOM HIGH 11"
+   "file": "bb_clap_dusty_01.wav",
+   "name": "MOTIVE CLAP"
   },
   {
-   "file": "bb_tom_low_01.wav",
-   "name": "TOM LOW 01"
+   "file": "bb_clap_tight_32.wav",
+   "name": "OG 11 CLAP"
   },
   {
-   "file": "bb_tom_low_02.wav",
-   "name": "TOM LOW 02"
+   "file": "bb_clap_tight_15.wav",
+   "name": "OG 12 CLAP"
   },
   {
-   "file": "bb_tom_low_03.wav",
-   "name": "TOM LOW 03"
+   "file": "bb_clap_tight_28.wav",
+   "name": "OG 3 CLAP"
   },
   {
-   "file": "bb_tom_low_04.wav",
-   "name": "TOM LOW 04"
+   "file": "bb_clap_tight_31.wav",
+   "name": "OG 5 CLAP"
   },
   {
-   "file": "bb_tom_low_05.wav",
-   "name": "TOM LOW 05"
+   "file": "bb_clap_tight_25.wav",
+   "name": "OG 7 CLAP"
   },
   {
-   "file": "bb_tom_low_06.wav",
-   "name": "TOM LOW 06"
+   "file": "bb_clap_tight_33.wav",
+   "name": "OG 8 CLAP"
   },
   {
-   "file": "bb_tom_low_07.wav",
-   "name": "TOM LOW 07"
+   "file": "bb_clap_tight_02.wav",
+   "name": "PLANETS CLAP"
   },
   {
-   "file": "bb_tom_low_08.wav",
-   "name": "TOM LOW 08"
+   "file": "bb_clap_tight_04.wav",
+   "name": "PLANETS V2 CLAP"
   },
   {
-   "file": "bb_tom_low_09.wav",
-   "name": "TOM LOW 09"
+   "file": "bb_clap_tight_05.wav",
+   "name": "PLANETS V3 CLAP"
   },
   {
-   "file": "bb_tom_low_10.wav",
-   "name": "TOM LOW 10"
+   "file": "bb_clap_tight_06.wav",
+   "name": "PLANETS V4 CLAP"
   },
   {
-   "file": "bb_tom_low_11.wav",
-   "name": "TOM LOW 11"
+   "file": "bb_clap_tight_08.wav",
+   "name": "RIVAL CLAP"
   },
   {
-   "file": "bb_tom_low_12.wav",
-   "name": "TOM LOW 12"
+   "file": "bb_clap_tight_19.wav",
+   "name": "RULERS CLAP"
   },
   {
-   "file": "bb_tom_low_13.wav",
-   "name": "TOM LOW 13"
+   "file": "bb_clap_wide_08.wav",
+   "name": "SOFT METAL CLAP"
   },
   {
-   "file": "bb_tom_low_14.wav",
-   "name": "TOM LOW 14"
+   "file": "bb_clap_wide_09.wav",
+   "name": "SOFT METAL V2 CLAP"
   },
   {
-   "file": "bb_tom_low_15.wav",
-   "name": "TOM LOW 15"
+   "file": "bb_clap_wide_04.wav",
+   "name": "SORCERER 3 CLAP"
   },
   {
-   "file": "bb_tom_low_16.wav",
-   "name": "TOM LOW 16"
+   "file": "bb_clap_wide_05.wav",
+   "name": "SORCERER CLAP"
   },
   {
-   "file": "bb_tom_low_17.wav",
-   "name": "TOM LOW 17"
+   "file": "bb_clap_wide_06.wav",
+   "name": "SORCERER V2 CLAP"
   },
   {
-   "file": "bb_tom_low_18.wav",
-   "name": "TOM LOW 18"
+   "file": "bb_clap_tight_16.wav",
+   "name": "SUNG JIN WOO CLAP"
   },
   {
-   "file": "bb_tom_low_19.wav",
-   "name": "TOM LOW 19"
-  },
-  {
-   "file": "bb_tom_low_20.wav",
-   "name": "TOM LOW 20"
-  },
-  {
-   "file": "bb_cymbal_crash_01.wav",
-   "name": "CYMBAL CRASH 01"
-  },
-  {
-   "file": "bb_cymbal_crash_02.wav",
-   "name": "CYMBAL CRASH 02"
-  },
-  {
-   "file": "bb_cymbal_crash_03.wav",
-   "name": "CYMBAL CRASH 03"
-  },
-  {
-   "file": "bb_cymbal_crash_04.wav",
-   "name": "CYMBAL CRASH 04"
-  },
-  {
-   "file": "bb_cymbal_crash_05.wav",
-   "name": "CYMBAL CRASH 05"
-  },
-  {
-   "file": "bb_cymbal_crash_06.wav",
-   "name": "CYMBAL CRASH 06"
-  },
-  {
-   "file": "bb_cymbal_crash_07.wav",
-   "name": "CYMBAL CRASH 07"
+   "file": "bb_clap_room_02.wav",
+   "name": "TANK CLAP"
   },
   {
    "file": "bb_cymbal_crash_08.wav",
-   "name": "CYMBAL CRASH 08"
+   "name": "BACKYARD CYMBAL"
   },
   {
-   "file": "bb_cymbal_crash_09.wav",
-   "name": "CYMBAL CRASH 09"
-  },
-  {
-   "file": "bb_cymbal_ride_01.wav",
-   "name": "CYMBAL RIDE 01"
-  },
-  {
-   "file": "bb_cymbal_ride_02.wav",
-   "name": "CYMBAL RIDE 02"
-  },
-  {
-   "file": "bb_cymbal_ride_03.wav",
-   "name": "CYMBAL RIDE 03"
-  },
-  {
-   "file": "bb_cymbal_ride_04.wav",
-   "name": "CYMBAL RIDE 04"
+   "file": "bb_cymbal_crash_02.wav",
+   "name": "CLASSICS CYMBAL"
   },
   {
    "file": "bb_cymbal_ride_05.wav",
-   "name": "CYMBAL RIDE 05"
+   "name": "COMPRESSED RIDE"
   },
   {
    "file": "bb_cymbal_ride_06.wav",
-   "name": "CYMBAL RIDE 06"
+   "name": "COMPRESSED V2 RIDE"
   },
   {
    "file": "bb_cymbal_ride_07.wav",
-   "name": "CYMBAL RIDE 07"
+   "name": "COMPRESSED V3 RIDE"
   },
   {
    "file": "bb_cymbal_ride_08.wav",
-   "name": "CYMBAL RIDE 08"
+   "name": "COMPRESSED V4 RIDE"
   },
   {
-   "file": "bb_cymbal_short_01.wav",
-   "name": "CYMBAL SHORT 01"
+   "file": "bb_cymbal_crash_09.wav",
+   "name": "EXPRESS CYMBAL"
   },
   {
-   "file": "bb_cymbal_short_02.wav",
-   "name": "CYMBAL SHORT 02"
+   "file": "bb_cymbal_crash_03.wav",
+   "name": "LOCKS CYMBAL"
   },
   {
-   "file": "bb_cymbal_short_03.wav",
-   "name": "CYMBAL SHORT 03"
-  },
-  {
-   "file": "bb_cymbal_short_04.wav",
-   "name": "CYMBAL SHORT 04"
+   "file": "bb_cymbal_crash_01.wav",
+   "name": "MARCHING CRASH"
   },
   {
    "file": "bb_cymbal_short_05.wav",
-   "name": "CYMBAL SHORT 05"
+   "name": "NEWS CYMBAL"
   },
   {
-   "file": "bb_fx_atmos_01.wav",
-   "name": "FX ATMOS 01"
+   "file": "bb_cymbal_crash_07.wav",
+   "name": "ORGANIC CYMBAL"
   },
   {
-   "file": "bb_fx_atmos_02.wav",
-   "name": "FX ATMOS 02"
+   "file": "bb_cymbal_crash_06.wav",
+   "name": "PLANES CRASH"
   },
   {
-   "file": "bb_fx_atmos_03.wav",
-   "name": "FX ATMOS 03"
+   "file": "bb_cymbal_crash_05.wav",
+   "name": "REAL CYMBAL"
+  },
+  {
+   "file": "bb_cymbal_short_02.wav",
+   "name": "STREAM CYMBAL"
+  },
+  {
+   "file": "bb_cymbal_ride_01.wav",
+   "name": "TRIPPY RIDE"
+  },
+  {
+   "file": "bb_cymbal_ride_02.wav",
+   "name": "TRIPPY V2 RIDE"
+  },
+  {
+   "file": "bb_cymbal_ride_03.wav",
+   "name": "TRIPPY V3 RIDE"
+  },
+  {
+   "file": "bb_cymbal_ride_04.wav",
+   "name": "TRIPPY V4 RIDE"
+  },
+  {
+   "file": "bb_cymbal_crash_04.wav",
+   "name": "YOTO CRASH"
   },
   {
    "file": "bb_fx_atmos_04.wav",
-   "name": "FX ATMOS 04"
+   "name": "BIRD AMBIENCE TEXTURE"
   },
   {
-   "file": "bb_fx_atmos_05.wav",
-   "name": "FX ATMOS 05"
-  },
-  {
-   "file": "bb_fx_hit_01.wav",
-   "name": "FX HIT 01"
-  },
-  {
-   "file": "bb_fx_hit_02.wav",
-   "name": "FX HIT 02"
-  },
-  {
-   "file": "bb_fx_hit_03.wav",
-   "name": "FX HIT 03"
-  },
-  {
-   "file": "bb_fx_hit_04.wav",
-   "name": "FX HIT 04"
-  },
-  {
-   "file": "bb_fx_hit_05.wav",
-   "name": "FX HIT 05"
-  },
-  {
-   "file": "bb_fx_hit_06.wav",
-   "name": "FX HIT 06"
-  },
-  {
-   "file": "bb_fx_hit_07.wav",
-   "name": "FX HIT 07"
-  },
-  {
-   "file": "bb_fx_reverse_01.wav",
-   "name": "FX REVERSE 01"
-  },
-  {
-   "file": "bb_fx_reverse_02.wav",
-   "name": "FX REVERSE 02"
-  },
-  {
-   "file": "bb_fx_reverse_03.wav",
-   "name": "FX REVERSE 03"
+   "file": "bb_fx_atmos_03.wav",
+   "name": "COLD WINTER TEXTURE"
   },
   {
    "file": "bb_fx_reverse_04.wav",
-   "name": "FX REVERSE 04"
+   "name": "GHOSTS TRIANGLE RISER"
+  },
+  {
+   "file": "bb_fx_hit_04.wav",
+   "name": "SR 2 DIRTY FX"
+  },
+  {
+   "file": "bb_fx_hit_05.wav",
+   "name": "SR 2 FX"
+  },
+  {
+   "file": "bb_fx_hit_03.wav",
+   "name": "SR 4 FX"
+  },
+  {
+   "file": "bb_hat_crisp_35.wav",
+   "name": "BASED HAT"
+  },
+  {
+   "file": "bb_hat_dark_31.wav",
+   "name": "BLUE LOCK HAT"
+  },
+  {
+   "file": "bb_hat_crisp_26.wav",
+   "name": "BONES HAT"
+  },
+  {
+   "file": "bb_hat_crisp_29.wav",
+   "name": "CASCADE HAT"
+  },
+  {
+   "file": "bb_hat_crisp_34.wav",
+   "name": "CASCADE V2 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_07.wav",
+   "name": "CASES HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_30.wav",
+   "name": "CHARM HAT"
+  },
+  {
+   "file": "bb_hat_dark_12.wav",
+   "name": "CLICKED HIHAT"
+  },
+  {
+   "file": "bb_fx_reverse_02.wav",
+   "name": "CLICKED REV HIHAT"
   },
   {
    "file": "bb_fx_reverse_05.wav",
-   "name": "FX REVERSE 05"
+   "name": "CLICKED REV V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_14.wav",
+   "name": "CLICKED V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_28.wav",
+   "name": "CONTROL HAT"
+  },
+  {
+   "file": "bb_hat_crisp_31.wav",
+   "name": "CONTROL V2 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_32.wav",
+   "name": "CONTROL V3 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_33.wav",
+   "name": "CONTROL V4 HAT"
+  },
+  {
+   "file": "bb_hat_dark_03.wav",
+   "name": "DEMON 1 HAT"
+  },
+  {
+   "file": "bb_hat_dark_04.wav",
+   "name": "DEMON 1 V2 HAT"
+  },
+  {
+   "file": "bb_hat_dark_09.wav",
+   "name": "DEMON 1 V3 HAT"
+  },
+  {
+   "file": "bb_hat_dark_29.wav",
+   "name": "DEMON 2 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_02.wav",
+   "name": "DEMON 3 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_18.wav",
+   "name": "DEMON 5 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_23.wav",
+   "name": "DEMON 5 V2 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_05.wav",
+   "name": "DEMON 6 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_08.wav",
+   "name": "DEMON 7 HAT"
+  },
+  {
+   "file": "bb_hat_dark_13.wav",
+   "name": "ENIGMA HAT"
+  },
+  {
+   "file": "bb_hat_dark_28.wav",
+   "name": "EXPLORER HAT"
+  },
+  {
+   "file": "bb_hat_dark_32.wav",
+   "name": "EXPLORER V2 HAT"
+  },
+  {
+   "file": "bb_shaker_14.wav",
+   "name": "EXPLORER V3 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_16.wav",
+   "name": "FLICKER HAT"
+  },
+  {
+   "file": "bb_hat_crisp_17.wav",
+   "name": "FLICKER V2 HAT"
+  },
+  {
+   "file": "bb_hat_dark_07.wav",
+   "name": "GOLDEN HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_08.wav",
+   "name": "GOLDEN V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_10.wav",
+   "name": "GOLDEN V3 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_11.wav",
+   "name": "GOLDEN V4 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_16.wav",
+   "name": "INTRO HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_17.wav",
+   "name": "INTRO V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_18.wav",
+   "name": "INTRO V3 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_19.wav",
+   "name": "KNIGHT HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_22.wav",
+   "name": "LAMP HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_24.wav",
+   "name": "LAMP V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_dusty_01.wav",
+   "name": "LOWPITCH HIHAT"
+  },
+  {
+   "file": "bb_hat_dusty_02.wav",
+   "name": "LOWPITCH V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_25.wav",
+   "name": "MIRAGE HAT"
+  },
+  {
+   "file": "bb_hat_dark_27.wav",
+   "name": "NAME HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_01.wav",
+   "name": "OPINIONS HAT"
+  },
+  {
+   "file": "bb_fx_reverse_03.wav",
+   "name": "POP REV HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_22.wav",
+   "name": "PRISM HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_23.wav",
+   "name": "PRISM V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_25.wav",
+   "name": "PRISM V3 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_26.wav",
+   "name": "PRISM V4 HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_19.wav",
+   "name": "RADIANT HAT"
+  },
+  {
+   "file": "bb_hat_crisp_21.wav",
+   "name": "RIGHTTHROUGH HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_11.wav",
+   "name": "ROCKET HAT"
+  },
+  {
+   "file": "bb_hat_crisp_13.wav",
+   "name": "ROCKET V2 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_14.wav",
+   "name": "ROCKET V3 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_15.wav",
+   "name": "ROCKET V4 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_09.wav",
+   "name": "SHIFTED HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_10.wav",
+   "name": "SHIFTED V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_05.wav",
+   "name": "SMITHER 2 HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_06.wav",
+   "name": "SMITHER 2 V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_20.wav",
+   "name": "SONIC HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_27.wav",
+   "name": "SONIC V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_03.wav",
+   "name": "TECH HAT"
+  },
+  {
+   "file": "bb_hat_crisp_04.wav",
+   "name": "TECH V2 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_30.wav",
+   "name": "THOUGHTS HAT"
+  },
+  {
+   "file": "bb_hat_dark_15.wav",
+   "name": "THRONE HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_21.wav",
+   "name": "TRIPPED HIHAT"
   },
   {
    "file": "bb_fx_reverse_06.wav",
-   "name": "FX REVERSE 06"
+   "name": "TRIPPED REV HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_20.wav",
+   "name": "TWILIGHT HAT"
+  },
+  {
+   "file": "bb_hat_dark_24.wav",
+   "name": "TWILIGHT V2 HAT"
+  },
+  {
+   "file": "bb_hat_crisp_12.wav",
+   "name": "VELVET HAT"
+  },
+  {
+   "file": "bb_hat_dark_01.wav",
+   "name": "WHATHAPPENED HIHAT"
+  },
+  {
+   "file": "bb_hat_dark_02.wav",
+   "name": "WHATHAPPENED V2 HIHAT"
+  },
+  {
+   "file": "bb_hat_crisp_06.wav",
+   "name": "WRITTINGS HAT"
+  },
+  {
+   "file": "bb_kick_thump_09.wav",
+   "name": "ALCHEMY KICK"
+  },
+  {
+   "file": "bb_kick_knock_19.wav",
+   "name": "ANIGMA KICK"
+  },
+  {
+   "file": "bb_kick_knock_11.wav",
+   "name": "ASTRONOMY KICK"
+  },
+  {
+   "file": "bb_kick_knock_15.wav",
+   "name": "ASTRONOMY V2 KICK"
+  },
+  {
+   "file": "bb_kick_knock_18.wav",
+   "name": "ASTRONOMY V3 KICK"
+  },
+  {
+   "file": "bb_beads_01.wav",
+   "name": "BEADS KICK"
+  },
+  {
+   "file": "bb_kick_thump_10.wav",
+   "name": "BOOKED KICK"
+  },
+  {
+   "file": "bb_kick_knock_08.wav",
+   "name": "BRICK KICK"
+  },
+  {
+   "file": "bb_kick_boom_17.wav",
+   "name": "CALLME KICK"
+  },
+  {
+   "file": "bb_kick_boom_18.wav",
+   "name": "CALLME V2 KICK"
+  },
+  {
+   "file": "bb_kick_boom_22.wav",
+   "name": "CHEAT CODE KICK"
+  },
+  {
+   "file": "bb_kick_knock_21.wav",
+   "name": "CLIPPED KICK"
+  },
+  {
+   "file": "bb_kick_thump_05.wav",
+   "name": "DEMON 1 KICK"
+  },
+  {
+   "file": "bb_kick_thump_03.wav",
+   "name": "DEMON 10 KICK"
+  },
+  {
+   "file": "bb_kick_thump_07.wav",
+   "name": "DEMON 3 KICK"
+  },
+  {
+   "file": "bb_kick_thump_08.wav",
+   "name": "DEMON 3 V2 KICK"
+  },
+  {
+   "file": "bb_kick_boom_24.wav",
+   "name": "DEMON 5 KICK"
+  },
+  {
+   "file": "bb_kick_boom_25.wav",
+   "name": "DEMON 5 V2 KICK"
+  },
+  {
+   "file": "bb_kick_boom_20.wav",
+   "name": "DEMON 7 KICK"
+  },
+  {
+   "file": "bb_kick_boom_13.wav",
+   "name": "DEMON 8 KICK"
+  },
+  {
+   "file": "bb_kick_punch_05.wav",
+   "name": "EXPANSION KICK"
+  },
+  {
+   "file": "bb_kick_knock_20.wav",
+   "name": "FACE KICK"
+  },
+  {
+   "file": "bb_kick_boom_16.wav",
+   "name": "FIST TO FACE KICK"
+  },
+  {
+   "file": "bb_kick_thump_11.wav",
+   "name": "FUNCTION KICK"
+  },
+  {
+   "file": "bb_kick_boom_06.wav",
+   "name": "FUNK KICK"
+  },
+  {
+   "file": "bb_kick_boom_19.wav",
+   "name": "GAME TIME KICK"
+  },
+  {
+   "file": "bb_kick_boom_21.wav",
+   "name": "GAME TIME V2 KICK"
+  },
+  {
+   "file": "bb_kick_thump_04.wav",
+   "name": "HEAVYWEIGHT KICK"
+  },
+  {
+   "file": "bb_kick_thump_06.wav",
+   "name": "HEAVYWEIGHT V2 KICK"
+  },
+  {
+   "file": "bb_kick_boom_11.wav",
+   "name": "HONEST KICK"
+  },
+  {
+   "file": "bb_kick_boom_14.wav",
+   "name": "HONEST V2 KICK"
+  },
+  {
+   "file": "bb_kick_knock_03.wav",
+   "name": "KNOCKGANG KICK"
+  },
+  {
+   "file": "bb_kick_knock_04.wav",
+   "name": "KNOCKGANG V2 KICK"
+  },
+  {
+   "file": "bb_kick_boom_08.wav",
+   "name": "LOFI 1 KICK"
+  },
+  {
+   "file": "bb_kick_boom_10.wav",
+   "name": "LOFI 1 V2 KICK"
+  },
+  {
+   "file": "bb_kick_boom_12.wav",
+   "name": "LOFI 1 V3 KICK"
+  },
+  {
+   "file": "bb_kick_knock_09.wav",
+   "name": "MECHANICS KICK"
+  },
+  {
+   "file": "bb_kick_knock_10.wav",
+   "name": "MECHANICS V2 KICK"
+  },
+  {
+   "file": "bb_kick_knock_14.wav",
+   "name": "MECHANICS V3 KICK"
+  },
+  {
+   "file": "bb_kick_punch_08.wav",
+   "name": "MEGA 2 KICK"
+  },
+  {
+   "file": "bb_tom_low_05.wav",
+   "name": "NETHER KICK"
+  },
+  {
+   "file": "bb_kick_boom_15.wav",
+   "name": "NEVERMIND KICK"
+  },
+  {
+   "file": "bb_kick_punch_06.wav",
+   "name": "NICE ASS KICK"
+  },
+  {
+   "file": "bb_kick_punch_07.wav",
+   "name": "NICE ASS V2 KICK"
+  },
+  {
+   "file": "bb_kick_punch_09.wav",
+   "name": "NICE ASS V3 KICK"
+  },
+  {
+   "file": "bb_kick_thump_01.wav",
+   "name": "OG 1 KICK"
+  },
+  {
+   "file": "bb_kick_boom_01.wav",
+   "name": "POP KICK"
+  },
+  {
+   "file": "bb_kick_thump_02.wav",
+   "name": "PRIME KICK"
+  },
+  {
+   "file": "bb_kick_knock_05.wav",
+   "name": "PUNCH KICK"
+  },
+  {
+   "file": "bb_kick_knock_07.wav",
+   "name": "PUNCH V2 KICK"
+  },
+  {
+   "file": "bb_kick_punch_03.wav",
+   "name": "QUIET POWER KICK"
+  },
+  {
+   "file": "bb_kick_punch_04.wav",
+   "name": "REASON ANALOG KICK"
+  },
+  {
+   "file": "bb_kick_knock_22.wav",
+   "name": "SHAPED KICK"
+  },
+  {
+   "file": "bb_kick_knock_23.wav",
+   "name": "SHAPED V2 KICK"
+  },
+  {
+   "file": "bb_kick_knock_25.wav",
+   "name": "SHAPED V3 KICK"
+  },
+  {
+   "file": "bb_kick_knock_16.wav",
+   "name": "SOFTER KICK"
+  },
+  {
+   "file": "bb_kick_knock_17.wav",
+   "name": "SOFTER V2 KICK"
+  },
+  {
+   "file": "bb_tom_low_04.wav",
+   "name": "SOFTER V3 KICK"
+  },
+  {
+   "file": "bb_kick_thump_12.wav",
+   "name": "SPHERES KICK"
+  },
+  {
+   "file": "bb_shaker_01.wav",
+   "name": "SPHERES V2 KICK"
+  },
+  {
+   "file": "bb_kick_knock_06.wav",
+   "name": "SPLASH KICK"
+  },
+  {
+   "file": "bb_kick_punch_01.wav",
+   "name": "STR8 UP ANALOG KICK"
+  },
+  {
+   "file": "bb_kick_punch_02.wav",
+   "name": "STR8 UP ANALOG V2 KICK"
+  },
+  {
+   "file": "bb_kick_boom_23.wav",
+   "name": "SUPERFREAK KICK"
+  },
+  {
+   "file": "bb_kick_boom_04.wav",
+   "name": "SUPERPOWER KICK"
+  },
+  {
+   "file": "bb_kick_boom_05.wav",
+   "name": "SUPERPOWER V2 KICK"
+  },
+  {
+   "file": "bb_kick_boom_09.wav",
+   "name": "SUPERPOWER V3 KICK"
+  },
+  {
+   "file": "bb_kick_knock_24.wav",
+   "name": "TF KICK"
+  },
+  {
+   "file": "bb_kick_knock_02.wav",
+   "name": "TIMELESS KICK"
+  },
+  {
+   "file": "bb_kick_knock_01.wav",
+   "name": "TRUE INDEED ANALOG KICK"
+  },
+  {
+   "file": "bb_kick_boom_03.wav",
+   "name": "TUBE KICK"
+  },
+  {
+   "file": "bb_kick_knock_12.wav",
+   "name": "WAVES KICK"
+  },
+  {
+   "file": "bb_kick_knock_13.wav",
+   "name": "WAVES V2 KICK"
+  },
+  {
+   "file": "bb_kick_knock_26.wav",
+   "name": "WAYY MORE THUMPIER KICK"
+  },
+  {
+   "file": "bb_kick_boom_02.wav",
+   "name": "WHATEVER KICK"
+  },
+  {
+   "file": "bb_kick_boom_07.wav",
+   "name": "WHOLE CLUB THUMP KICK"
+  },
+  {
+   "file": "bb_open_hat_long_14.wav",
+   "name": "ANIGMA OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_01.wav",
+   "name": "ANTI OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_23.wav",
+   "name": "ARCHITECTURE OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_24.wav",
+   "name": "ARCHITECTURE V2 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_04.wav",
+   "name": "BETWEENUS OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_19.wav",
+   "name": "BODY OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_07.wav",
+   "name": "BOUNCE OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_05.wav",
+   "name": "CLICKED OPEN HIHAT"
+  },
+  {
+   "file": "bb_open_hat_short_25.wav",
+   "name": "DEMON 1 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_21.wav",
+   "name": "DEMON 6 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_13.wav",
+   "name": "DEMON 7 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_22.wav",
+   "name": "DEMON 8 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_26.wav",
+   "name": "DISTORT OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_11.wav",
+   "name": "EX OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_22.wav",
+   "name": "EXCUSES OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_15.wav",
+   "name": "GROOVE OPEN HAT"
+  },
+  {
+   "file": "bb_cymbal_short_01.wav",
+   "name": "HELIOSPHERE OPEN HAT"
+  },
+  {
+   "file": "bb_cymbal_short_03.wav",
+   "name": "HELIOSPHERE V2 OPEN HAT"
+  },
+  {
+   "file": "bb_cymbal_short_04.wav",
+   "name": "HELIOSPHERE V3 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_11.wav",
+   "name": "HELIOSPHERE V4 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_05.wav",
+   "name": "HELIOSPHERE V5 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_06.wav",
+   "name": "HELIOSPHERE V6 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_07.wav",
+   "name": "HELIOSPHERE V7 OPEN HAT"
+  },
+  {
+   "file": "bb_shaker_13.wav",
+   "name": "HELIOSPHERE V8 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_23.wav",
+   "name": "KINDA ROLLS OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_08.wav",
+   "name": "KUNAI OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_02.wav",
+   "name": "LASTCALL OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_12.wav",
+   "name": "OG 2 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_18.wav",
+   "name": "OG 4 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_20.wav",
+   "name": "OG 4 V2 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_17.wav",
+   "name": "OG 5 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_08.wav",
+   "name": "OG 6 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_09.wav",
+   "name": "OG 6 V2 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_13.wav",
+   "name": "OG 7 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_18.wav",
+   "name": "OG 7 V2 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_03.wav",
+   "name": "OPINION OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_19.wav",
+   "name": "PARALLAX OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_20.wav",
+   "name": "PARALLAX V2 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_21.wav",
+   "name": "PARALLAX V3 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_09.wav",
+   "name": "PATTERNS OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_10.wav",
+   "name": "PATTERNS V2 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_12.wav",
+   "name": "PATTERNS V3 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_short_15.wav",
+   "name": "PATTERNS V4 OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_04.wav",
+   "name": "POP OPEN HIHAT"
+  },
+  {
+   "file": "bb_open_hat_short_14.wav",
+   "name": "SHAWTY OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_01.wav",
+   "name": "SMITHER OPEN HIHAT"
+  },
+  {
+   "file": "bb_open_hat_long_02.wav",
+   "name": "SMITHER V2 OPEN HIHAT"
+  },
+  {
+   "file": "bb_open_hat_long_03.wav",
+   "name": "SMITHER V3 OPEN HIHAT"
+  },
+  {
+   "file": "bb_open_hat_long_24.wav",
+   "name": "SUBS OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_06.wav",
+   "name": "THRONE OPEN HIHAT"
+  },
+  {
+   "file": "bb_open_hat_short_17.wav",
+   "name": "TIES OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_16.wav",
+   "name": "TIGHT OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_10.wav",
+   "name": "TRIPPED OPEN HIHAT"
+  },
+  {
+   "file": "bb_open_hat_short_16.wav",
+   "name": "VERSION OPEN HAT"
+  },
+  {
+   "file": "bb_open_hat_long_25.wav",
+   "name": "WHITE NOISE OPEN HAT"
+  },
+  {
+   "file": "bb_perc_wood_22.wav",
+   "name": "ACTUALLY PERC"
+  },
+  {
+   "file": "bb_beads_02.wav",
+   "name": "BEADS HIT PERC"
+  },
+  {
+   "file": "bb_perc_wood_01.wav",
+   "name": "BLOCKED PERC"
+  },
+  {
+   "file": "bb_tamb_04.wav",
+   "name": "CHA CHING TAMB"
+  },
+  {
+   "file": "bb_fx_hit_07.wav",
+   "name": "CLICKETY ENGINE PERC"
+  },
+  {
+   "file": "bb_clave_01.wav",
+   "name": "DANGER CLAVE"
+  },
+  {
+   "file": "bb_perc_wood_04.wav",
+   "name": "DEMON 10 PERC"
+  },
+  {
+   "file": "bb_perc_metal_02.wav",
+   "name": "DEMON 11 PERC"
+  },
+  {
+   "file": "bb_perc_click_01.wav",
+   "name": "DEMON 12 PERC"
+  },
+  {
+   "file": "bb_perc_hit_19.wav",
+   "name": "DEMON 15 PERC"
+  },
+  {
+   "file": "bb_perc_wood_02.wav",
+   "name": "DEMON 17 PERC"
+  },
+  {
+   "file": "bb_perc_metal_03.wav",
+   "name": "DEMON 19 PERC"
+  },
+  {
+   "file": "bb_perc_wood_15.wav",
+   "name": "DEMON 2 PERC"
+  },
+  {
+   "file": "bb_perc_wood_20.wav",
+   "name": "DEMON 3 PERC"
+  },
+  {
+   "file": "bb_perc_hit_08.wav",
+   "name": "DEMON 6 PERC"
+  },
+  {
+   "file": "bb_perc_hit_03.wav",
+   "name": "DEMON 7 PERC"
+  },
+  {
+   "file": "bb_perc_wood_03.wav",
+   "name": "DEMON 9 PERC"
+  },
+  {
+   "file": "bb_perc_hit_12.wav",
+   "name": "DIAL PERC"
+  },
+  {
+   "file": "bb_tamb_02.wav",
+   "name": "DOUBLE HIT TAMB"
+  },
+  {
+   "file": "bb_fx_atmos_01.wav",
+   "name": "EARTHQUAKE PERC"
+  },
+  {
+   "file": "bb_fx_hit_01.wav",
+   "name": "EARTHQUAKE V2 PERC"
+  },
+  {
+   "file": "bb_shaker_15.wav",
+   "name": "FINESSE 2 SHAKER"
+  },
+  {
+   "file": "bb_shaker_16.wav",
+   "name": "FINESSE 2 V2 SHAKER"
+  },
+  {
+   "file": "bb_shaker_08.wav",
+   "name": "FINESSE SHAKER"
+  },
+  {
+   "file": "bb_shaker_09.wav",
+   "name": "FINESSE V2 SHAKER"
+  },
+  {
+   "file": "bb_shaker_10.wav",
+   "name": "FINESSE V3 SHAKER"
+  },
+  {
+   "file": "bb_fx_hit_06.wav",
+   "name": "GROANING WILD ANIMAL PERC"
+  },
+  {
+   "file": "bb_fx_atmos_05.wav",
+   "name": "HARDDDD PERC"
+  },
+  {
+   "file": "bb_perc_hit_21.wav",
+   "name": "LIGHT PERC"
+  },
+  {
+   "file": "bb_tamb_03.wav",
+   "name": "MINI ROLL TAMB"
+  },
+  {
+   "file": "bb_perc_wood_05.wav",
+   "name": "NO 1 COWBELL"
+  },
+  {
+   "file": "bb_perc_wood_18.wav",
+   "name": "NO 1 SHAKER"
+  },
+  {
+   "file": "bb_shaker_04.wav",
+   "name": "NO 1 V10 COWBELL"
+  },
+  {
+   "file": "bb_perc_wood_06.wav",
+   "name": "NO 1 V2 COWBELL"
+  },
+  {
+   "file": "bb_perc_wood_19.wav",
+   "name": "NO 1 V2 SHAKER"
+  },
+  {
+   "file": "bb_perc_wood_07.wav",
+   "name": "NO 1 V3 COWBELL"
+  },
+  {
+   "file": "bb_perc_wood_21.wav",
+   "name": "NO 1 V3 SHAKER"
+  },
+  {
+   "file": "bb_perc_wood_08.wav",
+   "name": "NO 1 V4 COWBELL"
+  },
+  {
+   "file": "bb_shaker_05.wav",
+   "name": "NO 1 V4 SHAKER"
+  },
+  {
+   "file": "bb_perc_wood_09.wav",
+   "name": "NO 1 V5 COWBELL"
+  },
+  {
+   "file": "bb_perc_wood_10.wav",
+   "name": "NO 1 V6 COWBELL"
+  },
+  {
+   "file": "bb_perc_wood_11.wav",
+   "name": "NO 1 V7 COWBELL"
+  },
+  {
+   "file": "bb_perc_wood_12.wav",
+   "name": "NO 1 V8 COWBELL"
+  },
+  {
+   "file": "bb_perc_wood_13.wav",
+   "name": "NO 1 V9 COWBELL"
+  },
+  {
+   "file": "bb_perc_hit_15.wav",
+   "name": "NO 3 TRIANGLE"
+  },
+  {
+   "file": "bb_perc_hit_17.wav",
+   "name": "NO 3 V2 TRIANGLE"
+  },
+  {
+   "file": "bb_perc_hit_18.wav",
+   "name": "NO 3 V3 TRIANGLE"
+  },
+  {
+   "file": "bb_perc_metal_01.wav",
+   "name": "OYSTER LAYER PERC"
+  },
+  {
+   "file": "bb_fx_hit_02.wav",
+   "name": "PAINT1 A PERC"
+  },
+  {
+   "file": "bb_fx_atmos_02.wav",
+   "name": "PAINT2 A PERC"
+  },
+  {
+   "file": "bb_fx_reverse_01.wav",
+   "name": "REVERSE KICK MADNESS PERC"
+  },
+  {
+   "file": "bb_tamb_05.wav",
+   "name": "ROLL 1 TAMB"
+  },
+  {
+   "file": "bb_tamb_01.wav",
+   "name": "SMALL DOUBLE HIT 2 TAMB"
+  },
+  {
+   "file": "bb_shaker_12.wav",
+   "name": "SP 05 2 SHAKER"
+  },
+  {
+   "file": "bb_triangle_01.wav",
+   "name": "WEIRD TRIANGLE"
+  },
+  {
+   "file": "bb_perc_hit_20.wav",
+   "name": "WHOOPISH LAYER PERC"
+  },
+  {
+   "file": "bb_perc_hit_09.wav",
+   "name": "ACTION SNAP"
+  },
+  {
+   "file": "bb_rim_17.wav",
+   "name": "BANGER RIM"
+  },
+  {
+   "file": "bb_rim_18.wav",
+   "name": "BELL RIMSHOT"
+  },
+  {
+   "file": "bb_rim_15.wav",
+   "name": "CASPER RIM"
+  },
+  {
+   "file": "bb_rim_20.wav",
+   "name": "CRAFT SNAP"
+  },
+  {
+   "file": "bb_perc_hit_04.wav",
+   "name": "DEALS RIM"
+  },
+  {
+   "file": "bb_rim_24.wav",
+   "name": "ELEVATE SNAP"
+  },
+  {
+   "file": "bb_perc_hit_01.wav",
+   "name": "ENCORE SNAP"
+  },
+  {
+   "file": "bb_perc_hit_02.wav",
+   "name": "ESSENTIAL SNAP"
+  },
+  {
+   "file": "bb_perc_hit_16.wav",
+   "name": "FANTASY SNAP"
+  },
+  {
+   "file": "bb_perc_wood_16.wav",
+   "name": "FLIGHTS RIM"
+  },
+  {
+   "file": "bb_perc_wood_17.wav",
+   "name": "FLIGHTS V2 RIM"
+  },
+  {
+   "file": "bb_rim_03.wav",
+   "name": "FLIGHTS V3 RIM"
+  },
+  {
+   "file": "bb_rim_04.wav",
+   "name": "FLIGHTS V4 RIM"
+  },
+  {
+   "file": "bb_rim_22.wav",
+   "name": "FLINT RIM"
+  },
+  {
+   "file": "bb_perc_wood_26.wav",
+   "name": "FUJI SNAP"
+  },
+  {
+   "file": "bb_rim_28.wav",
+   "name": "GALACTIC SNAP"
+  },
+  {
+   "file": "bb_perc_click_02.wav",
+   "name": "GUNDAM SNAP"
+  },
+  {
+   "file": "bb_rim_23.wav",
+   "name": "HALLS RIM"
+  },
+  {
+   "file": "bb_perc_hit_06.wav",
+   "name": "HEALING SNAP"
+  },
+  {
+   "file": "bb_perc_hit_10.wav",
+   "name": "HELLSING SNAP"
+  },
+  {
+   "file": "bb_rim_06.wav",
+   "name": "HUNGER RIM"
+  },
+  {
+   "file": "bb_perc_hit_05.wav",
+   "name": "LAWS RIM"
+  },
+  {
+   "file": "bb_rim_12.wav",
+   "name": "LAWS V2 RIM"
+  },
+  {
+   "file": "bb_rim_13.wav",
+   "name": "LAWS V3 RIM"
+  },
+  {
+   "file": "bb_rim_14.wav",
+   "name": "LAWS V4 RIM"
+  },
+  {
+   "file": "bb_rim_01.wav",
+   "name": "MACHINE RIM"
+  },
+  {
+   "file": "bb_rim_19.wav",
+   "name": "METALS RIM"
+  },
+  {
+   "file": "bb_rim_11.wav",
+   "name": "MY HERO RIM"
+  },
+  {
+   "file": "bb_perc_wood_23.wav",
+   "name": "NEW LAND RIM"
+  },
+  {
+   "file": "bb_perc_wood_24.wav",
+   "name": "NEW LAND V2 RIM"
+  },
+  {
+   "file": "bb_perc_wood_25.wav",
+   "name": "NEW LAND V3 RIM"
+  },
+  {
+   "file": "bb_rim_08.wav",
+   "name": "NEW LAND V4 RIM"
+  },
+  {
+   "file": "bb_shaker_06.wav",
+   "name": "NEW LAND V5 RIM"
+  },
+  {
+   "file": "bb_rim_10.wav",
+   "name": "NINJA RIM"
+  },
+  {
+   "file": "bb_rim_02.wav",
+   "name": "OG 808 2 RIM"
+  },
+  {
+   "file": "bb_rim_21.wav",
+   "name": "PAY RIM"
+  },
+  {
+   "file": "bb_rim_09.wav",
+   "name": "PRESSING RIM"
+  },
+  {
+   "file": "bb_perc_hit_11.wav",
+   "name": "RESEARCH RIM"
+  },
+  {
+   "file": "bb_perc_hit_13.wav",
+   "name": "RESEARCH V2 RIM"
+  },
+  {
+   "file": "bb_perc_hit_14.wav",
+   "name": "RESEARCH V3 RIM"
+  },
+  {
+   "file": "bb_rim_25.wav",
+   "name": "RESEARCH V4 RIM"
+  },
+  {
+   "file": "bb_rim_26.wav",
+   "name": "RESEARCH V5 RIM"
+  },
+  {
+   "file": "bb_rim_27.wav",
+   "name": "RESEARCH V6 RIM"
+  },
+  {
+   "file": "bb_rim_29.wav",
+   "name": "RIDDLE RIM"
+  },
+  {
+   "file": "bb_perc_wood_14.wav",
+   "name": "ROOMS RIM"
+  },
+  {
+   "file": "bb_rim_16.wav",
+   "name": "SPECIAL RIM"
+  },
+  {
+   "file": "bb_rim_07.wav",
+   "name": "TECH RIM"
+  },
+  {
+   "file": "bb_perc_hit_07.wav",
+   "name": "ULTIMATE SNAP"
+  },
+  {
+   "file": "bb_rim_05.wav",
+   "name": "WHOLE RIM"
+  },
+  {
+   "file": "bb_snare_fat_15.wav",
+   "name": "14 CURRENT SNARE"
+  },
+  {
+   "file": "bb_snare_crack_14.wav",
+   "name": "14 MASTER SNARE"
+  },
+  {
+   "file": "bb_snare_room_06.wav",
+   "name": "AGENCY SNARE"
+  },
+  {
+   "file": "bb_snare_room_07.wav",
+   "name": "AGENCY V2 SNARE"
+  },
+  {
+   "file": "bb_snare_room_08.wav",
+   "name": "AGENCY V3 SNARE"
+  },
+  {
+   "file": "bb_snare_room_09.wav",
+   "name": "AGENCY V4 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_32.wav",
+   "name": "ALCHEMY SNARE"
+  },
+  {
+   "file": "bb_snare_crack_13.wav",
+   "name": "ARRIBA SNARE"
+  },
+  {
+   "file": "bb_snare_crack_16.wav",
+   "name": "BRITISH 2 SNARE"
+  },
+  {
+   "file": "bb_snare_room_01.wav",
+   "name": "BRITISH SNARE"
+  },
+  {
+   "file": "bb_snare_room_02.wav",
+   "name": "BRITISH V2 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_35.wav",
+   "name": "CAHONES 3 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_23.wav",
+   "name": "COOKED SNARE"
+  },
+  {
+   "file": "bb_snare_fat_14.wav",
+   "name": "COOL CAT 1 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_16.wav",
+   "name": "COOL CAT 1 V2 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_13.wav",
+   "name": "COOL CAT 2 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_26.wav",
+   "name": "CRACKED SNARE"
+  },
+  {
+   "file": "bb_shaker_11.wav",
+   "name": "CRYO SNARE"
+  },
+  {
+   "file": "bb_snare_crack_36.wav",
+   "name": "CRYO V2 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_37.wav",
+   "name": "CRYO V3 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_33.wav",
+   "name": "DEMON 2 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_22.wav",
+   "name": "DEMON 23 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_08.wav",
+   "name": "DEMON 6 SNARE"
+  },
+  {
+   "file": "bb_snare_room_03.wav",
+   "name": "DEPTH SNARE"
+  },
+  {
+   "file": "bb_snare_room_04.wav",
+   "name": "DEPTH V2 SNARE"
+  },
+  {
+   "file": "bb_snare_room_05.wav",
+   "name": "DEPTH V3 SNARE"
+  },
+  {
+   "file": "bb_clap_tight_01.wav",
+   "name": "DRAMATIC CLAP SNARE"
+  },
+  {
+   "file": "bb_snare_crack_15.wav",
+   "name": "DRIFTERS SNARE"
+  },
+  {
+   "file": "bb_snare_fat_22.wav",
+   "name": "EMOTION SNARE"
+  },
+  {
+   "file": "bb_snare_crack_25.wav",
+   "name": "ENTRANCE SNARE"
+  },
+  {
+   "file": "bb_snare_crack_31.wav",
+   "name": "FLINT SNARE"
+  },
+  {
+   "file": "bb_snare_crack_02.wav",
+   "name": "FORSHITSANDGIGGLES SNARE"
+  },
+  {
+   "file": "bb_snare_crack_08.wav",
+   "name": "FORSHITSANDGIGGLES V2 SNARE"
+  },
+  {
+   "file": "bb_snare_dusty_01.wav",
+   "name": "FRESH SNARE"
+  },
+  {
+   "file": "bb_snare_fat_20.wav",
+   "name": "FUN W VERB SNARE"
+  },
+  {
+   "file": "bb_snare_fat_05.wav",
+   "name": "FUNK SNARE"
+  },
+  {
+   "file": "bb_snare_fat_07.wav",
+   "name": "FUNK V2 SNARE"
+  },
+  {
+   "file": "bb_snare_room_14.wav",
+   "name": "GHOUL SNARE"
+  },
+  {
+   "file": "bb_snare_crack_03.wav",
+   "name": "GRAVITY SNARE"
+  },
+  {
+   "file": "bb_snare_crack_04.wav",
+   "name": "GRAVITY V2 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_05.wav",
+   "name": "GRAVITY V3 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_19.wav",
+   "name": "GRAVITY V4 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_10.wav",
+   "name": "GRIP SNARE"
+  },
+  {
+   "file": "bb_snare_crack_18.wav",
+   "name": "IDK 4 SNARE"
+  },
+  {
+   "file": "bb_snare_room_15.wav",
+   "name": "INDUSTRIAL SNARE"
+  },
+  {
+   "file": "bb_snare_crack_17.wav",
+   "name": "INTEGRA SNARE"
+  },
+  {
+   "file": "bb_clap_wide_07.wav",
+   "name": "ISSA BOUNCE CLAP SNARE"
+  },
+  {
+   "file": "bb_snare_room_13.wav",
+   "name": "K9 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_04.wav",
+   "name": "LOFI WARM SNARE"
+  },
+  {
+   "file": "bb_snare_crack_24.wav",
+   "name": "LUNAR SNARE"
+  },
+  {
+   "file": "bb_snare_crack_28.wav",
+   "name": "LUNAR V2 SNARE"
+  },
+  {
+   "file": "bb_clap_tight_09.wav",
+   "name": "MASSIVE CLAP SNARE"
+  },
+  {
+   "file": "bb_snare_fat_01.wav",
+   "name": "NEWEST LEAF SNARE"
+  },
+  {
+   "file": "bb_snare_fat_02.wav",
+   "name": "NEWEST LEAF V2 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_23.wav",
+   "name": "OG 11 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_29.wav",
+   "name": "OG 12 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_27.wav",
+   "name": "OG 13 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_20.wav",
+   "name": "OG 15 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_10.wav",
+   "name": "OG 5 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_11.wav",
+   "name": "OG 6 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_07.wav",
+   "name": "OG 8 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_34.wav",
+   "name": "PIERCE SNARE"
+  },
+  {
+   "file": "bb_snare_fat_24.wav",
+   "name": "POCKET SNARE"
+  },
+  {
+   "file": "bb_snare_fat_06.wav",
+   "name": "POUNCE SNARE"
+  },
+  {
+   "file": "bb_snare_crack_12.wav",
+   "name": "PRIMARY W VERB SNARE"
+  },
+  {
+   "file": "bb_snare_crack_01.wav",
+   "name": "PURE KNOCK SNARE"
+  },
+  {
+   "file": "bb_snare_crack_06.wav",
+   "name": "PURE KNOCK V2 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_09.wav",
+   "name": "PURE KNOCK V3 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_11.wav",
+   "name": "QUICK KNOCK SNARE"
+  },
+  {
+   "file": "bb_snare_fat_18.wav",
+   "name": "QUICK KNOCK V2 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_21.wav",
+   "name": "QUICK KNOCK V3 SNARE"
+  },
+  {
+   "file": "bb_snare_room_10.wav",
+   "name": "RAGE SNARE"
+  },
+  {
+   "file": "bb_clap_tight_03.wav",
+   "name": "RIFT CLAP SNARE"
+  },
+  {
+   "file": "bb_clap_tight_07.wav",
+   "name": "RIFT CLAP V2 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_09.wav",
+   "name": "RIFT SNARE"
+  },
+  {
+   "file": "bb_snare_room_11.wav",
+   "name": "SHOUT SNARE"
+  },
+  {
+   "file": "bb_snare_room_12.wav",
+   "name": "SHOUT V2 SNARE"
+  },
+  {
+   "file": "bb_clap_wide_01.wav",
+   "name": "SPIRI CLAP SNARE"
+  },
+  {
+   "file": "bb_clap_wide_02.wav",
+   "name": "SPIRI CLAP V2 SNARE"
+  },
+  {
+   "file": "bb_snare_crack_21.wav",
+   "name": "THICCNESS SNARE"
+  },
+  {
+   "file": "bb_clap_wide_03.wav",
+   "name": "TRAP CLAP SNARE"
+  },
+  {
+   "file": "bb_snare_fat_12.wav",
+   "name": "TRAPKNOCK 2 SNARE"
+  },
+  {
+   "file": "bb_snare_fat_03.wav",
+   "name": "TRAPKNOCK SNARE"
+  },
+  {
+   "file": "bb_snare_fat_17.wav",
+   "name": "VAMPIRES SNARE"
+  },
+  {
+   "file": "bb_snare_crack_30.wav",
+   "name": "WAVES SNARE"
+  },
+  {
+   "file": "bb_snare_crack_19.wav",
+   "name": "ZONE SNARE"
+  },
+  {
+   "file": "bb_tom_low_06.wav",
+   "name": "DANGER 1 TOM"
+  },
+  {
+   "file": "bb_tom_low_03.wav",
+   "name": "DISTRESSED 909 01 2 TOM"
+  },
+  {
+   "file": "bb_tom_low_01.wav",
+   "name": "DISTRESSED 909 10 2 TOM"
+  },
+  {
+   "file": "bb_tom_low_02.wav",
+   "name": "DISTRESSED 909 11 2 TOM"
+  },
+  {
+   "file": "bb_shaker_03.wav",
+   "name": "NO 1 TOM"
+  },
+  {
+   "file": "bb_tom_low_15.wav",
+   "name": "NO 1 V10 TOM"
+  },
+  {
+   "file": "bb_tom_low_16.wav",
+   "name": "NO 1 V11 TOM"
+  },
+  {
+   "file": "bb_tom_low_17.wav",
+   "name": "NO 1 V12 TOM"
+  },
+  {
+   "file": "bb_tom_low_18.wav",
+   "name": "NO 1 V13 TOM"
+  },
+  {
+   "file": "bb_tom_low_19.wav",
+   "name": "NO 1 V14 TOM"
+  },
+  {
+   "file": "bb_tom_low_20.wav",
+   "name": "NO 1 V15 TOM"
+  },
+  {
+   "file": "bb_tom_low_07.wav",
+   "name": "NO 1 V2 TOM"
+  },
+  {
+   "file": "bb_tom_low_08.wav",
+   "name": "NO 1 V3 TOM"
+  },
+  {
+   "file": "bb_tom_low_09.wav",
+   "name": "NO 1 V4 TOM"
+  },
+  {
+   "file": "bb_tom_low_10.wav",
+   "name": "NO 1 V5 TOM"
+  },
+  {
+   "file": "bb_tom_low_11.wav",
+   "name": "NO 1 V6 TOM"
+  },
+  {
+   "file": "bb_tom_low_12.wav",
+   "name": "NO 1 V7 TOM"
+  },
+  {
+   "file": "bb_tom_low_13.wav",
+   "name": "NO 1 V8 TOM"
+  },
+  {
+   "file": "bb_tom_low_14.wav",
+   "name": "NO 1 V9 TOM"
+  },
+  {
+   "file": "bb_shaker_02.wav",
+   "name": "NO 3 TOM"
+  },
+  {
+   "file": "bb_tom_high_06.wav",
+   "name": "NO 3 V2 TOM"
+  },
+  {
+   "file": "bb_tom_high_07.wav",
+   "name": "NO 3 V3 TOM"
+  },
+  {
+   "file": "bb_tom_high_08.wav",
+   "name": "NO 3 V4 TOM"
+  },
+  {
+   "file": "bb_tom_high_09.wav",
+   "name": "NO 3 V5 TOM"
+  },
+  {
+   "file": "bb_tom_high_10.wav",
+   "name": "NO 3 V6 TOM"
+  },
+  {
+   "file": "bb_tom_high_11.wav",
+   "name": "NO 3 V7 TOM"
+  },
+  {
+   "file": "bb_tom_high_01.wav",
+   "name": "NO 4 TOM"
+  },
+  {
+   "file": "bb_tom_high_02.wav",
+   "name": "NO 4 V2 TOM"
+  },
+  {
+   "file": "bb_tom_high_03.wav",
+   "name": "NO 4 V3 TOM"
+  },
+  {
+   "file": "bb_tom_high_04.wav",
+   "name": "NO 4 V4 TOM"
+  },
+  {
+   "file": "bb_tom_high_05.wav",
+   "name": "NO 4 V5 TOM"
   }
  ]
 }

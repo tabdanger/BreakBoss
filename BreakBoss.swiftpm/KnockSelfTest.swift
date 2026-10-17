@@ -121,7 +121,10 @@ enum KnockSelfTest {
         let urls = Set(library.allSounds.map(\.url))
         let names = library.allSounds.map(\.displayName)
         check(library.allSounds.count == 577 && urls.count == 577 && Set(names).count == 577, "the sound library holds 577 sounds, each with its own name")
-        check(names.allSatisfy { SoundType.forStockName($0) != nil }, "every stock sound is named by its category")
+        check(names.allSatisfy { SoundType.forStockName($0) != nil }, "every stock sound's name ends in what it is")
+        check(SoundType.forStockName("THRONE OPEN HIHAT") == .open && SoundType.forStockName("THRONE HIHAT") == .hat
+              && SoundType.forStockName("SUKUNA E1 808") == .bass && SoundType.forStockName("ISSA BOUNCE CLAP SNARE") == .snare,
+              "a stock sound's last word sorts it")
         check(library.librarySounds().count == 577, "the sound menu lists every stock sound, in a kit or not")
         var assignments = 0
         for kit in KitLibrary.factory {
