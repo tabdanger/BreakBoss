@@ -35,10 +35,9 @@ final class SequencerUITests: XCTestCase {
 
     private func any(_ id: String) -> XCUIElement { app.descendants(matching: .any)[id].firstMatch }
 
+    /// The text shown on a control (its StaticText, not its picture's name).
     private func label(_ id: String) -> String {
-        let e = any(id)
-        if !e.label.isEmpty { return e.label }
-        return e.staticTexts.firstMatch.label
+        app.staticTexts.matching(identifier: id).firstMatch.label
     }
 
     func testSequencerControls() {
@@ -97,5 +96,10 @@ final class SequencerUITests: XCTestCase {
         sleep(1)
         XCTAssertNotEqual(label("tempoChip"), bpmBefore, "sliding the BPM chip changes the tempo (still \(bpmBefore))")
         snap("tempo-slid")
+
+        // a tap on the BPM chip still opens the tempo panel
+        chip.tap()
+        XCTAssertTrue(app.staticTexts["TEMPO"].waitForExistence(timeout: 3), "a tap on the BPM chip opens the tempo panel")
+        snap("tempo-panel")
     }
 }
