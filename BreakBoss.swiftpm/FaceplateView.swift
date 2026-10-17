@@ -72,6 +72,12 @@ struct FaceplateView: View {
         .sheet(isPresented: $showExport) { ExportView(controller: controller) }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
         .fullScreenCover(item: $patternEditor) { target in SequencerView(controller: controller, loop: target.loop) }
+        .onAppear {
+            // Build-machine UI check only: open straight on the sequencer.
+            if ProcessInfo.processInfo.environment["BREAKBOSS_OPEN_SEQUENCER"] == "1" && patternEditor == nil {
+                patternEditor = PatternTarget(loop: 0)
+            }
+        }
         .fullScreenCover(item: $browser) { kind in BrowserView(controller: controller, kind: kind) }
         .alert(namePrompt == .kit ? "Save Kit" : "Save Preset", isPresented: Binding(
             get: { namePrompt != nil }, set: { if !$0 { namePrompt = nil } })) {

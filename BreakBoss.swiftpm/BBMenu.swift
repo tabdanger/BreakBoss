@@ -102,7 +102,6 @@ private struct BBMenuTrigger: ViewModifier {
     var tap: (() -> Void)? = nil
     var longPress = false
     @State private var frame: CGRect = .zero
-    @State private var pressed = false
 
     private func open() {
         center.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?()))
@@ -123,16 +122,21 @@ private struct BBMenuTrigger: ViewModifier {
                 .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in open() })
                 .background(SecondaryClickCatcher { open() })
         } else {
-            measured
-                // The button goes in while your finger is on it (a quick darkening, back up on release).
-                .overlay(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(pressed ? 0.28 : 0)).allowsHitTesting(false))
-                .scaleEffect(pressed ? 0.97 : 1)
-                .animation(.easeOut(duration: 0.08), value: pressed)
-                .simultaneousGesture(DragGesture(minimumDistance: 0)
-                    .onChanged { _ in pressed = true }
-                    .onEnded { _ in pressed = false })
-                .onTapGesture { open() }
+            // A real button: a press-and-hold DragGesture next to onTapGesture swallowed the taps on
+            // newer iPadOS, so none of these menus opened. The button goes in while your finger is on it.
+            Button(action: open) { measured }
+                .buttonStyle(MenuPress())
         }
+    }
+}
+
+/// The menu buttons' press: a quick darkening, back up on release.
+private struct MenuPress: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .overlay(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(configuration.isPressed ? 0.28 : 0)).allowsHitTesting(false))
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
     }
 }
 
