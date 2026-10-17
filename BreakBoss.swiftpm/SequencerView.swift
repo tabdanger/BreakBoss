@@ -290,6 +290,7 @@ struct SequencerView: View {
             let s = min(geo.size.width / Self.artW, geo.size.height / Self.artH)
             ZStack(alignment: .topLeading) {
                 Image(plateSprite).resizable().frame(width: Self.artW * s, height: Self.artH * s)
+                BrandLogo(dark: finish != "modern", tagline: "DRUM SEQUENCER", scale: s).place([62, 182, 276, 274], s)
                 topBar(s)
                 leftPanel(s)
                 editor(s)
@@ -507,7 +508,7 @@ struct SequencerView: View {
 
     private func settingsItems() -> [BBMenuItem] {
         [
-            .item("BreakBoss menu…", icon: "line.3.horizontal") { showMenu = true },
+            .item("BreaKing menu…", icon: "line.3.horizontal") { showMenu = true },
             .item("Follow playhead", icon: "arrow.right.to.line", checked: follow) { follow.toggle() },
             .submenu("Loop on screen: \(loop + 1)", icon: "repeat", controller.loops.indices.map { i in
                 BBMenuItem.item("\(i + 1)  \(controller.loops[i].name)", checked: i == loop) { loop = i }
@@ -1220,7 +1221,6 @@ struct SequencerView: View {
 
     private func grid(_ L: [RowLayout], width w: CGFloat, rowH: CGFloat) -> some View {
         Canvas { ctx, size in
-            let cell = ctx.resolve(Image("SeqCell"))
             let cw = cellWidth(size.width)
             let cells = Int(pageTicks / cellTicks)
             for (i, l) in L.enumerated() {
@@ -1228,11 +1228,11 @@ struct SequencerView: View {
                     // the band: the track's steps, lit where it has notes (any pitch)
                     ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: l.pitchTop - l.y)), with: .color(S.greenDark.opacity(0.5)))
                     ctx.fill(Path(CGRect(x: 0, y: l.y + l.bandH, width: size.width, height: l.pitchTop - l.y - l.bandH)), with: .color(Color(white: 0.06)))
+                    drawMetalCells(ctx, (0..<cells).map { CGRect(x: CGFloat($0) * cw + 1, y: l.y, width: cw - 2, height: l.bandH) })
                     for c in 0..<cells {
                         let at = pageStart + Int32(c) * cellTicks
                         let lit = pattern.events.contains { Int($0.pad) == l.channel.pad && $0.tick >= at && $0.tick < at + cellTicks }
                         let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.bandH)
-                        ctx.draw(cell, in: r)
                         if (Int(at / PatternData.ppq) % 2) == 1 { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.32))) }
                         if lit { ctx.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 2), cornerRadius: 3), with: .color(noteColor.opacity(0.8))) }
                     }
@@ -1253,10 +1253,10 @@ struct SequencerView: View {
                     ctx.fill(Path(CGRect(x: 0, y: l.y + l.height - 1, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
                 } else {
                     // the step buttons (the picture's)
+                    drawMetalCells(ctx, (0..<cells).map { CGRect(x: CGFloat($0) * cw + 1, y: l.y, width: cw - 2, height: l.bandH) })
                     for c in 0..<cells {
                         let at = pageStart + Int32(c) * cellTicks
                         let r = CGRect(x: CGFloat(c) * cw + 1, y: l.y, width: cw - 2, height: l.bandH)
-                        ctx.draw(cell, in: r)
                         // every other beat's buttons are the darker grey (Tyrone's picture)
                         if (Int(at / PatternData.ppq) % 2) == 1 { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.32))) }
                         if at >= pattern.lengthTicks { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.55))) }
@@ -1284,10 +1284,12 @@ struct SequencerView: View {
                 for (_, r) in lit { g.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(.black)) }
             }
             ctx.drawLayer { g in
-                g.addFilter(.shadow(color: noteColor, radius: 6))
+                g.addFilter(.shadow(color: noteColor, radius: 9))
                 for (e, r) in lit {
                     let glow = selection.contains(NoteKey(e)) ? Color.white : noteColor
-                    g.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3), with: .color(glow.opacity(0.3 + 0.6 * Double(e.velocity))))
+                    let step = layout(for: Int(e.pad), L)?.pitch == nil
+                    let shape = step ? Path(roundedRect: Self.oval(in: r), cornerRadius: min(Self.oval(in: r).width, Self.oval(in: r).height) / 2) : Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3)
+                    g.fill(shape, with: .color(glow.opacity(0.45 + 0.55 * Double(e.velocity))))
                 }
             }
             for (e, r) in lit {
@@ -1345,6 +1347,41 @@ struct SequencerView: View {
             ended: { panStart = nil }))
     }
 
+    /// The glowing oval inside a lit step button (Tyrone's picture: most of the button, rounded ends).
+    static func oval(in r: CGRect) -> CGRect { r.insetBy(dx: max(2, r.width * 0.17), dy: max(2, r.height * 0.09)) }
+
+    /// A row of unlit step buttons in brushed steel: bevelled, with the slot's thin, dim line of the
+    /// mode's colour. One fill per layer for the whole row.
+    private func drawMetalCells(_ ctx: GraphicsContext, _ rects: [CGRect]) {
+        guard let first = rects.first else { return }
+        let top = CGPoint(x: 0, y: first.minY), bottom = CGPoint(x: 0, y: first.maxY)
+        var body = Path(), slots = Path(), lines = Path()
+        for r in rects {
+            body.addRoundedRect(in: r, cornerSize: CGSize(width: 3, height: 3))
+            let sl = CGRect(x: r.minX + r.width * 0.16, y: r.minY + r.height * 0.15, width: r.width * 0.68, height: max(2.5, r.height * 0.09))
+            slots.addRoundedRect(in: sl, cornerSize: CGSize(width: sl.height / 2, height: sl.height / 2))
+            lines.addRoundedRect(in: sl.insetBy(dx: 1, dy: sl.height * 0.3), cornerSize: CGSize(width: 1, height: 1))
+        }
+        ctx.fill(body, with: .linearGradient(Gradient(stops: [
+            .init(color: Color(white: 0.8), location: 0), .init(color: Color(white: 0.66), location: 0.2),
+            .init(color: Color(white: 0.5), location: 0.6), .init(color: Color(white: 0.58), location: 1)]), startPoint: top, endPoint: bottom))
+        var c = ctx
+        c.clip(to: body)
+        var grain = Path()
+        var y = first.minY + 1
+        let x0 = rects.map(\.minX).min() ?? 0, x1 = rects.map(\.maxX).max() ?? 0
+        while y < first.maxY { grain.addRect(CGRect(x: x0, y: y, width: x1 - x0, height: 0.5)); y += 1.8 }
+        c.fill(grain, with: .color(Color.black.opacity(0.08)))
+        var bevel = Path()
+        for r in rects { bevel.addRoundedRect(in: r.insetBy(dx: 0.6, dy: 0.6), cornerSize: CGSize(width: 2.5, height: 2.5)) }
+        ctx.stroke(bevel, with: .linearGradient(Gradient(stops: [
+            .init(color: Color.white.opacity(0.8), location: 0), .init(color: Color.white.opacity(0), location: 0.35),
+            .init(color: Color.black.opacity(0), location: 0.65), .init(color: Color.black.opacity(0.55), location: 1)]), startPoint: top, endPoint: bottom), lineWidth: 1.1)
+        ctx.stroke(body, with: .color(Color.black.opacity(0.6)), lineWidth: 0.7)
+        ctx.fill(slots, with: .color(Color.black.opacity(0.7)))
+        ctx.fill(lines, with: .color(noteColor.opacity(0.35)))
+    }
+
     /// One note as a brushed-silver button: bevelled, lit from above, tinted and rimmed with the mode's
     /// colour (brighter the harder it's hit). A step button's slot glows that colour.
     private func drawMetalNote(_ ctx: GraphicsContext, _ r: CGRect, tint: Color, level: Double, slot: Bool) {
@@ -1361,18 +1398,32 @@ struct SequencerView: View {
         var c = ctx
         c.clip(to: shape)
         c.fill(grain, with: .color(Color.black.opacity(0.07)))
-        c.fill(Path(CGRect(x: r.minX, y: r.minY, width: r.width, height: r.height)), with: .color(tint.opacity(0.12 + 0.2 * level)))
+        // a step button's frame stays bare metal (only its oval lights); a piano-roll note takes the colour
+        if !slot { c.fill(Path(CGRect(x: r.minX, y: r.minY, width: r.width, height: r.height)), with: .color(tint.opacity(0.12 + 0.2 * level))) }
         // the bevel: a lit top edge, a dark bottom edge
         ctx.stroke(Path(roundedRect: r.insetBy(dx: 0.75, dy: 0.75), cornerRadius: 2.5), with: .linearGradient(Gradient(stops: [
             .init(color: Color.white.opacity(0.95), location: 0), .init(color: Color.white.opacity(0), location: 0.4),
             .init(color: Color.black.opacity(0), location: 0.6), .init(color: Color.black.opacity(0.5), location: 1)]), startPoint: top, endPoint: bottom), lineWidth: 1.2)
-        ctx.stroke(shape, with: .color(tint.opacity(0.5 + 0.4 * level)), lineWidth: 1)
+        ctx.stroke(shape, with: .color(slot ? Color.black.opacity(0.6) : tint.opacity(0.5 + 0.4 * level)), lineWidth: 1)
         if slot {
-            let s = CGRect(x: r.minX + r.width * 0.12, y: r.minY + r.height * 0.09, width: r.width * 0.76, height: max(3, r.height * 0.14))
-            ctx.fill(Path(roundedRect: s.insetBy(dx: -1.5, dy: -1.5), cornerRadius: s.height / 2 + 1.5), with: .color(Color.black.opacity(0.55)))
-            ctx.fill(Path(roundedRect: s, cornerRadius: s.height / 2), with: .linearGradient(Gradient(colors: [tint.opacity(level), tint.opacity(level * 0.75)]),
-                                                                                         startPoint: CGPoint(x: s.midX, y: s.minY), endPoint: CGPoint(x: s.midX, y: s.maxY)))
-            ctx.fill(Path(roundedRect: CGRect(x: s.minX + 1, y: s.minY + 0.5, width: s.width - 2, height: max(1, s.height * 0.4)), cornerRadius: 1), with: .color(Color.white.opacity(0.55)))
+            // the inside oval, recessed into the button and glowing solid in the mode's colour
+            let o = Self.oval(in: r)
+            let round = min(o.width, o.height) / 2
+            ctx.fill(Path(roundedRect: o.insetBy(dx: -1.5, dy: -1.5), cornerRadius: round + 1.5), with: .linearGradient(Gradient(colors: [Color.black.opacity(0.75), Color.black.opacity(0.35)]),
+                                                                                         startPoint: CGPoint(x: o.midX, y: o.minY), endPoint: CGPoint(x: o.midX, y: o.maxY)))
+            let well = Path(roundedRect: o, cornerRadius: round)
+            ctx.fill(well, with: .color(Color.black))
+            ctx.fill(well, with: .color(tint.opacity(0.55 + 0.45 * level)))
+            ctx.fill(well, with: .radialGradient(Gradient(colors: [Color.white.opacity(0.4 * level), tint.opacity(0.35), Color.black.opacity(0.35)]),
+                                                 center: CGPoint(x: o.midX, y: o.midY + o.height * 0.06), startRadius: 0, endRadius: max(o.width, o.height) * 0.6))
+            // the oval's walls: shadowed under the top lip, a lit lower lip
+            var w = ctx
+            w.clip(to: well)
+            w.fill(Path(o), with: .linearGradient(Gradient(stops: [.init(color: Color.black.opacity(0.55), location: 0), .init(color: Color.black.opacity(0), location: 0.3)]),
+                                                 startPoint: CGPoint(x: o.midX, y: o.minY), endPoint: CGPoint(x: o.midX, y: o.maxY)))
+            ctx.stroke(Path(roundedRect: o.insetBy(dx: -0.75, dy: -0.75), cornerRadius: round + 0.75), with: .linearGradient(Gradient(stops: [
+                .init(color: Color.black.opacity(0.6), location: 0), .init(color: Color.black.opacity(0), location: 0.5), .init(color: Color.white.opacity(0.55), location: 1)]),
+                startPoint: CGPoint(x: o.midX, y: o.minY), endPoint: CGPoint(x: o.midX, y: o.maxY)), lineWidth: 1)
         } else {
             // a highlight across the top, like light on a polished cap
             ctx.fill(Path(roundedRect: CGRect(x: r.minX + 2, y: r.minY + 1.5, width: max(0, r.width - 4), height: max(1.5, r.height * 0.16)), cornerRadius: 1.5), with: .color(Color.white.opacity(0.6)))
@@ -1711,7 +1762,7 @@ struct SequencerView: View {
 
     private func writeMIDI() -> URL? {
         let name = (controller.loops.indices.contains(loop) ? controller.loops[loop].name : "PATTERN").replacingOccurrences(of: "/", with: "-")
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("BreakBoss \(controller.state.kitName) \(name).mid")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("BreaKing \(controller.state.kitName) \(name).mid")
         do {
             // Twelve channels, one per pad (the same layout as MIDI OUT), each note's pitch and velocity intact.
             let names = (0..<Pad.count).map { pad in channels.first { $0.pad == pad }?.name ?? (Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)") }
@@ -1862,7 +1913,7 @@ struct ArtKnob: View {
     @State private var start: Float?
 
     var body: some View {
-        Image("SeqKnob").resizable().aspectRatio(contentMode: .fit)
+        MetalKnob().aspectRatio(1, contentMode: .fit)
             .rotationEffect(.degrees(KnobControl.angle(value)))
             .animation(.easeOut(duration: 0.15), value: value)
             .padding(grip)
@@ -1892,10 +1943,9 @@ struct DrumRollKnob: View {
 
     var body: some View {
         ZStack {
-            Circle().fill(LinearGradient(colors: [Color(white: 0.22), Color(white: 0.06)], startPoint: .top, endPoint: .bottom))
-            Circle().stroke(Color.black, lineWidth: 2)
-            Rectangle().fill(Color.white.opacity(0.9)).frame(width: 2.5, height: size * 0.28)
-                .offset(y: -size * 0.25)
+            MetalKnob(pointer: false)
+            Capsule().fill(Color(white: 0.12)).frame(width: 2.5, height: size * 0.22)
+                .offset(y: -size * 0.2)
                 .rotationEffect(.degrees(KnobControl.angle(value)))
         }
         .frame(width: size, height: size)

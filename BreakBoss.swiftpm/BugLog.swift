@@ -7,7 +7,7 @@ import UIKit
 // MARK: - Bug reports
 //
 // A running log of what the app did (launch, audio route and interruptions, notices on screen, memory
-// warnings, screen freezes, anything printed to the console) kept in Files › BreakBoss › Bug Reports, so a
+// warnings, screen freezes, anything printed to the console) kept in Files › BreaKing › Bug Reports, so a
 // test on the iPad (Swift Playgrounds or TestFlight) leaves something to send back. MENU › Bug report shows
 // it with the device details and the crash from the last run, if there was one; Copy or Share sends it.
 // Catching crashes and console output (BugCatcher.swift) is standalone-app only; the plug-in keeps the log
@@ -69,7 +69,7 @@ final class BugLog {
             if let data = recent.map({ $0 + "\n" }).joined().data(using: .utf8) { try? h?.write(contentsOf: data) }
         }
         setOnScreen(true)
-        note("BreakBoss started · " + Self.versionLine)
+        note("BreaKing started · " + Self.versionLine)
         if lastCrash != nil { note("The last run crashed (report in last-crash.txt)") }
         if lastRunEndedOnScreen { note("The last run ended while on screen without a crash report") }
     }
@@ -94,7 +94,7 @@ final class BugLog {
         let fm = FileManager.default
         for url in [previousLogURL, lastCrashURL] { try? fm.removeItem(at: url) }
         if let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) {
-            for f in files where f.lastPathComponent.hasPrefix("BreakBoss bug report") { try? fm.removeItem(at: f) }
+            for f in files where f.lastPathComponent.hasPrefix("BreaKing bug report") { try? fm.removeItem(at: f) }
         }
         lastCrash = nil
         lastRunEndedOnScreen = false
@@ -126,7 +126,7 @@ final class BugLog {
         var out = "BREAKBOSS BUG REPORT · \(Date().formatted(date: .abbreviated, time: .standard))\n\n"
         out += "WHAT HAPPENED\n" + (whatHappened.isEmpty ? "(nothing written)" : whatHappened) + "\n\n"
         out += "DEVICE\n"
-        out += "BreakBoss \(Self.versionLine)\n"
+        out += "BreaKing \(Self.versionLine)\n"
         out += "\(UIDevice.current.model) \(Self.hardware) · \(UIDevice.current.systemName) \(UIDevice.current.systemVersion) · \(memory) RAM\n"
         out += "Thermal state \(ProcessInfo.processInfo.thermalState.rawValue) · low power \(ProcessInfo.processInfo.isLowPowerModeEnabled ? "on" : "off")\n"
         out += String(format: "Audio %.0f Hz · buffer %.1f ms · out: %@ · in: %@\n\n",
@@ -150,7 +150,7 @@ final class BugLog {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd HH-mm-ss"
-        let name = "BreakBoss bug report \(f.string(from: Date())).txt"
+        let name = "BreaKing bug report \(f.string(from: Date())).txt"
         let url = folder.appendingPathComponent(name)
         do { try report(whatHappened: whatHappened).write(to: url, atomically: true, encoding: .utf8) } catch { return nil }
         return url
@@ -179,13 +179,13 @@ struct BugReportView: View {
                         Text(crash.split(separator: "\n").prefix(4).joined(separator: "\n"))
                             .font(.system(size: 12, design: .monospaced))
                     } header: {
-                        Text("BreakBoss crashed last time")
+                        Text("BreaKing crashed last time")
                     } footer: {
                         Text("The whole crash report is in the report below. Write what you were doing, then Copy or Share.")
                     }
                 } else if BugLog.shared.lastRunEndedOnScreen {
                     Section("Last run") {
-                        Text("BreakBoss closed while it was on screen without a crash report: a freeze, running out of memory, or Stop in Swift Playgrounds.")
+                        Text("BreaKing closed while it was on screen without a crash report: a freeze, running out of memory, or Stop in Swift Playgrounds.")
                             .font(.callout)
                     }
                 }
@@ -215,7 +215,7 @@ struct BugReportView: View {
                         Label("Clear old reports", systemImage: "trash")
                     }
                 } footer: {
-                    Text("The log keeps running while you play. Reports are also saved in Files › BreakBoss › Bug Reports.")
+                    Text("The log keeps running while you play. Reports are also saved in Files › BreaKing › Bug Reports.")
                 }
                 Section("Report") {
                     Text(preview)

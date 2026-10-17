@@ -20,7 +20,7 @@ final class AppAudioHost {
     private var source: AVAudioSourceNode?
     private var midiClient = MIDIClientRef()
     private var midiPort = MIDIPortRef()
-    /// "BreakBoss Out": a virtual MIDI source other apps and interfaces can listen to (MIDI OUT).
+    /// "BreaKing Out": a virtual MIDI source other apps and interfaces can listen to (MIDI OUT).
     private var midiSource = MIDIEndpointRef()
     private let outList = UnsafeMutableRawPointer.allocate(byteCount: 4096, alignment: 8)
     private var observers: [NSObjectProtocol] = []
@@ -126,10 +126,10 @@ final class AppAudioHost {
         let notify: MIDINotifyBlock = { [weak self] message in
             if message.pointee.messageID == .msgSetupChanged { DispatchQueue.main.async { self?.connectSources() } }
         }
-        guard MIDIClientCreateWithBlock("BreakBoss" as CFString, &midiClient, notify) == noErr else { return }
+        guard MIDIClientCreateWithBlock("BreaKing" as CFString, &midiClient, notify) == noErr else { return }
         let engine = self.engine
         let toSeconds = hostTicksToSeconds
-        let status = MIDIInputPortCreateWithProtocol(midiClient, "BreakBoss In" as CFString, ._1_0, &midiPort) { list, _ in
+        let status = MIDIInputPortCreateWithProtocol(midiClient, "BreaKing In" as CFString, ._1_0, &midiPort) { list, _ in
             for packet in list.unsafeSequence() {
                 let time = packet.pointee.timeStamp > 0 ? Double(packet.pointee.timeStamp) * toSeconds
                                                         : ProcessInfo.processInfo.systemUptime
@@ -149,14 +149,14 @@ final class AppAudioHost {
             }
         }
         guard status == noErr else { return }
-        MIDISourceCreateWithProtocol(midiClient, "BreakBoss Out" as CFString, ._1_0, &midiSource)
+        MIDISourceCreateWithProtocol(midiClient, "BreaKing Out" as CFString, ._1_0, &midiSource)
         connectSources()
     }
 
     private func isOwnSource(_ endpoint: MIDIEndpointRef) -> Bool {
         var name: Unmanaged<CFString>?
         guard MIDIObjectGetStringProperty(endpoint, kMIDIPropertyName, &name) == noErr, let n = name?.takeRetainedValue() else { return false }
-        return (n as String) == "BreakBoss Out"
+        return (n as String) == "BreaKing Out"
     }
 
     private func connectSources() {
@@ -166,7 +166,7 @@ final class AppAudioHost {
         connectedSources.formIntersection(available)
         for i in 0..<MIDIGetNumberOfSources() {
             let endpoint = MIDIGetSource(i)
-            // Never listen to our own "BreakBoss Out": the hits we send would come straight back in,
+            // Never listen to our own "BreaKing Out": the hits we send would come straight back in,
             // retrigger the pads / loops every audio block and turn the beat into a buzzing tone.
             if endpoint == midiSource || isOwnSource(endpoint) { continue }
             if !connectedSources.contains(endpoint), MIDIPortConnectSource(midiPort, endpoint, nil) == noErr {

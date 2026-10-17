@@ -25,7 +25,7 @@ final class PadRecorder: ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
                 guard granted else {
-                    self.message = "BreakBoss needs the microphone to record. Turn it on in Settings › Privacy & Security › Microphone."
+                    self.message = "BreaKing needs the microphone to record. Turn it on in Settings › Privacy & Security › Microphone."
                     return
                 }
                 self.begin()

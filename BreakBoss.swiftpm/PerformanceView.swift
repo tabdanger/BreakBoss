@@ -41,7 +41,7 @@ struct PerformanceView: View {
             }
             .font(.system(.body, design: .monospaced))
             .background(Color(white: 0.07))
-            .navigationTitle("BreakBoss · 12 Pads").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("BreaKing · 12 Pads").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .navigationViewStyle(.stack).preferredColorScheme(.dark)

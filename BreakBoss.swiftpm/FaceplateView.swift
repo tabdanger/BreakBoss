@@ -113,6 +113,7 @@ struct FaceplateView: View {
                 .resizable()
                 .interpolation(.high)
                 .frame(width: L.width * s, height: L.height * s)
+            BrandLogo(dark: sfx != "modern", inline: true, scale: s).place([574, 1003, 874, 1043], s)
             topLeft(L, sfx: sfx, s: s)
             knobs(L, sfx: sfx, s: s)
             transport(L, sfx: sfx, s: s)

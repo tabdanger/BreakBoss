@@ -12,7 +12,7 @@ enum PortablePreset {
         case invalid, tooLarge, missing(String), missingStock(String), unreadableStock(String)
         var errorDescription: String? {
             switch self {
-            case .invalid: return "This is not a supported BreakBoss preset package."
+            case .invalid: return "This is not a supported BreaKing preset package."
             case .tooLarge: return "This preset exceeds the 64 MB portable sample limit."
             case .missing(let name): return "The preset needs a missing sample: \(name)."
             case .missingStock(let name): return "The preset needs a missing stock sample: \(name)."
