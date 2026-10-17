@@ -176,6 +176,20 @@ enum KitLibrary {
                              mode: mode, family: family, genre: genre)
     }
 
+    /// The factory kits from FactoryKits.swift's table (a line that doesn't read is skipped, and the self-test counts them).
+    static func table(_ text: String) -> [KitDefinition] {
+        let voices = ["drumMastery": drumMastery, "modernTrap": modernTrap, "westBounce": westBounce, "baySlap": baySlap,
+                      "west90s": west90s, "neoSoul": neoSoul, "gospelChops": gospelChops, "funkBreak": funkBreak,
+                      "looseBreak": looseBreak, "heavyBreak": heavyBreak]
+        return text.split(separator: "\n").compactMap { line -> KitDefinition? in
+            let f = line.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+            guard f.count == 10, let voice = voices[f[2]], let style = GrooveStyle(rawValue: f[3]),
+                  let tempo = Double(f[4]), let seed = UInt32(f[5]), let bass = Float(f[6]),
+                  let mode = SoundMode.allCases.first(where: { $0.title.lowercased() == f[7] }) else { return nil }
+            return variant(f[0], f[1], voice, style, tempo, seed, bass: bass, mode, f[8], f[9])
+        }
+    }
+
     /// A kit by its identifier. Kits from before Oct 17 open the new kit nearest their genre.
     static func kit(id: String) -> KitDefinition {
         let id = retired[id] ?? id

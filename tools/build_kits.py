@@ -211,11 +211,15 @@ def main():
              "import Foundation", "", "extension KitLibrary {",
              "    /// The A/B kits of the research genres, then the named kits that give every mode bank",
              "    /// at least 20 kits under each genre tab (tools/kit_catalog.py).",
-             "    static let factory: [KitDefinition] = ["]
-    lines += [f'        variant("{k}", "{n}", {v}, .{st}, {t}, {sd}, bass: {hz}, .{m}, "{f}", "{g}"),'
-              for k, n, v, st, t, sd, hz, m, f, g in kits]
-    lines[-1] = lines[-1].rstrip(",")
-    lines += ["    ]", "", "    /// The kits before Oct 17: saved projects and your kits that used one open the nearest new kit.",
+             "    static let factory: [KitDefinition] = table(factoryTable)",
+             "",
+             "    /// One kit a line: id | name | synth voice | groove style | tempo | seed | 808 Hz | mode bank | genre tab | genre.",
+             "    /// Text, not Swift calls, so the Release build stays quick with hundreds of kits.",
+             '    private static let factoryTable = """']
+    for k, n, v, st, t, sd, hz, m, f, g in kits:
+        assert "|" not in n + g + f
+        lines.append(f"{k}|{n}|{v}|{st}|{t}|{sd}|{hz}|{m}|{f}|{g}")
+    lines += ['"""', "", "    /// The kits before Oct 17: saved projects and your kits that used one open the nearest new kit.",
               "    static let retired: [String: String] = ["]
     lines += [f'        "{o}": "{n}",' for o, n in sorted(retired.items())]
     lines[-1] = lines[-1].rstrip(",")
