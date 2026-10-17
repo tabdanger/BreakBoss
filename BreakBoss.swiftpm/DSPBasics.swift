@@ -94,6 +94,34 @@ struct OnePole {
     @inline(__always) mutating func highPass(_ x: Float) -> Float { x - lowPass(x) }
 }
 
+/// Zero-delay-feedback state-variable filter: low-pass and band-pass from one pass, stable while
+/// its cutoff sweeps every few samples.
+struct StateVariableFilter {
+    var a1: Float = 1, a2: Float = 0, a3: Float = 0, k: Float = 1
+    var ic1: Float = 0, ic2: Float = 0
+
+    mutating func set(_ f: Float, q: Float, sr: Float) {
+        let g = tanf(Float.pi * min(max(f, 20), sr * 0.45) / sr)
+        k = 1 / max(q, 0.1)
+        a1 = 1 / (1 + g * (g + k))
+        a2 = g * a1
+        a3 = g * a2
+    }
+
+    mutating func reset() { ic1 = 0; ic2 = 0 }
+
+    /// (low-pass, band-pass with a 0 dB peak)
+    @inline(__always)
+    mutating func process(_ x: Float) -> (Float, Float) {
+        let v3 = x - ic2
+        let v1 = a1 * ic1 + a2 * v3
+        let v2 = ic2 + a2 * ic1 + a3 * v3
+        ic1 = 2 * v1 - ic1
+        ic2 = 2 * v2 - ic2
+        return (v2, v1 * k)
+    }
+}
+
 /// Peak follower with separate attack and release.
 struct EnvelopeFollower {
     var attack: Float = 0
