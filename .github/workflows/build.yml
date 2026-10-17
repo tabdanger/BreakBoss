@@ -8,18 +8,8 @@
 # Signing and uploading to App Store Connect / TestFlight are in upload.yml.
 name: Build BreakBoss
 
+# Manual only (Tyrone, Oct 16: no automatic test builds; the TestFlight upload is the build check).
 on:
-  push:
-    branches: [main]
-    paths:
-      - "BreakBoss.swiftpm/**"
-      - "AUv3/**"
-      - "xcode/**"
-      - ".github/workflows/build.yml"
-      - ".github/scripts/annotate.py"
-      - ".github/scripts/simulate.py"
-      - ".github/scripts/test_release.py"
-      - ".github/scripts/asc.py"
   workflow_dispatch:
   workflow_call:
 
@@ -84,13 +74,13 @@ jobs:
           grep -q "BUILD SUCCEEDED" "$RUNNER_TEMP/build-xcode.log"
           APP=$(find "$RUNNER_TEMP/dd-xcode/Build/Products" -maxdepth 2 -name "BreakBoss.app" | head -1)
           if [ ! -d "$APP/PlugIns/BreakBossAU.appex" ]; then echo "::error title=AUv3::BreakBossAU.appex is not inside the app"; exit 1; fi
-          for f in Assets.car KnockLayout.json PhoneKnockLayout.json; do
+          for f in Assets.car KnockLayout.json; do
             [ -e "$APP/PlugIns/BreakBossAU.appex/$f" ] || { echo "::error title=AUv3::$f is missing from the plug-in"; exit 1; }
           done
           python3 .github/scripts/simulate.py --verify-bundle "$APP"
           echo "::notice title=AUv3::$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionAttributes:AudioComponents:0:name' "$APP/PlugIns/BreakBossAU.appex/Info.plist")"
 
-      - name: Build for iPhone and iPad simulators (optimized Release)
+      - name: Build for the iPad simulator (optimized Release)
         if: always()
         run: |
           xcodebuild \
@@ -105,13 +95,13 @@ jobs:
           python3 "$GITHUB_WORKSPACE/.github/scripts/annotate.py" "$RUNNER_TEMP/build-sim.log" "Simulator build"
           grep -q "BUILD SUCCEEDED" "$RUNNER_TEMP/build-sim.log"
 
-      - name: Run the self-test and draw the faceplates on iPhone and iPad
+      - name: Run the self-test and draw the faceplates on iPad
         run: |
           python3 .github/scripts/simulate.py \
             --products "$RUNNER_TEMP/dd-sim/Build/Products" \
             --output "$RUNNER_TEMP" --timeout 240
 
-      - name: Keep the iPhone and iPad faceplate screenshots
+      - name: Keep the iPad faceplate screenshots
         if: always()
         uses: actions/upload-artifact@v5
         with:

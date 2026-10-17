@@ -54,15 +54,15 @@ struct FaceplateLayout: Decodable {
     var isPhone: Bool { device == .phone }
 
     func plateImageName(for mode: SoundMode) -> String {
-        "\(isPhone ? "PhonePlate" : "Plate")_\(mode.assetSuffix)"
+        "Plate_\(mode.assetSuffix)"
     }
 
     /// Plate image for a face key ("modern", "vintage", "texture" or "platinum").
-    func plateImageName(face: String) -> String { "\(isPhone ? "PhonePlate" : "Plate")_\(face)" }
+    func plateImageName(face: String) -> String { "Plate_\(face)" }
 
-    /// State overlays cut from the same plate: "oneshot_on_modern" or "phone_oneshot_on_modern".
+    /// State overlays cut from the same plate: "oneshot_on_modern".
     func overlayName(_ kind: String, _ suffix: String) -> String {
-        "\(isPhone ? "phone_" : "")\(kind)_\(suffix)"
+        "\(kind)_\(suffix)"
     }
 
     static func rect(_ r: [Double]) -> CGRect {
@@ -82,10 +82,6 @@ struct FaceplateLayout: Decodable {
         load("KnockLayout")
     }()
 
-    static let phone: [String: FaceplateLayout] = {
-        load("PhoneKnockLayout")
-    }()
-
     private static func load(_ name: String) -> [String: FaceplateLayout] {
         guard let url = knockResourceURL(name, "json"),
               let data = try? Data(contentsOf: url),
@@ -94,12 +90,12 @@ struct FaceplateLayout: Decodable {
     }
 
     static func forMode(_ mode: SoundMode, device: Device = .tablet) -> FaceplateLayout? {
-        (device == .phone ? phone : all)[mode.assetSuffix]
+        all[mode.assetSuffix]        // iPad only for now
     }
 
     /// Layout for a face key; Platinum is Modern's alternate face, lined up with Modern.
     static func forFace(_ face: String, device: Device = .tablet) -> FaceplateLayout? {
-        (device == .phone ? phone : all)[face]
+        all[face]                    // iPad only for now
     }
 }
 
