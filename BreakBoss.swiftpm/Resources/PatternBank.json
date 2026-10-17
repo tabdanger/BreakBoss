@@ -2,4203 +2,213 @@
  "version": 1,
  "patterns": [
   {
-   "style": "Danger Patterns",
-   "name": "80s HIP HOP 1",
-   "bpm": 87,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "h": "x.x.xxx.x.xxxxxx",
-    "s": "...xx..xxx..x..x",
-    "k": "x..x..x...x..x.."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "80s HIP HOP 2",
-   "bpm": 87,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "h": "x.xxx.xxxxx.xx.x",
-    "s": "....x..xxx..x..x",
-    "k": "x..x..x...x..x.."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "80s HIP HOP 3",
-   "bpm": 87,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "o": "......x.........",
-    "h": "x.xxx..xxxx.xx.x",
-    "s": "....x....x..x..x",
-    "k": "x..x......x....x"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "80s HIP HOP 4",
-   "bpm": 87,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "h": "x.xxx.xxxxxxxx.x",
-    "s": "...xx....x..x..x",
-    "k": "x..x..x...x...x."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "80s HIP HOP 5",
-   "bpm": 87,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "h": "x.x.x.x.x.x.x.x.",
-    "s": "....x.......x...",
-    "k": "x.........x....."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "AFRO TRAP 1",
-   "bpm": 120,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x..xx...x...x...x...x..x",
-    "s": "x..x..x...x.x...x..x..x...x.x...",
-    "p1": ".x.....x.........x....x.x.....x.",
-    "p2": ".........x...x..............xx.x"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "AFRO TRAP 2",
-   "bpm": 120,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x...x...x.......x...x...",
-    "s": "x..x..x...x.x...x..x..x.....x...",
-    "p1": ".....x...............x........xx",
-    "h": "..x...............x..x..........",
-    "o": "......x...............x........."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "AFRO TRAP 3",
-   "bpm": 120,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...........",
-    "s": "x..x..x.....x...x..x..x.x...x...",
-    "h": ".........x.x.............x.x....",
-    "o": "..............x...............x."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "AFRO TRAP 4",
-   "bpm": 120,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...",
-    "s": "x..x..x...x...x.",
-    "p1": "xxx.........xx..",
-    "o": "..............x.",
-    "h": "........xx......"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "AFRO TRAP 5",
-   "bpm": 120,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "s": "x..x..x...x.x...x..x..x...x.x...",
-    "p1": "x.x...x.......x.x..xx.x.x.x.x.x.",
-    "p2": "x.x.............x.x............."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "90s BREAKBEAT 1",
-   "bpm": 90,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "h": "xxxxx.xxxxxxxxxx",
-    "s": "....x....x...x..",
-    "k": "x..x...x...x...x"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "90s BREAKBEAT 2",
-   "bpm": 90,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "h": "x.xxxxxxxxxxx.xx",
-    "s": "....x........x.x",
-    "k": "x.x....xx.x....."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "90s BREAKBEAT 3",
-   "bpm": 90,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "h": "xxxxx.xxx.xxx.xx",
-    "s": "....x....x.x.x.x",
-    "c": "....x...........",
-    "k": "x.x....x........"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 1 ATL BOUNCE",
-   "bpm": 140,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x.....x...x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.qx.x",
-    "o": "......................o.........",
-    "b": "0------.7-.....0-----.....5-----"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 2 TRIPLET HATS",
-   "bpm": 142,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.......x.x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.t.x.x.x.t.x.x.x.x.t.x.x.r.x.",
-    "b": "0-----0---0-----0-------3-3-----"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 3 MEMPHIS",
-   "bpm": 145,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x...x.....x..x....x.x.....",
-    "c": "........X...............X.......",
-    "h": "xxxxxxxxxxxxrrxxxxxxxxxxxxxxqqxx",
-    "p1": "....g.......g.......g.......g...",
-    "b": "0--0--0---3-----0--0----3-5-----"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 4 ROLLS",
-   "bpm": 140,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.......x.x.....x.....x.........",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.r.r.x.x.x.x.x.x.qqqqx.x.",
-    "o": "...........o...............o....",
-    "b": "0-------7-0-----0-----A---------"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 5 BOUNCY",
-   "bpm": 138,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x..x......x.....x..x..x...",
-    "c": "........X...............X.......",
-    "s": "..............g...............g.",
-    "h": "x.xxx.x.x.xxx.x.x.xxx.x.x.xxr.x.",
-    "b": "0-----0--0------0-----0--5--5---"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 6 SPACE",
-   "bpm": 150,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x...........x...x.........x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.t.x.x.x.x.x.t.x.",
-    "p2": "....o...............o...........",
-    "b": "0-----------0---0---------3-----"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 7 CLAP STACK",
-   "bpm": 140,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.....x...x.....x.x.......",
-    "c": "........X.......o.......X......o",
-    "s": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0-----0-----0---0-----0-0-------"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 8 STUTTER",
-   "bpm": 145,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x.......x.....x.x.....x.x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.rrx.x.x.x.x.x.x.qqx.x.x.x.",
-    "r": "...x...........x...x...........x",
-    "b": "0-0-------0-----0-0-----5-5-----"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 9 OPEN HAT",
-   "bpm": 138,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x......x.x......",
-    "c": "........X...............X.......",
-    "h": "x.x...x.x.x...x.x.x...x.x.x...x.",
-    "o": "....o.......o.......o.......o...",
-    "b": "0------0--0-----0------5-5------"
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 10 FINAL",
-   "bpm": 148,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.x...x.....x...x.x...",
-    "c": "........X...............X...X.XX",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.qqqqqqqq",
-    "cr": "x...............................",
-    "b": "0-----0---0-0---0-----0---7-7---"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 1 GRAVE",
-   "bpm": 140,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x...........x...x.........x.....",
-    "c": "........X...............X.......",
-    "h": "x...x.t.x...x...x...x.t.x...x.r.",
-    "r": "..........g...........g.........",
-    "b": "0-----------0---0---------A-----"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 2 HAUNT",
-   "bpm": 144,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.......x.......x.....x.........",
-    "s": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.t.x.t.",
-    "p1": "...o.......o.......o.......o....",
-    "b": "0-------0-------0-----B---------"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 3 SMOKE",
-   "bpm": 135,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..........x....x.......x.......",
-    "c": "........X...............X.......",
-    "h": "x...x...x...x.x.x...x...x...qqqq",
-    "o": "......o...............o.........",
-    "b": "0----------0----0-------3-------"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 4 VOID",
-   "bpm": 150,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x...............x.....x.........",
-    "c": "........X...............X.......",
-    "h": "x.t.x.x.x.t.x.x.x.t.x.x.x.t.x.x.",
-    "b": "0---------------0-----C---------"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 5 RITUAL",
-   "bpm": 140,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.....x...x.....x.....x...",
-    "c": "........X...............X.......",
-    "r": "....g.......g.......g.......g...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0-----0-----0---0-----3-----5---"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 6 GLOOM",
-   "bpm": 132,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x.....x.........x.x...",
-    "s": "........X...............X.......",
-    "h": "x.x.r.x.x.x.r.x.x.x.r.x.x.x.qqx.",
-    "p2": "..............o...............o.",
-    "b": "0---------0-----0---------A-A---"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 7 BELLS",
-   "bpm": 146,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.......x.x.....x.......x.......",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.t.x.x.x.x.x.x.x.t.x.qqx.",
-    "p1": "......o.......o.......o.......o.",
-    "b": "0-------0-0-----0-------5-------"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 8 CRAWL",
-   "bpm": 138,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...........x...x...........",
-    "c": "........X...............X.......",
-    "h": "x...x...x...x...x...x...x.x.x.x.",
-    "o": "..........o...............o.....",
-    "b": "0---0-----------0---3-----------"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 9 OMEN",
-   "bpm": 142,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.x.......x.....x...x.....",
-    "c": "........X.......................",
-    "s": "........................X.....gX",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.qqqqqqqq",
-    "b": "0-----0-0-------0-----0---A-----"
-   }
-  },
-  {
-   "style": "Dark Trap",
-   "name": "DARK TRAP 10 NIGHT",
-   "bpm": 140,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "c": "........X...............X.......",
-    "h": "t.x.x.x.t.x.x.x.t.x.x.x.t.x.x.x.",
-    "cr": "x...............................",
-    "b": "0---------0-----0---------B-----"
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 1 RATCHET",
-   "bpm": 98,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.x.......x.....x.x...x...",
-    "c": "....X.......X.......X.......X...",
-    "r": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "..............o...............o.",
-    "b": "0.....0.0.......0.....5.5...7..."
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 2 HEY",
-   "bpm": 100,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "...........X...............X....",
-    "b": "0.....0...0-----0.....5...5.5---"
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 3 SNAP",
-   "bpm": 96,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.x.....x.......x.x.....",
-    "r": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......o...............o.........",
-    "b": "0-------0.0-----0-------3.3-----"
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 4 MOZZY",
-   "bpm": 92,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.x...x.....x...x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "xxx.xxx.xxx.xxx.xxx.xxx.xxx.xxx.",
-    "b": "0-----0---0-0---0-----0---5-----"
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 5 TY",
-   "bpm": 104,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.x.....x.x.....x.x.......",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "..o.......o.......o.......o.....",
-    "b": "0.....0.0.....0.0.....3.3-------"
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 6 G-FUNK",
-   "bpm": 94,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.x.....x.......x...x.x.",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............o...............o.",
-    "p1": ".o.o.o.o.o.o.o.o.o.o.o.o.o.o.o.o"
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 7 LOWRIDER",
-   "bpm": 92,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x..x....x.x.....x..x....x.....x.",
-    "s": "....X.......X.......X.......X...",
-    "c": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0..3....0.0-----0..3....5.....7-"
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 8 SLAP",
-   "bpm": 100,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x...x...x.x...x.x...x...x.x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.r.x.",
-    "b": "0.0...0...0.0---0.0...5...5.5---"
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 9 BAY",
-   "bpm": 96,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.....x.x..x....x.....x.x..x.x..",
-    "s": "....X.......X.......X.......X...",
-    "r": "..........g...........g.....g...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0-----0.0..0----0-----0.0..3.3--"
-   }
-  },
-  {
-   "style": "West Coast",
-   "name": "WEST COAST 10 CRUISE",
-   "bpm": 98,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.....x.x.......x.....x.",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......o.......o.......o.......o.",
-    "p2": "...........o...............o....",
-    "b": "0-------0.....0.0-------5.....5."
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 1 UK",
-   "bpm": 142,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.....x.........",
-    "s": "........X..x...............X....",
-    "h": "x..x..x.x..x..x.x..x..x.x..x.x..",
-    "b": "0-----------3---0-----5---------"
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 2 NY",
-   "bpm": 144,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x......x..x.....x......x...x....",
-    "s": "........X..x...............X....",
-    "h": "x..x..x.x..x.x..x..x..x.x..x.x..",
-    "p1": "....o..............o............",
-    "b": "0------3--0-----0------5---3----"
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 3 SLIDES",
-   "bpm": 140,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.x...x.........x.....",
-    "s": "........X..x...............X....",
-    "h": "x..x..x.x.t..x..x..x..x.x.t..x..",
-    "b": "0---------7-5---0---------3-----"
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 4 BROOKLYN",
-   "bpm": 143,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x..x......x.....x..x......x.....",
-    "s": "........X..x...............X..x.",
-    "h": "x.x..x.x..x.x..xx.x..x.x..x.x..x",
-    "b": "0--3------0-----0--3------5-----"
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 5 DARK",
-   "bpm": 140,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "s": "........X..x...............X....",
-    "h": "x..x..x.x..x..x.x..x..x.qq.x..x.",
-    "r": "......g...........g.............",
-    "b": "0---------A-----0---------3-----"
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 6 BOUNCE",
-   "bpm": 142,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x....x....x.....x....x....x.x...",
-    "s": "........X..x...............X....",
-    "h": "x..x..x.x..x..x.x..x..x.x..x..x.",
-    "o": "..............o...............o.",
-    "b": "0----5----0-----0----3----0-0---"
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 7 SKIPPY",
-   "bpm": 145,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.......x.x.....x.......x.....x.",
-    "s": "........X..x...............X....",
-    "h": "x..xx.x.x..x..x.x..xx.x.x..x.qq.",
-    "b": "0-------0-7-----0-------5-----3-"
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 8 CHICAGO",
-   "bpm": 140,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x...x.....x..x..x...x.x...",
-    "s": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.qqqqx.x.x.x.x.x.",
-    "b": "0--0--0---0-----0--0--3---3-3---"
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 9 RIM",
-   "bpm": 141,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "s": "........X..x...............X....",
-    "r": "..x.....x.....x...x.....x.....x.",
-    "h": "x..x..x.x..x..x.x..x..x.x..x..x.",
-    "b": "0---------0-----0---------5-----"
-   }
-  },
-  {
-   "style": "Drill",
-   "name": "DRILL 10 SHUFFLE",
-   "bpm": 144,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x......x.x......x......x.x.x....",
-    "s": "........X..x...............X..g.",
-    "h": "x..x..x.x..x..x.x..x..x.x..x..x.",
-    "p2": "...............o...............o",
-    "b": "0------3.0------0------5.5.3----"
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 1 LOG DRUM",
-   "bpm": 112,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "r": "..x.....x..x.......x...x.....x..",
-    "p1": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "..o...o...o...o...o...o...o...o.",
-    "b": "0.....0.3...0...0.....0.5...3..."
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 2 PRIVATE",
-   "bpm": 113,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x.......x.......x.......x.......",
-    "c": "....x.......x.......x.......x...",
-    "p1": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "r": "......x.....x.x.......x.....x...",
-    "b": "0..0..0.....5...0..0..0.....7..."
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 3 SHAKER",
-   "bpm": 112,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "p1": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo",
-    "c": "........x...............x.......",
-    "r": "...x..x....x..x....x..x....x..x.",
-    "b": "0.......0.0.5.......0.0.....7.5."
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 4 GROOVE",
-   "bpm": 114,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "s": "........g......x........g.......",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "p2": "....x.......x.......x.....x.....",
-    "b": "0.....3.....0...0.....5.....3..."
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 5 BACARDI",
-   "bpm": 115,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....x.......x.......x.......x...",
-    "p1": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "b": "0.0.....0.0.....0.0.....5.5....."
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 6 SPARSE",
-   "bpm": 110,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x.......x.......x.......x.......",
-    "r": "......x.......x.......x.....x...",
-    "p1": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0.....0...7.......0.....0...5..."
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 7 SGIJA",
-   "bpm": 112,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "...........x...............x....",
-    "r": "..x..x..x..x..x...x..x..x..x..x.",
-    "p1": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo",
-    "b": "0...0...0.3.0...0...0...5.3.0..."
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 8 DEEP",
-   "bpm": 111,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "s": "........x...............x.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..o.......o.......o.......o.....",
-    "b": "0.......3.......0.......5.....3."
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 9 PERC",
-   "bpm": 113,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "p1": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "p2": "..o.....o..o......o.....o..o....",
-    "lt": "......x...............x.........",
-    "b": "0.....0.5.......0.....0.3......."
-   }
-  },
-  {
-   "style": "Amapiano",
-   "name": "AMAPIANO 10 CLUB",
-   "bpm": 114,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....x.......x.......x.......x...",
-    "p1": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "..o...o...o...o...o...o...o...o.",
-    "r": "......x.......x.....x.......x...",
-    "b": "0..0..0.5.......0..0..0.7.....5."
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 1 SOFT LOG",
-   "bpm": 108,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x.......x.......x.......x.......",
-    "r": "....x.......x.......x.......x...",
-    "p1": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0.....3.....0...0.....5.....3..."
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 2 MELLOW",
-   "bpm": 106,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....x.......x.......x.......x...",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "b": "0.......0.3.....0.......5.3....."
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 3 SHAKER",
-   "bpm": 110,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.......x.......x.......",
-    "s": "....x.......x.......x.......x...",
-    "p1": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo",
-    "r": "..........x...............x.....",
-    "b": "0.....0.......7.0.....0.......5."
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 4 SNAP",
-   "bpm": 105,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "r": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0.....0...3-----0.....0...5-----"
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 5 GROOVE",
-   "bpm": 108,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....x.......x.......x.......x...",
-    "p1": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "o": "..o.......o.......o.......o.....",
-    "b": "0...0.....3.....0...0.....5....."
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 6 LATE NIGHT",
-   "bpm": 104,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "x.......x..x....x.......x..x....",
-    "s": "....x.......x.......x.......x..g",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0.......0..3----0.......5..3----"
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 7 KEYS",
-   "bpm": 107,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "r": "......x.......x.......x.......x.",
-    "p1": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "c": "....x.......x.......x.......x...",
-    "b": "0.....0.3.......5.....5.3......."
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 8 RIMSHOT",
-   "bpm": 109,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.......x.......x.......",
-    "r": "..x...x...x.x...x...x...x...x.x.",
-    "p1": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo",
-    "b": "0.......0.0.....0.......7.5....."
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 9 SWAY",
-   "bpm": 106,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "x.....x.x.......x.....x.x.......",
-    "c": "....x.......x.......x.......x...",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "p2": "...........o...............o....",
-    "b": "0.....0.0.......3.....3.3......."
-   }
-  },
-  {
-   "style": "South African RnB",
-   "name": "SA RNB 10 SUNSET",
-   "bpm": 108,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "s": "....x.......x.......x.......x...",
-    "p1": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "o": "..............o...............o.",
-    "b": "0...........3...0...........5..."
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 1 SLOW JAM",
-   "bpm": 70,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x..x......",
-    "c": "........X...............X.......",
-    "r": "........x...............x.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.r.x.x.x.",
-    "b": "0.....0...0-----0.....5..5------"
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 2 SNAPS",
-   "bpm": 74,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x......x..x.....x......x........",
-    "r": "........X...............X.......",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxqqxxxxxx",
-    "o": "..............o...............o.",
-    "b": "0------0..0-----0------5--------"
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 3 TRAP SOUL",
-   "bpm": 68,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.......x.x.....x.....x.........",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.t.x.x.x.x.x.x.x.t.x.x.x.",
-    "p1": "......g...............g.........",
-    "b": "0-------0.0-----0-----3---------"
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 4 VELVET",
-   "bpm": 72,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.....x...x.....x.........",
-    "s": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "r": "..........g...............g.....",
-    "b": "0-----0-----0---0-----0---------"
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 5 RIDE",
-   "bpm": 76,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x.x...x.........x.....",
-    "c": "........X...............X.......",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxqqx.",
-    "b": "0---------0.0---0---------5-----"
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 6 MIDNIGHT",
-   "bpm": 66,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x......x........x......x..x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......o...............o.........",
-    "b": "0------0--------0------5--3-----"
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 7 KNOCK",
-   "bpm": 75,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x.....x..x......x.x...",
-    "c": "........X...............X.......",
-    "s": "........x...............x.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0..0......0-----0..0......5.5---"
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 8 SILK",
-   "bpm": 70,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.......x.....x.x.......",
-    "r": "........X...............X.......",
-    "h": "x.x.r.x.x.x.r.x.x.x.r.x.x.x.qqx.",
-    "b": "0-------0-------0-----3.3-------"
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 9 LATE",
-   "bpm": 72,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.....x...x.x...x.....x...x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "...o...............o............",
-    "b": "0-----0---0.0---0-----0---5-----"
-   }
-  },
-  {
-   "style": "RnB",
-   "name": "RNB 10 DRIP",
-   "bpm": 74,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x..x....x.......x..x....",
-    "c": "........X...............X.....g.",
-    "h": "xxx.xxx.xxx.xxx.xxx.xxx.xxx.qqqq",
-    "b": "0-------0..0----0-------5..5----"
-   }
-  },
-  {
-   "style": "90s RnB",
-   "name": "90s RNB 1 SWING",
-   "bpm": 92,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x......x..x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "r": "....x.......x.......x.......x..."
-   }
-  },
-  {
-   "style": "90s RnB",
-   "name": "90s RNB 2 NEW JACK",
-   "bpm": 104,
+   "style": "Neo Soul",
+   "name": "NEO SOUL 1 VOODOO POCKET",
+   "bpm": 84,
    "swing": 62,
    "glide": false,
    "lanes": {
-    "k": "x.....x...x.....x.....x...x.x...",
-    "s": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "..............o...............o."
+    "k": "X......x..x.....X.....x...x..x..X......x..x.....X.....x...x.....",
+    "s": "....X..g...gX..g....X..g.g..X..g....X..g...gX..g....X..g.g..XgXg",
+    "h": "xgogxgogxgogxgo.xgogxgogxgogxgo.xgogxgogxgogxgo.xgogxgogxgog....",
+    "o": "...............o...............o...............o................",
+    "cr": "x..............................................................."
+   },
+   "shift": {
+    "s": -3,
+    "k": 2
+   },
+   "ghostChance": {
+    "s": 0.7
    }
   },
   {
-   "style": "90s RnB",
-   "name": "90s RNB 3 SNAPS",
-   "bpm": 88,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.x.....x.......x.......",
-    "r": "....X.......X.......X.......X...",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "p1": "..........g...............g....."
-   }
-  },
-  {
-   "style": "90s RnB",
-   "name": "90s RNB 4 SLOW",
-   "bpm": 76,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x.x.......",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "........o...............o......."
-   }
-  },
-  {
-   "style": "90s RnB",
-   "name": "90s RNB 5 BOUNCE",
-   "bpm": 96,
-   "swing": 62,
-   "glide": false,
-   "lanes": {
-    "k": "x..x....x.x..x..x..x....x.x.....",
-    "s": "....X.......X.......X.......X..g",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......o...............o........."
-   }
-  },
-  {
-   "style": "90s RnB",
-   "name": "90s RNB 6 SMOOTH",
-   "bpm": 90,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x...x...x.......x.......",
-    "s": "....X.......X.......X.......X...",
-    "c": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "90s RnB",
-   "name": "90s RNB 7 GHOST",
-   "bpm": 94,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.x.......x.....x.x.......",
-    "s": "..g.X..g.g..X.g...g.X.g....X...g",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "90s RnB",
-   "name": "90s RNB 8 TIMBO",
-   "bpm": 98,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x...x.....x..x..x...x.x...",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.r.x.x.x.x.x.x.x.r.x.x.",
-    "p1": "...o.......o.......o.......o....",
-    "r": "..x.......x.......x.......x....."
-   }
-  },
-  {
-   "style": "90s RnB",
-   "name": "90s RNB 9 SHUFFLE",
-   "bpm": 86,
+   "style": "Neo Soul",
+   "name": "NEO SOUL 2 CROSS STICK",
+   "bpm": 78,
    "swing": 64,
    "glide": false,
    "lanes": {
-    "k": "x.......x..x....x.......x..x....",
-    "s": "....X.......X.......X.......X...",
-    "h": "xxx.xxx.xxx.xxx.xxx.xxx.xxx.xxx.",
-    "o": "..............o...............o."
+    "k": "X.......x..x....X......x..x.....X.......x..x....X......x..x.....",
+    "r": "....x.......x.......x.......x.......x.......x.......x...........",
+    "s": "..g......g....g...g......g....g...g......g....g...g......g..ggoX",
+    "h": "x.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.ox....",
+    "cr": "x..............................................................."
+   },
+   "shift": {
+    "s": -3,
+    "r": -3,
+    "k": 2
+   },
+   "ghostChance": {
+    "s": 0.7
    }
   },
   {
-   "style": "90s RnB",
-   "name": "90s RNB 10 QUIET STORM",
-   "bpm": 80,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x.....x.........x.x...",
-    "r": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "...........o...............o...."
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 1 LINN",
-   "bpm": 108,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "c": "....X.......X.......X.......X...",
-    "s": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 2 QUIET",
-   "bpm": 96,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.x.....x.......x.......",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "..o...o...o...o...o...o...o...o."
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 3 SEXUAL",
-   "bpm": 94,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x....x.......x..x....x.x.....",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............o...............o.",
-    "b": "0..0....0.......0..0....5.5....."
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 4 BOOGIE",
-   "bpm": 112,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.x.....x.x.....x.x.....x.",
-    "c": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "p1": "..x...x...x...x...x...x...x...x."
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 5 SLOW",
-   "bpm": 84,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.......x.......x..x....",
-    "s": "....X.......X.......X.......X...",
-    "c": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 6 COWBELL",
-   "bpm": 104,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "x..x..x...x.x...x..x..x...x.x..."
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 7 JAM",
-   "bpm": 100,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x.....x..x......x.x...",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......o...............o.........",
-    "lt": "..............................xx"
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 8 STREET",
-   "bpm": 106,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.x...x.....x...x.....",
-    "c": "....X.......X.......X.......X...",
-    "r": "..x.......x.......x.......x.....",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 9 SMOOTH",
-   "bpm": 92,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x..x....x.......x..x....",
-    "s": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "p1": "....o.......o.......o.......o..."
-   }
-  },
-  {
-   "style": "80s RnB",
-   "name": "80s RNB 10 DANCE",
-   "bpm": 116,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "o": "..o...o...o...o...o...o...o...o."
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 1 GATED",
-   "bpm": 118,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.x.....x.......x.x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "cr": "x..............................."
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 2 DRIVE",
-   "bpm": 124,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "s": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 3 TOMS",
-   "bpm": 120,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.......x.......x.......",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "ht": "........................x.x.....",
-    "lt": "............................x.x."
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 4 SYNTH",
-   "bpm": 112,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......o.......o.......o.......o."
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 5 ARENA",
-   "bpm": 116,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.x.......x.....x.x.......",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "cr": "x...............x..............."
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 6 NEW WAVE",
-   "bpm": 128,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "p1": "..o...o...o...o...o...o...o...o."
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 7 BALLAD",
-   "bpm": 84,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "lt": "..............................x.",
-    "ht": "............................x..."
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 8 CLAPS",
-   "bpm": 120,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.x.....x.......x.x.....",
-    "c": "....X.......X.......X.......X...",
-    "s": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 9 DANCE",
-   "bpm": 122,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "o": "..o...o...o...o...o...o...o...o.",
-    "p2": "x..x..x.x..x..x.x..x..x.x..x..x."
-   }
-  },
-  {
-   "style": "80s Pop",
-   "name": "80s POP 10 FILL",
-   "bpm": 118,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.x.....x.......x.x.....",
-    "s": "....X.......X.......X.......XXXX",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.....",
-    "ht": "........................x.x.....",
-    "lt": "............................xx.."
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 1 GROOVE",
-   "bpm": 104,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x.x...x..x....x.x.....",
-    "s": "....X..g.g..X...g...X..g.g..X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "..............o...............o."
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 2 SLAP",
-   "bpm": 108,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "x.x...x...x.....x.x...x...x.x...",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "..x.......x.......x.......x....."
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 3 GHOSTS",
-   "bpm": 100,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x.x.......",
-    "s": "..g.X.g..g.gX.g...g.X.g..g.gX.g.",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......o...............o........."
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 4 CLAP",
-   "bpm": 112,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x...x.....x..x..x...x.x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "p1": "..o...o...o...o...o...o...o...o."
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 5 MINNEAPOLIS",
-   "bpm": 116,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.x.....x.x.....x.x.....x.",
-    "c": "....X.......X.......X.......X...",
-    "s": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..o...o...o...o...o...o...o...o."
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 6 STRUT",
-   "bpm": 98,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x...x.....x.x...x...x.....x.x...",
-    "s": "....X.......X..g....X.......X...",
-    "h": "xxx.xxx.xxx.xxx.xxx.xxx.xxx.xxx.",
-    "o": "...o...o...o...o...o...o...o...o"
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 7 COWBELL",
-   "bpm": 106,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x...x.x...x..x..x...x.x...",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "x.x..x.x..x.x..xx.x..x.x..x.x..x"
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 8 SYNCOPATE",
-   "bpm": 110,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x..x..x.x.......x..x..x.",
-    "s": "....X..g....X..g....X..g....X..g",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 9 TOMS",
-   "bpm": 102,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x.....x..x......x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "ht": "..............x...............x.",
-    "lt": "...............x...............x"
-   }
-  },
-  {
-   "style": "80s Funk",
-   "name": "80s FUNK 10 PARTY",
-   "bpm": 114,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "o": "..o...o...o...o...o...o...o...o.",
-    "p1": "...x.......x.......x.......x...."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 1 MAIN ROOM",
-   "bpm": 128,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "c": "....X.......X.......X.......X...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "k": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 2 BIG ROOM",
-   "bpm": 128,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "c": "....X.......X.......X.......X...",
-    "s": "....X.......X.......X.......X...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "cr": "x...............................",
-    "k": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 3 BUILD",
-   "bpm": 128,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "s": "x...x...x...x...x.x.x.x.xxxxXXXX",
-    "h": "x.x.x.x.x.x.x.x.xxxxxxxxxxxxxxxx",
-    "cr": "x...............................",
-    "k": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 4 FUTURE",
-   "bpm": 150,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "..o.....o..o......o.....o..o....",
-    "k": "x.....x...x.....x.....x...x.x..."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 5 PROG",
-   "bpm": 126,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "c": "....x.......x.......x.......x...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "p1": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "k": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 6 ELECTRO",
-   "bpm": 128,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "c": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "p2": "..x..x....x..x....x..x....x..x..",
-    "k": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 7 FESTIVAL",
-   "bpm": 130,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "c": "....X.......X.......X.......X...",
-    "s": "....x.......x.......x.......x...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "ht": "............................xx..",
-    "lt": "..............................xx",
-    "k": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 8 MELODIC",
-   "bpm": 124,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "c": "....x.......x.......x.......x...",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "r": "......x.......x.......x.....x...",
-    "k": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 9 BOUNCE",
-   "bpm": 128,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "c": "....X.......X.......X.......X...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "p1": ".x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x",
-    "k": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "EDM",
-   "name": "EDM 10 DROP",
-   "bpm": 128,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "c": "....X.......X.......X.......X...",
-    "s": "....X.......X.......X.......X...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "cr": "x...............x...............",
-    "b": "..0...0...0...0...0...0...0...0.",
-    "k": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "House",
-   "name": "HOUSE 1 CLASSIC",
-   "bpm": 124,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "House",
-   "name": "HOUSE 2 DEEP",
-   "bpm": 122,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "r": "....x.......x.......x.......x...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "p1": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo"
-   }
-  },
-  {
-   "style": "House",
-   "name": "HOUSE 3 GARAGE",
-   "bpm": 128,
+   "style": "Neo Soul",
+   "name": "NEO SOUL 3 BROKEN TIME",
+   "bpm": 90,
    "swing": 60,
    "glide": false,
    "lanes": {
-    "k": "x.......x.x.....x.......x.....x.",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "o": "..o...o...o...o...o...o...o...o."
+    "k": "X..x...x..x.....X..x.....x..x...X..x...x..x.....X..x.....x..x...",
+    "s": "....X.g...g.X.......X.g..g..X.g.....X.g...g.X.......X.g..g..X.g.",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "p1": "gogogogogogogogogogogogogogogogogogogogogogogogogogogogogogogogo",
+    "cr": "x..............................................................."
+   },
+   "swingLanes": {
+    "h": 0.5,
+    "k": 0
+   },
+   "shift": {
+    "s": -3
+   },
+   "ghostChance": {
+    "s": 0.7
    }
   },
   {
-   "style": "House",
-   "name": "HOUSE 4 CHICAGO",
-   "bpm": 120,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "p2": "...x......x....x...x......x...x."
-   }
-  },
-  {
-   "style": "House",
-   "name": "HOUSE 5 TECH",
-   "bpm": 125,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "r": "...x..x....x..x....x..x....x..x.",
-    "b": "..0...0...0.0...0...0...0...0.0."
-   }
-  },
-  {
-   "style": "House",
-   "name": "HOUSE 6 DISCO",
-   "bpm": 120,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "p1": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "ht": "..........................x.x.x."
-   }
-  },
-  {
-   "style": "House",
-   "name": "HOUSE 7 AFRO",
-   "bpm": 122,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "r": "..x...x..x..x.x...x...x..x..x.x.",
-    "p1": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "lt": "......x.......x.......x.......x.",
-    "o": "..o...o...o...o...o...o...o...o."
-   }
-  },
-  {
-   "style": "House",
-   "name": "HOUSE 8 SOULFUL",
-   "bpm": 123,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "s": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..x...x...x...x...x...x...x...x."
-   }
-  },
-  {
-   "style": "House",
-   "name": "HOUSE 9 JACKIN",
-   "bpm": 126,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X..x....X.......X..x....X...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   }
-  },
-  {
-   "style": "House",
-   "name": "HOUSE 10 BASS",
-   "bpm": 124,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "b": "..0-..0-..3-..0-..0-..0-..5-..3-"
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 1 WAREHOUSE",
-   "bpm": 130,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "r": "...x..x....x..x....x..x....x..x.",
-    "b": "..0.0...0.0...0.0...0.0...0.0..."
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 2 RUMBLE",
-   "bpm": 132,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "c": "............X...............X...",
-    "b": ".000.000.000.000.000.000.000.000"
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 3 BERLIN",
-   "bpm": 128,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "......x.......x.....x.......x..."
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 4 DETROIT",
-   "bpm": 126,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "p1": "..o..o..o.o..o....o..o..o.o..o.."
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 5 HYPNOTIC",
-   "bpm": 134,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "r": "..x.....x..x......x.....x..x....",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "lt": ".......x.......x.......x.......x"
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 6 INDUSTRIAL",
-   "bpm": 136,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x.x.x...x...x...x.x.",
-    "s": "....x.......x.......x.......x...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "cr": "x..............................."
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 7 MINIMAL",
-   "bpm": 126,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "r": "...x.......x.......x...x...x....",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "p1": "x.......x.......x.......x......."
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 8 ACID",
-   "bpm": 130,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....x.......x.......x.......x...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "b": "0.0.c.0.0.3.0.c.0.0.c.0.5.0.3.0."
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 9 PEAK",
-   "bpm": 138,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "r": "..x..x....x..x....x..x....x..x.."
-   }
-  },
-  {
-   "style": "Techno",
-   "name": "TECHNO 10 DUB",
-   "bpm": 124,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "r": "......x.......x.......x.....x...",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "p2": "...o.......o.......o.......o....",
-    "b": "..0.....0.......0.....0.0......."
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 1 CLASSIC",
-   "bpm": 90,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..x.....X......x..x..x..",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 2 DUSTY GHOSTS",
-   "bpm": 88,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "X.....x...x.....X.....x..x......",
-    "s": "....X..g...gX.......X..g....X.g.",
-    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg"
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 3 HEAD NOD",
-   "bpm": 93,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "X..x......x.....X..x....x.x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............x...............x."
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 4 KNOCK & RIM",
-   "bpm": 92,
-   "swing": 57,
-   "glide": false,
-   "lanes": {
-    "k": "X.......x.x.....X.....x...x.....",
-    "s": "....X.......X.......X.......X...",
-    "r": "..g.......g.......g.......g...g.",
-    "h": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 5 SHAKER",
-   "bpm": 86,
-   "swing": 62,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..x...x.X......x.x......",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "ogogogogogogogogogogogogogogogog"
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 6 CHOP",
-   "bpm": 95,
-   "swing": 55,
-   "glide": false,
-   "lanes": {
-    "k": "X.x.......x..x..X.x.....x.......",
-    "s": "....X.......X.......X.....g.X...",
-    "c": "............x...............x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 7 LAZY",
-   "bpm": 84,
-   "swing": 64,
-   "glide": false,
-   "lanes": {
-    "k": "X......x.......x.X......x..x....",
-    "s": "....X.....g.X.......X.....g.X...",
-    "h": "x..xx..xx..xx..xx..xx..xx..xx..x"
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 8 BREAK",
-   "bpm": 96,
-   "swing": 55,
-   "glide": false,
-   "lanes": {
-    "k": "X.x.......xx....X.x.......x.....",
-    "s": "....X..g.g..X.......X..g.g..X..g",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......x...............x........."
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 9 RIDE",
-   "bpm": 90,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..x.....X......x.....x..",
-    "s": "....X.......X.......X.......X...",
-    "cr": "x...x...x...x...x...x...x...x...",
-    "h": "..x...x...x...x...x...x...x...x."
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 10 DARK",
+   "style": "Neo Soul",
+   "name": "NEO SOUL 4 LAZY ONE",
    "bpm": 82,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "X.........x.....X.......x..x....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "..............x...............x.",
-    "b": "0---------3-----0-------5--3----"
-   }
-  },
-  {
-   "style": "Jazz",
-   "name": "JAZZ 1 SWING RIDE",
-   "bpm": 120,
-   "swing": 66,
-   "glide": false,
-   "lanes": {
-    "cr": "x...x..xx...x..xx...x..xx...x..x",
-    "h": "....x.......x.......x.......x...",
-    "k": "g...g...g...g...g...g...g...g...",
-    "s": "......g.....g.........g......g.."
-   }
-  },
-  {
-   "style": "Jazz",
-   "name": "JAZZ 2 BRUSHES",
-   "bpm": 96,
-   "swing": 64,
-   "glide": false,
-   "lanes": {
-    "cr": "x...x..xx...x..xx...x..xx...x..x",
-    "h": "....x.......x.......x.......x...",
-    "p1": "oggoggoggoggoggooggoggoggoggoggo",
-    "k": "g.......g.......g.......g......."
-   }
-  },
-  {
-   "style": "Jazz",
-   "name": "JAZZ 3 BEBOP",
-   "bpm": 160,
    "swing": 62,
    "glide": false,
    "lanes": {
-    "cr": "x...x..xx...x..xx...x..xx...x..x",
-    "h": "....x.......x.......x.......x...",
-    "s": "...g..x......g....g....x...g..g.",
-    "k": "..........x.............x......."
+    "k": "X.....x...x.....X.....x...x.....",
+    "r": "....x.......x.......x.......x...",
+    "s": "..g....g.g....g...g....g.g....g.",
+    "h": "x.o.x.o.x.o.x.o.x.o.x.o.x.o.x.o."
+   },
+   "shift": {
+    "s": -3,
+    "r": -3,
+    "k": 2
+   },
+   "ghostChance": {
+    "s": 0.7
    }
   },
   {
-   "style": "Jazz",
-   "name": "JAZZ 4 JAZZ HOP",
+   "style": "Neo Soul",
+   "name": "NEO SOUL 5 RIDE BELL",
    "bpm": 88,
    "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X.......x.x.....X.......x.x..x..X.......x.x.....X.......x.x..x..",
+    "s": "..g.X..g...gX.....g.X..g...gX.....g.X..g...gX.....g.X..g...gXgXX",
+    "cr": "x.ox.ox.x.ox.ox.x.ox.ox.x.ox.ox.x.ox.ox.x.ox.ox.x.ox.ox.x.......",
+    "h": "....g.......g.......g.......g.......g.......g.......g.......g..."
+   },
+   "shift": {
+    "s": -3,
+    "k": 2
+   },
+   "ghostChance": {
+    "s": 0.7
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 6 HOUSE PARTY",
+   "bpm": 94,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x..x..X..x..x...x..x..",
+    "c": "....x.......x.......x.......x...",
+    "h": "..x...x...x...x...x...x...x...x.",
+    "p1": "ogxgogxgogxgogxgogxgogxgogxgogxg",
+    "r": "...............g...............g"
+   },
+   "shift": {
+    "r": -3,
+    "k": 2
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 7 QUIET STORM",
+   "bpm": 70,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X.......x..x....X......x...x....X.......x..x....X......x...x....",
+    "r": "....x.......x.......x.......x.......x.......x.......x...........",
+    "h": "o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.....",
+    "s": "...........................................................gooxX",
+    "cr": "x..............................................................."
+   },
+   "shift": {
+    "s": -3,
+    "r": -3,
+    "k": 2
+   },
+   "ghostChance": {
+    "s": 0.7
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 8 SPLIT KICK",
+   "bpm": 80,
+   "swing": 62,
+   "glide": false,
+   "lanes": {
+    "k": "X..x....x..x....X..x......x.....X..x....x..x....X..x......x.....",
+    "s": "....X..g..g.X.......X..g..g.X.......X..g..g.X.......X..g..g.X.gg",
+    "h": "x.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.og....",
+    "cr": "x..............................................................."
+   },
+   "shift": {
+    "s": -3,
+    "k": 2
+   },
+   "ghostChance": {
+    "s": 0.7
+   }
+  },
+  {
+   "style": "Neo Soul",
+   "name": "NEO SOUL 9 SNARE DRAG",
+   "bpm": 76,
+   "swing": 64,
    "glide": false,
    "lanes": {
     "k": "X......x..x.....X......x..x.....",
-    "s": "....X.......X.......X.......X...",
-    "cr": "x...x..xx...x..xx...x..xx...x..x",
-    "h": "....x.......x.......x.......x..."
-   }
-  },
-  {
-   "style": "Jazz",
-   "name": "JAZZ 5 BOSSA",
-   "bpm": 130,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x....x..x....x..x....x..x....",
-    "r": "x..x..x...x..x..x..x..x...x..x..",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Jazz",
-   "name": "JAZZ 6 BALLAD",
-   "bpm": 70,
-   "swing": 66,
-   "glide": false,
-   "lanes": {
-    "cr": "x...x..xx...x..xx...x..xx...x..x",
-    "p1": "o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.",
-    "h": "....x.......x.......x.......x...",
-    "k": "g.......g.......g.......g......."
-   }
-  },
-  {
-   "style": "Jazz",
-   "name": "JAZZ 7 FUNK",
-   "bpm": 100,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "X..x..x...x.....X..x....x.x.....",
-    "s": "....X..g.g..X..g....X..g.g..X..g",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "cr": "x.......x.......x.......x......."
-   }
-  },
-  {
-   "style": "Jazz",
-   "name": "JAZZ 8 SHUFFLE",
-   "bpm": 110,
-   "swing": 66,
-   "glide": false,
-   "lanes": {
-    "cr": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "k": "X.......x.......X.......x.......",
-    "s": "....X.......X.......X.......X..g"
-   }
-  },
-  {
-   "style": "Jazz",
-   "name": "JAZZ 9 LO-FI",
-   "bpm": 82,
-   "swing": 62,
-   "glide": false,
-   "lanes": {
-    "k": "X.....x...x.....X.......x.x.....",
-    "s": "....X.......X.......X.......X...",
-    "cr": "x...x..xx...x..xx...x..xx...x..x",
-    "r": "......g.......g.......g.......g."
-   }
-  },
-  {
-   "style": "Jazz",
-   "name": "JAZZ 10 UPTEMPO",
-   "bpm": 150,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "cr": "x...x..xx...x..xx...x..xx...x..x",
-    "h": "....x.......x.......x.......x...",
-    "k": "g...g...g...g...g...g...g...g...",
-    "s": "..g.....g..x.......g....x..g...."
+    "s": "....X..r....X.g.....X..r....X.g.",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x...",
+    "o": "..............................o."
+   },
+   "shift": {
+    "s": -3,
+    "k": 2
+   },
+   "ghostChance": {
+    "s": 0.7
    }
   },
   {
    "style": "Neo Soul",
-   "name": "NEO SOUL 1 DILLA",
-   "bpm": 88,
-   "swing": 62,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..x.x...X.....x....x....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg"
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 2 RIM KEEPER",
-   "bpm": 82,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "X.........x..x..X.......x.......",
-    "r": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "ogogogogogogogogogogogogogogogog"
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 3 VOODOO",
-   "bpm": 78,
-   "swing": 64,
-   "glide": false,
-   "lanes": {
-    "k": "X......x...x....X.....x...x.....",
-    "s": "....X..g....X..g....X..g....X..g",
-    "h": "x..x..x.x..x..x.x..x..x.x..x..x."
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 4 LATE SNARE",
-   "bpm": 85,
-   "swing": 66,
-   "glide": false,
-   "lanes": {
-    "k": "X.....x...x.....X.....x.....x...",
-    "s": ".....X.......X.......X.......X..",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 5 OPEN HAT",
-   "bpm": 90,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "X..x......x.....X..x....x.x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......x.......x.......x.......x."
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 6 BROKEN",
-   "bpm": 92,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "X..x...x..x.....X..x...x.....x..",
-    "s": "....X.....g.X.......X.....g.X...",
-    "h": "xgxgxgxgxgxgxgxgxgxgxgxgxgxgxgxg"
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 7 SOFT CLAP",
-   "bpm": 80,
-   "swing": 62,
-   "glide": true,
-   "lanes": {
-    "k": "X.......x.x.....X.......x...x...",
-    "c": "....o.......o.......o.......o...",
-    "s": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0-------5--3----0-------7--5----"
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 8 RIDE",
-   "bpm": 84,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..x.....X......x...x....",
-    "s": "....X.......X.......X.......X...",
-    "cr": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "r": "..g.......g.......g.......g....."
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 9 SHAKER POCKET",
-   "bpm": 86,
-   "swing": 64,
-   "glide": false,
-   "lanes": {
-    "p1": "xgogxgogxgogxgogxgogxgogxgogxgog",
-    "k": "X.....x...x.....X.....x.x.......",
-    "s": "....X.......X.......X.......X...",
-    "h": "..x...x...x...x...x...x...x...x."
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 10 SLOW JAM",
-   "bpm": 72,
-   "swing": 66,
-   "glide": false,
-   "lanes": {
-    "k": "X.......x..x....X.......x.......",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............x...............x.",
-    "p2": "...............x...............x"
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 1 MOTOWN",
-   "bpm": 104,
-   "swing": 52,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.x.....x.......x.x.....",
-    "s": "....X.......X.......X.......X...",
-    "p1": "....x.......x.......x.......x...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 2 70s GROOVE",
-   "bpm": 98,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "X..x....x.x.....X..x....x..x....",
-    "s": "....X..g....X..g....X..g....X..g",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "o": "..............x...............x."
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 3 SLOW JAM",
-   "bpm": 68,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "X.......x..x....X.......x..x....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "r": "..............g...............g."
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 4 QUIET STORM",
-   "bpm": 76,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..x.....X......x........",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "cr": "x...............x..............."
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 5 BREAK SOUL",
-   "bpm": 100,
-   "swing": 55,
-   "glide": false,
-   "lanes": {
-    "k": "X.x.......xx.x..X.x.......x.....",
-    "s": "....X..g.g..X.......X..g.g..X..g",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 6 GOSPEL PUSH",
-   "bpm": 94,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "X.....x...x..x..X.....x...x.....",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......x...............x........."
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 7 SHAKER",
-   "bpm": 88,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "p1": "ogogogogogogogogogogogogogogogog",
-    "k": "X......x..x.....X......x..x.x...",
-    "s": "....X.......X.......X.......X...",
-    "h": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 8 PHILLY",
-   "bpm": 112,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "s": "....X.......X.......X.......X...",
-    "o": "..x...x...x...x...x...x...x...x.",
-    "h": "x...x...x...x...x...x...x...x..."
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 9 HALF TIME",
-   "bpm": 72,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "X.......x.......X.....x.x.......",
-    "s": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Soul RnB",
-   "name": "SOUL RNB 10 RIDE",
-   "bpm": 92,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "cr": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "k": "X..x......x.....X..x......x.x...",
-    "s": "....X.......X.......X.......X..."
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 1 NECK BREAKER",
-   "bpm": 162,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x...x...x.x..x..x...xx....",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x...x...x...x...x...x...x...x...",
-    "b": "0--0--0---0---5-0--0--0---33----"
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 2 SCAM BOUNCE",
-   "bpm": 158,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x..x....x..x..x.x..x...x..x...",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "r": "..x.......x.......x.......x.....",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0-0--0----3--3--0-0--5---3--0---"
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 3 FLINT OFFBEAT",
-   "bpm": 166,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "..x..x...x..x.....x..x...x...x..",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "....x.......x.......x.......x...",
-    "p1": "x.......x.......x.......x.......",
-    "b": "..0--0---0--5.....0--3---0---0--"
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 4 SAMPLE CHOP",
-   "bpm": 150,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x..x......x.....",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............x...............x.",
-    "b": "0------0--3-----0--0------5-----"
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 5 MUTTER",
-   "bpm": 156,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x..x..x..x.....x.x....",
-    "s": "....X.......X.......X.......X...",
-    "r": "......x.......x.......x.......x.",
-    "h": "x...x...x...x...x...x...x...x...",
-    "b": "0--0------3--3--0--0-----5-3----"
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 6 SKIP KICK",
-   "bpm": 168,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x...x.x..x....x.x...x..x.x....",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.t.x.x.x.x.x.x.x.t.",
-    "b": "0-0---0-0--3----0-0---5--3-3----"
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 7 COLD PIANO",
-   "bpm": 152,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.......x.x.....x.....x...x.....",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.....x.....x...x.....x.....x...",
-    "p2": "......o...............o.........",
-    "b": "0-------3-3-----0-----5---3-----"
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 8 HARD DRUMS",
-   "bpm": 172,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x..x..x...x..x..x..x.x....",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "r": "...x.......x.......x.......x....",
-    "b": "0--0--0--0--3---0--0--5--3-3----"
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 9 SLOW CRUISE",
-   "bpm": 150,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x..x..x.......x.x.....",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x...x...x...x...x...x...x...x...",
-    "o": "......o...............o.........",
-    "b": "0---------3--3--0-------5-3-----"
-   }
-  },
-  {
-   "style": "Detroit",
-   "name": "DETROIT 10 PERC TALK",
-   "bpm": 160,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x....x.x..x..x..x....x...x...",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "p1": "..x...x...x..x....x...x...x..x..",
-    "h": "x.......x.......x.......x.......",
-    "b": "0--0----3-3--3--0--0----5---3---"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "DRILL 1",
-   "bpm": 142,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....................x.........",
-    "h": "x..x..x.x.xxxxx.x..x..xxx...xxxx",
-    "s": "........X...................X...",
-    "p1": "x..x..x.......x.x..x............",
-    "r": "..........................x.....",
-    "o": "....x..........................."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "DRILL 2",
-   "bpm": 142,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...................x...x.x.....",
-    "h": "x..x..x.x..xxxxxx..x..x.x..xxxxx",
-    "s": "........X...................X...",
-    "p1": "..................x...........x.",
-    "p2": ".x.x..x.............x...........",
-    "o": "..x..x.........................."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 1",
-   "bpm": 90,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "o": ".......x.....x..",
-    "h": "xxxxxxx.xxxxx.xx",
-    "s": "....x..x.x.xx..x",
-    "k": "x.x.......x..x.."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 2",
-   "bpm": 90,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "h": "..x...x...x...x.",
-    "s": "....X.......X...",
-    "k": "x......x.......x"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 3",
-   "bpm": 90,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "ht": "..xx......xx....",
-    "o": "......x.......x.",
-    "h": "..xx...xxx....xx",
-    "s": "....X.......X...",
-    "r": "....x.......x...",
-    "k": "x.x..x..x..x...x"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 4",
-   "bpm": 85,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "p1": "x...............",
-    "h": "..x.x.x.x.x.x.x.",
-    "c": "....x.......x...",
-    "s": "............X...",
-    "k": "x......xx.x..x.x"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 5",
-   "bpm": 85,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "o": "......x.......x.",
-    "p1": "....x.......x...",
-    "h": "xxxxxxxxxxxxxxxx",
-    "c": ".x..............",
-    "s": "....X..X....X...",
-    "k": "x..........x.xx."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 6",
-   "bpm": 85,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "h": "x.x.x.x.x.x.x.x.",
-    "s": "....X.......X...",
-    "k": "xx.....x..x...x."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 7",
-   "bpm": 95,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "p1": "x...............",
-    "h": "x.x.x.x.x.x.x.x.",
-    "s": "....X.......X...",
-    "k": "x......xx.x..x.x"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 8",
-   "bpm": 95,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "h": "x.x.x.x.x.x.x.x.",
-    "c": "....x.......x...",
-    "s": "..........X....X",
-    "k": "x.x..xxx........"
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 9",
-   "bpm": 95,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "o": "..............x.",
-    "h": "x.x.x.x.x.x.x...",
-    "s": "....X..X....X...",
-    "k": "x.........x....."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP SWING 10",
-   "bpm": 95,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "o": "...............x",
-    "h": "x.x.x.x.x.x.x.x.",
-    "s": "....X..X....X...",
-    "k": "x.........x....."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "HIP HOP RIDE",
-   "bpm": 90,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "cr": "x...x...x...x...",
-    "r": "..........x.....",
-    "k": "x.x...x........."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "BOOM BAP 90 1",
-   "bpm": 90,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "h": "..x...x..x......",
-    "s": "....X..X...X....",
-    "k": "x.......x......."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "BOOM BAP 90 2",
-   "bpm": 90,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "h": "..x...x...x.....",
-    "s": "....X...X..X....",
-    "k": "x........x...xx."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "BOOM BAP 90 3",
-   "bpm": 90,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "h": "..x.......x.....",
-    "s": "....X......X....",
-    "k": "x.......x......."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "BOOM BAP 90 4",
-   "bpm": 90,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "h": "..x...x...x.....",
-    "s": "....X..X...X....",
-    "k": "x.......x......."
-   }
-  },
-  {
-   "style": "Danger Patterns",
-   "name": "BOOM BAP 90 5",
-   "bpm": 90,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "h": "..x...x..x......",
-    "s": "....X......X....",
-    "k": "x......xx......."
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 11 ATL BOUNCE SNARE",
-   "bpm": 130,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "b": "0-------------0-----0-----0-----",
-    "c": "........X...............X.......",
-    "s": "........X.....o...o.....X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "x.......................x......."
-   }
-  },
-  {
-   "style": "Trap",
-   "name": "TRAP 12 ATL 808 PUSH",
-   "bpm": 130,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "b": "0-----0-----0-------------------",
-    "c": "........X...............X.......",
-    "s": "........X.....o...o.....X.......",
-    "h": "x.x.x.x.x...x.x.x.x.x.x.x.x.x.x.",
-    "o": "x.......................x......."
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 1 SIX",
-   "bpm": 136,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "c": "........X...............X.......",
-    "h": "x...x...x...x...x...x...x...x...",
-    "b": "0---------0-----3---------5-----"
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 2 MIDNIGHT",
-   "bpm": 134,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x......x........x.....x.........",
-    "s": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.xqx.x.x.x.x.x.x.xq",
-    "o": "..............x.................",
-    "b": "0------0--------A-----0---------"
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 3 QUEEN STREET",
-   "bpm": 140,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x..x......x.....x..x............",
-    "c": "........X...............X.......",
-    "r": "...............x...............x",
-    "h": "x...x...x...x.r.x...x...x...x.r.",
-    "b": "0--0------7-----0--5------------"
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 4 COLD NIGHT",
-   "bpm": 132,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x..........x....x...............",
-    "s": "........X...............X.......",
-    "p1": "......x...............x.........",
-    "h": "x.....x.x.....x.x.....x.x.....x.",
-    "b": "0----------C----0---------------"
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 5 BOUNCE",
-   "bpm": 138,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.t.x.x.x.x.x.x.x.t.x.x.x.",
-    "o": "......x...............x.........",
-    "b": "0-----0---3-----0-----0---5-----"
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 6 SLIDE",
-   "bpm": 136,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x............x..x............x..",
-    "s": "........X...............X.......",
-    "c": "........x...............x.......",
-    "h": "x.x.x.xxx.x.x.x.x.x.x.xxx.x.x.x.",
-    "b": "0------------7--0------------c--"
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 7 DRIFT",
-   "bpm": 128,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x........x......x........x......",
-    "c": "........X...............X.......",
-    "r": "....................x...........",
-    "h": "x...x...x...x...x...x...x...x...",
-    "p2": "............x...............x...",
-    "b": "0--------B------0--------3------"
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 8 WINTER",
-   "bpm": 140,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x.......x.....x.x.............",
-    "s": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............................x.",
-    "b": "0-0-------5-----0-0-------------"
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 9 DUNDAS",
-   "bpm": 136,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.....x....x....x..........x....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.xtx.x.x.x.x.x.x.xqx.",
-    "b": "0-----3----5----0----------A----"
-   }
-  },
-  {
-   "style": "Toronto Nights",
-   "name": "TORONTO NIGHTS 10 LAKESHORE",
-   "bpm": 130,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x...............x......x........",
-    "s": "........X...............X.......",
-    "h": "x.......x.......x.......x.......",
-    "p1": "....x.......x.......x.......x...",
-    "b": "0---------------0------5--------"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 1 AFTER HOURS",
-   "bpm": 72,
-   "swing": 54,
-   "glide": true,
-   "lanes": {
-    "k": "x......x..x.....x......x........",
-    "c": "........X...............X.......",
-    "r": "........x...............x.......",
-    "h": "x.x.x.x.x.x.x.xrx.x.x.x.x.x.x.xr",
-    "b": "0------0--3-----0------5--------"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 2 SNAPS",
-   "bpm": 70,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "r": "........X...............X.......",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "..............x...............x.",
-    "b": "0---------A-----0---------3-----"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 3 NEON",
-   "bpm": 74,
-   "swing": 54,
-   "glide": true,
-   "lanes": {
-    "k": "x.....x.........x..x..x.........",
-    "s": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.t.x.x.x.x.x.x.x.t.",
-    "p1": "............g...............g...",
-    "b": "0-----0---------5--3--0---------"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 4 SLOW MOTION",
-   "bpm": 68,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "x..........x....x...............",
-    "c": "........X...............X.......",
-    "r": "........o...............o.....o.",
-    "h": "x...x...x...x...x...x...x...x...",
-    "b": "0----------7----0---------------"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 5 CITY LIGHTS",
-   "bpm": 76,
-   "swing": 55,
-   "glide": true,
-   "lanes": {
-    "k": "x..x......x.....x.........x.....",
-    "c": "........X...............X.......",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "b": "0--0------3-----0---------B-----"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 6 CANDLES",
-   "bpm": 72,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x........x......x........x......",
-    "r": "........X...............X.......",
-    "s": "........o...............o.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......x...............x.........",
-    "b": "0--------5------0--------7------"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 7 LATE TEXT",
-   "bpm": 70,
-   "swing": 54,
-   "glide": true,
-   "lanes": {
-    "k": "x......x........x.x....x........",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.r.x.x.x.x.x.x.x.q.x.",
-    "b": "0------3--------0-0----A--------"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 8 PENTHOUSE",
-   "bpm": 75,
-   "swing": 57,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x..x..x.........x.....",
-    "c": "........X...............X.......",
-    "r": "...............g...............g",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0---------0--5--0---------------"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 9 RAIN",
-   "bpm": 66,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "x...............x.....x.........",
-    "s": "........X...............X.......",
-    "r": "........x...............x.......",
-    "h": "x.....x.x.....x.x.....x.x.....x.",
-    "p1": "..g...............g.............",
-    "b": "0---------------3-----5---------"
-   }
-  },
-  {
-   "style": "Late Night RnB",
-   "name": "LATE NIGHT RNB 10 LOW LIGHT",
-   "bpm": 73,
-   "swing": 55,
-   "glide": true,
-   "lanes": {
-    "k": "x.....x...x.....x.....x.....x...",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.t.x.x.x.x.x.x.x.t.x.x.x.",
-    "o": "..............................x.",
-    "b": "0-----0---7-----0-----5-----3---"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 1 NIGHT RIDE",
-   "bpm": 150,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x......x..x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.rrx.x.x.x.x.x.x.q.x.",
-    "b": "0------0--0-----0------3--5-----"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 2 CUP",
-   "bpm": 145,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x.....x..x......x.....",
-    "c": "........X...............X.......",
-    "s": "........x...............x.......",
-    "h": "x.x.t.x.x.x.t.x.x.x.t.x.x.x.t.x.",
-    "o": "..............x.................",
-    "b": "0--0------7-----0--0------5-----"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 3 OUTER SPACE",
-   "bpm": 148,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x....x....x.....x....x....",
-    "c": "........X...............X.......",
-    "h": "xxxxxxxxxxxxxxqxxxxxxxxxxxxxxxqx",
-    "b": "0-----0----3----0-----0----A----"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 4 SYRUP",
-   "bpm": 140,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x..x..x.........x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.t.x.x.x.x.x.x.x.t.x.x.x.q.",
-    "p1": "....x...............x...........",
-    "b": "0---------5--7--0---------3-----"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 5 BANDS",
-   "bpm": 150,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x....x........x.x....x........",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.xrx.x.x.x.x.x.x.xr",
-    "o": "......x...............x.........",
-    "b": "0-0----0--------0-0----C--------"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 6 PURPLE",
-   "bpm": 144,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x..........x....x..........x....",
-    "c": "........X...............X.......",
-    "s": "..............................o.",
-    "h": "x.x.x.x.xqx.x.x.x.x.x.x.xrx.x.x.",
-    "b": "0----------3----0----------5----"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 7 STAR",
-   "bpm": 152,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x.........x..x..x.........",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.t.x.x.x.x.x.x.x.t.x.x.x.",
-    "b": "0--0--0---------0--0--7---------"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 8 ROLLING",
-   "bpm": 142,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x......x........x......x.....x..",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............x...............x.",
-    "p2": "..........x...............x.....",
-    "b": "0------0--------0------3-----5--"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 9 STREETS",
-   "bpm": 148,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x.....x...x.....x.....",
-    "c": "........X...............X.......",
-    "h": "xxxxxxxxxxxxxxqqxxxxxxxxxxxxxxxx",
-    "b": "0---------0-----0---5-----3-----"
-   }
-  },
-  {
-   "style": "ATL Wave",
-   "name": "ATL WAVE 10 SLOW POUR",
-   "bpm": 140,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x.....x.........x.....x.........",
-    "c": "........X...............X.......",
-    "h": "x...x.x.x...x.x.x...x.x.x...x.x.",
-    "b": "0-----A---------0-----C---------"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 1 PINK",
-   "bpm": 155,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............x...............x.",
-    "b": "0-----7---5-----0-----3---5-----"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 2 BRIGHT",
-   "bpm": 160,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x.....x..x......x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.xrx.x.x.x.x.x.x.xtx.",
-    "b": "0--0------c-----0--0------7-----"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 3 PHILLY",
-   "bpm": 150,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x......x........",
-    "c": "........X...............X.......",
-    "s": "...............g................",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "b": "0------3--5-----0------7--------"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 4 GLOW",
-   "bpm": 158,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x....x....x.....x....x....",
-    "c": "........X...............X.......",
-    "h": "x.x.t.x.x.x.t.x.x.x.t.x.x.x.t.x.",
-    "p1": "..x...............x.............",
-    "b": "0-----0----3----0-----5----7----"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 5 FLEX",
-   "bpm": 154,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x.....x.........x..x..",
-    "c": "........X...............X.......",
-    "h": "x.x.x.q.x.x.x.x.x.x.x.q.x.x.x.x.",
-    "o": "............x...............x...",
-    "b": "0---------0-----0---------5--7--"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 6 MONEY",
-   "bpm": 162,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x...x........x..x...x........",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.xrx.x.x.x.x.x.x.xr",
-    "b": "0--0---0--------0--0---3--------"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 7 SPACE",
-   "bpm": 150,
-   "swing": 50,
-   "glide": true,
-   "lanes": {
-    "k": "x..........x....x..........x....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.t.x.x.x.x.x.x.x.t.x.x.x.",
-    "p2": "......x...............x.........",
-    "b": "0----------7----0----------c----"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 8 SKIPPY",
-   "bpm": 156,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.........x.....x.......x.",
-    "c": "........X...............X.......",
-    "s": "........x...............x.......",
-    "h": "xxxxxxxxxxxxqxxxxxxxxxxxxxxxqxxx",
-    "b": "0-----5---------0-----3-------5-"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 9 SUGAR",
-   "bpm": 152,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x.........x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......x...............x.......x.",
-    "b": "0------0--7-----0---------5-----"
-   }
-  },
-  {
-   "style": "Rockstar Bounce",
-   "name": "ROCKSTAR BOUNCE 10 LASER",
-   "bpm": 160,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x.......x.....x.x.......x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.xtr.x.x.x.x.x.x.x.q.",
-    "b": "0-0-------3-----0-0-------A-----"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 1 MOSH",
-   "bpm": 150,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x...x.....x..x..x...x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0--0--0---0-----0--0--0---3-----"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 2 NONSTOP",
-   "bpm": 160,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "........X...............X.......",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "b": "0---0---0---3---0---0---0---5---"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 3 SKY",
-   "bpm": 155,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x......x..x.....",
-    "c": "........X...............X.......",
-    "o": "......x.......x.......x.......x.",
-    "h": "x...x...x...x...x...x...x...x...",
-    "b": "0------0--0-----0------7--5-----"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 4 SLAM",
-   "bpm": 152,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x...x...x.....x.x...x...x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.q.x.x.x.x.x.x.x.q.",
-    "b": "0-0---0---0-----0-0---0---A-----"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 5 PUNK",
-   "bpm": 158,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.....x...x.....x.....x...",
-    "c": "........X...............X.......",
-    "s": "..............................o.",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "b": "0-----0-----3---0-----0-----5---"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 6 SPIKES",
-   "bpm": 150,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x..x..x..x......x..x..",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "....x...............x...........",
-    "b": "0--0------0--3--0--0------0--5--"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 7 FLOWERS",
-   "bpm": 162,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x....x....x..x..x....x....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............x.................",
-    "b": "0--0--0----7----0--0--0----5----"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 8 BLACKOUT",
-   "bpm": 155,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x....x....x.....x....x....x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.r.x.x.x.x.x.x.x.r.x.",
-    "b": "0----0----0-----0----0----C-----"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 9 CHAOS",
-   "bpm": 148,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x.x.....x.....x.x.x.....x.....",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": ".......x...............x........",
-    "b": "0-0-0-----3-----0-0-0-----5-----"
-   }
-  },
-  {
-   "style": "Vamp Rage",
-   "name": "VAMP RAGE 10 FULL VAMP",
-   "bpm": 165,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "c": "........X...............X.......",
-    "h": "x...x...x...x...x...x...x...x...",
-    "o": "..............................x.",
-    "b": "3-0-0-0-3-0-0-0-3-0-0-0-3-0-0-0-"
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 1 DUSTY",
-   "bpm": 90,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x......x..x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............x...............x."
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 2 PORCH",
+   "name": "NEO SOUL 10 SUNDAY PEDAL",
    "bpm": 86,
    "swing": 60,
    "glide": false,
    "lanes": {
-    "k": "x..x......x.....x..x......x.....",
+    "k": "X.....x.x.......X.....x.x.......",
     "s": "....X.......X.......X.......X...",
-    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg",
-    "p1": "..............................g."
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 3 SUNSET",
-   "bpm": 92,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x..x......x.....x..x......",
-    "s": "....X.......X..g....X.......X..g",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 4 HOMETOWN",
-   "bpm": 88,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "x.........xx....x.........x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "......x...............x........."
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 5 CROOKED",
-   "bpm": 94,
-   "swing": 57,
-   "glide": false,
-   "lanes": {
-    "k": "x......xx.......x......xx.......",
-    "s": "....X.....g.X.......X.....g.X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "cr": "x..............................."
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 6 WARM",
-   "bpm": 84,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x........x......x........x......",
-    "s": "....X.......X.......X.......X...",
-    "r": "..............g...............g.",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 7 VILLE",
-   "bpm": 90,
-   "swing": 62,
-   "glide": false,
-   "lanes": {
-    "k": "x..x...x........x..x...x........",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.oxx.x.x.x.x.x.x.x."
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 8 TAPE",
-   "bpm": 88,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x.....x.....x...x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "b": "0---------......0-----5---3-----"
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 9 FIRST CHILD",
-   "bpm": 92,
-   "swing": 55,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0-----0---A-----0-----3---5-----"
-   }
-  },
-  {
-   "style": "Carolina Soul",
-   "name": "CAROLINA SOUL 10 DREAMS",
-   "bpm": 86,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "x......x...x....x..........x....",
-    "s": "....X.......X.......X..g....X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "........o...............o......."
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 1 STRUT",
-   "bpm": 94,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x.....x..x......x.....",
-    "s": "....X.......X.......X.......X...",
-    "c": "....x...............x...........",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0--0------5-----0--7------5-----"
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 2 STOMP",
-   "bpm": 150,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x..x............x..x............",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0--0------------0--A------------"
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 3 CITY",
-   "bpm": 96,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "o": "..............x...............x.",
-    "b": "0-----0---3-----0-----5---7-----"
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 4 WINGS",
-   "bpm": 98,
-   "swing": 62,
-   "glide": false,
-   "lanes": {
-    "k": "x......x........x......x........",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg",
-    "cr": "x...............................",
-    "p1": "..............g...............g."
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 5 DOUBLE TIME",
-   "bpm": 140,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "c": "........X...............X.......",
-    "s": "...............g...............g",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "b": "0-----0---0-----0-----3---0-----"
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 6 GOOD STEP",
-   "bpm": 92,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "s": "....X.......X.......X.......X...",
+    "o": "..o...o...o...o...o...o...o...o.",
     "r": ".......g...............g........",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0---------5-----0---------3-----"
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 7 MARCH",
-   "bpm": 110,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x..x....x.......x..x....x.......",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.r.x.x.x.x.x.x.x.x.",
-    "o": "..............................x."
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 8 WEST SIDE",
-   "bpm": 92,
-   "swing": 55,
-   "glide": true,
-   "lanes": {
-    "k": "x......x..x.....x......x..x.....",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0------0--7-----0------5--3-----"
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 9 SERMON",
-   "bpm": 100,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "x........x......x....x...x......",
-    "s": "....X......gX.......X......gX...",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx"
-   }
-  },
-  {
-   "style": "LA Lyricist",
-   "name": "LA LYRICIST 10 CHAPTER",
-   "bpm": 90,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x..x..x.........x.....x.........",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............x.................",
-    "p2": "..........x...............x....."
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 1 CONTROL",
-   "bpm": 80,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "x......x........x......x........",
-    "r": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0------3--------0------5--------"
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 2 GOOD MORNING",
-   "bpm": 76,
-   "swing": 60,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "s": "....X.......X.g.....X.......X.g.",
-    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg",
-    "b": "0---------5-----A---------0-----"
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 3 SLEEP IN",
-   "bpm": 84,
-   "swing": 56,
-   "glide": true,
-   "lanes": {
-    "k": "x.....x.........x.....x.........",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.t.x.x.x.x.x.x.x.x.",
-    "b": "0-----0---------3-----5---------"
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 4 SWAY",
-   "bpm": 88,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "x..x......x.....x..x......x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "......o...............o........."
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 5 GARDEN",
-   "bpm": 72,
-   "swing": 60,
-   "glide": true,
-   "lanes": {
-    "k": "x........x......x...............",
-    "r": "....X.......X.......X.......X...",
-    "h": "x...x...x...x...x...x...x...x...",
-    "cr": "x...............................",
-    "b": "0--------7------0---------------"
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 6 CLOCKS",
-   "bpm": 82,
-   "swing": 57,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x......x........",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
-    "b": "0------0--3-----0---------------"
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 7 CLOUDS",
-   "bpm": 70,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "x......x..x.....x......x..x.....",
-    "c": "........X...............X.......",
-    "r": "........x...............x.......",
-    "h": "x.x.x.x.x.x.r.x.x.x.x.x.x.x.t.x.",
-    "b": "0------0--5-----0------3--------"
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 8 DRIVE",
-   "bpm": 86,
-   "swing": 55,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x....x....x.....x.........",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............x...............x."
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 9 ORBIT",
-   "bpm": 78,
-   "swing": 60,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.....x...x.....",
-    "r": "....X.......X.......X.......X...",
-    "s": "...............g...............g",
-    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg",
-    "b": "0---------3-----0-----5---7-----"
-   }
-  },
-  {
-   "style": "Soft Soul",
-   "name": "SOFT SOUL 10 SUNDAY",
-   "bpm": 74,
-   "swing": 62,
-   "glide": true,
-   "lanes": {
-    "k": "x......x........x...............",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "...g...............g............",
-    "b": "0------5--------0---------------"
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 1 MARCH",
-   "bpm": 124,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x...x.....x.....x...x.....",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0-----0---3-----0-----0---5-----"
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 2 CRUSH",
-   "bpm": 100,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x..x...x........x..x...x........",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "o": "..............x...............x."
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 3 LATE PARTY",
-   "bpm": 120,
-   "swing": 54,
-   "glide": true,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "c": "....X.......Xo......X.......Xo..",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0---------5-----0---------3-----"
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 4 DISCO",
-   "bpm": 120,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x...x...x...x...x...x...x...x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "..x...x...x...x...x...x...x...x.",
-    "o": "..x.......x.......x.......x....."
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 5 BACKSEAT",
-   "bpm": 96,
-   "swing": 57,
-   "glide": false,
-   "lanes": {
-    "k": "x......x..x.....x......x........",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.r.x.x.x.x.x.x.x.q.",
-    "b": "0------0--7-----0------5--------"
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 6 BOUNCE",
-   "bpm": 130,
-   "swing": 50,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x.........x.....x.........",
-    "c": "........X...............X.......",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "b": "0-----0---------0-----3---------"
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 7 STRUT",
-   "bpm": 84,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "s": "....X.......X..g....X.......X...",
-    "h": "x.xgx.xgx.xgx.xgx.xgx.xgx.xgx.xg",
-    "p1": "......o...............o........."
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 8 SLOW BOUNCE",
-   "bpm": 72,
-   "swing": 60,
-   "glide": true,
-   "lanes": {
-    "k": "x..x......x.....x..x............",
-    "c": "........X...............X.......",
-    "r": "........x...............x.......",
-    "h": "x.x.x.x.x.x.x.xrx.x.x.x.x.x.x.xr",
-    "b": "0--0------5-----0--3------------"
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 9 THIRD WARD",
-   "bpm": 98,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "x.....x..x......x.....x..x......",
-    "c": "....X.......X.......X.......X...",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............................x."
-   }
-  },
-  {
-   "style": "Houston Queen",
-   "name": "HOUSTON QUEEN 10 RODEO",
-   "bpm": 105,
-   "swing": 55,
-   "glide": false,
-   "lanes": {
-    "k": "x.........x.....x.........x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": "...o...o...........o...o........"
+    "p2": "..............g...............g."
+   },
+   "shift": {
+    "s": -3,
+    "r": -3,
+    "k": 2
+   },
+   "ghostChance": {
+    "s": 0.7
    }
   },
   {
@@ -4449,6 +459,196 @@
    "ghostChance": {
     "s": 0.7,
     "h": 0.85
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 1 LIVE BREAK",
+   "bpm": 92,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X.x.......x..x..X.x....x..x.....X.x.......x..x..X.x....x..x.....",
+    "s": "....X..g.g..X.......X..g.g..X..g....X..g.g..X.......X..g.g..XgXX",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "..............o...............o...............o.................",
+    "cr": "x..............................................................."
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "ghostChance": {
+    "s": 0.8
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 2 SP DUST",
+   "bpm": 90,
+   "swing": 62,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.....X......x..x..x..X......x..x.....X......x..x..x..",
+    "s": "....X.......X.......X.......X.......X.......X.......X.......X...",
+    "h": "x.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.og",
+    "r": "..........g...........g...................g...........g........."
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "shift": {
+    "r": -2
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 3 HARD KNOCK",
+   "bpm": 94,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..X.....X.x....x..X.....X......x..X.....X.x....x..X.....",
+    "s": "....X.......X.......X.......X.......X.......X.......X.......X.XX",
+    "h": "x...x...x...x...x...x...x...x...x...x...x...x...x...x...x...x...",
+    "p2": "..............o...............o...............o...............o."
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "ghostChance": {
+    "s": 0.8
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 4 CHOPPED",
+   "bpm": 94,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x.....X......x..x.....",
+    "s": "....X.......X.......X.......X...",
+    "h": "X.o.x.o.X.o.x.o.X.o.x.o.X.o.x.o.",
+    "o": "..............o...............o."
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "ghostChance": {
+    "s": 0.8
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 5 HORNS LOOP",
+   "bpm": 92,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x..x..X......x..x.....",
+    "s": "....X.......X..g....X.......X...",
+    "h": "xgxoxgxoxgxoxgxoxgxoxgxoxgxoxgxo",
+    "p1": "....x.......x.......x.......x..."
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "ghostChance": {
+    "s": 0.8
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 6 BASEMENT",
+   "bpm": 90,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X..x......x.....X..x.....x.x....",
+    "s": "....X.......X.......X.......X...",
+    "h": "x...x...x...x..xx...x...x...x..x",
+    "r": ".......g...............g........"
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "ghostChance": {
+    "s": 0.8
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 7 PICKUP",
+   "bpm": 88,
+   "swing": 62,
+   "glide": false,
+   "lanes": {
+    "k": "X......x........X.........x.....",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.ogx.ogx.ogx.ogx.ogx.ogx.ogx.og",
+    "o": "..............o...............o."
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "ghostChance": {
+    "s": 0.8
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 8 DOUBLE KICK",
+   "bpm": 95,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "XX......x.x.....XX......x......x",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "ghostChance": {
+    "s": 0.8
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 9 OPEN HATS",
+   "bpm": 86,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X.........x.x...X.......x.......",
+    "s": "....X.......X.......X.......X...",
+    "h": "x...x...x...x...x...x...x...x...",
+    "o": "..o...o...o...o...o...o...o...o."
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "ghostChance": {
+    "s": 0.8
+   }
+  },
+  {
+   "style": "Boom Bap",
+   "name": "BOOM BAP 10 GHOST TOWN",
+   "bpm": 90,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x.....X.....x.....x...",
+    "s": "....X..g.g..X..g....X..g.g..X..g",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "cr": "x..............................."
+   },
+   "swingLanes": {
+    "h": 0.9
+   },
+   "ghostChance": {
+    "s": 0.8
    }
   },
   {
@@ -5142,6 +1342,144 @@
    }
   },
   {
+   "style": "Trap",
+   "name": "TRAP 1 ATL BOUNCE",
+   "bpm": 140,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x......x..x.....x......x..x.....",
+    "c": "........X...............X.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.t.x.x.x.x.",
+    "b": "0------0--3-----0------0--5-----"
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 2 TRIPLET HATS",
+   "bpm": 145,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x..........x....x..........x....",
+    "c": "........X...............X.......",
+    "h": "x.x.t.x.x.x.x.x.x.x.t.x.x.x.t.x.",
+    "b": "0----------0----7----------5----"
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 3 ROLL CALL",
+   "bpm": 140,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x.........x.....x.........x.....x.........x.....x.........x..x..",
+    "c": "........X...............X...............X...............X.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.rrx.x.x.x.xxxxxxxxxxxxxxxxx.x.x.x.x.x.qqq.",
+    "b": "0---------0-----3---------0-----0---------0-----5---------7--c--"
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 4 CHURCH KEYS",
+   "bpm": 138,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x..x..x.........x..x..x.......x.",
+    "c": "........X...............X.......",
+    "s": "........o...............o.......",
+    "h": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo",
+    "o": "..............x.................",
+    "b": "0--0--7---------0--0--5-------0-"
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 5 DARK SPACE",
+   "bpm": 142,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "k": "x.............x.x.........x.....",
+    "c": "........X...............X.......",
+    "h": "x...x...x...t...x...x...x...q...",
+    "o": "......o...............o.........",
+    "cr": "x...............................",
+    "b": "0-------------0-A---------0-----"
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 6 KNOCK",
+   "bpm": 145,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x.x....x..x.....x.x....x..x.....",
+    "c": "........X...............X.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.rr",
+    "s": "...............g...............g",
+    "b": "0-0----0--3-----0-0----0--a-----"
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 7 RIM BOUNCE",
+   "bpm": 150,
+   "swing": 54,
+   "glide": false,
+   "lanes": {
+    "k": "x.....x...x.....x.....x...x.....",
+    "c": "........X...............X.......",
+    "r": "...o.......o.......o.......o....",
+    "h": "x.x.x.x.x.x.x.t.x.x.x.x.x.x.x.t.",
+    "b": "0-----0---5-----0-----0---7-----"
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 8 MEMPHIS RUN",
+   "bpm": 160,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x..x..x....x....x..x..x....x....",
+    "c": "........X...............X.......",
+    "h": "x.xxx.xxx.xxx.xxx.xxx.xxx.xxx.xx",
+    "p1": "....o...............o...........",
+    "b": "0--0--3----0----0--0--5----7----"
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 9 64TH RAMP",
+   "bpm": 140,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x.........x.....x.........x.....",
+    "c": "........X...............X.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.qqqq",
+    "o": "......................x.........",
+    "b": "0---------0-----3---------5-----"
+   }
+  },
+  {
+   "style": "Trap",
+   "name": "TRAP 10 DROP OUT",
+   "bpm": 140,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x......x..x.....x......x..x.....x......x..x.....x...............",
+    "c": "........X...............X...............X.......................",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.t.xxxxxxxxxxxxxxxx............qqqq",
+    "b": "0------0--3-----0------0--5-----0------0--3-----0---------------"
+   }
+  },
+  {
    "style": "Alt Trap",
    "name": "ALT TRAP 1 RAGE ARENA",
    "bpm": 160,
@@ -5284,290 +1622,154 @@
    }
   },
   {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 1 SLAP",
-   "bpm": 100,
-   "swing": 56,
+   "style": "Drill",
+   "name": "DRILL 1 CHOP HOUSE",
+   "bpm": 140,
+   "swing": 50,
    "glide": false,
    "lanes": {
-    "k": "X..x..x...x.....X..x..x...x..x..",
-    "c": "....X.......X.......X.......X...",
-    "s": "....o.......o.......o.......o...",
-    "h": "x.o.x.o.x.o.x.o.x.o.x.o.x.o.x.o.",
-    "p1": ".......o......o........o......o.",
-    "b": "0--0--c---0-----0--0--c---5-----"
-   }
-  },
-  {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 2 HYPHY",
-   "bpm": 106,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "X..x..x.x.x.....X..x..x.x..x.x..",
-    "c": "....X.......X.......X.......X...",
-    "h": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo",
-    "p2": "...............X...............X",
-    "o": "..............x...............x.",
-    "b": "0--0--0-3-5-----0--0--c---------"
-   }
-  },
-  {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 3 MOBB SLOW",
-   "bpm": 86,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "X......x..x.....X......x.x......",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "r": "..............g...............g.",
-    "b": "0------0--7-----0------5-3------"
-   }
-  },
-  {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 4 LO-FI HYPHY",
-   "bpm": 98,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "X.....x...x.....X.....x...x.....",
-    "c": "....X.......X.......X.......X...",
-    "h": "x...x...x...x...x...x...x...x...",
-    "p1": "..g...g...g...g...g...g...g...g.",
-    "b": "0-----0---5-----0-----0---3-----"
-   }
-  },
-  {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 5 HEAVY BASS",
-   "bpm": 96,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "X..x......x..x..X..x......x.....",
-    "c": "....X.......X.......X.......X...",
-    "s": "...............g...............g",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "......o...............o.........",
-    "b": "0--c------0--5--0--c------3-----"
-   }
-  },
-  {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 6 SIDESHOW",
-   "bpm": 104,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "X.x...x.x.x...x.X.x...x.x.x.x...",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.xrx.x.x.x.x.x.x.xr",
-    "p2": "...o...............o............",
-    "b": "0-0---0-c-0---3-0-0---0-c-5-----"
-   }
-  },
-  {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 7 SOUL CRUISE",
-   "bpm": 88,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..x.....X..x......x.....",
-    "s": "....X.......X.......X.......X...",
-    "h": "xgxgxgxgxgxgxgxgxgxgxgxgxgxgxgxg",
-    "o": "..............o...............o.",
-    "r": "..........g...............g....."
-   }
-  },
-  {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 8 SNAP BOUNCE",
-   "bpm": 102,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "X..x..x...x..x..X..x..x...x.....",
-    "c": "....X.......X.......X.......X...",
-    "p1": "....o.......o.......o.......o...",
-    "h": "x.o.x.o.x.o.x.o.x.o.x.o.x.o.x.o.",
-    "b": "0--0--7---0--5--0--0--c---7-----"
-   }
-  },
-  {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 9 VALLEJO",
-   "bpm": 94,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "X.....x.x.....x.X.....x.x.......",
-    "c": "....X.......X.......X.......X...",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p2": ".......g...............g........",
-    "b": "0-----3-5-----7-0-----3-5-------"
-   }
-  },
-  {
-   "style": "Bay Area 2026",
-   "name": "BAY AREA 10 TURF",
-   "bpm": 108,
-   "swing": 54,
-   "glide": false,
-   "lanes": {
-    "k": "X..x..x...x.x...X..x..x...x.x.x.",
-    "c": "....X.......X.......X.......X...",
-    "h": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo",
-    "o": "..............x.................",
+    "k": "x..x......x.....x..x......x.....",
+    "s": "......o.X...............X.....o.",
+    "c": "........X...............X.......",
+    "h": "x.x.x.x.x.x.t.x.x.x.x.x.x.x.t.x.",
+    "p1": "o.....o.........o.....o.........",
     "cr": "x...............................",
-    "b": "0--0--c---0-5---0--0--c---0-7---"
+    "b": "0--0--....3---..0--0--....5---.."
    }
   },
   {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 1 BOUNCE",
-   "bpm": 96,
-   "swing": 56,
+   "style": "Drill",
+   "name": "DRILL 2 BRASS STABS",
+   "bpm": 138,
+   "swing": 50,
    "glide": false,
    "lanes": {
-    "k": "X..x..x...x.x..xX..x..x...x.x..x",
-    "s": "....x.........x.....x.........x.",
-    "c": "...o...............o............",
-    "o": "......o...............o.........",
-    "h": "g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.",
-    "b": "0--0--0---0-3--c0--0--0---0-5--c"
+    "k": "x......x........x......x..x.....",
+    "s": "........X.....oo........X.......",
+    "c": "........X...............X.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "p2": "X..X............X..X............",
+    "b": "0---...0---.....3---...0--5---.."
    }
   },
   {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 2 SPIN ROLL",
-   "bpm": 98,
-   "swing": 56,
+   "style": "Drill",
+   "name": "DRILL 3 BELL RIDE",
+   "bpm": 142,
+   "swing": 50,
    "glide": false,
    "lanes": {
-    "k": "X..x..x...x.....X..x..x...x.....",
-    "r": "....X.......X.......X.......X...",
-    "h": "o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.",
-    "o": "..............o...............o.",
-    "b": "0..0..0...0.0c0c0..0..0...0.5c5c"
+    "k": "x.........x.....x.....x...x.....",
+    "c": "........X...............X.......",
+    "s": "..............................oo",
+    "p1": "x.o.x.o.x.o.x.o.x.o.x.o.x.o.x.o.",
+    "h": "....x.......x.......x.......x...",
+    "b": "0---......0---..7---..5--.0---.."
    }
   },
   {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 3 PIANO DRUMS",
-   "bpm": 94,
-   "swing": 58,
+   "style": "Drill",
+   "name": "DRILL 4 TRIPLET SNARE",
+   "bpm": 140,
+   "swing": 50,
    "glide": false,
    "lanes": {
-    "k": "X.....x...x.....X.....x..x......",
-    "s": "....X.......X.......X.......X...",
-    "p2": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "h": "g...g...g...g...g...g...g...g...",
-    "b": "0-----0---3-----0-----0--5------"
+    "k": "x..x.......x....x..x.......x....",
+    "s": "........X...............X...t.t.",
+    "c": "........X...............X.......",
+    "h": "x.x.x.t.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "b": "0--0---....3---.0--0---....5---."
    }
   },
   {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 4 SCAM SYNTH",
-   "bpm": 100,
-   "swing": 54,
+   "style": "Drill",
+   "name": "DRILL 5 CRASH EVERY BAR",
+   "bpm": 144,
+   "swing": 50,
    "glide": false,
    "lanes": {
-    "k": "X.x..x..x.x..x..X.x..x..x...x...",
-    "s": "....o.......o.......o.......o...",
-    "c": "....X.......X.......X.......X...",
-    "h": "xgxgxgxgxgxgxgxgxgxgxgxgxgxgxgxg",
-    "b": "0.0..0..3.3..5..0.0..0..7...5..."
+    "k": "x.....x...x.....x.....x...x.....",
+    "c": "........X...............X.......",
+    "s": "........x......x........x......x",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "cr": "x...............x...............",
+    "b": "0---..0--.3---..0---..0--.a---.."
    }
   },
   {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 5 MUTTER LOW",
-   "bpm": 92,
-   "swing": 58,
-   "glide": true,
-   "lanes": {
-    "k": "X......x..x.....X......x.x......",
-    "r": "....x.........x.....x.........x.",
-    "h": "g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.",
-    "o": "...............g...............g",
-    "b": "0------0--A-----0------0-B------"
-   }
-  },
-  {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 6 HYPE",
-   "bpm": 100,
-   "swing": 54,
+   "style": "Drill",
+   "name": "DRILL 6 COLD STREETS",
+   "bpm": 136,
+   "swing": 50,
    "glide": false,
    "lanes": {
-    "k": "X..x..x..x..x...X..x..x..x.x.x..",
-    "s": "....X.......X.......X.......X...",
-    "c": "....X.......X.......X.......X...",
-    "h": "o.o.o.o.o.o.o.o.o.o.o.o.o.o.o.o.",
-    "cr": "x...............................",
-    "p1": "...o.......o.......o.......o....",
-    "b": "0..0..0..0..3...0..0..5..3.3.cc."
+    "k": "x.............x.x.............x.",
+    "c": "........X...............X.......",
+    "h": "x...x...x.t.x...x...x...x.t.x...",
+    "p1": "......o...............o.........",
+    "o": "....................x...........",
+    "b": "0-----........0-3-----........0-"
    }
   },
   {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 7 PITCHED SNARE",
-   "bpm": 96,
-   "swing": 56,
+   "style": "Drill",
+   "name": "DRILL 7 SHORT 808",
+   "bpm": 140,
+   "swing": 50,
    "glide": false,
    "lanes": {
-    "k": "X..x......x..x..X..x....x.x.....",
-    "s": "....x.........x.....x.........x.",
-    "h": "g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.",
-    "o": "......x.........x.....x.........",
-    "b": "0--0------3--5--0--0----c-0-----"
+    "k": "x.x....x..x.....x.x....x..x.....",
+    "c": "........X...............X.......",
+    "s": "............o...............o...",
+    "h": "x.xxx.x.x.xxx.x.x.xxx.x.x.xxx.x.",
+    "b": "0-0-...3-.0-....0-0-...5-.7-...."
    }
   },
   {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 8 FLINT BLOWN",
-   "bpm": 98,
-   "swing": 56,
+   "style": "Drill",
+   "name": "DRILL 8 STORYTELLER",
+   "bpm": 135,
+   "swing": 50,
    "glide": false,
    "lanes": {
-    "k": "X..x..x...x..x..X..x..x...xx....",
-    "s": "....X.......X.......X.......X...",
-    "r": ".......g...............g........",
-    "h": "g...g...g...g...g...g...g...g...",
-    "b": "0..0..0...0..0..0..0..0...00.c.c"
+    "k": "x..........x....x..........x....",
+    "c": "........X...............X.......",
+    "s": "........x...............x.......",
+    "r": "...o...............o............",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.rrx.x.x.x.",
+    "b": "0-----.....0---.5-----.....3---."
    }
   },
   {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 9 FREESTYLE SAMPLE",
-   "bpm": 98,
-   "swing": 54,
+   "style": "Drill",
+   "name": "DRILL 9 STADIUM",
+   "bpm": 145,
+   "swing": 50,
    "glide": false,
    "lanes": {
-    "k": "X..x..x...x.....X..x..x...x.x...",
-    "c": "....X.......X.......X.......X...",
-    "p1": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............o...............o.",
-    "b": "0--0--0---5-----0--0--0---7-----"
+    "k": "x.........x.....x.........x.....x.........x.....x...............",
+    "c": "........X...............X...............X...............X.......",
+    "s": "........x...............x...............x...............x.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.........",
+    "ht": "........................................................XX......",
+    "lt": "..........................................................XXX...",
+    "cr": "x...............................x...............................",
+    "b": "0---......0---..3---......0---..0---......5---..7-------........"
    }
   },
   {
-   "style": "Detroit 2026",
-   "name": "DETROIT 2026 10 RIO GLIDE",
-   "bpm": 94,
-   "swing": 58,
-   "glide": true,
+   "style": "Drill",
+   "name": "DRILL 10 GHOST SNARES",
+   "bpm": 140,
+   "swing": 50,
+   "glide": false,
    "lanes": {
-    "k": "X......x..x.....X......x..x.....",
-    "s": "....x.........x.....x.........x.",
-    "h": "o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.",
-    "p2": "...........o...............o....",
-    "b": "0------0--5-----0------0--7-----"
+    "k": "x.....x.........x.....x...x.....",
+    "c": "........X...............X.......",
+    "s": ".....g..X....g.......g..X....g..",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "p1": "..............o...............o.",
+    "b": "0---..0---......3---..0---5---.."
    }
   },
   {
@@ -5852,6 +2054,635 @@
    }
   },
   {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 1 BOUNCE",
+   "bpm": 96,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x.x..xX..x..x...x.x..x",
+    "s": "....x.........x.....x.........x.",
+    "c": "...o...............o............",
+    "o": "......o...............o.........",
+    "h": "g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.",
+    "b": "0--0--0---0-3--c0--0--0---0-5--c"
+   }
+  },
+  {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 2 SPIN ROLL",
+   "bpm": 98,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x.....X..x..x...x.....",
+    "r": "....X.......X.......X.......X...",
+    "h": "o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.",
+    "o": "..............o...............o.",
+    "b": "0..0..0...0.0c0c0..0..0...0.5c5c"
+   }
+  },
+  {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 3 PIANO DRUMS",
+   "bpm": 94,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x.....X.....x..x......",
+    "s": "....X.......X.......X.......X...",
+    "p2": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "h": "g...g...g...g...g...g...g...g...",
+    "b": "0-----0---3-----0-----0--5------"
+   }
+  },
+  {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 4 SCAM SYNTH",
+   "bpm": 100,
+   "swing": 54,
+   "glide": false,
+   "lanes": {
+    "k": "X.x..x..x.x..x..X.x..x..x...x...",
+    "s": "....o.......o.......o.......o...",
+    "c": "....X.......X.......X.......X...",
+    "h": "xgxgxgxgxgxgxgxgxgxgxgxgxgxgxgxg",
+    "b": "0.0..0..3.3..5..0.0..0..7...5..."
+   }
+  },
+  {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 5 MUTTER LOW",
+   "bpm": 92,
+   "swing": 58,
+   "glide": true,
+   "lanes": {
+    "k": "X......x..x.....X......x.x......",
+    "r": "....x.........x.....x.........x.",
+    "h": "g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.",
+    "o": "...............g...............g",
+    "b": "0------0--A-----0------0-B------"
+   }
+  },
+  {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 6 HYPE",
+   "bpm": 100,
+   "swing": 54,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x..x..x...X..x..x..x.x.x..",
+    "s": "....X.......X.......X.......X...",
+    "c": "....X.......X.......X.......X...",
+    "h": "o.o.o.o.o.o.o.o.o.o.o.o.o.o.o.o.",
+    "cr": "x...............................",
+    "p1": "...o.......o.......o.......o....",
+    "b": "0..0..0..0..3...0..0..5..3.3.cc."
+   }
+  },
+  {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 7 PITCHED SNARE",
+   "bpm": 96,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..x......x..x..X..x....x.x.....",
+    "s": "....x.........x.....x.........x.",
+    "h": "g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.g.",
+    "o": "......x.........x.....x.........",
+    "b": "0--0------3--5--0--0----c-0-----"
+   }
+  },
+  {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 8 FLINT BLOWN",
+   "bpm": 98,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x..x..X..x..x...xx....",
+    "s": "....X.......X.......X.......X...",
+    "r": ".......g...............g........",
+    "h": "g...g...g...g...g...g...g...g...",
+    "b": "0..0..0...0..0..0..0..0...00.c.c"
+   }
+  },
+  {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 9 FREESTYLE SAMPLE",
+   "bpm": 98,
+   "swing": 54,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x.....X..x..x...x.x...",
+    "c": "....X.......X.......X.......X...",
+    "p1": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "..............o...............o.",
+    "b": "0--0--0---5-----0--0--0---7-----"
+   }
+  },
+  {
+   "style": "Detroit 2026",
+   "name": "DETROIT 2026 10 RIO GLIDE",
+   "bpm": 94,
+   "swing": 58,
+   "glide": true,
+   "lanes": {
+    "k": "X......x..x.....X......x..x.....",
+    "s": "....x.........x.....x.........x.",
+    "h": "o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.",
+    "p2": "...........o...............o....",
+    "b": "0------0--5-----0------0--7-----"
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 1 SLAP",
+   "bpm": 100,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x.....X..x..x...x..x..",
+    "c": "....X.......X.......X.......X...",
+    "s": "....o.......o.......o.......o...",
+    "h": "x.o.x.o.x.o.x.o.x.o.x.o.x.o.x.o.",
+    "p1": ".......o......o........o......o.",
+    "b": "0--0--c---0-----0--0--c---5-----"
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 2 HYPHY",
+   "bpm": 106,
+   "swing": 54,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x.x.x.....X..x..x.x..x.x..",
+    "c": "....X.......X.......X.......X...",
+    "h": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo",
+    "p2": "...............X...............X",
+    "o": "..............x...............x.",
+    "b": "0--0--0-3-5-----0--0--c---------"
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 3 MOBB SLOW",
+   "bpm": 86,
+   "swing": 58,
+   "glide": true,
+   "lanes": {
+    "k": "X......x..x.....X......x.x......",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "r": "..............g...............g.",
+    "b": "0------0--7-----0------5-3------"
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 4 LO-FI HYPHY",
+   "bpm": 98,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x.....X.....x...x.....",
+    "c": "....X.......X.......X.......X...",
+    "h": "x...x...x...x...x...x...x...x...",
+    "p1": "..g...g...g...g...g...g...g...g.",
+    "b": "0-----0---5-----0-----0---3-----"
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 5 HEAVY BASS",
+   "bpm": 96,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..x......x..x..X..x......x.....",
+    "c": "....X.......X.......X.......X...",
+    "s": "...............g...............g",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "......o...............o.........",
+    "b": "0--c------0--5--0--c------3-----"
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 6 SIDESHOW",
+   "bpm": 104,
+   "swing": 54,
+   "glide": false,
+   "lanes": {
+    "k": "X.x...x.x.x...x.X.x...x.x.x.x...",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.xrx.x.x.x.x.x.x.xr",
+    "p2": "...o...............o............",
+    "b": "0-0---0-c-0---3-0-0---0-c-5-----"
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 7 SOUL CRUISE",
+   "bpm": 88,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.....X..x......x.....",
+    "s": "....X.......X.......X.......X...",
+    "h": "xgxgxgxgxgxgxgxgxgxgxgxgxgxgxgxg",
+    "o": "..............o...............o.",
+    "r": "..........g...............g....."
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 8 SNAP BOUNCE",
+   "bpm": 102,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x..x..X..x..x...x.....",
+    "c": "....X.......X.......X.......X...",
+    "p1": "....o.......o.......o.......o...",
+    "h": "x.o.x.o.x.o.x.o.x.o.x.o.x.o.x.o.",
+    "b": "0--0--7---0--5--0--0--c---7-----"
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 9 VALLEJO",
+   "bpm": 94,
+   "swing": 58,
+   "glide": true,
+   "lanes": {
+    "k": "X.....x.x.....x.X.....x.x.......",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "p2": ".......g...............g........",
+    "b": "0-----3-5-----7-0-----3-5-------"
+   }
+  },
+  {
+   "style": "Bay Area 2026",
+   "name": "BAY AREA 10 TURF",
+   "bpm": 108,
+   "swing": 54,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x.x...X..x..x...x.x.x.",
+    "c": "....X.......X.......X.......X...",
+    "h": "xoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxo",
+    "o": "..............x.................",
+    "cr": "x...............................",
+    "b": "0--0--c---0-5---0--0--c---0-7---"
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 1 NIGHT DRIVE",
+   "bpm": 136,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "k": "o..........o....o..........o....",
+    "s": "........x...............x.......",
+    "r": "........o...............o.......",
+    "h": "x.ogx.ogx.ogx.ogx.ogx.ogx.ogx.og",
+    "b": "0----------0----5---------------"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "s": 3,
+    "r": 2
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 2 SLOW JAM",
+   "bpm": 128,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "k": "o......o........o.........o.....",
+    "c": "........x...............x.......",
+    "r": "........g...............g.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "..............................o.",
+    "b": "0------3--------5---------3-----"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "c": 3,
+    "r": 2
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 3 BOUNCE",
+   "bpm": 150,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "x..x......x.....x..x......x.....",
+    "c": "........X...............X.......",
+    "s": "........o...............o.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "p1": "......o...............o.........",
+    "b": "0--0------5-----0--0------3-----"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "s": 3,
+    "c": 3
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 4 TRAP SOUL",
+   "bpm": 140,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "k": "x.........x.....x.........x.....",
+    "s": "........X...............X.......",
+    "c": "........o...............o.......",
+    "h": "x.x.x.x.x.x.x.t.x.x.x.x.x.x.x.r.",
+    "b": "0---------0-----3---------5-----"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "s": 3,
+    "c": 3
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 5 SNAPS",
+   "bpm": 132,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "k": "o..........o....o.........o.....",
+    "r": "........X...............X.......",
+    "s": "........................o.......",
+    "h": "x.oxx.oxx.oxx.oxx.oxx.oxx.oxx.ox",
+    "b": "0----------3----5---------3-----"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "s": 3,
+    "r": 2
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 6 FLOAT",
+   "bpm": 120,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "o.....o...o.....o.....o...o.....",
+    "c": "........x...............x.......",
+    "h": "..x...x...x...x...x...x...x...x.",
+    "p1": "ogxgogxgogxgogxgogxgogxgogxgogxg",
+    "b": "0-----0---7-----5-----5---3-----"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "c": 3
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 7 RIM AND 808",
+   "bpm": 124,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "r": "........x....x..........x....x..",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "..............o.................",
+    "b": "0------------3--5---------------"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "r": 2
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 8 LATE SNARE",
+   "bpm": 138,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "k": "o......o........o......o........",
+    "s": "........X...............X.......",
+    "c": "........o...............o.......",
+    "h": "xgxgxgxgxgxgxgxgxgxgxgxgxgxgxgxg",
+    "b": "0------0--------3------5--------"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "s": 3,
+    "c": 3
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 9 PIANO BALLAD",
+   "bpm": 120,
+   "swing": 50,
+   "glide": false,
+   "lanes": {
+    "k": "o...............o.........o.....",
+    "s": "........x...............x.......",
+    "h": "x...x...x...x...x...x...x...x...",
+    "cr": "x...............................",
+    "b": "0---------------5---------7-----"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "s": 3
+   }
+  },
+  {
+   "style": "RnB",
+   "name": "RNB 10 KNOCK",
+   "bpm": 144,
+   "swing": 50,
+   "glide": true,
+   "lanes": {
+    "k": "x..x.......x....x..x.......x....",
+    "s": "........X...............X.......",
+    "c": "........X...............X.......",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.rrx.x.x.x.",
+    "o": "......o.........................",
+    "b": "0--0-------3----0--0-------5----"
+   },
+   "swingLanes": {
+    "h": 0.5
+   },
+   "shift": {
+    "s": 3,
+    "c": 3
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 1 NEW JACK",
+   "bpm": 108,
+   "swing": 66,
+   "glide": false,
+   "lanes": {
+    "k": "X..x..x...x..x..X..x..x...x.....",
+    "s": "....X.......X.......X.......X...",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x."
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 2 SWING BEAT",
+   "bpm": 112,
+   "swing": 64,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x.x.x.....X.....x.x...x.x.",
+    "s": "....X.......X.......X.......X...",
+    "c": "....X.......X.......X.......X...",
+    "h": "XgxgXgxgXgxgXgxgXgxgXgxgXgxgXgxg",
+    "o": "..............o...............o."
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 3 STUTTER",
+   "bpm": 96,
+   "swing": 54,
+   "glide": false,
+   "lanes": {
+    "k": "X..x...x.x..x...X..x....x.x..x..",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.xr..x.x.xr..x.x.xr..x.x.xr..x.",
+    "p1": ".......o.......o.......o.......o"
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 4 808 BOUNCE",
+   "bpm": 94,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x.....X.....x..x......",
+    "c": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "b": "0-----0---5-----0-----0--3------"
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 5 CABASA CLAPS",
+   "bpm": 100,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.....X......x.x......",
+    "c": "....X.......Xr......X.......Xr..",
+    "s": "....X.......X.......X.......X...",
+    "p1": "ogxgogxgogxgogxgogxgogxgogxgogxg"
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 6 QUIET STORM",
+   "bpm": 72,
+   "swing": 60,
+   "glide": false,
+   "lanes": {
+    "k": "X.......x..x....X......x........",
+    "r": "....x.......x.......x.......x...",
+    "h": "o.g.o.g.o.g.o.g.o.g.o.g.o.g.o.g.",
+    "o": "..............................g."
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 7 MACHINE FUNK",
+   "bpm": 104,
+   "swing": 56,
+   "glide": false,
+   "lanes": {
+    "k": "X..X..X...X..X..X..X..X...X.....",
+    "c": "....X.......X.......X.......X...",
+    "h": "xgxgxgxgxgxgxgxgxgxgxgxgxgxgxgxg",
+    "o": "......o...............o........."
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 8 SAMPLE SOUL",
+   "bpm": 92,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X......x..x.....X.......x.x.....",
+    "s": "....X.......X.......X.......X...",
+    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
+    "o": "..............o...............o.",
+    "p1": "....x.......x.......x.......x..."
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 9 VIRGINIA KNOCK",
+   "bpm": 100,
+   "swing": 52,
+   "glide": false,
+   "lanes": {
+    "k": "X.......X.x.....X.......X.......",
+    "s": "....X.......X.......X.......X...",
+    "p1": "..o.......o.......o.......o.....",
+    "r": ".......g...............g........"
+   }
+  },
+  {
+   "style": "90s RnB",
+   "name": "90S RNB 10 DUNGEON FAMILY",
+   "bpm": 90,
+   "swing": 58,
+   "glide": false,
+   "lanes": {
+    "k": "X.....x...x..x..X.....x...x.....",
+    "s": "....X..g....X.......X..g....X...",
+    "h": "xgoxxgoxxgoxxgoxxgoxxgoxxgoxxgox",
+    "o": "..............o.................",
+    "p2": "..............................o."
+   }
+  },
+  {
    "style": "UK RnB",
    "name": "UK RNB 1 TWO STEP",
    "bpm": 132,
@@ -6027,127 +2858,6 @@
    },
    "shift": {
     "s": 3
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 11 LIVE POCKET",
-   "bpm": 84,
-   "swing": 62,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..x.....X.....x...x..x..X......x..x.....X.....x...x.....",
-    "s": "....X..g...gX..g....X..g.g..X..g....X..g...gX..g....X..g.g..XgXg",
-    "h": "xgogxgogxgogxgo.xgogxgogxgogxgo.xgogxgogxgogxgo.xgogxgogxgog....",
-    "o": "...............o...............o...............o................",
-    "cr": "x..............................................................."
-   },
-   "shift": {
-    "s": -3,
-    "k": 2
-   },
-   "ghostChance": {
-    "s": 0.7
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 12 CROSS STICK",
-   "bpm": 78,
-   "swing": 64,
-   "glide": false,
-   "lanes": {
-    "k": "X.......x..x....X......x..x.....X.......x..x....X......x..x.....",
-    "r": "....x.......x.......x.......x.......x.......x.......x...........",
-    "s": "..g......g....g...g......g....g...g......g....g...g......g..ggoX",
-    "h": "x.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.oxx.ox....",
-    "cr": "x..............................................................."
-   },
-   "shift": {
-    "r": -3,
-    "k": 2
-   },
-   "ghostChance": {
-    "s": 0.7
-   }
-  },
-  {
-   "style": "Neo Soul",
-   "name": "NEO SOUL 13 BROKEN TIME",
-   "bpm": 90,
-   "swing": 60,
-   "glide": false,
-   "lanes": {
-    "k": "X..x...x..x.....X..x.....x..x...X..x...x..x.....X..x.....x..x...",
-    "s": "....X.g...g.X.......X.g..g..X.g.....X.g...g.X.......X.g..g..X.g.",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "p1": "gogogogogogogogogogogogogogogogogogogogogogogogogogogogogogogogo",
-    "cr": "x..............................................................."
-   },
-   "swingLanes": {
-    "h": 0.5,
-    "k": 0
-   },
-   "shift": {
-    "s": -3
-   },
-   "ghostChance": {
-    "s": 0.7
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 11 LIVE BREAK",
-   "bpm": 92,
-   "swing": 58,
-   "glide": false,
-   "lanes": {
-    "k": "X.x.......x..x..X.x....x..x.....X.x.......x..x..X.x....x..x.....",
-    "s": "....X..g.g..X.......X..g.g..X..g....X..g.g..X.......X..g.g..XgXX",
-    "h": "x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.",
-    "o": "..............o...............o...............o.................",
-    "cr": "x..............................................................."
-   },
-   "swingLanes": {
-    "h": 0.9
-   },
-   "ghostChance": {
-    "s": 0.8
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 12 SP DUST",
-   "bpm": 90,
-   "swing": 62,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..x.....X......x..x..x..X......x..x.....X......x..x..x..",
-    "s": "....X.......X.......X.......X.......X.......X.......X.......X...",
-    "h": "x.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.ogx.og",
-    "r": "..........g...........g...................g...........g........."
-   },
-   "swingLanes": {
-    "h": 0.9
-   },
-   "shift": {
-    "r": -2
-   }
-  },
-  {
-   "style": "Boom Bap",
-   "name": "BOOM BAP 13 HARD KNOCK",
-   "bpm": 94,
-   "swing": 56,
-   "glide": false,
-   "lanes": {
-    "k": "X......x..X.....X.x....x..X.....X......x..X.....X.x....x..X.....",
-    "s": "....X.......X.......X.......X.......X.......X.......X.......X.XX",
-    "h": "x...x...x...x...x...x...x...x...x...x...x...x...x...x...x...x...",
-    "p2": "..............o...............o...............o...............o."
-   },
-   "swingLanes": {
-    "h": 0.9
    }
   }
  ]

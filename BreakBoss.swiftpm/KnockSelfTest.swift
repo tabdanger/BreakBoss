@@ -117,33 +117,42 @@ enum KnockSelfTest {
         check(library.failure == nil, "stock audio manifest loads: \(library.failure ?? "OK")")
         guard library.failure == nil else { return }
 
-        var urls = Set<URL>()
+        let urls = Set(library.allSounds.map(\.url))
+        let names = library.allSounds.map(\.displayName)
+        check(library.allSounds.count == 577 && urls.count == 577 && Set(names).count == 577, "the sound library holds 577 sounds, each with its own name")
+        check(names.allSatisfy { SoundType.forStockName($0) != nil }, "every stock sound is named by its category")
+        check(library.librarySounds().count == 577, "the sound menu lists every stock sound, in a kit or not")
         var assignments = 0
         for kit in KitLibrary.factory {
             for pad in Pad.allCases {
                 let sample = library.sample(kitID: kit.id, pad: pad.rawValue)
                 check(sample != nil, "\(kit.name) pad \(pad.rawValue + 1) has bundled stock audio")
-                if let sample {
-                    assignments += 1
-                    urls.insert(sample.url)
+                guard let sample else { continue }
+                assignments += 1
+                check(urls.contains(sample.url), "\(kit.name) pad \(pad.rawValue + 1) plays a sound from the library")
+                // Each pad holds its own kind of sound (the rim pad may take a short snare, the perc pads an FX).
+                let kind = SoundType.forStockName(sample.displayName)
+                let fits: Bool
+                switch pad {
+                case .rim: fits = kind == .rim || kind == .snare
+                case .perc1, .perc2: fits = kind == .perc || kind == .fx
+                default: fits = kind == SoundType.forPad(pad.rawValue)
                 }
+                check(fits, "\(kit.name) pad \(pad.rawValue + 1) holds a sound of its kind (\(sample.displayName))")
+            }
+            let pair = KitLibrary.factory.filter { $0.genre == kit.genre }
+            let mine = Set(Pad.allCases.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url })
+            for other in pair where other.id != kit.id {
+                let theirs = Set(Pad.allCases.compactMap { library.sample(kitID: other.id, pad: $0.rawValue)?.url })
+                check(mine.isDisjoint(with: theirs), "\(kit.name) and \(other.name) share no sounds")
             }
         }
-        check(assignments == 1176, "stock audio covers all 1176 factory pad assignments")
-        check(urls.count == 703, "stock audio contains 703 distinct assigned WAV files")
+        check(assignments == KitLibrary.factory.count * Pad.count, "stock audio covers every factory pad")
         // Home dice draws each pad's sound from every kit's sound for that pad.
         check(Pad.allCases.allSatisfy { library.kits(withPad: $0.rawValue).count == KitLibrary.factory.count }, "dice: every pad has a sound in every kit")
-        var picked = KnockState(); picked.stockPicks = Array(repeating: nil, count: Pad.count); picked.stockPicks?[0] = "detroit"
-        check(KnockController.stockPick(picked, pad: 0) == "detroit" && KnockController.stockPick(picked, pad: 1) == nil, "dice: per-pad picks")
-        check(picked.selectingKit(KitLibrary.drumMastery).stockPicks == nil, "dice: choosing a kit brings its own sounds back")
-        let detroitKick = library.sample(kitID: "detroit", pad: 0)
-        check(detroitKick?.url.lastPathComponent.hasPrefix("bb_kp2-") == true, "Detroit kit plays Tyrone's new pack")
-        // Vintage kits play Tyrone's Vintage pack (kicks, snares/claps, hats).
-        for kit in KitLibrary.kits(for: .vintage) {
-            let kick = library.sample(kitID: kit.id, pad: Pad.kick.rawValue)
-            let file = kick?.url.lastPathComponent ?? ""
-            check(["bb_vtg-", "bb_g-", "bb_kp2-"].contains { file.hasPrefix($0) }, "\(kit.name): kick from Tyrone's packs")
-        }
+        var picked = KnockState(); picked.stockPicks = Array(repeating: nil, count: Pad.count); picked.stockPicks?[0] = "detroit-2026-a"
+        check(KnockController.stockPick(picked, pad: 0) == "detroit-2026-a" && KnockController.stockPick(picked, pad: 1) == nil, "dice: per-pad picks")
+        check(picked.selectingKit(KitLibrary.factory[1]).stockPicks == nil, "dice: choosing a kit brings its own sounds back")
         for url in urls.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             autoreleasepool {
                 do {
@@ -1330,9 +1339,27 @@ enum KnockSelfTest {
         let new = old.normalized()
         check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
-        check(KitLibrary.core.count == 24 && KitLibrary.textures.count == 8 && KitLibrary.legacy.count == 10 && KitLibrary.genres.count == 56 && KitLibrary.factory.count == 98,
-              "98 factory kits: 24 core, eight textures, ten originals and 56 genre and artist-style kits")
+        check(KitLibrary.factory.count == 42 && KitLibrary.genreGroups.count == 21 && KitLibrary.genreGroups.allSatisfy { $0.kits.count == 2 },
+              "42 factory kits: an A and a B for each of 21 genres")
+        check(KitLibrary.kits(for: .modern).count == 18 && KitLibrary.kits(for: .vintage).count == 16 && KitLibrary.kits(for: .texture).count == 8,
+              "18 Modern, 16 Vintage and 8 Texture kits")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")
+        check(KitLibrary.browserOrder.count == KitLibrary.factory.count, "the kit arrows step through every kit once")
+        // The kits before Oct 17 are gone: saves, kits and dice picks that named one open the nearest new kit.
+        let ids = Set(KitLibrary.factory.map(\.id))
+        check(KitLibrary.retired.count == 98 && KitLibrary.retired.values.allSatisfy { ids.contains($0) } &&
+              ids.isDisjoint(with: KitLibrary.retired.keys), "all 98 old kits open a new kit")
+        check(KitLibrary.kit(id: "boom-bap").id == "boom-bap-a" && KitLibrary.kit(id: "g-drill-b").id == "drill-a" &&
+              KitLibrary.kit(id: "no-such-kit").id == KitLibrary.factory[0].id, "old and unknown kit identifiers open a kit")
+        var oldSave = KnockState()
+        oldSave.kitID = "cole-world"; oldSave.kitName = "COLE WORLD"
+        oldSave.stockPicks = ["detroit", nil, "boom-bap"] + [String?](repeating: nil, count: Pad.count - 3)
+        let migrated = oldSave.normalized()
+        check(migrated.kitID == "neo-soul-a" && migrated.kitName == "NEO SOUL A" &&
+              migrated.stockPicks?[0] == "detroit-2026-a" && migrated.stockPicks?[1] == nil && migrated.stockPicks?[2] == "boom-bap-a",
+              "an old save opens the new kit and keeps its dice picks")
+        var mine = oldSave; mine.userKit = "MY DRUMS"; mine.kitName = "MY DRUMS"
+        check(mine.normalized().kitName == "MY DRUMS" && mine.normalized().kitID == "neo-soul-a", "a saved kit keeps its own name")
         check(Pad.allCases.allSatisfy { Pad.index(forMIDINote: $0.midiNote) == $0.rawValue }, "all pad MIDI mappings round trip")
         check(Pad.count == 12 && Pad.allCases.map { $0.midiNote } == Array(36...47), "12 pads use consecutive MIDI notes 36 through 47")
         check((36...47).allSatisfy { !Pad.bassNoteRange.contains($0) } &&
@@ -1342,24 +1369,21 @@ enum KnockSelfTest {
     static func checkFactoryPresetsAndKitIndependence() {
         let presets = PatternBank.all
         check(presets.count >= 150 && Set(presets.map { $0.name }).count == presets.count, "pattern bank loads with unique names (\(presets.count))")
-        let wanted = ["Trap", "Dark Trap", "West Coast", "Drill", "Amapiano", "South African RnB", "RnB", "90s RnB",
-                      "80s RnB", "80s Pop", "80s Funk", "EDM", "House", "Techno",
-                      "Boom Bap", "Jazz", "Neo Soul", "Soul RnB", "Detroit", "Toronto Nights", "Late Night RnB", "ATL Wave",
-                      "Rockstar Bounce", "Vamp Rage", "Carolina Soul", "LA Lyricist", "Soft Soul", "Houston Queen",
-                     "Dilla Time", "90s Rap", "70s Soul", "80s Breaks", "Rock", "Alt Trap", "Bay Area 2026", "Detroit 2026",
-                     "UK Drill", "NY Drill", "UK RnB"]
-        for style in wanted { check(PatternBank.presets(in: style).count >= 10, "\(style): at least 10 presets") }
-        check(PatternBank.styles.first == "Danger Patterns" && PatternBank.presets(in: "Danger Patterns").count >= 13, "Danger Patterns come first")
+        let wanted = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock", "Trap", "Alt Trap",
+                      "Drill", "UK Drill", "NY Drill", "Detroit 2026", "Bay Area 2026", "RnB", "90s RnB", "UK RnB"]
+        check(PatternBank.styles == wanted && presets.count == 170, "170 presets in the 17 research styles, in the genre guide's order")
+        for style in wanted { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
+        check(presets.filter { $0.shift != nil || $0.swingLanes != nil || $0.ghostChance != nil }.count >= 60, "the live styles carry their feel")
         for p in presets {
             let pat = p.pattern
             check(!pat.events.isEmpty && pat.events.allSatisfy { $0.tick >= 0 && $0.tick < pat.lengthTicks && Int($0.pad) < Pad.count },
                   "\(p.name): pattern decodes inside its length")
         }
-        if let hh = PatternBank.preset(named: "80s HIP HOP 1") {
-            let kicks = hh.pattern.events.filter { Int($0.pad) == Pad.kick.rawValue }.map { $0.tick / PatternData.stepTicks }
-            check(kicks == [0, 3, 6, 10, 13] && hh.bpm == 87 && hh.swing == 54, "Danger Pattern 80s HIP HOP 1 matches the cheat sheet")
+        if let uk = PatternBank.preset(named: "UK DRILL 1 TEMPLATE") {
+            let snares = uk.pattern.events.filter { Int($0.pad) == Pad.snare.rawValue }.map { $0.tick / PatternData.stepTicks }
+            check(snares == [8, 28] && uk.bpm == 142, "UK drill: snare on beat 3 of bar 1 and beat 4 of bar 2")
         } else {
-            check(false, "Danger Pattern 80s HIP HOP 1 is present")
+            check(false, "UK DRILL 1 TEMPLATE is present")
         }
         if let trap = PatternBank.preset(named: "TRAP 2 TRIPLET HATS") {
             let hats = trap.pattern.events.filter { Int($0.pad) == Pad.hat.rawValue }.map { $0.tick }
@@ -1391,10 +1415,11 @@ enum KnockSelfTest {
         encoder.outputFormatting = [.sortedKeys]
         source.grooveSeed = 777
         source.bpm = 101
-        let changedKit = source.selectingKit(KitLibrary.west90s)
+        let otherKit = KitLibrary.factory.first { $0.id != source.kitID } ?? KitLibrary.factory[0]
+        let changedKit = source.selectingKit(otherKit)
         var expectedPads = source.pads
         for i in expectedPads.indices { expectedPads[i].sampleFile = nil }
-        check(changedKit.kitID == KitLibrary.west90s.id && changedKit.kitName == KitLibrary.west90s.name &&
+        check(changedKit.kitID == otherKit.id && changedKit.kitName == otherKit.name &&
               changedKit.userKit == nil, "switching kits replaces the drum sounds")
         check(changedKit.values == source.values && changedKit.mode == source.mode &&
               changedKit.playMode == source.playMode && changedKit.presetName == source.presetName,
@@ -1403,7 +1428,7 @@ enum KnockSelfTest {
         check(changedKit.editedLoops == source.editedLoops && changedKit.grooveSeed == 777 && changedKit.bpm == 101 &&
               changedKit.patternStyle == KitLibrary.kit(id: source.kitID).style,
               "switching kits keeps the pattern, its edits and the tempo")
-        let twice = changedKit.selectingKit(KitLibrary.neoSoul)
+        let twice = changedKit.selectingKit(KitLibrary.factory[KitLibrary.factory.count - 1])
         check(twice.patternStyle == changedKit.patternStyle, "cycling kits never changes the pattern")
 
         for preset in presets {
@@ -1429,8 +1454,8 @@ enum KnockSelfTest {
         let old = try? JSONDecoder().decode(KnockState.self, from: encoder.encode(KnockState()))
         check(old?.patternStyle == nil && old?.basePattern == nil, "older saves load and follow their kit's patterns")
         // Randomize stays in style and only touches what it should.
-        let r1 = PatternRandomizer.randomPattern(style: "House", length: PatternData.ppq * 8, seed: 5)
-        let r2 = PatternRandomizer.randomPattern(style: "House", length: PatternData.ppq * 8, seed: 5)
+        let r1 = PatternRandomizer.randomPattern(style: "Boom Bap", length: PatternData.ppq * 8, seed: 5)
+        let r2 = PatternRandomizer.randomPattern(style: "Boom Bap", length: PatternData.ppq * 8, seed: 5)
         check(r1 == r2 && r1.events.contains { Int($0.pad) == Pad.kick.rawValue }, "randomize: same seed, same pattern, still has a kick")
         if let base = PatternBank.preset(named: "TRAP 1 ATL BOUNCE")?.pattern {
             let changed = PatternRandomizer.randomChannel(base, pad: Pad.hat.rawValue, style: "Trap", seed: 9)

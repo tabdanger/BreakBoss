@@ -107,6 +107,11 @@ struct KitDefinition: Identifiable {
     let bassHz: Float
     let pads: [DrumRecipe]
 
+    /// The genre in the browsers: the name without its A / B.
+    var genre: String {
+        name.hasSuffix(" A") || name.hasSuffix(" B") ? String(name.dropLast(2)) : name
+    }
+
     /// Browser home only: every kit and imported sample works through all three modes.
     var preferredMode: SoundMode {
         switch style {
@@ -124,155 +129,66 @@ struct KitDefinition: Identifiable {
 }
 
 enum KitLibrary {
-    static let legacy: [KitDefinition] = [
-        drumMastery, modernTrap, westBounce, baySlap, west90s, neoSoul, gospelChops, funkBreak, looseBreak, heavyBreak
-    ]
+    // The factory kits are in FactoryKits.swift (made by tools/build_kits.py): two kits per genre,
+    // every pad a stock sound sorted and named by category. The synth voices below are what each
+    // kit falls back on (and what plays its variations); they are not kits of their own.
 
-    // Core genre kits and percussion/texture kits keep stable IDs and MIDI pad roles.
-    static let core: [KitDefinition] = [
-        variant("memphis-trap", "MEMPHIS TRAP", modernTrap, .trapMemphis, 145, 11, -0.1, 0.3),
-        variant("atl-trap", "ATL TRAP", modernTrap, .trapAtlanta, 138, 23, 0.12, 0.15),
-        variant("six-side", "6 SIDE", drumMastery, .trapToronto, 132, 37, -0.2, 0.1),
-        variant("toronto-weird", "TORONTO WEIRD", modernTrap, .trapToronto, 125, 41, -0.25, 0.35),
-        variant("cole-world", "COLE WORLD", neoSoul, .neoSoul, 90, 53, -0.12, 0.1),
-        variant("boom-bap", "BOOM BAP", funkBreak, .boomBap, 92, 67, -0.15, 0.25),
-        variant("west-end", "WEST END", west90s, .west90s, 96, 71, 0.08, 0.08),
-        variant("trap-soul", "TRAP SOUL", drumMastery, .trapSoul, 118, 83, -0.22, 0.06),
-        variant("modern-rnb", "MODERN R&B", westBounce, .rnb, 104, 97, -0.05, 0.03),
-        variant("vintage-rnb", "VINTAGE R&B", neoSoul, .neoSoul, 84, 109, -0.18, 0.2),
-        variant("2000s-rnb", "2000s R&B", westBounce, .rnb, 98, 127, 0.16, 0.04),
-        variant("dirty-soul", "DIRTY SOUL", looseBreak, .neoSoul, 82, 139, -0.2, 0.4),
-        variant("live-soul", "70s SOUL", gospelChops, .gospel, 86, 151, -0.08, 0.02),
-        variant("80s-pop", "80s POP", heavyBreak, .pop80s, 114, 163, 0.15, 0.16),
-        variant("90s-pop", "90s POP", funkBreak, .pop90s, 108, 173, 0.05, 0.08),
-        variant("live-pop", "LIVE POP", gospelChops, .pop, 120, 191, 0.12, 0.02),
-        variant("lo-fi", "LO-FI", neoSoul, .loFi, 78, 281, -0.22, 0.18),
-        // Tyrone's second packs (Oct 14): see tools/apply_kit_pack.py
-        variant("detroit", "DETROIT", modernTrap, .trapAtlanta, 150, 301, 0.05, 0.2),
-        variant("knock-gang", "KNOCK GANG", drumMastery, .trap, 142, 313, 0.08, 0.15),
-        variant("rage", "RAGE", modernTrap, .trapToronto, 160, 317, -0.05, 0.35),
-        variant("drill-nights", "DRILL NIGHTS", drumMastery, .trapMemphis, 142, 331, -0.1, 0.25),
-        variant("danger-drums", "DANGER DRUMS", drumMastery, .trap, 140, 353, 0.05, 0.15),
-        variant("danger-drums-2", "DANGER DRUMS 2", modernTrap, .trapAtlanta, 144, 359, 0, 0.2),
-        variant("analog-funk", "ANALOG FUNK", funkBreak, .funkBreak, 96, 337, 0, 0.1)
-    ]
-    static let textures: [KitDefinition] = [
-        variant("afrobeats", "AFROBEATS", baySlap, .afrobeats, 106, 211, 0.08, 0.04),
-        variant("world-latin", "WORLD & LATIN", neoSoul, .latin, 112, 223, 0.1, 0.02),
-        variant("dark-experimental", "DARK EXPERIMENTAL", heavyBreak, .experimental, 100, 239, -0.3, 0.4),
-        variant("shakers", "SHAKERS", neoSoul, .afrobeats, 108, 251, 0.2, 0.02),
-        variant("perc-loops", "PERC LOOPS", baySlap, .latin, 115, 263, 0.06, 0.08),
-        variant("resampled-textures", "RESAMPLED TEXTURES", looseBreak, .experimental, 90, 277, -0.25, 0.5),
-        variant("amapiano", "AMAPIANO", modernTrap, .amapiano, 112, 293, -0.1, 0.04),
-        variant("sky-textures", "SKY TEXTURES", looseBreak, .experimental, 100, 347, -0.1, 0.2)
-    ]
-    /// Two kits per preset style, built from Tyrone's packs (tools/build_genre_kits.py).
-    static let genres: [KitDefinition] = [
-        variant("g-trap-a", "TRAP A", drumMastery, .trapAtlanta, 140, 401, 0, 0.1),
-        variant("g-trap-b", "TRAP B", drumMastery, .trapAtlanta, 140, 402, 0, 0.1),
-        variant("g-dark-trap-a", "DARK TRAP A", heavyBreak, .trapToronto, 135, 403, 0, 0.1),
-        variant("g-dark-trap-b", "DARK TRAP B", heavyBreak, .trapToronto, 135, 404, 0, 0.1),
-        variant("g-drill-a", "DRILL A", modernTrap, .trapMemphis, 142, 405, 0, 0.1),
-        variant("g-drill-b", "DRILL B", modernTrap, .trapMemphis, 142, 406, 0, 0.1),
-        variant("g-detroit-a", "DETROIT A", modernTrap, .trapAtlanta, 160, 407, 0, 0.1),
-        variant("g-detroit-b", "DETROIT B", modernTrap, .trapAtlanta, 160, 408, 0, 0.1),
-        variant("g-west-coast-a", "WEST COAST A", westBounce, .westBounce, 98, 409, 0, 0.1),
-        variant("g-west-coast-b", "WEST COAST B", westBounce, .westBounce, 98, 410, 0, 0.1),
-        variant("g-rnb-a", "RNB A", drumMastery, .trapSoul, 118, 411, 0, 0.1),
-        variant("g-rnb-b", "RNB B", drumMastery, .trapSoul, 118, 412, 0, 0.1),
-        variant("g-90s-rnb-a", "90S RNB A", west90s, .pop90s, 96, 413, 0, 0.1),
-        variant("g-90s-rnb-b", "90S RNB B", west90s, .pop90s, 96, 414, 0, 0.1),
-        variant("g-80s-rnb-a", "80S RNB A", gospelChops, .pop80s, 104, 415, 0, 0.1),
-        variant("g-80s-rnb-b", "80S RNB B", gospelChops, .pop80s, 104, 416, 0, 0.1),
-        variant("g-80s-pop-a", "80S POP A", funkBreak, .pop80s, 116, 417, 0, 0.1),
-        variant("g-80s-pop-b", "80S POP B", funkBreak, .pop80s, 116, 418, 0, 0.1),
-        variant("g-80s-funk-a", "80S FUNK A", funkBreak, .funkBreak, 104, 419, 0, 0.1),
-        variant("g-80s-funk-b", "80S FUNK B", funkBreak, .funkBreak, 104, 420, 0, 0.1),
-        variant("g-boom-bap-a", "BOOM BAP A", heavyBreak, .boomBap, 90, 421, 0, 0.1),
-        variant("g-boom-bap-b", "BOOM BAP B", heavyBreak, .boomBap, 90, 422, 0, 0.1),
-        variant("g-jazz-a", "JAZZ A", looseBreak, .looseBreak, 120, 423, 0, 0.1),
-        variant("g-jazz-b", "JAZZ B", looseBreak, .looseBreak, 120, 424, 0, 0.1),
-        variant("g-neo-soul-a", "NEO SOUL A", neoSoul, .neoSoul, 86, 425, 0, 0.1),
-        variant("g-neo-soul-b", "NEO SOUL B", neoSoul, .neoSoul, 86, 426, 0, 0.1),
-        variant("g-soul-rnb-a", "SOUL RNB A", gospelChops, .gospel, 94, 427, 0, 0.1),
-        variant("g-soul-rnb-b", "SOUL RNB B", gospelChops, .gospel, 94, 428, 0, 0.1),
-        variant("g-amapiano-a", "AMAPIANO A", baySlap, .amapiano, 112, 429, 0, 0.1),
-        variant("g-amapiano-b", "AMAPIANO B", baySlap, .amapiano, 112, 430, 0, 0.1),
-        variant("g-south-african-rnb-a", "SOUTH AFRICAN RNB A", looseBreak, .amapiano, 110, 431, 0, 0.1),
-        variant("g-south-african-rnb-b", "SOUTH AFRICAN RNB B", looseBreak, .amapiano, 110, 432, 0, 0.1),
-        variant("g-edm-a", "EDM A", drumMastery, .experimental, 128, 433, 0, 0.1),
-        variant("g-edm-b", "EDM B", drumMastery, .experimental, 128, 434, 0, 0.1),
-        variant("g-house-a", "HOUSE A", funkBreak, .afrobeats, 124, 435, 0, 0.1),
-        variant("g-house-b", "HOUSE B", funkBreak, .afrobeats, 124, 436, 0, 0.1),
-        variant("g-techno-a", "TECHNO A", heavyBreak, .experimental, 130, 437, 0, 0.1),
-        variant("g-techno-b", "TECHNO B", heavyBreak, .experimental, 130, 438, 0, 0.1),
-        // Artist styles (Tyrone's Danger Demon / Danger OG Trap packs): named for the sound, not the artist
-        variant("s-toronto-nights-a", "TORONTO NIGHTS A", heavyBreak, .trapToronto, 136, 501, 0, 0.1),
-        variant("s-toronto-nights-b", "TORONTO NIGHTS B", heavyBreak, .trapToronto, 136, 502, 0, 0.1),
-        variant("s-late-night-rnb-a", "LATE NIGHT RNB A", neoSoul, .trapSoul, 74, 503, 0, 0.1),
-        variant("s-late-night-rnb-b", "LATE NIGHT RNB B", neoSoul, .trapSoul, 74, 504, 0, 0.1),
-        variant("s-atl-wave-a", "ATL WAVE A", modernTrap, .trapAtlanta, 145, 505, 0, 0.1),
-        variant("s-atl-wave-b", "ATL WAVE B", modernTrap, .trapAtlanta, 145, 506, 0, 0.1),
-        variant("s-rockstar-bounce-a", "ROCKSTAR BOUNCE A", westBounce, .trapAtlanta, 155, 507, 0, 0.1),
-        variant("s-rockstar-bounce-b", "ROCKSTAR BOUNCE B", westBounce, .trapAtlanta, 155, 508, 0, 0.1),
-        variant("s-vamp-rage-a", "VAMP RAGE A", modernTrap, .trapAtlanta, 152, 509, 0, 0.1),
-        variant("s-vamp-rage-b", "VAMP RAGE B", modernTrap, .trapAtlanta, 152, 510, 0, 0.1),
-        variant("s-carolina-soul-a", "CAROLINA SOUL A", funkBreak, .boomBap, 90, 511, 0, 0.1),
-        variant("s-carolina-soul-b", "CAROLINA SOUL B", funkBreak, .boomBap, 90, 512, 0, 0.1),
-        variant("s-la-lyricist-a", "LA LYRICIST A", westBounce, .westBounce, 94, 513, 0, 0.1),
-        variant("s-la-lyricist-b", "LA LYRICIST B", westBounce, .westBounce, 94, 514, 0, 0.1),
-        variant("s-soft-soul-a", "SOFT SOUL A", neoSoul, .neoSoul, 82, 515, 0, 0.1),
-        variant("s-soft-soul-b", "SOFT SOUL B", neoSoul, .neoSoul, 82, 516, 0, 0.1),
-        variant("s-houston-queen-a", "HOUSTON QUEEN A", gospelChops, .rnb, 100, 517, 0, 0.1),
-        variant("s-houston-queen-b", "HOUSTON QUEEN B", gospelChops, .rnb, 100, 518, 0, 0.1)
-    ]
+    /// The kits grouped by genre ("BOOM BAP A" and "BOOM BAP B" -> "BOOM BAP"), in browser order.
+    static var genreGroups: [(genre: String, kits: [KitDefinition])] { groups(factory) }
 
-    static let factory = core + textures + legacy + genres
+    /// The genres whose kits open in this mode, grouped the same way.
+    static func genreGroups(for mode: SoundMode) -> [(genre: String, kits: [KitDefinition])] {
+        groups(kits(for: mode))
+    }
 
-    /// The genre kits (two per preset genre), grouped by genre in the order of the preset list.
-    static var genreGroups: [(genre: String, kits: [KitDefinition])] {
+    /// Every factory kit that opens in this mode, in browser order.
+    static func kits(for mode: SoundMode) -> [KitDefinition] {
+        factory.filter { $0.preferredMode == mode }
+    }
+
+    /// Mode lists first, the way the browsers show them (the ◀ ▶ kit arrows step through this).
+    static var browserOrder: [KitDefinition] { SoundMode.allCases.flatMap { kits(for: $0) } }
+
+    private static func groups(_ kits: [KitDefinition]) -> [(genre: String, kits: [KitDefinition])] {
         var order: [String] = []; var map: [String: [KitDefinition]] = [:]
-        for k in genres {
-            let g = String(k.name.dropLast(2))            // "BOOM BAP A" -> "BOOM BAP"
+        for k in kits {
+            let g = k.genre
             if map[g] == nil { order.append(g) }
             map[g, default: []].append(k)
         }
         return order.map { ($0, map[$0] ?? []) }
     }
 
-    /// Mode lists (the genre kits have their own section, see genreGroups).
-    static func kits(for mode: SoundMode) -> [KitDefinition] {
-        let genreIDs = Set(genres.map(\.id))
-        let kits = factory.filter { $0.preferredMode == mode && !genreIDs.contains($0.id) }
-        guard mode == .vintage else { return kits }
-        let primary = ["boom-bap", "live-soul", "vintage-rnb", "dirty-soul", "funk-break", "loose-break"]
-        return primary.compactMap { id in kits.first { $0.id == id } }
-            + kits.filter { !primary.contains($0.id) }
-    }
-
-    private static func variant(_ id: String, _ name: String, _ base: KitDefinition, _ style: GrooveStyle,
-                                _ tempo: Double, _ seed: UInt32, _ tone: Float, _ drive: Float) -> KitDefinition {
+    static func variant(_ id: String, _ name: String, _ base: KitDefinition, _ style: GrooveStyle,
+                        _ tempo: Double, _ seed: UInt32, bass: Float, tone: Float = 0, drive: Float = 0.1) -> KitDefinition {
         var rng = KRandom(seed: seed)
         var pads = base.pads.map { $0.varied(&rng, amount: 0.75) }
         for i in pads.indices {
             pads[i].tone = (pads[i].tone + tone).clamped(0, 1)
             pads[i].drive = (pads[i].drive + drive).clamped(0, 1)
         }
-        pads[Pad.bass808.rawValue].tune = base.bassHz
+        pads[Pad.bass808.rawValue].tune = bass
         if style == .latin || style == .afrobeats {
             pads[7] = DrumRecipe(kind: .conga, tune: 240, decay: 0.26, level: 0.8, label: "CONGA LOW")
             pads[8] = DrumRecipe(kind: .bongo, tune: 410, decay: 0.18, level: 0.7, label: "BONGO")
         }
-        return KitDefinition(id: id, name: name, style: style, tempo: tempo, bassHz: base.bassHz, pads: pads)
+        return KitDefinition(id: id, name: name, style: style, tempo: tempo, bassHz: bass, pads: pads)
     }
 
-    static func kit(id: String) -> KitDefinition { factory.first { $0.id == id } ?? drumMastery }
+    /// A kit by its identifier. Kits from before Oct 17 open the new kit nearest their genre.
+    static func kit(id: String) -> KitDefinition {
+        let id = retired[id] ?? id
+        return factory.first { $0.id == id } ?? factory[0]
+    }
+
+    /// The current identifier for a saved one (old kits map to their new kit).
+    static func currentID(_ id: String) -> String { kit(id: id).id }
 
     // Note frequencies used for 808 tunings.
     static let E1: Float = 41.20, F1: Float = 43.65, Fs1: Float = 46.25, G1: Float = 49.00, A1: Float = 55.00, D1: Float = 36.71
 
     static let drumMastery = KitDefinition(
-        id: "drum-mastery", name: "DRUM MASTERY", style: .trap, tempo: 140, bassHz: F1,
+        id: "voice-drum-mastery", name: "DRUM MASTERY", style: .trap, tempo: 140, bassHz: F1,
         pads: [
             DrumRecipe(kind: .kickPunch, tune: 52, decay: 0.32, tone: 0.55, snap: 0.6, drive: 0.15, label: "KICK"),
             DrumRecipe(kind: .snareTrap, tune: 195, decay: 0.26, tone: 0.55, snap: 0.6, label: "SNARE"),
@@ -289,7 +205,7 @@ enum KitLibrary {
         ])
 
     static let modernTrap = KitDefinition(
-        id: "modern-trap", name: "MODERN TRAP", style: .trap, tempo: 144, bassHz: E1,
+        id: "voice-modern-trap", name: "MODERN TRAP", style: .trap, tempo: 144, bassHz: E1,
         pads: [
             DrumRecipe(kind: .kickPunch, tune: 50, decay: 0.26, tone: 0.7, snap: 0.75, drive: 0.25, label: "KICK"),
             DrumRecipe(kind: .snareCrack, tune: 210, decay: 0.22, tone: 0.65, snap: 0.7, drive: 0.1, label: "SNARE"),
@@ -306,7 +222,7 @@ enum KitLibrary {
         ])
 
     static let westBounce = KitDefinition(
-        id: "west-bounce", name: "WEST BOUNCE", style: .westBounce, tempo: 100, bassHz: G1,
+        id: "voice-west-bounce", name: "WEST BOUNCE", style: .westBounce, tempo: 100, bassHz: G1,
         pads: [
             DrumRecipe(kind: .kickBoom, tune: 58, decay: 0.3, tone: 0.5, snap: 0.6, drive: 0.15, label: "KICK"),
             DrumRecipe(kind: .snareTrap, tune: 230, decay: 0.2, tone: 0.6, snap: 0.6, label: "SNARE"),
@@ -323,7 +239,7 @@ enum KitLibrary {
         ])
 
     static let baySlap = KitDefinition(
-        id: "bay-slap", name: "BAY SLAP", style: .baySlap, tempo: 92, bassHz: Fs1,
+        id: "voice-bay-slap", name: "BAY SLAP", style: .baySlap, tempo: 92, bassHz: Fs1,
         pads: [
             DrumRecipe(kind: .kickPunch, tune: 56, decay: 0.3, tone: 0.65, snap: 0.8, drive: 0.3, label: "KICK"),
             DrumRecipe(kind: .snareCrack, tune: 240, decay: 0.24, tone: 0.75, snap: 0.85, drive: 0.25, label: "SNARE"),
@@ -340,7 +256,7 @@ enum KitLibrary {
         ])
 
     static let west90s = KitDefinition(
-        id: "west-90s", name: "WEST 90S", style: .west90s, tempo: 95, bassHz: A1,
+        id: "voice-west-90s", name: "WEST 90S", style: .west90s, tempo: 95, bassHz: A1,
         pads: [
             DrumRecipe(kind: .kickBoom, tune: 54, decay: 0.42, tone: 0.35, snap: 0.45, drive: 0.1, label: "KICK"),
             DrumRecipe(kind: .snareTrap, tune: 185, decay: 0.24, tone: 0.45, snap: 0.5, label: "SNARE"),
@@ -357,7 +273,7 @@ enum KitLibrary {
         ])
 
     static let neoSoul = KitDefinition(
-        id: "neo-soul", name: "NEO SOUL", style: .neoSoul, tempo: 88, bassHz: D1,
+        id: "voice-neo-soul", name: "NEO SOUL", style: .neoSoul, tempo: 88, bassHz: D1,
         pads: [
             DrumRecipe(kind: .kickAcoustic, tune: 58, decay: 0.38, tone: 0.4, snap: 0.4, room: 0.25, label: "KICK"),
             DrumRecipe(kind: .snareAcoustic, tune: 190, decay: 0.28, tone: 0.4, snap: 0.45, room: 0.3, label: "SNARE"),
@@ -374,7 +290,7 @@ enum KitLibrary {
         ])
 
     static let gospelChops = KitDefinition(
-        id: "gospel-chops", name: "GOSPEL CHOPS", style: .gospel, tempo: 98, bassHz: F1,
+        id: "voice-gospel-chops", name: "GOSPEL CHOPS", style: .gospel, tempo: 98, bassHz: F1,
         pads: [
             DrumRecipe(kind: .kickAcoustic, tune: 62, decay: 0.32, tone: 0.55, snap: 0.6, room: 0.2, label: "KICK"),
             DrumRecipe(kind: .snareAcoustic, tune: 260, decay: 0.22, tone: 0.6, snap: 0.7, room: 0.25, label: "SNARE"),
@@ -391,7 +307,7 @@ enum KitLibrary {
         ])
 
     static let funkBreak = KitDefinition(
-        id: "funk-break", name: "FUNK BREAK", style: .funkBreak, tempo: 101, bassHz: E1,
+        id: "voice-funk-break", name: "FUNK BREAK", style: .funkBreak, tempo: 101, bassHz: E1,
         pads: [
             DrumRecipe(kind: .kickAcoustic, tune: 64, decay: 0.3, tone: 0.5, snap: 0.55, drive: 0.15, room: 0.45, label: "KICK"),
             DrumRecipe(kind: .snareAcoustic, tune: 215, decay: 0.26, tone: 0.55, snap: 0.6, drive: 0.15, room: 0.45, label: "SNARE"),
@@ -408,7 +324,7 @@ enum KitLibrary {
         ])
 
     static let looseBreak = KitDefinition(
-        id: "loose-break", name: "LOOSE BREAK", style: .looseBreak, tempo: 96, bassHz: G1,
+        id: "voice-loose-break", name: "LOOSE BREAK", style: .looseBreak, tempo: 96, bassHz: G1,
         pads: [
             DrumRecipe(kind: .kickAcoustic, tune: 60, decay: 0.34, tone: 0.45, snap: 0.5, drive: 0.2, room: 0.35, label: "KICK"),
             DrumRecipe(kind: .snareAcoustic, tune: 240, decay: 0.24, tone: 0.65, snap: 0.75, drive: 0.15, room: 0.35, label: "SNARE"),
@@ -425,7 +341,7 @@ enum KitLibrary {
         ])
 
     static let heavyBreak = KitDefinition(
-        id: "heavy-break", name: "HEAVY BREAK", style: .heavyBreak, tempo: 72, bassHz: D1,
+        id: "voice-heavy-break", name: "HEAVY BREAK", style: .heavyBreak, tempo: 72, bassHz: D1,
         pads: [
             DrumRecipe(kind: .kickAcoustic, tune: 52, decay: 0.5, tone: 0.35, snap: 0.6, drive: 0.3, room: 0.8, label: "KICK"),
             DrumRecipe(kind: .snareAcoustic, tune: 175, decay: 0.34, tone: 0.45, snap: 0.7, drive: 0.25, room: 0.85, label: "SNARE"),

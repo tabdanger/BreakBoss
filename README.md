@@ -4,9 +4,9 @@
 
 Universal iPhone/iPad drum machine and AUv3 instrument. Both use the same sound engine, stock kits, genre patterns, MIDI mapping, presets and exports. iPhone uses the supplied portrait faceplates; iPad retains its original artwork.
 
-All 544 factory pad slots across 34 kits use processed audio from the uploaded Multiverse folders. The bank contains 318 WAVs derived from 42 selected hits; exact processing and hashes are in `Build_Notes/STOCK_SAMPLE_PROVENANCE.json`. Imported audio takes priority. Genre patterns cover Atlanta/Memphis/Toronto Trap, Neo Soul, Boom Bap, Lo-fi, R&B, 80s/90s Pop, Amapiano and experimental/world percussion.
+The 577 stock sounds are sorted by category and named for how they sound ("KICK BOOM 07", "808 F1 LONG 02", "SHAKER 03"). They make 42 factory kits, an A and a B for each of 21 genres (the genres in the drum research plus Afrobeats, Amapiano, World Perc and FX Lab). Imported audio takes priority.
 
-There are 61 authored factory presets: 20 Modern, 21 Vintage and 20 Texture. A preset loads its matched kit, mode, FX/clipper and all 12 pad tuning/decay/filter settings. A kit change alone preserves the processing controls. Vintage leads with Boom Bap, 70s Soul, Vintage R&B, dusty soul and break grooves; the uploaded samples do not establish real acoustic drum or live-break provenance. Imported acoustic WAVs work through every mode.
+There are 170 factory presets (patterns), 10 each in 17 styles from the drum research: Neo Soul, Dilla Time, Boom Bap, 90s Rap, 70s Soul, 80s Breaks, Rock, Trap, Alt Trap, Drill, UK Drill, NY Drill, Detroit 2026, Bay Area 2026, RnB, 90s RnB and UK RnB. A preset loads a pattern only, so any pattern plays through any kit. Imported acoustic WAVs work through every mode.
 
 There are 12 pads, the same ones on the faceplate and in MENU. MIDI notes 36–47 play pads 1–12 in order, and notes 48–84 play the 808 chromatically, with 60 as the kit root. One-Shot ignores note length; Loop rhythms follow held notes.
 

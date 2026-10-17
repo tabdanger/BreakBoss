@@ -1675,7 +1675,7 @@ struct SequencerView: View {
 
     // MARK: Footer (pattern, kit)
 
-    private var orderedKits: [KitDefinition] { SoundMode.allCases.flatMap { KitLibrary.kits(for: $0) } + KitLibrary.genres }
+    private var orderedKits: [KitDefinition] { KitLibrary.browserOrder }
 
     @ViewBuilder private func footer(_ s: CGFloat) -> some View {
         // pads / sequencer switch: the pad button goes back to the faceplate
@@ -1727,18 +1727,14 @@ struct SequencerView: View {
     }
 
     private func kitItems() -> [BBMenuItem] {
-        // one vertical list: MODERN / VINTAGE / TEXTURE kits, the genre kits, your kits
+        // one vertical list: each genre's kits under its name (MODERN, then VINTAGE, then TEXTURE), your kits
         var items: [BBMenuItem] = []
         for mode in SoundMode.allCases {
-            items.append(.header("\(mode.title) kits"))
-            for def in KitLibrary.kits(for: mode) {
-                items.append(BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) { controller.selectKit(def) })
-            }
-        }
-        for g in KitLibrary.genreGroups {
-            items.append(.header(g.genre))
-            for def in g.kits {
-                items.append(BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) { controller.selectKit(def) })
+            for g in KitLibrary.genreGroups(for: mode) {
+                items.append(.header("\(g.genre) · \(mode.title)"))
+                for def in g.kits {
+                    items.append(BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) { controller.selectKit(def) })
+                }
             }
         }
         if !controller.userKits.isEmpty {

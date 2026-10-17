@@ -6,11 +6,9 @@ import Foundation
 // A preset loads a pattern only: its groove, tempo and swing. The kit (sounds), mode, knobs
 // and pad settings stay as they are, so any pattern plays through any kit. The 12 loops are
 // built from the preset's pattern (main, variations, fills, breakdown, tops, roll).
-// Styles: Tyrone's Danger Patterns plus 10 presets each of Trap, Dark Trap, West Coast, Drill,
-// Amapiano, South African RnB, RnB, 90s RnB, 80s RnB, 80s Pop, 80s Funk, EDM, House, Techno, and the
-// Vintage styles Boom Bap, Jazz, Neo Soul and Soul RnB.
-// Live-drummer styles (written with accents, ghosts and 4-bar fills): Dilla Time, 90s Rap, 70s Soul,
-// 80s Breaks, Rock, plus Alt Trap, Bay Area 2026, Detroit 2026, UK Drill, NY Drill and UK RnB.
+// Styles (rebuilt Oct 17 from the drum research, 10 presets each, written with accents, ghosts and
+// fills): Neo Soul, Dilla Time, Boom Bap, 90s Rap, 70s Soul, 80s Breaks, Rock, Trap, Alt Trap, Drill,
+// UK Drill, NY Drill, Detroit 2026, Bay Area 2026, RnB, 90s RnB and UK RnB.
 
 struct PatternPreset: Decodable, Equatable {
     let style: String
@@ -34,37 +32,15 @@ struct PatternPreset: Decodable, Equatable {
     /// The groove family used for the fills, breakdown and roll-up built around the pattern.
     var grooveStyle: GrooveStyle {
         switch style {
-        case "Trap": return .trapAtlanta
-        case "Dark Trap": return .trapToronto
-        case "West Coast": return .westBounce
-        case "Drill": return .trapMemphis
-        case "Amapiano", "South African RnB": return .amapiano
-        case "RnB": return .trapSoul
-        case "90s RnB": return .rnb
-        case "80s RnB", "80s Pop": return .pop80s
-        case "80s Funk": return .funkBreak
-        case "EDM", "House": return .pop
-        case "Techno": return .experimental
-        case "Detroit": return .trapAtlanta
-        case "Boom Bap": return .boomBap
-        case "Jazz": return .looseBreak
-        case "Neo Soul": return .neoSoul
-        case "Soul RnB": return .gospel
-        case "Toronto Nights": return .trapToronto
-        case "Late Night RnB": return .trapSoul
-        case "ATL Wave", "Rockstar Bounce", "Vamp Rage": return .trapAtlanta
-        case "Carolina Soul": return .boomBap
-        case "LA Lyricist": return .westBounce
-        case "Soft Soul": return .neoSoul
-        case "Houston Queen": return .rnb
-        case "Dilla Time": return .neoSoul
-        case "90s Rap": return .boomBap
+        case "Neo Soul", "Dilla Time": return .neoSoul
+        case "Boom Bap", "90s Rap": return .boomBap
         case "70s Soul": return .funkBreak
         case "80s Breaks", "Rock": return .heavyBreak
-        case "Alt Trap", "Detroit 2026": return .trapAtlanta
+        case "Trap", "Alt Trap", "Detroit 2026": return .trapAtlanta
+        case "Drill", "UK Drill", "NY Drill": return .trapMemphis
         case "Bay Area 2026": return .baySlap
-        case "UK Drill", "NY Drill": return .trapMemphis
-        case "UK RnB": return .rnb
+        case "RnB": return .trapSoul
+        case "90s RnB", "UK RnB": return .rnb
         default:
             if name.contains("AFRO") { return .afrobeats }
             if name.contains("BREAK") { return .funkBreak }
@@ -170,7 +146,7 @@ enum PatternBank {
         return file.patterns
     }()
 
-    /// Style names in browser order (Danger Patterns first).
+    /// Style names in browser order (the genre guide's order).
     static let styles: [String] = {
         var seen: [String] = []
         for p in all where !seen.contains(p.style) { seen.append(p.style) }
@@ -188,7 +164,7 @@ enum PatternBank {
 
 enum PatternRandomizer {
     static func style(for presetName: String) -> String {
-        PatternBank.preset(named: presetName)?.style ?? PatternBank.styles.first(where: { $0 != "Danger Patterns" }) ?? "Trap"
+        PatternBank.preset(named: presetName)?.style ?? PatternBank.styles.first ?? "Trap"
     }
 
     static func randomPattern(style: String, length: Int32, seed: UInt32) -> PatternData {
