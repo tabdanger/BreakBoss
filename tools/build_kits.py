@@ -4,16 +4,22 @@
   python3 tools/build_kits.py
 
 Writes BreakBoss.swiftpm/Resources/StockSamples/manifest.json (which sound plays on each pad of
-each kit, and every sound's name) and BreakBoss.swiftpm/FactoryKits.swift (the kit list). Two kits per genre, A and B,
+each kit, and every sound's name) and BreakBoss.swiftpm/FactoryKits.swift (the kit list).
+
+First the 42 A/B kits, unchanged since Oct 17: two kits per genre, A and B,
 for the genres in the drum research (/mnt/project-files/research/realistic-drums-and-genres.md)
 plus four texture genres. Every pad gets a sound of its own kind (kick pad: a KICK, and so on),
 chosen by the genre of the old kits it came from and by how it sounds (dusty, roomy, bright,
 long 808...). The same sound is never in both kits of a genre, and sounds already used elsewhere
 are passed over when there is a close second, so the whole library gets played.
+
+Then the named kits in tools/kit_catalog.py, so every mode bank holds at least 20 kits under every
+genre tab, picked the same way with the mode bank's leanings added.
 """
-import collections, json, math, os, sys
+import collections, json, math, os, random, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sort_stock_sounds import TAGS_OF          # the genre each old kit was made for
+import kit_catalog                             # the genre tabs and the named kits that fill them
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STOCK = os.path.join(ROOT, "BreakBoss.swiftpm", "Resources", "StockSamples")
@@ -125,24 +131,60 @@ def root_hz(s):
     return round(440 * 2 ** ((m - 69) / 12), 2)
 
 
+def old_mode(style):
+    """The bank each A/B kit has lived in (KitDefinition.preferredMode before the genre tabs)."""
+    if style in ("afrobeats", "latin", "experimental", "amapiano"): return "texture"
+    if style in ("neoSoul", "gospel", "funkBreak", "looseBreak", "heavyBreak", "west90s", "boomBap", "loFi",
+                 "pop80s", "pop90s", "pop"): return "vintage"
+    return "modern"
+
+
+def slug(name):
+    return "".join(c if c.isalnum() else "-" for c in name.lower().replace("&", "and")).strip("-").replace("--", "-").replace("--", "-")
+
+
 def build():
     uses = collections.Counter()
     kits, assignments = [], []
+    by_file = {s["file"]: s for s in SOUNDS}
+    taken = collections.defaultdict(set)     # genre -> sounds its kits already play (kits of a genre share none)
     seed = 601
     for name, gid, style, tempo, voice, tags, likes in GENRES:
-        taken = set()
         for side in ("A", "B"):
             files = []
             for pad in range(12):
-                cands = [s for s in pool(pad, likes) if s["file"] not in taken and s["file"] not in files]
+                cands = [s for s in pool(pad, likes) if s["file"] not in taken[name] and s["file"] not in files]
                 best = max(cands, key=lambda s: (score(s, pad, tags, likes) - 1.2 * uses[s["file"]], s["file"]))
-                files.append(best["file"]); taken.add(best["file"]); uses[best["file"]] += 1
+                files.append(best["file"]); taken[name].add(best["file"]); uses[best["file"]] += 1
             kid = f"{gid}-{side.lower()}"
-            by_file = {s["file"]: s for s in SOUNDS}
             for pad, f in enumerate(files):
                 assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": by_file[f]["name"]})
-            kits.append((kid, f"{name} {side}", voice, style, tempo, seed, root_hz(by_file[files[6]])))
+            kits.append((kid, f"{name} {side}", voice, style, tempo, seed, root_hz(by_file[files[6]]),
+                         old_mode(style), kit_catalog.OLD_FAMILY[name], name))
             seed += 1
+    # The named kits: each mode bank, each genre tab, each genre in it.
+    seen_sets = {frozenset(a["file"] for a in assignments if a["kitID"] == k[0]) for k in kits}
+    seed = 1001
+    for (mode, family), genres in kit_catalog.KITS.items():
+        for genre, style, tempo, voice, tags, likes, names in genres:
+            leans = dict(likes)
+            for k, v in kit_catalog.MODE_LIKES[mode].items(): leans[k] = leans.get(k, 0) + v
+            leans.setdefault("perc", kit_catalog.FAMILY_PERC[family])
+            for name in names:
+                rng = random.Random(seed)
+                jitter = collections.defaultdict(lambda: rng.random() * 0.8)   # a little of each kit's own taste
+                files = []
+                for pad in range(12):
+                    cands = [s for s in pool(pad, leans) if s["file"] not in taken[genre] and s["file"] not in files]
+                    best = max(cands, key=lambda s: (score(s, pad, tags, leans) - 1.2 * uses[s["file"]] + jitter[(pad, s["file"])], s["file"]))
+                    files.append(best["file"]); taken[genre].add(best["file"]); uses[best["file"]] += 1
+                assert frozenset(files) not in seen_sets, name
+                seen_sets.add(frozenset(files))
+                kid = slug(name)
+                for pad, f in enumerate(files):
+                    assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": by_file[f]["name"]})
+                kits.append((kid, name, voice, style, tempo, seed, root_hz(by_file[files[6]]), mode, family, genre))
+                seed += 1
     return kits, assignments, uses
 
 
@@ -151,8 +193,13 @@ def main():
     with open(os.path.join(STOCK, "manifest.json"), "w") as out:
         # "sounds": the whole library (the sound menu lists them all, even those in no kit)
         sounds = [{"file": x["file"], "name": x["name"]} for x in SOUNDS]
-        json.dump({"version": 1, "assignments": assignments, "sounds": sounds}, out, indent=1)
+        json.dump({"version": 1, "assignments": assignments, "sounds": sounds}, out, separators=(",", ":"))
     ids = [k[0] for k in kits]
+    assert len(set(ids)) == len(ids) and len({k[1] for k in kits}) == len(kits), "kit ids and names are unique"
+    for mode in kit_catalog.MODE_LIKES:
+        for fam in kit_catalog.FAMILIES:
+            n = sum(1 for k in kits if k[7] == mode and k[8] == fam)
+            assert n >= 20, (mode, fam, n)
     retired = {}
     for old in OLD_IDS:
         tags = TAGS_OF[old]
@@ -162,11 +209,17 @@ def main():
     lines = ["// Copyright © 2026 Tyrone Dangerfield. All rights reserved.",
              "// Made by tools/build_kits.py from the sorted stock sounds (tools/stock_sounds.json): edit that, not this.",
              "import Foundation", "", "extension KitLibrary {",
-             "    /// Two kits per genre (A and B), in browser order: the research genres, then the textures.",
-             "    static let factory: [KitDefinition] = ["]
-    lines += [f'        variant("{k}", "{n}", {v}, .{st}, {t}, {sd}, bass: {hz}),' for k, n, v, st, t, sd, hz in kits]
-    lines[-1] = lines[-1].rstrip(",")
-    lines += ["    ]", "", "    /// The kits before Oct 17: saved projects and your kits that used one open the nearest new kit.",
+             "    /// The A/B kits of the research genres, then the named kits that give every mode bank",
+             "    /// at least 20 kits under each genre tab (tools/kit_catalog.py).",
+             "    static let factory: [KitDefinition] = table(factoryTable)",
+             "",
+             "    /// One kit a line: id | name | synth voice | groove style | tempo | seed | 808 Hz | mode bank | genre tab | genre.",
+             "    /// Text, not Swift calls, so the Release build stays quick with hundreds of kits.",
+             '    private static let factoryTable = """']
+    for k, n, v, st, t, sd, hz, m, f, g in kits:
+        assert "|" not in n + g + f
+        lines.append(f"{k}|{n}|{v}|{st}|{t}|{sd}|{hz}|{m}|{f}|{g}")
+    lines += ['"""', "", "    /// The kits before Oct 17: saved projects and your kits that used one open the nearest new kit.",
               "    static let retired: [String: String] = ["]
     lines += [f'        "{o}": "{n}",' for o, n in sorted(retired.items())]
     lines[-1] = lines[-1].rstrip(",")
