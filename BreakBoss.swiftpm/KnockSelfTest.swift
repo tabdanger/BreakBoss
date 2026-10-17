@@ -1240,17 +1240,18 @@ enum KnockSelfTest {
         let rolls = (0..<400).map { PatternData.chanceRoll(pass: $0, tick: 48, pad: snare) }
         let under = rolls.filter { $0 < 0.5 }.count
         check(under > 150 && under < 250 && rolls.allSatisfy { $0 >= 0 && $0 < 1 }, "chance: 50% plays about half the passes (\(under)/400)")
-        // MIDI export plays the feel: the pushed snare lands early, and a 5% note drops out of most bars.
+        // MIDI export plays the feel: the pushed snare lands early, and a 5% note drops out of most bars
+        // (8 bars: MIDI import reads back the first 8).
         var ex = PatternData(name: "X", lengthTicks: bar, events: [GrooveEvent(tick: 96, pad: snare, velocity: 1)])
         ex.events[0].offset = -6
         var rare = GrooveEvent(tick: 0, pad: kick, velocity: 1); rare.chance = 0.05
         ex.events.append(rare)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("bb-feel-selftest.mid")
-        if (try? MIDIFile.write(ex, tempo: 120, bounce: 0, bars: 16, to: url)) != nil, let back = MIDIFile.read(url) {
+        if (try? MIDIFile.write(ex, tempo: 120, bounce: 0, bars: 8, to: url)) != nil, let back = MIDIFile.read(url) {
             let snares = back.events.filter { $0.pad == snare }.map { $0.tick % bar }
             let kicks = back.events.filter { $0.pad == kick }.count
-            check(snares.count == 16 && snares.allSatisfy { $0 == 90 }, "feel: MIDI export plays the pushed snare early (\(Set(snares)))")
-            check(kicks < 8, "chance: MIDI export drops a 5% note from most bars (\(kicks)/16)")
+            check(snares.count == 8 && snares.allSatisfy { $0 == 90 }, "feel: MIDI export plays the pushed snare early (\(Set(snares)))")
+            check(kicks < 4, "chance: MIDI export drops a 5% note from most bars (\(kicks)/8)")
         } else {
             check(false, "feel: MIDI export with offsets writes and reads back")
         }
