@@ -2,10 +2,12 @@ import SwiftUI
 import UIKit
 
 /// Two fingers on the sequencer's grid slide it: sideways along a long pattern and up and down
-/// through the rack. One finger keeps drawing. Sits behind the grid inside the rack's ScrollView,
-/// finds that UIScrollView and adds a two-finger pan to it.
+/// through the rack. One finger keeps drawing. A two-finger swipe on a trackpad does the same (the
+/// rack's own scrolling takes the up and down). Sits behind the grid inside the rack's ScrollView,
+/// finds that UIScrollView and adds the pans to it.
 struct GridScrollHook: UIViewRepresentable {
-    var began: () -> Void
+    /// `trackpad`: a trackpad swipe, so no finger is drawing on the grid.
+    var began: (_ trackpad: Bool) -> Void
     /// Sideways travel since the two fingers went down, in points.
     var sideways: (CGFloat) -> Void
     var ended: () -> Void
@@ -43,12 +45,14 @@ struct GridScrollHook: UIViewRepresentable {
         private weak var scrollView: UIScrollView?
         private weak var area: UIView?
         private var pan: UIPanGestureRecognizer?
+        private var swipe: UIPanGestureRecognizer?
         private var startY: CGFloat = 0
 
         func attach(to scrollView: UIScrollView, area: UIView) {
             self.area = area
             guard self.scrollView !== scrollView else { return }
             if let pan { pan.view?.removeGestureRecognizer(pan) }
+            if let swipe { swipe.view?.removeGestureRecognizer(swipe) }
             let pan = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
             pan.minimumNumberOfTouches = 2
             pan.maximumNumberOfTouches = 2
@@ -58,6 +62,13 @@ struct GridScrollHook: UIViewRepresentable {
             // the rack's own scrolling stays one finger, so the two never fight
             scrollView.panGestureRecognizer.maximumNumberOfTouches = 1
             self.pan = pan
+            // a trackpad's two-finger swipe: scroll events only, fingers on the glass stay with the pan
+            let swipe = UIPanGestureRecognizer(target: self, action: #selector(swiped(_:)))
+            swipe.allowedScrollTypesMask = .continuous
+            swipe.allowedTouchTypes = []
+            swipe.delegate = self
+            scrollView.addGestureRecognizer(swipe)
+            self.swipe = swipe
             self.scrollView = scrollView
         }
 
@@ -67,13 +78,21 @@ struct GridScrollHook: UIViewRepresentable {
             switch g.state {
             case .began:
                 startY = scrollView.contentOffset.y
-                hook?.began()
+                hook?.began(false)
             case .changed:
                 let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
                 scrollView.contentOffset.y = min(maxY, max(0, startY - moved.y))
                 hook?.sideways(moved.x)
             default:
                 hook?.ended()
+            }
+        }
+
+        @objc private func swiped(_ g: UIPanGestureRecognizer) {
+            switch g.state {
+            case .began: hook?.began(true)
+            case .changed: hook?.sideways(g.translation(in: g.view?.superview).x)
+            default: hook?.ended()
             }
         }
 
