@@ -55,7 +55,7 @@ final class SequencerUITests: XCTestCase {
         // PITCH shows the notes on a piano roll with KEY / SCALE / SNAP
         app.buttons["lanePitch"].tap()
         XCTAssertTrue(app.buttons["SNAP"].waitForExistence(timeout: 3), "PITCH opens the piano roll with SNAP")
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'KEY'")).firstMatch.exists, "the piano roll has KEY")
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'KEY'")).firstMatch.exists, "the piano roll has KEY")
         snap("pitch-piano-roll")
         app.buttons["laneVelocity"].tap()
         XCTAssertTrue(app.staticTexts["DRAG A BAR UP OR DOWN"].waitForExistence(timeout: 3), "VELOCITY goes back to the graph")
