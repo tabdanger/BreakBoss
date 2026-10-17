@@ -14,7 +14,7 @@ import UniformTypeIdentifiers
 //           that track's steps).
 //   Right:  the STEP GRID (16 steps a bar), the track's piano roll when expanded, and the graph
 //           a track's arrow drops down under its steps (VELOCITY / PITCH). DRAW / SELECT /
-//           ERASE, undo / redo, SNAP, SNAP TO SCALE, SWING and HUMANIZE, pinch to zoom (SNAP follows), 2 / 4 / 8 / 16 bars.
+//           ERASE, undo / redo, TEMPO SYNC / FOLLOW DAW, SNAP, SNAP TO SCALE, SWING and HUMANIZE, pinch to zoom (SNAP follows), 2 / 4 / 8 / 16 bars.
 //   Bottom: PATTERN and KIT pickers with arrows.
 // All note changes go through KnockController.setLoop, so the engine, presets, MIDI out and
 // MIDI export all see the same pattern. The rack's channels sit on the faceplate's 12 pads.
@@ -353,6 +353,7 @@ struct SequencerView: View {
         static let gear: [Double] = [1356, 194, 1402, 239], cloud: [Double] = [1430, 193, 1484, 241]
         static let snap: [Double] = [877, 245, 1047, 279], swing: [Double] = [1059, 244, 1219, 279], humanize: [Double] = [1230, 244, 1368, 279]
         static let swingKnob: [Double] = [1188, 247, 1216, 275], humanizeKnob: [Double] = [1337, 247, 1365, 275]
+        static let tempoSync: [Double] = [580, 245, 722, 279], followDAW: [Double] = [728, 245, 870, 279]
         static let pageBack: [Double] = [400, 246, 436, 280], pageText: [Double] = [436, 248, 534, 278], pageForward: [Double] = [534, 246, 572, 280]
         static let leftPanel: [Double] = [33, 300, 285, 693]
         static let rackX0: Double = 298, rackX1: Double = 534, gridX0: Double = 549, gridX1: Double = 1445, panelX1: Double = 1495
@@ -512,6 +513,9 @@ struct SequencerView: View {
             }
         }
         .place(A.rec, s)
+        // TEMPO SYNC and FOLLOW DAW (the same switches as Face 1's LEDs): lit green when on
+        hostSwitch("TEMPO SYNC", .tempoSync, A.tempoSync, s)
+        hostSwitch("FOLLOW DAW", .followDAW, A.followDAW, s)
         // tempo, bars, pattern, gear, cloud
         // tempo: slide up for faster, down for slower; a tap opens the tempo panel
         SeqChip(sprite: "SeqChipBpm", text: "\(Int(controller.liveTempo.rounded())) BPM", scale: s, color: tempoDragStart == nil ? .white : S.green)
@@ -581,6 +585,21 @@ struct SequencerView: View {
             work = p
             if ended { humanizeStart = nil; work = nil; controller.setLoop(loop, p) }
         }
+    }
+
+    /// A host transport switch on the top rail: its lamp and name, green when on.
+    private func hostSwitch(_ title: String, _ p: KParam, _ r: [Double], _ s: CGFloat) -> some View {
+        let on = controller.value(p) > 0.5
+        return SeqButton("SeqBtnTool", lit: on ? S.green : nil, scale: s, action: { controller.toggle(p) }) {
+            HStack(spacing: 6 * s) {
+                Circle().fill(on ? S.green : Color(white: 0.28)).frame(width: 7 * s, height: 7 * s)
+                    .shadow(color: on ? S.green : .clear, radius: 3 * s)
+                Text(title).font(.system(size: 12 * s, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7)
+            }
+            .foregroundColor(on ? S.green : .white)
+        }
+        .accessibilityIdentifier(p == .tempoSync ? "tempoSyncButton" : "followDAWButton")
+        .place(r, s)
     }
 
     private func settingsItems() -> [BBMenuItem] {
