@@ -27,6 +27,12 @@ final class SequencerUITests: XCTestCase {
         }
     }
 
+    /// What's on screen, in the build log (lines start with UITREE) when a step fails.
+    private func dumpTree(_ why: String) {
+        print("UITREE ---- \(why)")
+        for line in app.debugDescription.components(separatedBy: "\n") { print("UITREE \(line)") }
+    }
+
     private func any(_ id: String) -> XCUIElement { app.descendants(matching: .any)[id].firstMatch }
 
     private func label(_ id: String) -> String {
@@ -62,11 +68,14 @@ final class SequencerUITests: XCTestCase {
         snap("arrow-closes")
 
         // pattern length 2 / 4 / 8 / 16
-        any("barsChip").tap()
-        let four = app.buttons["4 BARS"]
-        XCTAssertTrue(four.waitForExistence(timeout: 3), "the BARS chip opens the length menu")
+        let barsChip = any("barsChip")
+        XCTAssertTrue(barsChip.exists, "there is a BARS chip")
+        barsChip.tap()
+        let four = app.buttons.matching(NSPredicate(format: "label CONTAINS '4 BARS'")).firstMatch
+        let opened = four.waitForExistence(timeout: 3)
+        XCTAssertTrue(opened, "the BARS chip opens the length menu")
         snap("bars-menu")
-        four.tap()
+        if opened { four.tap() } else { dumpTree("after tapping BARS") }
         sleep(1)
         XCTAssertTrue(label("barsChip").contains("4"), "the chip says 4 BARS (it says \(label("barsChip")))")
         snap("four-bars")
