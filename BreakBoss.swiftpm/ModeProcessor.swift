@@ -7,9 +7,10 @@ import Foundation
 // VINTAGE  the same knobs, plus built-in drive and boost: tape saturation, a low-end bump and a
 //          rolled-off top like an old sampler.
 // TEXTURE  the same knobs, plus a downsampled (lower sample rate, 12-bit) sound, instability
-//          (tape wow and flutter), a tempo-synced delay, a gated reverb, and WARP: pitch that
-//          sweeps up and down, a resonant filter sweeping back and forth, and tempo-synced
-//          stutters, at the WOBBLE rate.
+//          (tape wow and flutter, and the warp below), a tempo-synced delay and a gated reverb.
+//          WARP is part of the algorithm, not a knob: every bar or two it rolls a new scene (how
+//          far the pitch swings up and down, how fast it wobbles, its shape, how hard the
+//          resonant filter sweeps against it), and some 1/16s stutter. INSTABILITY sets how much.
 //
 // BOOST    low-end and level push into the chain.
 // PUNCH    transient shaper: louder attacks, a little less sustain.
@@ -63,7 +64,8 @@ final class BusProcessor {
     // Texture: gated reverb
     private var verb: GatedReverb
     // Texture: WARP. A two-head pitch shifter whose pitch swings up and down, a resonant filter
-    // sweeping against it, and stutters that repeat the start of a 1/16.
+    // sweeping against it, and stutters that repeat the start of a 1/16. Its settings are a
+    // random "scene" that changes every bar or two.
     private let warpSize = 16_384
     private let warpL: UnsafeMutablePointer<Float>
     private let warpR: UnsafeMutablePointer<Float>
@@ -88,6 +90,12 @@ final class BusProcessor {
     private var stutterReverse = false
     private var stutterMix = Smoothed(0)
     private var glitchRNG = KRandom(seed: 0x6A17C4)
+    private var sceneSteps = 0              // 1/16s left in this scene
+    private var sceneRate: Double = 1       // wobbles per beat
+    private var sceneSemis: Float = 0       // how far the pitch swings, either way
+    private var sceneShape = 0              // 0 sine, 1 triangle, 2 random steps
+    private var sceneBand: Float = 0        // how much of the sweep is the resonant band-pass
+    private var sceneHold: Float = 0        // the current random step (shape 2)
     // Noise
     private var rng = KRandom(seed: 0xC0FFEE)
     private var noiseEnv = EnvelopeFollower()
@@ -170,7 +178,7 @@ final class BusProcessor {
         stutterR.update(repeating: 0, count: stutterSize)
         for c in 0..<2 { warpFilter[c].reset() }
         warpMix.jump(0); stutterMix.jump(0)
-        stutterOn = false; stutterStep = Int.min; warpHead = 0; warpRatio = 1
+        stutterOn = false; stutterStep = Int.min; warpHead = 0; warpRatio = 1; sceneSteps = 0
         fast.value = 0; slow.value = 0; noiseEnv.value = 0
     }
 
@@ -188,8 +196,6 @@ final class BusProcessor {
         var delay: Float = 0.32
         var reverb: Float = 0.5
         var drive: Float = 0
-        var warp: Float = 0
-        var wobble: Float = 0.6
         /// The transport's beat at this block's first sample, while playing (stutters land on its 1/16s).
         var beat: Double?
     }
@@ -216,15 +222,12 @@ final class BusProcessor {
         let dsStep = texture ? min(1, (sr * powf(18_900 / sr, s.resample * 2)) / sr) : 1   // hold-and-sample down to ~19 kHz
         let wowDepth: Float = sr * 0.0022 * s.instability, flutterDepth: Float = sr * 0.00024 * s.instability
         let quantization = powf(2, 15 - s.resample * 8)
-        // WARP: depth up to an octave either way; more warp, more resonance, more stutters.
-        let warp = texture ? s.warp.clamped(0, 1) : 0
-        warpMix.set(min(0.85, warp * 1.5))
-        if warp <= 0.001 { stutterOn = false }
+        // WARP follows INSTABILITY: more instability, wider swings, more resonance, more stutters.
+        let warp = texture ? s.instability.clamped(0, 1) : 0
+        if warp <= 0.001 { warpMix.set(0); stutterOn = false; sceneSteps = 0 }
         let beatsPerSample = max(s.tempo, 40) / 60 / Double(sr)
-        let wobbleStep = KnockMath.wobbleRate(s.wobble) * beatsPerSample
-        let warpSemis = warp * 12
-        let warpQ = 0.8 + warp * 3.2
-        let stutterChance = warp * warp * 0.5
+        let warpQ = 0.8 + warp * 3
+        let stutterChance = warp * warp * 0.4
         if let b = s.beat { glitchBeat = b }
 
         for i in 0..<count {
@@ -300,19 +303,23 @@ final class BusProcessor {
                 // WARP
                 warpL[warpIndex] = l; warpR[warpIndex] = r
                 if warpMix.target > 0 || warpMix.value > 0 {
-                    let (wl, wr) = warpSample(warpQ: warpQ, semis: warpSemis, depth: warp)
+                    let (wl, wr) = warpSample(warpQ: warpQ)
                     let m = warpMix.next()
                     l += (wl - l) * m
                     r += (wr - r) * m
                 }
                 warpIndex = (warpIndex + 1) & (warpSize - 1)
-                wobblePhase += wobbleStep
-                if wobblePhase >= 1 { wobblePhase -= 1 }
+                wobblePhase += sceneRate * beatsPerSample
+                if wobblePhase >= 1 { wobblePhase -= 1; sceneHold = glitchRNG.bipolar() }
                 // Stutters: on some 1/16s the first 1/32 (or 1/48, 1/64) repeats, sometimes backwards.
                 stutterL[stutterIndex] = l; stutterR[stutterIndex] = r
                 let step = Int((glitchBeat * 4).rounded(.down))
                 if step != stutterStep {
                     stutterStep = step
+                    if warp > 0.001 {
+                        sceneSteps -= 1
+                        if sceneSteps <= 0 { rollScene(warp) }
+                    }
                     stutterOn = warp > 0.001 && glitchRNG.unit() < stutterChance
                     if stutterOn {
                         let pick = glitchRNG.int(4)
@@ -374,17 +381,37 @@ final class BusProcessor {
         }
     }
 
+    /// A new WARP scene, every one or two bars: wobble speed (1/2 to 1/32), swing (2 to 12
+    /// semitones), shape, filter, and how much of it you hear (sometimes none: only stutters).
+    private func rollScene(_ amount: Float) {
+        sceneSteps = 16 * (1 + glitchRNG.int(2))
+        sceneRate = 0.5 * pow(2, Double(glitchRNG.int(5)))
+        sceneSemis = amount * glitchRNG.range(2, 12)
+        sceneShape = glitchRNG.int(3)
+        sceneBand = glitchRNG.range(0, 0.7) * amount
+        warpMix.set(glitchRNG.chance(0.25) ? 0 : min(0.85, amount * glitchRNG.range(0.6, 1.6)))
+    }
+
     /// One sample of WARP's wet signal: pitch shifted by the wobble, through the swept filter.
     @inline(__always)
-    private func warpSample(warpQ: Float, semis: Float, depth: Float) -> (Float, Float) {
-        let lfo = Float(sin(2 * Double.pi * wobblePhase))
+    private func warpSample(warpQ: Float) -> (Float, Float) {
         // Pitch and filter move at control rate (every 16 samples).
         warpControl -= 1
         if warpControl <= 0 {
             warpControl = 16
-            warpRatio = exp2f(semis * lfo / 12)
-            // The filter sweeps a quarter-cycle behind the pitch: it opens as the pitch passes through the middle.
-            let sweep = Float(cos(2 * Double.pi * wobblePhase))
+            let lfo: Float, sweep: Float
+            switch sceneShape {
+            case 0:     // sine; the filter a quarter-cycle behind, opening as the pitch passes the middle
+                lfo = Float(sin(2 * Double.pi * wobblePhase))
+                sweep = Float(cos(2 * Double.pi * wobblePhase))
+            case 1:     // triangle; the filter against it
+                lfo = Float(4 * abs(wobblePhase - 0.5) - 1)
+                sweep = -lfo
+            default:    // random steps, a new one each wobble; the filter falls through each step
+                lfo = sceneHold
+                sweep = Float(1 - 2 * wobblePhase)
+            }
+            warpRatio = exp2f(sceneSemis * lfo / 12)
             let cutoff = 300 * powf(9_000 / 300, 0.5 + 0.5 * sweep)
             for c in 0..<2 { warpFilter[c].set(cutoff, q: warpQ, sr: sr) }
         }
@@ -402,7 +429,7 @@ final class BusProcessor {
         }
         let (ll, lb) = warpFilter[0].process(wl)
         let (rl, rb) = warpFilter[1].process(wr)
-        let band = depth * 0.6
+        let band = sceneBand
         return (Saturate.soft(ll * (1 - band * 0.5) + lb * band), Saturate.soft(rl * (1 - band * 0.5) + rb * band))
     }
 

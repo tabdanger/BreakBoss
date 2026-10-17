@@ -8,7 +8,7 @@ struct EngineControlsView: View {
         switch controller.mode {
         case .modern: return [.boost, .punch, .analogEQ, .tighten, .grit, .shine, .noise]
         case .vintage: return [.drive, .bounce, .velocity, .grit, .shine, .tighten, .noise]
-        case .texture: return [.resample, .instability, .textureDelay, .gatedReverb, .warp, .wobble, .drive, .shine, .noise]
+        case .texture: return [.resample, .instability, .textureDelay, .gatedReverb, .drive, .shine, .noise]
         }
     }
     var body: some View {

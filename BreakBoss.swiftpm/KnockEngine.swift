@@ -551,8 +551,6 @@ final class KnockEngine {
         bs.delay = params[KParam.textureDelay.rawValue]
         bs.reverb = params[KParam.gatedReverb.rawValue]
         bs.drive = params[KParam.drive.rawValue]
-        bs.warp = params[KParam.warp.rawValue]
-        bs.wobble = params[KParam.wobble.rawValue]
         bs.beat = playing ? blockBeat0 : nil
         bus.process(mixL, mixR, count: frames, bs)
 
@@ -753,7 +751,8 @@ final class KnockEngine {
             }
         case .play:
             clearGates()
-            if currentLoop < 0 { currentLoop = 0 }
+            if e.value >= 1 && e.value < Double(Pad.count + 1) { currentLoop = Int(e.value) - 1 }   // value: pattern + 1
+            else if currentLoop < 0 { currentLoop = 0 }
             userArmed = true
             if followingHost && wasHostPlaying {
                 playing = true                  // back in on the DAW's own beat

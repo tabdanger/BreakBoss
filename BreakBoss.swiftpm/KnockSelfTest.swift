@@ -980,6 +980,22 @@ enum KnockSelfTest {
             check(rc.addRackChannel(sound, load: false) == nil, "rack: 12 channels at most")
             rc.resetRack()
             check(rc.rackChannels.count == Pad.count && rc.rackChannels[0].soundID == "kit", "rack: back to the kit's channels")
+            // Face 1 and Face 2 stay in step: what a pattern plays is in the rack, a kit fills rack and pads.
+            if let kickRow = rc.rackChannels.first(where: { $0.pad == Pad.kick.rawValue }),
+               let preset = PatternBank.all.first(where: { $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } }) {
+                rc.removeRackChannel(kickRow.id)
+                check(!rc.rackChannels.contains { $0.pad == Pad.kick.rawValue } &&
+                      !rc.loops.contains { $0.events.contains { Int($0.pad) == Pad.kick.rawValue } },
+                      "rack: a deleted channel's notes go from every pattern")
+                rc.loadPatternPreset(preset)
+                check(rc.rackChannels.contains { $0.pad == Pad.kick.rawValue },
+                      "rack: a loaded pattern brings back the channels it plays")
+                rc.selectKit(KitLibrary.west90s)
+                check(rc.rackChannels.count == Pad.count && rc.rackChannels.allSatisfy { $0.soundID == "kit" },
+                      "rack: a kit loads into the rack as well as the pads")
+            }
+            rc.setLoop(3, rc.loops[3])
+            check(rc.screenPattern == 3, "PLAY on the faceplate plays the pattern the sequencer shows")
         }
         var pattern = PatternData(name: "RACK", lengthTicks: PatternEdit.barTicks,
                                   events: [])
@@ -1373,24 +1389,10 @@ enum KnockSelfTest {
             check(difference > 0.1, "\(parameter.name) changes texture output")
             check(b.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "\(parameter.name) stays finite and clipped")
         }
-        // WARP changes the sound; WOBBLE (its speed) does too once WARP is up.
-        for (parameter, low, high) in [(KParam.warp, Float(0), Float(1)), (KParam.wobble, Float(0), Float(1))] {
-            let (a, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 2) { e in
-                e.setParam(.warp, parameter == .warp ? low : 0.8); e.setParam(parameter, low)
-            }
-            let (b, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 2) { e in
-                e.setParam(.warp, parameter == .warp ? high : 0.8); e.setParam(parameter, high)
-            }
-            var difference: Double = 0
-            for i in a.indices { difference += Double(abs(a[i] - b[i])) }
-            check(difference > 0.1, "\(parameter.name) changes texture output")
-            check(b.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "\(parameter.name) stays finite and clipped")
-            check(b.contains { abs($0) > 0.01 }, "\(parameter.name) at full still sounds")
-        }
-        // WARP left at 0 leaves TEXTURE exactly as it was, and outside TEXTURE it does nothing.
-        let (plain, _) = render(kit: kit, style: .trap, mode: .modern, tempo: 120, seconds: 1)
-        let (warped, _) = render(kit: kit, style: .trap, mode: .modern, tempo: 120, seconds: 1) { $0.setParam(.warp, 1) }
-        check(plain == warped, "WARP only acts in TEXTURE")
+        // WARP (part of INSTABILITY) moves the sound bar to bar but stays in level.
+        let (warped, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 8) { $0.setParam(.instability, 1) }
+        check(warped.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "WARP stays finite and clipped")
+        check(warped[(warped.count - 48_000)...].contains { abs($0) > 0.01 }, "WARP keeps sounding over many scenes")
     }
 
     /// Turning a channel's LEVEL or PAN while its sound rings: the note keeps playing and glides to
