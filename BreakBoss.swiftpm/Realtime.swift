@@ -87,6 +87,7 @@ struct KEvent {
                           // a: -1 = MIDI out on (value 1) / off (value 0)
         case countIn      // a: beats of metronome count-in, then the pattern (value: loop 0...11, or -1 = the current one)
         case padPitched   // a: pad + 128 * (semitones + 64), value: velocity (a drum played at a pitch)
+        case cue          // a: the pattern on the sequencer (0...11); while stopped it's what PLAY or the DAW starts
     }
     var kind: Kind
     var a: Int32 = 0
