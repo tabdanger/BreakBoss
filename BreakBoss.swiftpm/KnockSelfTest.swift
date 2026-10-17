@@ -1430,10 +1430,17 @@ enum KnockSelfTest {
         let new = old.normalized()
         check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
-        check(KitLibrary.factory.count == 42 && KitLibrary.genreGroups.count == 21 && KitLibrary.genreGroups.allSatisfy { $0.kits.count == 2 },
-              "42 factory kits: an A and a B for each of 21 genres")
-        check(KitLibrary.kits(for: .modern).count == 18 && KitLibrary.kits(for: .vintage).count == 16 && KitLibrary.kits(for: .texture).count == 8,
-              "18 Modern, 16 Vintage and 8 Texture kits")
+        check(KitLibrary.factory.count == 362 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
+              "362 factory kits: the 42 A/B kits, then the named ones")
+        check(Set(KitLibrary.factory.map(\.name)).count == KitLibrary.factory.count, "every factory kit has its own name")
+        for mode in SoundMode.allCases {
+            for family in KitLibrary.families {
+                let n = KitLibrary.kits(for: mode).filter { $0.family == family }.count
+                check(n >= 20, "\(mode.title) kits: \(n) under \(family) (at least 20)")
+            }
+        }
+        check(KitLibrary.kit(id: "trap-a").preferredMode == .modern && KitLibrary.kit(id: "neo-soul-a").preferredMode == .vintage &&
+              KitLibrary.kit(id: "amapiano-a").preferredMode == .texture, "the A/B kits stay in their mode banks")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")
         check(KitLibrary.browserOrder.count == KitLibrary.factory.count, "the kit arrows step through every kit once")
         // The kits before Oct 17 are gone: saves, kits and dice picks that named one open the nearest new kit.
