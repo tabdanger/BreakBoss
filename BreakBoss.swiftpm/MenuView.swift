@@ -17,6 +17,7 @@ struct MenuView: View {
     @State private var performance = false
     @State private var portable = false
     @State private var engineControls = false
+    @State private var bugReport = false
     @State private var learningPad: Int?
     @State private var learnBase: Int32 = 0
     private let learnTicker = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
@@ -51,6 +52,13 @@ struct MenuView: View {
                     Text("Record")
                 } footer: {
                     Text("The RECORD button (top right) counts in with the metronome, then the pattern plays and every pad you hit lands in it on that pad's own channel. Open the sequencer to see and edit the notes in each pad's piano roll.")
+                }
+                Section {
+                    Button { bugReport = true } label: { Label("Bug report", systemImage: "ladybug") }
+                } header: {
+                    Text("Testing")
+                } footer: {
+                    Text("BreakBoss keeps a log while you play. If something goes wrong, open this, write what happened, and Copy or Share the report.")
                 }
                 Section("Performance") {
                     Button("Open the 12 performance pads") { performance = true }
@@ -153,6 +161,7 @@ struct MenuView: View {
         .fullScreenCover(isPresented: $performance) { PerformanceView(controller: controller) }
         .sheet(isPresented: $portable) { PortablePresetView(controller: controller) }
         .sheet(isPresented: $engineControls) { EngineControlsView(controller: controller) }
+        .sheet(isPresented: $bugReport) { BugReportView() }
         .fileImporter(isPresented: $showingSampleImporter,
                       allowedContentTypes: [.audio], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first, let pad = importPad {

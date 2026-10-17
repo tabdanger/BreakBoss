@@ -5,6 +5,7 @@ import UIKit
 @main
 struct BreakBossApp: App {
     init() {
+        BugCatcher.install()
         if ProcessInfo.processInfo.environment["BREAKBOSS_SELFTEST"] == "1" {
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1) { KnockSelfTest.run() }
         }
@@ -19,6 +20,8 @@ struct BreakBossApp: App {
 
 struct ContentView: View {
     @ObservedObject private var controller = AppAudioHost.shared.controller
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var crashReport = false
 
     var body: some View {
         FaceplateView(controller: controller)
@@ -28,6 +31,8 @@ struct ContentView: View {
             .preferredColorScheme(.dark)
             .onAppear {
                 AppAudioHost.shared.start()
+                // After a crash, the report opens by itself so the details get sent back.
+                if BugLog.shared.lastCrash != nil { crashReport = true }
                 if ProcessInfo.processInfo.environment["BREAKBOSS_SNAPSHOTS"] == "1" {
                     let c = controller
                     Task { @MainActor in
@@ -36,6 +41,17 @@ struct ContentView: View {
                     }
                 }
             }
+            .sheet(isPresented: $crashReport) { BugReportView() }
+            .onChange(of: scenePhase) { phase in
+                BugLog.shared.note("App \(phase == .active ? "on screen" : phase == .background ? "in the background" : "inactive")")
+                if phase != .inactive { BugLog.shared.setOnScreen(phase == .active) }
+            }
+            .onReceive(controller.$notice) { notice in
+                if let notice { BugLog.shared.note("Notice on screen: " + notice) }
+            }
+            .onChange(of: controller.state.presetName) { BugLog.shared.note("Preset: " + $0) }
+            .onChange(of: controller.state.kitID) { BugLog.shared.note("Kit: " + $0) }
+            .onChange(of: controller.mode) { BugLog.shared.note("Mode: \($0.title)") }
     }
 }
 
