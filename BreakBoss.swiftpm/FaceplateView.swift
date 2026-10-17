@@ -224,24 +224,19 @@ struct FaceplateView: View {
 
     // MARK: Menus
 
-    /// KITS: the drum sounds, grouped by mode, plus your own kits. (BreakBoss menu, not Apple's.)
+    /// KITS: the drum sounds, by mode and genre, plus your own kits. (BreakBoss menu, not Apple's.)
     func kitMenuItems() -> [BBMenuItem] {
         var items: [BBMenuItem] = []
         for mode in SoundMode.allCases {
             items.append(.submenu("\(mode.title) kits", icon: "square.grid.3x3",
-                KitLibrary.kits(for: mode).map { def in
-                    BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) {
-                        controller.selectKit(def)
-                    }
+                KitLibrary.genreGroups(for: mode).map { g in
+                    BBMenuItem.submenu(g.genre, icon: "music.note.list", g.kits.map { def in
+                        BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) {
+                            controller.selectKit(def)
+                        }
+                    })
                 }))
         }
-        items.append(.submenu("Genre kits", icon: "music.note.list", KitLibrary.genreGroups.map { g in
-            BBMenuItem.submenu(g.genre, icon: "square.grid.3x3", g.kits.map { def in
-                BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) {
-                    controller.selectKit(def)
-                }
-            })
-        }))
         if !controller.userKits.isEmpty {
             items.append(.submenu("My kits", icon: "person.crop.square", controller.userKits.map { name in
                 BBMenuItem.item(name, checked: controller.state.userKit == name) { controller.selectUserKit(name) }
@@ -258,11 +253,11 @@ struct FaceplateView: View {
         return items
     }
 
-    /// PRESETS: patterns, grouped by style (Danger Patterns first), plus your own presets.
+    /// PRESETS: patterns, grouped by style, plus your own presets.
     func presetMenuItems() -> [BBMenuItem] {
         var items: [BBMenuItem] = [.item("INIT", checked: controller.state.presetName == "INIT") { controller.loadInit() }]
         for style in PatternBank.styles {
-            items.append(.submenu(style, icon: style == "Danger Patterns" ? "bolt.fill" : "music.note.list",
+            items.append(.submenu(style, icon: "music.note.list",
                 PatternBank.presets(in: style).map { p in
                     BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
                           checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p) }

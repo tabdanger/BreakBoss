@@ -61,9 +61,9 @@ struct KnockState: Codable, Equatable {
     var values: [String: Float] = [:]
     var bpm: Double = 140
     /// The factory kit the sounds and grooves come from.
-    var kitID: String = KitLibrary.drumMastery.id
+    var kitID: String = KitLibrary.factory[0].id
     /// What the KITS window shows (a saved kit's own name).
-    var kitName: String = KitLibrary.drumMastery.name
+    var kitName: String = KitLibrary.factory[0].name
     /// Set when the kit was loaded from (or saved as) one of your kits.
     var userKit: String?
     var soundSeed: UInt32 = 1
@@ -170,6 +170,13 @@ struct KnockState: Codable, Equatable {
         }
         s.mode = SoundMode(rawValue: Int(s.values[KParam.soundMode.id] ?? 0)) ?? .modern
         s.playMode = (s.values[KParam.playMode.id] ?? 1) > 0.5 ? .loop : .oneShot
+        // Kits from before Oct 17 (or none at all) open the new kit nearest their genre.
+        let kit = KitLibrary.kit(id: s.kitID)
+        if kit.id != s.kitID {
+            s.kitID = kit.id
+            if s.userKit == nil { s.kitName = kit.name }
+        }
+        s.stockPicks = s.stockPicks.map { picks in picks.map { $0.map(KitLibrary.currentID) } }
         return s
     }
 }

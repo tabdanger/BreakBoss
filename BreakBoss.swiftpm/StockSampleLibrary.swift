@@ -11,9 +11,16 @@ struct StockSampleLibrary {
         let displayName: String
     }
 
+    /// One sound in the library, in a kit or not (named by category: "KICK BOOM 07").
+    struct Sound: Decodable {
+        let file: String
+        let name: String
+    }
+
     private struct Manifest: Decodable {
         let version: Int
         let assignments: [Assignment]
+        let sounds: [Sound]?
     }
 
     struct Sample {
@@ -36,11 +43,14 @@ struct StockSampleLibrary {
     }
 
     private let samples: [String: [Int: Sample]]
+    /// Every stock sound, sorted by category (the sound menu lists these).
+    let allSounds: [Sample]
     /// Shown by the controller when an installed pack cannot be used.
     let failure: String?
 
-    private init(samples: [String: [Int: Sample]] = [:], failure: String? = nil) {
+    private init(samples: [String: [Int: Sample]] = [:], allSounds: [Sample] = [], failure: String? = nil) {
         self.samples = samples
+        self.allSounds = allSounds
         self.failure = failure
     }
 
@@ -77,21 +87,27 @@ struct StockSampleLibrary {
         let folder = manifestURL.deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL
         let safeFilename = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-")
         let extensions: Set<String> = ["wav", "aif", "aiff", "caf"]
+        func sample(file: String, displayName: String) throws -> Sample {
+            let name = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !file.isEmpty, file.count <= 128,
+                  file.unicodeScalars.allSatisfy({ safeFilename.contains($0) }),
+                  extensions.contains((file as NSString).pathExtension.lowercased()),
+                  !name.isEmpty, name.count <= 80,
+                  !displayName.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) })
+            else { throw ManifestError.invalidAssignment }
+            let url = folder.appendingPathComponent(file).resolvingSymlinksInPath().standardizedFileURL
+            guard url.deletingLastPathComponent() == folder else { throw ManifestError.invalidAssignment }
+            return Sample(url: url, displayName: name)
+        }
         var samples: [String: [Int: Sample]] = [:]
         for assignment in manifest.assignments {
-            let name = assignment.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard knownKitIDs.contains(assignment.kitID), (0..<padCount).contains(assignment.pad),
-                  !assignment.file.isEmpty, assignment.file.count <= 128,
-                  assignment.file.unicodeScalars.allSatisfy({ safeFilename.contains($0) }),
-                  extensions.contains((assignment.file as NSString).pathExtension.lowercased()),
-                  !name.isEmpty, name.count <= 80,
-                  !assignment.displayName.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) })
+            guard knownKitIDs.contains(assignment.kitID), (0..<padCount).contains(assignment.pad)
             else { throw ManifestError.invalidAssignment }
             guard samples[assignment.kitID]?[assignment.pad] == nil else { throw ManifestError.duplicateAssignment }
-            let url = folder.appendingPathComponent(assignment.file).resolvingSymlinksInPath().standardizedFileURL
-            guard url.deletingLastPathComponent() == folder else { throw ManifestError.invalidAssignment }
-            samples[assignment.kitID, default: [:]][assignment.pad] = Sample(url: url, displayName: name)
+            samples[assignment.kitID, default: [:]][assignment.pad] = try sample(file: assignment.file, displayName: assignment.displayName)
         }
-        return StockSampleLibrary(samples: samples)
+        guard (manifest.sounds?.count ?? 0) <= 4096 else { throw ManifestError.invalidAssignment }
+        let all = try (manifest.sounds ?? []).map { try sample(file: $0.file, displayName: $0.name) }
+        return StockSampleLibrary(samples: samples, allSounds: all)
     }
 }
