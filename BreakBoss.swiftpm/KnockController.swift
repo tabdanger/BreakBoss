@@ -219,6 +219,7 @@ final class KnockController: ObservableObject {
     func padDown(_ pad: Int, velocity: Float) {
         guard pad >= 0 && pad < Pad.count else { return }
         if playMode == .loop {
+            screenPattern = pad
             engine.send(KEvent(kind: .loopPad, a: Int32(pad), value: Double(velocity)))
             let title = pad < loops.count ? loops[pad].name : LoopSlot(rawValue: pad)?.title ?? ""
             readout = Readout(title: "LOOP \(pad + 1)", value: title, time: Date())
@@ -364,9 +365,20 @@ final class KnockController: ObservableObject {
         _ = engine.collectRecorded()   // drop anything older
     }
 
+    /// The pattern both faces work on: the one last played (a LOOP pad, the sequencer's PLAY) or
+    /// edited in the sequencer. Face 1's PLAY plays it and the sequencer opens on it, so an empty
+    /// sequencer means an empty pattern is what plays.
+    private(set) var screenPattern = 0 {
+        didSet { if screenPattern != oldValue { engine.send(KEvent(kind: .cue, a: Int32(screenPattern))) } }
+    }
+
+    /// The sequencer switched the pattern on screen ("Loop on screen").
+    func showPattern(_ i: Int) { if loops.indices.contains(i) { screenPattern = i } }
+
     /// Plays the given pattern from its start (or keeps it going if it's already the one playing).
     func playPattern(_ loop: Int) {
         guard loops.indices.contains(loop) else { return }
+        screenPattern = loop
         if isPlaying && Int(meters.status[1]) == loop { return }
         if isPlaying { engine.send(KEvent(kind: .stop)) }
         engine.send(KEvent(kind: .loopPad, a: Int32(loop)))
@@ -398,7 +410,7 @@ final class KnockController: ObservableObject {
             p = PatternEdit.addRecorded(p, pad: Int(h.pad), tick: h.tick, velocity: h.velocity, semis: h.semis, snap: snap)
             touched[loop] = p
         }
-        for (loop, p) in touched { setLoop(loop, p) }
+        for (loop, p) in touched { storeLoop(loop, p) }
         return hits.count
     }
 
@@ -423,7 +435,8 @@ final class KnockController: ObservableObject {
     var isPlaying: Bool { meters.status[0] > 0.5 }
 
     func playPressed() {
-        engine.send(KEvent(kind: isPlaying ? .stop : .play))
+        // PLAY starts the pattern the sequencer shows (value: pattern + 1).
+        engine.send(isPlaying ? KEvent(kind: .stop) : KEvent(kind: .play, value: Double(screenPattern + 1)))
     }
 
     // MARK: Dice
@@ -476,6 +489,7 @@ final class KnockController: ObservableObject {
         state.userKit = kit.name
         state.soundSeed = kit.soundSeed
         state.pads = KnockState.normalizedPads(kit.pads)
+        state.workspaceChannels = nil          // the rack shows the kit's sounds, the same as the pads
         rebuildKit()
         rebuildLoops()
         readout = Readout(title: "KIT", value: state.kitName, time: Date())
@@ -622,29 +636,34 @@ final class KnockController: ObservableObject {
 
     // MARK: Channel rack (the sequencer screen's channels; the faceplate's 12 pads underneath)
 
-    /// The rack's channels. Until you change the rack it mirrors the kit: one channel per pad.
+    /// The rack's channels: always all 12 pads, in pad order, so every sound that can play is on
+    /// screen (Tyrone, Oct 17). A pad you haven't given a library sound shows the kit's sound.
     var rackChannels: [WorkspaceChannel] {
-        if let rows = state.workspaceChannels { return rows }
-        return (0..<Pad.count).map { pad in
-            WorkspaceChannel(id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", pad)) ?? UUID(), pad: pad, soundID: "kit",
-                             name: Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)", category: SoundType.forPad(pad).rawValue)
-        }
+        let custom = state.workspaceChannels ?? []
+        return (0..<Pad.count).map { pad in custom.first { $0.pad == pad } ?? kitChannel(pad) }
     }
 
-    /// Drop a library sound on the rack: a new channel on the first free pad slot (12 at most).
+    private func kitChannel(_ pad: Int) -> WorkspaceChannel {
+        WorkspaceChannel(id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", pad)) ?? UUID(), pad: pad, soundID: "kit",
+                         name: Pad(rawValue: pad)?.channelTitle ?? "PAD \(pad + 1)", category: SoundType.forPad(pad).rawValue)
+    }
+
+    /// Drop a library sound on the rack: it takes the last channel that still has the kit's sound
+    /// and no notes in any pattern (the rack is always the 12 pads).
     @discardableResult
     func addRackChannel(_ sound: LibrarySound, load: Bool = true) -> WorkspaceChannel? {
-        var rows = rackChannels
-        let used = Set(rows.map(\.pad))
-        guard let pad = (0..<Pad.count).first(where: { !used.contains($0) }) else {
-            notice = "The rack is full (12 channels). Delete one to add another."
+        var rows = state.workspaceChannels ?? []
+        let custom = Set(rows.map(\.pad))
+        let playing = Set(loops.flatMap { $0.events.map { Int($0.pad) } })
+        guard let pad = (0..<Pad.count).reversed().first(where: { !custom.contains($0) && !playing.contains($0) }) else {
+            notice = "Every channel is in use. Drop the sound on a channel to replace it, or clear one first."
             return nil
         }
         let row = WorkspaceChannel(id: UUID(), pad: pad, soundID: sound.id, name: sound.name, category: sound.type.rawValue)
         rows.append(row)
         state.workspaceChannels = rows
         for i in loops.indices where loops[i].events.contains(where: { Int($0.pad) == pad }) {   // a fresh channel starts empty
-            var p = loops[i]; p.events.removeAll { Int($0.pad) == pad }; setLoop(i, p)
+            var p = loops[i]; p.events.removeAll { Int($0.pad) == pad }; storeLoop(i, p)
         }
         if load { importSample(sound.url, toPad: pad) }
         scheduleSave()
@@ -653,32 +672,34 @@ final class KnockController: ObservableObject {
 
     /// Drop a sound on a channel: that channel plays it from now on (its steps stay).
     func replaceRackSound(_ id: UUID, with sound: LibrarySound) {
-        var rows = rackChannels
-        guard let i = rows.firstIndex(where: { $0.id == id }) else { return }
-        rows[i].soundID = sound.id; rows[i].name = sound.name; rows[i].category = sound.type.rawValue
+        guard let current = rackChannels.first(where: { $0.id == id }) else { return }
+        var rows = (state.workspaceChannels ?? []).filter { $0.pad != current.pad }
+        rows.append(WorkspaceChannel(id: current.id, pad: current.pad, soundID: sound.id, name: sound.name, category: sound.type.rawValue))
         state.workspaceChannels = rows
-        importSample(sound.url, toPad: rows[i].pad)
+        importSample(sound.url, toPad: current.pad)
         scheduleSave()
     }
 
     func renameRackChannel(_ id: UUID, _ name: String) {
-        var rows = rackChannels
-        guard let i = rows.firstIndex(where: { $0.id == id }) else { return }
-        rows[i].name = name.uppercased()
+        guard var row = rackChannels.first(where: { $0.id == id }) else { return }
+        row.name = name.uppercased()
+        var rows = (state.workspaceChannels ?? []).filter { $0.pad != row.pad }
+        rows.append(row)
         state.workspaceChannels = rows
         scheduleSave()
     }
 
-    /// Delete a channel: its steps go from every pattern and its pad slot is free again.
+    /// Delete a channel: its steps go from every pattern and the pad goes back to the kit's sound
+    /// (the row stays: the rack always shows all 12 pads).
     func removeRackChannel(_ id: UUID) {
-        var rows = rackChannels
-        guard let i = rows.firstIndex(where: { $0.id == id }) else { return }
-        let pad = rows[i].pad
-        rows.remove(at: i)
-        state.workspaceChannels = rows
-        for k in loops.indices where loops[k].events.contains(where: { Int($0.pad) == pad }) {
-            var p = loops[k]; p.events.removeAll { Int($0.pad) == pad }; setLoop(k, p)
+        guard let pad = rackChannels.first(where: { $0.id == id })?.pad else { return }
+        let rows = (state.workspaceChannels ?? []).filter { $0.pad != pad }
+        state.workspaceChannels = rows.isEmpty ? nil : rows
+        // From every pattern at once, then one rebuild.
+        for k in loops.indices where k < state.editedLoops.count && loops[k].events.contains(where: { Int($0.pad) == pad }) {
+            var p = loops[k]; p.events.removeAll { Int($0.pad) == pad }; state.editedLoops[k] = p
         }
+        rebuildLoops()
         revertPad(pad)
         scheduleSave()
     }
@@ -724,6 +745,13 @@ final class KnockController: ObservableObject {
     }
 
     func setLoop(_ index: Int, _ data: PatternData?) {
+        guard index >= 0 && index < Pad.count else { return }
+        screenPattern = index
+        storeLoop(index, data)
+    }
+
+    /// setLoop without making it the pattern on screen (recording, rack changes across every pattern).
+    private func storeLoop(_ index: Int, _ data: PatternData?) {
         guard index >= 0 && index < Pad.count else { return }
         state.editedLoops[index] = data
         rebuildLoops()
