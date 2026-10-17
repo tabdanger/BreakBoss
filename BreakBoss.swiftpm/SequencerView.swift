@@ -15,7 +15,8 @@ import UniformTypeIdentifiers
 //   Right:  the STEP GRID (16 steps a bar), the track's piano roll when expanded, and the graph
 //           a track's arrow drops down under its steps (VELOCITY / PITCH). DRAW / SELECT /
 //           ERASE, undo / redo, TEMPO SYNC / FOLLOW DAW, SNAP, SNAP TO SCALE, SWING and HUMANIZE, pinch to zoom (SNAP follows), 2 / 4 / 8 / 16 bars.
-//   Bottom: PATTERN and KIT pickers with arrows.
+//   Bottom: the slider back to Face 1, the POWER button (sequencer and pads all on or off),
+//           PATTERN and KIT pickers with arrows.
 // All note changes go through KnockController.setLoop, so the engine, presets, MIDI out and
 // MIDI export all see the same pattern. The rack's channels sit on the faceplate's 12 pads.
 
@@ -358,7 +359,7 @@ struct SequencerView: View {
         static let leftPanel: [Double] = [33, 300, 285, 693]
         static let rackX0: Double = 298, rackX1: Double = 534, gridX0: Double = 549, gridX1: Double = 1445, panelX1: Double = 1495
         static let rowsY0: Double = 341, rowsY1: Double = 682, rowH: Double = 56.5, labelsY: Double = 325
-        static let drumTrack: [Double] = [158, 715, 348, 768], drumCircle: [Double] = [164, 719, 212, 767]
+        static let power: [Double] = [156, 715, 213, 772]
         static let patternBack: [Double] = [602, 732, 640, 772], patternForward: [Double] = [640, 732, 677, 772], patternChip: [Double] = [677, 732, 841, 772]
         static let kitBack: [Double] = [889, 732, 927, 772], kitForward: [Double] = [927, 732, 964, 772], kitChip: [Double] = [964, 732, 1129, 772]
     }
@@ -654,60 +655,115 @@ struct SequencerView: View {
         return list
     }
 
-    private var headerSprite: String { finish == "platinum" ? "SeqHeader" : "SeqHeader_\(finish)" }
-
-    /// A section header on the panel: the finish's metal, the name in its ink, a chevron.
-    private func sectionHeader(_ title: String, open: Bool, _ r: [Double], _ s: CGFloat, action: @escaping () -> Void) -> some View {
-        SeqButton(headerSprite, corner: 10, scale: s, action: { withAnimation(.easeInOut(duration: 0.22)) { action() } }) {
-            HStack {
-                Text(title).font(.system(size: 15 * s, weight: .medium)).foregroundColor(inkColor).kerning(0.5)
-                Spacer()
-                Image(systemName: open ? "chevron.up" : "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(inkColor)
+    /// A section header: a plate of platinum (the slider knob's metal) the full width of the panel,
+    /// square and flush against the well under it. Tap it to slide the panels over.
+    private func sectionHeader(_ title: String, open: Bool, _ s: CGFloat) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.3)) { section = section == .sounds ? .generate : .sounds }
+        } label: {
+            ZStack {
+                PlatinumPlate()
+                HStack {
+                    Text(title).font(.system(size: 15 * s, weight: .semibold)).foregroundColor(Color(white: 0.13)).kerning(0.5)
+                    Spacer()
+                    Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(Color(white: 0.13))
+                        .rotationEffect(.degrees(open ? 180 : 0))
+                }
+                .padding(.leading, 18 * s).padding(.trailing, 18 * s)
             }
-            .padding(.leading, 26 * s).padding(.trailing, 28 * s)
+            .frame(height: 44 * s)
         }
+        .buttonStyle(PlatePress())
+        .accessibilityIdentifier(title == "SOUNDS" ? "soundsHeader" : "generateHeader")
+    }
+
+    /// The left panel: SOUNDS and GENERATE, each a platinum plate over its dark well. Opening one
+    /// slides the GENERATE plate up or down like a piece of metal, closing the other well under it.
+    @ViewBuilder private func leftPanel(_ s: CGFloat) -> some View {
+        let r = A.leftPanel
+        let headerH = 44.0 * s
+        let wellH = CGFloat(r[3] - r[1]) * s - 2 * headerH
+        VStack(spacing: 0) {
+            sectionHeader("SOUNDS", open: section == .sounds, s)
+            well(soundsPanel(s), height: wellH, open: section == .sounds, s)
+            sectionHeader("GENERATE", open: section == .generate, s)
+            well(generatePanel(s), height: wellH, open: section == .generate, s)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 8 * s))
+        .overlay(RoundedRectangle(cornerRadius: 8 * s).strokeBorder(Color.black.opacity(0.55), lineWidth: 1))
         .place(r, s)
     }
 
-    @ViewBuilder private func leftPanel(_ s: CGFloat) -> some View {
-        let x0 = 33.0, x1 = 284.0, bx0 = 41.0, bx1 = 274.0
-        let top = 320.0, bottom = 686.0
-        let headerH = 44.0, gap = 9.0
-        switch section {
-        case .sounds:
-            sectionHeader("SOUNDS", open: true, [x0, top, x1, top + headerH], s) { section = .generate }
-            soundsPanel([bx0, top + headerH + gap, bx1, bottom - headerH - gap], s)
-            sectionHeader("GENERATE", open: false, [x0, bottom - headerH, x1, bottom], s) { section = .generate }
-        case .generate:
-            sectionHeader("SOUNDS", open: false, [x0, top, x1, top + headerH], s) { section = .sounds }
-            Image("SeqSectionGenerate").resizable().place([bx0, 375, bx1, 632], s)
-            sectionHeader("GENERATE", open: true, [bx0, 375, bx1, 426], s) { section = .sounds }
-            generateOverlay([bx0, 375, bx1, 632], s)
+    /// A dark well under a plate: the content keeps its size and the plate below slides over it.
+    private func well<Content: View>(_ content: Content, height: CGFloat, open: Bool, _ s: CGFloat) -> some View {
+        content
+            .frame(height: height, alignment: .top)
+            .background(Color(white: 0.04))
+            .overlay(alignment: .top) {
+                // the plate above throws its shadow into the well
+                LinearGradient(colors: [.black.opacity(0.7), .clear], startPoint: .top, endPoint: .bottom).frame(height: 6 * s).allowsHitTesting(false)
+            }
+            .frame(height: open ? height : 0, alignment: .top)
+            .clipped()
+    }
+
+    /// GENERATE: GENRE, UPDATE SOUNDS, UPDATE TEMPO, Generate, Clear.
+    private func generatePanel(_ s: CGFloat) -> some View {
+        let line = Rectangle().fill(Color(white: 0.2)).frame(height: 1)
+        return VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 3 * s) {
+                Text("GENRE").font(.system(size: 12 * s, weight: .medium)).foregroundColor(S.dim)
+                HStack {
+                    Text(generateStyle ?? PatternRandomizer.style(for: controller.state.presetName))
+                        .font(.system(size: 17 * s)).foregroundColor(.white).lineLimit(1).minimumScaleFactor(0.6)
+                    Spacer()
+                    Image(systemName: "chevron.down").font(.system(size: 12 * s, weight: .semibold)).foregroundColor(.white)
+                }
+            }
+            .padding(.horizontal, 16 * s).frame(maxWidth: .infinity, minHeight: 70 * s, alignment: .leading)
+            .bbMenu(title: "Genre", width: 280) {
+                [BBMenuItem.item("This preset's style", checked: generateStyle == nil) { generateStyle = nil }]
+                + PatternBank.styles.map { st in BBMenuItem.item(st, checked: generateStyle == st) { generateStyle = st } }
+            }
+            line
+            HStack(spacing: 0) {
+                generateSwitch("UPDATE SOUNDS", on: updateSounds, s) { updateSounds.toggle() }
+                Rectangle().fill(Color(white: 0.2)).frame(width: 1)
+                generateSwitch("UPDATE TEMPO", on: updateTempo, s) { updateTempo.toggle() }
+            }
+            .frame(height: 70 * s)
+            line
+            Spacer(minLength: 0)
+            HStack(spacing: 8 * s) {
+                SeqButton("SeqBtnGenerate", corner: 8, scale: s) { generate() }.frame(width: 125 * s, height: 46 * s)
+                Button { clear() } label: {
+                    HStack(spacing: 6 * s) {
+                        Image(systemName: "xmark").font(.system(size: 15 * s, weight: .medium))
+                        Text("Clear").font(.system(size: 15 * s, weight: .medium))
+                    }
+                    .foregroundColor(.white).frame(width: 84 * s, height: 46 * s)
+                    .background(RoundedRectangle(cornerRadius: 8 * s).fill(Color(white: 0.11)).overlay(RoundedRectangle(cornerRadius: 8 * s).stroke(Color(white: 0.3), lineWidth: 1)))
+                }
+                .buttonStyle(SeqPress())
+            }
+            .padding(.bottom, 20 * s)
         }
     }
 
-    /// The GENERATE box's live parts: GENRE, UPDATE SOUNDS, UPDATE TEMPO, Generate, Clear.
-    @ViewBuilder private func generateOverlay(_ r: [Double], _ s: CGFloat) -> some View {
-        let x0 = r[0], x1 = r[2]
-        // GENRE value (the picture says "House"): covered with the box's black, then the live genre
-        Rectangle().fill(Color(white: 0.04)).place([x0 + 12, 458, x1 - 40, 484], s).allowsHitTesting(false)
-        artText(generateStyle ?? PatternRandomizer.style(for: controller.state.presetName), [x0 + 14, 458, x1 - 40, 484], s, size: 17, weight: .regular, align: .leading)
-        PressGlow().bbMenuPlaced([x0, 436, x1, 490], s, title: "Genre", width: 280) {
-            [BBMenuItem.item("This preset's style", checked: generateStyle == nil) { generateStyle = nil }]
-            + PatternBank.styles.map { st in BBMenuItem.item(st, checked: generateStyle == st) { generateStyle = st } }
+    private func generateSwitch(_ title: String, on: Bool, _ s: CGFloat, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 4 * s) {
+                Text(title).font(.system(size: 11 * s, weight: .medium)).foregroundColor(S.dim).lineLimit(1).minimumScaleFactor(0.7)
+                Text(on ? "On" : "Off").font(.system(size: 16 * s)).foregroundColor(on ? .white : Color(white: 0.5))
+            }
+            .padding(.horizontal, 12 * s).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
-        Rectangle().fill(Color(white: 0.04)).place([x0 + 12, 526, x0 + 60, 548], s).allowsHitTesting(false)
-        artText(updateSounds ? "On" : "Off", [x0 + 14, 526, x0 + 60, 548], s, size: 16, weight: .regular, color: updateSounds ? .white : Color(white: 0.5), align: .leading)
-        hit([x0, 500, x0 + 116, 556], s) { updateSounds.toggle() }
-        Rectangle().fill(Color(white: 0.04)).place([x0 + 128, 526, x0 + 176, 548], s).allowsHitTesting(false)
-        artText(updateTempo ? "On" : "Off", [x0 + 130, 526, x0 + 176, 548], s, size: 16, weight: .regular, color: updateTempo ? .white : Color(white: 0.5), align: .leading)
-        hit([x0 + 118, 500, x1, 556], s) { updateTempo.toggle() }
-        SeqButton("SeqBtnGenerate", corner: 8, scale: s) { generate() }.place([55, 570, 180, 616], s)
-        SeqButton("SeqBtnClear", corner: 0, scale: s) { clear() }.place([186, 570, 266, 616], s)
+        .buttonStyle(SeqPress())
     }
 
-    /// The sound library (GENERAL open): type chips, search, the list, import. Drag a sound to the rack.
-    private func soundsPanel(_ r: [Double], _ s: CGFloat) -> some View {
+    /// The sound library (SOUNDS open): type chips, search, the list, import. Drag a sound to the rack.
+    private func soundsPanel(_ s: CGFloat) -> some View {
         VStack(spacing: 5 * s) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 3 * s) {
@@ -734,9 +790,7 @@ struct SequencerView: View {
             }
             Text(libraryNote.isEmpty ? "DRAG A SOUND ONTO THE RACK" : libraryNote).font(.system(size: 8 * s, weight: .semibold)).foregroundColor(S.dim).lineLimit(1)
         }
-        .padding(8 * s)
-        .background(RoundedRectangle(cornerRadius: 12 * s).fill(Color(white: 0.04)).overlay(RoundedRectangle(cornerRadius: 12 * s).stroke(Color(white: 0.2), lineWidth: 1)))
-        .place(r, s)
+        .padding(.horizontal, 8 * s).padding(.top, 10 * s).padding(.bottom, 8 * s)
     }
 
     private func soundRow(_ sound: LibrarySound, _ s: CGFloat) -> some View {
@@ -1878,18 +1932,8 @@ struct SequencerView: View {
         // pads / sequencer switch: the pad button goes back to the faceplate
         // the way back to Face 1: slide the platinum knob (the sequencer's 9 squares) to the right
         FaceSlider(scale: s, color: noteColor) { dismiss() }.place([38, 715, 147, 772], s)
-        // Drum Track: MPC-style pad recording
-        SeqButton("SeqDrumTrack", lit: controller.recording ? S.red : nil, corner: 12, scale: s, action: { if !controller.recording { remember() }; controller.toggleRecordPads(loop: loop) }) {
-            if controller.recording {
-                HStack {
-                    Circle().stroke(S.red, lineWidth: 3 * s).shadow(color: S.red, radius: 6 * s)
-                        .overlay(Circle().fill(S.red).frame(width: 12 * s, height: 12 * s))
-                        .frame(width: 48 * s, height: 48 * s).padding(.leading, 6 * s)
-                    Spacer()
-                }
-            }
-        }
-        .place(A.drumTrack, s)
+        // power: the sequencer and pads all the way on or off
+        PowerButton(on: controller.powerOn, scale: s, color: S.green) { controller.togglePower() }.place(A.power, s)
         // PATTERN
         SeqButton("SeqArrowBack", corner: 8, scale: s) { cycleLoop(-1) }.place(A.patternBack, s)
         SeqButton("SeqArrowFwd", corner: 0, scale: s) { cycleLoop(1) }.place(A.patternForward, s)

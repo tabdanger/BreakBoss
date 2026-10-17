@@ -47,6 +47,25 @@ final class SequencerUITests: XCTestCase {
         snap("sequencer")
         XCTAssertEqual(any("brandLogo").label, "BreaKing", "the sequencer wears the BreaKing logo")
 
+        // GENERATE slides up over the sound library and back down
+        any("generateHeader").tap()
+        sleep(1)
+        snap("generate-open")
+        any("soundsHeader").tap()
+        sleep(1)
+        snap("sounds-open")
+
+        // the power button turns the sequencer and pads off, then back on
+        let power = app.buttons["powerButton"]
+        XCTAssertTrue(power.exists, "there is a power button")
+        power.tap()
+        sleep(1)
+        XCTAssertTrue(power.label.hasPrefix("Power off"), "one tap turns everything off")
+        snap("power-off")
+        power.tap()
+        sleep(1)
+        XCTAssertTrue(power.label.hasPrefix("Power on"), "a second tap turns it back on")
+
         // draw a note, then UNDO takes it away and REDO brings it back
         let grid = any("grid")
         let notes = { grid.value as? String ?? "" }

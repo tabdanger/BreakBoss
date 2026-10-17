@@ -19,6 +19,17 @@ struct SeqPress: ButtonStyle {
     }
 }
 
+/// Pressed look for a metal plate that sits flush in a panel: it darkens but keeps its size, so no
+/// gap opens at its edges.
+struct PlatePress: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .brightness(configuration.isPressed ? -0.1 : 0)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
+            .contentShape(Rectangle())
+    }
+}
+
 /// A button from the picture. `lit` draws the on-state (a coloured ring and tint) over the sprite.
 struct SeqButton<Label: View>: View {
     let sprite: String
@@ -180,6 +191,72 @@ struct FaceSlider: View {
         .accessibilityLabel("Slide right to go back to Face 1")
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { back() }
+    }
+}
+
+/// Platinum laid flat: the Face 1 / Face 2 slider knob's metal (bright silver catching the light in
+/// bands) on a brushed plate with a bevelled edge, lit on top and shadowed underneath. The SOUNDS and
+/// GENERATE headers are plates of it; inside a panel they sit square and flush against each other.
+struct PlatinumPlate: View {
+    var corner: CGFloat = 0
+
+    var body: some View {
+        let w = { (v: Double) in Color(white: v) }
+        ZStack {
+            LinearGradient(stops: [.init(color: w(0.95), location: 0), .init(color: w(0.80), location: 0.38),
+                                   .init(color: w(0.88), location: 0.62), .init(color: w(0.68), location: 1)],
+                           startPoint: .top, endPoint: .bottom)
+            // light caught across it, like the facets of the knob
+            LinearGradient(stops: [.init(color: .white.opacity(0), location: 0.1), .init(color: .white.opacity(0.4), location: 0.27),
+                                   .init(color: .white.opacity(0), location: 0.44), .init(color: .black.opacity(0.06), location: 0.6),
+                                   .init(color: .white.opacity(0.22), location: 0.8), .init(color: .white.opacity(0), location: 0.95)],
+                           startPoint: .leading, endPoint: .trailing)
+            BrushedFinish(corner: corner)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: corner))
+        .allowsHitTesting(false)
+    }
+}
+
+/// The Face 2 power button: a platinum knob like the slider's, with the power mark. Lit (the mark
+/// and a ring in green) while the sequencer and pads are on; dark when everything is off.
+struct PowerButton: View {
+    let on: Bool
+    var scale: CGFloat = 1
+    var color: Color = .green
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            GeometryReader { g in
+                let d = min(g.size.width, g.size.height)
+                ZStack {
+                    // the slot it sits in
+                    Circle().fill(LinearGradient(colors: [Color(white: 0.05), Color(white: 0.18)], startPoint: .top, endPoint: .bottom))
+                        .overlay(Circle().stroke(Color(white: 0.6), lineWidth: 1))
+                    Circle().stroke(on ? color : Color(white: 0.25), lineWidth: 2 * scale)
+                        .shadow(color: on ? color.opacity(0.8) : .clear, radius: 4 * scale)
+                        .padding(2.5 * scale)
+                    // the platinum knob
+                    ZStack {
+                        Circle().fill(AngularGradient(colors: [Color(white: 0.96), Color(white: 0.62), Color(white: 0.9), Color(white: 0.58), Color(white: 0.96)], center: .center))
+                        Circle().fill(RadialGradient(colors: [Color.white.opacity(0.55), .clear], center: .init(x: 0.35, y: 0.3), startRadius: 0, endRadius: d * 0.45))
+                        Circle().stroke(Color(white: 0.35), lineWidth: 1)
+                        Image(systemName: "power").font(.system(size: d * 0.3, weight: .bold))
+                            .foregroundColor(on ? color : Color(white: 0.2))
+                            .shadow(color: on ? color.opacity(0.9) : .clear, radius: 3 * scale)
+                    }
+                    .padding(6 * scale)
+                    .shadow(color: .black.opacity(0.55), radius: 3 * scale, y: 2 * scale)
+                }
+                .frame(width: d, height: d)
+                .position(x: g.size.width / 2, y: g.size.height / 2)
+            }
+        }
+        .buttonStyle(SeqPress())
+        .animation(.easeOut(duration: 0.15), value: on)
+        .accessibilityIdentifier("powerButton")
+        .accessibilityLabel(on ? "Power on: tap to turn the sequencer and pads off" : "Power off: tap to turn the sequencer and pads on")
     }
 }
 
