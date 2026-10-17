@@ -110,7 +110,9 @@ enum MIDIFile {
         let total = bars * ppq * 4
         for r in 0..<repeats {
             for e in pattern.events {
-                var t = r * loopLen + Int(e.tick) + Int(swing(tick: Int(e.tick), pad: Int(e.pad), bounce: bounce).rounded())
+                // CHANCE: each pass of the loop drops the notes the engine would drop on that pass.
+                if e.chance < 1 && PatternData.chanceRoll(pass: r, tick: e.tick, pad: e.pad) >= e.chance { continue }
+                var t = r * loopLen + Int(pattern.playTick(e, bounce: Double(bounce)).rounded())
                 t = max(0, t)
                 guard t < total else { continue }
                 let isBass = Int(e.pad) == Pad.bass808.rawValue
@@ -166,7 +168,8 @@ enum MIDIFile {
             let ch = UInt8(pad & 0x0F)
             for r in 0..<repeats {
                 for e in pattern.events where Int(e.pad) == pad {
-                    var tk = r * loopLen + Int(e.tick) + Int(swing(tick: Int(e.tick), pad: pad, bounce: bounce).rounded())
+                    if e.chance < 1 && PatternData.chanceRoll(pass: r, tick: e.tick, pad: e.pad) >= e.chance { continue }
+                    var tk = r * loopLen + Int(pattern.playTick(e, bounce: Double(bounce)).rounded())
                     tk = max(0, tk)
                     guard tk < total else { continue }
                     let note = UInt8((Pad.bassRootNote + Int(e.semis.rounded())).clamped(0, 127))
@@ -308,16 +311,6 @@ enum MIDIFile {
         p.events.removeAll { $0.tick >= limit }
         p.sort()
         return p
-    }
-
-    static func swing(tick: Int, pad: Int, bounce: Float) -> Double {
-        guard bounce > 0.001 else { return 0 }
-        let b = Double(bounce)
-        var o: Double = 0
-        if abs(tick % 48 - 24) <= 2 { o += b * 8 }
-        if pad == Pad.kick.rawValue { o += b * b * 4 }
-        if pad == Pad.snare.rawValue || pad == Pad.clap.rawValue { o -= b * b * 3 }
-        return o
     }
 
     private static func varLen(_ value: Int) -> [UInt8] {

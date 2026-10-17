@@ -6,6 +6,9 @@ Lanes are step strings, 16 steps per bar (1, 2 or 4 bars). Codes:
   r  two 32nds     q  four 64ths    t  triplet: three hits across this step and the next
   808 lane: 0-9 = semitones up, a b c = 10 11 12, A-L = 1..12 down, - = hold, . = rest
 Swing is MPC-style percent (50 = straight). Tyrone's own patterns are the "Danger Patterns".
+Feel (optional, by lane): swingLanes = a track's own swing (0..1 like the SWING knob, 0 = straight),
+shift = pushed early (-) or pulled late (+) in ticks (96 a beat), ghostChance = how often its ghost
+notes (velocity g) play, 0..1.
 """
 import json, os, sys
 
@@ -18,6 +21,24 @@ def pat(style, name, bpm, swing=50, glide=False, **lanes):
     n = {len(v) for v in lanes.values()}
     assert len(n) == 1, (name, n)
     P.append({"style": style, "name": name, "bpm": bpm, "swing": swing, "glide": glide, "lanes": lanes})
+
+# The feel each live style is played with (the research: Dilla's snare early over a straight kick and
+# swung hats, 90s hats swung harder than the kick and snare, soul backbeats a hair behind, R&B snares late).
+FEEL = {
+    "Dilla Time": {"swingLanes": {"h": 0.55, "k": 0}, "shift": {"s": -4, "c": -4, "r": -3, "k": 2}, "ghostChance": {"s": 0.7, "h": 0.85}},
+    "90s Rap": {"swingLanes": {"h": 0.9}, "shift": {"c": 2}, "ghostChance": {"s": 0.8}},
+    "70s Soul": {"shift": {"s": 2}, "ghostChance": {"s": 0.75}},
+    "80s Breaks": {"ghostChance": {"s": 0.8}},
+    "UK RnB": {"shift": {"s": 3, "c": 3, "r": 2}},
+}
+FEEL_NAMES = {   # the live additions to older styles (their older presets keep playing as they did)
+    "NEO SOUL 11 LIVE POCKET": {"shift": {"s": -3, "r": -3, "k": 2}, "ghostChance": {"s": 0.7}},
+    "NEO SOUL 12 CROSS STICK": {"shift": {"r": -3, "k": 2}, "ghostChance": {"s": 0.7}},
+    "NEO SOUL 13 BROKEN TIME": {"swingLanes": {"h": 0.5, "k": 0}, "shift": {"s": -3}, "ghostChance": {"s": 0.7}},
+    "BOOM BAP 11 LIVE BREAK": {"swingLanes": {"h": 0.9}, "ghostChance": {"s": 0.8}},
+    "BOOM BAP 12 SP DUST": {"swingLanes": {"h": 0.9}, "shift": {"r": -2}},
+    "BOOM BAP 13 HARD KNOCK": {"swingLanes": {"h": 0.9}},
+}
 
 # ---------------- Danger Patterns (Tyrone's) ----------------
 D = "Danger Patterns"
@@ -880,8 +901,16 @@ for st, n in cnt.items():
 assert len(cnt) == 40, cnt
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)
+for p in P:
+    for key, by_lane in FEEL_NAMES.get(p["name"], FEEL.get(p["style"], {})).items():
+        used = {lane: v for lane, v in by_lane.items() if lane in p["lanes"]}
+        if used: p[key] = used
 VALID = set(".xXogrqt")
 for p in P:
+    for key in ("swingLanes", "shift", "ghostChance"):
+        for lane, v in p.get(key, {}).items():
+            assert lane in LANES and lane in p["lanes"], (p["name"], key, lane)
+            assert (-24 <= v <= 24) if key == "shift" else (0 <= v <= 1), (p["name"], key, v)
     for lane, s in p["lanes"].items():
         allowed = set(".-0123456789abcABCDEFGHIJKL") if lane == "b" else VALID
         bad = set(s) - allowed

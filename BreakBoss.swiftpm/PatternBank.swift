@@ -20,6 +20,11 @@ struct PatternPreset: Decodable, Equatable {
     let swing: Double
     let glide: Bool
     let lanes: [String: String]
+    /// The feel a drummer plays it with, by lane: each track's own swing (0...1 like the SWING
+    /// knob), its push (-) or pull (+) in ticks, and how often its ghost notes play (0...1).
+    var swingLanes: [String: Float]? = nil
+    var shift: [String: Float]? = nil
+    var ghostChance: [String: Float]? = nil
 
     static let laneToPad: [String: Pad] = ["k": .kick, "s": .snare, "c": .clap, "r": .rim, "h": .hat, "o": .openHat,
                                            "b": .bass808, "p1": .perc1, "p2": .perc2, "lt": .tomLow, "ht": .tomHigh, "cr": .cymbal]
@@ -112,6 +117,12 @@ struct PatternPreset: Decodable, Equatable {
             }
         }
         var p = PatternData(name: name, lengthTicks: Int32(max(16, steps)) * step, events: events)
+        for (lane, v) in swingLanes ?? [:] { if let pad = PatternPreset.laneToPad[lane] { p.setSwing(pad: pad.rawValue, v) } }
+        for (lane, v) in shift ?? [:] { if let pad = PatternPreset.laneToPad[lane] { p.setShift(pad: pad.rawValue, v) } }
+        for (lane, v) in ghostChance ?? [:] {
+            guard let pad = PatternPreset.laneToPad[lane] else { continue }
+            for i in p.events.indices where Int(p.events[i].pad) == pad.rawValue && p.events[i].velocity < 0.5 { p.events[i].chance = v.clamped(0.05, 1) }
+        }
         p.sort()
         return p
     }

@@ -1145,6 +1145,81 @@ enum KnockSelfTest {
         check(echoed == 0, "MIDI in: notes from the DAW don't go back out")
         _ = rp
         checkCountInAndPitchedMIDI()
+        checkFeel()
+    }
+
+    /// Per-track swing, push / pull, NOTE OFFSET and CHANCE: saved, played, recorded and exported.
+    static func checkFeel() {
+        let bar = PatternData.ppq * 4, kick = Int8(Pad.kick.rawValue), snare = Int8(Pad.snare.rawValue), hat = Pad.hat.rawValue
+        // Older saves (no offset or chance) load on the grid, always playing; new ones round trip.
+        let old = #"{"tick":24,"pad":1,"velocity":0.5,"semis":0,"length":0,"glide":false}"#
+        let e0 = try? JSONDecoder().decode(GrooveEvent.self, from: Data(old.utf8))
+        check(e0?.offset == 0 && e0?.chance == 1 && e0?.tick == 24, "feel: older notes load on their step, always playing")
+        var fe = GrooveEvent(tick: 48, pad: snare, velocity: 0.9)
+        fe.offset = -5; fe.chance = 0.5
+        let back = (try? JSONEncoder().encode(fe)).flatMap { try? JSONDecoder().decode(GrooveEvent.self, from: $0) }
+        check(back == fe, "feel: note offset and chance are saved")
+        // Where a note plays: a track's own swing, its push / pull and the note's own offset.
+        var p = PatternData(name: "F", lengthTicks: bar, events: [GrooveEvent(tick: 24, pad: Int8(hat), velocity: 1),
+                                                                   GrooveEvent(tick: 24, pad: kick, velocity: 1), fe])
+        p.setSwing(pad: hat, 1)
+        p.setShift(pad: Int(snare), -4)
+        check(p.playTick(p.events[0], bounce: 0) == 32, "feel: a track's own swing moves its off 16ths with the knob at zero")
+        check(p.playTick(p.events[1], bounce: 0) == 24, "feel: the other tracks stay straight")
+        check(p.playTick(p.events[2], bounce: 0) == 48 - 4 - 5, "feel: push / pull and note offset add up")
+        p.setSwing(pad: hat, -1); p.setShift(pad: Int(snare), 0)
+        check(p.trackSwing == nil && p.trackShift == nil, "feel: back to the knob and the grid leaves nothing behind")
+        p.setShift(pad: Int(snare), -4)
+        let loop = PatternSet([p]).loops[0]
+        check(loop.earliest == -9 && (0..<loop.count).contains { loop.events[$0].pad == snare && loop.events[$0].offset == -9 },
+              "feel: the engine's copy carries each note's whole offset")
+        // RECORD keeps the timing you played as NOTE OFFSET; QUANTIZE clears it.
+        let empty = PatternData(name: "R", lengthTicks: bar, events: [])
+        let rec = PatternEdit.addRecorded(empty, pad: Int(snare), tick: 99, velocity: 1, semis: 0, snap: 24, keepFeel: true)
+        check(rec.events.count == 1 && rec.events[0].tick == 96 && rec.events[0].offset == 3, "feel: RECORD keeps a late hit as +3 on its step")
+        var swungEmpty = empty; swungEmpty.setSwing(pad: hat, 1)
+        let rec2 = PatternEdit.addRecorded(swungEmpty, pad: hat, tick: 31, velocity: 1, semis: 0, snap: 24, keepFeel: true)
+        check(rec2.events.first?.tick == 24 && rec2.events.first?.offset == -1, "feel: RECORD measures from where the swung step plays")
+        let plain = PatternEdit.addRecorded(empty, pad: Int(snare), tick: 99, velocity: 1, semis: 0, snap: 24)
+        check(plain.events.first?.offset == 0, "feel: RECORD snaps hard unless asked to keep the timing")
+        check(PatternEdit.quantize(rec, nil, grid: 24).events.allSatisfy { $0.offset == 0 }, "feel: quantize puts notes back on the grid")
+        // CHANCE: the roll is the same on the same pass and changes between passes.
+        check(PatternData.chanceRoll(pass: 3, tick: 48, pad: snare) == PatternData.chanceRoll(pass: 3, tick: 48, pad: snare),
+              "chance: same pass, same roll")
+        let rolls = (0..<400).map { PatternData.chanceRoll(pass: $0, tick: 48, pad: snare) }
+        let under = rolls.filter { $0 < 0.5 }.count
+        check(under > 150 && under < 250 && rolls.allSatisfy { $0 >= 0 && $0 < 1 }, "chance: 50% plays about half the passes (\(under)/400)")
+        // MIDI export plays the feel: the pushed snare lands early, and a 5% note drops out of most bars.
+        var ex = PatternData(name: "X", lengthTicks: bar, events: [GrooveEvent(tick: 96, pad: snare, velocity: 1)])
+        ex.events[0].offset = -6
+        var rare = GrooveEvent(tick: 0, pad: kick, velocity: 1); rare.chance = 0.05
+        ex.events.append(rare)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("bb-feel-selftest.mid")
+        if (try? MIDIFile.write(ex, tempo: 120, bounce: 0, bars: 16, to: url)) != nil, let back = MIDIFile.read(url) {
+            let snares = back.events.filter { $0.pad == snare }.map { $0.tick % bar }
+            let kicks = back.events.filter { $0.pad == kick }.count
+            check(snares.count == 16 && snares.allSatisfy { $0 == 90 }, "feel: MIDI export plays the pushed snare early (\(Set(snares)))")
+            check(kicks < 8, "chance: MIDI export drops a 5% note from most bars (\(kicks)/16)")
+        } else {
+            check(false, "feel: MIDI export with offsets writes and reads back")
+        }
+        try? FileManager.default.removeItem(at: url)
+        // The engine: a 5% note sounds far less often than one that always plays.
+        let en = KnockEngine()
+        en.prepare(sampleRate: 48_000, maxFrames: 256)
+        en.setParam(.playMode, 1); en.setParam(.followDAW, 0); en.setParam(.tempoSync, 0); en.setTempo(240)
+        en.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        var sure = GrooveEvent(tick: 0, pad: kick, velocity: 1)
+        var maybe = GrooveEvent(tick: 48, pad: snare, velocity: 1); maybe.chance = 0.05
+        sure.chance = 1
+        let one = PatternData(name: "C", lengthTicks: PatternData.ppq, events: [sure, maybe])
+        en.patternHandoff.publish(PatternSet(Array(repeating: one, count: Pad.count)))
+        renderBlock(en)
+        let k0 = en.padHits[Int(kick)], s0 = en.padHits[Int(snare)]
+        en.send(KEvent(kind: .loopPad, a: 0))
+        for _ in 0..<940 { renderBlock(en) }           // about 5 s at 240 BPM: some 20 passes of a one-beat loop
+        let kicksPlayed = Int(en.padHits[Int(kick)] &- k0), snaresPlayed = Int(en.padHits[Int(snare)] &- s0)
+        check(kicksPlayed >= 15 && snaresPlayed < kicksPlayed / 3, "chance: the engine skips a 5% note most passes (\(snaresPlayed) of \(kicksPlayed))")
     }
 
     /// RECORD's count-in, and a drum on its own MIDI channel sending / taking its pitch as the note.

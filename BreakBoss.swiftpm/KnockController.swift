@@ -327,6 +327,12 @@ final class KnockController: ObservableObject {
 
     /// Record quantize (ticks; 0 = as played). 1/16 by default, like an MPC's TC 16.
     var recordSnap: Int32 = PatternData.stepTicks
+    /// RECORD keeps your timing: hits land on the grid with how early or late you played them as NOTE OFFSET.
+    @Published private(set) var recordKeepsFeel: Bool = UserDefaults.standard.bool(forKey: "breakboss.recordKeepsFeel")
+    func setRecordKeepsFeel(_ on: Bool) {
+        recordKeepsFeel = on
+        UserDefaults.standard.set(on, forKey: "breakboss.recordKeepsFeel")
+    }
 
     /// RECORD's count-in, in bars (1 or 2), with the metronome clicking.
     @Published private(set) var countInBars: Int = max(1, min(2, UserDefaults.standard.integer(forKey: "breakboss.countInBars") == 0 ? 1 : UserDefaults.standard.integer(forKey: "breakboss.countInBars")))
@@ -395,7 +401,8 @@ final class KnockController: ObservableObject {
             let loop = Int(h.loop)
             guard loops.indices.contains(loop) else { continue }
             var p = touched[loop] ?? loops[loop]
-            p = PatternEdit.addRecorded(p, pad: Int(h.pad), tick: h.tick, velocity: h.velocity, semis: h.semis, snap: snap)
+            p = PatternEdit.addRecorded(p, pad: Int(h.pad), tick: h.tick, velocity: h.velocity, semis: h.semis, snap: snap,
+                                        keepFeel: recordKeepsFeel, bounce: Double(value(.bounce)))
             touched[loop] = p
         }
         for (loop, p) in touched { setLoop(loop, p) }

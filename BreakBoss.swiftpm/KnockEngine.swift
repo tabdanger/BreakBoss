@@ -1155,11 +1155,12 @@ final class KnockEngine {
         let tBlock = (blockStart - start) * ppq
         let len = Double(loop.lengthTicks)
         let samplesPerTick = 60 / tempo / ppq * sampleRate
-        // The BOUNCE control can move a hit between -3 and +12 ticks at maximum. Search
-        // only that small neighbourhood, then retain the exact swing and interval checks.
+        // The BOUNCE control can move a hit between -3 and +12 ticks at maximum, a track's own swing
+        // up to +8, and NOTE OFFSET / push-pull as far as the loop's earliest and latest note. Search
+        // only that neighbourhood, then retain the exact timing and interval checks.
         let loose = bounce > 0.001 ? bounce * bounce : 0
-        let maxSwing = bounce > 0.001 ? bounce * 8 + loose * 4 : 0
-        let minSwing = -loose * 3
+        let maxSwing = max(bounce > 0.001 ? bounce * 8 + loose * 4 : 0, loop.hasOwnSwing ? 8 : 0) + max(0, loop.latest)
+        let minSwing = -loose * 3 + min(0, loop.earliest)
         // One cycle either side, so swung hits near the loop's edges aren't missed.
         var cycle = max(0, (t0 / len).rounded(.down) - 1)
         let lastCycle = (t1 / len).rounded(.down) + 1
@@ -1171,8 +1172,11 @@ final class KnockEngine {
             while k < loop.count && Double(loop.events[k].tick) < upper {
                 let ev = loop.events[k]
                 k += 1
-                let t = base + Double(ev.tick) + swingOffset(tick: Int(ev.tick), pad: Int(ev.pad), bounce: bounce)
-                guard t >= t0 && t < t1 && t >= 0 else { continue }
+                // An early note on the very first downbeat plays on it (nothing plays before the start).
+                let t = max(0, base + Double(ev.tick) + Double(ev.offset)
+                            + PatternData.swingTicks(tick: Int(ev.tick), pad: Int(ev.pad), bounce: bounce, own: loop.ownSwing[Int(ev.pad)]))
+                guard t >= t0 && t < t1 else { continue }
+                if ev.chance < 1 && PatternData.chanceRoll(pass: Int(cycle), tick: ev.tick, pad: ev.pad) >= ev.chance { continue }
                 let offset = Int(((t - tBlock) * samplesPerTick).rounded(.down))
                 var e = KEvent(kind: ev.pad == Int8(Pad.bass808.rawValue) ? .bass : .pad, a: Int32(ev.pad), value: Double(ev.velocity))
                 if e.kind == .bass { e.a = Int32(ev.semis.rounded()) }
@@ -1195,20 +1199,6 @@ final class KnockEngine {
             else { high = mid }
         }
         return low
-    }
-
-    /// BOUNCE: swing on the off 16ths, and at the top of the knob a loose "late kick, early
-    /// snare" feel.
-    @inline(__always)
-    private func swingOffset(tick: Int, pad: Int, bounce: Double) -> Double {
-        guard bounce > 0.001 else { return 0 }
-        var o: Double = 0
-        let inBeat = tick % 48
-        if abs(inBeat - 24) <= 2 { o += bounce * 8 }
-        let loose = bounce * bounce
-        if pad == Pad.kick.rawValue { o += loose * 4 }
-        if pad == Pad.snare.rawValue || pad == Pad.clap.rawValue { o -= loose * 3 }
-        return o
     }
 
     // Block events carry loop info (808 length, glide).
