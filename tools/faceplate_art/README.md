@@ -19,3 +19,9 @@ Tyrone: "KEEP Platinum layout and match every other faceplate around it". Platin
 4. `plat_unify.py` builds Modern, Vintage and Texture from Platinum (`master2.py`), adds the same knobs, Aldrich
    lettering and wood to all four, and (iPad) the piano / export / menu buttons in the top-right corner
 5. `clean.py`, then `buttons.py`, then `check_align.py`
+
+## Depth pass (Oct 17)
+`build_depth.py BreakBoss.swiftpm` adds light, sunk panels, button shadows, detail and grain to the four
+iPad plates and re-cuts the state overlays to match (seamless where they show the plate). It always starts
+from the untouched art in `depth_base/`, so run it again after any change to the plates (copy the new
+plate and overlays into `depth_base/` first). Uses `../sequencer_art/metal.py` (needs scipy).
