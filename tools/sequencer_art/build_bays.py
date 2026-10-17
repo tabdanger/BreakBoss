@@ -75,12 +75,16 @@ c = bevel(brushed(x1 - x0 - 10, cap, 0.80, spread=0.12), top=2, bottom=3, light=
 v[4:4 + cap, 5:x1 - x0 - 5] = c
 a[y0:y1, x0:x1, :3] = to_rgb(v)
 
-# the bottom rail where the old Drum Track was painted out: carry the clean rail's rows across
-x0, x1, y0, y1 = 37, 362, 701, 788
-clean = a[y0:y1, 380:575, :3].copy()
-fill = np.concatenate([clean, clean[:, ::-1]], axis=1)[:, -(x1 - x0):]   # mirrored, so the strokes run on
-# blend into the rail at the right end so there's no seam
-t = np.clip((np.arange(x1 - x0) - (x1 - x0 - 24)) / 24, 0, 1)[None, :, None]
+# the bottom rail where the old Drum Track was painted out: the clean rail's light from top to
+# bottom (its bevels), carried across in brushed strokes and blended into the rail over 40 px, so no
+# block or seam shows where the patch was
+x0, x1, y0, y1 = 37, 400, 701, 788
+profile = a[y0:y1, 380:575, :3].mean(axis=1)                       # one colour per row
+n = x1 - x0
+grain = (hblur(rng.normal(0, 0.035, (y1 - y0, n)), 41) + hblur(rng.normal(0, 0.02, (y1 - y0, n)), 7)) * 255
+fill = profile[:, None, :] + grain[..., None]
+t = np.clip((np.arange(n) - (n - 40)) / 40, 0, 1)[None, :, None]
+t = t * t * (3 - 2 * t)
 a[y0:y1, x0:x1, :3] = fill * (1 - t) + a[y0:y1, x0:x1, :3] * t
 
 Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA").save(path)
