@@ -11,7 +11,20 @@ name: Build BreakBoss
 # Manual only (Tyrone, Oct 16: no automatic test builds; the TestFlight upload is the build check).
 on:
   workflow_dispatch:
+    inputs:
+      tap_check:
+        description: "Also tap through the sequencer on an iPad simulator (arrow, VELOCITY / PITCH, BARS, sliding, tempo) with screenshots"
+        type: boolean
+        default: false
+      taps_only:
+        description: "Only the sequencer tap check (skip the build and self-test)"
+        type: boolean
+        default: false
   workflow_call:
+    inputs:
+      tap_check:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -22,6 +35,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ !inputs.taps_only }}
     runs-on: macos-15
     timeout-minutes: 45
     steps:
@@ -127,3 +141,67 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  taps:
+    # only when asked: Run workflow › "Also tap through the sequencer"
+    if: ${{ inputs.tap_check }}
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v5
+
+      - name: Use Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -vi beta | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; fi
+          xcodebuild -version
+
+      - name: Make the Xcode project
+        run: |
+          brew install xcodegen > "$RUNNER_TEMP/brew.log" 2>&1 || { tail -20 "$RUNNER_TEMP/brew.log"; exit 1; }
+          python3 xcode/generate.py
+          xcodegen generate --spec xcode/project.yml
+
+      - name: Pick an iPad simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, re, sys
+          data = json.load(sys.stdin)["devices"]
+          best = None
+          for runtime, devices in data.items():
+              if "iOS" not in runtime: continue
+              pads = [d for d in devices if d["name"].startswith("iPad")]
+              if not pads: continue
+              version = tuple(int(x) for x in re.findall(r"\d+", runtime))
+              pad = next((d for d in pads if "11-inch" in d["name"]), pads[0])
+              if best is None or version > best[0]: best = (version, pad)
+          print(best[1]["udid"])')
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" || true
+
+      - name: Tap through the sequencer
+        run: |
+          mkdir -p "$RUNNER_TEMP/uishots"
+          TEST_RUNNER_SHOTS="$RUNNER_TEMP/uishots" xcodebuild test \
+            -project xcode/BreakBoss.xcodeproj \
+            -scheme BreakBossUITests \
+            -destination "id=$UDID" \
+            -derivedDataPath "$RUNNER_TEMP/dd-ui" \
+            -resultBundlePath "$RUNNER_TEMP/ui.xcresult" \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
+            > "$RUNNER_TEMP/ui-test.log" 2>&1 || STATUS=$?
+          grep -E "error:|XCTAssert|Test Case|failed|passed|\*\* TEST|^UITREE" "$RUNNER_TEMP/ui-test.log" | tail -400
+          xcrun xcresulttool export attachments --path "$RUNNER_TEMP/ui.xcresult" --output-path "$RUNNER_TEMP/uishots/attachments" > /dev/null 2>&1 || true
+          ls -R "$RUNNER_TEMP/uishots" | head -40
+          exit ${STATUS:-0}
+
+      - name: Keep the screenshots and the log
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: sequencer-tap-check
+          path: |
+            ${{ runner.temp }}/uishots
+            ${{ runner.temp }}/ui-test.log
+          retention-days: 14
+          if-no-files-found: ignore

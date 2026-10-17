@@ -47,6 +47,10 @@ final class KitBuffers {
     let bassHz: Float
     /// One-pole coefficients prepared on the control plane, never at note-on or render time.
     let filterCoefficients: [Float]
+    /// Each pad's LEVEL and PAN as left / right gains (equal-power pan). Notes that are already
+    /// sounding glide to these, so turning a channel's volume or pan never steps the gain.
+    let mixL: [Float]
+    let mixR: [Float]
 
     init(name: String, samples: [SampleBuffer], settings: [PadSettings], bassHz: Float,
          renderSampleRate: Double = 48_000) {
@@ -61,6 +65,8 @@ final class KitBuffers {
             let cutoff = min(40 * pow(450, Double(amount)), rate * 0.45)
             return Float(1 - exp(-2 * Double.pi * cutoff / rate))
         }
+        mixL = settings.map { $0.gain * cosf(($0.pan.clamped(-1, 1) + 1) * .pi / 4) * 1.414 }
+        mixR = settings.map { $0.gain * sinf(($0.pan.clamped(-1, 1) + 1) * .pi / 4) * 1.414 }
     }
 }
 
@@ -329,6 +335,10 @@ final class KnockEngine {
         for p in 0..<Pad.count where p != bass && midiOutChannel[p] == Int16(channel) && Int(midiOutNote[p]) == note {
             return (p, 0)
         }
+        // A pad controller on the GM drum channel (an MPK Mini's pads send notes 36-43 on
+        // channel 10 out of the box): a note on the live pad map plays its mapped pad, even
+        // though channel 10 also belongs to pad 10 in the multi-out layout.
+        if channel == 9 && livePad(note) != nil { return nil }
         if midiOutChannel[bass] == Int16(channel) && Pad.bassNoteRange.contains(note) {
             return (bass, note - Pad.bassRootNote)
         }
@@ -545,6 +555,7 @@ final class KnockEngine {
         bs.delay = params[KParam.textureDelay.rawValue]
         bs.reverb = params[KParam.gatedReverb.rawValue]
         bs.drive = params[KParam.drive.rawValue]
+        bs.beat = playing ? blockBeat0 : nil
         bus.process(mixL, mixR, count: frames, bs)
 
         var ms = MasterBus.Settings()
@@ -579,8 +590,18 @@ final class KnockEngine {
         }
         if oldKit == nil, retiringKit == nil, let newKit = kitHandoff.take() {
             // Fade out what's playing from the old kit, keep its memory until the fade is done.
-            for v in 0..<KnockEngine.maxVoices where voices[v].active { voices[v].startFade(samples: Int(sampleRate * 0.005)) }
-            for v in 0..<KnockEngine.maxStealTails where stealTails[v].active { stealTails[v].startFade(samples: Int(sampleRate * 0.005)) }
+            // A pad whose sound didn't change (only its level, pan, tune, decay...) keeps ringing:
+            // the new kit holds the same sample, and its level and pan glide to the new values.
+            func sameSound(_ pad: Int) -> Bool {
+                guard let kit, pad >= 0, pad < kit.samples.count, pad < newKit.samples.count else { return false }
+                return kit.samples[pad] === newKit.samples[pad]
+            }
+            for v in 0..<KnockEngine.maxVoices where voices[v].active && !sameSound(voices[v].pad) {
+                voices[v].startFade(samples: Int(sampleRate * 0.005))
+            }
+            for v in 0..<KnockEngine.maxStealTails where stealTails[v].active && !sameSound(stealTails[v].pad) {
+                stealTails[v].startFade(samples: Int(sampleRate * 0.005))
+            }
             oldKit = kit
             kit = newKit
             oldKitCountdown = Int(sampleRate * 0.015)
@@ -654,6 +675,9 @@ final class KnockEngine {
             trigger(pad: pad, velocity: Float(e.value), semis: semis, lengthSamples: 0, glide: false)
             midiOutHit(pad: pad, velocity: Float(e.value), semis: semis, length: 0, offset: offset)
             record(pad: pad, velocity: Float(e.value), semis: semis, offset: offset)
+        case .cue:
+            // The sequencer's pattern: what plays next when nothing is playing (PLAY, the DAW, MIDI start).
+            if !playing && e.a >= 0 && e.a < Int32(Pad.count) { currentLoop = Int(e.a) }
         case .countIn:
             // RECORD with a count-in: the clicks run for `a` beats before the pattern's first
             // beat (the transport starts below zero; nothing plays until it reaches the top).
@@ -734,7 +758,8 @@ final class KnockEngine {
             }
         case .play:
             clearGates()
-            if currentLoop < 0 { currentLoop = 0 }
+            if e.value >= 1 && e.value < Double(Pad.count + 1) { currentLoop = Int(e.value) - 1 }   // value: pattern + 1
+            else if currentLoop < 0 { currentLoop = 0 }
             userArmed = true
             if followingHost && wasHostPlaying {
                 playing = true                  // back in on the DAW's own beat
@@ -831,7 +856,7 @@ final class KnockEngine {
     @inline(__always)
     static func isTransport(_ k: KEvent.Kind) -> Bool {
         switch k {
-        case .midiNoteOn, .noteOff, .loopGateOn, .loopGateOff, .allOff, .loopPad, .play, .stop, .midiStart, .midiStop, .midiContinue, .midiClock, .songPosition, .countIn: return true
+        case .midiNoteOn, .noteOff, .loopGateOn, .loopGateOff, .allOff, .loopPad, .play, .stop, .midiStart, .midiStop, .midiContinue, .midiClock, .songPosition, .countIn, .cue: return true
         default: return false
         }
     }
@@ -1002,10 +1027,9 @@ final class KnockEngine {
         // Velocity: VELOCITY at 0 = every hit full; at 1 = the whole range.
         let sens = params[KParam.velocity.rawValue]
         let velGain = (1 - sens) + sens * powf(velocity.clamped(0, 1), 1.5)
-        let gain = velGain * ps.gain
-        let pan = ps.pan.clamped(-1, 1)
-        let gl = gain * cosf((pan + 1) * .pi / 4) * 1.414
-        let gr = gain * sinf((pan + 1) * .pi / 4) * 1.414
+        // LEVEL and PAN are applied while rendering (kit.mixL / mixR), so they can move under a sounding note.
+        let ml = pad < kit.mixL.count ? kit.mixL[pad] : ps.gain
+        let mr = pad < kit.mixR.count ? kit.mixR[pad] : ps.gain
 
         // TIGHTEN shortens tails (the 808 half as much); the pad's own DECAY too.
         let tighten = params[KParam.tighten.rawValue] * (pad == Pad.bass808.rawValue ? 0.5 : 1)
@@ -1015,10 +1039,11 @@ final class KnockEngine {
         let coef: Float = tau.isFinite ? Float(exp(-1 / (tau * sampleRate))) : 1
 
         voiceAge &+= 1
-        voices[slot] = Voice(sample: sample, pad: pad, rate: rate, reverse: ps.reverse, gainL: gl, gainR: gr,
+        voices[slot] = Voice(sample: sample, pad: pad, rate: rate, reverse: ps.reverse, gainL: velGain, gainR: velGain,
                              decayCoef: coef, holdSamples: Int(sampleRate * 0.012), chokeGroup: group,
                              age: voiceAge, remaining: lengthSamples > 0 ? lengthSamples : Int.max, heldNote: heldNote,
-                             attackSamples: max(1, Int(sampleRate * 0.0005)), filterCoefficient: kit.filterCoefficients[pad])
+                             attackSamples: max(1, Int(sampleRate * 0.0005)), filterCoefficient: kit.filterCoefficients[pad],
+                             mixL: ml, mixR: mr)
         padHits[pad] &+= 1
     }
 
@@ -1043,12 +1068,26 @@ final class KnockEngine {
 
     private func renderVoices(from start: Int, to end: Int) {
         guard end > start else { return }
+        // Level / pan glide: at most 0 -> full gain in 10 ms, the same at any buffer size.
+        let step = Float(1 / (0.01 * sampleRate))
+        let release = Int(sampleRate * 0.03)
         for v in 0..<KnockEngine.maxVoices where voices[v].active {
-            voices[v].render(into: mixL + start, mixR + start, frames: end - start, releaseSamples: Int(sampleRate * 0.03))
+            let (tl, tr) = mixTarget(voices[v])
+            voices[v].render(into: mixL + start, mixR + start, frames: end - start, releaseSamples: release,
+                             targetL: tl, targetR: tr, mixStep: step)
         }
         for v in 0..<KnockEngine.maxStealTails where stealTails[v].active {
-            stealTails[v].render(into: mixL + start, mixR + start, frames: end - start, releaseSamples: Int(sampleRate * 0.03))
+            let (tl, tr) = mixTarget(stealTails[v])
+            stealTails[v].render(into: mixL + start, mixR + start, frames: end - start, releaseSamples: release,
+                                 targetL: tl, targetR: tr, mixStep: step)
         }
+    }
+
+    /// Where a sounding note's level and pan are heading: its pad's current LEVEL and PAN.
+    @inline(__always)
+    private func mixTarget(_ voice: Voice) -> (Float, Float) {
+        guard let kit, voice.pad >= 0, voice.pad < kit.mixL.count, voice.pad < kit.mixR.count else { return (voice.mixL, voice.mixR) }
+        return (kit.mixL[voice.pad], kit.mixR[voice.pad])
     }
 
     // MARK: Loops
@@ -1274,12 +1313,15 @@ struct Voice {
     var filterCoefficient: Float = 1
     var filterL: Float = 0
     var filterR: Float = 0
+    /// The pad's LEVEL / PAN gains right now; render() glides them to the pad's current setting.
+    var mixL: Float = 1
+    var mixR: Float = 1
 
     init() {}
 
     init(sample: SampleBuffer, pad: Int, rate: Double, reverse: Bool, gainL: Float, gainR: Float,
          decayCoef: Float, holdSamples: Int, chokeGroup: Int, age: UInt32, remaining: Int, heldNote: Int,
-         attackSamples: Int = 0, filterCoefficient: Float = 1) {
+         attackSamples: Int = 0, filterCoefficient: Float = 1, mixL: Float = 1, mixR: Float = 1) {
         active = true
         self.pad = pad
         left = sample.left
@@ -1302,6 +1344,8 @@ struct Voice {
         self.remaining = remaining
         self.heldNote = heldNote
         self.filterCoefficient = filterCoefficient
+        self.mixL = mixL
+        self.mixR = mixR
     }
 
     mutating func startFade(samples: Int) {
@@ -1322,7 +1366,8 @@ struct Voice {
     }
 
     @inline(__always)
-    mutating func render(into outL: UnsafeMutablePointer<Float>, _ outR: UnsafeMutablePointer<Float>, frames: Int, releaseSamples: Int) {
+    mutating func render(into outL: UnsafeMutablePointer<Float>, _ outR: UnsafeMutablePointer<Float>, frames: Int, releaseSamples: Int,
+                         targetL: Float = 1, targetR: Float = 1, mixStep: Float = 1) {
         guard let left, let right else { active = false; return }
         let last = Double(length - 1)
         for i in 0..<frames {
@@ -1353,8 +1398,10 @@ struct Voice {
                 attack = min(1, attack + attackStep)
             }
             if g < 0.000_05 && env < 0.000_05 { active = false; return }
-            outL[i] += l * g * gainL
-            outR[i] += r * g * gainR
+            if mixL != targetL { mixL = targetL > mixL ? min(targetL, mixL + mixStep) : max(targetL, mixL - mixStep) }
+            if mixR != targetR { mixR = targetR > mixR ? min(targetR, mixR + mixStep) : max(targetR, mixR - mixStep) }
+            outL[i] += l * g * gainL * mixL
+            outR[i] += r * g * gainR * mixR
             if glideLeft > 0 {
                 rate += rateStep
                 glideLeft -= 1

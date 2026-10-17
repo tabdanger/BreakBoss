@@ -106,12 +106,12 @@ class SimulatorTests(unittest.TestCase):
             old.write_text("self-test passed")
             os.utime(old, (100, 100))
             self.assertNotIn("self-test passed", simulate.combined_log(console, root, started=101))
-            for name in simulate.expected_layout_names("iphone"):
+            for name in simulate.expected_layout_names("ipad"):
                 path = cache / name
-                path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", 941, 1672)
+                path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", 1448, 1086)
                                  + b"\0\0\0\0IEND\xaeB`\x82")
                 os.utime(path, (100, 100))
-            self.assertEqual(len(simulate.missing_layout_names("iphone", cache, started=101)), 6)
+            self.assertEqual(len(simulate.missing_layout_names("ipad", cache, started=101)), 6)
 
     def test_launch_precedes_rpc_and_survives_its_first_timeout(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -142,7 +142,7 @@ class SimulatorTests(unittest.TestCase):
                  patch.object(simulate, "combined_log", return_value="self-test passed"), \
                  patch.object(simulate, "missing_layout_names", return_value=[]), \
                  contextlib.redirect_stdout(io.StringIO()):
-                simulate.run_device("iphone", {"udid": "phone", "name": "iPhone"}, output / "app", "com.tabdanger.BreakBoss", output, 240)
+                simulate.run_device("ipad", {"udid": "pad", "name": "iPad"}, output / "app", "com.tabdanger.BreakBoss", output, 240)
             self.assertLess(events.index("launch"), events.index("get_app_container"))
             self.assertEqual(events.count("get_app_container"), 2)
             self.assertIn("shutdown", events)
@@ -156,17 +156,13 @@ class SimulatorTests(unittest.TestCase):
             for name in simulate.expected_layout_names("ipad"):
                 write(name, 1448, 1086)
             self.assertEqual(simulate.missing_layout_names("ipad", cache), [])
-            self.assertEqual(len(simulate.missing_layout_names("iphone", cache)), 6)
-            for name in simulate.expected_layout_names("iphone"):
-                write(name, 941, 1672)
-            self.assertEqual(simulate.missing_layout_names("iphone", cache), [])
-            wrong = "layout-phone-modern-loop.png"
-            write(wrong, 1448, 1086)
-            self.assertEqual(simulate.missing_layout_names("iphone", cache), [wrong])
+            wrong = "layout-tablet-modern-loop.png"
+            write(wrong, 941, 1672)
+            self.assertEqual(simulate.missing_layout_names("ipad", cache), [wrong])
             (cache / wrong).write_text("not a PNG")
-            self.assertEqual(simulate.missing_layout_names("iphone", cache), [wrong])
+            self.assertEqual(simulate.missing_layout_names("ipad", cache), [wrong])
 
-    def test_newest_available_runtime_with_both_families_is_selected(self):
+    def test_newest_available_runtime_with_an_ipad_is_selected(self):
         devices = {"devices": {
             "com.apple.CoreSimulator.SimRuntime.iOS-18-5": [
                 {"name": "iPhone 16", "udid": "old-phone"}, {"name": "iPad Air", "udid": "old-pad"}],
@@ -176,11 +172,11 @@ class SimulatorTests(unittest.TestCase):
                 {"name": "iPhone 18", "udid": "unavailable", "isAvailable": False}, {"name": "iPad Air", "udid": "new-pad"}],
             "com.apple.CoreSimulator.SimRuntime.tvOS-26-0": [{"name": "Apple TV", "udid": "tv"}]}}
         self.assertEqual([(family, d["udid"]) for family, d in simulate.select_devices(devices)],
-                         [("iphone", "phone"), ("ipad", "pad")])
+                         [("ipad", "new-pad")])
 
-    def test_missing_one_family_is_an_error(self):
+    def test_no_ipad_is_an_error(self):
         with self.assertRaises(RuntimeError):
-            simulate.select_devices({"devices": {"iOS-26": [{"name": "iPad Air", "udid": "pad"}]}})
+            simulate.select_devices({"devices": {"iOS-26": [{"name": "iPhone 17", "udid": "phone"}]}})
 
     def test_a_missing_result_or_failure_cannot_count_as_success(self):
         self.assertIsNone(simulate.result_state("app launched"))

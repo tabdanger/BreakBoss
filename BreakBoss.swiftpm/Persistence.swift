@@ -129,6 +129,7 @@ struct KnockState: Codable, Equatable {
         s.soloPads = s.soloPads.map { Array(($0 + Array(repeating: false, count: Pad.count)).prefix(Pad.count)) }
         for i in s.pads.indices { s.pads[i].sampleFile = nil }
         s.stockPicks = nil                      // a kit brings its own sounds back
+        s.workspaceChannels = nil               // to the rack as well as the pads: one channel per kit sound
         // KITS change the drum sounds only: the pattern, its edits and the tempo stay put.
         if s.patternStyle == nil { s.patternStyle = KitLibrary.kit(id: kitID).style }
         return s

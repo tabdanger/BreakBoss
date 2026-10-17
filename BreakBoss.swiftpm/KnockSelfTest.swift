@@ -33,6 +33,7 @@ enum KnockSelfTest {
         phase("checkMigration", checkMigration)
         phase("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence)
         phase("checkTextureControls", checkTextureControls)
+        phase("checkLevelPanGlide", checkLevelPanGlide)
         phase("checkPatternEditor", checkPatternEditor)
         phase("checkMIDIPadMap", checkMIDIPadMap)
         phase("checkRecordingTrim", checkRecordingTrim)
@@ -687,6 +688,34 @@ enum KnockSelfTest {
             }
         }
         check(l.contains { abs($0) > 0.05 }, "pad sounds after idle")
+        // An empty pattern on the sequencer is silent, even when the other patterns have notes:
+        // PLAY and the DAW start the pattern on screen (the cue), not the last one that played.
+        let cueEngine = KnockEngine()
+        cueEngine.prepare(sampleRate: 48_000, maxFrames: 512)
+        cueEngine.setParam(.followDAW, 0)
+        cueEngine.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        var cueLoops = GrooveGenerator.loops(style: .trap, seed: 1)
+        cueLoops[3] = PatternData(name: "EMPTY", lengthTicks: cueLoops[3].lengthTicks, events: [])
+        cueEngine.patternHandoff.publish(PatternSet(cueLoops))
+        func loud(_ e: KnockEngine, blocks: Int) -> Bool {
+            var heard = false
+            for _ in 0..<blocks {
+                l.withUnsafeMutableBufferPointer { lp in
+                    r.withUnsafeMutableBufferPointer { rp in
+                        e.render(frames: 512, left: lp.baseAddress!, right: rp.baseAddress!, host: nil)
+                    }
+                }
+                if l.contains(where: { abs($0) > 0.01 }) { heard = true }
+            }
+            return heard
+        }
+        cueEngine.send(KEvent(kind: .loopPad, a: 0))
+        check(loud(cueEngine, blocks: 100), "cue test: pattern 1 plays")
+        cueEngine.send(KEvent(kind: .stop))
+        _ = loud(cueEngine, blocks: 40)
+        cueEngine.send(KEvent(kind: .cue, a: 3))
+        cueEngine.send(KEvent(kind: .play))
+        check(!loud(cueEngine, blocks: 200), "an empty pattern on the sequencer plays nothing")
     }
 
     static func checkFiles() {
@@ -887,6 +916,51 @@ enum KnockSelfTest {
         let old = try? JSONDecoder().decode(KnockState.self, from: JSONEncoder().encode(KnockState()))
         check(old != nil && old?.midiMap == nil, "sessions without a MIDI map still load (standard map)")
         check(e.lastNoteOn.pointee & 0x7F == 60 && e.lastNoteOn.pointee >> 8 > 0, "MIDI learn sees the last note played")
+        checkMPKMiniPads()
+    }
+
+    /// An Akai MPK Mini (Plus) out of the box: pads send notes 36-43 (bank A) and 44-51 (bank B)
+    /// on channel 10. With MIDI OUT on in the multi-out layout (pad 10 owns channel 10) they
+    /// still play pads 1-12 in ONE-SHOT, and record into the pattern when RECORD is armed.
+    static func checkMPKMiniPads() {
+        let e = KnockEngine()
+        e.prepare(sampleRate: 48_000, maxFrames: 256)
+        e.setParam(.playMode, 0); e.setParam(.followDAW, 0); e.setParam(.tempoSync, 0); e.setTempo(120)
+        e.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        for p in 0..<Pad.count { e.send(KEvent(kind: .midiOut, a: Int32(p), value: Double(KnockController.defaultMIDIOutChannels[p] * 128 + KnockController.defaultMIDIOutNotes[p]))) }
+        e.send(KEvent(kind: .midiOut, a: -1, value: 1))
+        renderBlock(e)
+        func hits(_ note: UInt8, host: Bool) -> [UInt32] {
+            let before = (0..<Pad.count).map { e.padHits[$0] }
+            if host { e.hostMIDI(offset: 0, status: 0x99, data1: note, data2: 100) }
+            else { e.receiveMIDI(status: 0x99, data1: note, data2: 100, time: 0) }
+            renderBlock(e)
+            if host { e.hostMIDI(offset: 0, status: 0x89, data1: note, data2: 0) }
+            else { e.receiveMIDI(status: 0x89, data1: note, data2: 0, time: 0) }
+            for _ in 0..<12 { renderBlock(e) }          // past MIDI OUT's 50 ms loop-back guard
+            return (0..<Pad.count).map { e.padHits[$0] - before[$0] }
+        }
+        func onlyPad(_ d: [UInt32], _ pad: Int) -> Bool { d.enumerated().allSatisfy { $0.offset == pad ? $0.element > 0 : $0.element == 0 } }
+        for pad in 0..<Pad.count {
+            check(onlyPad(hits(UInt8(36 + pad), host: false), pad), "MPK Mini: pad note \(36 + pad) on channel 10 plays BB pad \(pad + 1)")
+            check(onlyPad(hits(UInt8(36 + pad), host: true), pad), "MPK Mini via the AUv3 host: note \(36 + pad) plays BB pad \(pad + 1)")
+        }
+        // Recorded into the sequencer like an on-screen tap.
+        var loops = Array(repeating: PatternData(name: "E", lengthTicks: Int32(PatternData.ppq) * 4, events: []), count: Pad.count)
+        loops[0] = PatternData(name: "R", lengthTicks: Int32(PatternData.ppq) * 4, events: [])
+        e.patternHandoff.publish(PatternSet(loops))
+        renderBlock(e)
+        e.send(KEvent(kind: .recordArm, a: 1))
+        e.send(KEvent(kind: .loopPad, a: 0))
+        for _ in 0..<10 { renderBlock(e) }
+        _ = e.collectRecorded()
+        e.receiveMIDI(status: 0x99, data1: 37, data2: 100, time: 0)
+        renderBlock(e)
+        let rec = e.collectRecorded()
+        check(rec.count == 1 && Int(rec[0].pad) == Pad.snare.rawValue && rec[0].semis == 0, "MPK Mini: a pad hit records into the pattern while RECORD is on")
+        e.send(KEvent(kind: .recordArm, a: 0))
+        e.send(KEvent(kind: .stop))
+        renderBlock(e)
     }
 
     static func checkRecordingTrim() {
@@ -971,14 +1045,27 @@ enum KnockSelfTest {
               "rack: starts as the kit's 12 channels")
         if let last = rc.rackChannels.last {
             rc.removeRackChannel(last.id)
-            check(rc.rackChannels.count == Pad.count - 1, "rack: a channel can be deleted")
+            check(rc.rackChannels.count == Pad.count && rc.rackChannels.last?.soundID == "kit",
+                  "rack: deleting a channel puts the kit's sound back, all 12 pads stay on screen")
             let sound = LibrarySound(id: "test", url: URL(fileURLWithPath: "/"), name: "TEST SNARE", type: .snare, pack: "TEST", user: true)
             let added = rc.addRackChannel(sound, load: false)
             check(added?.pad == last.pad && rc.rackChannels.count == Pad.count && rc.rackChannels.last?.name == "TEST SNARE",
-                  "rack: a dropped sound takes the free pad slot")
-            check(rc.addRackChannel(sound, load: false) == nil, "rack: 12 channels at most")
+                  "rack: a dropped sound takes a free kit channel")
             rc.resetRack()
             check(rc.rackChannels.count == Pad.count && rc.rackChannels[0].soundID == "kit", "rack: back to the kit's channels")
+            // Face 1 and Face 2 stay in step: every pad is in the rack, a kit fills rack and pads.
+            if let preset = PatternBank.all.first(where: { $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } }) {
+                rc.removeRackChannel(rc.rackChannels[Pad.kick.rawValue].id)
+                check(!rc.loops.contains { $0.events.contains { Int($0.pad) == Pad.kick.rawValue } },
+                      "rack: a deleted channel's notes go from every pattern")
+                rc.loadPatternPreset(preset)
+                _ = rc.addRackChannel(sound, load: false)
+                check(rc.rackChannels.map(\.pad) == Array(0..<Pad.count), "rack: always all 12 pads, in pad order")
+                rc.selectKit(KitLibrary.west90s)
+                check(rc.rackChannels.allSatisfy { $0.soundID == "kit" }, "rack: a kit loads into the rack as well as the pads")
+            }
+            rc.setLoop(3, rc.loops[3])
+            check(rc.screenPattern == 3, "PLAY on the faceplate plays the pattern the sequencer shows")
         }
         var pattern = PatternData(name: "RACK", lengthTicks: PatternEdit.barTicks,
                                   events: [])
@@ -1372,6 +1459,54 @@ enum KnockSelfTest {
             check(difference > 0.1, "\(parameter.name) changes texture output")
             check(b.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "\(parameter.name) stays finite and clipped")
         }
+        // WARP (part of INSTABILITY) moves the sound bar to bar but stays in level.
+        let (warped, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 8) { $0.setParam(.instability, 1) }
+        check(warped.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "WARP stays finite and clipped")
+        check(warped[(warped.count - 48_000)...].contains { abs($0) > 0.01 }, "WARP keeps sounding over many scenes")
+    }
+
+    /// Turning a channel's LEVEL or PAN while its sound rings: the note keeps playing and glides to
+    /// the new level, it isn't cut off (each cut was a click).
+    static func checkLevelPanGlide() {
+        let rate = 48_000.0
+        let sine = (0..<96_000).map { Float(sin(Double($0) * 2 * Double.pi * 220 / rate)) * 0.1 }
+        let sample = SampleBuffer(left: sine, sampleRate: rate)
+        let samples = Array(repeating: sample, count: Pad.count)
+        let before = Array(repeating: PadSettings(), count: Pad.count)
+        var after = before
+        after[Pad.kick.rawValue].level = 0.4
+        after[Pad.kick.rawValue].pan = 0.8
+        let engine = KnockEngine()
+        engine.prepare(sampleRate: rate, maxFrames: 512)
+        engine.setParam(.playMode, 0); engine.setParam(.followDAW, 0); engine.setParam(.tempoSync, 0)
+        engine.setParam(.boost, 0); engine.setParam(.clipper, 0)
+        engine.kitHandoff.publish(KitBuffers(name: "GLIDE", samples: samples, settings: before, bassHz: 110))
+        engine.send(KEvent(kind: .pad, a: Int32(Pad.kick.rawValue), value: 1))
+        let total = 24_576, swapAt = 8_192
+        var left = [Float](repeating: 0, count: total), right = left
+        var done = 0
+        while done < total {
+            if done == swapAt {
+                engine.kitHandoff.publish(KitBuffers(name: "GLIDE", samples: samples, settings: after, bassHz: 110))
+            }
+            left.withUnsafeMutableBufferPointer { l in
+                right.withUnsafeMutableBufferPointer { r in
+                    engine.render(frames: 128, left: l.baseAddress! + done, right: r.baseAddress! + done, host: nil)
+                }
+            }
+            done += 128
+        }
+        func peak(_ x: [Float], _ range: Range<Int>) -> Float { x[range].map { abs($0) }.max() ?? 0 }
+        let start = peak(left, (swapAt - 1_024)..<swapAt)
+        let justAfter = peak(left, swapAt..<(swapAt + 128))
+        let endL = peak(left, (total - 2_048)..<total), endR = peak(right, (total - 2_048)..<total)
+        var biggestStep: Float = 0
+        for i in 1..<total { biggestStep = max(biggestStep, abs(left[i] - left[i - 1]), abs(right[i] - right[i - 1])) }
+        check(start > 0.05, "glide test note sounds (\(start))")
+        check(justAfter > start * 0.6, "changing level keeps the ringing note (\(justAfter) vs \(start))")
+        check(endL > 0.005 && endL < start * 0.5, "the ringing note glides down to the new level (\(endL))")
+        check(endR > endL * 2, "the ringing note glides to the new pan (L \(endL), R \(endR))")
+        check(biggestStep < start * 0.08, "level and pan move without a step (\(biggestStep))")
     }
 
 }

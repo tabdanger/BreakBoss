@@ -117,3 +117,67 @@ struct ShareSheet: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIActivityViewController { UIActivityViewController(activityItems: items, applicationActivities: nil) }
     func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }
+
+/// Face 2 → Face 1: a platinum knob wearing the sequencer's 9 squares in a dark slot. Slide it to
+/// the right (past halfway) to go back to the faceplate; let go sooner and it springs back. A tap
+/// on the slot's right end (the pads square) does the same slide.
+struct FaceSlider: View {
+    var scale: CGFloat = 1
+    var color: Color = .green
+    let back: () -> Void
+    @State private var travel: CGFloat = 0
+    @State private var leaving = false
+
+    var body: some View {
+        GeometryReader { geo in
+            let h = geo.size.height, w = geo.size.width
+            let knob = h - 8 * scale
+            let maxTravel = max(1, w - knob - 8 * scale)
+            ZStack(alignment: .leading) {
+                // the slot
+                Capsule().fill(LinearGradient(colors: [Color(white: 0.05), Color(white: 0.16)], startPoint: .top, endPoint: .bottom))
+                    .overlay(Capsule().stroke(Color(white: 0.6), lineWidth: 1))
+                    .overlay(Capsule().fill(color.opacity(0.25 * Double(travel / maxTravel))).padding(2))
+                // where it goes: Face 1's pads
+                Image(systemName: "square.fill").font(.system(size: 13 * scale, weight: .bold))
+                    .foregroundColor(Color(white: travel > maxTravel * 0.5 ? 0.95 : 0.55))
+                    .frame(width: knob, height: knob).offset(x: w - knob - 4 * scale)
+                Image(systemName: "chevron.right.2").font(.system(size: 9 * scale, weight: .bold)).foregroundColor(Color(white: 0.45))
+                    .offset(x: knob + 6 * scale).opacity(1 - Double(travel / maxTravel))
+                // the platinum knob
+                ZStack {
+                    Circle().fill(AngularGradient(colors: [Color(white: 0.96), Color(white: 0.62), Color(white: 0.9), Color(white: 0.58), Color(white: 0.96)], center: .center))
+                    Circle().fill(RadialGradient(colors: [Color.white.opacity(0.55), .clear], center: .init(x: 0.35, y: 0.3), startRadius: 0, endRadius: knob * 0.6))
+                    Circle().stroke(Color(white: 0.35), lineWidth: 1)
+                    Image(systemName: "square.grid.3x3.fill").font(.system(size: knob * 0.42, weight: .bold)).foregroundColor(Color(white: 0.15))
+                }
+                .frame(width: knob, height: knob)
+                .shadow(color: .black.opacity(0.55), radius: 3 * scale, y: 2 * scale)
+                .offset(x: 4 * scale + travel)
+            }
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { g in
+                    guard !leaving else { return }
+                    travel = min(maxTravel, max(0, g.translation.width))
+                }
+                .onEnded { g in
+                    guard !leaving else { return }
+                    // a tap on the right half also slides it across
+                    let tapRight = abs(g.translation.width) < 4 && g.location.x > w / 2
+                    if travel > maxTravel * 0.5 || tapRight {
+                        leaving = true
+                        withAnimation(.easeOut(duration: 0.15)) { travel = maxTravel }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.17) { back() }
+                    } else {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { travel = 0 }
+                    }
+                })
+        }
+        .accessibilityElement()
+        .accessibilityIdentifier("faceSlider")
+        .accessibilityLabel("Slide right to go back to Face 1")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { back() }
+    }
+}
