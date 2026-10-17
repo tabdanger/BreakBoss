@@ -887,6 +887,51 @@ enum KnockSelfTest {
         let old = try? JSONDecoder().decode(KnockState.self, from: JSONEncoder().encode(KnockState()))
         check(old != nil && old?.midiMap == nil, "sessions without a MIDI map still load (standard map)")
         check(e.lastNoteOn.pointee & 0x7F == 60 && e.lastNoteOn.pointee >> 8 > 0, "MIDI learn sees the last note played")
+        checkMPKMiniPads()
+    }
+
+    /// An Akai MPK Mini (Plus) out of the box: pads send notes 36-43 (bank A) and 44-51 (bank B)
+    /// on channel 10. With MIDI OUT on in the multi-out layout (pad 10 owns channel 10) they
+    /// still play pads 1-12 in ONE-SHOT, and record into the pattern when RECORD is armed.
+    static func checkMPKMiniPads() {
+        let e = KnockEngine()
+        e.prepare(sampleRate: 48_000, maxFrames: 256)
+        e.setParam(.playMode, 0); e.setParam(.followDAW, 0); e.setParam(.tempoSync, 0); e.setTempo(120)
+        e.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        for p in 0..<Pad.count { e.send(KEvent(kind: .midiOut, a: Int32(p), value: Double(KnockController.defaultMIDIOutChannels[p] * 128 + KnockController.defaultMIDIOutNotes[p]))) }
+        e.send(KEvent(kind: .midiOut, a: -1, value: 1))
+        renderBlock(e)
+        func hits(_ note: UInt8, host: Bool) -> [UInt32] {
+            let before = (0..<Pad.count).map { e.padHits[$0] }
+            if host { e.hostMIDI(offset: 0, status: 0x99, data1: note, data2: 100) }
+            else { e.receiveMIDI(status: 0x99, data1: note, data2: 100, time: 0) }
+            renderBlock(e)
+            if host { e.hostMIDI(offset: 0, status: 0x89, data1: note, data2: 0) }
+            else { e.receiveMIDI(status: 0x89, data1: note, data2: 0, time: 0) }
+            for _ in 0..<12 { renderBlock(e) }          // past MIDI OUT's 50 ms loop-back guard
+            return (0..<Pad.count).map { e.padHits[$0] - before[$0] }
+        }
+        func onlyPad(_ d: [UInt32], _ pad: Int) -> Bool { d.enumerated().allSatisfy { $0.offset == pad ? $0.element > 0 : $0.element == 0 } }
+        for pad in 0..<Pad.count {
+            check(onlyPad(hits(UInt8(36 + pad), host: false), pad), "MPK Mini: pad note \(36 + pad) on channel 10 plays BB pad \(pad + 1)")
+            check(onlyPad(hits(UInt8(36 + pad), host: true), pad), "MPK Mini via the AUv3 host: note \(36 + pad) plays BB pad \(pad + 1)")
+        }
+        // Recorded into the sequencer like an on-screen tap.
+        var loops = Array(repeating: PatternData(name: "E", lengthTicks: Int32(PatternData.ppq) * 4, events: []), count: Pad.count)
+        loops[0] = PatternData(name: "R", lengthTicks: Int32(PatternData.ppq) * 4, events: [])
+        e.patternHandoff.publish(PatternSet(loops))
+        renderBlock(e)
+        e.send(KEvent(kind: .recordArm, a: 1))
+        e.send(KEvent(kind: .loopPad, a: 0))
+        for _ in 0..<10 { renderBlock(e) }
+        _ = e.collectRecorded()
+        e.receiveMIDI(status: 0x99, data1: 37, data2: 100, time: 0)
+        renderBlock(e)
+        let rec = e.collectRecorded()
+        check(rec.count == 1 && Int(rec[0].pad) == Pad.snare.rawValue && rec[0].semis == 0, "MPK Mini: a pad hit records into the pattern while RECORD is on")
+        e.send(KEvent(kind: .recordArm, a: 0))
+        e.send(KEvent(kind: .stop))
+        renderBlock(e)
     }
 
     static func checkRecordingTrim() {
