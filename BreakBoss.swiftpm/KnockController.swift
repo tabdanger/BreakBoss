@@ -647,7 +647,23 @@ final class KnockController: ObservableObject {
     /// screen (Tyrone, Oct 17). A pad you haven't given a library sound shows the kit's sound.
     var rackChannels: [WorkspaceChannel] {
         let custom = state.workspaceChannels ?? []
-        return (0..<Pad.count).map { pad in custom.first { $0.pad == pad } ?? kitChannel(pad) }
+        return rackOrder.map { pad in custom.first { $0.pad == pad } ?? kitChannel(pad) }
+    }
+
+    /// The rack's top-to-bottom order of pads: pad order until a track is dragged somewhere else.
+    var rackOrder: [Int] {
+        guard let order = state.rackOrder, order.count == Pad.count, Set(order) == Set(0..<Pad.count) else { return Array(0..<Pad.count) }
+        return order
+    }
+
+    /// Drag a track up or down the rack: it lands at `index` (counted without it).
+    func moveRackChannel(pad: Int, to index: Int) {
+        var order = rackOrder
+        guard let from = order.firstIndex(of: pad) else { return }
+        order.remove(at: from)
+        order.insert(pad, at: max(0, min(order.count, index)))
+        state.rackOrder = order == Array(0..<Pad.count) ? nil : order
+        scheduleSave()
     }
 
     private func kitChannel(_ pad: Int) -> WorkspaceChannel {

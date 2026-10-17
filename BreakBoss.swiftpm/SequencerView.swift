@@ -178,6 +178,11 @@ struct SequencerView: View {
     @State private var undoStack: [PatternData] = []
     @State private var redoStack: [PatternData] = []
     @State private var rememberedAt: Date?
+    /// Hold a track header: the tracks wiggle and can be dragged up and down (DONE ends it).
+    @State private var reordering = false
+    @State private var wiggle = false
+    @State private var movingPad: Int?
+    @State private var movingDY: CGFloat = 0
     @State private var work: PatternData?
     @State private var drag: GridDrag = .none
     @State private var lastVelocity: Float = 0.78
@@ -837,6 +842,16 @@ struct SequencerView: View {
         let contentH = max((L.last.map { $0.y + $0.height } ?? 0) + (channels.count < Pad.count ? rowH : 0) + 12 * s, (A.rowsY1 - A.rowsY0) * s)
         // beat numbers
         ruler(width: gridW).place([A.gridX0, A.labelsY - 14, A.gridX1, A.rowsY0 - 1], s)
+        if reordering {
+            Button { stopReordering() } label: {
+                Text("DONE · DRAG TRACKS UP OR DOWN").font(.system(size: 11 * s, weight: .bold)).foregroundColor(.black)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Capsule().fill(noteColor))
+            }
+            .buttonStyle(SeqPress())
+            .accessibilityIdentifier("reorderDone")
+            .place([A.rackX0 + 4, A.labelsY - 16, A.rackX1 - 4, A.rowsY0 - 3], s)
+        }
         // the rows: rack column and the grid, scrolling together
         ScrollViewReader { proxy in
         ScrollView(.vertical, showsIndicators: false) {
@@ -951,7 +966,12 @@ struct SequencerView: View {
     private func rackColumn(_ L: [RowLayout], rowH: CGFloat, s: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
             ForEach(L, id: \.channel.id) { l in
-                channelRow(l, rowH: rowH, s: s).offset(y: l.y)
+                channelRow(l, L, rowH: rowH, s: s)
+                    .rotationEffect(.degrees(reordering && movingPad != l.channel.pad ? (wiggle ? 0.8 : -0.8) * (l.channel.pad % 2 == 0 ? 1 : -1) : 0))
+                    .scaleEffect(movingPad == l.channel.pad ? 1.04 : 1)
+                    .shadow(color: .black.opacity(movingPad == l.channel.pad ? 0.6 : 0), radius: 8 * s, y: 4 * s)
+                    .offset(y: l.y + (movingPad == l.channel.pad ? movingDY : 0))
+                    .zIndex(movingPad == l.channel.pad ? 1 : 0)
             }
             if channels.count < Pad.count {
                 let y = (L.last.map { $0.y + $0.height } ?? 0)
@@ -964,7 +984,23 @@ struct SequencerView: View {
         }
     }
 
-    private func channelRow(_ l: RowLayout, rowH: CGFloat, s: CGFloat) -> some View {
+    private func startReordering() {
+        reordering = true
+        wiggle = false
+        withAnimation(.easeInOut(duration: 0.13).repeatForever(autoreverses: true)) { wiggle = true }
+    }
+
+    private func stopReordering() {
+        withAnimation(.easeOut(duration: 0.15)) { reordering = false; wiggle = false }
+        movingPad = nil; movingDY = 0
+    }
+
+    /// Where a dragged track lands: after every other track whose middle is above its middle.
+    private func dropIndex(pad: Int, centre: CGFloat, _ L: [RowLayout]) -> Int {
+        L.filter { $0.channel.pad != pad && $0.y + $0.height / 2 < centre }.count
+    }
+
+    private func channelRow(_ l: RowLayout, _ L: [RowLayout], rowH: CGFloat, s: CGFloat) -> some View {
         let ch = l.channel, pad = ch.pad
         let muted = controller.mutedPads[pad]
         let isSel = selectedID == ch.id
@@ -992,11 +1028,36 @@ struct SequencerView: View {
             Text(ch.name).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? noteColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 92 * s, height: 45 * s, alignment: .leading).offset(x: X(335), y: 5 * s)
                 .allowsHitTesting(false)
-            // the oval: tap selects the track, hold for its menu
-            Color.clear.contentShape(Capsule()).frame(width: 105 * s, height: 45 * s).offset(x: X(321), y: 5 * s)
-                .bbLongPressMenu(title: ch.name, width: 270, tap: { selectedID = ch.id }) { channelMenu(ch) }
-            ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 30 * s, height: 30 * s).offset(x: X(425), y: 13 * s)
-            ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 30 * s, height: 30 * s).offset(x: X(463), y: 13 * s)
+            if reordering {
+                // wiggling: drag the track up or down; ⋯ is its menu
+                Color.clear.contentShape(Rectangle()).frame(width: 240 * s, height: rowH)
+                    .highPriorityGesture(DragGesture(minimumDistance: 2, coordinateSpace: .global)
+                        .onChanged { g in movingPad = pad; movingDY = g.translation.height }
+                        .onEnded { g in
+                            let to = dropIndex(pad: pad, centre: l.y + l.bandH / 2 + g.translation.height, L)
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                controller.moveRackChannel(pad: pad, to: to)
+                                movingPad = nil; movingDY = 0
+                            }
+                        })
+                    .accessibilityElement().accessibilityLabel("Drag \(ch.name) up or down")
+                    .accessibilityIdentifier("trackMove\(pad)")
+                Image(systemName: "ellipsis.circle.fill").font(.system(size: 20 * s)).foregroundColor(Color(white: 0.85))
+                    .frame(width: 34 * s, height: 34 * s).contentShape(Rectangle())
+                    .bbMenu(title: ch.name, width: 270) { channelMenu(ch) }
+                    .offset(x: X(428), y: 11 * s)
+                Image(systemName: "line.3.horizontal").font(.system(size: 16 * s, weight: .semibold)).foregroundColor(Color(white: 0.7))
+                    .frame(width: 30 * s, height: 30 * s).offset(x: X(466), y: 13 * s).allowsHitTesting(false)
+            } else {
+                // the oval: tap selects the track, hold makes the tracks wiggle so you can drag them
+                Color.clear.contentShape(Capsule()).frame(width: 105 * s, height: 45 * s).offset(x: X(321), y: 5 * s)
+                    .onTapGesture { selectedID = ch.id }
+                    .onLongPressGesture(minimumDuration: 0.45) { selectedID = ch.id; startReordering() }
+                    .accessibilityElement().accessibilityAddTraits(.isButton).accessibilityLabel("Hold to move tracks")
+                    .accessibilityIdentifier("trackHeader\(pad)")
+                ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 30 * s, height: 30 * s).offset(x: X(425), y: 13 * s)
+                ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 30 * s, height: 30 * s).offset(x: X(463), y: 13 * s)
+            }
             // the lamp: on / off
             if muted { Circle().fill(Color(white: 0.12)).frame(width: 9 * s, height: 9 * s).offset(x: X(504.5), y: 23.5 * s).allowsHitTesting(false) }
             Button { controller.toggleMute(pad) } label: { Color.clear.frame(width: 22 * s, height: 30 * s).contentShape(Rectangle()) }
@@ -1384,44 +1445,68 @@ struct SequencerView: View {
             }
             // the notes: silver buttons that glow the mode's colour. The shadow under them and the glow
             // are one blurred layer each, so the canvas blurs twice however many notes are on screen.
-            let lit: [(GrooveEvent, CGRect)] = pattern.events.filter(visible).compactMap { e in noteRect(e, w: size.width, L).map { (e, $0) } }
-            ctx.drawLayer { g in
-                g.addFilter(.shadow(color: Color.black.opacity(0.75), radius: 2.5, x: 0, y: 2))
-                for (_, r) in lit { g.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(.black)) }
-            }
-            ctx.drawLayer { g in
-                g.addFilter(.shadow(color: noteColor, radius: 9))
-                for (e, r) in lit {
-                    let glow = selection.contains(NoteKey(e)) ? Color.white : noteColor
-                    let step = layout(for: Int(e.pad), L)?.pitch == nil
-                    let shape = step ? Path(roundedRect: Self.oval(in: r), cornerRadius: min(Self.oval(in: r).width, Self.oval(in: r).height) / 2) : Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3)
-                    g.fill(shape, with: .color(glow.opacity(0.45 + 0.55 * Double(e.velocity))))
+            // Step rows: a step button lights when it holds any hit (a roll's hits share one button,
+            // a mark each in its slot). The piano roll's notes are drawn one by one.
+            let shown = pattern.events.filter(visible)
+            var steps: [StepKey: [GrooveEvent]] = [:]
+            var notes: [(GrooveEvent, CGRect)] = []
+            for e in shown {
+                guard let l = layout(for: Int(e.pad), L) else { continue }
+                if l.pitch == nil {
+                    steps[StepKey(pad: Int(e.pad), cell: Int((e.tick - pageStart) / max(1, cellTicks))), default: []].append(e)
+                } else if let r = noteRect(e, w: size.width, L) {
+                    notes.append((e, r))
                 }
             }
-            for (e, r) in lit {
+            let lit: [(StepKey, CGRect, [GrooveEvent])] = steps.compactMap { key, hits in
+                guard let l = layout(for: key.pad, L) else { return nil }
+                return (key, CGRect(x: CGFloat(key.cell) * cw + 1, y: l.y, width: cw - 2, height: l.bandH), hits.sorted { $0.tick < $1.tick })
+            }
+            // the glow: one blurred layer for every lit slot (and every piano-roll note)
+            ctx.drawLayer { g in
+                g.addFilter(.shadow(color: glowColor, radius: 7))
+                for (_, r, hits) in lit {
+                    let sel = hits.contains { selection.contains(NoteKey($0)) }
+                    let v = Double(hits.map(\.velocity).max() ?? 0.8)
+                    g.fill(Path(roundedRect: Self.slot(in: r).insetBy(dx: -1, dy: -1), cornerRadius: 2), with: .color((sel ? Color.white : glowColor).opacity(0.5 + 0.5 * v)))
+                }
+                for (e, r) in notes {
+                    g.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3), with: .color((selection.contains(NoteKey(e)) ? Color.white : glowColor).opacity(0.3 + 0.4 * Double(e.velocity))))
+                }
+            }
+            for (_, r, hits) in lit {
+                let sel = hits.contains { selection.contains(NoteKey($0)) }
+                let v = Double(hits.map(\.velocity).max() ?? 0.8)
+                drawLitStep(ctx, r, glow: sel ? Color.white : glowColor, level: 0.55 + 0.45 * v, hits: hits.count)
+                if sel { ctx.stroke(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.white), lineWidth: 1.5) }
+                if hits.contains(where: { $0.chance < 1 }) {
+                    ctx.stroke(Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3), with: .color(glowColor.opacity(0.9)), style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                }
+                if let e = hits.first, e.semis != 0, r.width > 14 {
+                    ctx.draw(Text(e.semis > 0 ? "+\(Int(e.semis))" : "\(Int(e.semis))").font(.system(size: 9, weight: .bold)).foregroundColor(.black),
+                             at: CGPoint(x: r.midX, y: r.midY + r.height * 0.12))
+                }
+                // NOTE OFFSET: a thin line where each hit really plays
+                for e in hits where e.offset != 0 {
+                    let px = x(e.tick + Int32(e.offset), size.width)
+                    ctx.fill(Path(CGRect(x: px - 0.75, y: r.minY + r.height * 0.35, width: 1.5, height: r.height * 0.5)), with: .color(Color.black.opacity(0.6)))
+                }
+            }
+            for (e, r) in notes {
                 let sel = selection.contains(NoteKey(e))
-                let base = sel ? Color.white : noteColor
-                let shade = 0.55 + 0.45 * Double(e.velocity)
-                let step = layout(for: Int(e.pad), L)?.pitch == nil
-                // A step button keeps its shape (and its slot); the piano roll's notes keep theirs.
-                drawMetalNote(ctx, r, tint: base, level: shade, slot: step)
+                drawMetalNote(ctx, r, tint: sel ? Color.white : glowColor, level: 0.55 + 0.45 * Double(e.velocity))
                 if sel { ctx.stroke(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.white), lineWidth: 1.5) }
                 if sel && tool == .select {
                     ctx.fill(Path(roundedRect: CGRect(x: r.maxX - 4, y: r.minY + 2, width: 3, height: max(2, r.height - 4)), cornerRadius: 1.5),
                              with: .color(Color.black.opacity(0.55)))
                 }
-                // NOTE OFFSET: a thin line where the hit really plays; CHANCE: a dashed outline
                 if e.offset != 0 {
                     let px = x(e.tick + Int32(e.offset), size.width)
                     ctx.fill(Path(CGRect(x: px - 0.75, y: r.minY + 2, width: 1.5, height: max(2, r.height - 4))), with: .color(Color.white.opacity(0.85)))
                 }
                 if e.chance < 1 {
-                    ctx.stroke(Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3), with: .color(base.opacity(0.9)),
+                    ctx.stroke(Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3), with: .color(glowColor.opacity(0.9)),
                                style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
-                }
-                if e.semis != 0 && r.width > 14 && layout(for: Int(e.pad), L)?.pitch == nil {
-                    ctx.draw(Text(e.semis > 0 ? "+\(Int(e.semis))" : "\(Int(e.semis))").font(.system(size: 9, weight: .bold)).foregroundColor(.black),
-                             at: CGPoint(x: r.midX, y: r.midY))
                 }
             }
             if case let .marquee(a, b) = drag {
@@ -1462,20 +1547,26 @@ struct SequencerView: View {
             ended: { panStart = nil }))
     }
 
-    /// The glowing oval inside a lit step button (Tyrone's picture: most of the button, rounded ends).
-    static func oval(in r: CGRect) -> CGRect { r.insetBy(dx: max(2, r.width * 0.17), dy: max(2, r.height * 0.09)) }
+    /// The slot near the top of a step button (Tyrone's picture): dark when off, a glowing bar when lit.
+    static func slot(in r: CGRect) -> CGRect {
+        CGRect(x: r.minX + r.width * 0.16, y: r.minY + r.height * 0.15, width: r.width * 0.68, height: max(3, r.height * 0.1))
+    }
 
-    /// A row of unlit step buttons in brushed steel: bevelled, with the slot's thin, dim line of the
-    /// mode's colour. One fill per layer for the whole row.
+    /// The lit slot's colour: the mode's light (VINTAGE glows yellow rather than its cream).
+    private var glowColor: Color { controller.mode == .vintage ? Color(red: 1, green: 0.8, blue: 0.25) : noteColor }
+
+    private struct StepKey: Hashable { let pad: Int; let cell: Int }
+
+    /// A row of step buttons in brushed steel: bevelled, each with its dark slot near the top. One
+    /// fill per layer for the whole row; a lit button is drawn over its own.
     private func drawMetalCells(_ ctx: GraphicsContext, _ rects: [CGRect]) {
         guard let first = rects.first else { return }
         let top = CGPoint(x: 0, y: first.minY), bottom = CGPoint(x: 0, y: first.maxY)
-        var body = Path(), slots = Path(), lines = Path()
+        var body = Path(), slots = Path()
         for r in rects {
             body.addRoundedRect(in: r, cornerSize: CGSize(width: 3, height: 3))
-            let sl = CGRect(x: r.minX + r.width * 0.16, y: r.minY + r.height * 0.15, width: r.width * 0.68, height: max(2.5, r.height * 0.09))
-            slots.addRoundedRect(in: sl, cornerSize: CGSize(width: sl.height / 2, height: sl.height / 2))
-            lines.addRoundedRect(in: sl.insetBy(dx: 1, dy: sl.height * 0.3), cornerSize: CGSize(width: 1, height: 1))
+            let sl = Self.slot(in: r)
+            slots.addRoundedRect(in: sl.insetBy(dx: -1, dy: -1), cornerSize: CGSize(width: 2, height: 2))
         }
         ctx.fill(body, with: .linearGradient(Gradient(stops: [
             .init(color: Color(white: 0.8), location: 0), .init(color: Color(white: 0.66), location: 0.2),
@@ -1494,55 +1585,41 @@ struct SequencerView: View {
             .init(color: Color.black.opacity(0), location: 0.65), .init(color: Color.black.opacity(0.55), location: 1)]), startPoint: top, endPoint: bottom), lineWidth: 1.1)
         ctx.stroke(body, with: .color(Color.black.opacity(0.6)), lineWidth: 0.7)
         ctx.fill(slots, with: .color(Color.black.opacity(0.7)))
-        ctx.fill(lines, with: .color(noteColor.opacity(0.35)))
     }
 
-    /// One note as a brushed-silver button: bevelled, lit from above, tinted and rimmed with the mode's
-    /// colour (brighter the harder it's hit). A step button's slot glows that colour.
-    private func drawMetalNote(_ ctx: GraphicsContext, _ r: CGRect, tint: Color, level: Double, slot: Bool) {
+    /// A lit step button: the same silver button, its slot lit as a bright bar of the mode's light
+    /// (a roll's hits split the bar, a mark each). The metal stays silver in every mode.
+    private func drawLitStep(_ ctx: GraphicsContext, _ r: CGRect, glow: Color, level: Double, hits: Int) {
+        let sl = Self.slot(in: r)
+        ctx.fill(Path(roundedRect: sl.insetBy(dx: -1, dy: -1), cornerRadius: 2), with: .color(Color.black.opacity(0.8)))
+        let n = max(1, min(hits, 4)), gap: CGFloat = n > 1 ? 1.5 : 0
+        let w = (sl.width - gap * CGFloat(n - 1)) / CGFloat(n)
+        for i in 0..<n {
+            let bar = CGRect(x: sl.minX + CGFloat(i) * (w + gap), y: sl.minY, width: w, height: sl.height)
+            ctx.fill(Path(roundedRect: bar, cornerRadius: min(2, bar.height / 2)), with: .linearGradient(Gradient(colors: [glow.opacity(level), glow.opacity(level * 0.8)]),
+                                                                                                startPoint: CGPoint(x: bar.midX, y: bar.minY), endPoint: CGPoint(x: bar.midX, y: bar.maxY)))
+            // the hot core of the light
+            ctx.fill(Path(roundedRect: bar.insetBy(dx: min(2, bar.width * 0.15), dy: bar.height * 0.3), cornerRadius: 1), with: .color(Color.white.opacity(0.55 * level)))
+        }
+        // a faint wash of the light on the button's edge
+        ctx.stroke(Path(roundedRect: r.insetBy(dx: 0.5, dy: 0.5), cornerRadius: 3), with: .color(glow.opacity(0.35 * level)), lineWidth: 1)
+    }
+
+    /// A piano-roll note as a brushed-silver bar tinted with the mode's light.
+    private func drawMetalNote(_ ctx: GraphicsContext, _ r: CGRect, tint: Color, level: Double) {
         let shape = Path(roundedRect: r, cornerRadius: 3)
         let top = CGPoint(x: r.midX, y: r.minY), bottom = CGPoint(x: r.midX, y: r.maxY)
         ctx.fill(shape, with: .linearGradient(Gradient(stops: [
             .init(color: Color(white: 0.97), location: 0), .init(color: Color(white: 0.82), location: 0.18),
             .init(color: Color(white: 0.6), location: 0.55), .init(color: Color(white: 0.7), location: 0.8),
             .init(color: Color(white: 0.86), location: 1)]), startPoint: top, endPoint: bottom))
-        // brushed grain
-        var grain = Path()
-        var y = r.minY + 1.5
-        while y < r.maxY - 1 { grain.addRect(CGRect(x: r.minX + 1, y: y, width: r.width - 2, height: 0.5)); y += 2 }
         var c = ctx
         c.clip(to: shape)
-        c.fill(grain, with: .color(Color.black.opacity(0.07)))
-        // a step button's frame stays bare metal (only its oval lights); a piano-roll note takes the colour
-        if !slot { c.fill(Path(CGRect(x: r.minX, y: r.minY, width: r.width, height: r.height)), with: .color(tint.opacity(0.12 + 0.2 * level))) }
-        // the bevel: a lit top edge, a dark bottom edge
+        c.fill(Path(r), with: .color(tint.opacity(0.25 + 0.3 * level)))
         ctx.stroke(Path(roundedRect: r.insetBy(dx: 0.75, dy: 0.75), cornerRadius: 2.5), with: .linearGradient(Gradient(stops: [
             .init(color: Color.white.opacity(0.95), location: 0), .init(color: Color.white.opacity(0), location: 0.4),
             .init(color: Color.black.opacity(0), location: 0.6), .init(color: Color.black.opacity(0.5), location: 1)]), startPoint: top, endPoint: bottom), lineWidth: 1.2)
-        ctx.stroke(shape, with: .color(slot ? Color.black.opacity(0.6) : tint.opacity(0.5 + 0.4 * level)), lineWidth: 1)
-        if slot {
-            // the inside oval, recessed into the button and glowing solid in the mode's colour
-            let o = Self.oval(in: r)
-            let round = min(o.width, o.height) / 2
-            ctx.fill(Path(roundedRect: o.insetBy(dx: -1.5, dy: -1.5), cornerRadius: round + 1.5), with: .linearGradient(Gradient(colors: [Color.black.opacity(0.75), Color.black.opacity(0.35)]),
-                                                                                         startPoint: CGPoint(x: o.midX, y: o.minY), endPoint: CGPoint(x: o.midX, y: o.maxY)))
-            let well = Path(roundedRect: o, cornerRadius: round)
-            ctx.fill(well, with: .color(Color.black))
-            ctx.fill(well, with: .color(tint.opacity(0.55 + 0.45 * level)))
-            ctx.fill(well, with: .radialGradient(Gradient(colors: [Color.white.opacity(0.4 * level), tint.opacity(0.35), Color.black.opacity(0.35)]),
-                                                 center: CGPoint(x: o.midX, y: o.midY + o.height * 0.06), startRadius: 0, endRadius: max(o.width, o.height) * 0.6))
-            // the oval's walls: shadowed under the top lip, a lit lower lip
-            var w = ctx
-            w.clip(to: well)
-            w.fill(Path(o), with: .linearGradient(Gradient(stops: [.init(color: Color.black.opacity(0.55), location: 0), .init(color: Color.black.opacity(0), location: 0.3)]),
-                                                 startPoint: CGPoint(x: o.midX, y: o.minY), endPoint: CGPoint(x: o.midX, y: o.maxY)))
-            ctx.stroke(Path(roundedRect: o.insetBy(dx: -0.75, dy: -0.75), cornerRadius: round + 0.75), with: .linearGradient(Gradient(stops: [
-                .init(color: Color.black.opacity(0.6), location: 0), .init(color: Color.black.opacity(0), location: 0.5), .init(color: Color.white.opacity(0.55), location: 1)]),
-                startPoint: CGPoint(x: o.midX, y: o.minY), endPoint: CGPoint(x: o.midX, y: o.maxY)), lineWidth: 1)
-        } else {
-            // a highlight across the top, like light on a polished cap
-            ctx.fill(Path(roundedRect: CGRect(x: r.minX + 2, y: r.minY + 1.5, width: max(0, r.width - 4), height: max(1.5, r.height * 0.16)), cornerRadius: 1.5), with: .color(Color.white.opacity(0.6)))
-        }
+        ctx.stroke(shape, with: .color(tint.opacity(0.5 + 0.4 * level)), lineWidth: 1)
     }
 
     private func setZoom(_ level: Int) {
