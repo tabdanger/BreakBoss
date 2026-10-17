@@ -106,53 +106,52 @@ struct KitDefinition: Identifiable {
     /// 808 tuning in Hz (note 60 plays this).
     let bassHz: Float
     let pads: [DrumRecipe]
+    /// The mode bank it lives in. Browser home only: every kit and imported sample works through all three modes.
+    let preferredMode: SoundMode
+    /// The genre tab it sits under in the KITS browser (KitLibrary.families), or "FX".
+    let family: String
+    /// What it is, on its card: "G-FUNK", "AMAPIANO". The A/B kits use their name without the A / B.
+    let genre: String
 
-    /// The genre in the browsers: the name without its A / B.
-    var genre: String {
-        name.hasSuffix(" A") || name.hasSuffix(" B") ? String(name.dropLast(2)) : name
-    }
-
-    /// Browser home only: every kit and imported sample works through all three modes.
-    var preferredMode: SoundMode {
-        switch style {
-        case .afrobeats, .latin, .experimental, .amapiano: return .texture
-        case .neoSoul, .gospel, .funkBreak, .looseBreak, .heavyBreak, .west90s,
-             .boomBap, .loFi, .pop80s, .pop90s, .pop: return .vintage
-        default: return .modern
-        }
-    }
-
-    init(id: String, name: String, style: GrooveStyle, tempo: Double, bassHz: Float, pads: [DrumRecipe]) {
+    init(id: String, name: String, style: GrooveStyle, tempo: Double, bassHz: Float, pads: [DrumRecipe],
+         mode: SoundMode = .modern, family: String = "", genre: String? = nil) {
         self.id = id; self.name = name; self.style = style; self.tempo = tempo; self.bassHz = bassHz
         self.pads = Array(pads.prefix(Pad.count))
+        self.preferredMode = mode; self.family = family
+        self.genre = genre ?? (name.hasSuffix(" A") || name.hasSuffix(" B") ? String(name.dropLast(2)) : name)
     }
 }
 
 enum KitLibrary {
-    // The factory kits are in FactoryKits.swift (made by tools/build_kits.py): two kits per genre,
+    // The factory kits are in FactoryKits.swift (made by tools/build_kits.py from tools/kit_catalog.py):
     // every pad a stock sound sorted and named by category. The synth voices below are what each
     // kit falls back on (and what plays its variations); they are not kits of their own.
 
-    /// The kits grouped by genre ("BOOM BAP A" and "BOOM BAP B" -> "BOOM BAP"), in browser order.
-    static var genreGroups: [(genre: String, kits: [KitDefinition])] { groups(factory) }
+    /// The genre tabs of the KITS browser, in order. Every mode bank has at least 20 kits under each.
+    static let families = ["TRAP", "WEST COAST", "SOUL & R&B", "BREAKS", "POP", "WORLD"]
 
-    /// The genres whose kits open in this mode, grouped the same way.
+    /// The kits grouped by genre ("BOOM BAP A" and "BOOM BAP B" -> "BOOM BAP"), in browser order.
+    static var genreGroups: [(genre: String, kits: [KitDefinition])] { groups(factory, by: \.genre) }
+
+    /// This mode's kits under their genre tabs (TRAP, WEST COAST...), for the kit menus.
     static func genreGroups(for mode: SoundMode) -> [(genre: String, kits: [KitDefinition])] {
-        groups(kits(for: mode))
+        groups(kits(for: mode), by: \.family)
     }
 
-    /// Every factory kit that opens in this mode, in browser order.
+    /// Every factory kit that opens in this mode, in browser order: tab by tab.
     static func kits(for mode: SoundMode) -> [KitDefinition] {
-        factory.filter { $0.preferredMode == mode }
+        let mine = factory.filter { $0.preferredMode == mode }
+        let rank = { (k: KitDefinition) in families.firstIndex(of: k.family) ?? families.count }
+        return mine.enumerated().sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }.map(\.element)
     }
 
     /// Mode lists first, the way the browsers show them (the ◀ ▶ kit arrows step through this).
     static var browserOrder: [KitDefinition] { SoundMode.allCases.flatMap { kits(for: $0) } }
 
-    private static func groups(_ kits: [KitDefinition]) -> [(genre: String, kits: [KitDefinition])] {
+    private static func groups(_ kits: [KitDefinition], by key: KeyPath<KitDefinition, String>) -> [(genre: String, kits: [KitDefinition])] {
         var order: [String] = []; var map: [String: [KitDefinition]] = [:]
         for k in kits {
-            let g = k.genre
+            let g = k[keyPath: key]
             if map[g] == nil { order.append(g) }
             map[g, default: []].append(k)
         }
@@ -160,7 +159,8 @@ enum KitLibrary {
     }
 
     static func variant(_ id: String, _ name: String, _ base: KitDefinition, _ style: GrooveStyle,
-                        _ tempo: Double, _ seed: UInt32, bass: Float, tone: Float = 0, drive: Float = 0.1) -> KitDefinition {
+                        _ tempo: Double, _ seed: UInt32, bass: Float, _ mode: SoundMode, _ family: String, _ genre: String,
+                        tone: Float = 0, drive: Float = 0.1) -> KitDefinition {
         var rng = KRandom(seed: seed)
         var pads = base.pads.map { $0.varied(&rng, amount: 0.75) }
         for i in pads.indices {
@@ -172,7 +172,8 @@ enum KitLibrary {
             pads[7] = DrumRecipe(kind: .conga, tune: 240, decay: 0.26, level: 0.8, label: "CONGA LOW")
             pads[8] = DrumRecipe(kind: .bongo, tune: 410, decay: 0.18, level: 0.7, label: "BONGO")
         }
-        return KitDefinition(id: id, name: name, style: style, tempo: tempo, bassHz: bass, pads: pads)
+        return KitDefinition(id: id, name: name, style: style, tempo: tempo, bassHz: bass, pads: pads,
+                             mode: mode, family: family, genre: genre)
     }
 
     /// A kit by its identifier. Kits from before Oct 17 open the new kit nearest their genre.

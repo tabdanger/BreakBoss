@@ -50,6 +50,8 @@ struct BrowserView: View {
         let detail: String
         let bank: String
         let user: Bool
+        /// The genre tab a kit sits under (TRAP, WEST COAST...).
+        var family = ""
     }
 
     private static let favoritesBank = "★ FAVORITES"
@@ -76,8 +78,9 @@ struct BrowserView: View {
                 for g in KitLibrary.genreGroups(for: mode) {
                     for def in g.kits {
                         n += 1
-                        out.append(Item(id: def.id, number: n, category: g.genre, name: def.name,
-                                        detail: "\(mode.title.uppercased()) · \(Int(def.tempo)) BPM", bank: "\(mode.title.uppercased()) KITS", user: false))
+                        out.append(Item(id: def.id, number: n, category: def.genre, name: def.name,
+                                        detail: "\(mode.title.uppercased()) · \(Int(def.tempo)) BPM", bank: "\(mode.title.uppercased()) KITS",
+                                        user: false, family: def.family))
                     }
                 }
             }
@@ -100,7 +103,7 @@ struct BrowserView: View {
     private var chips: [String] {
         switch kind {
         case .presets: return ["ALL", "STRAIGHT", "SWING", "< 90", "90–110", "110–130", "130+"]
-        case .kits: return ["ALL", "TRAP", "WEST COAST", "SOUL & R&B", "BREAKS", "POP", "WORLD"]
+        case .kits: return ["ALL"] + KitLibrary.families
         }
     }
 
@@ -116,7 +119,7 @@ struct BrowserView: View {
         if chip != "ALL" {
             items = items.filter { i in
                 switch kind {
-                case .kits: return i.category == chip
+                case .kits: return i.family == chip
                 case .presets:
                     guard let p = PatternBank.preset(named: i.name) else { return false }
                     switch chip {
