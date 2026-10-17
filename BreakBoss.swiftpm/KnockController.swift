@@ -257,6 +257,12 @@ final class KnockController: ObservableObject {
         pushPadMask(); scheduleSave()
     }
 
+    /// Every track back in (a dark lamp on a track another SOLO silenced).
+    func clearSolos() {
+        state.soloPads = nil
+        pushPadMask(); scheduleSave()
+    }
+
     /// FL-style: with any solo on, only soloed channels sound; mutes always silence.
     static func padMask(muted: [Bool], solo: [Bool]) -> UInt16 {
         let anySolo = solo.contains(true)
@@ -844,8 +850,14 @@ final class KnockController: ObservableObject {
     }
 
     /// PRESETS: load a pattern (and its tempo and swing). Sounds, mode and knobs stay.
+    /// A new pattern opens on its MAIN A, the whole groove: left on a part of the last one (the
+    /// INTRO or TOPS a LOOP pad picked) it played only some of its drums, or none.
     func loadPatternPreset(_ preset: PatternPreset) {
+        let playingLoop = Int(meters.status[1])
         restore(preset.applying(to: state), keepPlaying: true)   // the beat carries on with the new pattern
+        screenPattern = 0
+        if !isPlaying { engine.send(KEvent(kind: .cue, a: 0)) }
+        else if playingLoop != 0 { engine.send(KEvent(kind: .loopPad, a: 0)) }   // over to MAIN A at the bar
         readout = Readout(title: "PATTERN", value: preset.name, time: Date())
     }
 
