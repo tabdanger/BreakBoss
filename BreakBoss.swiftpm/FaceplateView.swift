@@ -47,23 +47,12 @@ struct FaceplateView: View {
     var body: some View {
         GeometryReader { geo in
             let mode = controller.mode
-            let device = deviceOverride ?? (UIDevice.current.userInterfaceIdiom == .phone ? .phone : .tablet)
+            let device = deviceOverride ?? .tablet          // iPad only for now
             if let layout = FaceplateLayout.forFace(controller.faceKey, device: device) ?? FaceplateLayout.forMode(mode, device: device) {
-                if layout.isPhone && geo.size.width > geo.size.height {
-                    // Keep the portrait instrument large enough to use after rotation.
-                    // The artwork stays proportional and every row remains reachable.
-                    let s = min(geo.size.width, max(360, geo.size.height * 1.05)) / layout.width
-                    ScrollView(.vertical) {
-                        plate(layout, mode: mode, s: s)
-                            .frame(width: layout.width * s, height: layout.height * s)
-                            .frame(maxWidth: .infinity)
-                    }
-                } else {
-                    let s = min(geo.size.width / layout.width, geo.size.height / layout.height)
-                    plate(layout, mode: mode, s: s)
-                        .frame(width: layout.width * s, height: layout.height * s)
-                        .position(x: geo.size.width / 2, y: geo.size.height / 2)
-                }
+                let s = min(geo.size.width / layout.width, geo.size.height / layout.height)
+                plate(layout, mode: mode, s: s)
+                    .frame(width: layout.width * s, height: layout.height * s)
+                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
             } else {
                 Text("The faceplate artwork is missing from the app.")
                     .foregroundColor(.white)
@@ -129,7 +118,7 @@ struct FaceplateView: View {
     /// Screen, ONE-SHOT / LOOP and the three mode buttons (each mode is its own faceplate).
     @ViewBuilder
     private func topLeft(_ L: FaceplateLayout, sfx: String, s: CGFloat) -> some View {
-        ScopeView(controller: controller, scale: L.isPhone ? s * 1.3 : s)
+        ScopeView(controller: controller, scale: s)
             .place(L.scope, s)
         if controller.playMode == .oneShot {
             Image(L.overlayName("oneshot_on", sfx)).resizable().place(L.oneShotButton, s)

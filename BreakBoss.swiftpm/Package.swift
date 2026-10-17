@@ -4,7 +4,7 @@
 import PackageDescription
 import AppleProductTypes
 
-// Universal standalone iPhone and iPad app for iOS 16 and later.
+// iPad app (and AUv3) for iOS 16 and later. iPhone comes back once the iPad version is right.
 // The repository's Xcode targets additionally build the existing AUv3 extension.
 let package = Package(
     name: "BreakBoss",
@@ -20,7 +20,7 @@ let package = Package(
             bundleVersion: "10",
             appIcon: .asset("AppIcon"),
             accentColor: .presetColor(.red),
-            supportedDeviceFamilies: [.phone, .pad],
+            supportedDeviceFamilies: [.pad],
             supportedInterfaceOrientations: [
                 .landscapeRight,
                 .landscapeLeft,

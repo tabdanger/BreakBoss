@@ -60,11 +60,7 @@ def main():
         "UIApplicationSceneManifest": {"UIApplicationSupportsMultipleScenes": True, "UISceneConfigurations": {}},
         "UIApplicationSupportsIndirectInputEvents": True,
         "UILaunchScreen": {},
-        "UISupportedInterfaceOrientations": [
-            "UIInterfaceOrientationPortrait",
-            "UIInterfaceOrientationLandscapeLeft",
-            "UIInterfaceOrientationLandscapeRight",
-        ],
+        "UISupportedInterfaceOrientations": ipad_orientations,
         "UISupportedInterfaceOrientations~ipad": ipad_orientations,
     }
     with open(EXTRA, "rb") as handle:

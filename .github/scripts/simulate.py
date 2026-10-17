@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the real BreakBoss self-test and snapshot renderer on iPhone and iPad."""
+"""Run the real BreakBoss self-test and snapshot renderer on an iPad."""
 import argparse
 import json
 import os
@@ -18,24 +18,22 @@ def simctl(*arguments, check=True, timeout=180, **kwargs):
 
 
 def select_devices(device_list):
-    """Use the newest installed available iOS runtime with both device families."""
+    """Use the newest installed available iOS runtime with an iPad."""
     runtimes = []
     for runtime, devices in device_list.get("devices", {}).items():
         if "iOS" not in runtime:
             continue
         devices = [d for d in devices if d.get("isAvailable", True)]
-        phones = [d for d in devices if d["name"].startswith("iPhone")]
         pads = [d for d in devices if d["name"].startswith("iPad")]
-        if phones and pads:
+        if pads:
             version = tuple(int(x) for x in re.findall(r"\d+", runtime))
-            runtimes.append((version, phones, pads))
+            runtimes.append((version, pads))
     if not runtimes:
-        raise RuntimeError("No available iOS runtime contains both iPhone and iPad simulators")
-    _, phones, pads = max(runtimes, key=lambda value: value[0])
-    # Prefer the regular Pro phone and 11-inch tablet to exercise realistic screen widths.
-    phone = next((d for d in phones if "Pro" in d["name"] and "Max" not in d["name"]), phones[0])
+        raise RuntimeError("No available iOS runtime contains an iPad simulator")
+    _, pads = max(runtimes, key=lambda value: value[0])
+    # Prefer the 11-inch tablet to exercise a realistic screen width.
     pad = next((d for d in pads if "11-inch" in d["name"]), pads[0])
-    return [("iphone", phone), ("ipad", pad)]
+    return [("ipad", pad)]
 
 
 def result_state(text):
@@ -48,13 +46,13 @@ def result_state(text):
 
 
 def expected_layout_names(family):
-    device = {"iphone": "phone", "ipad": "tablet"}[family]
+    device = {"ipad": "tablet"}[family]
     return {f"layout-{device}-{mode}-{play}.png"
             for mode in ("modern", "vintage", "texture") for play in ("loop", "oneshot")}
 
 
 def missing_layout_names(family, cache, started=None):
-    expected_size = {"iphone": (941, 1672), "ipad": (1448, 1086)}[family]
+    expected_size = {"ipad": (1448, 1086)}[family]
     missing = []
     for name in sorted(expected_layout_names(family)):
         path = cache / name if cache else None
@@ -79,8 +77,8 @@ def verify_bundle(app):
     for bundle in (app, app / "PlugIns" / "BreakBossAU.appex"):
         with (bundle / "Info.plist").open("rb") as file:
             info = plistlib.load(file)
-        if set(info.get("UIDeviceFamily", [])) != {1, 2}:
-            raise RuntimeError(f"{bundle.name} must support both iPhone and iPad (UIDeviceFamily 1,2)")
+        if set(info.get("UIDeviceFamily", [])) != {2}:
+            raise RuntimeError(f"{bundle.name} must be iPad-only for now (UIDeviceFamily 2)")
         manifests = [path for path in bundle.rglob("manifest.json")
                      if "PlugIns" not in path.relative_to(bundle).parts]
         if len(manifests) != 1:
@@ -94,7 +92,7 @@ def verify_bundle(app):
             if Path(filename).name != filename or not (manifest.parent / filename).is_file():
                 raise RuntimeError(f"{bundle.name} is missing stock sample {filename}")
         print(f"::notice title=Stock sounds::{bundle.name}: {len(assignments)} pad assignments resolve", flush=True)
-    print("::notice title=Universal app::App and AUv3 support iPhone and iPad", flush=True)
+    print("::notice title=iPad app::App and AUv3 are iPad-only for now", flush=True)
 
 
 def local_data_container(udid, bundle_id):

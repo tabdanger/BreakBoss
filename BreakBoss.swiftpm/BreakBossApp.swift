@@ -22,7 +22,7 @@ struct ContentView: View {
 
     var body: some View {
         FaceplateView(controller: controller)
-            .ignoresSafeArea(.container, edges: UIDevice.current.userInterfaceIdiom == .phone ? [] : .all)
+            .ignoresSafeArea(.container, edges: .all)
             .statusBarHidden(true)
             .persistentSystemOverlays(.hidden)
             .preferredColorScheme(.dark)
@@ -47,8 +47,8 @@ enum LayoutSnapshots {
         let start = controller.mode
         FaceplateView.snapshotMode = true
         defer { FaceplateView.snapshotMode = false }
-        for device in [FaceplateLayout.Device.tablet, .phone] {
-            let size = device == .phone ? CGSize(width: 941, height: 1672) : CGSize(width: 1448, height: 1086)
+        for device in [FaceplateLayout.Device.tablet] {
+            let size = CGSize(width: 1448, height: 1086)
             for mode in SoundMode.allCases {
                 controller.selectMode(mode)
                 for play in [PlayMode.loop, .oneShot] {
