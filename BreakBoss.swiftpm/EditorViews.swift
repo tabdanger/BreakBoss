@@ -56,7 +56,7 @@ struct PadEditorView: View {
                         }
                     }
                     Text("You can also drag an audio file from Files straight onto a pad. Imported sounds are copied to "
-                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreakBoss › Samples on this device."))
+                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreaKing › Samples on this device."))
                         .font(.footnote).foregroundColor(.secondary)
                 }
 
@@ -341,7 +341,7 @@ struct ExportView: View {
                     Section {
                         ShareLink(items: allURLs(out)) { Label("Share or save everything…", systemImage: "square.and.arrow.up") }
                         if !controller.isPlugin {
-                            Text("Also in Files › BreakBoss › Exports on this device.").font(.footnote).foregroundColor(.secondary)
+                            Text("Also in Files › BreaKing › Exports on this device.").font(.footnote).foregroundColor(.secondary)
                         }
                     }
                 }

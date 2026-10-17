@@ -70,7 +70,7 @@ def main():
     component_version = (parts[0] << 16) | (parts[1] << 8) | parts[2]
     plugin = {
         "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)",
-        "CFBundleDisplayName": "BreakBoss",
+        "CFBundleDisplayName": "BreaKing",
         "CFBundleExecutable": "$(EXECUTABLE_NAME)",
         "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
         "CFBundleInfoDictionaryVersion": "6.0",
@@ -81,9 +81,9 @@ def main():
         "NSExtension": {
             "NSExtensionAttributes": {
                 "AudioComponents": [{
-                    "description": "BreakBoss drum machine",
+                    "description": "BreaKing drum machine",
                     "manufacturer": "Tdgr",
-                    "name": "Tabdanger: BreakBoss",
+                    "name": "Tabdanger: BreaKing",
                     "sandboxSafe": True,
                     "subtype": "brbs",
                     "tags": ["Drums", "Sampler"],

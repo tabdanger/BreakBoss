@@ -59,6 +59,7 @@ struct SeqArt<Label: View>: View {
     var body: some View {
         ZStack {
             Image(sprite).resizable()
+            BrushedFinish(corner: corner * scale)
             if let lit {
                 RoundedRectangle(cornerRadius: corner * scale).fill(lit.opacity(0.16))
                 RoundedRectangle(cornerRadius: corner * scale).stroke(lit, lineWidth: 1.5 * scale)
@@ -179,5 +180,71 @@ struct FaceSlider: View {
         .accessibilityLabel("Slide right to go back to Face 1")
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { back() }
+    }
+}
+
+/// Brushed steel laid over a sprite: fine horizontal grain, light sweeping across it and a
+/// bevelled edge (lit on top, shadowed underneath).
+struct BrushedFinish: View {
+    var corner: CGFloat = 7
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: corner)
+        ZStack {
+            Canvas { ctx, size in
+                var light = Path(), dark = Path()
+                var y: CGFloat = 0.5
+                while y < size.height { light.addRect(CGRect(x: 0, y: y, width: size.width, height: 0.5)); y += 1.6 }
+                y = 1.3
+                while y < size.height { dark.addRect(CGRect(x: 0, y: y, width: size.width, height: 0.5)); y += 2.3 }
+                ctx.fill(light, with: .color(Color.white.opacity(0.05)))
+                ctx.fill(dark, with: .color(Color.black.opacity(0.08)))
+            }
+            LinearGradient(stops: [.init(color: .white.opacity(0.16), location: 0), .init(color: .white.opacity(0), location: 0.45),
+                                   .init(color: .white.opacity(0.07), location: 0.7), .init(color: .white.opacity(0), location: 1)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.4), .white.opacity(0), .black.opacity(0.45)], startPoint: .top, endPoint: .bottom), lineWidth: 1))
+        .allowsHitTesting(false)
+    }
+}
+
+/// A machined knob: a spun-metal cap (concentric grain, light caught in its facets) sitting in a dark
+/// well, with a groove on the cap and a white tick on the rim to read it by.
+struct MetalKnob: View {
+    var pointer = true
+
+    var body: some View {
+        GeometryReader { g in
+            let d = min(g.size.width, g.size.height)
+            let w = { (v: Double) in Color(white: v) }
+            ZStack {
+                Circle().fill(RadialGradient(colors: [w(0.02), w(0.18)], center: .center, startRadius: d * 0.32, endRadius: d * 0.5))
+                ZStack {
+                    Circle().fill(AngularGradient(colors: [w(0.96), w(0.6), w(0.9), w(0.52), w(0.96), w(0.58), w(0.9), w(0.55), w(0.96)], center: .center))
+                    Canvas { ctx, size in
+                        let c = CGPoint(x: size.width / 2, y: size.height / 2)
+                        var r: CGFloat = 1.5, i = 0
+                        while r < size.width / 2 {
+                            ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)),
+                                       with: .color(i % 2 == 0 ? Color.black.opacity(0.07) : Color.white.opacity(0.06)), lineWidth: 0.5)
+                            r += 1.2; i += 1
+                        }
+                    }
+                    Circle().strokeBorder(LinearGradient(colors: [.white.opacity(0.9), .black.opacity(0.55)], startPoint: .top, endPoint: .bottom), lineWidth: max(1, d * 0.03))
+                    if pointer {
+                        Capsule().fill(w(0.12)).frame(width: max(1.5, d * 0.06), height: d * 0.24).offset(y: -d * 0.22)
+                    }
+                }
+                .frame(width: d * 0.8, height: d * 0.8)
+                .shadow(color: .black.opacity(0.65), radius: d * 0.05, x: 0, y: d * 0.04)
+                if pointer {
+                    Capsule().fill(Color.white).frame(width: max(1.5, d * 0.05), height: d * 0.08).offset(y: -d * 0.455)
+                }
+            }
+            .frame(width: d, height: d)
+            .position(x: g.size.width / 2, y: g.size.height / 2)
+        }
     }
 }

@@ -64,7 +64,7 @@ enum MIDIPadMap: String, CaseIterable, Codable {
 
     var title: String {
         switch self {
-        case .standard: return "BreakBoss / MPC Chromatic C1 (36–47)"
+        case .standard: return "BreaKing / MPC Chromatic C1 (36–47)"
         case .mpcClassic: return "MPC Classic (A01–A12)"
         case .custom: return "Custom (MIDI learn)"
         }

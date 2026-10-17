@@ -45,6 +45,7 @@ final class SequencerUITests: XCTestCase {
         XCTAssertTrue(arrow.waitForExistence(timeout: 20), "the sequencer opens with a track arrow")
         sleep(1)
         snap("sequencer")
+        XCTAssertEqual(any("brandLogo").label, "BreaKing", "the sequencer wears the BreaKing logo")
 
         // draw a note, then UNDO takes it away and REDO brings it back
         let grid = any("grid")
@@ -128,6 +129,7 @@ final class SequencerUITests: XCTestCase {
             .press(forDuration: 0.1, thenDragTo: slider.coordinate(withNormalizedOffset: CGVector(dx: 1.0, dy: 0.5)))
         sleep(2)
         XCTAssertFalse(arrow.exists, "sliding right goes back to Face 1")
+        XCTAssertTrue(any("brandLogo").exists, "Face 1 wears the BreaKing logo")
         snap("back-to-face-1")
     }
 }

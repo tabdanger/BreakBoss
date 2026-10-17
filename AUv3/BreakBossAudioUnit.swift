@@ -80,7 +80,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
 
     /// MIDI OUT: the pattern's hits go to the host's MIDI output (route them to other plug-ins
     /// or external gear), each drum channel on its own MIDI channel.
-    public override var midiOutputNames: [String] { ["BreakBoss MIDI Out"] }
+    public override var midiOutputNames: [String] { ["BreaKing MIDI Out"] }
     /// The host's MIDI output block, read by the render block (set before rendering starts).
     private final class MIDIOutHolder { var block: AUMIDIOutputEventBlock? }
     private let midiOutHolder = MIDIOutHolder()

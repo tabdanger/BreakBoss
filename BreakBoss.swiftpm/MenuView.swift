@@ -64,7 +64,7 @@ struct MenuView: View {
                     Text("Your samples on the pads")
                 } footer: {
                     Text("Tap Import to put an audio file (WAV, AIFF, MP3, M4A, FLAC) on a pad. You can also drag a file from Files straight onto a pad, or hold a pad for its editor. Imported files are copied to "
-                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreakBoss › Samples on this device."))
+                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreaKing › Samples on this device."))
                 }
 
                 Section("Kits") {
@@ -110,7 +110,7 @@ struct MenuView: View {
                     Toggle(isOn: Binding(get: { controller.midiOutOn }, set: { controller.setMIDIOut($0) })) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("MIDI out to your DAW")
-                            Text(controller.isPlugin ? "Sent from the plug-in's MIDI output" : "Sent on the \"BreakBoss Out\" MIDI port")
+                            Text(controller.isPlugin ? "Sent from the plug-in's MIDI output" : "Sent on the \"BreaKing Out\" MIDI port")
                                 .font(.caption).foregroundColor(.secondary)
                         }
                     }
@@ -121,7 +121,7 @@ struct MenuView: View {
                         mapRow("One channel", "Every pad on MIDI channel 10 (General MIDI drums)")
                     }
                 } header: { Text("MIDI out") } footer: {
-                    Text("Everything you play on the pads and every note the patterns and drum roll play goes out as MIDI. In your DAW, record BreakBoss's MIDI output onto a track and the notes land in its piano roll, ready to edit. The 808 sends the note it plays. Pick each channel's MIDI channel and note in the drum roll (tap a channel name).")
+                    Text("Everything you play on the pads and every note the patterns and drum roll play goes out as MIDI. In your DAW, record BreaKing's MIDI output onto a track and the notes land in its piano roll, ready to edit. The 808 sends the note it plays. Pick each channel's MIDI channel and note in the drum roll (tap a channel name).")
                 }
 
                 Section("How it works") {
@@ -138,7 +138,7 @@ struct MenuView: View {
 
                 Section {
                     HStack {
-                        Text("BreakBoss")
+                        Text("BreaKing")
                         Spacer()
                         Text(versionText).foregroundColor(.secondary).font(.system(.body, design: .monospaced))
                     }

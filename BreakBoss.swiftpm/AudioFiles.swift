@@ -10,7 +10,7 @@ enum SampleLoader {
         case tooLong
         var errorDescription: String? {
             switch self {
-            case .unreadable(let name): return "\(name) isn't an audio file BreakBoss can read."
+            case .unreadable(let name): return "\(name) isn't an audio file BreaKing can read."
             case .tooLong: return "That sample is longer than 30 seconds."
             }
         }
@@ -129,7 +129,7 @@ enum MIDIFile {
         let usPerQuarter = Int(60_000_000 / max(tempo, 1))
         track += [0x00, 0xFF, 0x51, 0x03, UInt8(usPerQuarter >> 16 & 0xFF), UInt8(usPerQuarter >> 8 & 0xFF), UInt8(usPerQuarter & 0xFF)]
         track += [0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08]
-        let name = Array("BreakBoss".utf8)
+        let name = Array("BreaKing".utf8)
         track += [0x00, 0xFF, 0x03, UInt8(name.count)] + name
         var last = 0
         for e in events {
@@ -157,7 +157,7 @@ enum MIDIFile {
         let usPerQuarter = Int(60_000_000 / max(tempo, 1))
         meta += [0x00, 0xFF, 0x51, 0x03, UInt8(usPerQuarter >> 16 & 0xFF), UInt8(usPerQuarter >> 8 & 0xFF), UInt8(usPerQuarter & 0xFF)]
         meta += [0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08]
-        let title = Array("BreakBoss".utf8)
+        let title = Array("BreaKing".utf8)
         meta += [0x00, 0xFF, 0x03, UInt8(title.count)] + title
         meta += varLen(total) + [0xFF, 0x2F, 0x00]
         tracks.append(meta)

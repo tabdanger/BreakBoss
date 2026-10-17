@@ -930,7 +930,7 @@ final class KnockController: ObservableObject {
         var params = [Float](repeating: 0, count: KParam.count)
         for p in KParam.allCases { params[p.rawValue] = value(p) }
         let tempo = liveTempo
-        let name = "BreakBoss \(state.kitName) \(loops[loop].name) \(Int(tempo.rounded()))BPM"
+        let name = "BreaKing \(state.kitName) \(loops[loop].name) \(Int(tempo.rounded()))BPM"
         let job = Exporter.Job(kit: kit, patterns: patterns, loop: loop, params: params,
                                tempo: tempo, bars: bars, sampleRate: exportRate, baseName: name)
         DispatchQueue.global(qos: .userInitiated).async {
