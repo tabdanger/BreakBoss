@@ -1059,8 +1059,8 @@ struct SequencerView: View {
         return VStack(spacing: 0) {
             ForEach(Array(range.reversed()), id: \.self) { sm in
                 let note = base + sm
-                let inScale = !controller.snapToScale || controller.scale.contains(note, root: controller.scaleRoot)
-                let isRoot = controller.snapToScale && (note - controller.scaleRoot) % 12 == 0
+                let inScale = controller.scale.contains(note, root: controller.scaleRoot)
+                let isRoot = (note - controller.scaleRoot) % 12 == 0
                 HStack {
                     Spacer()
                     Text(MusicScale.noteName(note)).font(.system(size: 9 * s, design: .monospaced))
@@ -1234,11 +1234,13 @@ struct SequencerView: View {
                     let base = controller.baseNote(pad: l.channel.pad)
                     for (k, s) in range.reversed().enumerated() {
                         let note = base + s
-                        let inScale = !controller.snapToScale || controller.scale.contains(note, root: controller.scaleRoot)
-                        let isRoot = controller.snapToScale && (note - controller.scaleRoot) % 12 == 0
+                        let inScale = controller.scale.contains(note, root: controller.scaleRoot)
+                        let isRoot = (note - controller.scaleRoot) % 12 == 0
                         let y = l.pitchTop + CGFloat(k) * l.pitchRowH
+                        // the key's notes are lit (the root greener), the notes outside it are dark
                         ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: l.pitchRowH)),
                                  with: .color(isRoot ? S.green.opacity(0.1) : (inScale ? (k % 2 == 0 ? S.rowA : S.rowB) : Color.black.opacity(0.35))))
+                        if inScale && !isRoot { ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: l.pitchRowH)), with: .color(noteColor.opacity(0.07))) }
                         if s == 0 { ctx.fill(Path(CGRect(x: 0, y: y + l.pitchRowH - 1, width: size.width, height: 1)), with: .color(S.dim.opacity(0.5))) }
                     }
                     ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
