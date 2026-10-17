@@ -370,6 +370,9 @@ final class KnockController: ObservableObject {
     /// sequencer means an empty pattern is what plays.
     private(set) var screenPattern = 0
 
+    /// The sequencer switched the pattern on screen ("Loop on screen").
+    func showPattern(_ i: Int) { if loops.indices.contains(i) { screenPattern = i } }
+
     /// Plays the given pattern from its start (or keeps it going if it's already the one playing).
     func playPattern(_ loop: Int) {
         guard loops.indices.contains(loop) else { return }
