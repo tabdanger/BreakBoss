@@ -14,3 +14,11 @@ button), `SeqRow` (a rack row with the name blanked), `SeqKnob`, the left panel'
 The rectangles the controls sit on are in `SequencerView.A` (picture pixels).
 
     python3 tools/sequencer_art/build_controls.py BreakBoss.swiftpm
+
+Oct 17: `build_bays.py` paints the flat grey slabs under the SOUNDS / GENERATE panel and the
+channel rack (and the smear left where the Drum Track button was painted out) as brushed metal.
+The SOUNDS / GENERATE headers are no longer sprites: they're `PlatinumPlate` (SwiftUI, the slider
+knob's metal) and slide over their wells. Order: build_controls.py, build_bays.py, build_finishes.py.
+
+    python3 tools/sequencer_art/build_bays.py BreakBoss.swiftpm
+    python3 tools/sequencer_art/build_finishes.py BreakBoss.swiftpm

@@ -218,6 +218,7 @@ final class KnockController: ObservableObject {
 
     func padDown(_ pad: Int, velocity: Float) {
         guard pad >= 0 && pad < Pad.count else { return }
+        guard powerOn else { readout = Readout(title: "POWER", value: "OFF", time: Date()); return }
         if playMode == .loop {
             screenPattern = pad
             engine.send(KEvent(kind: .loopPad, a: Int32(pad), value: Double(velocity)))
@@ -311,7 +312,22 @@ final class KnockController: ObservableObject {
     }
 
     private func pushPadMask() {
-        engine.send(KEvent(kind: .padMask, a: Int32(KnockController.padMask(muted: mutedPads, solo: soloPads))))
+        let mask = powerOn ? KnockController.padMask(muted: mutedPads, solo: soloPads) : 0
+        engine.send(KEvent(kind: .padMask, a: Int32(mask)))
+    }
+
+    /// Face 2's power button: off stops the pattern and silences every pad (taps, MIDI in, the
+    /// sequencer and MIDI out) until it's pressed again. Not saved: the app always opens powered on.
+    @Published private(set) var powerOn = true
+    func togglePower() {
+        powerOn.toggle()
+        if !powerOn {
+            if recording { setRecording(false) }
+            stopPlayback()
+            engine.send(KEvent(kind: .allOff))
+        }
+        pushPadMask()
+        readout = Readout(title: "POWER", value: powerOn ? "ON" : "OFF", time: Date())
     }
 
     @Published private(set) var recording = false
@@ -356,6 +372,7 @@ final class KnockController: ObservableObject {
     /// recording (the pattern keeps playing). If the pattern is already running, recording just
     /// starts on the next hit, no count-in.
     func toggleRecordPads(loop: Int? = nil) {
+        guard powerOn || recording else { readout = Readout(title: "POWER", value: "OFF", time: Date()); return }
         if recording {
             setRecording(false)
             readout = Readout(title: "RECORD", value: "OFF", time: Date())
@@ -390,6 +407,7 @@ final class KnockController: ObservableObject {
     /// Plays the given pattern from its start (or keeps it going if it's already the one playing).
     func playPattern(_ loop: Int) {
         guard loops.indices.contains(loop) else { return }
+        guard powerOn else { readout = Readout(title: "POWER", value: "OFF", time: Date()); return }
         screenPattern = loop
         if isPlaying && Int(meters.status[1]) == loop { return }
         if isPlaying { engine.send(KEvent(kind: .stop)) }
