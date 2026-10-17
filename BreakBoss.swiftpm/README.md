@@ -4,6 +4,18 @@ TestFlight release: **0.3.2 (build 13)**, available to the existing internal tes
 
 Universal iPhone and iPad app for iOS 16 and later. The existing Xcode pipeline also builds its AUv3 extension.
 
+## Test it in Swift Playgrounds on iPad (no AUv3, no Mac)
+
+This folder is the whole standalone app; the AUv3 plug-in is only added by the Xcode build on GitHub. To run it on the iPad:
+
+1. In Safari, open the repository on GitHub, pick the branch, then Code › Download ZIP.
+2. In Files, tap the ZIP to unzip it and open the unzipped folder.
+3. Tap `BreakBoss.swiftpm`; it opens in Swift Playgrounds. Press Run (▶).
+
+## Bug reports
+
+BreakBoss keeps a log while you play: launches, audio interruptions and route changes, notices on screen, kit / preset / mode changes, memory warnings, screen freezes over 2 seconds, and anything printed to the console. If the app crashes, the next launch opens the report by itself with the crash (the Swift error line and the call stack). Any time, MENU › Testing › Bug report: write what happened, then Copy report (paste it in the project chat) or Share report as a file. Logs and reports live in Files › BreakBoss › Bug Reports (`log.txt`, `previous-run.txt`, `last-crash.txt`). Crash catching runs in the standalone app only, not in the AUv3 plug-in.
+
 ## Open
 
 The app-only download `BreakBoss-v0.3.2.swiftpm.zip` contains `Package.swift` directly at the ZIP root. Unzip it in Files, open the resulting `BreakBoss-v0.3.2.swiftpm` in Swift Playgrounds on iPad, and press Run. Keep your previous project as a backup. If opening the older archive, open its inner `BreakBoss.swiftpm` folder; its outer folder contains documentation and is not the app. Install the compiled universal app through the existing TestFlight app on iPhone or iPad.
