@@ -12,9 +12,9 @@ import UniformTypeIdentifiers
 //           sound. Each row: the ▶ triangle expands the track into its piano roll, the name,
 //           LEVEL and PAN knobs, the on/off lamp, and the track's own dice (randomizes only
 //           that track's steps).
-//   Right:  the STEP GRID (16 steps a bar), the track's piano roll when expanded, the velocity
-//           lane under it. DRAW / SELECT / ERASE, undo / redo, SNAP, SNAP TO SCALE, SWING and
-//           HUMANIZE, pinch to zoom (SNAP follows), 2 / 4 / 8 / 16 bars.
+//   Right:  the STEP GRID (16 steps a bar), the track's piano roll when expanded, and the graph
+//           a track's arrow drops down under its steps (VELOCITY / PITCH). DRAW / SELECT /
+//           ERASE, undo / redo, SNAP, SNAP TO SCALE, SWING and HUMANIZE, pinch to zoom (SNAP follows), 2 / 4 / 8 / 16 bars.
 //   Bottom: PATTERN and KIT pickers with arrows.
 // All note changes go through KnockController.setLoop, so the engine, presets, MIDI out and
 // MIDI export all see the same pattern. The rack's channels sit on the faceplate's 12 pads.
@@ -81,8 +81,7 @@ struct SequencerView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     enum Tool { case draw, select, erase }
-    /// The lane's header: VELOCITY edits velocities in the lane; PITCH opens the track's piano roll,
-    /// where each note is dragged up or down for its pitch (the lane keeps showing velocity).
+    /// What the graph under the open track edits, picked from the menu on the graph's header.
     enum Lane: String, CaseIterable { case velocity = "VELOCITY", pitch = "PITCH" }
     enum Panel { case sounds, generate }
 
@@ -263,8 +262,7 @@ struct SequencerView: View {
         static let pageBack: [Double] = [400, 246, 436, 280], pageText: [Double] = [436, 248, 534, 278], pageForward: [Double] = [534, 246, 572, 280]
         static let leftPanel: [Double] = [33, 300, 285, 693]
         static let rackX0: Double = 298, rackX1: Double = 534, gridX0: Double = 549, gridX1: Double = 1445, panelX1: Double = 1495
-        static let rowsY0: Double = 341, rowsY1: Double = 594, rowH: Double = 56.5, labelsY: Double = 325
-        static let laneY0: Double = 600, laneY1: Double = 682
+        static let rowsY0: Double = 341, rowsY1: Double = 682, rowH: Double = 56.5, labelsY: Double = 325
         static let padsButton: [Double] = [97, 725, 137, 760], gridButton: [Double] = [47, 727, 87, 760]
         static let drumTrack: [Double] = [158, 715, 348, 768], drumCircle: [Double] = [164, 719, 212, 767]
         static let patternBack: [Double] = [602, 732, 640, 772], patternForward: [Double] = [640, 732, 677, 772], patternChip: [Double] = [677, 732, 841, 772]
@@ -717,7 +715,7 @@ struct SequencerView: View {
         }
     }
 
-    // MARK: Editor: the rack and the grid on the picture's panels, the velocity lane under them
+    // MARK: Editor: the rack and the grid on the picture's panels
 
     @ViewBuilder private func editor(_ s: CGFloat) -> some View {
         let rowH = A.rowH * s
@@ -764,9 +762,6 @@ struct SequencerView: View {
         if rackTargeted {
             RoundedRectangle(cornerRadius: 8 * s).stroke(S.green, lineWidth: 2 * s).place([A.rackX0, A.rowsY0 - 4, A.rackX1, A.rowsY1], s).allowsHitTesting(false)
         }
-        // the velocity lane
-        laneHeader(s).place([A.rackX0 + 4, A.laneY0, A.rackX1, A.laneY1], s)
-        laneView(width: gridW, height: (A.laneY1 - A.laneY0) * s).place([A.gridX0, A.laneY0, A.gridX1, A.laneY1], s)
     }
 
     /// The graph dropped down under the open track: velocity bars, or pitch bars either side of a centre line.
@@ -872,7 +867,7 @@ struct SequencerView: View {
             Text(ch.name).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? noteColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 92 * s, height: 45 * s, alignment: .leading).offset(x: X(335), y: 5 * s)
                 .allowsHitTesting(false)
-            // the arrow: this track's lane (velocity / pitch, and the piano roll from the lane's menu)
+            // the arrow: drops this track's graph down under its steps (velocity / pitch)
             let isOpen = openID == ch.id
             Button {
                 withAnimation(.easeInOut(duration: 0.22)) { openID = isOpen ? nil : ch.id }
@@ -901,10 +896,36 @@ struct SequencerView: View {
                 pitchKeys(l, s: s).offset(y: rowH + toolbarH(rowH))
             }
             if l.graphH > 0 {
-                HStack(spacing: 6 * s) {
-                    Image(systemName: lane == .velocity ? "waveform.path" : "arrow.up.and.down").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(noteColor)
-                    Text(lane == .velocity ? "VELOCITY" : "PITCH").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(noteColor)
-                    Spacer()
+                // the graph's header: tap VELOCITY / PITCH to switch; the dice gives new velocities
+                VStack(alignment: .leading, spacing: 6 * s) {
+                    HStack(spacing: 6 * s) {
+                        HStack(spacing: 6 * s) {
+                            Image(systemName: lane == .velocity ? "waveform.path" : "arrow.up.and.down").font(.system(size: 11 * s, weight: .semibold)).foregroundColor(noteColor)
+                            Text(lane.rawValue).font(.system(size: 11 * s, weight: .semibold)).foregroundColor(noteColor)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.down").font(.system(size: 9 * s, weight: .semibold)).foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 8 * s).frame(width: 140 * s, height: 30 * s)
+                        .background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
+                        .contentShape(Rectangle())
+                        .bbMenu(title: ch.name, width: 240) {
+                            [BBMenuItem.item("VELOCITY", detail: "how hard each hit plays", icon: "waveform.path", checked: lane == .velocity) {
+                                withAnimation(.easeInOut(duration: 0.22)) { lane = .velocity }
+                             },
+                             BBMenuItem.item("PITCH", detail: "each hit's pitch, ±12 semitones", icon: "arrow.up.and.down", checked: lane == .pitch) {
+                                withAnimation(.easeInOut(duration: 0.22)) { lane = .pitch }
+                             }]
+                        }
+                        // velocity dice: new velocities for this track (or just the selected notes)
+                        Button {
+                            commit(PatternEdit.randomizeVelocity(pattern, pad: pad, keys: selection, seed: UInt64.random(in: 1...UInt64.max)))
+                        } label: {
+                            Image(systemName: "dice.fill").font(.system(size: 13 * s)).foregroundColor(.white)
+                                .frame(width: 36 * s, height: 30 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(SeqPress())
+                    }
                     Text(lane == .velocity ? "DRAG A BAR UP OR DOWN" : "DRAG A BAR: ±12 SEMITONES").font(.system(size: 7 * s, weight: .semibold, design: .monospaced)).foregroundColor(Color(white: 0.45)).lineLimit(1)
                 }
                 .padding(.horizontal, 10 * s)
@@ -1406,86 +1427,7 @@ struct SequencerView: View {
         }
     }
 
-    // MARK: Velocity / pitch lane
-
-    /// The track whose velocity / pitch the lane edits: the one opened with its arrow.
-    private var laneChannel: WorkspaceChannel? { channels.first { $0.id == openID } }
-    private var lanePad: Int? { laneChannel?.pad }
-
-    private func laneHeader(_ s: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 4 * s) {
-            HStack(spacing: 6 * s) {
-                HStack {
-                    Text(lane.rawValue).font(.system(size: 12 * s, weight: .medium)).foregroundColor(.white)
-                    Spacer()
-                    Image(systemName: "chevron.down").font(.system(size: 10 * s, weight: .semibold)).foregroundColor(.white)
-                }
-                .padding(.horizontal, 10 * s).frame(width: 150 * s, height: 36 * s)
-                .background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
-                .contentShape(Rectangle())
-                .bbMenu(title: laneChannel?.name ?? "Lane", width: 240) {
-                    [BBMenuItem.item("VELOCITY", detail: "how hard each hit plays", icon: "waveform.path", checked: lane == .velocity) {
-                        withAnimation(.easeInOut(duration: 0.22)) { lane = .velocity }
-                     },
-                     BBMenuItem.item("PITCH", detail: "each hit's pitch, ±12 semitones", icon: "arrow.up.and.down", checked: lane == .pitch) {
-                        withAnimation(.easeInOut(duration: 0.22)) { lane = .pitch }
-                     }]
-                }
-                // velocity dice: new velocities only (selected notes, or the selected track, or all)
-                Button {
-                    commit(PatternEdit.randomizeVelocity(pattern, pad: lanePad ?? selectedPad, keys: selection, seed: UInt64.random(in: 1...UInt64.max)))
-                } label: {
-                    Image(systemName: "dice.fill").font(.system(size: 14 * s)).foregroundColor(.white)
-                        .frame(width: 40 * s, height: 36 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.1)).overlay(RoundedRectangle(cornerRadius: 6 * s).stroke(Color(white: 0.3), lineWidth: 1)))
-                }
-            }
-            Text(laneChannel?.name ?? "TAP A TRACK'S ARROW TO OPEN ITS GRAPH").font(.system(size: 9 * s, weight: .semibold, design: .monospaced))
-                .foregroundColor(laneChannel == nil ? Color(white: 0.4) : noteColor).lineLimit(1)
-            Spacer(minLength: 0)
-        }
-        .padding(.top, 6 * s)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-
-
-    private func laneView(width w: CGFloat, height h: CGFloat) -> some View {
-        Canvas { ctx, size in
-            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(S.lane))
-            for frac in [0.0, 0.5, 1.0] {
-                ctx.fill(Path(CGRect(x: 0, y: CGFloat(frac) * (size.height - 8) + 4, width: size.width, height: 1)), with: .color(S.stepLine))
-            }
-            var lt = ((pageStart + PatternData.ppq - 1) / PatternData.ppq) * PatternData.ppq
-            while lt <= pageStart + pageTicks {
-                let bx = CGFloat(lt - pageStart) / CGFloat(pageTicks) * size.width
-                let bar = lt % PatternEdit.barTicks == 0
-                ctx.fill(Path(CGRect(x: bx, y: 0, width: bar ? 1.5 : 1, height: size.height)), with: .color(bar ? S.beatLine : S.stepLine))
-                lt += PatternData.ppq
-            }
-            let marks: [(String, CGFloat, UnitPoint)] = lane == .velocity
-                ? [("127", 1, .topTrailing), ("64", 0.5, .trailing), ("0", 0, .bottomTrailing)]
-                : [("+12", 1, .topTrailing), ("0", 0.5, .trailing), ("-12", 0, .bottomTrailing)]
-            for m in marks {
-                let y = 4 + (1 - m.1) * (size.height - 8)
-                ctx.draw(Text(m.0).font(.system(size: 10, design: .monospaced)).foregroundColor(Color.white.opacity(0.55)),
-                         at: CGPoint(x: size.width - 4, y: m.1 == 1 ? y + 2 : (m.1 == 0 ? y - 2 : y)), anchor: m.2)
-            }
-            for e in pattern.events where visible(e) && lanePad != nil && Int(e.pad) == lanePad {
-                let sel = selection.contains(NoteKey(e))
-                let v: CGFloat = lane == .velocity ? CGFloat(e.velocity) : CGFloat((e.semis.clamped(-12, 12) + 12) / 24)
-                let bx = x(e.tick, size.width) + 3
-                let top = 4 + (1 - v) * (size.height - 8)
-                ctx.fill(Path(CGRect(x: bx, y: top, width: 5, height: size.height - 4 - top)),
-                         with: .color((sel ? Color.white : noteColor).opacity(selection.isEmpty || sel ? 0.95 : 0.35)))
-            }
-        }
-        .contentShape(Rectangle())
-        .gesture(DragGesture(minimumDistance: 0)
-            .onChanged { g in laneChanged(g, w: w, h: h) }
-            .onEnded { _ in
-                if let p = work { work = nil; controller.setLoop(loop, p) } else if laneOrigin != nil { _ = undoStack.popLast() }
-                laneOrigin = nil
-            })
-    }
+    // MARK: The graph under the open track
 
     @State private var laneOrigin: PatternData?
 
@@ -1498,18 +1440,6 @@ struct SequencerView: View {
         }.map(NoteKey.init))
         guard !keys.isEmpty else { return }
         apply(graphValue: v, to: keys, pad: pad)
-    }
-
-    private func laneChanged(_ g: DragGesture.Value, w: CGFloat, h: CGFloat) {
-        guard let lanePad else { return }      // the lane edits the track opened with its arrow
-        if laneOrigin == nil { laneOrigin = pattern; undoStack.append(pattern); redoStack = [] }
-        let v = Float(1 - (g.location.y - 4) / (h - 8)).clamped(0, 1)
-        let keys = Set(pattern.events.filter { e in
-            visible(e) && abs(x(e.tick, w) + 5 - g.location.x) <= 8 && (selection.isEmpty || selection.contains(NoteKey(e)))
-                && Int(e.pad) == lanePad
-        }.map(NoteKey.init))
-        guard !keys.isEmpty else { return }
-        apply(graphValue: v, to: keys, pad: lanePad)
     }
 
     /// Sets velocity or pitch (whichever graph is showing) on the notes under the finger.
