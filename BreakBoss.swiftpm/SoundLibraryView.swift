@@ -54,21 +54,22 @@ enum SoundType: String, CaseIterable, Identifiable {
 }
 
 extension SoundType {
-    /// Stock sounds are named by category ("KICK BOOM 07", "SHAKER 03"): the first word says which.
+    /// A stock sound's name ends in what it is ("ASTRONOMY KICK", "THRONE OPEN HIHAT", "SUKUNA E1 808").
     static func forStockName(_ name: String) -> SoundType? {
-        let words = name.split(separator: " ")
-        switch words.first.map(String.init) ?? "" {
+        let words = name.split(separator: " ").map(String.init)
+        guard let last = words.last else { return nil }
+        if words.count >= 2, words[words.count - 2] == "OPEN", last == "HAT" || last == "HIHAT" { return .open }
+        switch last {
         case "KICK": return .kick
         case "SNARE": return .snare
         case "CLAP": return .clap
-        case "RIM", "SNAP": return .rim
-        case "HAT": return .hat
-        case "OPEN": return .open
+        case "RIM", "RIMSHOT", "SNAP": return .rim
+        case "HAT", "HIHAT": return .hat
         case "808": return .bass
-        case "PERC", "SHAKER", "TAMB", "CLAVE", "TRIANGLE", "CONGA", "BONGO", "BELL", "BEADS": return .perc
+        case "PERC", "SHAKER", "TAMB", "TAMBOURINE", "TRIANGLE", "COWBELL", "CLAVE": return .perc
         case "TOM": return .tom
-        case "CYMBAL": return .cymbal
-        case "FX": return .fx
+        case "CYMBAL", "CRASH", "RIDE": return .cymbal
+        case "FX", "SFX", "LAZER", "SCRATCH", "RISER", "TEXTURE": return .fx
         default: return nil
         }
     }
