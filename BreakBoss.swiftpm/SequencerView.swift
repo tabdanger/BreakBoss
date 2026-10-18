@@ -864,9 +864,11 @@ struct SequencerView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             guard let ch = selected else { return }
-            controller.replaceRackSound(ch.id, with: sound)
             let pad = ch.pad
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { controller.auditionPad(pad) }
+            // heard once the engine has it: a fixed wait played the old sound when loading took longer
+            controller.replaceRackSound(ch.id, with: sound) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) { controller.auditionPad(pad) }
+            }
         }
         .onDrag {
             NSItemProvider(object: (soundDragPrefix + sound.id) as NSString)
@@ -1194,7 +1196,7 @@ struct SequencerView: View {
                     selectedID = ch.id
                 }) { channelMenu(ch) }
                 .accessibilityIdentifier("trackHeader\(pad)")
-            ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 36 * s, height: 36 * s).offset(x: 135 * s, y: 11.5 * s)
+            ArtKnob(value: ps.level / PadSettings.maxLevel, reset: 0.8 / PadSettings.maxLevel) { v, _ in set { $0.level = v * PadSettings.maxLevel } }.frame(width: 36 * s, height: 36 * s).offset(x: 135 * s, y: 11.5 * s)
             ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 36 * s, height: 36 * s).offset(x: 184 * s, y: 11.5 * s)
             // the lamp: on / off
             if muted { Circle().fill(Color(white: 0.12)).overlay(Circle().stroke(Color.black, lineWidth: 1)).frame(width: 13 * s, height: 13 * s).offset(x: 231.5 * s, y: 23 * s).allowsHitTesting(false) }

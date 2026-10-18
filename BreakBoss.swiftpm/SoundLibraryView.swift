@@ -319,10 +319,11 @@ struct SoundLibraryView: View {
 
     /// Puts the sound on this channel and plays it once it's loaded.
     private func load(_ s: LibrarySound) {
-        controller.importSample(s.url, toPad: pad)
-        loadedID = s.id
         let p = pad
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { controller.auditionPad(p) }
+        controller.importSample(s.url, toPad: pad) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) { controller.auditionPad(p) }
+        }
+        loadedID = s.id
     }
 
     /// A whole pack onto the 12 channels: each channel gets the pack's first sound of its type.

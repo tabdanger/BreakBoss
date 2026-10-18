@@ -4,7 +4,7 @@ import Foundation
 // MARK: - Per-pad settings (pad editor)
 
 struct PadSettings: Codable, Equatable {
-    /// 0...1, 0.8 = unity.
+    /// 0...maxLevel, 0.8 = unity (100%), maxLevel = 200% (+12 dB).
     var level: Float = 0.8
     /// -1 (left) ... 1 (right)
     var pan: Float = 0
@@ -25,6 +25,11 @@ struct PadSettings: Codable, Equatable {
     }
 
     var gain: Float { level <= 0.001 ? 0 : KnockMath.dbToGain(40 * log10f(level / 0.8)) }
+
+    /// A track's volume goes to 200%, +12 dB (Tyrone, Oct 18). Knobs and sliders turn 0...1 over 0...maxLevel.
+    static let maxLevel: Float = 1.6
+    /// What a volume control shows: 100% at unity, 200% at the top.
+    static func levelText(_ level: Float) -> String { String(format: "%.0f%%", level / 0.8 * 100) }
 }
 
 extension PadSettings {
