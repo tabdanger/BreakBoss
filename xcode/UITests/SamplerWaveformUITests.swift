@@ -133,7 +133,8 @@ final class SamplerWaveformUITests: XCTestCase {
             if c.playing && !playingShot && c.far > 0.05 { picture("sample-page-playing", of: window); picture("waveform-playing", of: wave, width: 1200); playingShot = true }
             if c.resets > rest.resets && !c.playing { break }
         }
-        XCTAssertEqual(now.hits, rest.hits + 1, "the hit restarts the cursor (\(now))")
+        // one tap can be several hits (the track's arpeggiator or chord): the cursor follows each newest one
+        XCTAssertGreaterThanOrEqual(now.hits, rest.hits + 1, "the hit restarts the cursor (\(now))")
         XCTAssertEqual(now.resets, rest.resets + 1, "the cursor resets when the hit ends (\(now))")
         XCTAssertFalse(now.playing, "the cursor rests once the hit has ended")
         XCTAssertEqual(now.position, rest.position, accuracy: 0.002, "it rests at the sound's start again")

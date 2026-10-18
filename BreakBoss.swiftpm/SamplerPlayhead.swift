@@ -207,11 +207,12 @@ struct SamplerPlayhead: UIViewRepresentable {
         }
 
         /// The cursor's pale light: the mode's colour lifted toward white.
-        private var paleColor: UIColor {
-            guard let c = cursor?.color else { return .white }
+        private var paleColor: UIColor { cursor.map { Self.lifted($0.color, 0.6) } ?? .white }
+
+        private static func lifted(_ c: UIColor, _ amount: CGFloat) -> UIColor {
             var r: CGFloat = 1, g: CGFloat = 1, b: CGFloat = 1, a: CGFloat = 1
             c.getRed(&r, green: &g, blue: &b, alpha: &a)
-            return UIColor(red: r + (1 - r) * 0.6, green: g + (1 - g) * 0.6, blue: b + (1 - b) * 0.6, alpha: 1)
+            return UIColor(red: r + (1 - r) * amount, green: g + (1 - g) * amount, blue: b + (1 - b) * amount, alpha: 1)
         }
 
         private func changed(from old: SamplerPlayhead?) {
@@ -248,7 +249,8 @@ struct SamplerPlayhead: UIViewRepresentable {
             imageToken += 1
             let token = imageToken
             let size = bounds.size, sample = cursor.sample, zoom = Double(cursor.zoom), scroll = Double(cursor.scroll)
-            let bright = cursor.color, pale = paleColor
+            // the played part: the mode's light lifted a little toward white, not the cursor's pale
+            let bright = cursor.color, lift = Self.lifted(cursor.color, 0.3)
             DispatchQueue.global(qos: .userInitiated).async {
                 let cols = peaks.columns(sample, count: max(1, Int(size.width * scale)), zoom: zoom, scroll: scroll)
                 let format = UIGraphicsImageRendererFormat()
@@ -256,7 +258,7 @@ struct SamplerPlayhead: UIViewRepresentable {
                 let image = UIGraphicsImageRenderer(size: size, format: format).image { r in
                     let ctx = r.cgContext
                     let mid = size.height / 2, w = 1 / scale
-                    ctx.setFillColor(pale.withAlphaComponent(0.55).cgColor)
+                    ctx.setFillColor(lift.withAlphaComponent(0.5).cgColor)
                     for (c, (lo, hi)) in cols.enumerated() {
                         ctx.fill(CGRect(x: CGFloat(c) * w, y: mid - CGFloat(hi) * mid * 0.92, width: w,
                                         height: max(w, CGFloat(hi - lo) * mid * 0.92)))
