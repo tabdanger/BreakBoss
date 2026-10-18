@@ -247,6 +247,8 @@ struct SequencerView: View {
         /// Hold a step and pull down: the step plays `count` even hits (note repeat).
         case noteRepeat(pad: Int, cellStart: Int32, like: GrooveEvent, origin: PatternData, count: Int, fromPaint: Bool)
         case graph(pad: Int, top: CGFloat, height: CGFloat)
+        /// A tap on a note's ⊕ or ⊖ (done when the finger lands; the rest of the touch does nothing).
+        case octave
     }
 
     private typealias S = DrumRollStyle
@@ -1061,20 +1063,35 @@ struct SequencerView: View {
         }
     }
 
+    /// Where a note's ⊕ (over it) and ⊖ (under it) sit, in grid points, and their size.
+    private func octaveGlyphCenters(_ r: CGRect, gridW: CGFloat) -> (up: CGPoint, down: CGPoint, size: CGFloat) {
+        let d = 30 * gridW / CGFloat(A.gridX1 - A.gridX0)
+        return (CGPoint(x: r.midX, y: r.minY - d * 0.65), CGPoint(x: r.midX, y: r.maxY + d * 0.65), d)
+    }
+    /// True for a touch on the note's ⊕, false for its ⊖, nil for neither.
+    private func octaveGlyphHit(_ p: CGPoint, _ key: NoteKey, w: CGFloat, L: [RowLayout]) -> Bool? {
+        guard let e = pattern.events.first(where: { NoteKey($0) == key }), visible(e), let r = noteRect(e, w: w, L) else { return nil }
+        let c = octaveGlyphCenters(r, gridW: w), reach = c.size * 0.65
+        if hypot(p.x - c.up.x, p.y - c.up.y) <= reach { return true }
+        if hypot(p.x - c.down.x, p.y - c.down.y) <= reach { return false }
+        return nil
+    }
+
     /// ⊕ over the note and ⊖ under it after a two-finger tap (or a right-click) on it: the note goes
     /// up or down an octave, C1 to C8.
     @ViewBuilder private func noteOctaveGlyphs(_ L: [RowLayout], gridW: CGFloat, s: CGFloat) -> some View {
         if let key = octaveNote, let e = pattern.events.first(where: { NoteKey($0) == key }), visible(e), let r = noteRect(e, w: gridW, L) {
-            let d = 30 * s, x0 = (A.gridX0 - A.rackX0) * s
+            let c = octaveGlyphCenters(r, gridW: gridW), x0 = (A.gridX0 - A.rackX0) * s
             let keys = selection.contains(key) ? selection : [key]
             let canMove = { (by: Int) in PatternEdit.transpose(pattern, keys, by: by, limits: { controller.pitchLimits(pad: $0) }) != nil }
             let name = MusicScale.noteName(controller.baseNote(pad: Int(key.pad)) + Int(key.semis.rounded()))
-            octaveGlyph(true, size: d, enabled: canMove(12)) { moveOctave(key, by: 1) }
+            // pictures only: the grid's touch handles them (octaveGlyphHit), so a tap can't land on both
+            octaveGlyphFace(true, size: c.size, enabled: canMove(12))
                 .accessibilityLabel("Note up an octave").accessibilityValue(name).accessibilityIdentifier("noteOctaveUp")
-                .position(x: x0 + r.midX, y: r.minY - d * 0.65)
-            octaveGlyph(false, size: d, enabled: canMove(-12)) { moveOctave(key, by: -1) }
+                .position(x: x0 + c.up.x, y: c.up.y)
+            octaveGlyphFace(false, size: c.size, enabled: canMove(-12))
                 .accessibilityLabel("Note down an octave").accessibilityValue(name).accessibilityIdentifier("noteOctaveDown")
-                .position(x: x0 + r.midX, y: r.maxY + d * 0.65)
+                .position(x: x0 + c.down.x, y: c.down.y)
         }
     }
 
@@ -1497,17 +1514,25 @@ struct SequencerView: View {
 
     /// A plus or minus in a see-through circle (Tyrone, Oct 18): the piano roll's octave buttons.
     private func octaveGlyph(_ up: Bool, size: CGFloat, enabled: Bool = true, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: up ? "plus" : "minus").font(.system(size: size * 0.48, weight: .bold)).foregroundColor(.white)
-                .frame(width: size, height: size)
-                .background(Circle().fill(Color.white.opacity(0.1)))
-                .overlay(Circle().stroke(Color.white.opacity(0.8), lineWidth: 1.5))
-                .shadow(color: Color.black.opacity(0.6), radius: 2)
-                .contentShape(Circle())
-        }
-        .buttonStyle(SeqPress())
-        .disabled(!enabled)
-        .opacity(enabled ? 1 : 0.35)
+        Button(action: action) { octaveCircle(up, size: size).contentShape(Circle()) }
+            .buttonStyle(SeqPress())
+            .disabled(!enabled)
+            .opacity(enabled ? 1 : 0.35)
+    }
+    private func octaveCircle(_ up: Bool, size: CGFloat) -> some View {
+        Image(systemName: up ? "plus" : "minus").font(.system(size: size * 0.48, weight: .bold)).foregroundColor(.white)
+            .frame(width: size, height: size)
+            .background(Circle().fill(Color.white.opacity(0.1)))
+            .overlay(Circle().stroke(Color.white.opacity(0.8), lineWidth: 1.5))
+            .shadow(color: Color.black.opacity(0.6), radius: 2)
+    }
+    /// The note's ⊕ / ⊖: the picture, a button to VoiceOver and tests; touches go to the grid under it.
+    private func octaveGlyphFace(_ up: Bool, size: CGFloat, enabled: Bool) -> some View {
+        octaveCircle(up, size: size)
+            .opacity(enabled ? 1 : 0.35)
+            .allowsHitTesting(false)
+            .accessibilityElement(children: .ignore)
+            .accessibilityAddTraits(.isButton)
     }
 
 
@@ -1880,6 +1905,8 @@ struct SequencerView: View {
             ended: { panStart = nil },
             twoFingerTap: { points in
                 // a two-finger tap or a right-click on a note: its octave glyphs (a touch on the grid hides them)
+                // the tap is over: the next touch on the grid draws again even if no drag ended
+                twoFinger = false; drag = .none; work = nil
                 if let hit = points.lazy.compactMap({ noteAt($0, w: w, L: L) }).first {
                     octaveNote = NoteKey(hit)
                     if let l = layout(for: Int(hit.pad), L) { selectedID = l.channel.id }
@@ -2028,6 +2055,12 @@ struct SequencerView: View {
 
     private func gridChanged(_ g: DragGesture.Value, w: CGFloat, L: [RowLayout]) {
         if case .none = drag {
+            // the note's ⊕ / ⊖ are drawn over the grid; the grid's own touch takes them
+            if let key = octaveNote, let up = octaveGlyphHit(g.startLocation, key, w: w, L: L) {
+                drag = .octave
+                moveOctave(key, by: up ? 1 : -1)
+                return
+            }
             if octaveNote != nil { octaveNote = nil }
             let start = g.startLocation
             guard let l = layout(at: start.y, L) else { return }
@@ -2162,7 +2195,7 @@ struct SequencerView: View {
                 work = PatternEdit.remove(pattern, [NoteKey(hit)])
                 selection.remove(NoteKey(hit))
             }
-        case .none:
+        case .none, .octave:
             break
         }
     }
@@ -2215,7 +2248,7 @@ struct SequencerView: View {
             } else {
                 selection = Set(pattern.events.filter { visible($0) && (noteRect($0, w: w, L).map { rect.intersects($0) } ?? false) }.map(NoteKey.init))
             }
-        case .none:
+        case .none, .octave:
             break
         }
     }

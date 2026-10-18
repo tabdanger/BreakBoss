@@ -227,20 +227,22 @@ final class SequencerUITests: XCTestCase {
         print("UITREE glyph up \(noteUp.frame) down \(noteDown.frame) grid \(grid.frame) hittable \(noteUp.isHittable)")
         let start = name()
         print("UITREE note \(start)")
+        // the note's glyphs are pictures over the grid (the grid takes the touch): tap where they are
+        func press(_ e: XCUIElement) { e.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
         func octave(_ n: String, _ by: Int) -> String {
             let letters = n.prefix { !$0.isNumber && $0 != "-" }
             return "\(letters)\((Int(n.dropFirst(letters.count)) ?? 0) + by)"
         }
-        noteUp.tap()
+        press(noteUp)
         sleep(1)
         print("UITREE after plus: \(notes()), keys \(keys()), note \(name())")
         if !noteUp.exists { dumpTree("after plus") }
         XCTAssertEqual(name(), octave(start, 1), "plus moves the note up an octave")
         print("UITREE keys after plus: \(keys())")
         snap("note-up")
-        noteDown.tap()
+        press(noteDown)
         sleep(1)
-        noteDown.tap()
+        press(noteDown)
         sleep(1)
         XCTAssertEqual(name(), octave(start, -1), "minus moves it down an octave")
         XCTAssertEqual(notes(), drawn, "moving octaves keeps one note")
