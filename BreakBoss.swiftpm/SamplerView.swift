@@ -466,7 +466,15 @@ struct SamplerWindow: View {
 
     private func contentPanel(_ s: CGFloat) -> some View {
         panel("Content", s) {
-            toggleRow("Keep on disk", sm.keepOnDisk, x: 22, y: 56, s, id: "samplerKeepOnDisk") { edit { $0.keepOnDisk.toggle() } }
+            // Keep on disk (Tyrone, Oct 18): lit while the channel holds its own loaded sample; off goes
+            // back to the kit's sound, on opens Files to load one
+            toggleRow("Keep on disk", controller.state.pads[pad].sampleFile != nil, x: 22, y: 56, s, id: "samplerKeepOnDisk") {
+                if controller.state.pads[pad].sampleFile != nil {
+                    var ps = controller.state.pads[pad]; ps.sampleFile = nil; controller.setPadSettings(pad, ps)
+                } else {
+                    importFile()
+                }
+            }
             toggleRow("Resample", sm.resample, x: 22, y: 102, s, id: "samplerResample") { edit { $0.resample.toggle() } }
             toggleRow("Load regions", sm.loadRegions, x: 314, y: 56, s, id: "samplerLoadRegions") { edit { $0.loadRegions.toggle() } }
             toggleRow("Load slice markers", sm.loadSliceMarkers, x: 314, y: 102, w: 340, s, id: "samplerSliceMarkers") { edit { $0.loadSliceMarkers.toggle() } }
