@@ -591,7 +591,7 @@ struct SequencerView: View {
         hostSwitch("FOLLOW DAW", .followDAW, A.followDAW, s)
         // tempo, bars, gear, cloud
         // tempo: slide up for faster, down for slower; a tap opens the tempo panel
-        SeqChip(sprite: "SeqChipBpm", text: "\(Int(controller.liveTempo.rounded())) BPM", size: 17, leading: 24, trailing: 52, scale: s, color: tempoDragStart == nil ? .white : accent)
+        SeqChip(sprite: "SeqChipBpm", text: "\(Int((controller.tempoIsExternal ? controller.liveTempo : controller.state.bpm).rounded())) BPM", size: 17, leading: 24, trailing: 52, scale: s, color: tempoDragStart == nil ? .white : accent)
             .accessibilityIdentifier("tempoChip")
             .bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
             // the slide sits outside the tap's button (inside it, the button kept the drag and the tempo never moved)
