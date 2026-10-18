@@ -243,10 +243,18 @@ struct SamplerWindow: View {
         .frame(width: Self.artW * s, height: Self.artH * s, alignment: .topLeading)
     }
 
+    /// BreaKing with its K in the mode's light, as in the renders.
+    private var brand: Text {
+        let a: Text = Text("Brea").foregroundColor(skin.ink)
+        let k: Text = Text("K").foregroundColor(skin.glow)
+        let b: Text = Text("ing").foregroundColor(skin.ink)
+        return a + k + b
+    }
+
     private func titleBar(_ s: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
             SamplerMetal(tone: skin.surface, corner: 6 * s).spot(26, 8, 1356, 58, s)
-            (Text("Brea").foregroundColor(skin.ink) + Text("K").foregroundColor(skin.glow) + Text("ing").foregroundColor(skin.ink))
+            brand
                 .font(.system(size: 34 * s, weight: .bold).width(.expanded))
                 .shadow(color: .black.opacity(0.4), radius: 0, y: 1)
                 .lineLimit(1).minimumScaleFactor(0.5)
