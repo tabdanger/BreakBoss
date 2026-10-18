@@ -119,9 +119,13 @@ enum SamplerTarget: Int, CaseIterable {
     var title: String { ["Panning", "Volume", "Mod X", "Mod Y", "Pitch"][rawValue] }
 }
 
+/// The filter's type (MOD X is its cutoff, MOD Y its resonance). Fast LP is a light one-pole low-pass
+/// (fully open with MOD Y at 0 it's bypassed, the default); MOD Y turns it into a resonant one. LP and
+/// LPx2 are resonant biquads (LPx2 two in a row, steeper); BP, HP, BS and the SVF ones are a
+/// state-variable filter (SVF LPx2 two in a row).
 enum SamplerFilterType: Int, Codable, CaseIterable {
-    case fastLP, lp, bp, hp, bs, lp2
-    var title: String { ["Fast LP", "LP", "BP", "HP", "BS", "LPx2"][rawValue] }
+    case fastLP, lp, bp, hp, bs, lp2, svfLP, svfLP2
+    var title: String { ["Fast LP", "LP", "BP", "HP", "BS", "LPx2", "SVF LP", "SVF LPx2"][rawValue] }
 }
 
 /// DELAY, ATT, HOLD, DEC, SUS, REL and the three TENSIONs. Knob values 0…1.
@@ -147,6 +151,16 @@ struct SamplerEnvelope: Codable, Equatable, Hashable {
         let x = Double(v.clamped(0, 1))
         return x * x * x * (tempo ? 16 : 8)
     }
+
+    /// The knob setting for a length in beats (Tempo on); `scale` is 0.5 for the LFO's knobs.
+    static func knob(beats: Double, scale: Double = 1) -> Float {
+        Float(min(1, cbrt(max(0, beats / scale) / 16)))
+    }
+
+    /// The tempo lengths a time knob's Set menu offers, in beats.
+    static let tempoLengths: [(String, Double)] = [("1/64", 1.0 / 16), ("1/32", 0.125), ("1/16T", 1.0 / 6), ("1/16", 0.25), ("1/8T", 1.0 / 3),
+                                                   ("1/8", 0.5), ("1/4T", 2.0 / 3), ("1/4 (beat)", 1), ("1/2", 2), ("1 bar", 4),
+                                                   ("2 bars", 8), ("4 bars", 16)]
 }
 
 /// The LFO: shape (sine, triangle, square), DELAY, ATT, AMT, SPEED, Tempo and Global.
@@ -170,7 +184,10 @@ struct SamplerLFO: Codable, Equatable, Hashable {
 
 /// One track's sampler. Nil on a pad = never opened: its sound plays exactly as it always has.
 struct SamplerSettings: Codable, Equatable {
-    // the header: PITCH turns ± RANGE semitones
+    // the header: VOL pre-amplifies the sound before the mode's effects, 0…200% (0.5 = 100% = 0 dB,
+    // all the way up +12 dB; the rack's volume stays 0…100%),
+    // PITCH turns ± RANGE semitones
+    var volume: Float = 0.5
     var pitch: Float = 0
     var range = 2
     // Content
@@ -227,6 +244,12 @@ struct SamplerSettings: Codable, Equatable {
 
     var mul: Double { pow(4, Double(multiplier.clamped(0, 1) - 0.5) * 2) }
 
+    /// VOL's gain: straight up to 100% in the middle, then up to +12 dB.
+    static func preGain(_ v: Float) -> Float {
+        let x = v.clamped(0, 1)
+        return x <= 0.5 ? x * 2 : powf(4, (x - 0.5) * 2)
+    }
+
     func envelope(_ t: SamplerTarget) -> SamplerEnvelope { envelopes.indices.contains(t.rawValue) ? envelopes[t.rawValue] : SamplerEnvelope() }
     func lfo(_ t: SamplerTarget) -> SamplerLFO { lfos.indices.contains(t.rawValue) ? lfos[t.rawValue] : SamplerLFO() }
     mutating func setEnvelope(_ t: SamplerTarget, _ change: (inout SamplerEnvelope) -> Void) {
@@ -276,7 +299,7 @@ struct SamplerSettings: Codable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case pitch, range, keepOnDisk, resample, loadRegions, loadSliceMarkers, declick, startOffset, useLoop, pingPong
+        case volume, pitch, range, keepOnDisk, resample, loadRegions, loadSliceMarkers, declick, startOffset, useLoop, pingPong
         case loopStart, loopEnd, markers
         case stretchPitch, multiplier, time, stretch, removeDC, normalize, reverse, reversePolarity, fadeStereo, swapStereo
         case start, length, fadeIn, fadeOut, crossfade, trim, envelopes, lfos, cutoff, resonance, filterType
@@ -290,7 +313,7 @@ extension SamplerSettings {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         func v<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T { (try? c.decodeIfPresent(T.self, forKey: key)) ?? fallback }
         let d = SamplerSettings()
-        pitch = v(.pitch, d.pitch); range = v(.range, d.range)
+        volume = v(.volume, d.volume); pitch = v(.pitch, d.pitch); range = v(.range, d.range)
         keepOnDisk = v(.keepOnDisk, d.keepOnDisk); resample = v(.resample, d.resample)
         loadRegions = v(.loadRegions, d.loadRegions); loadSliceMarkers = v(.loadSliceMarkers, d.loadSliceMarkers)
         declick = v(.declick, d.declick); startOffset = v(.startOffset, d.startOffset)
@@ -556,6 +579,8 @@ enum SamplerProcessor {
 /// A track's sampler as the audio thread reads it (built when the kit is published).
 struct SamplerRT {
     var active = false
+    /// The header's VOL as a gain: 0 at the bottom, 1 in the middle, 4 (+12 dB) all the way up.
+    var preGain: Float = 1
     /// The header's PITCH × RANGE, the root note and the fine tune, in semitones.
     var semis: Float = 0
     var mainPitch = true
@@ -587,6 +612,7 @@ struct SamplerRT {
     init(_ s: SamplerSettings?) {
         guard let s else { return }
         active = true
+        preGain = SamplerSettings.preGain(s.volume)
         let bend = s.pitch.clamped(-1, 1) * Float(max(1, s.range))
         semis = (s.addToKey ? bend.rounded() : bend) + Float(60 - s.rootNote) + s.fineTune.clamped(-100, 100) / 100
         mainPitch = s.mainPitch
@@ -748,10 +774,13 @@ struct SamplerVoice {
     var panL: Float = 1, panR: Float = 1
     var rateMul: Double = 1
     var done = false
-    // the filter: one-pole coefficient, or the SVF's (two stages for LPx2)
+    /// How the filter runs this block: 0 one-pole, 1 biquad, 2 state-variable.
+    var filterMode = 0
+    // the one-pole coefficient, the SVF's (two stages for the x2 types) and the biquad's
     var c1: Float = 1, a1: Float = 0, a2: Float = 0, a3: Float = 0, k: Float = 2
     var s1L: Float = 0, s2L: Float = 0, s1R: Float = 0, s2R: Float = 0
     var t1L: Float = 0, t2L: Float = 0, t1R: Float = 0, t2R: Float = 0
+    var b0: Float = 1, b1: Float = 0, b2: Float = 0, q1: Float = 0, q2: Float = 0
     var sampleRate: Float = 48_000
     // looping
     var looping = false
@@ -784,7 +813,8 @@ struct SamplerVoice {
         cutoff = rt.cutoff
         resonance = rt.resonance
         filterType = rt.filterType
-        filterOn = filterType != .fastLP || cutoff < 0.999 || env.2.on || env.3.on || lfo.2.on || lfo.3.on
+        // Fast LP fully open with no resonance is bypassed (the default)
+        filterOn = filterType != .fastLP || cutoff < 0.999 || resonance > 0.001 || env.2.on || env.3.on || lfo.2.on || lfo.3.on
         gain = env.1.on ? 0 : 1
         control(0)
         gain = env.1.on ? env.1.value : gain
@@ -827,15 +857,32 @@ struct SamplerVoice {
 
         guard filterOn else { return }
         var x = cutoff, y = resonance
-        if env.2.on { x += env.2.advance(n) * env.2.amount }
+        if env.2.on {
+            // the envelope opens the filter up to MOD X (or, turned left, closes it from there), so it's
+            // heard even with the filter wide open
+            let v = env.2.advance(n), a = env.2.amount
+            x *= a >= 0 ? 1 - a * (1 - v) : 1 + a * v
+        }
         if lfo.2.on { x += lfo.2.advance(n, age: age) }
         if env.3.on { y += env.3.advance(n) * env.3.amount }
         if lfo.3.on { y += lfo.3.advance(n, age: age) }
         x = x.clamped(0, 1); y = y.clamped(0, 1)
         let hz = min(20 * powf(1000, x), sampleRate * 0.45)
-        if filterType == .fastLP {
+        switch filterType {
+        case .fastLP where y <= 0.001:
+            filterMode = 0
             c1 = x >= 0.999 ? 1 : 1 - expf(-2 * .pi * hz / sampleRate)
-        } else {
+        case .lp, .lp2:
+            // RBJ low-pass, its Q from MOD Y (a gentler peak for two in a row)
+            filterMode = 1
+            let q = 0.707 + y * (filterType == .lp2 ? 5 : 11)
+            let w = 2 * Float.pi * hz / sampleRate
+            let cw = cosf(w), alpha = sinf(w) / (2 * q)
+            let a0 = 1 + alpha
+            b0 = (1 - cw) / 2 / a0; b1 = (1 - cw) / a0; b2 = b0
+            q1 = -2 * cw / a0; q2 = (1 - alpha) / a0
+        default:
+            filterMode = 2
             let gg = tanf(.pi * hz / sampleRate)
             k = 2 - 1.96 * y
             a1 = 1 / (1 + gg * (gg + k)); a2 = gg * a1; a3 = gg * a2
@@ -846,18 +893,29 @@ struct SamplerVoice {
     @inline(__always)
     mutating func filter(_ l: inout Float, _ r: inout Float) {
         guard filterOn else { return }
-        if filterType == .fastLP {
+        switch filterMode {
+        case 0:
             guard c1 < 1 else { return }
             s1L += c1 * (l - s1L); s1R += c1 * (r - s1R)
             l = s1L; r = s1R
-            return
-        }
-        let type = filterType, b1 = a1, b2 = a2, b3 = a3, kk = k
-        l = Self.svf(l, &s1L, &s2L, type, b1, b2, b3, kk)
-        r = Self.svf(r, &s1R, &s2R, type, b1, b2, b3, kk)
-        if type == .lp2 {
-            l = Self.svf(l, &t1L, &t2L, .lp, b1, b2, b3, kk)
-            r = Self.svf(r, &t1R, &t2R, .lp, b1, b2, b3, kk)
+        case 1:
+            // transposed direct form II; the x2 type runs a second one on the SVF's spare state
+            let x = l, z = r
+            l = b0 * x + s1L; s1L = b1 * x - q1 * l + s2L; s2L = b2 * x - q2 * l
+            r = b0 * z + s1R; s1R = b1 * z - q1 * r + s2R; s2R = b2 * z - q2 * r
+            if filterType == .lp2 {
+                let x2 = l, z2 = r
+                l = b0 * x2 + t1L; t1L = b1 * x2 - q1 * l + t2L; t2L = b2 * x2 - q2 * l
+                r = b0 * z2 + t1R; t1R = b1 * z2 - q1 * r + t2R; t2R = b2 * z2 - q2 * r
+            }
+        default:
+            let type = filterType, f1 = a1, f2 = a2, f3 = a3, kk = k
+            l = Self.svf(l, &s1L, &s2L, type, f1, f2, f3, kk)
+            r = Self.svf(r, &s1R, &s2R, type, f1, f2, f3, kk)
+            if type == .svfLP2 {
+                l = Self.svf(l, &t1L, &t2L, .svfLP, f1, f2, f3, kk)
+                r = Self.svf(r, &t1R, &t2R, .svfLP, f1, f2, f3, kk)
+            }
         }
     }
 
@@ -1018,6 +1076,15 @@ struct SamplerEnvelopePreset: Codable, Equatable, Identifiable {
         make("Fat snare", "Snare", hold: 0.18, decay: 0.48, release: 0.25, drop: 0.12, dropDecay: 0.15),
         make("Roomy snare", "Snare", hold: 0.18, decay: 0.55, sustain: 0.1, release: 0.42)
     ]
+
+    /// The box method: the sound stays at full level while the note is held (Hold all the way up, the
+    /// rest at zero) and stops the moment it's let go.
+    static let boxMethod: SamplerEnvelopePreset = {
+        var e = SamplerSettings.defaultEnvelopes
+        e[SamplerTarget.volume.rawValue] = SamplerEnvelope(on: true, delay: 0, attack: 0, hold: 1, decay: 0, sustain: 1,
+                                                          release: 0.05, attackTension: 0, decayTension: 0, releaseTension: 0, amount: 1)
+        return SamplerEnvelopePreset(name: "Box method", kind: "Basic", envelopes: e)
+    }()
 
     /// Your own presets (saved on this device).
     static var saved: [SamplerEnvelopePreset] {

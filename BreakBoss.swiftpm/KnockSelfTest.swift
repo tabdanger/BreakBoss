@@ -570,6 +570,66 @@ enum KnockSelfTest {
         check(energy(plain, blocks: 50...60) > 1 && energy(offset, blocks: 50...60) < energy(plain, blocks: 50...60) * 0.01,
               "Sampler: START OFFSET starts the sound later in")
 
+        // Tyrone, Oct 18 (build 82): every ENVELOPE-page control changes the sound
+        func stereo(_ settings: PadSettings, _ sample: SampleBuffer = long, blocks: ClosedRange<Int>) -> (Float, Float) {
+            var all = Array(repeating: PadSettings(), count: Pad.count)
+            all[0] = settings
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0), (.velocity, 0), (.boost, 0), (.clipper, 0),
+                                            (.clipDrive, 0), (.gatedReverb, 0), (.textureDelay, 0)]
+            for (p, v) in quiet { e.setParam(p, v) }
+            e.kitHandoff.publish(KitBuffers(name: "SAMPLER", samples: Array(repeating: sample, count: Pad.count), settings: all, bassHz: 110))
+            e.send(KEvent(kind: .pad, a: 0, value: 1))
+            var l2: Float = 0, r2: Float = 0
+            for b in 0...blocks.upperBound {
+                var left = [Float](repeating: 0, count: 128), right = left
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+                if blocks.contains(b) { l2 += left.reduce(0) { $0 + $1 * $1 }; r2 += right.reduce(0) { $0 + $1 * $1 } }
+            }
+            return (l2, r2)
+        }
+        let low = SampleBuffer(left: (0..<48_000).map { sinf(Float($0) * 2 * .pi * 110 / 48_000) * 0.3 }, sampleRate: rate)
+        for type in SamplerFilterType.allCases {
+            var f = PadSettings(); f.sampler = SamplerSettings(); f.sampler?.filterType = type
+            f.sampler?.cutoff = type == .hp ? 0.75 : (type == .bs ? 0.2468 : 0.2); f.sampler?.resonance = type == .fastLP ? 0.4 : 0
+            let sample = type == .hp || type == .bs ? low : long
+            let changed = energy(f, sample, blocks: 5...20), was = energy(plain, sample, blocks: 5...20)
+            check(changed < was * 0.3, "Sampler: the \(type.title) filter changes the sound (\(changed) vs \(was))")
+        }
+        let box = SamplerEnvelopePreset.boxMethod
+        var boxed = PadSettings(); boxed.sampler = SamplerSettings(); boxed.sampler?.envelopes = box.envelopes
+        check(energy(boxed, blocks: 2...8) > energy(plain, blocks: 2...8) * 0.9 && energy(boxed, blocks: tail) < energy(plain, blocks: tail) * 0.001,
+              "Sampler: the box method plays at full level and stops when the note ends")
+        var swept = PadSettings(); swept.sampler = SamplerSettings()
+        swept.sampler?.setEnvelope(.modX) { $0.on = true; $0.attack = 0; $0.hold = 0; $0.decay = 0.2; $0.sustain = 0; $0.amount = 1 }
+        check(energy(swept, blocks: tail) < energy(plain, blocks: tail) * 0.1, "Sampler: a Mod X envelope closes the open filter")
+        var wobble = PadSettings(); wobble.sampler = SamplerSettings()
+        wobble.sampler?.setLFO(.pan) { $0.shape = 2; $0.amount = 1 }
+        let (wl, wr) = stereo(wobble, blocks: 5...60)
+        check(wr > wl * 4, "Sampler: a square LFO on the panning moves the sound (L \(wl), R \(wr))")
+        var tremolo = PadSettings(); tremolo.sampler = SamplerSettings()
+        tremolo.sampler?.setLFO(.volume) { $0.shape = 2; $0.amount = -1 }
+        check(abs(energy(tremolo, blocks: 5...300) - energy(plain, blocks: 5...300)) > energy(plain, blocks: 5...300) * 0.2,
+              "Sampler: an LFO on the volume changes the level")
+        var bent = PadSettings(); bent.sampler = SamplerSettings()
+        bent.sampler?.setEnvelope(.pan) { $0.on = true; $0.attack = 0; $0.hold = 0.4; $0.amount = -1 }
+        let (bl, br) = stereo(bent, blocks: 5...30)
+        check(bl > br * 4, "Sampler: the Panning envelope turned left moves the sound left (L \(bl), R \(br))")
+        check(abs(SamplerEnvelope.units(SamplerEnvelope.knob(beats: 1), tempo: true) - 1) < 0.001
+              && abs(SamplerEnvelope.units(SamplerEnvelope.knob(beats: 2, scale: 0.5), tempo: true) * 0.5 - 2) < 0.001,
+              "Sampler: a knob's Set menu puts it on a tempo length")
+        var loud = PadSettings(); loud.sampler = SamplerSettings(); loud.sampler?.volume = 1
+        var soft = PadSettings(); soft.sampler = SamplerSettings(); soft.sampler?.volume = 0.25
+        let unity = energy(plain, blocks: 5...20)
+        let up = energy(loud, blocks: 5...20) / unity, down = energy(soft, blocks: 5...20) / unity
+        check(up > 6 && down > 0.15 && down < 0.35,
+              "Sampler: VOL goes from silence to +12 dB, 100% in the middle (×\(up), ×\(down))")
+        let dragged = SamplerWindow.dragged(SamplerEnvelope(), handle: 4, dx: 0, dy: -0.3)
+        check(dragged.on && abs(dragged.sustain - 0.2) < 0.001, "Sampler: dragging the sustain point down lowers the sustain")
+        let bulged = SamplerWindow.dragged(SamplerEnvelope(), handle: 6, dx: 0, dy: 0.25)
+        check(bulged.attackTension < -0.4, "Sampler: dragging the attack curve up bends it")
+
         // Realtime stretching: ×2 plays twice as long with nothing computed first
         let quarter = SampleBuffer(left: (0..<12_000).map { sinf(Float($0) * 2 * .pi * 220 / 48_000) * 0.5 }, sampleRate: rate)
         var realtime = PadSettings(); realtime.sampler = SamplerSettings()

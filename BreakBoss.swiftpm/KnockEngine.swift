@@ -1053,6 +1053,7 @@ final class KnockEngine {
             sample = hits[Int(padHits[pad] % UInt32(hits.count))]
             velGain = sqrtf(min(1, v / max(layers.tops[l], 0.001)))
         }
+        if rt.active { velGain *= rt.preGain }
         let globalSemis = Float(Int(((params[KParam.pitch.rawValue] - 0.5) * 24).rounded()))
         let cents = (params[KParam.tune.rawValue] - 0.5) * 200
         // the sampler's "Enable main pitch" off: this track ignores the faceplate's PITCH and TUNE
