@@ -87,6 +87,7 @@ struct SamplerKnob: View {
     let change: (Float, Bool) -> Void
     @State private var start: Float?
     @State private var live: Float?
+    @State private var lastTap = Date.distantPast
 
     var body: some View {
         let v = live ?? value
@@ -143,8 +144,12 @@ struct SamplerKnob: View {
                 change(n, true)
                 start = nil; live = nil
             })
-        // double tap: back to its default
-        .simultaneousGesture(TapGesture(count: 2).onEnded { if let reset { change(reset, true) } })
+        // double tap: back to its default (two single taps timed here: a count-2 tap gesture next to the
+        // knob's two-finger menu recognizer never fired in the simulator)
+        .simultaneousGesture(TapGesture().onEnded {
+            let now = Date()
+            if now.timeIntervalSince(lastTap) < 0.4, let reset { change(reset, true); lastTap = .distantPast } else { lastTap = now }
+        })
     }
 }
 

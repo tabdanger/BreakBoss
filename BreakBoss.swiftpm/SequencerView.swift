@@ -592,7 +592,10 @@ struct SequencerView: View {
         // tempo, bars, gear, cloud
         // tempo: slide up for faster, down for slower; a tap opens the tempo panel
         SeqChip(sprite: "SeqChipBpm", text: "\(Int(controller.liveTempo.rounded())) BPM", size: 17, leading: 24, trailing: 52, scale: s, color: tempoDragStart == nil ? .white : accent)
-            .simultaneousGesture(DragGesture(minimumDistance: 6)
+            .accessibilityIdentifier("tempoChip")
+            .bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
+            // the slide sits outside the tap's button (inside it, the button kept the drag and the tempo never moved)
+            .highPriorityGesture(DragGesture(minimumDistance: 6)
                 .onChanged { g in
                     guard !controller.tempoIsExternal else { return }
                     if tempoDragStart == nil { tempoDragStart = controller.state.bpm }
@@ -600,8 +603,6 @@ struct SequencerView: View {
                     if bpm != controller.state.bpm { controller.setBPM(min(280, max(40, bpm))) }
                 }
                 .onEnded { _ in tempoDragStart = nil })
-            .accessibilityIdentifier("tempoChip")
-            .bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
         SeqChip(sprite: "SeqChipBars", text: "\(bars) BARS", size: 17, leading: 18, trailing: 52, scale: s)
             .accessibilityIdentifier("barsChip")
             .bbMenuPlaced(A.bars, s, title: "Pattern length") {

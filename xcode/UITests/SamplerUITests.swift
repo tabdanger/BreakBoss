@@ -62,7 +62,7 @@ final class SamplerUITests: XCTestCase {
             default: break
             }
         }
-        print("UITREE PROBE \(what): \(p)")
+        print("UITREE PROBE \(what): \(p)  [given:\(text.components(separatedBy: " lfoV=").dropFirst().first.map { " lfoV=" + $0 } ?? "")]")
         return p
     }
 
@@ -269,6 +269,7 @@ final class SamplerUITests: XCTestCase {
             any("samplerPolyMaxUp").coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
             sleep(1)
             print("UITREE STEP MAX after a second + = \(any("samplerPolyMax").value ?? "?")")
+            _ = probe("settings after MAX +")
             snap("max-stepper")
         }
         XCTAssertEqual(any("samplerPolyMax").value as? String, "1", "MAX steps up from no limit")

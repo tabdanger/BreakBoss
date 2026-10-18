@@ -763,8 +763,8 @@ final class KnockController: ObservableObject {
         // what the engine was given, so a probe that didn't change can be told from a setting that didn't arrive
         let sm = state.pads.indices.contains(pad) ? state.pads[pad].sampler : nil
         let lv = sm?.lfo(.volume), ev = sm?.envelope(.volume)
-        let given = String(format: " lfoV=%.2f/%d/%.2f envV=%d/%d/%.2f", lv?.amount ?? 0, lv?.shape ?? 0, lv?.speed ?? 0,
-                           (ev?.on ?? false) ? 1 : 0, (ev?.tempo ?? false) ? 1 : 0, ev?.attack ?? 0)
+        let given = String(format: " lfoV=%.2f/%d/%.2f envV=%d/%d/%.2f max=%d cut=%d", lv?.amount ?? 0, lv?.shape ?? 0, lv?.speed ?? 0,
+                           (ev?.on ?? false) ? 1 : 0, (ev?.tempo ?? false) ? 1 : 0, ev?.attack ?? 0, sm?.polyMax ?? -1, sm?.cutGroup ?? -1)
         return String(format: "L=%.4f R=%.4f early=%.4f late=%.4f zc=%d hf=%.4f", l2, r2, early, late, crossings, diff / max(quarter, 1e-12)) + given
     }
 
