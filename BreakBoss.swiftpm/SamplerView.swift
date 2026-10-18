@@ -240,7 +240,8 @@ struct SamplerWindow: View {
         GeometryReader { geo in
             let s = min(geo.size.width / Self.artW, geo.size.height / Self.artH)
             ZStack(alignment: .topLeading) {
-                bezel(s)
+                // the window's own id sits on its bezel: on the whole window it would replace every control's id
+                bezel(s).accessibilityElement().accessibilityIdentifier("samplerWindow")
                 titleBar(s)
                 tabStrip(s)
                 switch page {
@@ -261,7 +262,6 @@ struct SamplerWindow: View {
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .aspectRatio(Self.artW / Self.artH, contentMode: .fit)
-        .accessibilityIdentifier("samplerWindow")
         .alert("Save the envelope", isPresented: Binding(get: { savingKind != nil }, set: { if !$0 { savingKind = nil } })) {
             TextField("Name", text: $presetName)
             Button("Save") { savePreset() }
