@@ -101,12 +101,6 @@ extension View {
         modifier(BBContextTrigger(title: title, width: width, items: items))
     }
 
-    /// bbContextMenu only where there is a menu: a knob with none carries no extra touch recognizers
-    /// (in the simulator a stepper's + beside one never got its tap).
-    @ViewBuilder func bbContextMenuIf(_ on: Bool, title: String? = nil, width: CGFloat = 280, items: @escaping () -> [BBMenuItem]) -> some View {
-        if on { bbContextMenu(title: title, width: width, items: items) } else { self }
-    }
-
     /// A menu trigger placed over a painted button (faceplate pixels): the menu goes on BEFORE the
     /// placement so its touch area and anchor are the button, not the whole screen.
     func bbMenuPlaced(_ r: [Double], _ s: CGFloat, title: String? = nil, width: CGFloat = 280,
@@ -236,8 +230,6 @@ private struct TapRecognizer: UIGestureRecognizerRepresentable {
     func makeUIGestureRecognizer(context: Context) -> UITapGestureRecognizer {
         let g = UITapGestureRecognizer()
         if secondaryClick { g.buttonMaskRequired = .secondary } else { g.numberOfTouchesRequired = touches }
-        // one-finger taps reach the controls underneath on time (a double tap's second tap included)
-        g.delaysTouchesEnded = false
         return g
     }
 

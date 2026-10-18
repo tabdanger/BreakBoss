@@ -586,7 +586,7 @@ struct SamplerWindow: View {
                       display: ((Float) -> String)? = nil, change: @escaping (Float, Bool) -> Void) -> some View {
         ZStack(alignment: .topLeading) {
             SamplerKnob(value: value, skin: skin, bipolar: bipolar, reset: reset, display: display, change: change)
-                .bbContextMenuIf(menu != nil, title: title, width: 220) { menu?() ?? [] }
+                .bbContextMenu(title: title, width: 220) { menu?() ?? [] }
                 .frame(width: d * s, height: d * s).offset(x: (x - d / 2) * s, y: (y - d / 2) * s)
                 .accessibilityLabel(title)
                 .accessibilityIdentifier("samplerKnob" + (id ?? title.replacingOccurrences(of: " ", with: "")))
