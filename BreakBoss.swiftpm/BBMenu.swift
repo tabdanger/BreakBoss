@@ -160,7 +160,7 @@ private struct BBContextTrigger: ViewModifier {
                     .onAppear { frame = g.frame(in: .named(bbSpace)) }
                     .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
             })
-            .twoFingerTap(simultaneous: true) {
+            .twoFingerTap {
                 let list = items()
                 guard !list.isEmpty else { return }
                 center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: list))
@@ -187,16 +187,10 @@ private extension View {
     /// A two-finger tap or a trackpad / mouse right-click on this view. SwiftUI's own taps can't count
     /// fingers, so these are UIKit recognizers handed to SwiftUI (iPadOS 18 and later; the app's
     /// iPads run 26), which keeps them in SwiftUI's gesture system next to the button's own tap.
-    /// `simultaneous`: the view's own gestures (a knob's drag) keep working alongside.
-    @ViewBuilder func twoFingerTap(simultaneous: Bool = false, _ action: @escaping () -> Void) -> some View {
+    @ViewBuilder func twoFingerTap(_ action: @escaping () -> Void) -> some View {
         if #available(iOS 18.0, *) {
-            if simultaneous {
-                simultaneousGesture(TapRecognizer(touches: 2, action: action))
-                    .simultaneousGesture(TapRecognizer(secondaryClick: true, action: action))
-            } else {
-                gesture(TapRecognizer(touches: 2, action: action))
-                    .gesture(TapRecognizer(secondaryClick: true, action: action))
-            }
+            gesture(TapRecognizer(touches: 2, action: action))
+                .gesture(TapRecognizer(secondaryClick: true, action: action))
         } else {
             self
         }

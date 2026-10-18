@@ -8,7 +8,7 @@ import UniformTypeIdentifiers
 // editor). Page 1 SAMPLE, page 2 ENVELOPE; the tabs flip between them. Drawn at the renders' size
 // (1408 × 1000 with the waveform's edit bar) and scaled to fit: it floats over the sequencer, drag
 // its title bar to move it and its corner to resize it. Each mode wears its own metal and light: Platinum silver with
-// platinum knobs and green light, Modern Black with red, Vintage cream with yellow, Texture blue
+// platinum knobs and red light, Modern Black with red, Vintage cream with yellow, Texture blue
 // with blue. See Sampler.swift for what every control does to the sound.
 
 /// The window's metal, printing and light in each finish.
@@ -30,11 +30,11 @@ struct SamplerSkin {
     static func of(_ finish: String) -> SamplerSkin {
         let tone = MetalTone.of(finish)
         let glow: Color
+        // Platinum and Modern Black light red (Tyrone, Oct 18: no lime green on Platinum), Vintage yellow, Texture blue
         switch finish {
-        case "modern": glow = Color(red: 1, green: 0.2, blue: 0.16)
         case "vintage": glow = Color(red: 1, green: 0.78, blue: 0.18)
         case "texture": glow = Color(red: 0.3, green: 0.66, blue: 1)
-        default: glow = DrumRollStyle.green
+        default: glow = Color(red: 1, green: 0.2, blue: 0.16)
         }
         return SamplerSkin(finish: finish, bezel: finish == "modern" ? MetalTone.of("platinum") : tone, surface: tone, ink: tone.ink, glow: glow)
     }
@@ -87,7 +87,6 @@ struct SamplerKnob: View {
     let change: (Float, Bool) -> Void
     @State private var start: Float?
     @State private var live: Float?
-    @State private var lastTap: Date?
 
     var body: some View {
         let v = live ?? value
@@ -131,7 +130,8 @@ struct SamplerKnob: View {
         }
         .contentShape(Rectangle())
         .accessibilityValue(display?(value) ?? String(format: "%.3f", value))
-        .highPriorityGesture(DragGesture(minimumDistance: 0)
+        // a short travel before it turns, so a two-finger tap (its tempo menu) isn't taken for a turn
+        .highPriorityGesture(DragGesture(minimumDistance: 2)
             .onChanged { g in
                 if start == nil { start = value }
                 let n = ((start ?? value) + Float((-g.translation.height + g.translation.width * 0.6) / 180)).clamped(0, 1)
@@ -139,16 +139,12 @@ struct SamplerKnob: View {
                 change(n, false)
             }
             .onEnded { g in
-                let isTap = abs(g.translation.width) < 6 && abs(g.translation.height) < 6
-                if isTap, let reset, let t = lastTap, Date().timeIntervalSince(t) < 0.35 {
-                    change(reset, true); lastTap = nil
-                } else {
-                    let n = ((start ?? value) + Float((-g.translation.height + g.translation.width * 0.6) / 180)).clamped(0, 1)
-                    change(n, true)
-                    lastTap = isTap ? Date() : nil
-                }
+                let n = ((start ?? value) + Float((-g.translation.height + g.translation.width * 0.6) / 180)).clamped(0, 1)
+                change(n, true)
                 start = nil; live = nil
             })
+        // double tap: back to its default
+        .simultaneousGesture(TapGesture(count: 2).onEnded { if let reset { change(reset, true) } })
     }
 }
 
