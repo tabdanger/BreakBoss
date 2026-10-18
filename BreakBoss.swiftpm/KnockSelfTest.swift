@@ -622,9 +622,9 @@ enum KnockSelfTest {
         var loud = PadSettings(); loud.sampler = SamplerSettings(); loud.sampler?.volume = 1
         var soft = PadSettings(); soft.sampler = SamplerSettings(); soft.sampler?.volume = 0.25
         let unity = energy(plain, blocks: 5...20)
-        let up = energy(loud, blocks: 5...20) / unity, down = energy(soft, blocks: 5...20) / unity
-        check(up > 6 && down > 0.15 && down < 0.35,
-              "Sampler: VOL goes from silence to +12 dB, 100% in the middle (×\(up), ×\(down))")
+        let boost = energy(loud, blocks: 5...20) / unity, down = energy(soft, blocks: 5...20) / unity
+        check(boost > 6 && down > 0.15 && down < 0.35,
+              "Sampler: VOL goes from silence to +12 dB, 100% in the middle (×\(boost), ×\(down))")
         let dragged = SamplerWindow.dragged(SamplerEnvelope(), handle: 4, dx: 0, dy: -0.3)
         check(dragged.on && abs(dragged.sustain - 0.2) < 0.001, "Sampler: dragging the sustain point down lowers the sustain")
         let bulged = SamplerWindow.dragged(SamplerEnvelope(), handle: 6, dx: 0, dy: 0.25)
