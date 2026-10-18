@@ -372,6 +372,9 @@ dark-gqom|DARK GQOM|drumMastery|amapiano|126|1317|46.25|texture|WORLD|DARK GQOM
 bossa-lo-fi|BOSSA LO-FI|neoSoul|latin|90|1318|49.0|texture|WORLD|LATIN LO-FI
 havana-tape|HAVANA TAPE|neoSoul|latin|90|1319|49.0|texture|WORLD|LATIN LO-FI
 desert-ritual|DESERT RITUAL|looseBreak|experimental|90|1320|43.65|texture|WORLD|ETHNO AMBIENT
+soul-session|SOUL SESSION|neoSoul|neoSoul|88|1321|43.65|vintage|SOUL & R&B|LIVE SOUL
+break-room|BREAK ROOM|funkBreak|funkBreak|96|1322|41.2|vintage|BREAKS|LIVE BREAKS
+studio-a|STUDIO A|heavyBreak|heavyBreak|118|1323|41.2|modern|POP|LIVE ROCK
 """
 
     /// The kits before Oct 17: saved projects and your kits that used one open the nearest new kit.

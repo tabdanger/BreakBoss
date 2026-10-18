@@ -1,5 +1,5 @@
 New in this build:
-- HUMANIZE now plays like a live drummer instead of shaking notes at random. Hats are accented by where they fall in the beat and alternate hands on fast lines. Snare backbeats sit laid back in a narrow loud range, ghost notes stay quiet, and the kick sits just behind the grid with the 808 locked to it. Fills grow and rush into the next downbeat, and the crash after a fill hits hardest. Repeated hits land a few cents apart, so hat lines and rolls don't sound like the same sample over and over.
-- The notes you see stay where you put them. MIDI out and exported MIDI files carry the played feel when HUMANIZE is on.
-- Also in this build: the floating sample editor (waveform editing, loop points, markers, envelope presets, Realtime stretch).
-Please try: a boom bap, neo soul or breaks pattern with HUMANIZE at 0, then 50%, then 100%. Listen to the hats and the snare. Export the MIDI with HUMANIZE on and look at it in your DAW's piano roll.
+- Three live acoustic kits, a real multisampled drum kit: SOUL SESSION (Vintage, Soul & R&B), BREAK ROOM (Vintage, Breaks) and STUDIO A (Modern, Pop). Each drum was recorded at several strengths: a soft hit plays a soft recording, so ghost notes sound like ghost notes, not a loud hit turned down. Repeated hits switch between recordings, so nothing machine-guns.
+- Kick, snare, rimshot, cross-stick, closed / half-open / open hi-hat, two toms, ride and crash, from Versilian Studios' Virtuosity Drums (free, CC0). Clap, 808 and perc pads use stock sounds.
+- From the last build: HUMANIZE plays like a live drummer.
+Please try: load SOUL SESSION, finger-drum the snare soft and hard with VELOCITY up, then play a neo soul pattern with HUMANIZE at 50% to 100%.

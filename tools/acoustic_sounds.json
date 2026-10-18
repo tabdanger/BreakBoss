@@ -1,0 +1,206 @@
+[
+ {
+  "category": "KICK",
+  "character": "ACOUSTIC",
+  "file": "ac_kick_l4_r1.wav",
+  "name": "VIRTUOSITY KICK",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "ACOUSTIC",
+  "file": "ac_snare_l8_r1.wav",
+  "name": "VIRTUOSITY SNARE",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 0.8
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "ACOUSTIC",
+  "file": "ac_rimshot_l6_r1.wav",
+  "name": "VIRTUOSITY RIMSHOT SNARE",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 0.9
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "ACOUSTIC",
+  "file": "ac_offctr_l6_r1.wav",
+  "name": "VIRTUOSITY OFF CENTER SNARE",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 0.8
+  }
+ },
+ {
+  "category": "RIM",
+  "character": "ACOUSTIC",
+  "file": "ac_xstick_l6_r1.wav",
+  "name": "VIRTUOSITY CROSS STICK RIM",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 0.4
+  }
+ },
+ {
+  "category": "HAT",
+  "character": "ACOUSTIC",
+  "file": "ac_hat_l4_r1.wav",
+  "name": "VIRTUOSITY HIHAT",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 0.45
+  }
+ },
+ {
+  "category": "OPEN HAT",
+  "character": "ACOUSTIC",
+  "file": "ac_halfhat_l4_r1.wav",
+  "name": "VIRTUOSITY HALF OPEN HIHAT",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "OPEN HAT",
+  "character": "ACOUSTIC",
+  "file": "ac_openhat_l4_r1.wav",
+  "name": "VIRTUOSITY OPEN HIHAT",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 1.8
+  }
+ },
+ {
+  "category": "TOM",
+  "character": "LOW",
+  "file": "ac_lotom_l4_r1.wav",
+  "name": "VIRTUOSITY LOW TOM",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 1.2
+  }
+ },
+ {
+  "category": "TOM",
+  "character": "HIGH",
+  "file": "ac_hitom_l4_r1.wav",
+  "name": "VIRTUOSITY HIGH TOM",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "RIDE",
+  "file": "ac_ride_l3_r1.wav",
+  "name": "VIRTUOSITY RIDE",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 2.5
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "CRASH",
+  "file": "ac_crash_l3_r1.wav",
+  "name": "VIRTUOSITY CRASH",
+  "folder": "VIRTUOSITY DRUMS",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "feat": {
+   "dur": 3.2
+  }
+ }
+]

@@ -25,6 +25,8 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STOCK = os.path.join(ROOT, "BreakBoss.swiftpm", "Resources", "StockSamples")
 SWIFT = os.path.join(ROOT, "BreakBoss.swiftpm", "FactoryKits.swift")
 SOUNDS = json.load(open(os.path.join(ROOT, "tools", "stock_sounds.json")))
+# The multisampled acoustic drums (tools/build_acoustic_sounds.py): only the ACOUSTIC_KITS play them.
+ACOUSTIC = json.load(open(os.path.join(ROOT, "tools", "acoustic_sounds.json")))
 
 # What each pad holds (KitLibrary.swift, Pad): category, and the character it leans to.
 PADS = [("KICK", None), ("SNARE", None), ("CLAP", None), ("RIM", None), ("HAT", None), ("OPEN HAT", None),
@@ -185,6 +187,27 @@ def build():
                     assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": by_file[f]["name"]})
                 kits.append((kid, name, voice, style, tempo, seed, root_hz(by_file[files[6]]), mode, family, genre))
                 seed += 1
+    # The live acoustic kits, last, so every kit above keeps its sounds.
+    acoustic = {s["name"]: s for s in ACOUSTIC}
+    for name, mode, family, genre, style, tempo, voice, tags, likes, picks in kit_catalog.ACOUSTIC_KITS:
+        leans = dict(likes)
+        for k, v in kit_catalog.MODE_LIKES[mode].items(): leans[k] = leans.get(k, 0) + v
+        files, names = [], []
+        for pad in range(12):
+            if pad in picks:
+                a = acoustic[picks[pad]]
+                assert a["category"] == PADS[pad][0] or (pad == 3 and a["category"] == "SNARE"), (name, pad)
+                files.append(a["file"]); names.append(a["name"])
+                continue
+            cands = [s for s in pool(pad, leans) if s["file"] not in taken[genre] and s["file"] not in files]
+            best = max(cands, key=lambda s: (score(s, pad, tags, leans) - 1.2 * uses[s["file"]], s["file"]))
+            files.append(best["file"]); names.append(best["name"]); uses[best["file"]] += 1
+            taken[genre].add(best["file"])
+        kid = slug(name)
+        for pad, f in enumerate(files):
+            assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": names[pad]})
+        kits.append((kid, name, voice, style, tempo, seed, root_hz(by_file[files[6]]), mode, family, genre))
+        seed += 1
     return kits, assignments, uses
 
 
@@ -192,7 +215,7 @@ def main():
     kits, assignments, uses = build()
     with open(os.path.join(STOCK, "manifest.json"), "w") as out:
         # "sounds": the whole library (the sound menu lists them all, even those in no kit)
-        sounds = [{"file": x["file"], "name": x["name"]} for x in SOUNDS]
+        sounds = [{"file": x["file"], "name": x["name"]} for x in SOUNDS + ACOUSTIC]
         json.dump({"version": 1, "assignments": assignments, "sounds": sounds}, out, separators=(",", ":"))
     ids = [k[0] for k in kits]
     assert len(set(ids)) == len(ids) and len({k[1] for k in kits}) == len(kits), "kit ids and names are unique"

@@ -24,6 +24,7 @@ enum KnockSelfTest {
         phase("checkSmallBuffersAndVoiceStealing", checkSmallBuffersAndVoiceStealing)
         phase("checkHostMIDIAndAutomation", checkHostMIDIAndAutomation)
         phase("checkOneShotMIDIAndPadFilters", checkOneShotMIDIAndPadFilters)
+        phase("checkVelocityLayers", checkVelocityLayers)
         phase("checkModesAndClipper", checkModesAndClipper)
         phase("checkTempoSync", checkTempoSync)
         phase("checkHostTransport", checkHostTransport)
@@ -122,12 +123,12 @@ enum KnockSelfTest {
 
         let urls = Set(library.allSounds.map(\.url))
         let names = library.allSounds.map(\.displayName)
-        check(library.allSounds.count == 577 && urls.count == 577 && Set(names).count == 577, "the sound library holds 577 sounds, each with its own name")
+        check(library.allSounds.count == 589 && urls.count == 589 && Set(names).count == 589, "the sound library holds 589 sounds, each with its own name")
         check(names.allSatisfy { SoundType.forStockName($0) != nil }, "every stock sound's name ends in what it is")
         check(SoundType.forStockName("THRONE OPEN HIHAT") == .open && SoundType.forStockName("THRONE HIHAT") == .hat
               && SoundType.forStockName("SUKUNA E1 808") == .bass && SoundType.forStockName("ISSA BOUNCE CLAP SNARE") == .snare,
               "a stock sound's last word sorts it")
-        check(library.librarySounds().count == 577, "the sound menu lists every stock sound, in a kit or not")
+        check(library.librarySounds().count == 589, "the sound menu lists every stock sound, in a kit or not")
         var assignments = 0
         for kit in KitLibrary.factory {
             for pad in Pad.allCases {
@@ -159,6 +160,26 @@ enum KnockSelfTest {
         var picked = KnockState(); picked.stockPicks = Array(repeating: nil, count: Pad.count); picked.stockPicks?[0] = "detroit-2026-a"
         check(KnockController.stockPick(picked, pad: 0) == "detroit-2026-a" && KnockController.stockPick(picked, pad: 1) == nil, "dice: per-pad picks")
         check(picked.selectingKit(KitLibrary.factory[1]).stockPicks == nil, "dice: choosing a kit brings its own sounds back")
+        // The acoustic drums: every sound multisampled, softest layer first, the loudest one the sound itself.
+        let acoustic = library.allSounds.filter { $0.displayName.hasPrefix("VIRTUOSITY ") }
+        check(acoustic.count == 12 && acoustic.allSatisfy { (library.layers(for: $0)?.count ?? 0) >= 3 },
+              "acoustic drums: 12 multisampled sounds, each with its velocity layers")
+        for sound in acoustic {
+            let layers = library.layers(for: sound) ?? []
+            check(layers.last?.top == 1 && zip(layers, layers.dropFirst()).allSatisfy { $0.0.top < $0.1.top }
+                  && layers.last?.urls.contains(sound.url) == true,
+                  "\(sound.displayName): layers rise to full velocity and end on the sound itself")
+            for url in layers.flatMap(\.urls) where !urls.contains(url) {
+                autoreleasepool {
+                    guard let buffer = try? SampleLoader.load(url) else { check(false, "\(url.lastPathComponent): acoustic layer decodes"); return }
+                    var peak: Float = 0
+                    for frame in 0..<buffer.length { peak = max(peak, max(abs(buffer.left[frame]), abs(buffer.right[frame]))) }
+                    check(abs(buffer.sampleRate - 48_000) < 1 && buffer.length > 0 && buffer.seconds <= 4 && peak.isFinite
+                          && peak > 0.000_1 && peak <= stockLoudnessCeiling * 1.002,
+                          "\(url.lastPathComponent): acoustic layer at 48 kHz, bounded and audible")
+                }
+            }
+        }
         for url in urls.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             autoreleasepool {
                 do {
@@ -596,6 +617,56 @@ enum KnockSelfTest {
               "Sampler: envelope presets for 808s, kicks and snares shape the volume")
         let round = (try? JSONEncoder().encode(presets)).flatMap { try? JSONDecoder().decode([SamplerEnvelopePreset].self, from: $0) }
         check(round == presets, "Sampler: envelope presets save and load")
+    }
+
+    /// A multisampled pad: a soft hit plays the soft recording, a hard one the loud one, and repeated
+    /// hits step through the layer's round robins.
+    static func checkVelocityLayers() {
+        let rate = 48_000.0
+        func tone(_ amplitude: Float) -> SampleBuffer {
+            SampleBuffer(left: (0..<12_000).map { sinf(Float($0) * 2 * .pi * 1_000 / 48_000) * amplitude }, sampleRate: rate)
+        }
+        let main = tone(0.4), soft = tone(0.02), hardA = tone(0.4), hardB = tone(0.2)
+        guard let layers = VelocityLayers(source: main, tops: [0.5, 1], hits: [[soft], [hardA, hardB]]) else {
+            check(false, "layers: made"); return
+        }
+        check(layers.layer(for: 0.3) == 0 && layers.layer(for: 0.5) == 0 && layers.layer(for: 0.51) == 1 && layers.layer(for: 1) == 1,
+              "layers: how hard a hit is picks its layer")
+        check(VelocityLayers(source: main, tops: [1], hits: [[]]) == nil, "layers: a layer needs a hit")
+        var padLayers = [VelocityLayers?](repeating: nil, count: Pad.count)
+        padLayers[Pad.snare.rawValue] = layers
+        let kit = KitBuffers(name: "LAYERS", samples: Array(repeating: main, count: Pad.count),
+                             settings: Array(repeating: PadSettings(), count: Pad.count), bassHz: 110, layers: padLayers)
+        func engine() -> KnockEngine {
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            e.setParam(.playMode, 0); e.setParam(.followDAW, 0); e.setParam(.tempoSync, 0)
+            e.setParam(.velocity, 1); e.setParam(.boost, 0); e.setParam(.clipper, 0); e.setParam(.clipDrive, 0)
+            e.kitHandoff.publish(kit)
+            return e
+        }
+        func peak(_ e: KnockEngine, blocks: Int = 4) -> Float {
+            var p: Float = 0
+            for _ in 0..<blocks {
+                var left = [Float](repeating: 0, count: 128), right = left
+                left.withUnsafeMutableBufferPointer { l in
+                    right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) }
+                }
+                p = max(p, left.map(abs).max() ?? 0)
+            }
+            return p
+        }
+        let snare = UInt8(Pad.snare.midiNote), kick = UInt8(Pad.kick.midiNote)
+        let s = engine(); s.hostMIDI(offset: 0, status: 0x90, data1: snare, data2: 32)
+        let h = engine(); h.hostMIDI(offset: 0, status: 0x90, data1: snare, data2: 127)
+        let k = engine(); k.hostMIDI(offset: 0, status: 0x90, data1: kick, data2: 127)
+        let softPeak = peak(s), hardPeak = peak(h), plainPeak = peak(k)
+        check(softPeak > 0.002 && softPeak < hardPeak * 0.1, "layers: a soft hit plays the soft recording (\(softPeak) vs \(hardPeak))")
+        check(abs(hardPeak - plainPeak) < plainPeak * 0.1, "layers: a full hit plays the loud recording at full level")
+        _ = peak(h, blocks: 110)   // let the first hit end
+        h.hostMIDI(offset: 0, status: 0x90, data1: snare, data2: 127)
+        let second = peak(h)
+        check(second > hardPeak * 0.3 && second < hardPeak * 0.7, "layers: the next hit takes the layer's next round robin")
     }
 
     /// A one-shot's tail is independent of note length. Exercise every sequential pad,
@@ -1639,8 +1710,8 @@ enum KnockSelfTest {
         let new = old.normalized()
         check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
-        check(KitLibrary.factory.count == 362 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
-              "362 factory kits: the 42 A/B kits, then the named ones")
+        check(KitLibrary.factory.count == 365 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
+              "365 factory kits: the 42 A/B kits, the named ones, the live acoustic ones")
         check(Set(KitLibrary.factory.map(\.name)).count == KitLibrary.factory.count, "every factory kit has its own name")
         for mode in SoundMode.allCases {
             for family in KitLibrary.families {

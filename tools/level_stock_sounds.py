@@ -18,7 +18,7 @@ Running it again is a no-op: a levelled sound already measures TARGET, or is one
 KnockSelfTest.checkStockSamples measures the decoded audio the same way and holds every sound to
 TARGET +/- TOLERANCE, or to the ceiling for the clicks.
 """
-import glob, os, sys, wave
+import glob, json, os, sys, wave
 import numpy as np
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -123,6 +123,13 @@ def level(path):
 def main():
     check = "--check" in sys.argv
     paths = sorted(glob.glob(os.path.join(STOCK, "*.wav")))
+    # An acoustic drum's softer layers keep the gain of its loudest hit (tools/build_acoustic_sounds.py):
+    # only that loudest hit, the one the sound menu names, is levelled here.
+    layers_path = os.path.join(STOCK, "acoustic_layers.json")
+    if os.path.exists(layers_path):
+        layers = json.load(open(layers_path))["sounds"]
+        quiet = {f for main, ls in layers.items() for l in ls for f in l["files"] if f != main}
+        paths = [p for p in paths if os.path.basename(p) not in quiet]
     off = []
     for n, path in enumerate(paths):
         audio, out, channels, before = level(path)
