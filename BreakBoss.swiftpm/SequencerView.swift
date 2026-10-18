@@ -1879,12 +1879,10 @@ struct SequencerView: View {
             sideways: { dx in scroll(to: (panStart ?? origin) - Double(dx / max(1, w)) * Double(windowTicks)) },
             ended: { panStart = nil },
             twoFingerTap: { points in
-                // a two-finger tap or a right-click on a note: its octave glyphs (anywhere else hides them)
+                // a two-finger tap or a right-click on a note: its octave glyphs (a touch on the grid hides them)
                 if let hit = points.lazy.compactMap({ noteAt($0, w: w, L: L) }).first {
                     octaveNote = NoteKey(hit)
                     if let l = layout(for: Int(hit.pad), L) { selectedID = l.channel.id }
-                } else {
-                    octaveNote = nil
                 }
             }))
     }

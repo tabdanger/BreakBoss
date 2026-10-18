@@ -223,7 +223,8 @@ final class SequencerUITests: XCTestCase {
         XCTAssertTrue(noteDown.exists, "and a minus under it")
         XCTAssertEqual(notes(), drawn, "the two-finger tap doesn't draw or erase a note")
         snap("note-glyphs")
-        let name = { noteUp.value as? String ?? "" }
+        let name = { noteUp.exists ? (noteUp.value as? String ?? "") : "gone" }
+        print("UITREE glyph up \(noteUp.frame) down \(noteDown.frame) grid \(grid.frame) hittable \(noteUp.isHittable)")
         let start = name()
         print("UITREE note \(start)")
         func octave(_ n: String, _ by: Int) -> String {
@@ -232,6 +233,8 @@ final class SequencerUITests: XCTestCase {
         }
         noteUp.tap()
         sleep(1)
+        print("UITREE after plus: \(notes()), keys \(keys()), note \(name())")
+        if !noteUp.exists { dumpTree("after plus") }
         XCTAssertEqual(name(), octave(start, 1), "plus moves the note up an octave")
         print("UITREE keys after plus: \(keys())")
         snap("note-up")

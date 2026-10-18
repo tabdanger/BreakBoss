@@ -113,6 +113,7 @@ struct GridScrollHook: UIViewRepresentable {
             self.tap2 = tap2
             let rightClick = UITapGestureRecognizer(target: self, action: #selector(rightClicked(_:)))
             rightClick.buttonMaskRequired = .secondary
+            rightClick.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.indirectPointer.rawValue)]
             rightClick.cancelsTouchesInView = false
             rightClick.delegate = self
             scrollView.addGestureRecognizer(rightClick)
