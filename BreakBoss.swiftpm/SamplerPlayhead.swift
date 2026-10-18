@@ -146,6 +146,10 @@ struct SamplerPlayhead: UIViewRepresentable {
         private var last: SharedPlayheads.Row?
         private var resetAt: Double?
         private var shownValue = ""
+        /// For the UI tests (BREAKBOSS_UI_PROBE): hits followed, resets to rest, steps against the
+        /// voice's direction, and how far the longest hit got.
+        private var probeHits = 0, probeResets = 0, probeBacksteps = 0
+        private var probeFurthest: Double = 0
         /// From the engine writing a sound to hearing it: the output's latency and one buffer.
         private let latency: Double = {
             #if os(iOS)
@@ -288,9 +292,16 @@ struct SamplerPlayhead: UIViewRepresentable {
                     // a new hit: the cursor starts again where the voice started
                     voice = row.id
                     playedLo = row.start; playedHi = row.start
+                    position = row.start
+                    probeHits += 1
                 }
                 last = row
+                let before = position
                 position = heard(row, now)
+                if Self.probing && row.loopEnd < 0 {
+                    if (row.speed > 0 && position < before - 0.001) || (row.speed < 0 && position > before + 0.001) { probeBacksteps += 1 }
+                    probeFurthest = max(probeFurthest, abs(position - row.start))
+                }
                 playedLo = min(playedLo, position); playedHi = max(playedHi, position)
                 place()
                 return
@@ -306,6 +317,7 @@ struct SamplerPlayhead: UIViewRepresentable {
             }
             voice = 0; last = nil; resetAt = nil
             position = cursor.rest
+            probeResets += 1
             setFast(false)
             place()
         }
@@ -356,9 +368,10 @@ struct SamplerPlayhead: UIViewRepresentable {
                 wash.frame = CGRect(x: a, y: 0, width: b - a, height: h)
             }
             CATransaction.commit()
-            // for the UI tests: where the cursor is (part of the sound) and whether a hit is playing
+            // for the UI tests: where the cursor is (part of the sound), whether a hit is playing, and the counts above
             guard Self.probing else { return }
-            let value = String(format: "%.3f %@", position, playing ? "playing" : "rest")
+            let value = String(format: "%.3f %@ hits=%d resets=%d back=%d far=%.3f", position, playing ? "playing" : "rest",
+                               probeHits, probeResets, probeBacksteps, probeFurthest)
             if value != shownValue { shownValue = value; accessibilityValue = value }
         }
 

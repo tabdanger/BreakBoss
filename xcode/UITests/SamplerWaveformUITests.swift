@@ -35,7 +35,18 @@ final class SamplerWaveformUITests: XCTestCase {
         attachment.name = "waveform-" + name
         attachment.lifetime = .keepAlways
         add(attachment)
-        let image = shot.image
+        // the screen upright, as the app is drawn (a landscape screenshot can come out portrait)
+        let raw = shot.image
+        let rotate = (raw.size.width < raw.size.height) != (app.frame.width < app.frame.height)
+        let upright = rotate ? CGSize(width: raw.size.height, height: raw.size.width) : raw.size
+        let fmt = UIGraphicsImageRendererFormat(); fmt.scale = raw.scale
+        let image = UIGraphicsImageRenderer(size: upright, format: fmt).image { r in
+            if rotate {
+                r.cgContext.translateBy(x: 0, y: raw.size.width)
+                r.cgContext.rotate(by: -.pi / 2)
+            }
+            raw.draw(at: .zero)
+        }
         let scale = image.scale
         let f = element.frame
         guard f.width > 10, let cg = image.cgImage?.cropping(to: CGRect(x: f.minX * scale, y: f.minY * scale,
@@ -55,12 +66,29 @@ final class SamplerWaveformUITests: XCTestCase {
         }
     }
 
-    /// The cursor's value: its place in the sound and "playing" or "rest".
-    private func cursor(_ el: XCUIElement) -> (Double, Bool)? {
+    /// The cursor's value: its place in the sound, "playing" or "rest", and its counts
+    /// (hits followed, resets to rest, steps backwards during a hit, how far a hit got).
+    private struct Cursor: CustomStringConvertible {
+        var position = 0.0, playing = false, hits = 0, resets = 0, back = 0, far = 0.0
+        var description: String { String(format: "%.3f %@ hits=%d resets=%d back=%d far=%.3f", position, playing ? "playing" : "rest", hits, resets, back, far) }
+    }
+    private func cursor(_ el: XCUIElement) -> Cursor? {
         guard let v = el.value as? String else { return nil }
         let parts = v.components(separatedBy: " ")
-        guard parts.count == 2, let f = Double(parts[0]) else { return nil }
-        return (f, parts[1] == "playing")
+        guard parts.count >= 2, let f = Double(parts[0]) else { return nil }
+        var c = Cursor(position: f, playing: parts[1] == "playing")
+        for part in parts.dropFirst(2) {
+            let kv = part.components(separatedBy: "=")
+            guard kv.count == 2 else { continue }
+            switch kv[0] {
+            case "hits": c.hits = Int(kv[1]) ?? 0
+            case "resets": c.resets = Int(kv[1]) ?? 0
+            case "back": c.back = Int(kv[1]) ?? 0
+            case "far": c.far = Double(kv[1]) ?? 0
+            default: break
+            }
+        }
+        return c
     }
 
     func testLiveWaveformAndPageButtons() {
@@ -89,32 +117,28 @@ final class SamplerWaveformUITests: XCTestCase {
         XCTAssertTrue(playhead.waitForExistence(timeout: 3), "the cursor is over the waveform")
         guard let rest = cursor(playhead) else { dumpTree("no cursor value"); XCTFail("the cursor reports its place"); return }
         print("UITREE CURSOR rest \(rest)")
-        XCTAssertFalse(rest.1, "nothing plays before a hit")
+        XCTAssertFalse(rest.playing, "nothing plays before a hit")
         picture("sample-page-rest", of: window)
+        picture("waveform-rest", of: wave, width: 1200)
 
-        // a hit: the cursor starts at the sound's start, moves on, then rests at the start again
-        var seen: [(Double, Bool, Double)] = []
-        let t0 = Date()
+        // a hit: the cursor follows it (never stepping back), then rests at the start again
         wave.tap()
-        var tookPicture = false
-        while Date().timeIntervalSince(t0) < 4 {
-            if let c = cursor(playhead) {
-                seen.append((c.0, c.1, Date().timeIntervalSince(t0)))
-                if c.1 && !tookPicture && c.0 > rest.0 + 0.05 { picture("sample-page-playing", of: window); tookPicture = true }
-                if !c.1 && seen.contains(where: { $0.1 }) { break }
-            }
+        var playingShot = false
+        var now = rest
+        let t0 = Date()
+        while Date().timeIntervalSince(t0) < 12 {
+            guard let c = cursor(playhead) else { continue }
+            now = c
+            print(String(format: "UITREE CURSOR %.2fs %@", Date().timeIntervalSince(t0), c.description))
+            if c.playing && !playingShot && c.far > 0.05 { picture("sample-page-playing", of: window); picture("waveform-playing", of: wave, width: 1200); playingShot = true }
+            if c.resets > rest.resets && !c.playing { break }
         }
-        print("UITREE CURSOR seen " + seen.map { String(format: "%.3f%@@%.2f", $0.0, $0.1 ? "p" : "r", $0.2) }.joined(separator: " "))
-        let playing = seen.filter { $0.1 }.map { $0.0 }
-        XCTAssertGreaterThan(playing.count, 1, "the cursor moves while the hit plays")
-        if playing.count > 1 {
-            XCTAssertGreaterThan(playing.last!, playing.first!, "the cursor moves forward through the sound")
-            XCTAssertEqual(zip(playing, playing.dropFirst()).filter { $1 < $0 - 0.001 }.count, 0, "the cursor never jumps back during one hit")
-        }
-        if let last = seen.last {
-            XCTAssertFalse(last.1, "the cursor rests once the hit has ended")
-            XCTAssertEqual(last.0, rest.0, accuracy: 0.002, "it rests at the sound's start again")
-        }
+        XCTAssertEqual(now.hits, rest.hits + 1, "the hit restarts the cursor (\(now))")
+        XCTAssertEqual(now.resets, rest.resets + 1, "the cursor resets when the hit ends (\(now))")
+        XCTAssertFalse(now.playing, "the cursor rests once the hit has ended")
+        XCTAssertEqual(now.position, rest.position, accuracy: 0.002, "it rests at the sound's start again")
+        XCTAssertEqual(now.back, 0, "the cursor never steps back during a hit (\(now))")
+        XCTAssertGreaterThan(now.far, 0.5, "the cursor travels through the sound (\(now))")
 
         // the page buttons on every page
         any("samplerEnvelopePage").tap(); sleep(1)
