@@ -395,21 +395,39 @@ struct SamplerWindow: View {
         }
     }
 
+    /// A page tab is a physical button (Tyrone's MISC render, Oct 18): a raised metal cap with a
+    /// bevelled edge in its own dark bay; the page that's showing is pressed in, its icon lit and
+    /// a line of light under it.
     private func pageTab<G: View>(_ i: Int, _ title: String, _ s: CGFloat, @ViewBuilder glyph: () -> G) -> some View {
         let on = page == i
+        let cap = RoundedRectangle(cornerRadius: 5 * s)
         return Button { withAnimation(.easeOut(duration: 0.15)) { page = i } } label: {
-            ZStack(alignment: .bottom) {
-                SamplerMetal(tone: skin.surface, corner: 5 * s, sunk: on)
-                if on { RoundedRectangle(cornerRadius: 5 * s).fill(skin.glow.opacity(0.12)) }
-                HStack(spacing: 20 * s) {
-                    glyph().frame(width: 50 * s, height: 36 * s)
-                    Text(title).font(.system(size: 24 * s, weight: .medium)).foregroundColor(on ? skin.glow : skin.dim)
+            ZStack {
+                // the bay the button sits in
+                SamplerWell(skin: skin, corner: 7 * s)
+                ZStack(alignment: .bottom) {
+                    SamplerMetal(tone: skin.surface, corner: 5 * s, sunk: on)
+                    // the bevel: a lit top lip and a dark lower edge (inverted when it's pressed in)
+                    cap.strokeBorder(LinearGradient(colors: on ? [.black.opacity(0.7), skin.surface.bright.opacity(0.35)]
+                                                              : [skin.surface.bright.opacity(0.9), .clear, .black.opacity(0.75)],
+                                                    startPoint: .top, endPoint: .bottom), lineWidth: 2 * s)
+                    if on { cap.fill(skin.glow.opacity(0.08)) }
+                    HStack(spacing: 20 * s) {
+                        glyph().frame(width: 50 * s, height: 36 * s)
+                            .shadow(color: on ? skin.glow.opacity(0.8) : .clear, radius: 4 * s)
+                        Text(title).font(.system(size: 24 * s, weight: .medium)).foregroundColor(on ? skin.ink : skin.dim)
+                            .shadow(color: .black.opacity(on ? 0.35 : 0.25), radius: 0, y: 1 * s)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .offset(y: on ? 1 * s : 0)
+                    if on {
+                        Capsule().fill(skin.glow).frame(height: 4 * s).padding(.horizontal, 8 * s).padding(.bottom, 2 * s)
+                            .shadow(color: skin.glow, radius: 5 * s)
+                    }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                if on {
-                    Capsule().fill(skin.glow).frame(height: 4 * s).padding(.horizontal, 6 * s)
-                        .shadow(color: skin.glow, radius: 5 * s)
-                }
+                .clipShape(cap)
+                .shadow(color: .black.opacity(on ? 0.25 : 0.6), radius: on ? 1 * s : 3 * s, y: on ? 0 : 2 * s)
+                .padding(4 * s)
             }
         }
         .buttonStyle(SeqPress())
@@ -698,7 +716,14 @@ struct SamplerWindow: View {
                                   loop: sm.useLoop, loopPoints: loopPoints, region: sm.loadRegions ? sample.region : nil, cues: marks,
                                   markers: markerDrag.map { d in var m = sm.markers; if m.indices.contains(d.0) { m[d.0] = d.1 }; return m } ?? sm.markers,
                                   regions: sm.regions, selection: selection, bpm: controller.state.bpm)
+                    .equatable()
                     .clipShape(RoundedRectangle(cornerRadius: 6 * s)).spot(2, 2, 1330, 178, s)
+                // the playback cursor and the played part, following the track's newest voice
+                SamplerPlayhead(playheads: controller.engine.playheads, pad: pad, sample: sample, zoom: zoom, scroll: scrollPos,
+                                color: UIColor(skin.glow),
+                                rest: controller.state.pads[pad].reverse ? 1 - Double(startDrag ?? sm.startOffset) : Double(startDrag ?? sm.startOffset))
+                    .clipShape(RoundedRectangle(cornerRadius: 6 * s)).spot(2, 2, 1330, 178, s)
+                    .allowsHitTesting(false)
                 // bit depth and channels, lower right (FL's readout)
                 HStack(spacing: 8 * s) {
                     Text(String(format: "%.3f BPM", controller.state.bpm)).font(.system(size: 16 * s, weight: .medium, design: .monospaced))
@@ -1880,9 +1905,10 @@ struct SamplerWindow: View {
 
 // MARK: - Drawings
 
-/// The waveform: the sound's peaks in the mode's light, with START OFFSET, the loop and the
-/// fade / slice markers.
-struct SamplerWaveCanvas: View {
+/// The waveform: the sound's peaks in the mode's light (with a soft glow, over a faint grid), with
+/// START OFFSET, the loop and the fade / slice markers. Drawn only when what it shows changes (the
+/// peaks are kept per sound, see SamplerPeaks); the cursor moves over it in SamplerPlayhead.
+struct SamplerWaveCanvas: View, Equatable {
     let sample: SampleBuffer
     let zoom: CGFloat
     let scroll: CGFloat
@@ -1902,9 +1928,24 @@ struct SamplerWaveCanvas: View {
 
     static let selectionRed = Color(red: 1, green: 0.16, blue: 0.14)
 
+    /// Counts the sounds whose peaks have come in (draws again then).
+    @State private var peaksLoaded = 0
+
+    static func == (a: Self, b: Self) -> Bool {
+        a.sample === b.sample && a.zoom == b.zoom && a.scroll == b.scroll && a.color == b.color && a.startOffset == b.startOffset
+            && a.loop == b.loop && a.loopPoints == b.loopPoints && a.region == b.region && a.cues == b.cues
+            && a.markers == b.markers && a.regions == b.regions && a.selection == b.selection && a.bpm == b.bpm
+    }
+
     var body: some View {
-        Canvas { ctx, size in
+        let loaded = peaksLoaded
+        return Canvas { ctx, size in
             let n = sample.length
+            // the faint grid: 32 across, 6 down
+            var grid = Path()
+            for k in 1..<32 { grid.addRect(CGRect(x: (size.width * CGFloat(k) / 32).rounded(), y: 0, width: 0.5, height: size.height)) }
+            for k in 1..<6 { grid.addRect(CGRect(x: 0, y: (size.height * CGFloat(k) / 6).rounded(), width: size.width, height: 0.5)) }
+            ctx.fill(grid, with: .color(.white.opacity(0.05)))
             guard n > 1 else { return }
             let span = Double(n) / Double(zoom)
             let first = Double(scroll) * Double(n)
@@ -1935,17 +1976,15 @@ struct SamplerWaveCanvas: View {
             }
             ctx.fill(Path(CGRect(x: 0, y: mid - 0.5, width: size.width, height: 1)), with: .color(color.opacity(0.25)))
             var top = Path()
-            let cols = max(1, Int(size.width))
-            let per = max(1, Int(span / Double(cols)))
-            let stride = max(1, per / 64)
-            for c in 0..<cols {
-                let a = Int(first + span * Double(c) / Double(cols))
-                guard a < n else { break }
-                var lo: Float = 0, hi: Float = 0
-                var i = a
-                while i < min(n, a + per) { let v = (sample.left[i] + sample.right[i]) * 0.5; lo = min(lo, v); hi = max(hi, v); i += stride }
-                let px = CGFloat(c)
-                top.addRect(CGRect(x: px, y: mid - CGFloat(hi) * mid * 0.92, width: 1, height: max(1, CGFloat(hi - lo) * mid * 0.92)))
+            if loaded >= 0, let peaks = SamplerPeaks.cached(sample) {
+                for (c, (lo, hi)) in peaks.columns(sample, count: max(1, Int(size.width)), zoom: Double(zoom), scroll: Double(scroll)).enumerated() {
+                    top.addRect(CGRect(x: CGFloat(c), y: mid - CGFloat(hi) * mid * 0.92, width: 1, height: max(1, CGFloat(hi - lo) * mid * 0.92)))
+                }
+            }
+            // a soft glow under the crisp wave
+            ctx.drawLayer { glow in
+                glow.addFilter(.blur(radius: 4))
+                glow.fill(top, with: .color(color.opacity(0.55)))
             }
             ctx.fill(top, with: .color(color.opacity(0.9)))
             // START OFFSET: before it is dimmed
@@ -2000,7 +2039,14 @@ struct SamplerWaveCanvas: View {
                 }
             }
         }
+        .drawingGroup()
         .allowsHitTesting(false)
+        .onAppear { load() }
+        .onChange(of: ObjectIdentifier(sample)) { _ in load() }
+    }
+
+    private func load() {
+        SamplerPeaks.load(sample) { _ in peaksLoaded += 1 }
     }
 }
 
