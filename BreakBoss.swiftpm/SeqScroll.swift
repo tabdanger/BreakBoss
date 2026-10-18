@@ -182,3 +182,70 @@ struct GridScrollHook: UIViewRepresentable {
         func gestureRecognizer(_ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
     }
 }
+
+/// A thin line the display link moves every frame: `position` is the playhead's place across the
+/// view (0...1, nil when nothing plays here); `offScreen` is called when it leaves the view.
+struct PlayheadLine: UIViewRepresentable {
+    var color: UIColor
+    var position: () -> CGFloat?
+    var offScreen: () -> Void
+
+    func makeUIView(context: Context) -> LineView {
+        let view = LineView()
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        view.line = self
+        return view
+    }
+
+    func updateUIView(_ view: LineView, context: Context) { view.line = self }
+
+    final class LineView: UIView {
+        var line: PlayheadLine? { didSet { bar.backgroundColor = line?.color.cgColor } }
+        private let bar = CALayer()
+        private var link: CADisplayLink?
+        private var lastNudge: CFTimeInterval = 0
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            bar.isHidden = true
+            bar.actions = ["position": NSNull(), "bounds": NSNull(), "hidden": NSNull()]
+            layer.addSublayer(bar)
+        }
+        required init?(coder: NSCoder) { fatalError() }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            link?.invalidate()
+            link = nil
+            guard window != nil else { return }
+            let link = CADisplayLink(target: Proxy(self), selector: #selector(Proxy.tick(_:)))
+            link.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
+            link.add(to: .main, forMode: .common)
+            self.link = link
+        }
+
+        deinit { link?.invalidate() }
+
+        fileprivate func tick(_ link: CADisplayLink) {
+            guard let line, let f = line.position() else { bar.isHidden = true; return }
+            if f < 0 || f > 1 {
+                bar.isHidden = true
+                // ask the window to catch up, at most every tenth of a second
+                if link.timestamp - lastNudge > 0.1 { lastNudge = link.timestamp; line.offScreen() }
+                return
+            }
+            bar.isHidden = false
+            bar.frame = CGRect(x: f * bounds.width - 1, y: 0, width: 2, height: bounds.height)
+        }
+
+        /// Keeps the display link from holding the view alive.
+        private final class Proxy: NSObject {
+            weak var view: LineView?
+            init(_ view: LineView) { self.view = view }
+            @objc func tick(_ link: CADisplayLink) {
+                if let view { view.tick(link) } else { link.invalidate() }
+            }
+        }
+    }
+}
