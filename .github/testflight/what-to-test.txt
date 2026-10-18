@@ -1,8 +1,5 @@
 New in this build:
-- RECORD on the pad faceplate (top right, next to the piano-roll button) and REC on the sequencer: a 1- or 2-bar metronome count-in (the count shows on the button), then the pattern plays and every pad you hit lands in it on that pad's own channel. Tap again to stop recording. Count-in length and metronome are in the menu.
-- Each pad is its own MIDI channel. A pitched hit goes out as a pitched note, so a DAW piano roll has full control of pitch and velocity; played back into BreakBoss it plays that pad at that pitch and records it. The cloud exports a 12-track MIDI file (one track per channel).
-- The sequencer wears the faceplate's finish: platinum / black for MODERN, cream for VINTAGE, blue for TEXTURE. Notes and the selected track light in the same colour.
-- MAIN A is gone. BPM slider goes to 280 with + / -. SWING and HUMANIZE open sliders when tapped; the knobs have a bigger grip and turn instead of scrolling the rack.
-- Tap a track header to select it. The arrow opens that track's piano roll with KEY / SCALE / SNAP / FIT buttons. The velocity / pitch lane edits the open track only.
-- The grid opens blank with every other beat darker; a pressed step lights its inner slot. Every button is a real control that presses in.
-Please try: RECORD from the pads with a count-in, then open the sequencer and look at each pad's piano roll; the finish in each mode; the swing and humanize sliders.
+- HUMANIZE now plays like a live drummer instead of shaking notes at random. Hats are accented by where they fall in the beat and alternate hands on fast lines. Snare backbeats sit laid back in a narrow loud range, ghost notes stay quiet, and the kick sits just behind the grid with the 808 locked to it. Fills grow and rush into the next downbeat, and the crash after a fill hits hardest. Repeated hits land a few cents apart, so hat lines and rolls don't sound like the same sample over and over.
+- The notes you see stay where you put them. MIDI out and exported MIDI files carry the played feel when HUMANIZE is on.
+- Also in this build: the floating sample editor (waveform editing, loop points, markers, envelope presets, Realtime stretch).
+Please try: a boom bap, neo soul or breaks pattern with HUMANIZE at 0, then 50%, then 100%. Listen to the hats and the snare. Export the MIDI with HUMANIZE on and look at it in your DAW's piano roll.

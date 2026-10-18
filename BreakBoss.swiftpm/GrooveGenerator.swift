@@ -48,6 +48,8 @@ struct GrooveEvent: Codable, Equatable {
     var offset: Int8 = 0
     /// CHANCE: how often the note plays, 0...1 (1 = every time).
     var chance: Float = 1
+    /// HUMANIZE's played feel, in ticks (fractions too). Only on the engine's copy; never saved.
+    var feel: Float = 0
 }
 
 // Saves and patterns from before NOTE OFFSET and CHANCE load with every note on its step, always playing.
@@ -84,7 +86,7 @@ struct PatternData: Codable, Equatable {
     var lengthTicks: Int32
     var events: [GrooveEvent]
     /// Drum roll HUMANIZE, 0...1: small timing and velocity changes added when the pattern is
-    /// handed to the engine. The notes you see and export stay exactly where you put them.
+    /// handed to the engine (LiveDrummer). The notes you see stay exactly where you put them.
     var humanize: Float? = nil
     /// Each track's own SWING, 0...1 like the SWING knob (50-72%); below 0 (or nil) the track follows the knob.
     var trackSwing: [Float]? = nil
@@ -147,7 +149,7 @@ struct PatternData: Codable, Equatable {
     func playTick(_ e: GrooveEvent, bounce: Double) -> Double {
         let pad = Int(e.pad)
         return Double(e.tick) + PatternData.swingTicks(tick: Int(e.tick), pad: pad, bounce: bounce, own: Double(swing(pad: pad)))
-            + Double(shift(pad: pad)) + Double(e.offset)
+            + Double(shift(pad: pad)) + Double(e.offset) + Double(e.feel)
     }
 
     /// CHANCE: the same roll for a note on the same pass of the loop, a new one each pass.
@@ -181,7 +183,7 @@ final class PatternSet {
             sorted.sort()
             // Keep every hit inside the loop (micro-timing can push one past an edge).
             let len = Int(max(sorted.lengthTicks, PatternData.ppq))
-            var lo = 0, hi = 0
+            var lo: Double = 0, hi: Double = 0
             for i in sorted.events.indices {
                 var t = Int(sorted.events[i].tick) % len
                 if t < 0 { t += len }
@@ -189,7 +191,8 @@ final class PatternSet {
                 // The track's push / pull rides on each note's own offset.
                 let o = (Float(sorted.events[i].offset) + sorted.shift(pad: Int(sorted.events[i].pad))).rounded()
                 sorted.events[i].offset = Int8(o.clamped(-48, 48))
-                lo = min(lo, Int(sorted.events[i].offset)); hi = max(hi, Int(sorted.events[i].offset))
+                let reach = Double(sorted.events[i].offset) + Double(sorted.events[i].feel)
+                lo = min(lo, reach); hi = max(hi, reach)
             }
             sorted.sort()
             let buffer = UnsafeMutableBufferPointer<GrooveEvent>.allocate(capacity: max(sorted.events.count, 1))
@@ -201,7 +204,7 @@ final class PatternSet {
             ownSwing = UnsafeMutableBufferPointer<Double>.allocate(capacity: Pad.count)
             _ = ownSwing.initialize(from: swings)
             hasOwnSwing = swings.contains { $0 >= 0 }
-            earliest = Double(lo); latest = Double(hi)
+            earliest = lo.rounded(.down); latest = hi.rounded(.up)
         }
         let count: Int
         deinit { events.deallocate(); ownSwing.deallocate() }
@@ -210,17 +213,10 @@ final class PatternSet {
     let loops: [Loop]
     let data: [PatternData]
 
-    /// Same pattern, same result: the jitter comes from each note's own position.
+    /// HUMANIZE: the pattern as a live drummer plays it (LiveDrummer). Same pattern, same feel.
     static func humanized(_ data: PatternData) -> PatternData {
         guard let amount = data.humanize, amount > 0.001 else { return data }
-        var p = data
-        for i in p.events.indices {
-            var rng = KRandom(seed: UInt32(truncatingIfNeeded: Int(p.events[i].tick) &* 31 &+ Int(p.events[i].pad) &* 7919 &+ 17))
-            let shift = Int32((rng.range(-1, 1) * amount * 6).rounded())
-            p.events[i].tick = max(0, p.events[i].tick + shift)
-            p.events[i].velocity = (p.events[i].velocity * (1 + rng.range(-1, 1) * amount * 0.18)).clamped(0.05, 1)
-        }
-        return p
+        return LiveDrummer.play(data, amount: amount)
     }
 
     init(_ data: [PatternData]) {

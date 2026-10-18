@@ -1261,7 +1261,7 @@ final class KnockEngine {
                 let ev = loop.events[k]
                 k += 1
                 // An early note on the very first downbeat plays on it (nothing plays before the start).
-                let t = max(0, base + Double(ev.tick) + Double(ev.offset)
+                let t = max(0, base + Double(ev.tick) + Double(ev.offset) + Double(ev.feel)
                             + PatternData.swingTicks(tick: Int(ev.tick), pad: Int(ev.pad), bounce: bounce, own: loop.ownSwing[Int(ev.pad)]))
                 guard t >= t0 && t < t1 else { continue }
                 if ev.chance < 1 && PatternData.chanceRoll(pass: Int(cycle), tick: ev.tick, pad: ev.pad) >= ev.chance { continue }
