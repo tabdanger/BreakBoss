@@ -754,9 +754,9 @@ enum KnockSelfTest {
               "Sampler: an LFO on the volume changes the level")
         var dip = PadSettings(); dip.sampler = SamplerSettings()
         dip.sampler?.setLFO(.volume) { $0.shape = 2; $0.amount = -1; $0.speed = 0.2 }
-        var peak = PadSettings(); peak.sampler = SamplerSettings()
-        peak.sampler?.setLFO(.volume) { $0.shape = 2; $0.amount = 1; $0.speed = 0.2 }
-        check(energy(dip, blocks: 2...8) < energy(plain, blocks: 2...8) * 0.1 && energy(peak, blocks: 2...8) > energy(plain, blocks: 2...8) * 0.9,
+        var crest = PadSettings(); crest.sampler = SamplerSettings()
+        crest.sampler?.setLFO(.volume) { $0.shape = 2; $0.amount = 1; $0.speed = 0.2 }
+        check(energy(dip, blocks: 2...8) < energy(plain, blocks: 2...8) * 0.1 && energy(crest, blocks: 2...8) > energy(plain, blocks: 2...8) * 0.9,
               "Sampler: AMT turned left inverts the volume LFO (a square starts in its dip)")
         var bent = PadSettings(); bent.sampler = SamplerSettings()
         bent.sampler?.setEnvelope(.pan) { $0.on = true; $0.attack = 0; $0.hold = 0.4; $0.amount = -1 }
