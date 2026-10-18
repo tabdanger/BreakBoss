@@ -461,7 +461,12 @@ struct SequencerView: View {
                 channelStrip(ch).padding(.vertical, 12)
                 Spacer()
             }
-            .background(S.header.ignoresSafeArea()).preferredColorScheme(.dark).presentationDetents([.height(180)])
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(S.header.ignoresSafeArea())
+            // a sheet is its own window: the SOUND and MIDI menus need a menu layer of their own here
+            .bbMenuHost()
+            .preferredColorScheme(.dark).presentationDetents([.height(180), .medium])
+            .accessibilityIdentifier("trackSettingsSheet")
         }
         .sheet(item: Binding(get: { recordPad.map { PadID(pad: $0) } }, set: { recordPad = $0?.pad })) { target in
             ChannelRecordSheet(controller: controller, pad: target.pad)
@@ -1466,31 +1471,41 @@ struct SequencerView: View {
         }
     }
 
-    /// The menu a two-finger tap opens on a channel: fills, clear, randomize, rename, delete.
+    /// The menu a two-finger tap (or right-click) opens on a channel. Tyrone, Oct 18: the track's own
+    /// things first, top to bottom (Track settings, Open sample editor, Solo, Load sample, Clear sample,
+    /// Remove), then its steps and its feel.
     private func channelMenu(_ ch: WorkspaceChannel) -> [BBMenuItem] {
         let pad = ch.pad
+        let loaded = controller.state.pads[pad].sampleFile != nil
+        var items: [BBMenuItem] = [
+            .item("Track settings…", detail: "Tune, decay, filter, MIDI", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id },
+            .item("Open sample editor", icon: "waveform") { openSampler(pad) },
+            .item(controller.soloPads[pad] ? "Solo off" : "Solo", icon: "s.square", checked: controller.soloPads[pad]) { controller.toggleSolo(pad) },
+            .item("Load sample…", icon: "folder") { importPad = pad },
+            .item("Clear sample", detail: loaded ? "Back to the kit's sound" : "Playing the kit's sound", icon: "xmark",
+                  destructive: loaded, enabled: loaded) {
+                // only the loaded sample goes: the track keeps its level, pan and sampler settings
+                var ps = controller.state.pads[pad]; ps.sampleFile = nil; controller.setPadSettings(pad, ps)
+            },
+            .item("Remove", detail: "Takes this track out of the rack", icon: "trash", destructive: true) {
+                if expandedID == ch.id { expandedID = nil }
+                if openID == ch.id { openID = nil }
+                if selectedID == ch.id { selectedID = nil }
+                if samplerPad == pad { samplerPad = nil }
+                controller.removeRackChannel(ch.id)
+            }
+        ]
         let step = PatternData.stepTicks
         let fills: [(String, Int32)] = [("Fill every step", step), ("Fill every 2 steps", step * 2), ("Fill every 4 steps (beat)", step * 4),
                                         ("Fill every 8 steps (1/2 bar)", step * 8), ("Fill every bar", PatternEdit.barTicks),
                                         ("Fill every 1/2 step (1/32)", step / 2)]
-        var items: [BBMenuItem] = fills.map { f in
+        items.append(.header("Steps"))
+        items += fills.map { f in
             BBMenuItem.item(f.0, icon: "square.grid.4x3.fill") { commit(PatternEdit.fill(pattern, pad: pad, every: f.1, velocity: lastVelocity)) }
         }
-        items.append(.header("This channel"))
         items.append(BBMenuItem.item("Randomize its steps", icon: "dice") { remember(); controller.randomizeChannel(loop: loop, pad: pad) })
+        items.append(BBMenuItem.item("Clear its steps", icon: "xmark.square", destructive: true) { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
         items += feelItems(pad)
-        items.append(.header("Track"))
-        items.append(BBMenuItem.item("Open sample editor", icon: "waveform") { openSampler(pad) })
-        items.append(BBMenuItem.item("Track settings… (tune, decay, filter, MIDI)", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id })
-        items.append(BBMenuItem.item(controller.soloPads[pad] ? "Solo off" : "Solo", icon: "s.square", checked: controller.soloPads[pad]) { controller.toggleSolo(pad) })
-        items.append(BBMenuItem.item("Load a sample from Files…", icon: "folder") { importPad = pad })
-        items.append(BBMenuItem.item("Clear its steps", icon: "xmark", destructive: true) { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
-        items.append(BBMenuItem.item("Delete channel", icon: "trash", destructive: true) {
-            if expandedID == ch.id { expandedID = nil }
-            if openID == ch.id { openID = nil }
-            if selectedID == ch.id { selectedID = nil }
-            controller.removeRackChannel(ch.id)
-        })
         return items
     }
 

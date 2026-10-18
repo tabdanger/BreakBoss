@@ -60,6 +60,17 @@ enum BBMenuStyle {
 
 private let bbSpace = "bbMenuHost"
 
+/// The menu layer a trigger opens its menu in. Optional, so a menu button in a view with no
+/// .bbMenuHost() above it (a sheet, a new window) does nothing instead of crashing the app
+/// (build 82: Track settings in a sheet hit SwiftUI's "No ObservableObject of type BBMenuCenter").
+private struct BBMenuCenterKey: EnvironmentKey { static let defaultValue: BBMenuCenter? = nil }
+extension EnvironmentValues {
+    var bbMenuCenter: BBMenuCenter? {
+        get { self[BBMenuCenterKey.self] }
+        set { self[BBMenuCenterKey.self] = newValue }
+    }
+}
+
 extension View {
     /// Adds the layer the BreakBoss menus draw in. Put it on the outermost view of a screen.
     func bbMenuHost() -> some View { modifier(BBMenuHost()) }
@@ -74,6 +85,12 @@ extension View {
     func bbTwoFingerMenu(title: String? = nil, width: CGFloat = 280, tap: @escaping () -> Void,
                          items: @escaping () -> [BBMenuItem]) -> some View {
         modifier(BBMenuTrigger(title: title, width: width, items: items, custom: nil, tap: tap, twoFinger: true))
+    }
+
+    /// Opens a BreakBoss menu on a two-finger tap (or right-click) on a control that keeps its own
+    /// touches, such as a knob or the sampler's waveform: one finger still turns or drags it.
+    func bbContextMenu(title: String? = nil, width: CGFloat = 280, items: @escaping () -> [BBMenuItem]) -> some View {
+        modifier(BBContextTrigger(title: title, width: width, items: items))
     }
 
     /// A menu trigger placed over a painted button (faceplate pixels): the menu goes on BEFORE the
@@ -94,7 +111,7 @@ extension View {
 }
 
 private struct BBMenuTrigger: ViewModifier {
-    @EnvironmentObject var center: BBMenuCenter
+    @Environment(\.bbMenuCenter) private var center
     let title: String?
     let width: CGFloat
     let items: () -> [BBMenuItem]
@@ -104,7 +121,7 @@ private struct BBMenuTrigger: ViewModifier {
     @State private var frame: CGRect = .zero
 
     private func open() {
-        center.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?()))
+        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?()))
     }
 
     func body(content: Content) -> some View {
@@ -129,6 +146,28 @@ private struct BBMenuTrigger: ViewModifier {
     }
 }
 
+private struct BBContextTrigger: ViewModifier {
+    @Environment(\.bbMenuCenter) private var center
+    let title: String?
+    let width: CGFloat
+    let items: () -> [BBMenuItem]
+    @State private var frame: CGRect = .zero
+
+    func body(content: Content) -> some View {
+        content
+            .background(GeometryReader { g in
+                Color.clear
+                    .onAppear { frame = g.frame(in: .named(bbSpace)) }
+                    .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
+            })
+            .twoFingerTap(simultaneous: true) {
+                let list = items()
+                guard !list.isEmpty else { return }
+                center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: list))
+            }
+    }
+}
+
 /// The menu buttons' press: a quick darkening, back up on release.
 private struct MenuPress: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -148,10 +187,16 @@ private extension View {
     /// A two-finger tap or a trackpad / mouse right-click on this view. SwiftUI's own taps can't count
     /// fingers, so these are UIKit recognizers handed to SwiftUI (iPadOS 18 and later; the app's
     /// iPads run 26), which keeps them in SwiftUI's gesture system next to the button's own tap.
-    @ViewBuilder func twoFingerTap(_ action: @escaping () -> Void) -> some View {
+    /// `simultaneous`: the view's own gestures (a knob's drag) keep working alongside.
+    @ViewBuilder func twoFingerTap(simultaneous: Bool = false, _ action: @escaping () -> Void) -> some View {
         if #available(iOS 18.0, *) {
-            gesture(TapRecognizer(touches: 2, action: action))
-                .gesture(TapRecognizer(secondaryClick: true, action: action))
+            if simultaneous {
+                simultaneousGesture(TapRecognizer(touches: 2, action: action))
+                    .simultaneousGesture(TapRecognizer(secondaryClick: true, action: action))
+            } else {
+                gesture(TapRecognizer(touches: 2, action: action))
+                    .gesture(TapRecognizer(secondaryClick: true, action: action))
+            }
         } else {
             self
         }
@@ -181,6 +226,7 @@ private struct BBMenuHost: ViewModifier {
     func body(content: Content) -> some View {
         content
             .environmentObject(center)
+            .environment(\.bbMenuCenter, center)
             .overlay(
                 GeometryReader { geo in
                     if let spec = center.open {

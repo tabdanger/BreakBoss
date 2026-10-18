@@ -1,0 +1,206 @@
+import XCTest
+
+/// The track menu and the SAMPLER window, on an iPad simulator (build.yml, "taps" job). Every control
+/// is turned the way a finger turns it, then the track's next hit is rendered offline in the app
+/// (the window's probe, BREAKBOSS_UI_PROBE) so the log shows whether the sound changed.
+final class SamplerUITests: XCTestCase {
+    private var app: XCUIApplication!
+    private var shot = 0
+
+    override func setUp() {
+        continueAfterFailure = true
+        XCUIDevice.shared.orientation = .landscapeLeft
+        app = XCUIApplication()
+        app.launchEnvironment["BREAKBOSS_OPEN_SEQUENCER"] = "1"
+        app.launchEnvironment["BREAKBOSS_UI_PROBE"] = "1"
+        app.launch()
+    }
+
+    private func snap(_ name: String) {
+        shot += 1
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = String(format: "sampler-%02d-%@", shot, name)
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    private func dumpTree(_ why: String) {
+        print("UITREE ---- \(why)")
+        for line in app.debugDescription.components(separatedBy: "\n") { print("UITREE \(line)") }
+    }
+
+    private func any(_ id: String) -> XCUIElement { app.descendants(matching: .any)[id].firstMatch }
+
+    private func menuRow(_ prefix: String) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label CONTAINS %@", prefix)).firstMatch
+    }
+
+    /// The track's next hit, rendered now: energy left / right, early / late, zero crossings, brightness.
+    private struct Probe: CustomStringConvertible {
+        var l = 0.0, r = 0.0, early = 0.0, late = 0.0, zc = 0.0, hf = 0.0
+        var description: String { String(format: "L=%.4f R=%.4f early=%.4f late=%.4f zc=%.0f hf=%.4f", l, r, early, late, zc, hf) }
+    }
+
+    private func probe(_ what: String) -> Probe {
+        let button = any("samplerProbe")
+        guard button.waitForExistence(timeout: 3) else { dumpTree("no probe"); return Probe() }
+        sleep(2)            // the SAMPLE page's sound is computed off the main thread
+        button.tap()
+        sleep(1)
+        let text = (button.value as? String) ?? button.label
+        var p = Probe()
+        for part in text.components(separatedBy: " ") {
+            let kv = part.components(separatedBy: "=")
+            guard kv.count == 2, let v = Double(kv[1]) else { continue }
+            switch kv[0] {
+            case "L": p.l = v
+            case "R": p.r = v
+            case "early": p.early = v
+            case "late": p.late = v
+            case "zc": p.zc = v
+            case "hf": p.hf = v
+            default: break
+            }
+        }
+        print("UITREE PROBE \(what): \(p)")
+        return p
+    }
+
+    /// Turns a knob: drags up (positive) or down from its middle.
+    private func turn(_ id: String, by dy: CGFloat, dx: CGFloat = 0) {
+        let knob = any(id)
+        guard knob.waitForExistence(timeout: 3) else { XCTFail("there is a \(id) knob"); dumpTree("no \(id)"); return }
+        let from = knob.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: dx, dy: -dy)))
+        sleep(1)
+        print("UITREE KNOB \(id) = \(knob.value ?? "?")")
+    }
+
+    func testTrackMenuAndSampler() {
+        let header = any("trackHeader0")
+        XCTAssertTrue(header.waitForExistence(timeout: 20), "the rack shows its first track")
+        sleep(1)
+
+        // the track menu: the track's own things first, Remove up top
+        header.twoFingerTap()
+        let settings = menuRow("Track settings")
+        XCTAssertTrue(settings.waitForExistence(timeout: 3), "a two-finger tap opens the track menu with Track settings")
+        snap("track-menu")
+        let order = ["Track settings", "Open sample editor", "Solo", "Load sample", "Clear sample", "Remove"]
+        let ys = order.map { menuRow($0).frame.minY }
+        print("UITREE MENU ORDER \(zip(order, ys).map { "\($0.0)@\(Int($0.1))" }.joined(separator: " "))")
+        XCTAssertEqual(ys, ys.sorted(), "the track menu runs Track settings, Open sample editor, Solo, Load sample, Clear sample, Remove")
+        XCTAssertLessThan(menuRow("Remove").frame.minY, menuRow("Fill every step").frame.minY, "Remove is above the fills")
+
+        // Track settings (build 82 crashed here): the sheet opens and its SOUND menu works
+        settings.tap()
+        XCTAssertTrue(app.staticTexts["TRACK SETTINGS"].waitForExistence(timeout: 5), "Track settings opens without crashing")
+        snap("track-settings")
+        let sound = app.buttons.matching(NSPredicate(format: "label CONTAINS 'SOUND'")).firstMatch
+        if sound.waitForExistence(timeout: 2) {
+            sound.tap()
+            XCTAssertTrue(menuRow("Load a sample").waitForExistence(timeout: 3), "the SOUND menu opens inside Track settings")
+            snap("track-settings-sound-menu")
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.95)).tap()
+        } else {
+            dumpTree("no SOUND in track settings")
+        }
+        XCTAssertEqual(app.state, .runningForeground, "the app is still running")
+        app.swipeDown(velocity: .fast)
+        sleep(1)
+        if app.staticTexts["TRACK SETTINGS"].exists {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.05)).tap()
+            sleep(1)
+        }
+
+        // the sample editor
+        header.twoFingerTap()
+        let open = menuRow("Open sample editor")
+        XCTAssertTrue(open.waitForExistence(timeout: 3), "the track menu has Open sample editor")
+        open.tap()
+        XCTAssertTrue(any("samplerWindow").waitForExistence(timeout: 5), "the sampler opens")
+        snap("sampler")
+
+        let plain = probe("plain")
+        XCTAssertGreaterThan(plain.l + plain.r, 0.0001, "the track makes a sound")
+
+        // PAN, VOL, PITCH on the header
+        turn("samplerKnobPAN", by: 0, dx: 160)
+        let panned = probe("pan right")
+        XCTAssertGreaterThan(panned.r, panned.l * 1.5, "PAN to the right moves the sound right (\(panned))")
+        turn("samplerKnobVOL", by: -120)
+        let quieter = probe("vol down")
+        XCTAssertLessThan(quieter.l + quieter.r, (panned.l + panned.r) * 0.7, "VOL down makes it quieter (\(quieter) vs \(panned))")
+        turn("samplerKnobVOL", by: 120)
+        turn("samplerKnobPITCH", by: 150)
+        let higher = probe("pitch up")
+        XCTAssertGreaterThan(higher.zc, quieter.zc * 1.05, "PITCH up raises it (\(higher.zc) vs \(quieter.zc) crossings)")
+        turn("samplerKnobPITCH", by: -75)
+
+        // precomputed effects
+        let beforeReverse = probe("before reverse")
+        any("samplerReverse").tap()
+        let reversed = probe("reverse")
+        XCTAssertNotEqual(reversed.early, beforeReverse.early, accuracy: beforeReverse.early * 0.05, "Reverse changes the sound")
+        any("samplerReverse").tap()
+        turn("samplerKnobLENGTH", by: -150)
+        let shorter = probe("length short")
+        XCTAssertLessThan(shorter.late + shorter.early, (beforeReverse.late + beforeReverse.early) * 0.95, "LENGTH shortens the sound (\(shorter))")
+        turn("samplerKnobLENGTH", by: 300)
+        snap("sample-page-turned")
+
+        // ENVELOPE: turning a knob turns the Volume envelope on and shapes the hit
+        any("samplerEnvelopePage").tap()
+        sleep(1)
+        snap("envelope-page")
+        let open0 = probe("envelope page")
+        turn("samplerKnobDEC", by: -150)
+        turn("samplerKnobSUS", by: -150)
+        let decayed = probe("decay short, sustain 0")
+        XCTAssertLessThan(decayed.late, open0.late * 0.5 + 1e-6, "DEC and SUS shorten the hit (\(decayed) vs \(open0))")
+        turn("samplerKnobATT", by: 140)
+        let slow = probe("slow attack")
+        XCTAssertLessThan(slow.early, decayed.early * 0.8, "ATT fades the hit in (\(slow) vs \(decayed))")
+        snap("envelope-turned")
+
+        // the box method preset
+        any("samplerEnvPresets").tap()
+        let box = menuRow("Box method")
+        if box.waitForExistence(timeout: 3) { box.tap() } else { XCTFail("the presets have the box method"); dumpTree("presets") }
+        _ = probe("box method")
+
+        // LFO on the volume: picking a shape brings it in
+        any("samplerLFOShape2").tap()
+        let lfo = probe("square LFO on volume")
+        XCTAssertNotEqual(lfo.l, open0.l, accuracy: 1e-6, "the LFO changes the sound")
+        snap("lfo")
+
+        // a tempo length from a knob's own menu
+        any("samplerKnobATT").twoFingerTap()
+        let quarter = menuRow("1/4 (beat)")
+        XCTAssertTrue(quarter.waitForExistence(timeout: 3), "a two-finger tap on ATT opens its tempo lengths")
+        snap("att-set-menu")
+        if quarter.exists { quarter.tap() } else { app.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.95)).tap() }
+        sleep(1)
+        XCTAssertEqual(any("samplerEnvTempo").value as? String, "on", "picking a tempo length turns Tempo on")
+
+        // the filter: MOD X down takes the top off
+        let open1 = probe("before filter")
+        turn("samplerKnobMODX", by: -160)
+        let dark = probe("mod x down")
+        XCTAssertLessThan(dark.hf, open1.hf * 0.7, "MOD X down darkens the sound (\(dark.hf) vs \(open1.hf))")
+        turn("samplerKnobMODY", by: 160)
+        _ = probe("mod y up")
+        snap("filter")
+
+        // the graph: drag the sustain point down
+        let graph = any("samplerEnvGraph")
+        if graph.waitForExistence(timeout: 2) {
+            graph.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                .press(forDuration: 0.05, thenDragTo: graph.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
+            sleep(1)
+            snap("graph-dragged")
+        }
+        XCTAssertEqual(app.state, .runningForeground, "the app is still running")
+    }
+}

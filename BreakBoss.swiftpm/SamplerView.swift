@@ -130,6 +130,7 @@ struct SamplerKnob: View {
             .position(x: g.size.width / 2, y: g.size.height / 2)
         }
         .contentShape(Rectangle())
+        .accessibilityValue(display?(value) ?? String(format: "%.3f", value))
         .highPriorityGesture(DragGesture(minimumDistance: 0)
             .onChanged { g in
                 if start == nil { start = value }
@@ -212,6 +213,8 @@ struct SamplerWindow: View {
     @State private var presetsChanged = 0
 
     static let artW: CGFloat = 1408, artH: CGFloat = 1000
+    static let probing = ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil
+    @State private var probe = ""
 
     private var skin: SamplerSkin { SamplerSkin.of(finish) }
     private var sm: SamplerSettings { pending ?? controller.sampler(pad) }
@@ -234,6 +237,14 @@ struct SamplerWindow: View {
                 titleBar(s)
                 tabStrip(s)
                 if page == 0 { samplePage(s) } else { envelopePage(s) }
+                if Self.probing {
+                    // UI tests only: renders a hit of the track as it is now and shows its numbers
+                    Button { probe = controller.probeTrack(pad) } label: {
+                        Text(probe.isEmpty ? "probe" : probe).font(.system(size: 9)).foregroundColor(.white.opacity(0.3))
+                    }
+                    .accessibilityIdentifier("samplerProbe").accessibilityValue(probe)
+                    .spot(560, 974, 560, 22, s)
+                }
             }
             .frame(width: Self.artW * s, height: Self.artH * s, alignment: .topLeading)
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
@@ -379,6 +390,7 @@ struct SamplerWindow: View {
                             display: @escaping (Float) -> String, change: @escaping (Float, Bool) -> Void) -> some View {
         VStack(spacing: 4 * s) {
             SamplerKnob(value: value, skin: skin, bipolar: bipolar, reset: reset, display: display, change: change).frame(width: 66 * s, height: 66 * s)
+                .accessibilityLabel(title).accessibilityIdentifier("samplerKnob" + title)
             label(title, s)
         }
         .frame(width: 96 * s).offset(x: (x - 48) * s, y: 74 * s)
@@ -541,12 +553,13 @@ struct SamplerWindow: View {
     }
 
     private func knob(_ title: String, _ value: Float, x: CGFloat, y: CGFloat, d: CGFloat, _ s: CGFloat, labelY: CGFloat,
-                      bipolar: Bool = false, reset: Float? = nil, labelSize: CGFloat = 17,
+                      bipolar: Bool = false, reset: Float? = nil, labelSize: CGFloat = 17, id: String? = nil,
                       display: ((Float) -> String)? = nil, change: @escaping (Float, Bool) -> Void) -> some View {
         ZStack(alignment: .topLeading) {
             SamplerKnob(value: value, skin: skin, bipolar: bipolar, reset: reset, display: display, change: change)
                 .frame(width: d * s, height: d * s).offset(x: (x - d / 2) * s, y: (y - d / 2) * s)
                 .accessibilityLabel(title)
+                .accessibilityIdentifier("samplerKnob" + (id ?? title.replacingOccurrences(of: " ", with: "")))
             label(title, s, size: labelSize).frame(width: 140 * s, height: 24 * s).offset(x: (x - 70) * s, y: (labelY - 12) * s)
         }
     }
