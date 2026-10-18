@@ -194,6 +194,56 @@ final class SharedControls {
     }
 }
 
+/// Where each track's newest voice is in its sound, for the SAMPLER's playback cursor.
+/// The audio thread publishes once per render call with a try-lock (it never waits); the
+/// screen copies one track's row under the lock.
+final class SharedPlayheads {
+    /// One row per pad: voice id (its trigger's age, 0 = nothing sounding), position, start,
+    /// speed (parts of the sound per second, minus = backwards), loop start, loop end (-1 = no loop).
+    static let stride = 6
+    struct Row: Equatable {
+        var id: UInt32 = 0
+        var position: Double = 0
+        var start: Double = 0
+        var speed: Double = 0
+        var loopStart: Double = -1
+        var loopEnd: Double = -1
+        /// When the audio thread wrote it (CACurrentMediaTime's clock) and how long that render call was.
+        var time: Double = 0
+        var block: Double = 0
+    }
+    private let lock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
+    private let rows = UnsafeMutablePointer<Double>.allocate(capacity: Pad.count * SharedPlayheads.stride)
+    private var time: Double = 0
+    private var block: Double = 0
+    private let secondsPerTick: Double
+    init() {
+        lock.initialize(to: os_unfair_lock())
+        rows.initialize(repeating: 0, count: Pad.count * SharedPlayheads.stride)
+        var info = mach_timebase_info_data_t()
+        mach_timebase_info(&info)
+        secondsPerTick = Double(info.numer) / Double(info.denom) / 1_000_000_000
+    }
+    deinit { rows.deallocate(); lock.deinitialize(count: 1); lock.deallocate() }
+
+    /// Audio thread: copies `source` (Pad.count rows) if the screen isn't reading right now.
+    func publish(_ source: UnsafeMutablePointer<Double>, block seconds: Double) {
+        guard os_unfair_lock_trylock(lock) else { return }
+        rows.update(from: source, count: Pad.count * SharedPlayheads.stride)
+        time = Double(mach_absolute_time()) * secondsPerTick
+        block = seconds
+        os_unfair_lock_unlock(lock)
+    }
+
+    func row(_ pad: Int) -> Row {
+        guard (0..<Pad.count).contains(pad) else { return Row() }
+        os_unfair_lock_lock(lock)
+        defer { os_unfair_lock_unlock(lock) }
+        let r = rows + pad * SharedPlayheads.stride
+        return Row(id: UInt32(r[0]), position: r[1], start: r[2], speed: r[3], loopStart: r[4], loopEnd: r[5], time: time, block: block)
+    }
+}
+
 struct MeterSnapshot {
     var status = [Double](repeating: 0, count: 8)
     var padHits = [UInt32](repeating: 0, count: Pad.count)

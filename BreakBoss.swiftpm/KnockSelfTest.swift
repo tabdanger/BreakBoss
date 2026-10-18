@@ -43,6 +43,7 @@ enum KnockSelfTest {
         phase("checkDrumRoll", checkDrumRoll)
         phase("checkWorkspaceChannels", checkWorkspaceChannels)
         phase("checkSampler", checkSampler)
+        phase("checkSamplerPlayhead", checkSamplerPlayhead)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -636,6 +637,77 @@ enum KnockSelfTest {
     }
 
     /// The SAMPLER window: the SAMPLE page's computed sound and the ENVELOPE page while it plays.
+    /// The SAMPLER's live waveform (Tyrone, Oct 18): the cursor follows the track's newest voice
+    /// from the engine (start, speed, pitch, reverse, START OFFSET, loop, STOP), and the waveform's
+    /// kept peaks match the sound.
+    static func checkSamplerPlayhead() {
+        let rate = 48_000.0
+        let sound = SampleBuffer(left: (0..<48_000).map { sinf(Float($0) * 0.05) * (1 - Float($0) / 48_000) }, sampleRate: rate)
+        func run(_ settings: PadSettings, hits: Int = 1, blocks: Int = 10, stop: Bool = false) -> (SharedPlayheads.Row, [UInt32]) {
+            var all = Array(repeating: PadSettings(), count: Pad.count)
+            all[0] = settings
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0), (.velocity, 0), (.tighten, 0)]
+            for (p, v) in quiet { e.setParam(p, v) }
+            e.kitHandoff.publish(KitBuffers(name: "PLAYHEAD", samples: Array(repeating: sound, count: Pad.count), settings: all, bassHz: 110))
+            var left = [Float](repeating: 0, count: 128), right = left
+            func render() {
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+            }
+            render()
+            var ids: [UInt32] = []
+            for _ in 0..<hits {
+                e.send(KEvent(kind: .pad, a: 0, value: 1))
+                for _ in 0..<blocks { render() }
+                ids.append(e.playheads.row(0).id)
+            }
+            if stop {
+                e.send(KEvent(kind: .stop))
+                for _ in 0..<40 { render() }
+            }
+            return (e.playheads.row(0), ids)
+        }
+        let after = 10.0 * 128 / 48_000   // the part of the sound 10 blocks play at speed 1
+        let (plain, _) = run(PadSettings())
+        check(plain.id != 0 && plain.start == 0 && abs(plain.position - after) < 0.004 && abs(plain.speed - 1) < 0.01,
+              "Sampler cursor: a hit starts at the sound's start and moves at its speed (\(plain.position), \(plain.speed)/s)")
+        check(plain.block > 0 && plain.time > 0, "Sampler cursor: the engine stamps when it wrote the position")
+        var up = PadSettings(); up.tune = 12
+        let (octave, _) = run(up)
+        check(abs(octave.speed - 2) < 0.02 && abs(octave.position - 2 * after) < 0.006,
+              "Sampler cursor: an octave up moves twice as fast (\(octave.speed)/s)")
+        var back = PadSettings(); back.reverse = true
+        let (reversed, _) = run(back)
+        check(reversed.start > 0.99 && reversed.speed < 0 && abs((reversed.start - reversed.position) - after) < 0.004,
+              "Sampler cursor: reverse starts at the end and moves backwards (\(reversed.position))")
+        var offset = PadSettings(); offset.sampler = SamplerSettings(); offset.sampler?.startOffset = 0.5
+        let (late, _) = run(offset)
+        check(abs(late.start - 0.5) < 0.002 && late.position > late.start, "Sampler cursor: START OFFSET moves where it starts (\(late.start))")
+        var looped = PadSettings(); looped.sampler = SamplerSettings(); looped.sampler?.useLoop = true
+        let (loop, _) = run(looped)
+        check(loop.loopEnd > loop.loopStart && loop.loopStart >= 0, "Sampler cursor: a looping voice reports its loop (\(loop.loopStart)…\(loop.loopEnd))")
+        check(plain.loopEnd < 0, "Sampler cursor: a one-shot reports no loop")
+        let (again, ids) = run(PadSettings(), hits: 2, blocks: 5)
+        check(ids.count == 2 && ids[1] != ids[0] && again.id == ids[1] && again.position < after,
+              "Sampler cursor: overlapping hits follow the newest one, from its start (\(again.position))")
+        let (stopped, _) = run(PadSettings(), stop: true)
+        check(stopped.id == 0, "Sampler cursor: STOP ends the voice so the cursor resets")
+        // the waveform's kept peaks: the same lows and highs as reading every frame
+        let peaks = SamplerPeaks(sound)
+        var worst: Float = 0
+        for (a, b) in [(0, 10), (100, 5_000), (7_000, 48_000), (31, 33), (40_000, 41_500)] {
+            var lo: Float = 0, hi: Float = 0
+            for i in a..<b { let v = (sound.left[i] + sound.right[i]) * 0.5; lo = min(lo, v); hi = max(hi, v) }
+            let (plo, phi) = peaks.range(sound, a, b)
+            // the kept blocks may reach a block past either edge: never less than the frames hold
+            worst = max(worst, max(0, plo - lo), max(0, hi - phi))
+        }
+        check(worst < 0.000_1, "Sampler waveform: the kept peaks cover the sound's own lows and highs")
+        let cols = peaks.columns(sound, count: 1_330, zoom: 1, scroll: 0)
+        check(cols.count == 1_330 && cols[0].1 > cols[1_300].1, "Sampler waveform: one column per pixel, louder at the start of a decaying hit")
+    }
+
     static func checkSampler() {
         let rate = 48_000.0
         let ramp = SampleBuffer(left: (0..<9_600).map { Float($0) / 9_600 * 0.5 }, sampleRate: rate)
