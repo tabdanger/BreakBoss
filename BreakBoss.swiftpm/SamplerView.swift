@@ -204,6 +204,8 @@ struct SamplerWindow: View {
     /// The waveform's selection (parts of the sound, 0…1) and the edits UNDO can take back.
     @State private var selection: ClosedRange<Double>?
     @State private var selectFrom: Double?
+    /// A region marker being dragged along the top of the waveform: which one, and where it is now.
+    @State private var markerDrag: (Int, Float)?
     @State private var handleFrom: (Double, Double)?
     @State private var undo: [PadSettings] = []
     /// Dragging a loop flag: the loop points shown until it's let go.
@@ -262,8 +264,8 @@ struct SamplerWindow: View {
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .aspectRatio(Self.artW / Self.artH, contentMode: .fit)
-        // the window's menus check their items red on Platinum too, not lime
-        .environment(\.bbMenuAccent, skin.finish == "platinum" ? skin.glow : nil)
+        // the window's menus check their items in the mode's own colour, not lime
+        .environment(\.bbMenuAccent, skin.glow)
         .alert("Save the envelope", isPresented: Binding(get: { savingKind != nil }, set: { if !$0 { savingKind = nil } })) {
             TextField("Name", text: $presetName)
             Button("Save") { savePreset() }
@@ -350,7 +352,7 @@ struct SamplerWindow: View {
             // ON: the track plays (a mute on the rack turns it off)
             Button { controller.toggleMute(pad) } label: {
                 VStack(spacing: 6 * s) {
-                    SamplerSwitch(on: !muted, skin: skin, lamp: skin.finish == "platinum" ? nil : Color(red: 0.4, green: 0.95, blue: 0.3)).frame(width: 34 * s, height: 34 * s)
+                    SamplerSwitch(on: !muted, skin: skin, lamp: nil).frame(width: 34 * s, height: 34 * s)
                     label("ON", s)
                 }
             }
@@ -687,7 +689,8 @@ struct SamplerWindow: View {
             if let sample {
                 SamplerWaveCanvas(sample: sample, zoom: zoom, scroll: scrollPos, color: skin.glow, startOffset: startDrag ?? sm.startOffset,
                                   loop: sm.useLoop, loopPoints: loopPoints, region: sm.loadRegions ? sample.region : nil, cues: marks,
-                                  markers: sm.markers, selection: selection, bpm: controller.state.bpm)
+                                  markers: markerDrag.map { d in var m = sm.markers; if m.indices.contains(d.0) { m[d.0] = d.1 }; return m } ?? sm.markers,
+                                  regions: sm.regions, selection: selection, bpm: controller.state.bpm)
                     .clipShape(RoundedRectangle(cornerRadius: 6 * s)).spot(2, 2, 1330, 178, s)
                 // bit depth and channels, lower right (FL's readout)
                 HStack(spacing: 8 * s) {
@@ -717,11 +720,26 @@ struct SamplerWindow: View {
                 .onTapGesture { controller.auditionPad(pad) }
                 .gesture(DragGesture(minimumDistance: 6)
                     .onChanged { v in
+                        // a drag that starts on a marker's flag (along the top) moves that marker
+                        if selectFrom == nil && markerDrag == nil && v.startLocation.y < 28 * s,
+                           let k = sm.markers.indices.min(by: { abs(point(Double(sm.markers[$0]), width: w) - v.startLocation.x) < abs(point(Double(sm.markers[$1]), width: w) - v.startLocation.x) }),
+                           abs(point(Double(sm.markers[k]), width: w) - v.startLocation.x) < 22 * s {
+                            markerDrag = (k, sm.markers[k])
+                        }
+                        if let d = markerDrag {
+                            markerDrag = (d.0, Float(part(v.location.x, width: w)))
+                            return
+                        }
                         if selectFrom == nil { selectFrom = part(v.startLocation.x, width: w) }
                         let a = selectFrom ?? 0, b = part(v.location.x, width: w)
                         selection = min(a, b)...max(a, b)
                     }
                     .onEnded { _ in
+                        if let d = markerDrag {
+                            markerDrag = nil
+                            edit { if $0.markers.indices.contains(d.0) { $0.markers[d.0] = d.1; $0.markers.sort() } }
+                            return
+                        }
                         selectFrom = nil
                         if let sel = selection, sel.upperBound - sel.lowerBound < 0.000_5 { selection = nil }
                     })
@@ -1029,6 +1047,19 @@ struct SamplerWindow: View {
             edit { $0.markers.removeAll { r.contains(Double($0)) } }
         })
         items.append(.item("Clear all markers", icon: "trash", destructive: true, enabled: !sm.markers.isEmpty) { edit { $0.markers = [] } })
+        items.append(.header("Regions"))
+        let wide = sel.map { $0.upperBound - $0.lowerBound > 0.001 } ?? false
+        items.append(.item(wide ? "Add a region from the selection" : "Add a region (select a part first)", icon: "rectangle.dashed", enabled: wide) {
+            guard let r = sel else { return }
+            edit { $0.regions.append(SamplerRegion(start: Float(r.lowerBound), end: Float(r.upperBound))); $0.regions.sort { $0.start < $1.start } }
+        })
+        items.append(.item("Play only the first region", detail: "Load regions", checked: sm.loadRegions, enabled: !sm.regions.isEmpty) { edit { $0.loadRegions.toggle() } })
+        let regionsHere = sel.map { r in sm.regions.filter { r.overlaps(Double($0.start)...Double(max($0.start, $0.end))) } } ?? []
+        items.append(.item("Remove the regions in the selection", icon: "rectangle.slash", destructive: true, enabled: !regionsHere.isEmpty) {
+            guard let r = sel else { return }
+            edit { $0.regions.removeAll { r.overlaps(Double($0.start)...Double(max($0.start, $0.end))) } }
+        })
+        items.append(.item("Clear all regions", icon: "trash", destructive: true, enabled: !sm.regions.isEmpty) { edit { $0.regions = [] } })
         items.append(.header("Beat length"))
         let beats: [Double] = [1, 2, 4, 8, 16, 32]
         var beatRows: [BBMenuItem] = [
@@ -1080,9 +1111,10 @@ struct SamplerWindow: View {
     private var env: SamplerEnvelope { sm.envelope(target) }
     private var lfo: SamplerLFO { sm.lfo(target) }
     /// `on`: turning one of its knobs or points switches the envelope on, so you hear it straight away.
-    private func editEnv(on: Bool = false, _ change: @escaping (inout SamplerEnvelope) -> Void) {
+    /// `knobs`: a knob (or its Set menu) shapes the envelope, so graph points you added give way to the knobs' shape.
+    private func editEnv(on: Bool = false, knobs: Bool = false, _ change: @escaping (inout SamplerEnvelope) -> Void) {
         let t = target
-        edit { $0.setEnvelope(t) { e in change(&e); if on { e.on = true } } }
+        edit { $0.setEnvelope(t) { e in change(&e); if on { e.on = true }; if knobs { e.points = []; e.sustainPoint = -1 } } }
     }
     /// `bringIn`: an LFO with AMT in the middle does nothing, so picking its shape, speed, delay or
     /// attack brings it in at +50% (turn AMT back to the middle to take it out again).
@@ -1136,7 +1168,7 @@ struct SamplerWindow: View {
         func set(_ title: String, _ path: WritableKeyPath<SamplerEnvelope, Float>) -> () -> [BBMenuItem] {
             { [BBMenuItem.header("Set \(title) (tempo)")] + SamplerEnvelope.tempoLengths.map { name, beats in
                 BBMenuItem.item(name, checked: e.tempo && abs(SamplerEnvelope.units(e[keyPath: path], tempo: true) - beats) < 0.001) {
-                    editEnv(on: true) { $0.tempo = true; $0[keyPath: path] = SamplerEnvelope.knob(beats: beats) }
+                    editEnv(on: true, knobs: true) { $0.tempo = true; $0[keyPath: path] = SamplerEnvelope.knob(beats: beats) }
                 }
             } }
         }
@@ -1162,29 +1194,30 @@ struct SamplerWindow: View {
                 .spot(410, 8, 268, 38, s)
                 .accessibilityIdentifier("samplerEnvPresets")
             Group {
-            knob("DELAY", e.delay, x: 56, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("DELAY", \.delay), display: time) { v, _ in editEnv(on: true) { $0.delay = v } }
-            knob("ATT", e.attack, x: 154, y: 282, d: 64, s, labelY: 327, reset: 0.12, menu: set("ATT", \.attack), display: time) { v, _ in editEnv(on: true) { $0.attack = v } }
-            knob("HOLD", e.hold, x: 254, y: 282, d: 64, s, labelY: 327, reset: 0.18, menu: set("HOLD", \.hold), display: time) { v, _ in editEnv(on: true) { $0.hold = v } }
-            knob("DEC", e.decay, x: 353, y: 282, d: 64, s, labelY: 327, reset: 0.45, menu: set("DEC", \.decay), display: time) { v, _ in editEnv(on: true) { $0.decay = v } }
-            knob("SUS", e.sustain, x: 451, y: 282, d: 64, s, labelY: 327, reset: 0.5, display: { v in "\(Int((v * 100).rounded()))%" }) { v, _ in editEnv(on: true) { $0.sustain = v } }
-            knob("REL", e.release, x: 548, y: 282, d: 64, s, labelY: 327, reset: 0.3, menu: set("REL", \.release), display: time) { v, _ in editEnv(on: true) { $0.release = v } }
+            knob("DELAY", e.delay, x: 56, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("DELAY", \.delay), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.delay = v } }
+            knob("ATT", e.attack, x: 154, y: 282, d: 64, s, labelY: 327, reset: 0.12, menu: set("ATT", \.attack), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.attack = v } }
+            knob("HOLD", e.hold, x: 254, y: 282, d: 64, s, labelY: 327, reset: 0.18, menu: set("HOLD", \.hold), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.hold = v } }
+            knob("DEC", e.decay, x: 353, y: 282, d: 64, s, labelY: 327, reset: 0.45, menu: set("DEC", \.decay), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.decay = v } }
+            knob("SUS", e.sustain, x: 451, y: 282, d: 64, s, labelY: 327, reset: 0.5, display: { v in "\(Int((v * 100).rounded()))%" }) { v, _ in editEnv(on: true, knobs: true) { $0.sustain = v } }
+            knob("REL", e.release, x: 548, y: 282, d: 64, s, labelY: 327, reset: 0.3, menu: set("REL", \.release), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.release = v } }
             }
             if target != .volume {
                 knob("AMT", (e.amount + 1) / 2, x: 640, y: 282, d: 54, s, labelY: 327, bipolar: true, reset: 0.75,
                      display: { v in "\(Int(((v * 2 - 1) * 100).rounded()))%" }) { v, _ in editEnv(on: true) { $0.amount = abs(v * 2 - 1) < 0.02 ? 0 : v * 2 - 1 } }
             }
             Group {
-            knob("TENSION", (e.attackTension + 1) / 2, x: 154, y: 370, d: 46, s, labelY: 407, bipolar: true, reset: 0.5, labelSize: 15, id: "AttTension", display: tension) { v, _ in editEnv(on: true) { $0.attackTension = v * 2 - 1 } }
-            knob("TENSION", (e.decayTension + 1) / 2, x: 353, y: 370, d: 46, s, labelY: 407, bipolar: true, reset: 0.5, labelSize: 15, id: "DecTension", display: tension) { v, _ in editEnv(on: true) { $0.decayTension = v * 2 - 1 } }
-            knob("TENSION", (e.releaseTension + 1) / 2, x: 548, y: 370, d: 46, s, labelY: 407, bipolar: true, reset: 0.5, labelSize: 15, id: "RelTension", display: tension) { v, _ in editEnv(on: true) { $0.releaseTension = v * 2 - 1 } }
+            knob("TENSION", (e.attackTension + 1) / 2, x: 154, y: 370, d: 46, s, labelY: 407, bipolar: true, reset: 0.5, labelSize: 15, id: "AttTension", display: tension) { v, _ in editEnv(on: true, knobs: true) { $0.attackTension = v * 2 - 1 } }
+            knob("TENSION", (e.decayTension + 1) / 2, x: 353, y: 370, d: 46, s, labelY: 407, bipolar: true, reset: 0.5, labelSize: 15, id: "DecTension", display: tension) { v, _ in editEnv(on: true, knobs: true) { $0.decayTension = v * 2 - 1 } }
+            knob("TENSION", (e.releaseTension + 1) / 2, x: 548, y: 370, d: 46, s, labelY: 407, bipolar: true, reset: 0.5, labelSize: 15, id: "RelTension", display: tension) { v, _ in editEnv(on: true, knobs: true) { $0.releaseTension = v * 2 - 1 } }
             }
             smallToggle("Tempo", e.tempo, x: 690, y: 394, s, id: "samplerEnvTempo") { editEnv { $0.tempo.toggle() } }
         }
     }
 
-    /// The envelope graph's touch layer: drag a point to move it (sideways = its time, up and down =
-    /// the sustain level), drag a diamond up or down to bend its curve; a two-finger tap (or a
-    /// right-click) adds or removes points.
+    /// The envelope graph's touch layer: drag a point to move it, drag a diamond up or down to bend its
+    /// curve; double tap empty space to add a point there and double tap a point to delete it (FL style:
+    /// the knobs' shape turns into free points the first time); a two-finger tap (or a right-click)
+    /// opens the points menu (sustain point, straighten, back to the knobs' shape).
     private func envelopeEditor(_ e: SamplerEnvelope) -> some View {
         GeometryReader { g in
             let w = g.size.width, h = g.size.height
@@ -1192,19 +1225,81 @@ struct SamplerWindow: View {
                 .gesture(DragGesture(minimumDistance: 0)
                     .onChanged { v in
                         if envDrag == nil {
-                            let handles = EnvelopeGraph.points(e, width: w, height: h) + EnvelopeGraph.tensionHandles(e, width: w, height: h)
+                            let handles = EnvelopeGraph.handles(e, width: w, height: h)
                             let near = handles.enumerated().min { hypot($0.1.x - v.startLocation.x, $0.1.y - v.startLocation.y) < hypot($1.1.x - v.startLocation.x, $1.1.y - v.startLocation.y) }
                             guard let near, hypot(near.1.x - v.startLocation.x, near.1.y - v.startLocation.y) < 34 else { return }
                             envDrag = (near.0, e)
                         }
                         guard let drag = envDrag else { return }
-                        let moved = Self.dragged(drag.from, handle: drag.handle, dx: Float(v.translation.width / max(w, 1)), dy: Float(-v.translation.height / max(h * 0.9, 1)))
+                        let dy = Float(-v.translation.height / max(h * 0.9, 1))
+                        let moved = drag.from.usesPoints
+                            ? Self.draggedPoint(drag.from, handle: drag.handle, dt: Float(v.translation.width / EnvelopeGraph.pixelsPerUnit(drag.from, width: w)), dy: dy)
+                            : Self.dragged(drag.from, handle: drag.handle, dx: Float(v.translation.width / max(w, 1)), dy: dy)
                         editEnv { $0 = moved }
                     }
                     .onEnded { _ in envDrag = nil })
+                .simultaneousGesture(SpatialTapGesture(count: 2).onEnded { v in
+                    let pts = e.usesPoints ? EnvelopeGraph.pointXY(e, width: w, height: h) : []
+                    if let hit = pts.indices.first(where: { hypot(pts[$0].x - v.location.x, pts[$0].y - v.location.y) < 26 }) {
+                        editEnv(on: true) { $0 = Self.removingPoint(hit, from: $0) }
+                    } else {
+                        let p = e.withPoints()
+                        let time = Float(v.location.x / EnvelopeGraph.pixelsPerUnit(p, width: w))
+                        let level = Float((h - 2 - v.location.y) / max(h * 0.9, 1)).clamped(0, 1)
+                        editEnv(on: true) { $0 = Self.addingPoint(time: time, level: level, to: $0) }
+                    }
+                })
                 .bbContextMenu(title: "Envelope points", width: 300) { envelopePointItems(e) }
         }
         .accessibilityIdentifier("samplerEnvGraph")
+        .accessibilityValue(e.usesPoints ? "\(e.points.count) points" : "knobs")
+    }
+
+    /// Adds a point `time` from the start (seconds, or beats with Tempo) at `level`; the points after it stay where they are.
+    static func addingPoint(time: Float, level: Float, to from: SamplerEnvelope) -> SamplerEnvelope {
+        var e = from.withPoints()
+        guard e.points.count < SamplerEnvPoints.capacity else { return e }
+        var start: Float = 0
+        var at = e.points.count
+        for (i, p) in e.points.enumerated() {
+            if start + p.time > time { at = i; break }
+            start += p.time
+        }
+        let gap = max(0, time - start)
+        if at < e.points.count { e.points[at].time = max(0, e.points[at].time - gap) }
+        e.points.insert(SamplerEnvPoint(time: gap, level: level), at: at)
+        if e.sustainPoint >= at { e.sustainPoint += 1 }
+        return e
+    }
+
+    /// Deletes point `i`; the points after it stay where they are. The last one gone = the knobs' shape again.
+    static func removingPoint(_ i: Int, from: SamplerEnvelope) -> SamplerEnvelope {
+        var e = from
+        guard e.points.indices.contains(i) else { return e }
+        let gap = e.points[i].time
+        e.points.remove(at: i)
+        if i < e.points.count { e.points[i].time += gap }
+        if e.sustainPoint == i { e.sustainPoint = -1 } else if e.sustainPoint > i { e.sustainPoint -= 1 }
+        if e.points.isEmpty { e.sustainPoint = -1 }
+        return e
+    }
+
+    /// A graph point (handle < count) moved by `dt` (seconds, or beats) and `dy` of the height, or the
+    /// curve into point handle − count bent by `dy`.
+    static func draggedPoint(_ from: SamplerEnvelope, handle: Int, dt: Float, dy: Float) -> SamplerEnvelope {
+        var e = from
+        e.on = true
+        let n = e.points.count
+        if handle < n {
+            e.points[handle].time = (from.points[handle].time + dt).clamped(0, from.maxPointTime)
+            e.points[handle].level = (from.points[handle].level + dy).clamped(0, 1)
+        } else if handle - n < n {
+            let i = handle - n
+            let before: Float = i == 0 ? 0 : from.points[i - 1].level
+            let rising = from.points[i].level >= before
+            e.points[i].tension = (from.points[i].tension + (rising ? -dy : dy) * 2).clamped(-1, 1)
+        }
+        return e
     }
 
     /// A point (0 attack start … 5 release end) or a curve (6 attack, 7 decay, 8 release) dragged by
@@ -1230,6 +1325,20 @@ struct SamplerWindow: View {
     }
 
     private func envelopePointItems(_ e: SamplerEnvelope) -> [BBMenuItem] {
+        if e.usesPoints {
+            let sustainRows: [BBMenuItem] = [.item("None (runs straight through)", checked: e.sustainPoint < 0) { editEnv(on: true) { $0.sustainPoint = -1 } }]
+                + e.points.indices.map { i in
+                    BBMenuItem.item("Point \(i + 1)", detail: "\(Int((e.points[i].level * 100).rounded()))%", checked: e.sustainPoint == i) { editEnv(on: true) { $0.sustainPoint = i } }
+                }
+            return [
+                .header("Double tap the graph to add a point, a point to delete it"),
+                .submenu("Sustain point", icon: "pause", sustainRows),
+                .item("Delete the last point", icon: "minus.circle", destructive: true) { editEnv(on: true) { $0 = Self.removingPoint($0.points.count - 1, from: $0) } },
+                .item("Straighten the curves", icon: "line.diagonal") { editEnv(on: true) { for i in $0.points.indices { $0.points[i].tension = 0 } } },
+                .item("Back to the knobs' shape", icon: "dial.medium") { editEnv(on: true) { $0.points = []; $0.sustainPoint = -1 } },
+                .item(e.on ? "Turn the envelope off" : "Turn the envelope on", icon: "power", checked: e.on) { editEnv { $0.on.toggle() } },
+            ]
+        }
         let d = SamplerEnvelope()
         let stages: [(String, WritableKeyPath<SamplerEnvelope, Float>, Float)] = [("delay", \.delay, 0.2), ("attack", \.attack, d.attack), ("hold", \.hold, d.hold),
                                                                                ("decay", \.decay, d.decay), ("release", \.release, d.release)]
@@ -1442,20 +1551,22 @@ struct SamplerWindow: View {
     }
     private static func bipolar(_ v: Float) -> Float { abs(v * 2 - 1) < 0.02 ? 0 : v * 2 - 1 }
 
-    /// Levels adjustment: the same PAN and VOL as the header, MOD X / MOD Y the filter's cutoff and resonance.
+    /// Levels adjustment (FL's MISC offsets): PAN, VOL, MOD X and MOD Y on top of the main ones, on every note.
     private func levelsPanel(_ s: CGFloat) -> some View {
         panel("Levels adjustment", s) {
-            knob("PAN", (controller.state.pads[pad].pan + 1) / 2, x: 55, y: 120, d: 62, s, labelY: 166, bipolar: true, reset: 0.5, id: "LevelsPAN",
+            knob("PAN", (sm.levelPan + 1) / 2, x: 55, y: 120, d: 62, s, labelY: 166, bipolar: true, reset: 0.5, id: "LevelsPAN",
                  display: { v in let p = Int(((v * 2 - 1) * 100).rounded()); return p == 0 ? "C" : (p < 0 ? "L\(-p)" : "R\(p)") }) { v, _ in
-                var ps = controller.state.pads[pad]; let p = v * 2 - 1; ps.pan = abs(p) < 0.03 ? 0 : p; controller.setPadSettings(pad, ps)
+                edit { $0.levelPan = Self.bipolar(v) }
             }
-            knob("VOL", sm.volume, x: 142, y: 120, d: 62, s, labelY: 166, reset: 0.5, id: "LevelsVOL",
+            knob("VOL", sm.levelVol, x: 142, y: 120, d: 62, s, labelY: 166, reset: 0.5, id: "LevelsVOL",
                  display: { v in
                      let g = SamplerSettings.preGain(v)
                      return "\(Int((v * 200).rounded()))%  " + (g <= 0.0001 ? "-∞" : String(format: "%+.1f dB", 20 * log10(Double(g))))
-                 }) { v, _ in edit { $0.volume = abs(v - 0.5) < 0.01 ? 0.5 : v } }
-            knob("MOD X", sm.cutoff, x: 229, y: 120, d: 62, s, labelY: 166, reset: 1, id: "LevelsMODX", display: Self.cutoffText) { v, _ in edit { $0.cutoff = v } }
-            knob("MOD Y", sm.resonance, x: 316, y: 120, d: 62, s, labelY: 166, reset: 0, id: "LevelsMODY", display: Self.percent) { v, _ in edit { $0.resonance = v } }
+                 }) { v, _ in edit { $0.levelVol = abs(v - 0.5) < 0.01 ? 0.5 : v } }
+            knob("MOD X", (sm.levelX + 1) / 2, x: 229, y: 120, d: 62, s, labelY: 166, bipolar: true, reset: 0.5, id: "LevelsMODX",
+                 display: Self.bipolarPercent) { v, _ in edit { $0.levelX = Self.bipolar(v) } }
+            knob("MOD Y", (sm.levelY + 1) / 2, x: 316, y: 120, d: 62, s, labelY: 166, bipolar: true, reset: 0.5, id: "LevelsMODY",
+                 display: Self.bipolarPercent) { v, _ in edit { $0.levelY = Self.bipolar(v) } }
         }
     }
 
@@ -1689,7 +1800,7 @@ struct SamplerWindow: View {
     // MARK: The keyboard: tap a key to play the track at that note; two-finger tap sets the root note
 
     private func keyboard(_ s: CGFloat) -> some View {
-        let whites = 33
+        let whites = 29                // C3 to C7 (Tyrone's render), four octaves and the top C
         let whiteNotes = Self.whiteKeys(from: keyboardStart, count: whites)
         return ZStack(alignment: .topLeading) {
             GeometryReader { g in
@@ -1766,6 +1877,8 @@ struct SamplerWaveCanvas: View {
     let region: ClosedRange<Int>?
     let cues: [Int]
     var markers: [Float] = []
+    /// Regions drawn from a selection (shaded, numbered R1, R2…).
+    var regions: [SamplerRegion] = []
     var selection: ClosedRange<Double>? = nil
     /// The project's tempo: a line every beat, the bar numbers along the top.
     var bpm: Double = 0
@@ -1833,6 +1946,15 @@ struct SamplerWaveCanvas: View {
                 ctx.fill(Path(CGRect(x: x(a), y: 0, width: max(1, x(b) - x(a)), height: size.height)), with: .color(color.opacity(0.14)))
                 ctx.fill(Path(CGRect(x: x(a), y: 0, width: max(1, x(b) - x(a)), height: 8)), with: .color(color.opacity(0.6)))
                 for p in [a, b] { ctx.fill(Path(CGRect(x: x(p) - 1, y: 0, width: 2, height: size.height)), with: .color(color.opacity(0.7))) }
+            }
+            // the regions you drew
+            for (k, rg) in regions.enumerated() {
+                let a = x(Int(Double(rg.start) * Double(n - 1))), b = x(Int(Double(rg.end) * Double(n - 1)))
+                ctx.fill(Path(CGRect(x: a, y: 0, width: max(1, b - a), height: size.height)), with: .color(color.opacity(0.1)))
+                ctx.fill(Path(CGRect(x: a, y: size.height - 16, width: max(1, b - a), height: 16)), with: .color(color.opacity(0.35)))
+                for p in [a, b] { ctx.fill(Path(CGRect(x: p - 0.5, y: 0, width: 1, height: size.height)), with: .color(color.opacity(0.55))) }
+                ctx.draw(Text("R\(k + 1)").font(.system(size: 10, weight: .bold)).foregroundColor(.white),
+                         at: CGPoint(x: a + 12, y: size.height - 8))
             }
             // a bleeding declick's fade markers
             let (fi, fo) = sample.fadeMarks
@@ -1947,6 +2069,37 @@ struct EnvelopeGraph: View {
                 CGPoint(x: xs[4], y: y(sus, height: h)), CGPoint(x: xs[5], y: y(sus, height: h)), CGPoint(x: xs[6], y: y(0, height: h))]
     }
 
+    // MARK: the graph's own points
+
+    /// Pixels per second (or beat): the whole envelope fills 92% of the width.
+    static func pixelsPerUnit(_ env: SamplerEnvelope, width w: CGFloat) -> CGFloat {
+        let total = CGFloat(env.points.reduce(0) { $0 + $1.time })
+        return w * 0.92 / max(total, 0.05)
+    }
+
+    /// Where each point sits.
+    static func pointXY(_ env: SamplerEnvelope, width w: CGFloat, height h: CGFloat) -> [CGPoint] {
+        let k = pixelsPerUnit(env, width: w)
+        var t: CGFloat = 0
+        return env.points.map { p in t += CGFloat(p.time); return CGPoint(x: t * k, y: y(CGFloat(p.level), height: h)) }
+    }
+
+    /// The middle of the curve into each point.
+    static func pointTensionHandles(_ env: SamplerEnvelope, width w: CGFloat, height h: CGFloat) -> [CGPoint] {
+        let xy = pointXY(env, width: w, height: h)
+        return env.points.indices.map { i in
+            let x0 = i == 0 ? 0 : xy[i - 1].x
+            let v0 = CGFloat(i == 0 ? 0 : env.points[i - 1].level), v1 = CGFloat(env.points[i].level)
+            return CGPoint(x: (x0 + xy[i].x) / 2, y: y(v0 + (v1 - v0) * CGFloat(pow(0.5, Double(powf(4, env.points[i].tension)))), height: h))
+        }
+    }
+
+    /// Everything a finger can drag, in the order the editor numbers it.
+    static func handles(_ env: SamplerEnvelope, width w: CGFloat, height h: CGFloat) -> [CGPoint] {
+        env.usesPoints ? pointXY(env, width: w, height: h) + pointTensionHandles(env, width: w, height: h)
+                       : points(env, width: w, height: h) + tensionHandles(env, width: w, height: h)
+    }
+
     /// The middles of the attack, decay and release curves.
     static func tensionHandles(_ env: SamplerEnvelope, width w: CGFloat, height h: CGFloat) -> [CGPoint] {
         let xs = xs(env, width: w), sus = CGFloat(env.sustain)
@@ -1957,6 +2110,54 @@ struct EnvelopeGraph: View {
     }
 
     var body: some View {
+        if env.usesPoints { pointsBody } else { knobsBody }
+    }
+
+    /// The graph's own points: the line through them, the sustain point marked with a dashed line.
+    private var pointsBody: some View {
+        Canvas { ctx, size in
+            let w = size.width, h = size.height
+            func y(_ v: CGFloat) -> CGFloat { Self.y(v, height: h) }
+            let xy = Self.pointXY(env, width: w, height: h)
+            var path = Path()
+            path.move(to: CGPoint(x: 0, y: y(0)))
+            var x0: CGFloat = 0, v0: CGFloat = 0
+            for (i, p) in env.points.enumerated() {
+                let v1 = CGFloat(p.level), k = Double(powf(4, p.tension))
+                for j in 1...24 {
+                    let f = Double(j) / 24
+                    path.addLine(to: CGPoint(x: x0 + (xy[i].x - x0) * CGFloat(f), y: y(v0 + (v1 - v0) * CGFloat(pow(f, k)))))
+                }
+                x0 = xy[i].x; v0 = v1
+            }
+            var fill = path
+            fill.addLine(to: CGPoint(x: x0, y: h)); fill.addLine(to: CGPoint(x: 0, y: h)); fill.closeSubpath()
+            ctx.fill(fill, with: .linearGradient(Gradient(colors: [color.opacity(0.35), color.opacity(0.05)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+            for i in 1..<8 { ctx.fill(Path(CGRect(x: w * CGFloat(i) / 8, y: 0, width: 0.5, height: h)), with: .color(.white.opacity(0.06))) }
+            for i in 1..<4 { ctx.fill(Path(CGRect(x: 0, y: h * CGFloat(i) / 4, width: w, height: 0.5)), with: .color(.white.opacity(0.06))) }
+            if xy.indices.contains(env.sustainPoint) {
+                var line = Path()
+                line.move(to: CGPoint(x: xy[env.sustainPoint].x, y: 0)); line.addLine(to: CGPoint(x: xy[env.sustainPoint].x, y: h))
+                ctx.stroke(line, with: .color(color.opacity(0.7)), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+            }
+            ctx.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: 2.5, lineJoin: .round))
+            for (i, p) in xy.enumerated() {
+                let r = CGRect(x: p.x - 7, y: p.y - 7, width: 14, height: 14)
+                ctx.fill(Path(ellipseIn: r), with: .color(i == env.sustainPoint ? color : Color(white: 0.1)))
+                ctx.stroke(Path(ellipseIn: r), with: .color(color), lineWidth: 2.5)
+            }
+            for p in Self.pointTensionHandles(env, width: w, height: h) {
+                var d = Path()
+                d.move(to: CGPoint(x: p.x, y: p.y - 6)); d.addLine(to: CGPoint(x: p.x + 6, y: p.y))
+                d.addLine(to: CGPoint(x: p.x, y: p.y + 6)); d.addLine(to: CGPoint(x: p.x - 6, y: p.y)); d.closeSubpath()
+                ctx.fill(d, with: .color(color.opacity(0.85)))
+            }
+        }
+        .shadow(color: color.opacity(0.5), radius: 4)
+        .allowsHitTesting(false)
+    }
+
+    private var knobsBody: some View {
         Canvas { ctx, size in
             let w = size.width, h = size.height
             let xs = Self.xs(env, width: w)

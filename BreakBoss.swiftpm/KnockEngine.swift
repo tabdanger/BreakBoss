@@ -178,6 +178,14 @@ final class KnockEngine {
     private var pendingCount = 0
     /// Each track's last note speed, for Porta.
     private let lastRate: UnsafeMutablePointer<Double>
+    /// Chord "Auto (sustain)": the notes held on each track (low to high, up to `arpHeldMax`), how
+    /// long each is still held, and how long the track's arpeggio keeps running.
+    static let arpHeldMax = 8
+    private let arpHeld: UnsafeMutablePointer<Float>
+    private let arpHeldLeft: UnsafeMutablePointer<Int>
+    private let arpHeldCount: UnsafeMutablePointer<Int>
+    private let arpRunLeft: UnsafeMutablePointer<Int>
+    private var arpRunning = false
 
     let bus = BusProcessor()
     let master = MasterBus()
@@ -305,10 +313,19 @@ final class KnockEngine {
         dueHits.initialize(repeating: PendingHit(), count: KnockEngine.maxPending)
         lastRate = .allocate(capacity: Pad.count)
         lastRate.initialize(repeating: 0, count: Pad.count)
+        arpHeld = .allocate(capacity: Pad.count * KnockEngine.arpHeldMax)
+        arpHeld.initialize(repeating: 0, count: Pad.count * KnockEngine.arpHeldMax)
+        arpHeldLeft = .allocate(capacity: Pad.count * KnockEngine.arpHeldMax)
+        arpHeldLeft.initialize(repeating: 0, count: Pad.count * KnockEngine.arpHeldMax)
+        arpHeldCount = .allocate(capacity: Pad.count)
+        arpHeldCount.initialize(repeating: 0, count: Pad.count)
+        arpRunLeft = .allocate(capacity: Pad.count)
+        arpRunLeft.initialize(repeating: 0, count: Pad.count)
     }
 
     deinit {
         pending.deallocate(); dueHits.deallocate(); lastRate.deallocate()
+        arpHeld.deallocate(); arpHeldLeft.deallocate(); arpHeldCount.deallocate(); arpRunLeft.deallocate()
         midiOut.deallocate(); midiOutChannel.deallocate(); midiOutNote.deallocate()
         midiOffDue.deallocate(); midiOffChannel.deallocate(); midiOffNote.deallocate(); midiSentAt.deallocate()
         heldLoops.deallocate()
@@ -559,6 +576,7 @@ final class KnockEngine {
         applyHostTransportAtBlockStart()
         scheduleLoops(frames: frames, host: host)
         sortBlockEvents()
+        if arpRunning { countDownHeld(frames: frames) }
         if pendingCount > 0 { playPending(frames: frames) }
 
         // Voices, segment by segment between events.
@@ -933,6 +951,8 @@ final class KnockEngine {
     private func releaseAll() {
         for v in 0..<KnockEngine.maxVoices where voices[v].active { voices[v].release(samples: Int(sampleRate * 0.03)) }
         pendingCount = 0
+        for pad in 0..<Pad.count { arpHeldCount[pad] = 0; arpRunLeft[pad] = 0 }
+        arpRunning = false
     }
 
     /// Drum roll RECORD: note a live hit at its place in the playing pattern.
@@ -1067,6 +1087,17 @@ final class KnockEngine {
         let ps = kit.settings[pad]
         let rt = pad < kit.sampler.count ? kit.sampler[pad] : SamplerRT()
         // MISC: the arpeggiator plays this note as a run of notes instead (the first one now)
+        if rt.active && arp && rt.arpMode != 0 && !glide && rt.arpAuto {
+            let length = lengthSamples > 0 ? lengthSamples : Int(samplesPerBeat)
+            holdForArp(pad: pad, semis: semis, length: length)
+            // already running on this track: the note joins it; otherwise its run starts (the first
+            // step next block, once every note of a chord that lands together has joined)
+            if arpRunLeft[pad] > 0 { arpRunLeft[pad] = max(arpRunLeft[pad], length); return }
+            arpRunLeft[pad] = length
+            arpRunning = true
+            scheduleAutoArp(pad: pad, rt: rt, velocity: velocity, length: length)
+            return
+        }
         if rt.active && arp && rt.arpMode != 0 && !glide {
             let first = scheduleArp(pad: pad, rt: rt, velocity: velocity, semis: semis,
                                     length: lengthSamples > 0 ? lengthSamples : Int(samplesPerBeat))
@@ -1089,7 +1120,7 @@ final class KnockEngine {
             sample = hits[Int(padHits[pad] % UInt32(hits.count))]
             velGain = sqrtf(min(1, v / max(layers.tops[l], 0.001)))
         }
-        if rt.active { velGain *= rt.preGain * level }
+        if rt.active { velGain *= rt.preGain * rt.levelGain * level }
         let globalSemis = Float(Int(((params[KParam.pitch.rawValue] - 0.5) * 24).rounded()))
         let cents = (params[KParam.tune.rawValue] - 0.5) * 200
         // the sampler's "Enable main pitch" off: this track ignores the faceplate's PITCH and TUNE
@@ -1200,11 +1231,13 @@ final class KnockEngine {
             // MISC tracking: velocity (Vol) and the note's distance from Mid (Key) move PAN, MOD X and MOD Y
             let vel = velocity.clamped(0, 1) * 2 - 1
             let key = ((60 + semis - rt.keyMid) / 24).clamped(-1, 1)
-            let panOff = offsets.0 + rt.velTrack.0 * vel + rt.keyTrack.0 * key
-            let xOff = offsets.1 + rt.velTrack.1 * vel + rt.keyTrack.1 * key
-            let yOff = offsets.2 + rt.velTrack.2 * vel + rt.keyTrack.2 * key
+            // Levels adjustment's offsets ride on every note too
+            let panOff = offsets.0 + rt.velTrack.0 * vel + rt.keyTrack.0 * key + rt.levels.0
+            let xOff = offsets.1 + rt.velTrack.1 * vel + rt.keyTrack.1 * key + rt.levels.1
+            let yOff = offsets.2 + rt.velTrack.2 * vel + rt.keyTrack.2 * key + rt.levels.2
             voices[slot].startSampler(rt, sampleRate: sampleRate, samplesPerBeat: beatSamples, clock: sampleClock,
-                                      loopStart: sample.loopStart, loopEnd: sample.loopEnd, region: rt.regions ? sample.region : nil,
+                                      loopStart: sample.loopStart, loopEnd: sample.loopEnd, region: rt.regions ? (rt.hasUserRegion ? rt.region(length: sample.length) : sample.region) : nil,
+                                      playRegion: rt.regions && rt.hasUserRegion,
                                       offsets: (panOff, xOff, yOff))
             voices[slot].sm.gateCut = gateCut
             if pitchFrom > 0 && abs(pitchFrom - rate) > 0.000_1 {
@@ -1248,6 +1281,21 @@ final class KnockEngine {
         pendingCount = keep       // notes played now append their own echoes after the waiting ones
         for i in 0..<due {
             let h = dueHits[i]
+            if h.arpStep >= 0 {
+                let kit = self.kit
+                let rt = kit.map { h.pad < $0.sampler.count ? $0.sampler[h.pad] : SamplerRT() } ?? SamplerRT()
+                guard let note = autoArpNote(pad: h.pad, rt: rt, step: h.arpStep) else { continue }
+                trigger(pad: h.pad, velocity: h.velocity, semis: note, lengthSamples: h.length, glide: false,
+                        arp: false, echo: true, slide: h.slide && h.arpStep > 0)
+                // the next step, while the run lasts (a note that joins later and holds on longer keeps it going)
+                let step = max(1, Int(rt.arpStepBeats * samplesPerBeat))
+                let next = h.due + step
+                if arpRunLeft[h.pad] - next > step / 2 {
+                    var n = h; n.due = next; n.arpStep += 1
+                    addPending(n)
+                }
+                continue
+            }
             trigger(pad: h.pad, velocity: h.velocity, semis: h.semis, lengthSamples: h.length, glide: false,
                     arp: false, echo: h.echo, offsets: (h.pan, h.x, h.y), slide: h.slide, level: h.level)
         }
@@ -1284,6 +1332,78 @@ final class KnockEngine {
                                   pan: 0, x: 0, y: 0, echo: true, slide: rt.arpSlide))
         }
         return (at(0), noteLength)
+    }
+
+    /// Chord "Auto (sustain)": keeps `semis` as held on the track for `length` samples (low to high).
+    private func holdForArp(pad: Int, semis: Float, length: Int) {
+        let base = pad * KnockEngine.arpHeldMax
+        var count = arpHeldCount[pad]
+        // the same note again just holds on longer
+        for i in 0..<count where arpHeld[base + i] == semis { arpHeldLeft[base + i] = max(arpHeldLeft[base + i], length); return }
+        if count == KnockEngine.arpHeldMax {
+            // full: the note that ends soonest makes room
+            var soonest = 0
+            for i in 1..<count where arpHeldLeft[base + i] < arpHeldLeft[base + soonest] { soonest = i }
+            for i in soonest..<(count - 1) { arpHeld[base + i] = arpHeld[base + i + 1]; arpHeldLeft[base + i] = arpHeldLeft[base + i + 1] }
+            count -= 1
+        }
+        var at = count
+        while at > 0 && arpHeld[base + at - 1] > semis {
+            arpHeld[base + at] = arpHeld[base + at - 1]; arpHeldLeft[base + at] = arpHeldLeft[base + at - 1]
+            at -= 1
+        }
+        arpHeld[base + at] = semis
+        arpHeldLeft[base + at] = length
+        arpHeldCount[pad] = count + 1
+    }
+
+    /// Lets go of held notes that have ended and stops each track's run when its time is up.
+    private func countDownHeld(frames: Int) {
+        var any = false
+        for pad in 0..<Pad.count where arpRunLeft[pad] > 0 || arpHeldCount[pad] > 0 {
+            let base = pad * KnockEngine.arpHeldMax
+            var keep = 0
+            for i in 0..<arpHeldCount[pad] {
+                let left = arpHeldLeft[base + i] - frames
+                if left > 0 { arpHeld[base + keep] = arpHeld[base + i]; arpHeldLeft[base + keep] = left; keep += 1 }
+            }
+            arpHeldCount[pad] = keep
+            arpRunLeft[pad] = max(0, arpRunLeft[pad] - frames)
+            if arpRunLeft[pad] > 0 && keep == 0 { arpRunLeft[pad] = 0 }
+            if arpRunLeft[pad] > 0 || keep > 0 { any = true }
+        }
+        arpRunning = any
+    }
+
+    /// Starts a run of Auto steps; each one picks its note when it plays and queues the next.
+    private func scheduleAutoArp(pad: Int, rt: SamplerRT, velocity: Float, length: Int) {
+        let step = max(1, Int(rt.arpStepBeats * samplesPerBeat))
+        let noteLength = max(1, Int(Float(step) * rt.arpGate))
+        addPending(PendingHit(pad: pad, due: 0, velocity: velocity, semis: 0, length: noteLength,
+                              pan: 0, x: 0, y: 0, echo: true, slide: rt.arpSlide, arpStep: 0))
+    }
+
+    /// Step `k` of an Auto run over the notes held now (nil = none are held any more).
+    private func autoArpNote(pad: Int, rt: SamplerRT, step k: Int) -> Float? {
+        let count = arpHeldCount[pad]
+        guard count > 0 else { return nil }
+        let base = pad * KnockEngine.arpHeldMax
+        let n = count * max(1, rt.arpRange)
+        func ordered(_ j: Int) -> Float { arpHeld[base + j % count] + Float(12 * (j / count)) }
+        let i = k / max(1, rt.arpRepeat)
+        switch rt.arpMode {
+        case 2: return ordered(n - 1 - i % n)
+        case 3, 4:
+            let period = rt.arpMode == 3 ? max(1, 2 * n - 2) : 2 * n
+            let p = i % period
+            if rt.arpMode == 3 { return p < n ? ordered(p) : ordered(2 * n - 2 - p) }
+            return p < n ? ordered(p) : ordered(2 * n - 1 - p)
+        case 5:
+            var x = UInt32(truncatingIfNeeded: i &* 2_654_435_761 &+ Int(padHits[pad]) &* 40_503)
+            x ^= x >> 13; x = x &* 1_274_126_177; x ^= x >> 16
+            return ordered(Int(x % UInt32(n)))
+        default: return ordered(i % n)
+        }
     }
 
     /// The note's echoes: each FEED quieter, PAN / MOD X / MOD Y / PITCH further, TIME later (Fat mode: a few ms).
@@ -1544,6 +1664,9 @@ struct PendingHit {
     var slide = false
     /// An echo's level (FEED once per repeat), whatever the velocity setting.
     var level: Float = 1
+    /// Chord "Auto (sustain)": this step of the track's arpeggio (its note is picked from the notes
+    /// held when it plays); −1 = an ordinary hit.
+    var arpStep = -1
 }
 
 // MARK: - A playing sound
@@ -1627,7 +1750,7 @@ struct Voice {
 
     /// The sampler takes over this voice: START OFFSET, loop points and the ENVELOPE page.
     mutating func startSampler(_ rt: SamplerRT, sampleRate: Double, samplesPerBeat: Double, clock: Int64, loopStart: Int,
-                               loopEnd: Int, region: ClosedRange<Int>?, offsets: (Float, Float, Float) = (0, 0, 0)) {
+                               loopEnd: Int, region: ClosedRange<Int>?, playRegion: Bool = false, offsets: (Float, Float, Float) = (0, 0, 0)) {
         sm = SamplerVoice(rt, sampleRate: sampleRate, samplesPerBeat: samplesPerBeat, clock: clock,
                           panOffset: offsets.0, xOffset: offsets.1, yOffset: offsets.2)
         let last = Double(max(length - 2, 0))
@@ -1647,6 +1770,11 @@ struct Voice {
         }
         if let region, Double(region.upperBound) <= last, region.count > 32 {
             sm.loopStart = Double(region.lowerBound); sm.loopEnd = Double(region.upperBound)
+            // a region drawn on the waveform: with no loop, the note plays just that part
+            if playRegion && !sm.looping && !reverse {
+                position = max(position, Double(region.lowerBound))
+                sm.regionEnd = Double(region.upperBound)
+            }
         }
     }
 
@@ -1756,6 +1884,7 @@ struct Voice {
                     }
                 }
                 if position < 0 || position >= last { active = false; return }
+                if sm.regionEnd > 0 && position >= sm.regionEnd - 240 * rate { startFade(samples: 240); sm.regionEnd = 0 }
                 var l: Float, r: Float
                 if sm.grains {
                     // two grains, half a grain apart: the newest fades in as the one before fades out

@@ -145,6 +145,37 @@ struct SamplerEnvelope: Codable, Equatable, Hashable {
     var amount: Float = 0.5
     /// Times in beats instead of seconds.
     var tempo = false
+    /// Points added on the graph (FL style). Empty = the shape the knobs make; once you add, move
+    /// or delete a point the envelope follows these instead, until a knob is turned again.
+    var points: [SamplerEnvPoint] = []
+    /// The point the envelope waits on while the note is held (−1 = it runs straight through).
+    var sustainPoint = -1
+
+    var usesPoints: Bool { !points.isEmpty }
+
+    /// The knobs' shape as graph points: delay, peak, hold, sustain (where it waits) and release.
+    func knobPoints() -> (points: [SamplerEnvPoint], sustain: Int) {
+        func u(_ v: Float) -> Float { Float(Self.units(v, tempo: tempo)) }
+        var p: [SamplerEnvPoint] = []
+        if delay > 0.001 { p.append(SamplerEnvPoint(time: u(delay), level: 0)) }
+        p.append(SamplerEnvPoint(time: u(attack), level: 1, tension: attackTension))
+        p.append(SamplerEnvPoint(time: u(hold), level: 1))
+        p.append(SamplerEnvPoint(time: u(decay), level: sustain.clamped(0, 1), tension: decayTension))
+        let sus = p.count - 1
+        p.append(SamplerEnvPoint(time: u(release), level: 0, tension: releaseTension))
+        return (p, sus)
+    }
+
+    /// The same envelope drawn as points, ready to add to, move or delete from.
+    func withPoints() -> SamplerEnvelope {
+        guard !usesPoints else { return self }
+        var e = self
+        (e.points, e.sustainPoint) = knobPoints()
+        return e
+    }
+
+    /// The longest a point can sit after the one before it (seconds, or beats with Tempo).
+    var maxPointTime: Float { tempo ? 16 : 8 }
 
     /// A time knob in seconds (or beats with Tempo): cubic, so short times are easy to set.
     static func units(_ v: Float, tempo: Bool) -> Double {
@@ -161,6 +192,69 @@ struct SamplerEnvelope: Codable, Equatable, Hashable {
     static let tempoLengths: [(String, Double)] = [("1/64", 1.0 / 16), ("1/32", 0.125), ("1/16T", 1.0 / 6), ("1/16", 0.25), ("1/8T", 1.0 / 3),
                                                    ("1/8", 0.5), ("1/4T", 2.0 / 3), ("1/4 (beat)", 1), ("1/2", 2), ("1 bar", 4),
                                                    ("2 bars", 8), ("4 bars", 16)]
+}
+
+/// A region drawn on the waveform: from `start` to `end`, parts of the sound (0…1).
+struct SamplerRegion: Codable, Equatable, Hashable {
+    var start: Float
+    var end: Float
+}
+
+/// One point on the envelope graph: how long after the point before it (seconds, or beats with
+/// Tempo), its level 0…1, and the bend of the line into it (−1…1, like the TENSION knobs).
+struct SamplerEnvPoint: Codable, Equatable, Hashable {
+    var time: Float
+    var level: Float
+    var tension: Float = 0
+}
+
+extension SamplerEnvelope {
+    // older saves have no points: every field falls back to its default (an extension keeps the memberwise init)
+    enum CodingKeys: String, CodingKey {
+        case on, delay, attack, hold, decay, sustain, release, attackTension, decayTension, releaseTension, amount, tempo, points, sustainPoint
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        func v<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T { (try? c.decodeIfPresent(T.self, forKey: key)) ?? fallback }
+        let d = SamplerEnvelope()
+        self.init(on: v(.on, d.on), delay: v(.delay, d.delay), attack: v(.attack, d.attack), hold: v(.hold, d.hold), decay: v(.decay, d.decay),
+                  sustain: v(.sustain, d.sustain), release: v(.release, d.release), attackTension: v(.attackTension, d.attackTension),
+                  decayTension: v(.decayTension, d.decayTension), releaseTension: v(.releaseTension, d.releaseTension),
+                  amount: v(.amount, d.amount), tempo: v(.tempo, d.tempo), points: v(.points, d.points), sustainPoint: v(.sustainPoint, d.sustainPoint))
+    }
+}
+
+/// Up to 16 graph points in fixed storage, so a voice starts on the audio thread without touching an array.
+struct SamplerEnvPoints {
+    static let capacity = 16
+    typealias Row = (Float, Float, Float, Float, Float, Float, Float, Float, Float, Float, Float, Float, Float, Float, Float, Float)
+    private static let zeros: Row = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    var count = 0
+    var sustain = -1
+    private var times = SamplerEnvPoints.zeros, levels = SamplerEnvPoints.zeros, curves = SamplerEnvPoints.zeros
+
+    init() {}
+
+    init(_ e: SamplerEnvelope) {
+        count = min(Self.capacity, e.points.count)
+        sustain = e.sustainPoint < count ? e.sustainPoint : -1
+        for i in 0..<count {
+            let p = e.points[i]
+            Self.put(&times, i, max(0, p.time))
+            Self.put(&levels, i, p.level.clamped(0, 1))
+            Self.put(&curves, i, powf(4, p.tension.clamped(-1, 1)))
+        }
+    }
+
+    private static func put(_ r: inout Row, _ i: Int, _ v: Float) {
+        withUnsafeMutableBytes(of: &r) { $0.storeBytes(of: v, toByteOffset: i * 4, as: Float.self) }
+    }
+    @inline(__always) private static func get(_ r: Row, _ i: Int) -> Float {
+        withUnsafeBytes(of: r) { $0.load(fromByteOffset: i * 4, as: Float.self) }
+    }
+    @inline(__always) func time(_ i: Int) -> Float { Self.get(times, i) }
+    @inline(__always) func level(_ i: Int) -> Float { Self.get(levels, i) }
+    @inline(__always) func curve(_ i: Int) -> Float { Self.get(curves, i) }
 }
 
 /// The LFO: shape (sine, triangle, square), DELAY, ATT, AMT, SPEED, Tempo and Global.
@@ -205,6 +299,9 @@ struct SamplerSettings: Codable, Equatable {
     var loopEnd: Float = 1
     /// Region markers added on the waveform (parts of the sound, 0…1); START OFFSET snaps to them.
     var markers: [Float] = []
+    /// Regions drawn on the waveform from a selection (parts of the sound). With "Load regions" on, the
+    /// first one is what plays (instead of the file's own region).
+    var regions: [SamplerRegion] = []
     // Time stretching: PITCH ±12 semitones, MUL ×¼…×4 (0.5 = ×1), TIME, Mode
     var stretchPitch: Float = 0
     var multiplier: Float = 0.5
@@ -250,6 +347,12 @@ struct SamplerSettings: Codable, Equatable {
     var velTrack: [Float] = [0, 0, 0]
     var keyTrack: [Float] = [0, 0, 0]
     var keyMid = 60
+    /// Levels adjustment (FL's MISC offsets, on top of the main PAN / VOL / MOD X / MOD Y, every note):
+    /// PAN and MOD X / MOD Y −1…1 (0 = none), VOL 0…1 with 0.5 = 100% (the header VOL's curve).
+    var levelPan: Float = 0
+    var levelVol: Float = 0.5
+    var levelX: Float = 0
+    var levelY: Float = 0
     /// Group: a note on this track stops the tracks whose By is this track's Cut (0 = none); Cut self
     /// stops this track's own last note.
     var cutGroup = 0
@@ -352,11 +455,12 @@ struct SamplerSettings: Codable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case volume, pitch, range, keepOnDisk, resample, loadRegions, loadSliceMarkers, declick, startOffset, useLoop, pingPong
-        case loopStart, loopEnd, markers
+        case loopStart, loopEnd, markers, regions
         case stretchPitch, multiplier, time, stretch, removeDC, normalize, reverse, reversePolarity, fadeStereo, swapStereo
         case start, length, fadeIn, fadeOut, crossfade, trim, envelopes, lfos, cutoff, resonance, filterType
         case rootNote, mainPitch, addToKey, fineTune
         case polyMax, mono, porta, slide, gate, fullPorta, velTrack, keyTrack, keyMid, cutGroup, cutBy, cutSelf
+        case levelPan, levelVol, levelX, levelY
         case arpMode, arpTime, arpGate, arpRange, arpRepeat, arpSlide, arpChord
         case echoFeed, echoPan, echoX, echoY, echoPitch, echoTime, echoes, echoPingPong, fatMode
     }
@@ -374,6 +478,7 @@ extension SamplerSettings {
         declick = v(.declick, d.declick); startOffset = v(.startOffset, d.startOffset)
         useLoop = v(.useLoop, d.useLoop); pingPong = v(.pingPong, d.pingPong)
         loopStart = v(.loopStart, d.loopStart); loopEnd = v(.loopEnd, d.loopEnd); markers = v(.markers, d.markers)
+        regions = v(.regions, d.regions)
         stretchPitch = v(.stretchPitch, d.stretchPitch); multiplier = v(.multiplier, d.multiplier)
         time = v(.time, d.time); stretch = v(.stretch, d.stretch)
         removeDC = v(.removeDC, d.removeDC); normalize = v(.normalize, d.normalize); reverse = v(.reverse, d.reverse)
@@ -388,6 +493,7 @@ extension SamplerSettings {
         gate = v(.gate, d.gate); fullPorta = v(.fullPorta, d.fullPorta)
         velTrack = v(.velTrack, d.velTrack); keyTrack = v(.keyTrack, d.keyTrack); keyMid = v(.keyMid, d.keyMid)
         cutGroup = v(.cutGroup, d.cutGroup); cutBy = v(.cutBy, d.cutBy); cutSelf = v(.cutSelf, d.cutSelf)
+        levelPan = v(.levelPan, d.levelPan); levelVol = v(.levelVol, d.levelVol); levelX = v(.levelX, d.levelX); levelY = v(.levelY, d.levelY)
         arpMode = v(.arpMode, d.arpMode); arpTime = v(.arpTime, d.arpTime); arpGate = v(.arpGate, d.arpGate)
         arpRange = v(.arpRange, d.arpRange); arpRepeat = v(.arpRepeat, d.arpRepeat); arpSlide = v(.arpSlide, d.arpSlide); arpChord = v(.arpChord, d.arpChord)
         echoFeed = v(.echoFeed, d.echoFeed); echoPan = v(.echoPan, d.echoPan); echoX = v(.echoX, d.echoX); echoY = v(.echoY, d.echoY)
@@ -661,11 +767,16 @@ struct SamplerRT {
     var rtPitch: Float = 0
     /// Load regions: the loop runs over the file's own loop region (WAV 'smpl') when it has one.
     var regions = false
+    /// The first region drawn on the waveform (parts of the sound), used instead of the file's.
+    var userRegion: (Float, Float) = (0, 1)
+    var hasUserRegion = false
     /// Resample mode's speed: TIME, MUL and PITCH change it as they would a tape.
     var tapeTime: SamplerTime = .none
     var tapeMul: Double = 1
     var tapePitch: Float = 0
     var pan = SamplerEnvelope(), volume = SamplerEnvelope(), modX = SamplerEnvelope(), modY = SamplerEnvelope(), pitch = SamplerEnvelope()
+    /// Their graph points, copied into fixed storage here (off the audio thread)
+    var points = (SamplerEnvPoints(), SamplerEnvPoints(), SamplerEnvPoints(), SamplerEnvPoints(), SamplerEnvPoints())
     var lfoPan = SamplerLFO(), lfoVolume = SamplerLFO(), lfoX = SamplerLFO(), lfoY = SamplerLFO(), lfoPitch = SamplerLFO()
     var cutoff: Float = 1
     var resonance: Float = 0
@@ -680,6 +791,9 @@ struct SamplerRT {
     var velTrack: (Float, Float, Float) = (0, 0, 0)
     var keyTrack: (Float, Float, Float) = (0, 0, 0)
     var keyMid: Float = 60
+    /// Levels adjustment: pan, MOD X, MOD Y offsets and a gain
+    var levels: (Float, Float, Float) = (0, 0, 0)
+    var levelGain: Float = 1
     var cutGroup = 0, cutBy = 0
     var cutSelf = false
     var arpMode = 0
@@ -691,6 +805,9 @@ struct SamplerRT {
     /// The chord's notes (semitones), at most 4; `arpNotes` of them are used.
     var arpChord: (Int, Int, Int, Int) = (0, 0, 0, 0)
     var arpNotes = 1
+    /// Chord "Auto (sustain)": the arpeggio runs over the notes held on the track (a chord in the piano
+    /// roll, keys held on a keyboard), joining and leaving as they start and end.
+    var arpAuto = true
     var echoFeed: Float = 0
     var echoPan: Float = 0, echoX: Float = 0, echoY: Float = 0, echoPitch: Float = 0
     var echoBeats = 0.5
@@ -712,6 +829,10 @@ struct SamplerRT {
         pingPong = s.pingPong
         if s.customLoop { loopStart = s.loopStart.clamped(0, 1); loopEnd = s.loopEnd.clamped(0, 1) }
         regions = s.loadRegions
+        if let first = s.regions.first, first.end > first.start {
+            userRegion = (first.start.clamped(0, 1), first.end.clamped(0, 1))
+            hasUserRegion = true
+        }
         if s.stretch == .resample {
             tapeTime = s.time
             tapeMul = s.mul
@@ -723,6 +844,7 @@ struct SamplerRT {
             rtPitch = s.stretchPitch
         }
         pan = s.envelope(.pan); volume = s.envelope(.volume); modX = s.envelope(.modX); modY = s.envelope(.modY); pitch = s.envelope(.pitch)
+        points = (SamplerEnvPoints(pan), SamplerEnvPoints(volume), SamplerEnvPoints(modX), SamplerEnvPoints(modY), SamplerEnvPoints(pitch))
         lfoPan = s.lfo(.pan); lfoVolume = s.lfo(.volume); lfoX = s.lfo(.modX); lfoY = s.lfo(.modY); lfoPitch = s.lfo(.pitch)
         cutoff = s.cutoff.clamped(0, 1)
         resonance = s.resonance.clamped(0, 1)
@@ -735,6 +857,8 @@ struct SamplerRT {
         fullPorta = s.fullPorta
         func three(_ a: [Float]) -> (Float, Float, Float) { (a.count > 0 ? a[0] : 0, a.count > 1 ? a[1] : 0, a.count > 2 ? a[2] : 0) }
         velTrack = three(s.velTrack); keyTrack = three(s.keyTrack); keyMid = Float(s.keyMid)
+        levels = (s.levelPan.clamped(-1, 1), s.levelX.clamped(-1, 1), s.levelY.clamped(-1, 1))
+        levelGain = SamplerSettings.preGain(s.levelVol)
         cutGroup = s.cutGroup; cutBy = s.cutBy; cutSelf = s.cutSelf
         arpMode = s.arpMode.clamped(0, 5)
         arpStepBeats = SamplerSettings.step(s.arpTime).1
@@ -744,6 +868,7 @@ struct SamplerRT {
         arpSlide = s.arpSlide
         let chord = SamplerSettings.chords[s.arpChord.clamped(0, SamplerSettings.chords.count - 1)].1
         arpNotes = min(4, chord.count)
+        arpAuto = s.arpChord == 0
         arpChord = (chord[0], chord.count > 1 ? chord[1] : 0, chord.count > 2 ? chord[2] : 0, chord.count > 3 ? chord[3] : 0)
         echoFeed = s.echoFeed.clamped(0, 1)
         echoPan = s.echoPan.clamped(-1, 1); echoX = s.echoX.clamped(-1, 1); echoY = s.echoY.clamped(-1, 1)
@@ -755,6 +880,13 @@ struct SamplerRT {
     }
 
     /// One of the chord's notes (semitones).
+    /// The drawn region in frames of a sound `length` long.
+    func region(length: Int) -> ClosedRange<Int> {
+        let last = max(1, length - 2)
+        let a = Int(Float(last) * userRegion.0), b = max(a + 1, Int(Float(last) * userRegion.1))
+        return a...min(last, b)
+    }
+
     func chordNote(_ i: Int) -> Int {
         switch i % max(1, arpNotes) { case 1: return arpChord.1; case 2: return arpChord.2; case 3: return arpChord.3; default: return arpChord.0 }
     }
@@ -781,12 +913,29 @@ struct SamplerEnvRun {
     var from: Float = 0
     var value: Float = 0
     var amount: Float = 0
+    // the graph's own points (FL style), when the envelope has them
+    var usePoints = false
+    var table = SamplerEnvPoints()
+    var seg = 0, segLen = 0
+    var unit: Float = 48_000
+    var released = false
 
     init() {}
 
-    init(_ e: SamplerEnvelope, sampleRate: Double, samplesPerBeat: Double) {
+    init(_ e: SamplerEnvelope, points: SamplerEnvPoints, sampleRate: Double, samplesPerBeat: Double) {
         guard e.on else { return }
         let unit = e.tempo ? samplesPerBeat : sampleRate
+        amount = e.amount.clamped(-1, 1)
+        if points.count > 0 {
+            usePoints = true
+            table = points
+            self.unit = Float(unit)
+            stage = 0
+            seg = 0
+            from = 0
+            segLen = Int(table.time(0) * self.unit)
+            return
+        }
         func len(_ v: Float) -> Int { Int(SamplerEnvelope.units(v, tempo: e.tempo) * unit) }
         stage = 0
         lenDelay = len(e.delay); lenAttack = len(e.attack); lenHold = len(e.hold); lenDecay = len(e.decay); lenRelease = len(e.release)
@@ -801,6 +950,16 @@ struct SamplerEnvRun {
     var done: Bool { stage == 6 }
 
     mutating func release() {
+        if usePoints {
+            guard stage < 6, !released else { return }
+            released = true
+            // jump past the sustain point from wherever it is now
+            if table.sustain >= 0 && seg <= table.sustain + 1 {
+                seg = table.sustain + 1; pos = 0; from = value
+                segLen = seg < table.count ? Int(table.time(seg) * unit) : 0
+            }
+            return
+        }
         guard stage < 5 else { return }
         from = value; stage = 5; pos = 0
         if lenRelease == 0 { stage = 6; value = 0 }
@@ -810,6 +969,7 @@ struct SamplerEnvRun {
     @inline(__always)
     mutating func advance(_ n: Int) -> Float {
         guard stage < 6 else { return stage == 6 ? 0 : 1 }
+        if usePoints { return advancePoints(n) }
         pos += n
         while true {
             switch stage {
@@ -834,6 +994,37 @@ struct SamplerEnvRun {
             default:
                 value = 0
             }
+            break
+        }
+        return value
+    }
+
+    /// The graph's points: each segment runs from the level before to its point's level, bent by its
+    /// tension; it waits on the sustain point while the note is held, and ends after the last point.
+    @inline(__always)
+    private mutating func advancePoints(_ n: Int) -> Float {
+        pos += n
+        while true {
+            if seg >= table.count {
+                value = table.count > 0 ? table.level(table.count - 1) : 0
+                if value < 0.0001 { stage = 6; value = 0 }
+                pos = 0
+                break
+            }
+            // holding on the sustain point until the note lets go
+            if !released && seg == table.sustain + 1 && table.sustain >= 0 {
+                value = table.level(table.sustain)
+                pos = 0
+                break
+            }
+            if pos >= segLen {
+                pos -= segLen
+                from = table.level(seg)
+                seg += 1
+                segLen = seg < table.count ? Int(table.time(seg) * unit) : 0
+                continue
+            }
+            value = from + (table.level(seg) - from) * powf(Float(pos) / Float(max(1, segLen)), table.curve(seg))
             break
         }
         return value
@@ -915,6 +1106,8 @@ struct SamplerVoice {
     var grainPitch: Double = 1
     var grainA: Double = 0, grainB: Double = 0
     var grainAge = 0, grainHalf = 1_680
+    /// A region drawn on the waveform plays to here, then fades out (0 = the sound's end).
+    var regionEnd: Double = 0
 
     init() {}
 
@@ -930,11 +1123,11 @@ struct SamplerVoice {
         self.xOffset = xOffset
         self.yOffset = yOffset
         sampleRate = Float(rate)
-        env = (SamplerEnvRun(rt.pan, sampleRate: rate, samplesPerBeat: samplesPerBeat),
-               SamplerEnvRun(rt.volume, sampleRate: rate, samplesPerBeat: samplesPerBeat),
-               SamplerEnvRun(rt.modX, sampleRate: rate, samplesPerBeat: samplesPerBeat),
-               SamplerEnvRun(rt.modY, sampleRate: rate, samplesPerBeat: samplesPerBeat),
-               SamplerEnvRun(rt.pitch, sampleRate: rate, samplesPerBeat: samplesPerBeat))
+        env = (SamplerEnvRun(rt.pan, points: rt.points.0, sampleRate: rate, samplesPerBeat: samplesPerBeat),
+               SamplerEnvRun(rt.volume, points: rt.points.1, sampleRate: rate, samplesPerBeat: samplesPerBeat),
+               SamplerEnvRun(rt.modX, points: rt.points.2, sampleRate: rate, samplesPerBeat: samplesPerBeat),
+               SamplerEnvRun(rt.modY, points: rt.points.3, sampleRate: rate, samplesPerBeat: samplesPerBeat),
+               SamplerEnvRun(rt.pitch, points: rt.points.4, sampleRate: rate, samplesPerBeat: samplesPerBeat))
         lfo = (SamplerLfoRun(rt.lfoPan, sampleRate: rate, samplesPerBeat: samplesPerBeat, clock: clock),
                SamplerLfoRun(rt.lfoVolume, sampleRate: rate, samplesPerBeat: samplesPerBeat, clock: clock),
                SamplerLfoRun(rt.lfoX, sampleRate: rate, samplesPerBeat: samplesPerBeat, clock: clock),

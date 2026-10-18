@@ -222,6 +222,15 @@ final class SamplerUITests: XCTestCase {
                 .press(forDuration: 0.05, thenDragTo: graph.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
             sleep(1)
             snap("graph-dragged")
+            // FL-style free points: double tap empty space adds one, the knobs' shape becomes points
+            let pointsBefore = probe("before adding a point")
+            graph.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.1)).doubleTap()
+            sleep(1)
+            print("UITREE GRAPH after double tap = \(graph.value ?? "?")")
+            XCTAssertTrue((graph.value as? String)?.hasSuffix("points") == true, "double tapping the graph adds a point (\(graph.value ?? "?"))")
+            _ = probe("after adding a point")
+            _ = pointsBefore
+            snap("graph-point-added")
         }
 
         // MISC (the wrench tab): echoes, the arpeggiator, Levels VOL, steppers and the chord menu
@@ -266,6 +275,9 @@ final class SamplerUITests: XCTestCase {
         any("samplerMono").tap()
         sleep(1)
         XCTAssertEqual(any("samplerMono").value as? String, "on", "Mono switches on")
+        // the keyboard: C3 to C7, as in the render
+        XCTAssertTrue(any("samplerKey36").exists && any("samplerKey84").exists, "the keyboard runs from C3 to C7")
+        XCTAssertFalse(any("samplerKey86").exists, "the keyboard stops at C7")
         snap("misc-turned")
         XCTAssertEqual(app.state, .runningForeground, "the app is still running")
     }

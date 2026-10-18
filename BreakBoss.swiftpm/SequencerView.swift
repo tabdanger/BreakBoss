@@ -314,9 +314,16 @@ struct SequencerView: View {
         default: return Color(red: 1, green: 0.2, blue: 0.16)
         }
     }
-    /// The panels' lit green (selected rows, the root note, lit boxes): red on Platinum.
-    private var lit: Color { finish == "platinum" ? accent : S.green }
-    private var litDark: Color { finish == "platinum" ? Color(red: 0.24, green: 0.05, blue: 0.04) : S.greenDark }
+    /// The panels' lit colour (selected rows, the root note, lit boxes): each mode's own accent
+    /// (Tyrone, Oct 18: red only on Platinum and Black, the other modes their own colour, no lime).
+    private var lit: Color { accent }
+    private var litDark: Color {
+        switch finish {
+        case "vintage": return Color(red: 0.24, green: 0.17, blue: 0.04)
+        case "texture": return Color(red: 0.05, green: 0.13, blue: 0.24)
+        default: return Color(red: 0.24, green: 0.05, blue: 0.04)
+        }
+    }
     /// The selected track (red in every render) and the open graph's lane chip (blue on Texture).
     private var selectColor: Color { Color(red: 1, green: 0.22, blue: 0.16) }
     private var laneColor: Color { finish == "texture" ? Color(red: 0.25, green: 0.6, blue: 1) : selectColor }
@@ -425,6 +432,8 @@ struct SequencerView: View {
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
             // headers, slider, knob rims and control edges in the faceplate's metal
             .environment(\.seqFinish, finish)
+            // Face 2's menus check their items in the mode's own colour, not lime
+            .environment(\.bbMenuAccent, accent)
         }
         .overlay { samplerOverlay }
         .bbMenuHost()
@@ -2464,6 +2473,7 @@ struct SequencerView: View {
 
 /// The tempo slider panel (header BPM). Follows the DAW / MIDI clock when TEMPO SYNC has one.
 struct TempoPanel: View {
+    @Environment(\.bbMenuAccent) private var accent
     @ObservedObject var controller: KnockController
 
     var body: some View {
@@ -2479,7 +2489,7 @@ struct TempoPanel: View {
                             Text("\(b)").font(.system(size: 13, weight: .medium, design: .monospaced))
                                 .foregroundColor(Int(controller.state.bpm) == b ? .black : BBMenuStyle.text)
                                 .frame(maxWidth: .infinity, minHeight: 34)
-                                .background(RoundedRectangle(cornerRadius: 6).fill(Int(controller.state.bpm) == b ? BBMenuStyle.accent : BBMenuStyle.row))
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Int(controller.state.bpm) == b ? (accent ?? BBMenuStyle.accent) : BBMenuStyle.row))
                         }
                     }
                 }

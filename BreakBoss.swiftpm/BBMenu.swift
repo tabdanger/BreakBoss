@@ -304,7 +304,7 @@ private struct BBMenuPanel: View {
                     .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 6)
             }
             if let custom = spec.custom, center.path.isEmpty {
-                custom.padding(14)
+                custom.padding(14).environment(\.bbMenuAccent, spec.accent)
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -369,6 +369,7 @@ struct BBSlider: View {
     var step: Double = 1
     var label: (Double) -> String
     let set: (Double) -> Void
+    @Environment(\.bbMenuAccent) var accent
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -384,7 +385,7 @@ struct BBSlider: View {
                 let f = CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound))
                 ZStack(alignment: .leading) {
                     Capsule().fill(BBMenuStyle.row).frame(height: 8)
-                    Capsule().fill(BBMenuStyle.accent).frame(width: max(8, g.size.width * f), height: 8)
+                    Capsule().fill(accent ?? BBMenuStyle.accent).frame(width: max(8, g.size.width * f), height: 8)
                     Circle().fill(Color.white).frame(width: 26, height: 26)
                         .shadow(color: .black.opacity(0.5), radius: 3)
                         .offset(x: max(0, min(g.size.width - 26, g.size.width * f - 13)))

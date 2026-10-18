@@ -776,6 +776,40 @@ enum KnockSelfTest {
         let bulged = SamplerWindow.dragged(SamplerEnvelope(), handle: 6, dx: 0, dy: 0.25)
         check(bulged.attackTension < -0.4, "Sampler: dragging the attack curve up bends it")
 
+        // free envelope points (FL style): add, move, delete, sustain point; the voice follows them
+        var pts = SamplerEnvelope(); pts.on = true
+        pts.points = [SamplerEnvPoint(time: 0.005, level: 1), SamplerEnvPoint(time: 0.02, level: 0.5), SamplerEnvPoint(time: 0.05, level: 0)]
+        pts.sustainPoint = 1
+        var run = SamplerEnvRun(pts, points: SamplerEnvPoints(pts), sampleRate: 48_000, samplesPerBeat: 24_000)
+        for _ in 0..<300 { _ = run.advance(16) }               // 0.1 s: waiting on the sustain point
+        let held = run.value
+        run.release()
+        for _ in 0..<200 { _ = run.advance(16) }               // 0.067 s: past the last point
+        check(abs(held - 0.5) < 0.001 && run.done, "Sampler: envelope points wait on the sustain point and end after the last one (\(held), done \(run.done))")
+        var through = pts; through.sustainPoint = -1
+        var run2 = SamplerEnvRun(through, points: SamplerEnvPoints(through), sampleRate: 48_000, samplesPerBeat: 24_000)
+        for _ in 0..<300 { _ = run2.advance(16) }
+        check(run2.done, "Sampler: with no sustain point the envelope runs straight through")
+        let added = SamplerWindow.addingPoint(time: 0.3, level: 0.8, to: SamplerEnvelope())
+        let knobShape = SamplerEnvelope().knobPoints()
+        check(added.points.count == knobShape.points.count + 1 && added.points.contains { abs($0.level - 0.8) < 0.001 }
+              && abs(added.points.reduce(0) { $0 + $1.time } - knobShape.points.reduce(0) { $0 + $1.time }) < 0.0001,
+              "Sampler: double tapping the graph adds a point and the others stay where they were")
+        let removed = SamplerWindow.removingPoint(added.points.firstIndex { abs($0.level - 0.8) < 0.001 } ?? 0, from: added)
+        check(removed.points.count == knobShape.points.count && removed.sustainPoint == knobShape.sustain
+              && zip(removed.points, knobShape.points).allSatisfy { abs($0.time - $1.time) < 0.0001 && $0.level == $1.level },
+              "Sampler: double tapping a point deletes it")
+        let moved = SamplerWindow.draggedPoint(pts, handle: 1, dt: 0.1, dy: -0.25)
+        check(abs(moved.points[1].time - 0.12) < 0.0001 && abs(moved.points[1].level - 0.25) < 0.0001, "Sampler: dragging a point moves its time and level")
+        var pointed = PadSettings(); pointed.sampler = SamplerSettings()
+        pointed.sampler?.setEnvelope(.volume) { $0 = through }
+        let cutLate = energy(pointed, blocks: 40...100), plainLate = energy(plain, blocks: 40...100)
+        check(cutLate < plainLate * 0.01, "Sampler: a voice follows the graph's points (late energy \(cutLate) vs \(plainLate))")
+        if let old = try? JSONDecoder().decode(SamplerEnvelope.self, from: Data(#"{"on":true,"attack":0.3,"sustain":0.7}"#.utf8)) {
+            check(old.on && old.attack == 0.3 && old.points.isEmpty && old.sustainPoint == -1 && old.release == SamplerEnvelope().release,
+                  "Sampler: envelopes saved before points still load")
+        } else { check(false, "Sampler: envelopes saved before points still load") }
+
         // Tyrone, Oct 18: the MISC page (third tab): every control changes what plays
         /// Plays `hits` (block, pad, semitones) on a fresh engine; returns each block's left / right
         /// energy and zero crossings, and how many hits each pad made.
@@ -822,6 +856,16 @@ enum KnockSelfTest {
         let downRun = play([misc { $0.arpMode = 2; $0.arpTime = 0.35; $0.arpChord = 11 }], tone1k, hits: one, blocks: 60)
         check(sumZ(upRun.zc, 2...30) * 3 < sumZ(downRun.zc, 2...30) * 2,
               "Sampler MISC: Up starts on the low note, Down on the high one (\(sumZ(upRun.zc, 2...30)) vs \(sumZ(downRun.zc, 2...30)) crossings)")
+        // Chord "Auto (sustain)": a chord held on the track is arpeggiated as one run, low to high
+        let chordHits = [(0, 0, 0), (0, 0, 4), (0, 0, 7)]
+        let autoChord = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: chordHits, blocks: 200)
+        let autoSingle = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: one, blocks: 200)
+        check(autoChord.hits[0] == 4, "Sampler MISC: Auto (sustain) runs one arpeggio over a held chord (\(autoChord.hits[0]) notes, not 12)")
+        check(sumZ(autoChord.zc, 0...199) * 10 > sumZ(autoSingle.zc, 0...199) * 11,
+              "Sampler MISC: Auto (sustain) plays the chord's notes (\(sumZ(autoChord.zc, 0...199)) vs \(sumZ(autoSingle.zc, 0...199)) crossings)")
+        let joined = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: [(0, 0, 0), (20, 0, 12)], blocks: 200)
+        check(joined.hits[0] >= 4 && sumZ(joined.zc, 25...199) > sumZ(autoSingle.zc, 25...199),
+              "Sampler MISC: a note held later joins the running arpeggio (\(joined.hits[0]) notes)")
         // Echo delay: FEED repeats the note, TIME apart; Ping pong swaps sides; Fat mode packs them in
         let blip = SampleBuffer(left: (0..<3_000).map { $0 % 2 == 0 ? 0.2 : -0.2 }, sampleRate: rate)
         let dry = play([misc { _ in }], blip, hits: one, blocks: 200)
@@ -871,6 +915,24 @@ enum KnockSelfTest {
         check(sum(keyRight.r, 2...29) > sum(keyRight.l, 2...29) * 2, "Sampler MISC: Key tracking moves a note above Mid")
         let keyDark = play([misc { $0.keyTrack = [0, 1, 0]; $0.keyMid = 84 }], hits: one, blocks: 30)
         check(sum(keyDark.l, 2...29) < sum(open.l, 2...29) * 0.3, "Sampler MISC: Key tracking on MOD X closes the filter below Mid")
+        // Levels adjustment: its own offsets on top of the main PAN, VOL, MOD X, MOD Y (not the same knobs)
+        let lvlLeft = play([misc { $0.levelPan = -1 }], hits: one, blocks: 30)
+        check(sum(lvlLeft.l, 2...29) > sum(lvlLeft.r, 2...29) * 4, "Sampler MISC: Levels PAN moves every note")
+        let lvlSoft = play([misc { $0.levelVol = 0.25 }], hits: one, blocks: 30)
+        let lvlRatio = (sum(lvlSoft.l, 2...29) + sum(lvlSoft.r, 2...29)) / max(1e-9, sum(open.l, 2...29) + sum(open.r, 2...29))
+        check(lvlRatio > 0.15 && lvlRatio < 0.35, "Sampler MISC: Levels VOL turns every note down (×\(lvlRatio))")
+        let lvlDark = play([misc { $0.levelX = -0.8 }], hits: one, blocks: 30)
+        check(sum(lvlDark.l, 2...29) < sum(open.l, 2...29) * 0.3, "Sampler MISC: Levels MOD X closes the filter")
+        let lvlRes = play([misc { $0.cutoff = 0.5; $0.levelY = 0.9 }], hits: one, blocks: 30)
+        let lvlNoRes = play([misc { $0.cutoff = 0.5 }], hits: one, blocks: 30)
+        check(abs(sum(lvlRes.l, 2...29) - sum(lvlNoRes.l, 2...29)) > sum(lvlNoRes.l, 2...29) * 0.05, "Sampler MISC: Levels MOD Y changes the resonance")
+        // a region drawn on the waveform: with Load regions on, a note plays just that part
+        let whole = play([misc { _ in }], hits: one, blocks: 150)
+        let part = play([misc { $0.loadRegions = true; $0.regions = [SamplerRegion(start: 0.25, end: 0.5)] }], hits: one, blocks: 150)
+        check(sum(part.l, 2...80) > sum(whole.l, 2...80) * 0.5 && sum(part.l, 100...149) < sum(whole.l, 100...149) * 0.01,
+              "Sampler: a drawn region plays just that part of the sound (\(sum(part.l, 100...149)) after its end)")
+        var mainPan = PadSettings(); mainPan.sampler = misc { $0.levelPan = 0.5 }.sampler
+        check(mainPan.pan == 0 && mainPan.sampler?.volume == SamplerSettings().volume, "Sampler MISC: Levels leaves the main PAN and VOL where they are")
         var restored = PadSettings(); restored.sampler = misc { $0.arpMode = 3; $0.echoFeed = 0.4; $0.keyTrack = [0.5, 0, 0]; $0.cutGroup = 2; $0.mono = true }.sampler
         let back = (try? JSONEncoder().encode(restored)).flatMap { try? JSONDecoder().decode(PadSettings.self, from: $0) }
         check(back?.sampler == restored.sampler, "Sampler MISC: its settings are saved with the track")
