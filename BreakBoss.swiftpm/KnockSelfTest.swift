@@ -1178,6 +1178,16 @@ enum KnockSelfTest {
         check(barFill.events.filter { Int($0.pad) == Pad.bass808.rawValue }.map { $0.tick } == [0, bar]
               && barFill.events.allSatisfy { Int($0.pad) != Pad.bass808.rawValue || $0.length > step }, "drum roll: fill every bar (808 holds)")
         check(!PatternEdit.clearChannel(filled, pad: Pad.hat.rawValue).events.contains { Int($0.pad) == Pad.hat.rawValue }, "drum roll: clear channel")
+        // Note repeat: hold a step and pull down.
+        let hatHit = GrooveEvent(tick: step * 2, pad: Int8(Pad.hat.rawValue), velocity: 0.6, semis: 0)
+        let one = PatternData(name: "N", lengthTicks: bar, events: [hatHit, GrooveEvent(tick: step * 3, pad: Int8(Pad.hat.rawValue), velocity: 0.7)])
+        let rolled = PatternEdit.repeatStep(one, pad: Pad.hat.rawValue, cellStart: step * 2, cell: step, count: 4, like: hatHit)
+        let rollTicks = rolled.events.filter { Int($0.pad) == Pad.hat.rawValue && $0.tick >= step * 2 && $0.tick < step * 3 }.map { $0.tick }
+        check(rollTicks == [step * 2, step * 2 + step / 4, step * 2 + step / 2, step * 2 + step * 3 / 4]
+              && rolled.events.contains { $0.tick == step * 3 }, "note repeat: four even hits in the step, the next step untouched")
+        let back = PatternEdit.repeatStep(rolled, pad: Pad.hat.rawValue, cellStart: step * 2, cell: step, count: 1, like: hatHit)
+        check(back.events.count == one.events.count, "note repeat: pulling back up to 1 leaves one hit")
+        check(PatternEdit.repeatCounts(cell: step) == [1, 2, 3, 4, 6, 8], "note repeat: the counts a pull steps through")
         // Snap to scale (FL's list).
         let minor = MusicScale.named("Minor (Aeolian)")
         check(MusicScale.all.count == 23 && minor.steps == [0, 2, 3, 5, 7, 8, 10], "scales: FL list and C minor")

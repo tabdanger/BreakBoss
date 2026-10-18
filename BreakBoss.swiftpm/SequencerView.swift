@@ -167,11 +167,12 @@ struct SequencerView: View {
     @State private var follow = true
     /// Where the grid's visible window starts (ticks): it slides sideways when the pattern is longer
     /// than the screen (drag the beat numbers, or two fingers on the grid).
-    @State private var viewStart: Int32 = 0
-    @State private var rulerDragStart: Int32?
+    /// In ticks, fractional, so the grid glides under a finger instead of jumping a step at a time.
+    @State private var viewStart: Double = 0
+    @State private var rulerDragStart: Double?
     @State private var tempoDragStart: Double?
     @State private var twoFinger = false                      // two fingers on the grid: sliding, not drawing
-    @State private var panStart: Int32?
+    @State private var panStart: Double?
     @State private var zoomLevel = 0
     @State private var pinchBase: CGFloat = 1
     @State private var pinching = false
@@ -196,6 +197,8 @@ struct SequencerView: View {
     @State private var recordPad: Int?
     @State private var exportURL: URL?
     @State private var tick = Date()
+    @State private var clock = ClockState()
+    final class ClockState { var wasLive = false }
     @State private var newborn = Set<UUID>()
     @State private var settling = Set<UUID>()
     @State private var rackTargeted = false
@@ -228,6 +231,8 @@ struct SequencerView: View {
         case marquee(start: CGPoint, current: CGPoint)
         case erase
         case tapOnNote(key: NoteKey)
+        /// Hold a step and pull down: the step plays `count` even hits (note repeat).
+        case noteRepeat(pad: Int, cellStart: Int32, like: GrooveEvent, origin: PatternData, count: Int, fromPaint: Bool)
         case graph(pad: Int, top: CGFloat, height: CGFloat)
     }
 
@@ -253,16 +258,19 @@ struct SequencerView: View {
     }
     private var totalTicks: Int32 { Int32(bars) * PatternEdit.barTicks }
     private var maxStart: Int32 { max(0, totalTicks - windowTicks) }
-    /// The visible window's first tick, on a step so the step buttons stay put.
+    /// The tick at the grid's left edge (fractional: the window slides smoothly).
+    private var origin: Double { min(Double(maxStart), max(0, viewStart)) }
+    /// The first step cell on screen (it can be partly off the left edge while sliding).
     private var pageStart: Int32 {
         let c = max(1, cellTicks)
-        return min(maxStart, max(0, viewStart)) / c * c
+        return Int32(origin) / c * c
     }
-    private func scroll(to start: Int32) {
-        let clamped = min(maxStart, max(0, start))
+    private func scroll(to start: Double) {
+        let clamped = min(Double(maxStart), max(0, start))
         if clamped != viewStart { viewStart = clamped }
         follow = false
     }
+    private func scroll(to start: Int32) { scroll(to: Double(start)) }
     private var pageTicks: Int32 { windowTicks }
     private var snapTicks: Int32 { snap }
     /// The step cells drawn on each row: 16ths, finer when zoomed in.
@@ -389,6 +397,7 @@ struct SequencerView: View {
     var body: some View {
         GeometryReader { geo in
             let s = min(geo.size.width / Self.artW, geo.size.height / Self.artH)
+            let _ = tick      // lamps, PLAY and the count-in follow the engine's clock while it plays
             ZStack(alignment: .topLeading) {
                 // the plate carries the BreaKing logo, as in the renders
                 Image(plateSprite).resizable().frame(width: Self.artW * s, height: Self.artH * s)
@@ -410,7 +419,11 @@ struct SequencerView: View {
         .preferredColorScheme(.dark)
         .background(spaceBar)
         .onReceive(ticker) { now in
-            tick = now
+            // the clock only redraws Face 2 while something is playing (and once more as it stops):
+            // a redraw every tenth of a second made scrolling the rack stutter
+            let live = controller.isPlaying || controller.recording
+            if live || clock.wasLive { tick = now }
+            clock.wasLive = live
             if controller.recording { controller.mergeRecorded(snap: snapTicks) }
             followPlayhead()
         }
@@ -522,8 +535,8 @@ struct SequencerView: View {
         .place(A.redo, s)
         // bars pager
         artText(pageLabel, A.pageText, s, size: 21, weight: .medium, color: inkColor).accessibilityIdentifier("pageLabel")
-        SeqGlyph(symbol: "chevron.left", size: 21, scale: s, enabled: pageStart > 0, color: inkColor) { scroll(to: pageStart - windowTicks) }.place(A.pageBack, s)
-        SeqGlyph(symbol: "chevron.right", size: 21, scale: s, enabled: pageStart < maxStart, color: inkColor) { scroll(to: pageStart + windowTicks) }.place(A.pageForward, s)
+        SeqGlyph(symbol: "chevron.left", size: 21, scale: s, enabled: origin > 0, color: inkColor) { scroll(to: (origin - Double(windowTicks)).rounded(.down)) }.place(A.pageBack, s)
+        SeqGlyph(symbol: "chevron.right", size: 21, scale: s, enabled: origin < Double(maxStart), color: inkColor) { scroll(to: (origin + Double(windowTicks)).rounded(.down)) }.place(A.pageForward, s)
         // transport
         SeqButton("SeqBtnTransport", corner: 8, scale: s, action: { controller.stopPlayback() }) {
             RoundedRectangle(cornerRadius: 2 * s).fill(Color(white: 0.92)).frame(width: 21 * s, height: 21 * s)
@@ -991,8 +1004,8 @@ struct SequencerView: View {
             ctx.fill(Path(CGRect(x: 0, y: top + 4 + CGFloat(frac) * (h - 8), width: width, height: 1)), with: .color(S.stepLine))
         }
         var lt = ((pageStart + PatternData.ppq - 1) / PatternData.ppq) * PatternData.ppq
-        while lt <= pageStart + pageTicks {
-            let bx = CGFloat(lt - pageStart) / CGFloat(pageTicks) * width
+        while Double(lt) <= origin + Double(pageTicks) {
+            let bx = x(lt, width)
             ctx.fill(Path(CGRect(x: bx, y: top, width: lt % PatternEdit.barTicks == 0 ? 1.5 : 1, height: h)), with: .color(lt % PatternEdit.barTicks == 0 ? S.beatLine : S.stepLine))
             lt += PatternData.ppq
         }
@@ -1023,9 +1036,10 @@ struct SequencerView: View {
     /// The beat numbers over the grid (bar.beat). Drag them sideways to slide along a long pattern.
     private func ruler(width: CGFloat) -> some View {
         Canvas { ctx, size in
-            let px = { (t: Int32) in CGFloat(t - pageStart) / CGFloat(pageTicks) * size.width }
-            var t = (pageStart + PatternData.ppq - 1) / PatternData.ppq * PatternData.ppq
-            while t < pageStart + pageTicks {
+            ctx.clip(to: Path(CGRect(x: 0, y: -20, width: size.width, height: size.height + 40)))
+            let px = { (t: Int32) in x(t, size.width) }
+            var t = pageStart / PatternData.ppq * PatternData.ppq
+            while Double(t) < origin + Double(pageTicks) {
                 let bar = t / PatternEdit.barTicks + 1, beat = (t % PatternEdit.barTicks) / PatternData.ppq + 1
                 let label = beat == 1 ? "\(bar)" : "\(bar).\(beat)"
                 ctx.draw(Text(label).font(.system(size: size.height * 0.46, weight: beat == 1 ? .bold : .medium)).foregroundColor(beat == 1 ? .white : Color(white: 0.75)),
@@ -1034,18 +1048,17 @@ struct SequencerView: View {
             }
             // where the window sits in the whole pattern
             if totalTicks > windowTicks {
-                let x0 = CGFloat(pageStart) / CGFloat(totalTicks) * size.width
+                let x0 = CGFloat(origin / Double(totalTicks)) * size.width
                 let w = max(24, CGFloat(windowTicks) / CGFloat(totalTicks) * size.width)
                 ctx.fill(Path(roundedRect: CGRect(x: 0, y: size.height - 3, width: size.width, height: 3), cornerRadius: 1.5), with: .color(Color.white.opacity(0.12)))
                 ctx.fill(Path(roundedRect: CGRect(x: x0, y: size.height - 3, width: w, height: 3), cornerRadius: 1.5), with: .color(glowColor))
             }
-            _ = tick
         }
         .contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 4)
             .onChanged { g in
-                if rulerDragStart == nil { rulerDragStart = pageStart }
-                scroll(to: (rulerDragStart ?? 0) - Int32(g.translation.width / max(1, width) * CGFloat(windowTicks)))
+                if rulerDragStart == nil { rulerDragStart = origin }
+                scroll(to: (rulerDragStart ?? 0) - Double(g.translation.width / max(1, width)) * Double(windowTicks))
             }
             .onEnded { _ in rulerDragStart = nil })
         .accessibilityElement()
@@ -1455,8 +1468,8 @@ struct SequencerView: View {
 
     // MARK: Grid drawing
 
-    private func x(_ t: Int32, _ w: CGFloat) -> CGFloat { CGFloat(t - pageStart) / CGFloat(pageTicks) * w }
-    private func tickAt(_ x: CGFloat, _ w: CGFloat) -> Int32 { pageStart + Int32((x / w * CGFloat(pageTicks)).rounded(.down)) }
+    private func x(_ t: Int32, _ w: CGFloat) -> CGFloat { CGFloat((Double(t) - origin) / Double(pageTicks)) * w }
+    private func tickAt(_ x: CGFloat, _ w: CGFloat) -> Int32 { Int32((origin + Double(x / w) * Double(pageTicks)).rounded(.down)) }
     private func snapped(_ t: Int32) -> Int32 {
         let g = placeTicks
         return max(0, min((t / g) * g, max(pattern.lengthTicks, 1) - 1))
@@ -1475,22 +1488,49 @@ struct SequencerView: View {
         }
         return CGRect(x: x(e.tick, w) + 1, y: l.y + 2, width: noteWidth(e, w), height: l.bandH - 4)
     }
-    private func visible(_ e: GrooveEvent) -> Bool { e.tick >= pageStart && e.tick < pageStart + pageTicks }
+    private func visible(_ e: GrooveEvent) -> Bool { e.tick >= pageStart && Double(e.tick) < origin + Double(pageTicks) }
+
+    /// Everything the grid's drawing reads. The grid only redraws when this changes, so the clock
+    /// ticking while a pattern plays (and anything else on Face 2) leaves it alone.
+    private func gridKey(_ L: [RowLayout]) -> Int {
+        var h = Hasher()
+        h.combine(origin); h.combine(pageTicks); h.combine(cellTicks); h.combine(snapTicks); h.combine(pattern.lengthTicks)
+        for e in pattern.events {
+            h.combine(e.tick); h.combine(e.pad); h.combine(e.velocity); h.combine(e.semis)
+            h.combine(e.length); h.combine(e.glide); h.combine(e.offset); h.combine(e.chance)
+        }
+        h.combine(selection)
+        for l in L {
+            h.combine(l.channel.id); h.combine(l.channel.pad); h.combine(l.y); h.combine(l.height); h.combine(l.bandH)
+            h.combine(l.graphH); h.combine(l.pitchTop); h.combine(l.pitchRowH); h.combine(l.pitch?.lowerBound); h.combine(l.pitch?.upperBound)
+            if l.pitch != nil { h.combine(controller.baseNote(pad: l.channel.pad)) }
+        }
+        h.combine(finish); h.combine(controller.mode.rawValue); h.combine(controller.state.scaleName); h.combine(controller.scaleRoot)
+        h.combine(tool); h.combine(lane.rawValue)
+        switch drag {
+        case let .marquee(a, b): h.combine(1); h.combine(a.x); h.combine(a.y); h.combine(b.x); h.combine(b.y)
+        case let .noteRepeat(pad, cellStart, _, _, count, _): h.combine(2); h.combine(pad); h.combine(cellStart); h.combine(count)
+        default: h.combine(0)
+        }
+        return h.finalize()
+    }
 
     private func grid(_ L: [RowLayout], width w: CGFloat, rowH: CGFloat) -> some View {
-        Canvas { ctx, size in
+        EquatableCanvas(key: gridKey(L)) { ctx, size in
+            ctx.clip(to: Path(CGRect(x: 0, y: -20, width: size.width, height: size.height + 40)))
             let cw = cellWidth(size.width)
-            let cells = Int(pageTicks / cellTicks)
+            // one more cell than fits: while sliding, the first and last are partly on screen
+            let cells = Int(pageTicks / cellTicks) + 1
             for (i, l) in L.enumerated() {
                 if let range = l.pitch {
                     // the band: the track's steps, lit where it has notes (any pitch)
                     ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: l.pitchTop - l.y)), with: .color(S.greenDark.opacity(0.5)))
                     ctx.fill(Path(CGRect(x: 0, y: l.y + l.bandH, width: size.width, height: l.pitchTop - l.y - l.bandH)), with: .color(Color(white: 0.06)))
-                    drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l) })
+                    drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l, size.width) })
                     for c in 0..<cells {
                         let at = pageStart + Int32(c) * cellTicks
                         let lit = pattern.events.contains { Int($0.pad) == l.channel.pad && $0.tick >= at && $0.tick < at + cellTicks }
-                        let r = cellRect(c, cw, l)
+                        let r = cellRect(c, cw, l, size.width)
                         if (Int(at / PatternData.ppq) % 2) == 1 { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.32))) }
                         if lit { ctx.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 2), cornerRadius: 3), with: .color(glowColor.opacity(0.8))) }
                     }
@@ -1511,10 +1551,10 @@ struct SequencerView: View {
                     ctx.fill(Path(CGRect(x: 0, y: l.y + l.height - 1, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
                 } else {
                     // the step buttons (the picture's)
-                    drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l) })
+                    drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l, size.width) })
                     for c in 0..<cells {
                         let at = pageStart + Int32(c) * cellTicks
-                        let r = cellRect(c, cw, l)
+                        let r = cellRect(c, cw, l, size.width)
                         // every other beat's buttons are the darker grey (Tyrone's picture)
                         if (Int(at / PatternData.ppq) % 2) == 1 { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.32))) }
                         if at >= pattern.lengthTicks { ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.55))) }
@@ -1524,15 +1564,15 @@ struct SequencerView: View {
             }
             // the bar line
             var t = pageStart
-            while t <= pageStart + pageTicks {
-                if t % PatternEdit.barTicks == 0 && t > pageStart && t < pageStart + pageTicks {
+            while Double(t) <= origin + Double(pageTicks) {
+                if t % PatternEdit.barTicks == 0 && Double(t) > origin && Double(t) < origin + Double(pageTicks) {
                     ctx.fill(Path(CGRect(x: x(t, size.width) - 0.5, y: 0, width: 1, height: size.height)), with: .color(Color.white.opacity(0.25)))
                 }
                 t += PatternData.ppq
             }
             if snapTicks > 0 && snapTicks < cellTicks {      // a finer SNAP than the cells: its lines
-                var st = pageStart
-                while st < pageStart + pageTicks { ctx.fill(Path(CGRect(x: x(st, size.width), y: 0, width: 1, height: size.height)), with: .color(S.stepLine)); st += snapTicks }
+                var st = pageStart / snapTicks * snapTicks
+                while Double(st) < origin + Double(pageTicks) { ctx.fill(Path(CGRect(x: x(st, size.width), y: 0, width: 1, height: size.height)), with: .color(S.stepLine)); st += snapTicks }
             }
             // the notes: silver buttons that glow the mode's colour. The shadow under them and the glow
             // are one blurred layer each, so the canvas blurs twice however many notes are on screen.
@@ -1551,7 +1591,7 @@ struct SequencerView: View {
             }
             let lit: [(StepKey, CGRect, [GrooveEvent])] = steps.compactMap { key, hits in
                 guard let l = layout(for: key.pad, L) else { return nil }
-                return (key, cellRect(key.cell, cw, l), hits.sorted { $0.tick < $1.tick })
+                return (key, cellRect(key.cell, cw, l, size.width), hits.sorted { $0.tick < $1.tick })
             }
             // the glow: one blurred layer for every lit slot (and every piano-roll note)
             ctx.drawLayer { g in
@@ -1605,14 +1645,19 @@ struct SequencerView: View {
                 ctx.fill(Path(rect), with: .color(S.orange.opacity(0.12)))
                 ctx.stroke(Path(rect), with: .color(S.orange), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
             }
-            if isThisPlaying, let t = controller.playheadTick {
-                let px = x(Int32(t), size.width)
-                if px >= 0 && px <= size.width {
-                    ctx.fill(Path(CGRect(x: px - 1, y: 0, width: 2, height: size.height)), with: .color(glowColor))
-                }
+            // note repeat: the count over the step while the finger pulls down
+            if case let .noteRepeat(pad, cellStart, _, _, count, _) = drag, let l = layout(for: pad, L) {
+                let r = cellRect(Int((cellStart - pageStart) / max(1, cellTicks)), cw, l, size.width)
+                let badge = CGRect(x: r.midX - 15, y: r.maxY + 3, width: 30, height: 18)
+                ctx.fill(Path(roundedRect: badge, cornerRadius: 5), with: .color(Color.black.opacity(0.85)))
+                ctx.stroke(Path(roundedRect: badge, cornerRadius: 5), with: .color(glowColor), lineWidth: 1)
+                ctx.draw(Text("×\(count)").font(.system(size: 12, weight: .bold, design: .rounded)).foregroundColor(.white),
+                         at: CGPoint(x: badge.midX, y: badge.midY))
             }
-            _ = tick
         }
+        .equatable()
+        // the playhead runs on its own layer at the display's rate, so the grid never redraws for it
+        .overlay(playhead(width: w).allowsHitTesting(false))
         .contentShape(Rectangle())
         .accessibilityElement()
         .accessibilityIdentifier("grid")
@@ -1625,7 +1670,7 @@ struct SequencerView: View {
         .simultaneousGesture(pinch)
         .background(GridScrollHook(
             began: { trackpad in
-                panStart = pageStart
+                panStart = origin
                 if trackpad { return }
                 switch drag {
                 case .paint, .erase, .graph: _ = undoStack.popLast()
@@ -1634,8 +1679,23 @@ struct SequencerView: View {
                 drag = .none; work = nil; laneOrigin = nil
                 twoFinger = true
             },
-            sideways: { dx in scroll(to: (panStart ?? pageStart) - Int32(dx / max(1, w) * CGFloat(windowTicks))) },
+            sideways: { dx in scroll(to: (panStart ?? origin) - Double(dx / max(1, w)) * Double(windowTicks)) },
             ended: { panStart = nil }))
+    }
+
+    private func playhead(width w: CGFloat) -> some View {
+        let playing = isThisPlaying
+        let start = origin, ticks = Double(pageTicks), color = glowColor
+        let engine = controller
+        return TimelineView(.animation(minimumInterval: nil, paused: !playing)) { _ in
+            Canvas { ctx, size in
+                guard playing, let t = engine.playheadTick else { return }
+                let px = CGFloat((t - start) / ticks) * size.width
+                if px >= 0 && px <= size.width {
+                    ctx.fill(Path(CGRect(x: px - 1, y: 0, width: 2, height: size.height)), with: .color(color))
+                }
+            }
+        }
     }
 
     /// The slot near the top of a step button (Tyrone's picture): dark when off, a glowing bar when lit.
@@ -1644,9 +1704,9 @@ struct SequencerView: View {
     }
 
     /// A step button inside its cell: gaps between the steps and between the rows, as in the render.
-    private func cellRect(_ c: Int, _ cw: CGFloat, _ l: RowLayout) -> CGRect {
+    private func cellRect(_ c: Int, _ cw: CGFloat, _ l: RowLayout, _ w: CGFloat) -> CGRect {
         let gx = min(2.5, cw * 0.09), gy = l.bandH * 0.05
-        return CGRect(x: CGFloat(c) * cw + gx, y: l.y + gy, width: cw - 2 * gx, height: l.bandH - 1.6 * gy)
+        return CGRect(x: x(pageStart, w) + CGFloat(c) * cw + gx, y: l.y + gy, width: cw - 2 * gx, height: l.bandH - 1.6 * gy)
     }
 
     /// The ON notes' glow (Tyrone, Oct 17): Platinum and Modern Black red, Vintage yellow, Texture blue.
@@ -1696,7 +1756,7 @@ struct SequencerView: View {
     private func drawLitStep(_ ctx: GraphicsContext, _ r: CGRect, glow: Color, level: Double, hits: Int) {
         let sl = Self.slot(in: r)
         ctx.fill(Path(roundedRect: sl.insetBy(dx: -1, dy: -1), cornerRadius: 2), with: .color(Color.black.opacity(0.8)))
-        let n = max(1, min(hits, 4)), gap: CGFloat = n > 1 ? 1.5 : 0
+        let n = max(1, min(hits, 8)), gap: CGFloat = n > 4 ? 0.8 : (n > 1 ? 1.5 : 0)
         let w = (sl.width - gap * CGFloat(n - 1)) / CGFloat(n)
         for i in 0..<n {
             let bar = CGRect(x: sl.minX + CGFloat(i) * (w + gap), y: sl.minY, width: w, height: sl.height)
@@ -1729,9 +1789,9 @@ struct SequencerView: View {
     private func setZoom(_ level: Int) {
         let newLevel = max(0, min(Self.zoomSnaps.count - 1, level))
         guard newLevel != zoomLevel else { return }
-        let center = pageStart + pageTicks / 2
+        let center = origin + Double(pageTicks) / 2
         zoomLevel = newLevel
-        viewStart = max(0, center - windowTicks / 2)
+        viewStart = max(0, center - Double(windowTicks) / 2)
         snap = Self.zoomSnaps[newLevel]
         follow = false
     }
@@ -1820,7 +1880,10 @@ struct SequencerView: View {
         case .graph:
             graphChanged(g, w: w)
         case .tapOnNote(let key):
-            if hypot(g.translation.width, g.translation.height) > 8 {
+            if let l = layout(at: g.startLocation.y, L), pullsDown(g, l), let hit = pattern.events.first(where: { NoteKey($0) == key }) {
+                startRepeat(pad: l.channel.pad, like: hit, fromPaint: false)
+                gridChanged(g, w: w, L: L)
+            } else if hypot(g.translation.width, g.translation.height) > 8 {
                 let inSelection = selection.contains(key)
                 let l = layout(at: g.startLocation.y, L)
                 let s0 = l.map { Int(semis(at: g.startLocation.y, in: $0).rounded()) } ?? 0
@@ -1829,17 +1892,35 @@ struct SequencerView: View {
                 gridChanged(g, w: w, L: L)
             }
         case .paint(let pad, let sem, let lastCell):
+            // pressed an empty step and pulled straight down: the new note repeats
+            if let l = layout(for: pad, L), l.pitch == nil, lastCell == Int(snapped(tickAt(g.startLocation.x, w)) / placeTicks), pullsDown(g, l),
+               let hit = noteAt(g.startLocation, w: w, L: L) {
+                startRepeat(pad: pad, like: hit, fromPaint: true)
+                gridChanged(g, w: w, L: L)
+                return
+            }
             let t = snapped(tickAt(g.location.x, w))
             let cell = Int(t / placeTicks)
             // painting inside an open piano roll follows the finger's pitch
             let l = layout(for: pad, L)
             let s = l?.pitch != nil ? controller.scaleSnapped(semis(at: g.location.y, in: l!), pad: pad) : sem
-            if (cell != lastCell || s != sem) && t >= pageStart && t < pageStart + pageTicks {
+            if (cell != lastCell || s != sem) && Double(t) >= origin && Double(t) < origin + Double(pageTicks) {
                 work = PatternEdit.addNote(pattern, pad: pad, tick: t, velocity: lastVelocity, semis: s)
                 drag = .paint(pad: pad, semis: s, lastCell: cell)
             }
         case .long808:
             break
+        case .noteRepeat(let pad, let cellStart, let like, let origin, let count, let fromPaint):
+            let counts = PatternEdit.repeatCounts(cell: cellTicks)
+            let have = origin.events.filter { Int($0.pad) == pad && $0.tick >= cellStart && $0.tick < cellStart + cellTicks }.count
+            let at = counts.lastIndex { $0 <= max(1, have) } ?? 0
+            let notch = max(14, (layout(for: pad, L)?.bandH ?? 40) * 0.3)
+            let steps = Int(((g.translation.height - 6) / notch).rounded(.down)) + 1
+            let n = counts[max(0, min(counts.count - 1, at + steps))]
+            if n != count || work == nil {
+                work = PatternEdit.repeatStep(origin, pad: pad, cellStart: cellStart, cell: cellTicks, count: n, like: like)
+                drag = .noteRepeat(pad: pad, cellStart: cellStart, like: like, origin: origin, count: n, fromPaint: fromPaint)
+            }
         case .move(let keys, let origin, let startTick, let startSemis, let followSelection):
             let raw = tickAt(g.location.x, w) - startTick
             let d = snapTicks > 0 ? (raw / snapTicks) * snapTicks : raw
@@ -1884,6 +1965,22 @@ struct SequencerView: View {
         }
     }
 
+    /// A finger that went down on a step and is heading straight down (more down than sideways).
+    private func pullsDown(_ g: DragGesture.Value, _ l: RowLayout) -> Bool {
+        guard l.pitch == nil, g.startLocation.y < l.y + l.bandH else { return false }
+        return g.translation.height > 6 && g.translation.height > abs(g.translation.width) * 1.3
+    }
+
+    /// Hold a step and pull down (Logic's Drum Machine Designer note repeat): the further down, the
+    /// more even hits share the step, and its slot shows a light for each.
+    private func startRepeat(pad: Int, like: GrooveEvent, fromPaint: Bool) {
+        let c = max(1, cellTicks)
+        let cellStart = like.tick / c * c
+        drag = .noteRepeat(pad: pad, cellStart: cellStart, like: like, origin: pattern, count: 0, fromPaint: fromPaint)
+        work = nil
+        selectedID = channels.first { $0.pad == pad }?.id ?? selectedID
+    }
+
     private func gridEnded(_ g: DragGesture.Value, w: CGFloat, L: [RowLayout]) {
         defer { drag = .none }
         switch drag {
@@ -1899,6 +1996,10 @@ struct SequencerView: View {
         case .paint, .erase:
             if let p = work { work = nil; controller.setLoop(loop, p) }
             else { _ = undoStack.popLast() }
+        case .noteRepeat(_, _, _, _, _, let fromPaint):
+            // from an empty step the undo was kept when the note went in
+            if fromPaint { if let p = work { work = nil; controller.setLoop(loop, p) } }
+            else if let p = work { commit(p) } else { work = nil }
         case .graph:
             if let p = work { work = nil; controller.setLoop(loop, p) } else { _ = undoStack.popLast() }
             laneOrigin = nil
@@ -2167,7 +2268,7 @@ struct SequencerView: View {
     private func followPlayhead() {
         guard follow, isThisPlaying, let t = controller.playheadTick, case .none = drag else { return }
         let t32 = Int32(t)
-        if t32 < pageStart || t32 >= pageStart + pageTicks { viewStart = min(maxStart, t32 / pageTicks * pageTicks) }
+        if Double(t32) < origin || Double(t32) >= origin + Double(pageTicks) { viewStart = Double(min(maxStart, t32 / pageTicks * pageTicks)) }
     }
 
     // MARK: Small pieces
