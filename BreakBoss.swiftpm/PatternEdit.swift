@@ -48,6 +48,26 @@ enum PatternEdit {
         return p
     }
 
+    /// Note repeat (hold a step and pull down): the step's hits become `count` even hits across the
+    /// cell, each a copy of `like` (its velocity, pitch, chance). 1 leaves a single hit.
+    static func repeatStep(_ pattern: PatternData, pad: Int, cellStart: Int32, cell: Int32, count: Int, like: GrooveEvent) -> PatternData {
+        var p = pattern
+        let n = max(1, min(count, Int(cell)))
+        p.events.removeAll { Int($0.pad) == pad && $0.tick >= cellStart && $0.tick < cellStart + cell }
+        for i in 0..<n {
+            var e = like
+            e.tick = cellStart + Int32((Double(i) * Double(cell) / Double(n)).rounded())
+            e.pad = Int8(pad)
+            if i > 0 { e.offset = 0 }
+            p.events.append(e)
+        }
+        p.sort()
+        return p
+    }
+
+    /// The repeat counts a pull down steps through: even rolls that land on whole ticks.
+    static func repeatCounts(cell: Int32) -> [Int] { [1, 2, 3, 4, 6, 8].filter { Int(cell) % $0 == 0 } }
+
     /// One 808 note held across `cells` cells, replacing the 808 hits under it.
     static func longBass(_ pattern: PatternData, from tick: Int32, cells: Int, cell: Int32) -> PatternData {
         var p = pattern

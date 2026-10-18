@@ -83,6 +83,17 @@ final class SequencerUITests: XCTestCase {
         XCTAssertEqual(notes(), drawn, "REDO puts it back")
         snap("undo-redo")
 
+        // hold the note and pull down: the step repeats (more hits the further down)
+        let step = grid.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 20, dy: 14))
+        step.press(forDuration: 0.15, thenDragTo: step.withOffset(CGVector(dx: 0, dy: 50)))
+        sleep(1)
+        let count = { (text: String) in Int(text.components(separatedBy: " ").first ?? "") ?? 0 }
+        XCTAssertGreaterThan(count(notes()), count(drawn), "pulling a step down repeats it (\(drawn) -> \(notes()))")
+        snap("note-repeat")
+        app.buttons["undoButton"].tap()
+        sleep(1)
+        XCTAssertEqual(notes(), drawn, "UNDO takes the repeats away")
+
         // the arrow opens the track's VELOCITY graph
         arrow.tap()
         XCTAssertTrue(app.buttons["laneVelocity"].waitForExistence(timeout: 3), "the arrow opens the velocity graph")
