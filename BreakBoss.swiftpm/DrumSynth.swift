@@ -62,6 +62,16 @@ final class SampleBuffer {
     let sampleRate: Double
     /// Peak-normalised preview for the pad editor's waveform (256 points).
     let overview: [Float]
+    /// What the file was (the sampler's readout): 16- or 32-bit, stereo or mono. Set before publishing.
+    var bitDepth = 32
+    var stereo = false
+    /// Where a loop starts again (the sampler's CROSSFADE moves it in). Set before publishing.
+    var loopStart = 0
+    /// The file's slice markers (WAV cue points) and its loop region (WAV 'smpl'), in frames.
+    var cues: [Int] = []
+    var region: ClosedRange<Int>?
+    /// Where a bleeding declick's fades end and start (the sampler draws its markers there).
+    var fadeMarks = (0, 0)
 
     init(left l: [Float], right r: [Float]? = nil, sampleRate: Double) {
         let n = max(l.count, 1)

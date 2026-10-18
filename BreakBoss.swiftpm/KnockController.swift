@@ -22,6 +22,11 @@ final class KnockController: ObservableObject {
     @Published private(set) var userPresets: [String] = []
     /// The 12 pad sounds as loaded (for the pad editor's waveform).
     @Published private(set) var kitSamples: [SampleBuffer] = []
+    /// What the engine plays: the kit's sounds with each track's SAMPLER page computed in.
+    @Published private(set) var playedSamples: [SampleBuffer] = []
+    /// Each track's computed sound, and what it was computed from.
+    private var samplerCache: [Int: (raw: SampleBuffer, key: SamplerOffline, buffer: SampleBuffer)] = [:]
+    private var samplerWorking = false
     /// Names for successfully loaded factory samples; these never become device-local imports.
     @Published private(set) var stockSampleNames: [Int: String] = [:]
     @Published private(set) var loadingKit = false
@@ -213,6 +218,8 @@ final class KnockController: ObservableObject {
         let b = (bpm * 10).rounded() / 10
         state.bpm = b.clamped(40, 240)
         engine.setTempo(state.bpm)
+        // a sampler stretched to the tempo (TIME: Project tempo, beats, bars) is stretched again
+        if state.pads.contains(where: { $0.sampler?.offline(bpm: 0).map { $0.stretch != .resample && $0.time.followsTempo } ?? false }) { republishKit() }
         scheduleSave()
     }
 
@@ -606,12 +613,75 @@ final class KnockController: ObservableObject {
         }
     }
 
-    /// Same sounds, new pad settings (level, pan, tune, decay, filter, reverse): instant.
+    /// Same sounds, new pad settings (level, pan, tune, decay, filter, reverse): instant. A track
+    /// whose SAMPLER page changed keeps its last computed sound until the new one is ready.
     private func republishKit() {
         guard kitSamples.count == Pad.count else { rebuildKit(); return }
-        let kit = KitBuffers(name: state.kitName, samples: kitSamples, settings: state.pads,
+        var samples = kitSamples
+        var todo: [(pad: Int, raw: SampleBuffer, key: SamplerOffline)] = []
+        for pad in 0..<Pad.count {
+            guard let key = state.pads[pad].sampler?.offline(bpm: state.bpm) else { samplerCache[pad] = nil; continue }
+            let raw = kitSamples[pad]
+            if let c = samplerCache[pad], c.raw === raw {
+                samples[pad] = c.buffer
+                if c.key == key { continue }
+            }
+            todo.append((pad, raw, key))
+        }
+        playedSamples = samples
+        let kit = KitBuffers(name: state.kitName, samples: samples, settings: state.pads,
                              bassHz: kitDefinition.bassHz, renderSampleRate: engine.sampleRate)
         engine.kitHandoff.publish(kit)
+        if !todo.isEmpty { computeSamplers(todo) }
+    }
+
+    /// Computes the SAMPLER pages (declick, tools, trims, fades, stretching) off the main thread, one
+    /// batch at a time; the next publish picks up anything that changed meanwhile.
+    private func computeSamplers(_ todo: [(pad: Int, raw: SampleBuffer, key: SamplerOffline)]) {
+        guard !samplerWorking else { return }
+        samplerWorking = true
+        let rate = engine.sampleRate > 0 ? engine.sampleRate : 48_000
+        kitQueue.async { [weak self] in
+            let done = todo.map { job in (job.pad, job.raw, job.key, SamplerProcessor.process(job.raw, job.key, engineRate: rate)) }
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.samplerWorking = false
+                for d in done { self.samplerCache[d.0] = (raw: d.1, key: d.2, buffer: d.3) }
+                self.republishKit()
+            }
+        }
+    }
+
+    // MARK: The SAMPLER window (one per track)
+
+    /// A track's sampler: the defaults until something on it is changed.
+    func sampler(_ pad: Int) -> SamplerSettings {
+        guard (0..<Pad.count).contains(pad) else { return SamplerSettings() }
+        return state.pads[pad].sampler ?? SamplerSettings()
+    }
+
+    func setSampler(_ pad: Int, _ settings: SamplerSettings) {
+        guard (0..<Pad.count).contains(pad) else { return }
+        var ps = state.pads[pad]
+        ps.sampler = settings
+        setPadSettings(pad, ps)
+    }
+
+    /// The sound the track plays now (with its SAMPLE page applied).
+    func playedSample(_ pad: Int) -> SampleBuffer? {
+        if playedSamples.indices.contains(pad) { return playedSamples[pad] }
+        return kitSamples.indices.contains(pad) ? kitSamples[pad] : nil
+    }
+
+    /// The sampler's keyboard: the track's sound `semis` from its root note.
+    func auditionPitched(_ pad: Int, semis: Int, velocity: Float = 0.85) {
+        guard (0..<Pad.count).contains(pad) else { return }
+        let st = semis.clamped(-60, 60)
+        if pad == Pad.bass808.rawValue {
+            engine.send(KEvent(kind: .bass, a: Int32(st), value: Double(velocity)))
+        } else {
+            engine.send(KEvent(kind: .padPitched, a: Int32(pad + 128 * (st + 64)), value: Double(velocity)))
+        }
     }
 
     // MARK: Pad editor
@@ -979,7 +1049,7 @@ final class KnockController: ObservableObject {
             return
         }
         let exportRate: Double = 48_000
-        let kit = KitBuffers(name: state.kitName, samples: kitSamples, settings: state.pads,
+        let kit = KitBuffers(name: state.kitName, samples: playedSamples.count == Pad.count ? playedSamples : kitSamples, settings: state.pads,
                              bassHz: kitDefinition.bassHz, renderSampleRate: exportRate)
         let patterns = PatternSet(loops)
         var params = [Float](repeating: 0, count: KParam.count)
