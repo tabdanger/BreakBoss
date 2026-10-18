@@ -541,7 +541,7 @@ enum KnockSelfTest {
               "Sampler: the Volume envelope shapes the hit")
         var filtered = PadSettings(); filtered.sampler = SamplerSettings(); filtered.sampler?.cutoff = 0.2; filtered.sampler?.filterType = .lp
         check(energy(filtered, blocks: 5...20) < energy(plain, blocks: 5...20) * 0.05, "Sampler: the filter (MOD X) takes the top off")
-        let short = SampleBuffer(left: (0..<3_000).map { _ in 0.2 }, sampleRate: rate)
+        let short = SampleBuffer(left: (0..<3_000).map { $0 % 2 == 0 ? 0.2 : -0.2 }, sampleRate: rate)
         var looped = PadSettings(); looped.sampler = SamplerSettings(); looped.sampler?.useLoop = true
         check(energy(looped, short, blocks: 60...80) > 1 && energy(plain, short, blocks: 60...80) < energy(looped, short, blocks: 60...80) * 0.01,
               "Sampler: Use loop points keeps a short sound going")
