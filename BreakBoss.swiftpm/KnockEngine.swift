@@ -1764,7 +1764,8 @@ struct Voice {
         self.rate = rate
         targetRate = rate
         self.reverse = reverse
-        position = reverse ? Double(sample.length - 1) : 0
+        // backwards from the last frame it can read (length - 1 would end the voice before its first sample)
+        position = reverse ? Double(max(0, sample.length - 2)) : 0
         startPosition = position
         self.gainL = gainL
         self.gainR = gainR
