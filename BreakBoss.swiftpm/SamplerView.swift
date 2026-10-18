@@ -262,6 +262,8 @@ struct SamplerWindow: View {
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .aspectRatio(Self.artW / Self.artH, contentMode: .fit)
+        // the window's menus check their items red on Platinum too, not lime
+        .environment(\.bbMenuAccent, skin.finish == "platinum" ? skin.glow : nil)
         .alert("Save the envelope", isPresented: Binding(get: { savingKind != nil }, set: { if !$0 { savingKind = nil } })) {
             TextField("Name", text: $presetName)
             Button("Save") { savePreset() }

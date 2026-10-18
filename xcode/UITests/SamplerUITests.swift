@@ -188,6 +188,12 @@ final class SamplerUITests: XCTestCase {
         let lfo = probe("square LFO on volume, inverted")
         XCTAssertLessThan(lfo.l + lfo.r, (boxed.l + boxed.r) * 0.8, "the LFO changes the level (\(lfo) vs \(boxed))")
         snap("lfo")
+        // AMT back to the middle takes the LFO out again, so the checks after this hear the plain hit
+        any("samplerKnobLFOAMT").doubleTap()
+        sleep(1)
+        print("UITREE KNOB samplerKnobLFOAMT after double tap = \(any("samplerKnobLFOAMT").value ?? "?")")
+        let unLFO = probe("LFO back out")
+        XCTAssertEqual(unLFO.l + unLFO.r, boxed.l + boxed.r, accuracy: (boxed.l + boxed.r) * 0.05 + 1e-6, "AMT in the middle takes the LFO out (\(unLFO) vs \(boxed))")
 
         // a tempo length from a knob's own menu
         menuTap(any("samplerKnobATT"), expect: "1/4 (beat)")
@@ -197,6 +203,8 @@ final class SamplerUITests: XCTestCase {
         if quarter.exists { quarter.tap() } else { app.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.95)).tap() }
         sleep(1)
         XCTAssertEqual(any("samplerEnvTempo").value as? String, "on", "picking a tempo length turns Tempo on")
+        let beat = probe("attack 1/4 beat")
+        XCTAssertGreaterThan(beat.l + beat.r, 0, "a one-beat attack still sounds (\(beat))")
 
         // the filter: MOD X down takes the top off
         let open1 = probe("before filter")
@@ -241,6 +249,10 @@ final class SamplerUITests: XCTestCase {
         any("samplerCutUp").tap()
         sleep(1)
         print("UITREE STEP Cut after + = \(any("samplerCut").value ?? "?")")
+        for id in ["samplerCutUp", "samplerPolyMaxUp", "samplerPolyMax", "samplerKnobSLIDE", "samplerPorta"] {
+            let e = any(id)
+            print("UITREE FRAME \(id) \(e.frame) hittable=\(e.exists && e.isHittable)")
+        }
         any("samplerPolyMaxUp").tap()
         sleep(1)
         print("UITREE STEP MAX after + = \(any("samplerPolyMax").value ?? "?")")

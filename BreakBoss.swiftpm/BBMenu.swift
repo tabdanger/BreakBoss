@@ -39,6 +39,8 @@ struct BBMenuSpec: Identifiable {
     var title: String?
     var items: [BBMenuItem]
     var custom: AnyView? = nil
+    /// The check marks' colour; nil = the usual lime (the sampler on Platinum lights them red).
+    var accent: Color? = nil
 }
 
 final class BBMenuCenter: ObservableObject {
@@ -69,7 +71,13 @@ extension EnvironmentValues {
         get { self[BBMenuCenterKey.self] }
         set { self[BBMenuCenterKey.self] = newValue }
     }
+    /// The colour the menus opened from inside this view check their items in (nil = lime).
+    var bbMenuAccent: Color? {
+        get { self[BBMenuAccentKey.self] }
+        set { self[BBMenuAccentKey.self] = newValue }
+    }
 }
+private struct BBMenuAccentKey: EnvironmentKey { static let defaultValue: Color? = nil }
 
 extension View {
     /// Adds the layer the BreakBoss menus draw in. Put it on the outermost view of a screen.
@@ -112,6 +120,7 @@ extension View {
 
 private struct BBMenuTrigger: ViewModifier {
     @Environment(\.bbMenuCenter) private var center
+    @Environment(\.bbMenuAccent) private var accent
     let title: String?
     let width: CGFloat
     let items: () -> [BBMenuItem]
@@ -121,7 +130,7 @@ private struct BBMenuTrigger: ViewModifier {
     @State private var frame: CGRect = .zero
 
     private func open() {
-        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?()))
+        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?(), accent: accent))
     }
 
     func body(content: Content) -> some View {
@@ -149,6 +158,7 @@ private struct BBMenuTrigger: ViewModifier {
 
 private struct BBContextTrigger: ViewModifier {
     @Environment(\.bbMenuCenter) private var center
+    @Environment(\.bbMenuAccent) private var accent
     let title: String?
     let width: CGFloat
     let items: () -> [BBMenuItem]
@@ -168,7 +178,7 @@ private struct BBContextTrigger: ViewModifier {
     private func show() {
         let list = items()
         guard !list.isEmpty else { return }
-        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: list))
+        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: list, accent: accent))
     }
 }
 
@@ -284,7 +294,7 @@ private struct BBMenuPanel: View {
                         Spacer()
                     }
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                    .foregroundColor(M.accent)
+                    .foregroundColor(spec.accent ?? M.accent)
                     .padding(.horizontal, 14).frame(height: 42)
                 }
                 Rectangle().fill(M.line).frame(height: 1)
@@ -338,7 +348,7 @@ private struct BBMenuPanel: View {
                         }
                     }
                     Spacer(minLength: 6)
-                    if item.checked { Image(systemName: "checkmark").foregroundColor(M.accent) }
+                    if item.checked { Image(systemName: "checkmark").foregroundColor(spec.accent ?? M.accent) }
                     if item.children != nil { Image(systemName: "chevron.right").foregroundColor(M.dim) }
                 }
                 .padding(.horizontal, 14)
