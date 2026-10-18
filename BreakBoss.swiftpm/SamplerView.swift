@@ -183,13 +183,13 @@ struct SamplerWindow: View {
     let switchTo: (Int) -> Void
     let importFile: () -> Void
     let drop: ([NSItemProvider]) -> Bool
-    /// Dragging the title bar moves the window (translation, finished).
-    var move: ((CGSize, Bool) -> Void)? = nil
     /// The track's own SWING (below 0: it follows the SWING knob) and push / pull (ticks) in the
     /// pattern, and how MISC's SHIFT / SWING knobs set them (nil leaves one as it is; `final` at let go).
     var swing: Float = -1
     var shift: Float = 0
     var setFeel: ((_ swing: Float?, _ shift: Float?, _ final: Bool) -> Void)? = nil
+    /// Dragging the title bar moves the window (translation, finished).
+    var move: ((CGSize, Bool) -> Void)? = nil
 
     @State private var page = 0                  // 0 SAMPLE, 1 ENVELOPE, 2 MISC
     @State private var trackingTab = 1           // MISC's tracking: 0 Vol (velocity), 1 Key
