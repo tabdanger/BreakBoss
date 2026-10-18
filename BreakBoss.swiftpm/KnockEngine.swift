@@ -165,6 +165,14 @@ final class KnockEngine {
     private let mixR: UnsafeMutablePointer<Float>
     private let blockEvents: UnsafeMutablePointer<BlockEvent>
     private var blockEventCount = 0
+    /// The SAMPLER's MISC page: arpeggiator notes and echoes waiting to play (fixed storage).
+    static let maxPending = 256
+    private let pending: UnsafeMutablePointer<PendingHit>
+    /// The hits due in this block, copied out so the notes they play can add their own echoes safely.
+    private let dueHits: UnsafeMutablePointer<PendingHit>
+    private var pendingCount = 0
+    /// Each track's last note speed, for Porta.
+    private let lastRate: UnsafeMutablePointer<Double>
 
     let bus = BusProcessor()
     let master = MasterBus()
@@ -286,9 +294,16 @@ final class KnockEngine {
         mixR.initialize(repeating: 0, count: 8_192)
         blockEvents = .allocate(capacity: KnockEngine.maxBlockEvents)
         blockEvents.initialize(repeating: BlockEvent(), count: KnockEngine.maxBlockEvents)
+        pending = .allocate(capacity: KnockEngine.maxPending)
+        pending.initialize(repeating: PendingHit(), count: KnockEngine.maxPending)
+        dueHits = .allocate(capacity: KnockEngine.maxPending)
+        dueHits.initialize(repeating: PendingHit(), count: KnockEngine.maxPending)
+        lastRate = .allocate(capacity: Pad.count)
+        lastRate.initialize(repeating: 0, count: Pad.count)
     }
 
     deinit {
+        pending.deallocate(); dueHits.deallocate(); lastRate.deallocate()
         midiOut.deallocate(); midiOutChannel.deallocate(); midiOutNote.deallocate()
         midiOffDue.deallocate(); midiOffChannel.deallocate(); midiOffNote.deallocate(); midiSentAt.deallocate()
         heldLoops.deallocate()
@@ -539,6 +554,7 @@ final class KnockEngine {
         applyHostTransportAtBlockStart()
         scheduleLoops(frames: frames, host: host)
         sortBlockEvents()
+        if pendingCount > 0 { playPending(frames: frames) }
 
         // Voices, segment by segment between events.
         mixL.update(repeating: 0, count: frames)
@@ -911,6 +927,7 @@ final class KnockEngine {
 
     private func releaseAll() {
         for v in 0..<KnockEngine.maxVoices where voices[v].active { voices[v].release(samples: Int(sampleRate * 0.03)) }
+        pendingCount = 0
     }
 
     /// Drum roll RECORD: note a live hit at its place in the playing pattern.
@@ -1035,11 +1052,25 @@ final class KnockEngine {
 
     // MARK: Pads
 
-    private func trigger(pad: Int, velocity: Float, semis: Float, lengthSamples: Int, glide: Bool, heldNote: Int = -1) {
+    /// `arp` / `echo`: the SAMPLER's arpeggiator and echoes may add notes (off for the notes they add).
+    /// `offsets`: this note's own pan, MOD X and MOD Y (echoes). `slide`: glide in from the last note.
+    private func trigger(pad: Int, velocity: Float, semis: Float, lengthSamples: Int, glide: Bool, heldNote: Int = -1,
+                         arp: Bool = true, echo: Bool = true, offsets: (Float, Float, Float) = (0, 0, 0), slide: Bool = false,
+                         level: Float = 1) {
         guard pad >= 0 && pad < Pad.count, padMask & (1 << UInt16(pad)) != 0, let kit else { return }
         var sample = kit.samples[pad]
         let ps = kit.settings[pad]
         let rt = pad < kit.sampler.count ? kit.sampler[pad] : SamplerRT()
+        // MISC: the arpeggiator plays this note as a run of notes instead (the first one now)
+        if rt.active && arp && rt.arpMode != 0 && !glide {
+            let first = scheduleArp(pad: pad, rt: rt, velocity: velocity, semis: semis,
+                                    length: lengthSamples > 0 ? lengthSamples : Int(samplesPerBeat))
+            trigger(pad: pad, velocity: velocity, semis: semis + Float(first.semis), lengthSamples: first.length, glide: false,
+                    heldNote: heldNote, arp: false, echo: echo, offsets: offsets, level: level)
+            return
+        }
+        // MISC: the echoes of this note, each one TIME later
+        if rt.active && echo && rt.echoes > 0 { scheduleEchoes(pad: pad, rt: rt, velocity: velocity, semis: semis, length: lengthSamples, offsets: offsets) }
         // VELOCITY at 0 = every hit full; at 1 = the whole range.
         let sens = params[KParam.velocity.rawValue]
         var velGain = (1 - sens) + sens * powf(velocity.clamped(0, 1), 1.5)
@@ -1053,7 +1084,7 @@ final class KnockEngine {
             sample = hits[Int(padHits[pad] % UInt32(hits.count))]
             velGain = sqrtf(min(1, v / max(layers.tops[l], 0.001)))
         }
-        if rt.active { velGain *= rt.preGain }
+        if rt.active { velGain *= rt.preGain * level }
         let globalSemis = Float(Int(((params[KParam.pitch.rawValue] - 0.5) * 24).rounded()))
         let cents = (params[KParam.tune.rawValue] - 0.5) * 200
         // the sampler's "Enable main pitch" off: this track ignores the faceplate's PITCH and TUNE
@@ -1082,6 +1113,53 @@ final class KnockEngine {
                 padHits[pad] &+= 1
                 return
             }
+        }
+
+        // MISC: GATE sets the note's length (a one-shot stops there too)
+        var gateCut = false
+        if rt.active && rt.gateSeconds > 0 {
+            lengthSamples = max(1, Int(rt.gateSeconds * sampleRate))
+            gateCut = true
+        }
+        var pitchFrom = 0.0
+        if rt.active {
+            // Mono with Porta: the sounding note slides to this one (legato)
+            if rt.mono && rt.porta {
+                for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad && !voices[v].releasing {
+                    voices[v].glide(to: rate, samples: max(1, Int(rt.slideSeconds * sampleRate)))
+                    voices[v].remaining = lengthSamples > 0 ? lengthSamples : Int.max
+                    lastRate[pad] = rate
+                    padHits[pad] &+= 1
+                    return
+                }
+            }
+            // Porta (or the arpeggiator's Slide): slide in from the last note; Full porta even after it ended
+            var sounding = false
+            for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad && !voices[v].releasing { sounding = true; break }
+            if (rt.porta || slide) && lastRate[pad] > 0 && (sounding || rt.fullPorta || slide) { pitchFrom = lastRate[pad] }
+            // Group: this note cuts the tracks whose By is its Cut; Cut self and polyphony stop its own notes
+            if rt.cutGroup > 0 {
+                for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad != pad {
+                    let other = voices[v].pad
+                    if other >= 0 && other < kit.sampler.count && kit.sampler[other].cutBy == rt.cutGroup {
+                        voices[v].startFade(samples: Int(sampleRate * 0.005))
+                    }
+                }
+            }
+            if rt.cutSelf {
+                for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad { voices[v].startFade(samples: Int(sampleRate * 0.005)) }
+            } else if rt.polyMax > 0 {
+                while true {
+                    var count = 0, oldest = -1, oldestAge = UInt32.max
+                    for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad && !voices[v].releasing {
+                        count += 1
+                        if voices[v].age < oldestAge { oldestAge = voices[v].age; oldest = v }
+                    }
+                    if count < rt.polyMax || oldest < 0 { break }
+                    voices[oldest].startFade(samples: Int(sampleRate * 0.005))
+                }
+            }
+            lastRate[pad] = rate
         }
 
         // Decide before choking anything: an overload rejection leaves sounding notes alone.
@@ -1114,8 +1192,20 @@ final class KnockEngine {
                              attackSamples: max(1, Int(sampleRate * 0.0005)), filterCoefficient: kit.filterCoefficients[pad],
                              mixL: ml, mixR: mr)
         if rt.active {
+            // MISC tracking: velocity (Vol) and the note's distance from Mid (Key) move PAN, MOD X and MOD Y
+            let vel = velocity.clamped(0, 1) * 2 - 1
+            let key = ((60 + semis - rt.keyMid) / 24).clamped(-1, 1)
+            let panOff = offsets.0 + rt.velTrack.0 * vel + rt.keyTrack.0 * key
+            let xOff = offsets.1 + rt.velTrack.1 * vel + rt.keyTrack.1 * key
+            let yOff = offsets.2 + rt.velTrack.2 * vel + rt.keyTrack.2 * key
             voices[slot].startSampler(rt, sampleRate: sampleRate, samplesPerBeat: beatSamples, clock: sampleClock,
-                                      loopStart: sample.loopStart, loopEnd: sample.loopEnd, region: rt.regions ? sample.region : nil)
+                                      loopStart: sample.loopStart, loopEnd: sample.loopEnd, region: rt.regions ? sample.region : nil,
+                                      offsets: (panOff, xOff, yOff))
+            voices[slot].sm.gateCut = gateCut
+            if pitchFrom > 0 && abs(pitchFrom - rate) > 0.000_1 {
+                voices[slot].rate = pitchFrom
+                voices[slot].glide(to: rate, samples: max(1, Int((slide ? 0.03 : rt.slideSeconds) * sampleRate)))
+            }
             // Realtime stretching: the length follows TIME × MUL at this tempo, the pitch the note and PITCH
             if rt.realtime && !ps.reverse {
                 let f = rt.realtimeFactor(sourceSeconds: sample.seconds, bpm: sampleRate * 60 / beatSamples)
@@ -1126,6 +1216,84 @@ final class KnockEngine {
             }
         }
         padHits[pad] &+= 1
+    }
+
+    // MARK: The SAMPLER's arpeggiator and echoes
+
+    private func addPending(_ h: PendingHit) {
+        guard pendingCount < KnockEngine.maxPending else { return }
+        pending[pendingCount] = h
+        pendingCount += 1
+    }
+
+    /// Plays what's due in this block (at its start: at most a block early) and counts the rest down.
+    private func playPending(frames: Int) {
+        var keep = 0, due = 0
+        for i in 0..<pendingCount {
+            var h = pending[i]
+            if h.due < frames {
+                dueHits[due] = h
+                due += 1
+            } else {
+                h.due -= frames
+                pending[keep] = h
+                keep += 1
+            }
+        }
+        pendingCount = keep       // notes played now append their own echoes after the waiting ones
+        for i in 0..<due {
+            let h = dueHits[i]
+            trigger(pad: h.pad, velocity: h.velocity, semis: h.semis, lengthSamples: h.length, glide: false,
+                    arp: false, echo: h.echo, offsets: (h.pan, h.x, h.y), slide: h.slide, level: h.level)
+        }
+    }
+
+    /// Lays out the arpeggio for a note `length` samples long; returns its first note (played now).
+    private func scheduleArp(pad: Int, rt: SamplerRT, velocity: Float, semis: Float, length: Int) -> (semis: Int, length: Int) {
+        let step = max(1, Int(rt.arpStepBeats * samplesPerBeat))
+        let noteLength = max(1, Int(Float(step) * rt.arpGate))
+        // the notes: the chord over Range octaves, low to high (the chords are listed low to high,
+        // so the k-th note is worked out in place; nothing is allocated on the audio thread)
+        let n = max(1, rt.arpNotes * rt.arpRange)
+        func ordered(_ j: Int) -> Int { rt.chordNote(j % rt.arpNotes) + 12 * (j / max(1, rt.arpNotes)) }
+        func at(_ k: Int) -> Int {
+            let i = k / rt.arpRepeat
+            switch rt.arpMode {
+            case 2: return ordered(n - 1 - i % n)
+            case 3, 4:
+                // up and down: the ends once (3) or twice (4)
+                let period = rt.arpMode == 3 ? max(1, 2 * n - 2) : 2 * n
+                let p = i % period
+                if rt.arpMode == 3 { return p < n ? ordered(p) : ordered(2 * n - 2 - p) }
+                return p < n ? ordered(p) : ordered(2 * n - 1 - p)
+            case 5:
+                var x = UInt32(truncatingIfNeeded: i &* 2_654_435_761 &+ Int(padHits[pad]) &* 40_503)
+                x ^= x >> 13; x = x &* 1_274_126_177; x ^= x >> 16
+                return ordered(Int(x % UInt32(n)))
+            default: return ordered(i % n)
+            }
+        }
+        let steps = max(1, Int((Double(length) / Double(step)).rounded()))
+        for k in 1..<max(2, steps) where k < steps {
+            addPending(PendingHit(pad: pad, due: k * step, velocity: velocity, semis: semis + Float(at(k)), length: noteLength,
+                                  pan: 0, x: 0, y: 0, echo: true, slide: rt.arpSlide))
+        }
+        return (at(0), noteLength)
+    }
+
+    /// The note's echoes: each FEED quieter, PAN / MOD X / MOD Y / PITCH further, TIME later (Fat mode: a few ms).
+    private func scheduleEchoes(pad: Int, rt: SamplerRT, velocity: Float, semis: Float, length: Int, offsets: (Float, Float, Float)) {
+        let gap = rt.fatMode ? max(1, Int(sampleRate * (0.004 + 0.02 * rt.echoBeats / 4))) : max(1, Int(rt.echoBeats * samplesPerBeat))
+        var v: Float = 1
+        for k in 1...rt.echoes {
+            v *= rt.echoFeed
+            guard v > 0.01 else { break }
+            let side: Float = rt.echoPingPong && k % 2 == 1 ? -1 : 1
+            let f = Float(k)
+            addPending(PendingHit(pad: pad, due: k * gap, velocity: velocity, semis: semis + rt.echoPitch * 12 * f, length: length,
+                                  pan: offsets.0 + side * rt.echoPan * (rt.echoPingPong ? 1 : f),
+                                  x: offsets.1 + rt.echoX * f, y: offsets.2 + rt.echoY * f, echo: false, slide: false, level: v))
+        }
     }
 
     /// Samples in one beat at the tempo that's playing (or the display's).
@@ -1359,6 +1527,20 @@ final class KnockEngine {
     }
 }
 
+/// A note the SAMPLER's arpeggiator or echo delay will play `due` samples from now.
+struct PendingHit {
+    var pad = 0
+    var due = 0
+    var velocity: Float = 0
+    var semis: Float = 0
+    var length = 0
+    var pan: Float = 0, x: Float = 0, y: Float = 0
+    var echo = false
+    var slide = false
+    /// An echo's level (FEED once per repeat), whatever the velocity setting.
+    var level: Float = 1
+}
+
 // MARK: - A playing sound
 
 struct Voice {
@@ -1440,8 +1622,9 @@ struct Voice {
 
     /// The sampler takes over this voice: START OFFSET, loop points and the ENVELOPE page.
     mutating func startSampler(_ rt: SamplerRT, sampleRate: Double, samplesPerBeat: Double, clock: Int64, loopStart: Int,
-                               loopEnd: Int, region: ClosedRange<Int>?) {
-        sm = SamplerVoice(rt, sampleRate: sampleRate, samplesPerBeat: samplesPerBeat, clock: clock)
+                               loopEnd: Int, region: ClosedRange<Int>?, offsets: (Float, Float, Float) = (0, 0, 0)) {
+        sm = SamplerVoice(rt, sampleRate: sampleRate, samplesPerBeat: samplesPerBeat, clock: clock,
+                          panOffset: offsets.0, xOffset: offsets.1, yOffset: offsets.2)
         let last = Double(max(length - 2, 0))
         let offset = Double(rt.startOffset) * last
         position = reverse ? last - offset : offset
@@ -1476,6 +1659,8 @@ struct Voice {
     /// The note's length is up: the sampler's envelopes release, or a loop plays out to its end.
     private mutating func noteEnded(releaseSamples: Int) {
         guard sm.on else { release(samples: releaseSamples); return }
+        // GATE: with no Volume envelope to release, the sound stops at the gate
+        if sm.gateCut && !sm.env.1.on { release(samples: releaseSamples); return }
         sm.release()
         // with the Volume envelope the loop keeps going under its release; without it the sound plays out
         if !sm.env.1.on && sm.looping { sm.looping = false; sm.direction = 1 }

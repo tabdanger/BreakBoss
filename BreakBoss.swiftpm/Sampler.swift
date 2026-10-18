@@ -235,6 +235,58 @@ struct SamplerSettings: Codable, Equatable {
     var addToKey = false
     /// Cents, −100…100.
     var fineTune: Float = 0
+    // MISC page (Tyrone's third render, Oct 18)
+    /// Polyphony: how many notes of this track sound at once (0 = no limit); Mono = one, its notes slide
+    /// with Porta. SLIDE is the glide's time.
+    var polyMax = 0
+    var mono = false
+    var porta = false
+    var slide: Float = 0.3
+    /// Time: GATE sets every note's length (0 = off, the note's own length); Full porta glides from the
+    /// last note even after it has ended.
+    var gate: Float = 0
+    var fullPorta = false
+    /// Tracking: how far velocity (Vol) and the note's distance from Mid (Key) move PAN, MOD X and MOD Y (−1…1).
+    var velTrack: [Float] = [0, 0, 0]
+    var keyTrack: [Float] = [0, 0, 0]
+    var keyMid = 60
+    /// Group: a note on this track stops the tracks whose By is this track's Cut (0 = none); Cut self
+    /// stops this track's own last note.
+    var cutGroup = 0
+    var cutBy = 0
+    var cutSelf = false
+    /// Arpeggiator: 0 off, 1 up, 2 down, 3 up and down, 4 up and down (ends twice), 5 random.
+    var arpMode = 0
+    var arpTime: Float = 0.45
+    var arpGate: Float = 0.5
+    var arpRange = 1
+    var arpRepeat = 1
+    var arpSlide = false
+    var arpChord = 0
+    /// Echo delay / fat mode: Echoes repeats, each FEED quieter, moved by PAN, MOD X, MOD Y and PITCH,
+    /// TIME apart (FEED at 0 = off). Ping pong swaps the pan each time; Fat mode packs them a few ms apart.
+    var echoFeed: Float = 0
+    var echoPan: Float = 0
+    var echoX: Float = 0
+    var echoY: Float = 0
+    var echoPitch: Float = 0
+    var echoTime: Float = 0.5
+    var echoes = 4
+    var echoPingPong = false
+    var fatMode = false
+
+    /// The arpeggiator's chords, as semitones from the note ("Auto" plays the note itself).
+    static let chords: [(String, [Int])] = [("Auto (sustain)", [0]), ("Major", [0, 4, 7]), ("Minor", [0, 3, 7]), ("Major 7", [0, 4, 7, 11]),
+                                            ("Minor 7", [0, 3, 7, 10]), ("Dominant 7", [0, 4, 7, 10]), ("Sus2", [0, 2, 7]), ("Sus4", [0, 5, 7]),
+                                            ("Diminished", [0, 3, 6]), ("Augmented", [0, 4, 8]), ("Power (5th)", [0, 7]), ("Octave", [0, 12])]
+    /// The arpeggiator's and echo's TIME knob: a step from 1/64 to 1 bar, in beats.
+    static let steps: [(String, Double)] = [("1/64", 1.0 / 16), ("1/32", 0.125), ("1/16T", 1.0 / 6), ("1/16", 0.25), ("1/8T", 1.0 / 3),
+                                            ("1/8", 0.5), ("1/4T", 2.0 / 3), ("1/4", 1), ("1/2", 2), ("1 bar", 4)]
+    static func step(_ v: Float) -> (String, Double) { steps[min(steps.count - 1, Int(v.clamped(0, 1) * Float(steps.count)))] }
+    /// SLIDE in seconds (cubic: short glides are easy to set).
+    static func slideSeconds(_ v: Float) -> Double { 0.005 + 1.5 * pow(Double(v.clamped(0, 1)), 3) }
+    /// GATE in seconds (0 = off).
+    static func gateSeconds(_ v: Float) -> Double { v <= 0.001 ? 0 : 0.01 + 2 * pow(Double(v.clamped(0, 1)), 3) }
 
     static var defaultEnvelopes: [SamplerEnvelope] {
         var e = Array(repeating: SamplerEnvelope(), count: SamplerTarget.allCases.count)
@@ -304,6 +356,9 @@ struct SamplerSettings: Codable, Equatable {
         case stretchPitch, multiplier, time, stretch, removeDC, normalize, reverse, reversePolarity, fadeStereo, swapStereo
         case start, length, fadeIn, fadeOut, crossfade, trim, envelopes, lfos, cutoff, resonance, filterType
         case rootNote, mainPitch, addToKey, fineTune
+        case polyMax, mono, porta, slide, gate, fullPorta, velTrack, keyTrack, keyMid, cutGroup, cutBy, cutSelf
+        case arpMode, arpTime, arpGate, arpRange, arpRepeat, arpSlide, arpChord
+        case echoFeed, echoPan, echoX, echoY, echoPitch, echoTime, echoes, echoPingPong, fatMode
     }
 }
 
@@ -329,6 +384,15 @@ extension SamplerSettings {
         cutoff = v(.cutoff, d.cutoff); resonance = v(.resonance, d.resonance); filterType = v(.filterType, d.filterType)
         rootNote = v(.rootNote, d.rootNote); mainPitch = v(.mainPitch, d.mainPitch); addToKey = v(.addToKey, d.addToKey)
         fineTune = v(.fineTune, d.fineTune)
+        polyMax = v(.polyMax, d.polyMax); mono = v(.mono, d.mono); porta = v(.porta, d.porta); slide = v(.slide, d.slide)
+        gate = v(.gate, d.gate); fullPorta = v(.fullPorta, d.fullPorta)
+        velTrack = v(.velTrack, d.velTrack); keyTrack = v(.keyTrack, d.keyTrack); keyMid = v(.keyMid, d.keyMid)
+        cutGroup = v(.cutGroup, d.cutGroup); cutBy = v(.cutBy, d.cutBy); cutSelf = v(.cutSelf, d.cutSelf)
+        arpMode = v(.arpMode, d.arpMode); arpTime = v(.arpTime, d.arpTime); arpGate = v(.arpGate, d.arpGate)
+        arpRange = v(.arpRange, d.arpRange); arpRepeat = v(.arpRepeat, d.arpRepeat); arpSlide = v(.arpSlide, d.arpSlide); arpChord = v(.arpChord, d.arpChord)
+        echoFeed = v(.echoFeed, d.echoFeed); echoPan = v(.echoPan, d.echoPan); echoX = v(.echoX, d.echoX); echoY = v(.echoY, d.echoY)
+        echoPitch = v(.echoPitch, d.echoPitch); echoTime = v(.echoTime, d.echoTime); echoes = v(.echoes, d.echoes)
+        echoPingPong = v(.echoPingPong, d.echoPingPong); fatMode = v(.fatMode, d.fatMode)
     }
 }
 
@@ -606,6 +670,33 @@ struct SamplerRT {
     var cutoff: Float = 1
     var resonance: Float = 0
     var filterType = SamplerFilterType.fastLP
+    // MISC
+    var polyMax = 0
+    var mono = false
+    var porta = false
+    var slideSeconds = 0.0
+    var gateSeconds = 0.0
+    var fullPorta = false
+    var velTrack: (Float, Float, Float) = (0, 0, 0)
+    var keyTrack: (Float, Float, Float) = (0, 0, 0)
+    var keyMid: Float = 60
+    var cutGroup = 0, cutBy = 0
+    var cutSelf = false
+    var arpMode = 0
+    var arpStepBeats = 0.25
+    var arpGate: Float = 0.5
+    var arpRange = 1
+    var arpRepeat = 1
+    var arpSlide = false
+    /// The chord's notes (semitones), at most 4; `arpNotes` of them are used.
+    var arpChord: (Int, Int, Int, Int) = (0, 0, 0, 0)
+    var arpNotes = 1
+    var echoFeed: Float = 0
+    var echoPan: Float = 0, echoX: Float = 0, echoY: Float = 0, echoPitch: Float = 0
+    var echoBeats = 0.5
+    var echoes = 0
+    var echoPingPong = false
+    var fatMode = false
 
     init() {}
 
@@ -636,6 +727,36 @@ struct SamplerRT {
         cutoff = s.cutoff.clamped(0, 1)
         resonance = s.resonance.clamped(0, 1)
         filterType = s.filterType
+        polyMax = s.mono ? 1 : max(0, s.polyMax)
+        mono = s.mono
+        porta = s.porta
+        slideSeconds = SamplerSettings.slideSeconds(s.slide)
+        gateSeconds = SamplerSettings.gateSeconds(s.gate)
+        fullPorta = s.fullPorta
+        func three(_ a: [Float]) -> (Float, Float, Float) { (a.count > 0 ? a[0] : 0, a.count > 1 ? a[1] : 0, a.count > 2 ? a[2] : 0) }
+        velTrack = three(s.velTrack); keyTrack = three(s.keyTrack); keyMid = Float(s.keyMid)
+        cutGroup = s.cutGroup; cutBy = s.cutBy; cutSelf = s.cutSelf
+        arpMode = s.arpMode.clamped(0, 5)
+        arpStepBeats = SamplerSettings.step(s.arpTime).1
+        arpGate = 0.05 + 0.95 * s.arpGate.clamped(0, 1)
+        arpRange = s.arpRange.clamped(1, 4)
+        arpRepeat = s.arpRepeat.clamped(1, 8)
+        arpSlide = s.arpSlide
+        let chord = SamplerSettings.chords[s.arpChord.clamped(0, SamplerSettings.chords.count - 1)].1
+        arpNotes = min(4, chord.count)
+        arpChord = (chord[0], chord.count > 1 ? chord[1] : 0, chord.count > 2 ? chord[2] : 0, chord.count > 3 ? chord[3] : 0)
+        echoFeed = s.echoFeed.clamped(0, 1)
+        echoPan = s.echoPan.clamped(-1, 1); echoX = s.echoX.clamped(-1, 1); echoY = s.echoY.clamped(-1, 1)
+        echoPitch = s.echoPitch.clamped(-1, 1)
+        echoBeats = SamplerSettings.step(s.echoTime).1
+        echoes = echoFeed > 0.001 ? s.echoes.clamped(0, 16) : 0
+        echoPingPong = s.echoPingPong
+        fatMode = s.fatMode
+    }
+
+    /// One of the chord's notes (semitones).
+    func chordNote(_ i: Int) -> Int {
+        switch i % max(1, arpNotes) { case 1: return arpChord.1; case 2: return arpChord.2; case 3: return arpChord.3; default: return arpChord.0 }
     }
 
     /// Realtime mode: how much longer the sound plays (1 = as it is).
@@ -797,8 +918,17 @@ struct SamplerVoice {
 
     init() {}
 
-    init(_ rt: SamplerRT, sampleRate rate: Double, samplesPerBeat: Double, clock: Int64) {
+    /// This note's own pan, MOD X and MOD Y on top of the track's (key and velocity tracking, echoes).
+    var panOffset: Float = 0, xOffset: Float = 0, yOffset: Float = 0
+    /// GATE cut this note short: it releases when the gate closes even with the envelope off.
+    var gateCut = false
+
+    init(_ rt: SamplerRT, sampleRate rate: Double, samplesPerBeat: Double, clock: Int64,
+         panOffset: Float = 0, xOffset: Float = 0, yOffset: Float = 0) {
         on = true
+        self.panOffset = panOffset
+        self.xOffset = xOffset
+        self.yOffset = yOffset
         sampleRate = Float(rate)
         env = (SamplerEnvRun(rt.pan, sampleRate: rate, samplesPerBeat: samplesPerBeat),
                SamplerEnvRun(rt.volume, sampleRate: rate, samplesPerBeat: samplesPerBeat),
@@ -814,7 +944,7 @@ struct SamplerVoice {
         resonance = rt.resonance
         filterType = rt.filterType
         // Fast LP fully open with no resonance is bypassed (the default)
-        filterOn = filterType != .fastLP || cutoff < 0.999 || resonance > 0.001 || env.2.on || env.3.on || lfo.2.on || lfo.3.on
+        filterOn = filterType != .fastLP || cutoff + xOffset < 0.999 || resonance + yOffset > 0.001 || env.2.on || env.3.on || lfo.2.on || lfo.3.on
         gain = env.1.on ? 0 : 1
         control(0)
         gain = env.1.on ? env.1.value : gain
@@ -840,7 +970,7 @@ struct SamplerVoice {
         }
         gain = max(0, g)
 
-        var p: Float = 0
+        var p: Float = panOffset
         if env.0.on { p += env.0.advance(n) * env.0.amount }
         if lfo.0.on { p += lfo.0.advance(n, age: age) }
         if p != 0 {
@@ -856,7 +986,7 @@ struct SamplerVoice {
         rateMul = semis == 0 ? 1 : Double(exp2f(semis / 12))
 
         guard filterOn else { return }
-        var x = cutoff, y = resonance
+        var x = (cutoff + xOffset).clamped(0, 1), y = resonance + yOffset
         if env.2.on {
             // the envelope opens the filter up to MOD X (or, turned left, closes it from there), so it's
             // heard even with the filter wide open

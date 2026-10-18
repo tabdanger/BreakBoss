@@ -630,6 +630,105 @@ enum KnockSelfTest {
         let bulged = SamplerWindow.dragged(SamplerEnvelope(), handle: 6, dx: 0, dy: 0.25)
         check(bulged.attackTension < -0.4, "Sampler: dragging the attack curve up bends it")
 
+        // Tyrone, Oct 18: the MISC page (third tab): every control changes what plays
+        /// Plays `hits` (block, pad, semitones) on a fresh engine; returns each block's left / right
+        /// energy and zero crossings, and how many hits each pad made.
+        func play(_ all: [PadSettings], _ sample: SampleBuffer = long, hits: [(Int, Int, Int)], blocks: Int)
+            -> (l: [Float], r: [Float], zc: [Int], hits: [UInt32]) {
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0), (.velocity, 0), (.boost, 0), (.clipper, 0),
+                                            (.clipDrive, 0), (.gatedReverb, 0), (.textureDelay, 0)]
+            for (p, v) in quiet { e.setParam(p, v) }
+            var settings = all
+            while settings.count < Pad.count { settings.append(PadSettings()) }
+            e.kitHandoff.publish(KitBuffers(name: "MISC", samples: Array(repeating: sample, count: Pad.count), settings: settings, bassHz: 110))
+            var ls: [Float] = [], rs: [Float] = [], zs: [Int] = []
+            var last: Float = 0
+            for b in 0..<blocks {
+                for h in hits where h.0 == b { e.send(KEvent(kind: .padPitched, a: Int32(h.1 + 128 * (h.2 + 64)), value: 1)) }
+                var left = [Float](repeating: 0, count: 128), right = left
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+                ls.append(left.reduce(0) { $0 + $1 * $1 }); rs.append(right.reduce(0) { $0 + $1 * $1 })
+                var z = 0
+                for x in left { if (x < 0) != (last < 0) && abs(x) > 0.000_1 { z += 1 }; if abs(x) > 0.000_1 { last = x } }
+                zs.append(z)
+            }
+            return (ls, rs, zs, (0..<Pad.count).map { e.padHits[$0] })
+        }
+        func misc(_ change: (inout SamplerSettings) -> Void) -> PadSettings {
+            var p = PadSettings(); var sm = SamplerSettings(); change(&sm); p.sampler = sm; return p
+        }
+        func sum(_ v: [Float], _ r: ClosedRange<Int>) -> Float { r.reduce(0) { $0 + v[$1] } }
+        func sumZ(_ v: [Int], _ r: ClosedRange<Int>) -> Int { r.reduce(0) { $0 + v[$1] } }
+        let one = [(0, 0, 0)]
+        // Arpeggiator: a tap becomes a run of notes, TIME apart (a beat's worth at 140 BPM)
+        let arp16 = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], hits: one, blocks: 200).hits[0]
+        let arp8 = play([misc { $0.arpMode = 1; $0.arpTime = 0.55 }], hits: one, blocks: 200).hits[0]
+        let arpOff = play([misc { _ in }], hits: one, blocks: 200).hits[0]
+        check(arpOff == 1 && arp16 == 4 && arp8 == 2, "Sampler MISC: the arpeggiator plays 1/16s and 1/8s (\(arp16), \(arp8), off \(arpOff))")
+        for mode in 2...5 {
+            check(play([misc { $0.arpMode = mode; $0.arpTime = 0.35; $0.arpChord = 3; $0.arpRange = 2; $0.arpRepeat = 2 }], hits: one, blocks: 200).hits[0] == 4,
+                  "Sampler MISC: arpeggiator mode \(mode) with a chord, Range and Repeat plays its run")
+        }
+        let tone1k = SampleBuffer(left: (0..<48_000).map { sinf(Float($0) * 2 * .pi * 1_000 / 48_000) * 0.3 }, sampleRate: rate)
+        let upRun = play([misc { $0.arpMode = 1; $0.arpTime = 0.35; $0.arpChord = 11 }], tone1k, hits: one, blocks: 60)
+        let downRun = play([misc { $0.arpMode = 2; $0.arpTime = 0.35; $0.arpChord = 11 }], tone1k, hits: one, blocks: 60)
+        check(sumZ(upRun.zc, 2...30) * 3 < sumZ(downRun.zc, 2...30) * 2,
+              "Sampler MISC: Up starts on the low note, Down on the high one (\(sumZ(upRun.zc, 2...30)) vs \(sumZ(downRun.zc, 2...30)) crossings)")
+        // Echo delay: FEED repeats the note, TIME apart; Ping pong swaps sides; Fat mode packs them in
+        let blip = SampleBuffer(left: (0..<3_000).map { $0 % 2 == 0 ? 0.2 : -0.2 }, sampleRate: rate)
+        let dry = play([misc { _ in }], blip, hits: one, blocks: 200)
+        let wet = play([misc { $0.echoFeed = 0.6; $0.echoTime = 0.35; $0.echoes = 4 }], blip, hits: one, blocks: 200)
+        check(wet.hits[0] == 5 && sum(wet.l, 40...199) > sum(dry.l, 0...30) * 0.2 && sum(dry.l, 40...199) < 0.001,
+              "Sampler MISC: echoes repeat the note, each quieter (\(wet.hits[0]) hits)")
+        check(sum(wet.l, 40...60) > sum(wet.l, 80...100), "Sampler MISC: each echo is quieter than the last")
+        let pong = play([misc { $0.echoFeed = 0.6; $0.echoTime = 0.35; $0.echoes = 1; $0.echoPan = 1; $0.echoPingPong = true }], blip, hits: one, blocks: 80)
+        check(sum(pong.l, 40...79) > sum(pong.r, 40...79) * 4, "Sampler MISC: Ping pong puts the first echo on the other side")
+        let fat = play([misc { $0.echoFeed = 0.6; $0.fatMode = true; $0.echoes = 4 }], blip, hits: one, blocks: 30)
+        check(fat.hits[0] == 5, "Sampler MISC: Fat mode packs the echoes in a few ms apart (\(fat.hits[0]) hits in 80 ms)")
+        let high = play([misc { $0.echoFeed = 0.6; $0.echoTime = 0.35; $0.echoes = 1; $0.echoPitch = 1 }], tone1k, hits: one, blocks: 70)
+        let flat = play([misc { $0.echoFeed = 0.6; $0.echoTime = 0.35; $0.echoes = 1 }], tone1k, hits: one, blocks: 70)
+        check(high.l != flat.l, "Sampler MISC: the echo's PITCH changes the echoes")
+        // GATE: every note stops at the gate
+        let gated = play([misc { $0.gate = 0.3 }], hits: one, blocks: 80)
+        let open = play([misc { _ in }], hits: one, blocks: 80)
+        check(sum(gated.l, 50...79) < sum(open.l, 50...79) * 0.05, "Sampler MISC: GATE cuts the note short")
+        // Polyphony, Mono, Cut self: a second hit stops the first (two in phase sound 4× the energy)
+        let twice = [(0, 0, 0), (10, 0, 0)]
+        let both = sum(play([misc { _ in }], hits: twice, blocks: 60).l, 30...59)
+        for (name, setting) in [("Max 1", misc { $0.polyMax = 1 }), ("Mono", misc { $0.mono = true }), ("Cut self", misc { $0.cutSelf = true })] {
+            let alone = sum(play([setting], hits: twice, blocks: 60).l, 30...59)
+            check(alone < both * 0.4, "Sampler MISC: \(name) stops the track's last note (\(alone) vs \(both))")
+        }
+        // Group: track 1's note cuts track 2 when track 2's By is track 1's Cut
+        let cutter = misc { $0.cutGroup = 1 }, cutBy1 = misc { $0.cutBy = 1 }
+        let grouped = sum(play([cutter, cutBy1], hits: [(0, 1, 0), (10, 0, 0)], blocks: 60).l, 30...59)
+        let ungrouped = sum(play([cutter, misc { _ in }], hits: [(0, 1, 0), (10, 0, 0)], blocks: 60).l, 30...59)
+        check(grouped < ungrouped * 0.4, "Sampler MISC: Cut / By stops the other track (\(grouped) vs \(ungrouped))")
+        // Porta and Full porta: the next note slides in from the last
+        let leap = [(0, 0, 0), (10, 0, 12)]
+        let monoJump = play([misc { $0.mono = true }], tone1k, hits: leap, blocks: 30)
+        let monoSlide = play([misc { $0.mono = true; $0.porta = true; $0.slide = 0.4 }], tone1k, hits: leap, blocks: 30)
+        check(sumZ(monoSlide.zc, 11...16) * 10 < sumZ(monoJump.zc, 11...16) * 9,
+              "Sampler MISC: Mono with Porta slides up to the next note (\(sumZ(monoSlide.zc, 11...16)) vs \(sumZ(monoJump.zc, 11...16)) crossings)")
+        let shortTone = SampleBuffer(left: (0..<2_000).map { sinf(Float($0) * 2 * .pi * 1_000 / 48_000) * 0.3 }, sampleRate: rate)
+        let later = [(0, 0, 0), (30, 0, 12)]
+        let ended = play([misc { $0.porta = true; $0.slide = 0.4 }], shortTone, hits: later, blocks: 40)
+        let full = play([misc { $0.porta = true; $0.fullPorta = true; $0.slide = 0.4 }], shortTone, hits: later, blocks: 40)
+        check(sumZ(full.zc, 31...36) * 10 < sumZ(ended.zc, 31...36) * 9,
+              "Sampler MISC: Full porta slides even after the last note ended (\(sumZ(full.zc, 31...36)) vs \(sumZ(ended.zc, 31...36)))")
+        // Tracking: velocity (Vol) and the note above Mid (Key) move the pan
+        let velLeft = play([misc { $0.velTrack = [-1, 0, 0] }], hits: one, blocks: 30)
+        check(sum(velLeft.l, 2...29) > sum(velLeft.r, 2...29) * 4, "Sampler MISC: Vol tracking moves a hard hit's pan")
+        let keyRight = play([misc { $0.keyTrack = [1, 0, 0]; $0.keyMid = 48 }], hits: [(0, 0, 0)], blocks: 30)
+        check(sum(keyRight.r, 2...29) > sum(keyRight.l, 2...29) * 2, "Sampler MISC: Key tracking moves a note above Mid")
+        let keyDark = play([misc { $0.keyTrack = [0, 1, 0]; $0.keyMid = 84 }], hits: one, blocks: 30)
+        check(sum(keyDark.l, 2...29) < sum(open.l, 2...29) * 0.3, "Sampler MISC: Key tracking on MOD X closes the filter below Mid")
+        var restored = PadSettings(); restored.sampler = misc { $0.arpMode = 3; $0.echoFeed = 0.4; $0.keyTrack = [0.5, 0, 0]; $0.cutGroup = 2; $0.mono = true }.sampler
+        let back = (try? JSONEncoder().encode(restored)).flatMap { try? JSONDecoder().decode(PadSettings.self, from: $0) }
+        check(back?.sampler == restored.sampler, "Sampler MISC: its settings are saved with the track")
+
         // Realtime stretching: ×2 plays twice as long with nothing computed first
         let quarter = SampleBuffer(left: (0..<12_000).map { sinf(Float($0) * 2 * .pi * 220 / 48_000) * 0.5 }, sampleRate: rate)
         var realtime = PadSettings(); realtime.sampler = SamplerSettings()

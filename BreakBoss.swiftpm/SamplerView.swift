@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 // MARK: - The SAMPLER window (Tyrone's two renders, Oct 18)
 //
 // One window per track, opened from the track's menu (two-finger tap / right-click > Open sample
-// editor). Page 1 SAMPLE, page 2 ENVELOPE; the tabs flip between them. Drawn at the renders' size
+// editor). Page 1 SAMPLE, page 2 ENVELOPE, page 3 MISC (the wrench); the tabs flip between them. Drawn at the renders' size
 // (1408 × 1000 with the waveform's edit bar) and scaled to fit: it floats over the sequencer, drag
 // its title bar to move it and its corner to resize it. Each mode wears its own metal and light: Platinum silver with
 // platinum knobs and red light, Modern Black with red, Vintage cream with yellow, Texture blue
@@ -185,8 +185,14 @@ struct SamplerWindow: View {
     let drop: ([NSItemProvider]) -> Bool
     /// Dragging the title bar moves the window (translation, finished).
     var move: ((CGSize, Bool) -> Void)? = nil
+    /// The track's own SWING (below 0: it follows the SWING knob) and push / pull (ticks) in the
+    /// pattern, and how MISC's SHIFT / SWING knobs set them (nil leaves one as it is; `final` at let go).
+    var swing: Float = -1
+    var shift: Float = 0
+    var setFeel: ((_ swing: Float?, _ shift: Float?, _ final: Bool) -> Void)? = nil
 
-    @State private var page = 0                  // 0 SAMPLE, 1 ENVELOPE
+    @State private var page = 0                  // 0 SAMPLE, 1 ENVELOPE, 2 MISC
+    @State private var trackingTab = 1           // MISC's tracking: 0 Vol (velocity), 1 Key
     @State private var target: SamplerTarget = .volume
     @State private var keyboardStart = 36        // the keyboard's first key (C3)
     @State private var zoom: CGFloat = 1
@@ -237,7 +243,11 @@ struct SamplerWindow: View {
                 bezel(s)
                 titleBar(s)
                 tabStrip(s)
-                if page == 0 { samplePage(s) } else { envelopePage(s) }
+                switch page {
+                case 0: samplePage(s)
+                case 1: envelopePage(s)
+                default: miscPage(s)
+                }
                 if Self.probing {
                     // UI tests only: renders a hit of the track as it is now and shows its numbers
                     Button { probe = controller.probeTrack(pad) } label: {
@@ -331,10 +341,14 @@ struct SamplerWindow: View {
                 .spot(36, 76, 238, 84, s)
             pageTab(1, "ENVELOPE", s) { EnvelopeGlyph().stroke(page == 1 ? skin.glow : skin.dim, style: StrokeStyle(lineWidth: 3 * s, lineJoin: .round)) }
                 .spot(278, 76, 264, 84, s)
+            pageTab(2, "MISC", s) {
+                Image(systemName: "wrench.adjustable").font(.system(size: 28 * s, weight: .medium)).foregroundColor(page == 2 ? skin.glow : skin.dim)
+            }
+                .spot(546, 76, 200, 84, s)
             // ON: the track plays (a mute on the rack turns it off)
             Button { controller.toggleMute(pad) } label: {
                 VStack(spacing: 6 * s) {
-                    SamplerSwitch(on: !muted, skin: skin, lamp: Color(red: 0.4, green: 0.95, blue: 0.3)).frame(width: 34 * s, height: 34 * s)
+                    SamplerSwitch(on: !muted, skin: skin, lamp: skin.finish == "platinum" ? nil : Color(red: 0.4, green: 0.95, blue: 0.3)).frame(width: 34 * s, height: 34 * s)
                     label("ON", s)
                 }
             }
@@ -388,7 +402,7 @@ struct SamplerWindow: View {
             }
         }
         .buttonStyle(SeqPress())
-        .accessibilityIdentifier(i == 0 ? "samplerSamplePage" : "samplerEnvelopePage")
+        .accessibilityIdentifier(["samplerSamplePage", "samplerEnvelopePage", "samplerMiscPage"][min(i, 2)])
     }
 
     private func headerKnob(_ title: String, value: Float, bipolar: Bool, reset: Float, x: CGFloat, _ s: CGFloat,
@@ -1375,6 +1389,249 @@ struct SamplerWindow: View {
                 }
                 .spot(20, 362, 198, 52, s)
                 .accessibilityIdentifier("samplerFilterType")
+        }
+    }
+
+    // MARK: Page 3: MISC (Tyrone's third render, Oct 18). What each control does: SamplerSettings / KnockEngine.trigger
+
+    private func miscPage(_ s: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            levelsPanel(s).spot(36, 176, 372, 244, s)
+            polyphonyPanel(s).spot(414, 176, 300, 244, s)
+            timePanel(s).spot(720, 176, 320, 244, s)
+            trackingPanel(s).spot(1046, 176, 338, 244, s)
+            groupPanel(s).spot(36, 426, 250, 260, s)
+            arpPanel(s).spot(292, 426, 560, 260, s)
+            echoPanel(s).spot(858, 426, 526, 260, s)
+            rootBar(s).spot(36, 696, 1348, 66, s)
+            keyboard(s).spot(36, 770, 1348, 200, s)
+        }
+    }
+
+    /// A count with − and + either side (Max, Cut, By, Range, Repeat, Echoes), its name underneath.
+    private func stepper(_ title: String, _ text: String, x: CGFloat, y: CGFloat, w: CGFloat = 120, _ s: CGFloat, id: String,
+                         down: @escaping () -> Void, up: @escaping () -> Void) -> some View {
+        VStack(spacing: 6 * s) {
+            HStack(spacing: 0) {
+                Button(action: down) { Image(systemName: "minus").frame(width: 30 * s, height: 44 * s).contentShape(Rectangle()) }
+                    .accessibilityIdentifier(id + "Down")
+                ZStack {
+                    SamplerWell(skin: skin, corner: 3 * s)
+                    Text(text).font(.system(size: 24 * s, weight: .medium, design: .monospaced)).foregroundColor(skin.glow)
+                        .shadow(color: skin.glow.opacity(0.8), radius: 4 * s).lineLimit(1).minimumScaleFactor(0.5)
+                }
+                .accessibilityElement().accessibilityIdentifier(id).accessibilityValue(text)
+                Button(action: up) { Image(systemName: "plus").frame(width: 30 * s, height: 44 * s).contentShape(Rectangle()) }
+                    .accessibilityIdentifier(id + "Up")
+            }
+            .font(.system(size: 16 * s, weight: .bold)).foregroundColor(skin.ink)
+            .buttonStyle(SeqPress())
+            .frame(height: 44 * s)
+            label(title, s)
+        }
+        .frame(width: w * s)
+        .offset(x: x * s, y: y * s)
+    }
+
+    private static func percent(_ v: Float) -> String { "\(Int((v * 100).rounded()))%" }
+    private static func bipolarPercent(_ v: Float) -> String { "\(Int(((v * 2 - 1) * 100).rounded()))%" }
+    private static func cutoffText(_ v: Float) -> String {
+        let hz = 20 * pow(1000, Double(v)); return hz < 1000 ? "\(Int(hz)) Hz" : String(format: "%.1f kHz", hz / 1000)
+    }
+    private static func bipolar(_ v: Float) -> Float { abs(v * 2 - 1) < 0.02 ? 0 : v * 2 - 1 }
+
+    /// Levels adjustment: the same PAN and VOL as the header, MOD X / MOD Y the filter's cutoff and resonance.
+    private func levelsPanel(_ s: CGFloat) -> some View {
+        panel("Levels adjustment", s) {
+            knob("PAN", (controller.state.pads[pad].pan + 1) / 2, x: 55, y: 120, d: 62, s, labelY: 166, bipolar: true, reset: 0.5, id: "LevelsPAN",
+                 display: { v in let p = Int(((v * 2 - 1) * 100).rounded()); return p == 0 ? "C" : (p < 0 ? "L\(-p)" : "R\(p)") }) { v, _ in
+                var ps = controller.state.pads[pad]; let p = v * 2 - 1; ps.pan = abs(p) < 0.03 ? 0 : p; controller.setPadSettings(pad, ps)
+            }
+            knob("VOL", sm.volume, x: 142, y: 120, d: 62, s, labelY: 166, reset: 0.5, id: "LevelsVOL",
+                 display: { v in
+                     let g = SamplerSettings.preGain(v)
+                     return "\(Int((v * 200).rounded()))%  " + (g <= 0.0001 ? "-∞" : String(format: "%+.1f dB", 20 * log10(Double(g))))
+                 }) { v, _ in edit { $0.volume = abs(v - 0.5) < 0.01 ? 0.5 : v } }
+            knob("MOD X", sm.cutoff, x: 229, y: 120, d: 62, s, labelY: 166, reset: 1, id: "LevelsMODX", display: Self.cutoffText) { v, _ in edit { $0.cutoff = v } }
+            knob("MOD Y", sm.resonance, x: 316, y: 120, d: 62, s, labelY: 166, reset: 0, id: "LevelsMODY", display: Self.percent) { v, _ in edit { $0.resonance = v } }
+        }
+    }
+
+    /// Polyphony: Max notes at once (∞ = no limit), SLIDE (the glide's time), Porta, Mono.
+    private func polyphonyPanel(_ s: CGFloat) -> some View {
+        panel("Polyphony", s) {
+            stepper("MAX", sm.polyMax == 0 ? "∞" : "\(sm.polyMax)", x: 18, y: 64, w: 130, s, id: "samplerPolyMax",
+                    down: { edit { $0.polyMax = max(0, $0.polyMax - 1) } }, up: { edit { $0.polyMax = min(16, $0.polyMax + 1) } })
+            knob("SLIDE", sm.slide, x: 226, y: 96, d: 62, s, labelY: 142, reset: 0.3, id: "SLIDE",
+                 display: { v in let t = SamplerSettings.slideSeconds(v); return t < 1 ? "\(Int((t * 1000).rounded())) ms" : String(format: "%.2f s", t) }) { v, _ in edit { $0.slide = v } }
+            smallToggle("Porta", sm.porta, x: 160, y: 206, s, id: "samplerPorta") { edit { $0.porta.toggle() } }
+            smallToggle("Mono", sm.mono, x: 290, y: 206, s, id: "samplerMono") { edit { $0.mono.toggle() } }
+        }
+    }
+
+    /// Time: GATE (every note's length; all the way down = off), SHIFT (push / pull) and SWING (the
+    /// track's own swing in the pattern), Full porta.
+    private func timePanel(_ s: CGFloat) -> some View {
+        panel("Time", s) {
+            knob("GATE", sm.gate, x: 55, y: 110, d: 62, s, labelY: 156, reset: 0, id: "GATE",
+                 display: { v in let t = SamplerSettings.gateSeconds(v); return t == 0 ? "Off" : (t < 1 ? "\(Int((t * 1000).rounded())) ms" : String(format: "%.2f s", t)) }) { v, _ in
+                edit { $0.gate = v < 0.01 ? 0 : v }
+            }
+            knob("SHIFT", (shift / PatternData.maxShift + 1) / 2, x: 160, y: 110, d: 62, s, labelY: 156, bipolar: true, reset: 0.5, id: "SHIFT",
+                 display: { v in
+                     let t = ((v * 2 - 1) * PatternData.maxShift).rounded()
+                     return t == 0 ? "On the grid" : "\(Int(abs(t))) ticks \(t < 0 ? "early" : "late")"
+                 }) { v, final in setFeel?(nil, ((v * 2 - 1) * PatternData.maxShift).rounded(), final) }
+            knob("SWING", max(0, swing), x: 265, y: 110, d: 62, s, labelY: 156, reset: 0, id: "SWING",
+                 menu: { [BBMenuItem.item("Follow the SWING knob", checked: swing < 0) { setFeel?(-1, nil, true) }] },
+                 display: { v in swing < 0 && v == 0 ? "SWING knob" : "\(Int((50 + v * 22).rounded()))%" }) { v, final in setFeel?(v, nil, final) }
+            smallToggle("Full porta", sm.fullPorta, x: 300, y: 214, s, id: "samplerFullPorta") { edit { $0.fullPorta.toggle() } }
+        }
+    }
+
+    /// Tracking: how far velocity (Vol) or the note's distance from Mid (Key) moves PAN, MOD X and MOD Y.
+    private func trackingPanel(_ s: CGFloat) -> some View {
+        let tab = trackingTab
+        let values = tab == 0 ? sm.velTrack : sm.keyTrack
+        func value(_ i: Int) -> Float { i < values.count ? values[i] : 0 }
+        func set(_ i: Int, _ v: Float) {
+            edit { st in
+                if tab == 0 { while st.velTrack.count < 3 { st.velTrack.append(0) }; st.velTrack[i] = v }
+                else { while st.keyTrack.count < 3 { st.keyTrack.append(0) }; st.keyTrack[i] = v }
+            }
+        }
+        return panel(nil, s) {
+            HStack(spacing: 4 * s) {
+                ForEach(0..<2, id: \.self) { i in
+                    Button { trackingTab = i } label: {
+                        VStack(spacing: 4 * s) {
+                            Text(i == 0 ? "Vol" : "Key").font(.system(size: 21 * s, weight: tab == i ? .semibold : .regular))
+                                .foregroundColor(tab == i ? skin.ink : skin.dim)
+                            Capsule().fill(tab == i ? skin.glow : .clear).frame(height: 4 * s).shadow(color: tab == i ? skin.glow : .clear, radius: 4 * s)
+                        }
+                        .frame(width: 64 * s, height: 44 * s).contentShape(Rectangle())
+                    }
+                    .buttonStyle(SeqPress())
+                    .accessibilityIdentifier(i == 0 ? "samplerTrackVol" : "samplerTrackKey")
+                    .accessibilityValue(tab == i ? "on" : "off")
+                }
+                Text("Tracking").font(.system(size: 22 * s, weight: .medium)).foregroundColor(skin.ink).padding(.leading, 8 * s)
+            }
+            .offset(x: 12 * s, y: 6 * s)
+            knob("PAN", (value(0) + 1) / 2, x: 62, y: 106, d: 58, s, labelY: 150, bipolar: true, reset: 0.5, id: "TrackPAN",
+                 display: Self.bipolarPercent) { v, _ in set(0, Self.bipolar(v)) }
+            knob("MOD X", (value(1) + 1) / 2, x: 169, y: 106, d: 58, s, labelY: 150, bipolar: true, reset: 0.5, id: "TrackMODX",
+                 display: Self.bipolarPercent) { v, _ in set(1, Self.bipolar(v)) }
+            knob("MOD Y", (value(2) + 1) / 2, x: 276, y: 106, d: 58, s, labelY: 150, bipolar: true, reset: 0.5, id: "TrackMODY",
+                 display: Self.bipolarPercent) { v, _ in set(2, Self.bipolar(v)) }
+            // Mid: the note that Key tracking leaves alone
+            label("Mid: \(Self.noteName(sm.keyMid))", s).frame(width: 110 * s, height: 30 * s, alignment: .leading).offset(x: 16 * s, y: 196 * s)
+            midSlider(s).spot(124, 190, 196, 42, s).opacity(tab == 1 ? 1 : 0.45)
+        }
+    }
+
+    private func midSlider(_ s: CGFloat) -> some View {
+        GeometryReader { g in
+            let w = g.size.width
+            let lo = 24, hi = 108
+            let x = CGFloat(sm.keyMid.clamped(lo, hi) - lo) / CGFloat(hi - lo) * w
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color(white: 0.05)).overlay(Capsule().stroke(skin.surface.bright.opacity(0.5), lineWidth: 1)).frame(height: 10 * s)
+                ZStack {
+                    Circle().fill(skin.cap.spun)
+                    Circle().strokeBorder(Color.black.opacity(0.6), lineWidth: 1)
+                    Capsule().fill(skin.glow).frame(width: 3 * s, height: 14 * s)
+                }
+                .frame(width: 30 * s, height: 30 * s).offset(x: x - 15 * s)
+                .shadow(color: .black.opacity(0.6), radius: 3 * s, y: 2 * s)
+            }
+            .frame(height: g.size.height)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0).onChanged { v in
+                let n = lo + Int((Float(v.location.x / max(w, 1)) * Float(hi - lo)).rounded())
+                edit { $0.keyMid = n.clamped(lo, hi) }
+            })
+            .onTapGesture(count: 2) { edit { $0.keyMid = 60 } }
+        }
+        .accessibilityElement().accessibilityIdentifier("samplerKeyMid").accessibilityValue(Self.noteName(sm.keyMid))
+    }
+
+    /// Group: a note on this track stops the tracks whose By is this track's Cut; Cut self stops its own.
+    private func groupPanel(_ s: CGFloat) -> some View {
+        panel("Group", s) {
+            stepper("CUT", sm.cutGroup == 0 ? "–" : "\(sm.cutGroup)", x: 14, y: 62, w: 106, s, id: "samplerCut",
+                    down: { edit { $0.cutGroup = max(0, $0.cutGroup - 1) } }, up: { edit { $0.cutGroup = min(16, $0.cutGroup + 1) } })
+            stepper("BY", sm.cutBy == 0 ? "–" : "\(sm.cutBy)", x: 128, y: 62, w: 106, s, id: "samplerCutBy",
+                    down: { edit { $0.cutBy = max(0, $0.cutBy - 1) } }, up: { edit { $0.cutBy = min(16, $0.cutBy + 1) } })
+            smallToggle("Cut self", sm.cutSelf, x: 230, y: 200, s, id: "samplerCutSelf") { edit { $0.cutSelf.toggle() } }
+        }
+    }
+
+    /// Arpeggiator: off, up, down, up and down, sticky (the ends twice), random; TIME a step, GATE its length,
+    /// Range octaves, Repeat each note, Slide between notes, Chord the notes it runs over.
+    private func arpPanel(_ s: CGFloat) -> some View {
+        let modes = ["Off", "Up", "Down", "Up/Dn", "Sticky", "Random"]
+        let icons = ["xmark", "arrow.up.right", "arrow.down.right", "arrow.up.arrow.down", "arrow.up.and.down.righttriangle.up.righttriangle.down", "shuffle"]
+        return panel("Arpeggiator", s) {
+            HStack(spacing: 4 * s) {
+                ForEach(0..<6, id: \.self) { i in
+                    let on = sm.arpMode == i
+                    Button { edit { $0.arpMode = i } } label: {
+                        ZStack {
+                            if on { SamplerWell(skin: skin, corner: 4 * s) }
+                            VStack(spacing: 2 * s) {
+                                Image(systemName: icons[i]).font(.system(size: 16 * s, weight: .semibold))
+                                Text(modes[i]).font(.system(size: 13 * s, weight: .medium)).lineLimit(1).minimumScaleFactor(0.6)
+                            }
+                            .foregroundColor(on ? skin.glow : skin.ink)
+                        }
+                        .frame(width: 62 * s, height: 50 * s).contentShape(Rectangle())
+                    }
+                    .buttonStyle(SeqPress())
+                    .accessibilityLabel(modes[i]).accessibilityValue(on ? "on" : "off")
+                    .accessibilityIdentifier("samplerArp\(i)")
+                }
+            }
+            .offset(x: 160 * s, y: 6 * s)
+            knob("TIME", sm.arpTime, x: 52, y: 120, d: 60, s, labelY: 165, reset: 0.45, id: "ArpTIME",
+                 display: { v in SamplerSettings.step(v).0 }) { v, _ in edit { $0.arpTime = v } }
+            knob("GATE", sm.arpGate, x: 142, y: 120, d: 60, s, labelY: 165, reset: 0.5, id: "ArpGATE",
+                 display: { v in "\(Int(((0.05 + 0.95 * v) * 100).rounded()))%" }) { v, _ in edit { $0.arpGate = v } }
+            stepper("RANGE", "\(sm.arpRange)", x: 200, y: 92, w: 112, s, id: "samplerArpRange",
+                    down: { edit { $0.arpRange = max(1, $0.arpRange - 1) } }, up: { edit { $0.arpRange = min(4, $0.arpRange + 1) } })
+            stepper("REPEAT", "\(sm.arpRepeat)", x: 318, y: 92, w: 112, s, id: "samplerArpRepeat",
+                    down: { edit { $0.arpRepeat = max(1, $0.arpRepeat - 1) } }, up: { edit { $0.arpRepeat = min(8, $0.arpRepeat + 1) } })
+            smallToggle("Slide", sm.arpSlide, x: 548, y: 120, s, id: "samplerArpSlide") { edit { $0.arpSlide.toggle() } }
+            label("Chord", s, size: 20).frame(height: 46 * s).offset(x: 22 * s, y: 196 * s)
+            menuChip(SamplerSettings.chords[sm.arpChord.clamped(0, SamplerSettings.chords.count - 1)].0, s, size: 20)
+                .bbMenu(title: "Chord", width: 240) {
+                    SamplerSettings.chords.enumerated().map { i, c in BBMenuItem.item(c.0, checked: sm.arpChord == i) { edit { $0.arpChord = i } } }
+                }
+                .spot(96, 196, 300, 46, s)
+                .accessibilityIdentifier("samplerArpChord")
+        }
+    }
+
+    /// Echo delay / fat mode: FEED (0 = off) each echo quieter, PAN / MOD X / MOD Y / PITCH move each one
+    /// further, TIME apart, Echoes how many; Ping pong swaps sides, Fat mode packs them a few ms apart.
+    private func echoPanel(_ s: CGFloat) -> some View {
+        panel("Echo delay / fat mode", s) {
+            knob("FEED", sm.echoFeed, x: 50, y: 112, d: 58, s, labelY: 156, reset: 0, id: "EchoFEED",
+                 display: { v in v <= 0.001 ? "Off" : Self.percent(v) }) { v, _ in edit { $0.echoFeed = v < 0.01 ? 0 : v } }
+            knob("PAN", (sm.echoPan + 1) / 2, x: 135, y: 112, d: 58, s, labelY: 156, bipolar: true, reset: 0.5, id: "EchoPAN",
+                 display: Self.bipolarPercent) { v, _ in edit { $0.echoPan = Self.bipolar(v) } }
+            knob("MOD X", (sm.echoX + 1) / 2, x: 220, y: 112, d: 58, s, labelY: 156, bipolar: true, reset: 0.5, id: "EchoMODX",
+                 display: Self.bipolarPercent) { v, _ in edit { $0.echoX = Self.bipolar(v) } }
+            knob("MOD Y", (sm.echoY + 1) / 2, x: 305, y: 112, d: 58, s, labelY: 156, bipolar: true, reset: 0.5, id: "EchoMODY",
+                 display: Self.bipolarPercent) { v, _ in edit { $0.echoY = Self.bipolar(v) } }
+            knob("PITCH", (sm.echoPitch + 1) / 2, x: 390, y: 112, d: 58, s, labelY: 156, bipolar: true, reset: 0.5, id: "EchoPITCH",
+                 display: { v in String(format: "%+.1f st", Double(Self.bipolar(v)) * 12) }) { v, _ in edit { $0.echoPitch = Self.bipolar(v) } }
+            knob("TIME", sm.echoTime, x: 475, y: 112, d: 58, s, labelY: 156, reset: 0.5, id: "EchoTIME",
+                 display: { v in SamplerSettings.step(v).0 }) { v, _ in edit { $0.echoTime = v } }
+            stepper("ECHOES", "\(sm.echoes)", x: 20, y: 182, w: 130, s, id: "samplerEchoes",
+                    down: { edit { $0.echoes = max(1, $0.echoes - 1) } }, up: { edit { $0.echoes = min(16, $0.echoes + 1) } })
+            smallToggle("Ping pong", sm.echoPingPong, x: 340, y: 210, s, id: "samplerPingPongEcho") { edit { $0.echoPingPong.toggle() } }
+            smallToggle("Fat mode", sm.fatMode, x: 506, y: 210, s, id: "samplerFatMode") { edit { $0.fatMode.toggle() } }
         }
     }
 

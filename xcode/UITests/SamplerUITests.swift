@@ -201,6 +201,33 @@ final class SamplerUITests: XCTestCase {
             sleep(1)
             snap("graph-dragged")
         }
+
+        // MISC (the wrench tab): echoes, the arpeggiator, Levels VOL, steppers and the chord menu
+        any("samplerMiscPage").tap()
+        sleep(1)
+        snap("misc-page")
+        let misc0 = probe("misc page")
+        turn("samplerKnobEchoFEED", by: 140)
+        let echoed = probe("echo feed up")
+        XCTAssertNotEqual(echoed.late, misc0.late, accuracy: misc0.late * 0.05 + 1e-6, "FEED adds echoes (\(echoed) vs \(misc0))")
+        any("samplerArp1").tap()
+        let arped = probe("arpeggiator up")
+        XCTAssertNotEqual(arped.late, echoed.late, accuracy: echoed.late * 0.05 + 1e-6, "the arpeggiator changes the sound (\(arped) vs \(echoed))")
+        any("samplerArpRangeUp").tap()
+        XCTAssertEqual(any("samplerArpRange").value as? String, "2", "RANGE steps up")
+        any("samplerArpChord").tap()
+        let major = menuRow("Minor 7")
+        if major.waitForExistence(timeout: 3) { major.tap() } else { XCTFail("the Chord menu opens"); dumpTree("chord menu") }
+        let chord = probe("minor 7 chord")
+        XCTAssertNotEqual(chord.zc, arped.zc, accuracy: 0.5, "the chord changes the notes (\(chord) vs \(arped))")
+        turn("samplerKnobLevelsVOL", by: -140)
+        let levels = probe("levels vol down")
+        XCTAssertLessThan(levels.l + levels.r, (chord.l + chord.r) * 0.7, "Levels VOL turns it down (\(levels) vs \(chord))")
+        any("samplerPolyMaxUp").tap()
+        XCTAssertEqual(any("samplerPolyMax").value as? String, "1", "MAX steps up from no limit")
+        any("samplerMono").tap()
+        XCTAssertEqual(any("samplerMono").value as? String, "on", "Mono switches on")
+        snap("misc-turned")
         XCTAssertEqual(app.state, .runningForeground, "the app is still running")
     }
 }

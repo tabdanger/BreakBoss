@@ -1289,6 +1289,17 @@ struct SequencerView: View {
                                   switchTo: { openSampler($0) },
                                   importFile: { importPad = pad },
                                   drop: { dropOnRack($0, channel: channel(pad: pad)) },
+                                  swing: pattern.swing(pad: pad), shift: pattern.shift(pad: pad),
+                                  setFeel: { sw, sh, _ in
+                                      // MISC's SWING / SHIFT: the track's own swing and push / pull, one undo per turn
+                                      var p = pattern
+                                      if let sw { p.setSwing(pad: pad, sw) }
+                                      if let sh { p.setShift(pad: pad, sh) }
+                                      guard p != pattern else { return }
+                                      remember(coalescing: true)
+                                      work = nil
+                                      controller.setLoop(loop, p)
+                                  },
                                   move: { t, done in
                                       if done {
                                           samplerX = Double((x0 + t.width).clamped(80 - w, g.size.width - 80))
