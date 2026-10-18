@@ -196,12 +196,6 @@ enum KnockSelfTest {
                     }
                     check(finite, "\(url.lastPathComponent): decoded stereo audio is finite")
                     check(peak > 0.005 && peak <= 1.000_01, "\(url.lastPathComponent): decoded stock audio is audible and bounded")
-                    // tools/level_stock_sounds.py: every sound at the same loudness, or (a tiny click) at full scale.
-                    let lufs = stockLoudness(buffer)
-                    let atCeiling = peak >= stockLoudnessCeiling * 0.99
-                    check(peak <= stockLoudnessCeiling * 1.002 && lufs <= stockLoudnessTarget + stockLoudnessTolerance + 0.15
-                          && (lufs >= stockLoudnessTarget - stockLoudnessTolerance - 0.15 || atCeiling),
-                          "\(url.lastPathComponent): levelled with the other stock sounds (\(String(format: "%.1f", lufs)) LUFS)")
                 } catch {
                     check(false, "\(url.lastPathComponent): stock audio decodes (\(error.localizedDescription))")
                 }
@@ -210,7 +204,7 @@ enum KnockSelfTest {
         #endif
     }
 
-    // The loudness every stock sound is levelled to (tools/level_stock_sounds.py TARGET, TOLERANCE, CEILING).
+    // The acoustic layers' loudness (tools/build_acoustic_sounds.py; the pack sounds are their original files).
     static let stockLoudnessTarget = -10.0
     static let stockLoudnessTolerance = 1.0
     static let stockLoudnessCeiling: Float = 0.944  // -0.5 dBFS
@@ -255,6 +249,20 @@ enum KnockSelfTest {
         guard let hat = all.first(where: { $0.type == .hat }), let clap = all.first(where: { $0.type == .clap }),
               let kick = all.first(where: { $0.type == .kick && $0.url != kitKickURL }) else {
             check(false, "sound swap: the library has a kick, a clap and a hat"); return
+        }
+        // A MY SOUNDS copy of a stock sound that was levelled (same name and size, other audio) goes back
+        // to the original; a different file of yours with that name stays.
+        if let original = try? Data(contentsOf: hat.url), original.count > 100 {
+            let copy = KnockFolders.samples.appendingPathComponent(hat.url.lastPathComponent)
+            var levelled = original; levelled[levelled.count - 2] ^= 0x5A; levelled[levelled.count - 40] ^= 0x33
+            try? levelled.write(to: copy)
+            let n = SampleLoader.restoreStockCopies([hat.url])
+            check(n == 1 && (try? Data(contentsOf: copy)) == original, "MY SOUNDS: a levelled copy of a stock sound goes back to the original")
+            let mine = Data(original.prefix(original.count / 2))
+            try? mine.write(to: copy)
+            SampleLoader.restoreStockCopies([hat.url])
+            check((try? Data(contentsOf: copy)) == mine, "MY SOUNDS: your own file with a stock sound's name is left alone")
+            try? FileManager.default.removeItem(at: copy)
         }
         let engine = KnockEngine()
         engine.prepare(sampleRate: 48_000, maxFrames: 512)
@@ -319,15 +327,15 @@ enum KnockSelfTest {
         log("sound swap: kick \(kick.name), clap \(clap.name), hat \(hat.name)")
         check(audition() == "the kit's kick", "sound swap: the kick track starts on the kit's kick")
         let kickTrack = onMain({ rc.rackChannels[0] })
-        // From the SOUNDS panel: tap a sound with the track selected (the screen auditions it after 0.25 s).
+        // From the SOUNDS panel: tap a sound with the track selected (the screen auditions it once it's loaded).
         for sound in [hat, clap, kick, hat] {
-            onMain { rc.replaceRackSound(kickTrack.id, with: sound) }
+            var ready = false
+            onMain { rc.replaceRackSound(kickTrack.id, with: sound) { ready = true } }
             let start = Date()
-            Thread.sleep(forTimeInterval: 0.25)
+            let loaded = settle { ready }
+            log("sound swap: \(sound.name) loaded=\(loaded) after \(String(format: "%.2f", Date().timeIntervalSince(start))) s, file \(onMain({ rc.state.pads[0].sampleFile ?? "nil" }))")
             let early = audition()
-            let loaded = settle { rc.state.pads[0].sampleFile != nil && rc.padName(0).uppercased() == (sound.url.deletingPathExtension().lastPathComponent).uppercased() }
-            log("sound swap: \(sound.name) loaded=\(loaded) after \(String(format: "%.2f", Date().timeIntervalSince(start))) s, file \(onMain({ rc.state.pads[0].sampleFile ?? "nil" })), audition at 0.25 s heard \(early)")
-            check(early == sound.name, "sound swap: the audition when \(sound.name) is picked plays \(sound.name) (heard \(early))")
+            check(loaded && early == sound.name, "sound swap: the audition when \(sound.name) is picked plays \(sound.name) (heard \(early))")
             let now = audition()
             check(now == sound.name, "sound swap: the track plays \(sound.name) once it's picked (heard \(now))")
             check(onMain({ rc.rackChannels[0].name }) == sound.name, "sound swap: the rack names \(sound.name)")
@@ -351,8 +359,9 @@ enum KnockSelfTest {
             engine.send(KEvent(kind: .stop))
             onMain { rc.clearSolos() }
             // A pattern change right after a pick must not lose the pick.
-            onMain { rc.replaceRackSound(kickTrack.id, with: clap); rc.loadPatternPreset(preset) }
-            _ = settle(3) { false }
+            var ready = false
+            onMain { rc.replaceRackSound(kickTrack.id, with: clap) { ready = true }; rc.loadPatternPreset(preset) }
+            _ = settle(3) { ready }
             for (p, v) in quiet { engine.setParam(p, v) }
             let afterPattern = audition()
             check(afterPattern == clap.name && onMain({ rc.rackChannels[0].name }) == clap.name,
@@ -2054,6 +2063,13 @@ enum KnockSelfTest {
     /// Turning a channel's LEVEL or PAN while its sound rings: the note keeps playing and glides to
     /// the new level, it isn't cut off (each cut was a click).
     static func checkLevelPanGlide() {
+        // Every volume goes to 200%, +12 dB (Tyrone, Oct 18): track LEVEL / VOL and the master OUTPUT.
+        var loud = PadSettings(); loud.level = PadSettings.maxLevel
+        check(abs(20 * log10f(loud.gain) - 12) < 0.1 && PadSettings.levelText(loud.level) == "200%" && PadSettings.levelText(0.8) == "100%",
+              "a track's volume goes to 200% (+12 dB), 100% is unity")
+        check(KnockState.normalizedPads([loud])[0].level == PadSettings.maxLevel && KnockState.normalizedPads([PadSettings()])[0].gain == 1,
+              "a saved 200% track volume stays 200%, old projects keep their levels")
+        check(abs(KnockMath.outputDB(1) - 12) < 0.01 && abs(KnockMath.outputDB(0.75)) < 0.01, "OUTPUT goes to +12 dB, 0.75 stays 0 dB")
         let rate = 48_000.0
         let sine = (0..<96_000).map { Float(sin(Double($0) * 2 * Double.pi * 220 / rate)) * 0.1 }
         let sample = SampleBuffer(left: sine, sampleRate: rate)

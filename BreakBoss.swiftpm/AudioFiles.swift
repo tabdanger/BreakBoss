@@ -94,9 +94,11 @@ enum SampleLoader {
             return url.path.replacingOccurrences(of: folder.standardizedFileURL.path + "/", with: "")
         }
         var dest = folder.appendingPathComponent(url.lastPathComponent)
-        // The same sound again (a library pick, say): reuse the copy that's already there.
+        // The same sound again (a library pick, say): reuse the copy that's already there, if it is the
+        // same audio (a copy of a levelled stock sound has the same size but not the same sound).
         let size = { (u: URL) in (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? -1 }
-        if FileManager.default.fileExists(atPath: dest.path) && size(dest) == size(url) { return dest.lastPathComponent }
+        if FileManager.default.fileExists(atPath: dest.path) && size(dest) == size(url),
+           let a = try? Data(contentsOf: dest), let b = try? Data(contentsOf: url), a == b { return dest.lastPathComponent }
         var n = 2
         while FileManager.default.fileExists(atPath: dest.path) {
             let base = url.deletingPathExtension().lastPathComponent
@@ -108,6 +110,25 @@ enum SampleLoader {
     }
 
     static func urlInSamples(_ name: String) -> URL { KnockFolders.samples.appendingPathComponent(name) }
+
+    /// Copies of stock sounds in Samples (every library pick copies its sound there, they're MY SOUNDS)
+    /// go back to the bundled original when they differ from it: builds 74-82 levelled the stock sounds
+    /// and Tyrone wants the originals (Oct 18). Only a file of the same name and size is replaced (the
+    /// levelling kept every length), so your own sounds are never touched. Returns how many were reset.
+    @discardableResult
+    static func restoreStockCopies(_ stock: [URL]) -> Int {
+        let fm = FileManager.default
+        var n = 0
+        for url in stock {
+            let dest = KnockFolders.samples.appendingPathComponent(url.lastPathComponent)
+            guard fm.fileExists(atPath: dest.path) else { continue }
+            let size = { (u: URL) in (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? -1 }
+            guard size(dest) == size(url), let original = try? Data(contentsOf: url),
+                  let copy = try? Data(contentsOf: dest), copy != original else { continue }
+            if (try? original.write(to: dest, options: .atomic)) != nil { n += 1 }
+        }
+        return n
+    }
 }
 
 // MARK: - Writing audio

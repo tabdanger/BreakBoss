@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Levels every stock sound to the same loudness, so no kit has a pad that jumps out or hides.
 
+NOT RUN on the stock sounds any more (Tyrone, Oct 18 2026): the levelling and its transient limiter
+made them sound altered, so the 570 pack sounds are back to their original files. Leave them as they
+are; tools/build_acoustic_sounds.py still uses the measuring helpers here.
+
   python3 tools/level_stock_sounds.py          # level the WAVs in place
   python3 tools/level_stock_sounds.py --check  # only report, exit 1 if any sound is off target
 
