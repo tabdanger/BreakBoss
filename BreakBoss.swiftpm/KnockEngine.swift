@@ -1075,8 +1075,18 @@ final class KnockEngine {
                              age: voiceAge, remaining: lengthSamples > 0 ? lengthSamples : Int.max, heldNote: heldNote,
                              attackSamples: max(1, Int(sampleRate * 0.0005)), filterCoefficient: kit.filterCoefficients[pad],
                              mixL: ml, mixR: mr)
-        if rt.active { voices[slot].startSampler(rt, sampleRate: sampleRate, samplesPerBeat: beatSamples, clock: sampleClock,
-                                                 loopStart: sample.loopStart, region: rt.regions ? sample.region : nil) }
+        if rt.active {
+            voices[slot].startSampler(rt, sampleRate: sampleRate, samplesPerBeat: beatSamples, clock: sampleClock,
+                                      loopStart: sample.loopStart, loopEnd: sample.loopEnd, region: rt.regions ? sample.region : nil)
+            // Realtime stretching: the length follows TIME × MUL at this tempo, the pitch the note and PITCH
+            if rt.realtime && !ps.reverse {
+                let f = rt.realtimeFactor(sourceSeconds: sample.seconds, bpm: sampleRate * 60 / beatSamples)
+                let p = Double(exp2f(rt.rtPitch / 12))
+                if abs(f - 1) > 0.001 || abs(p - 1) > 0.000_1 {
+                    voices[slot].startGrains(timeStep: Double(sample.sampleRate / sampleRate) / f, pitch: p, sampleRate: sampleRate)
+                }
+            }
+        }
         padHits[pad] &+= 1
     }
 
@@ -1392,18 +1402,37 @@ struct Voice {
 
     /// The sampler takes over this voice: START OFFSET, loop points and the ENVELOPE page.
     mutating func startSampler(_ rt: SamplerRT, sampleRate: Double, samplesPerBeat: Double, clock: Int64, loopStart: Int,
-                               region: ClosedRange<Int>?) {
+                               loopEnd: Int, region: ClosedRange<Int>?) {
         sm = SamplerVoice(rt, sampleRate: sampleRate, samplesPerBeat: samplesPerBeat, clock: clock)
         let last = Double(max(length - 2, 0))
         let offset = Double(rt.startOffset) * last
         position = reverse ? last - offset : offset
         sm.looping = rt.loop && !reverse && length > 64
         sm.pingPong = rt.pingPong
-        sm.loopStart = min(Double(max(0, loopStart)), last * 0.95)
-        sm.loopEnd = last
+        if loopEnd > 0 {
+            // a CROSSFADE computed its loop into the sound
+            sm.loopStart = min(Double(max(0, loopStart)), last * 0.95)
+            sm.loopEnd = min(Double(loopEnd), last)
+        } else {
+            // the loop points (the whole sound unless they're set), after any crossfade start
+            sm.loopStart = min(max(Double(max(0, loopStart)), Double(rt.loopStart) * last), last * 0.95)
+            sm.loopEnd = max(sm.loopStart + 32, min(last, Double(rt.loopEnd) * last))
+            if sm.loopEnd > last { sm.loopStart = max(0, last - 32); sm.loopEnd = last }
+        }
         if let region, Double(region.upperBound) <= last, region.count > 32 {
             sm.loopStart = Double(region.lowerBound); sm.loopEnd = Double(region.upperBound)
         }
+    }
+
+    /// Realtime stretching: `timeStep` is how fast the position moves through the sound (the length);
+    /// the grains read it at the note's speed × `pitch`.
+    mutating func startGrains(timeStep: Double, pitch: Double, sampleRate: Double) {
+        sm.grains = true
+        sm.timeStep = timeStep
+        sm.grainPitch = pitch
+        sm.grainHalf = max(64, Int(sampleRate * 0.035))
+        sm.grainA = position; sm.grainB = position
+        sm.grainAge = 0
     }
 
     /// The note's length is up: the sampler's envelopes release, or a loop plays out to its end.
@@ -1499,10 +1528,32 @@ struct Voice {
                     }
                 }
                 if position < 0 || position >= last { active = false; return }
-                let idx = Int(position)
-                let frac = Float(position - Double(idx))
-                var l = left[idx] + (left[idx + 1] - left[idx]) * frac
-                var r = right[idx] + (right[idx + 1] - right[idx]) * frac
+                var l: Float, r: Float
+                if sm.grains {
+                    // two grains, half a grain apart: the newest fades in as the one before fades out
+                    if sm.grainAge >= sm.grainHalf { sm.grainB = sm.grainA; sm.grainA = position; sm.grainAge = 0 }
+                    let step = rate * sm.rateMul * sm.grainPitch
+                    let w = 0.5 - 0.5 * cosf(.pi * Float(sm.grainAge) / Float(sm.grainHalf))
+                    let pa = sm.grainA + Double(sm.grainAge) * step
+                    let pb = sm.grainB + Double(sm.grainAge + sm.grainHalf) * step
+                    var la: Float = 0, ra: Float = 0, lb: Float = 0, rb: Float = 0
+                    if pa >= 0 && pa < last {
+                        let k = Int(pa), t = Float(pa - Double(k))
+                        la = left[k] + (left[k + 1] - left[k]) * t; ra = right[k] + (right[k + 1] - right[k]) * t
+                    }
+                    if pb >= 0 && pb < last {
+                        let k = Int(pb), t = Float(pb - Double(k))
+                        lb = left[k] + (left[k + 1] - left[k]) * t; rb = right[k] + (right[k + 1] - right[k]) * t
+                    }
+                    l = la * w + lb * (1 - w)
+                    r = ra * w + rb * (1 - w)
+                    sm.grainAge += 1
+                } else {
+                    let idx = Int(position)
+                    let frac = Float(position - Double(idx))
+                    l = left[idx] + (left[idx + 1] - left[idx]) * frac
+                    r = right[idx] + (right[idx + 1] - right[idx]) * frac
+                }
                 sm.filter(&l, &r)
                 if filterCoefficient < 1 {
                     filterL += filterCoefficient * (l - filterL)
@@ -1533,7 +1584,8 @@ struct Voice {
                     glideLeft -= 1
                     if glideLeft == 0 { rate = targetRate }
                 }
-                position += (reverse ? -rate : rate) * sm.rateMul * sm.direction
+                if sm.grains { position += sm.timeStep * sm.direction }
+                else { position += (reverse ? -rate : rate) * sm.rateMul * sm.direction }
             }
             i += n
         }

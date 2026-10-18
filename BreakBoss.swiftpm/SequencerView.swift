@@ -212,6 +212,12 @@ struct SequencerView: View {
     /// The track whose SAMPLER window is open, and whether it's tucked away (minimized).
     @State private var samplerPad: Int?
     @State private var samplerMinimized = false
+    /// The SAMPLER window floats over the sequencer: where it sits and how wide it is (kept between opens).
+    @AppStorage("samplerWindowX") private var samplerX: Double = -1
+    @AppStorage("samplerWindowY") private var samplerY: Double = -1
+    @AppStorage("samplerWindowW") private var samplerW: Double = 0
+    @State private var samplerMove: CGSize = .zero
+    @State private var samplerGrow: CGFloat = 0
     @State private var libraryType: SoundType? = .kick
     @State private var search = ""
     @State private var userSounds: [LibrarySound] = UserSoundLibrary.sounds()
@@ -1261,16 +1267,48 @@ struct SequencerView: View {
                 .padding(16)
                 .transition(.opacity)
             } else {
-                ZStack {
-                    Color.black.opacity(0.5).ignoresSafeArea()
+                // a window over the sequencer (Tyrone, Oct 18): drag the title bar to move it, the corner to resize it
+                GeometryReader { g in
+                    let aspect = SamplerWindow.artW / SamplerWindow.artH
+                    let maxW = max(320, min(g.size.width - 16, (g.size.height - 16) * aspect))
+                    let w = ((samplerW > 0 ? CGFloat(samplerW) : g.size.width * 0.62) + samplerGrow).clamped(min(480, maxW), maxW)
+                    let h = w / aspect
+                    let x0 = samplerX >= 0 ? CGFloat(samplerX) : (g.size.width - w) / 2
+                    let y0 = samplerY >= 0 ? CGFloat(samplerY) : (g.size.height - h) / 2
+                    // keep the title bar on screen
+                    let x = (x0 + samplerMove.width).clamped(80 - w, g.size.width - 80)
+                    let y = (y0 + samplerMove.height).clamped(0, g.size.height - 48)
                     SamplerWindow(controller: controller, pad: pad, finish: finish,
                                   close: { withAnimation(.easeIn(duration: 0.15)) { samplerPad = nil } },
                                   minimize: { withAnimation(.easeIn(duration: 0.15)) { samplerMinimized = true } },
                                   switchTo: { openSampler($0) },
                                   importFile: { importPad = pad },
-                                  drop: { dropOnRack($0, channel: channel(pad: pad)) })
+                                  drop: { dropOnRack($0, channel: channel(pad: pad)) },
+                                  move: { t, done in
+                                      if done {
+                                          samplerX = Double((x0 + t.width).clamped(80 - w, g.size.width - 80))
+                                          samplerY = Double((y0 + t.height).clamped(0, g.size.height - 48))
+                                          samplerMove = .zero
+                                      } else {
+                                          samplerMove = t
+                                      }
+                                  })
                         .id(pad)
-                        .padding(12)
+                        .frame(width: w, height: h)
+                        .overlay(alignment: .bottomTrailing) {
+                            SamplerResizeGrip(tone: MetalTone.of(finish))
+                                .frame(width: 34, height: 34)
+                                .contentShape(Rectangle())
+                                .gesture(DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                                    .onChanged { v in samplerGrow = max(v.translation.width, v.translation.height * aspect) }
+                                    .onEnded { v in
+                                        samplerW = Double(w)
+                                        if samplerX < 0 { samplerX = Double(x); samplerY = Double(y) }
+                                        samplerGrow = 0
+                                    })
+                                .accessibilityIdentifier("samplerResize")
+                        }
+                        .offset(x: x, y: y)
                 }
                 .environment(\.seqFinish, finish)
                 .transition(.opacity.combined(with: .scale(scale: 0.97)))

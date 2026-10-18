@@ -6,7 +6,8 @@ import UniformTypeIdentifiers
 //
 // One window per track, opened from the track's menu (two-finger tap / right-click > Open sample
 // editor). Page 1 SAMPLE, page 2 ENVELOPE; the tabs flip between them. Drawn at the renders' size
-// (1408 × 940) and scaled to fit. Each mode wears its own metal and light: Platinum silver with
+// (1408 × 1000 with the waveform's edit bar) and scaled to fit: it floats over the sequencer, drag
+// its title bar to move it and its corner to resize it. Each mode wears its own metal and light: Platinum silver with
 // platinum knobs and green light, Modern Black with red, Vintage cream with yellow, Texture blue
 // with blue. See Sampler.swift for what every control does to the sound.
 
@@ -185,6 +186,8 @@ struct SamplerWindow: View {
     let switchTo: (Int) -> Void
     let importFile: () -> Void
     let drop: ([NSItemProvider]) -> Bool
+    /// Dragging the title bar moves the window (translation, finished).
+    var move: ((CGSize, Bool) -> Void)? = nil
 
     @State private var page = 0                  // 0 SAMPLE, 1 ENVELOPE
     @State private var target: SamplerTarget = .volume
@@ -195,8 +198,20 @@ struct SamplerWindow: View {
     @State private var dropping = false
     /// Turning a SAMPLE-page knob: the knob shows this until it's let go (the sound is computed then).
     @State private var pending: SamplerSettings?
+    /// The waveform's selection (parts of the sound, 0…1) and the edits UNDO can take back.
+    @State private var selection: ClosedRange<Double>?
+    @State private var selectFrom: Double?
+    @State private var handleFrom: (Double, Double)?
+    @State private var undo: [PadSettings] = []
+    /// Dragging a loop flag: the loop points shown until it's let go.
+    @State private var loopDrag: (Float, Float)?
+    @State private var loopFrom: (Float, Float)?
+    /// Saving the envelope as a preset: its kind, and the name being typed.
+    @State private var savingKind: String?
+    @State private var presetName = ""
+    @State private var presetsChanged = 0
 
-    static let artW: CGFloat = 1408, artH: CGFloat = 940
+    static let artW: CGFloat = 1408, artH: CGFloat = 1000
 
     private var skin: SamplerSkin { SamplerSkin.of(finish) }
     private var sm: SamplerSettings { pending ?? controller.sampler(pad) }
@@ -225,6 +240,13 @@ struct SamplerWindow: View {
         }
         .aspectRatio(Self.artW / Self.artH, contentMode: .fit)
         .accessibilityIdentifier("samplerWindow")
+        .alert("Save the envelope", isPresented: Binding(get: { savingKind != nil }, set: { if !$0 { savingKind = nil } })) {
+            TextField("Name", text: $presetName)
+            Button("Save") { savePreset() }
+            Button("Cancel", role: .cancel) { savingKind = nil }
+        } message: {
+            Text("Saved with your \(savingKind ?? "") presets on this device.")
+        }
     }
 
     // MARK: Frame, title, tabs
@@ -234,8 +256,8 @@ struct SamplerWindow: View {
             SamplerMetal(tone: skin.bezel, corner: 14 * s)
                 .shadow(color: .black.opacity(0.7), radius: 18 * s, y: 8 * s)
             // the body inside the bezel
-            SamplerMetal(tone: skin.surface, corner: 8 * s, sunk: true).spot(22, 6, 1364, 922, s)
-            ForEach([CGPoint(x: 10, y: 470), CGPoint(x: 1398, y: 470)], id: \.x) { p in
+            SamplerMetal(tone: skin.surface, corner: 8 * s, sunk: true).spot(22, 6, 1364, 982, s)
+            ForEach([CGPoint(x: 10, y: 500), CGPoint(x: 1398, y: 500)], id: \.x) { p in
                 Circle().fill(skin.bezel.spun).overlay(Circle().stroke(Color.black.opacity(0.5), lineWidth: 1))
                     .frame(width: 9 * s, height: 9 * s).position(x: p.x * s, y: p.y * s)
             }
@@ -254,15 +276,24 @@ struct SamplerWindow: View {
     private func titleBar(_ s: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
             SamplerMetal(tone: skin.surface, corner: 6 * s).spot(26, 8, 1356, 58, s)
+            // the title bar moves the window
+            Color.clear.contentShape(Rectangle()).spot(26, 8, 1190, 58, s)
+                .gesture(DragGesture(minimumDistance: 2, coordinateSpace: .global)
+                    .onChanged { v in move?(v.translation, false) }
+                    .onEnded { v in move?(v.translation, true) })
+                .accessibilityIdentifier("samplerTitleBar")
             brand
                 .font(.system(size: 34 * s, weight: .bold).width(.expanded))
                 .shadow(color: .black.opacity(0.4), radius: 0, y: 1)
                 .lineLimit(1).minimumScaleFactor(0.5)
                 .frame(width: 210 * s, height: 58 * s, alignment: .leading).offset(x: 58 * s, y: 8 * s)
+                .allowsHitTesting(false)
             Text("SAMPLER").font(.system(size: 30 * s, weight: .medium).width(.expanded)).foregroundColor(skin.dim)
                 .frame(width: 220 * s, height: 58 * s, alignment: .leading).offset(x: 272 * s, y: 8 * s)
+                .allowsHitTesting(false)
             Text(String(format: "CH %02d", trackNumber)).font(.system(size: 27 * s, weight: .medium)).foregroundColor(skin.ink)
                 .frame(width: 160 * s, height: 58 * s, alignment: .trailing).offset(x: 1030 * s, y: 8 * s)
+                .allowsHitTesting(false)
             titleButton("minus", s, red: false, action: minimize).spot(1232, 14, 64, 46, s)
                 .accessibilityLabel("Minimize the sampler").accessibilityIdentifier("samplerMinimize")
             titleButton("xmark", s, red: true, action: close).spot(1310, 14, 66, 46, s)
@@ -379,7 +410,8 @@ struct SamplerWindow: View {
             playbackPanel(s).spot(36, 514, 664, 170, s)
             stretchPanel(s).spot(710, 182, 664, 166, s)
             effectsPanel(s).spot(710, 354, 664, 330, s)
-            waveform(s).spot(38, 698, 1334, 216, s)
+            editBar(s).spot(38, 694, 1334, 52, s)
+            waveform(s).spot(38, 754, 1334, 216, s)
         }
     }
 
@@ -491,13 +523,14 @@ struct SamplerWindow: View {
     private func playbackPanel(_ s: CGFloat) -> some View {
         let cues = sm.loadSliceMarkers ? (controller.playedSample(pad)?.cues ?? []) : []
         let length = max(1, controller.playedSample(pad)?.length ?? 1)
+        let marks = cues.map { Float($0) / Float(length) } + sm.markers
         return panel("Playback", s) {
             knob("START OFFSET", sm.startOffset, x: 113, y: 92, d: 72, s, labelY: 146, reset: 0,
                  display: { v in "\(Int((v * 100).rounded()))%" }) { v, _ in
-                // with slice markers, START OFFSET jumps from marker to marker
+                // with slice or region markers, START OFFSET jumps from marker to marker
                 var o = v
-                if !cues.isEmpty {
-                    let points = [0] + cues.map { Float($0) / Float(length) }
+                if !marks.isEmpty {
+                    let points = [0] + marks
                     o = points.min { abs($0 - v) < abs($1 - v) } ?? v
                 }
                 edit { $0.startOffset = o }
@@ -599,14 +632,26 @@ struct SamplerWindow: View {
 
     // MARK: The sample view
 
+    /// The loop points shown (while a flag is dragged, where it is).
+    private var loopPoints: (Float, Float) { loopDrag ?? (sm.loopStart, sm.loopEnd) }
+
+    /// A point on the waveform (0…width) as a part of the sound.
+    private func part(_ x: CGFloat, width: CGFloat) -> Double {
+        (Double(scrollPos) + Double(x / max(1, width)) / Double(zoom)).clamped(0, 1)
+    }
+    /// A part of the sound as a point on the waveform.
+    private func point(_ f: Double, width: CGFloat) -> CGFloat { CGFloat((f - Double(scrollPos)) * Double(zoom)) * width }
+
     private func waveform(_ s: CGFloat) -> some View {
         let sample = controller.playedSample(pad)
         let marks = sm.loadSliceMarkers ? (sample?.cues ?? []) : []
+        let w = 1334 * s, h = 182 * s
         return ZStack(alignment: .topLeading) {
             SamplerWell(skin: skin, corner: 6 * s).spot(0, 0, 1334, 182, s)
             if let sample {
                 SamplerWaveCanvas(sample: sample, zoom: zoom, scroll: scrollPos, color: skin.glow, startOffset: sm.startOffset,
-                                  loop: sm.useLoop, region: sm.loadRegions ? sample.region : nil, cues: marks)
+                                  loop: sm.useLoop, loopPoints: loopPoints, region: sm.loadRegions ? sample.region : nil, cues: marks,
+                                  markers: sm.markers, selection: selection)
                     .clipShape(RoundedRectangle(cornerRadius: 6 * s)).spot(2, 2, 1330, 178, s)
                 // bit depth and channels, lower right (FL's readout)
                 HStack(spacing: 8 * s) {
@@ -628,11 +673,21 @@ struct SamplerWindow: View {
                     .foregroundColor(dropping ? skin.glow : skin.wellInk.opacity(0.3))
                     .frame(width: 1334 * s, height: 182 * s).allowsHitTesting(false)
             }
-            // tap: play it; pinch: zoom; tap twice: load another sample from Files
-            Color.clear.contentShape(Rectangle()).frame(width: 1334 * s, height: 182 * s)
+            // tap: play it; drag: select; pinch: zoom; tap twice: load another sample from Files
+            Color.clear.contentShape(Rectangle()).frame(width: w, height: h)
                 .onTapGesture(count: 2) { importFile() }
                 .onTapGesture { controller.auditionPad(pad) }
-                .gesture(MagnificationGesture()
+                .gesture(DragGesture(minimumDistance: 6)
+                    .onChanged { v in
+                        if selectFrom == nil { selectFrom = part(v.startLocation.x, width: w) }
+                        let a = selectFrom ?? 0, b = part(v.location.x, width: w)
+                        selection = min(a, b)...max(a, b)
+                    }
+                    .onEnded { _ in
+                        selectFrom = nil
+                        if let sel = selection, sel.upperBound - sel.lowerBound < 0.000_5 { selection = nil }
+                    })
+                .simultaneousGesture(MagnificationGesture()
                     .onChanged { m in
                         if pinchFrom == nil { pinchFrom = zoom }
                         zoom = ((pinchFrom ?? 1) * m).clamped(1, 64)
@@ -641,8 +696,271 @@ struct SamplerWindow: View {
                     .onEnded { _ in pinchFrom = nil })
                 .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: $dropping) { providers in drop(providers) }
                 .accessibilityIdentifier("samplerWaveform")
+            if sample != nil {
+                selectionHandles(w: w, h: h, s)
+                if sm.useLoop { loopFlags(w: w, h: h, s) }
+            }
             scrollBar(s).spot(0, 186, 1334, 30, s)
         }
+    }
+
+    /// The selection's red handles: drag either edge.
+    @ViewBuilder private func selectionHandles(w: CGFloat, h: CGFloat, _ s: CGFloat) -> some View {
+        if let sel = selection {
+            ForEach(0..<2, id: \.self) { edge in
+                let f = edge == 0 ? sel.lowerBound : sel.upperBound
+                let x = point(f, width: w)
+                if x >= -10 * s && x <= w + 10 * s {
+                    SelectionHandle(scale: s, leading: edge == 0)
+                        .frame(width: 44 * s, height: h)
+                        .contentShape(Rectangle())
+                        .position(x: x, y: h / 2)
+                        .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                            .onChanged { v in
+                                if handleFrom == nil { handleFrom = (sel.lowerBound, sel.upperBound) }
+                                guard let from = handleFrom else { return }
+                                let moved = (edge == 0 ? from.0 : from.1) + Double(v.translation.width / w) / Double(zoom)
+                                let other = edge == 0 ? from.1 : from.0
+                                let m = moved.clamped(0, 1)
+                                selection = min(m, other)...max(m, other)
+                            }
+                            .onEnded { _ in handleFrom = nil })
+                        .accessibilityIdentifier(edge == 0 ? "samplerSelectionStart" : "samplerSelectionEnd")
+                }
+            }
+        }
+    }
+
+    /// The loop's start and end flags under the waveform: drag them to set the loop points.
+    private func loopFlags(w: CGFloat, h: CGFloat, _ s: CGFloat) -> some View {
+        let (ls, le) = loopPoints
+        return ForEach(0..<2, id: \.self) { edge in
+            let f = Double(edge == 0 ? ls : le)
+            let x = point(f, width: w)
+            LoopFlag(color: skin.glow, leading: edge == 0)
+                .frame(width: 30 * s, height: 26 * s)
+                .contentShape(Rectangle())
+                .position(x: x, y: h - 13 * s)
+                .opacity(x >= -15 * s && x <= w + 15 * s ? 1 : 0)
+                .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                    .onChanged { v in
+                        if loopFrom == nil { loopFrom = (sm.loopStart, sm.loopEnd) }
+                        guard let from = loopFrom else { return }
+                        let d = Float(v.translation.width / w) / Float(zoom)
+                        if edge == 0 { loopDrag = ((from.0 + d).clamped(0, from.1 - 0.002), from.1) }
+                        else { loopDrag = (from.0, (from.1 + d).clamped(from.0 + 0.002, 1)) }
+                    }
+                    .onEnded { _ in
+                        if let l = loopDrag { edit { $0.loopStart = l.0; $0.loopEnd = l.1 } }
+                        loopDrag = nil; loopFrom = nil
+                    })
+                .accessibilityIdentifier(edge == 0 ? "samplerLoopStart" : "samplerLoopEnd")
+        }
+    }
+
+    // MARK: The edit bar: select, cut, copy, paste, delete, trim silence, fades, undo, properties
+
+    /// The selection in frames of the sound that plays now.
+    private func frames(_ sample: SampleBuffer) -> Range<Int>? {
+        guard let sel = selection else { return nil }
+        let a = Int(sel.lowerBound * Double(sample.length)), b = Int(sel.upperBound * Double(sample.length))
+        return b > a ? a..<min(b, sample.length) : nil
+    }
+
+    /// Runs an edit, keeping what the track was for UNDO.
+    private func run(_ e: SampleEdit, keepSelection: Bool = false, select: ((Int) -> ClosedRange<Double>?)? = nil) {
+        let before = controller.state.pads[pad]
+        let oldLength = controller.playedSample(pad)?.length ?? 0
+        controller.editSample(pad, e) { name in
+            guard name != nil else { return }
+            undo.append(before)
+            if undo.count > 30 { undo.removeFirst() }
+            if let select { selection = select(oldLength) } else if !keepSelection { selection = nil }
+        }
+    }
+
+    private func editBar(_ s: CGFloat) -> some View {
+        let sample = controller.playedSample(pad)
+        let range = sample.flatMap { frames($0) }
+        let clip = controller.sampleClipboard
+        let busy = controller.sampleEditing
+        return ZStack(alignment: .topLeading) {
+            Group {
+                editButton("ALL", "selection.pin.in.out", s, enabled: sample != nil) { selection = 0...1 }
+                    .spot(0, 0, 96, 50, s)
+                editButton("CUT", "scissors", s, enabled: range != nil && !busy) {
+                    guard let sample, let r = range else { return }
+                    controller.sampleClipboard = SampleEditor.clip(sample, r)
+                    run(.delete(r))
+                }
+                .spot(102, 0, 96, 50, s)
+                editButton("COPY", "doc.on.doc", s, enabled: range != nil) {
+                    guard let sample, let r = range else { return }
+                    controller.sampleClipboard = SampleEditor.clip(sample, r)
+                }
+                .spot(204, 0, 96, 50, s)
+                editButton("PASTE", "doc.on.clipboard", s, enabled: clip != nil && !busy, menu: true)
+                    .bbMenu(title: clip.map { String(format: "Paste %.3f s", Double($0.count) / max(1, $0.sampleRate)) } ?? "Paste", width: 300) { pasteMenu() }
+                    .spot(306, 0, 110, 50, s)
+                    .accessibilityIdentifier("samplerPaste")
+                editButton("DELETE", "delete.left", s, enabled: range != nil && !busy) {
+                    guard let r = range else { return }
+                    run(.delete(r))
+                }
+                .spot(422, 0, 110, 50, s)
+                editButton("TRIM", "arrow.right.and.line.vertical.and.arrow.left", s, enabled: sample != nil && !busy) { run(.trimSilence) }
+                    .spot(538, 0, 96, 50, s)
+                editButton("FADE IN", "chart.line.uptrend.xyaxis", s, enabled: range != nil && !busy) {
+                    guard let r = range else { return }
+                    run(.fadeIn(r), keepSelection: true)
+                }
+                .spot(640, 0, 120, 50, s)
+                editButton("FADE OUT", "chart.line.downtrend.xyaxis", s, enabled: range != nil && !busy) {
+                    guard let r = range else { return }
+                    run(.fadeOut(r), keepSelection: true)
+                }
+                .spot(766, 0, 132, 50, s)
+                editButton("UNDO", "arrow.uturn.backward", s, enabled: !undo.isEmpty && !busy) {
+                    guard let last = undo.popLast() else { return }
+                    controller.restorePad(pad, last)
+                    selection = nil
+                }
+                .spot(904, 0, 104, 50, s)
+            }
+            // the selection's length
+            Text(selectionText(sample)).font(.system(size: 15 * s, weight: .medium, design: .monospaced))
+                .foregroundColor(skin.ink).lineLimit(1).minimumScaleFactor(0.6)
+                .frame(width: 126 * s, height: 50 * s).offset(x: 1012 * s)
+                .allowsHitTesting(false)
+            editButton("PROPERTIES", "slider.horizontal.3", s, enabled: sample != nil, menu: true)
+                .bbMenu(title: "Sample properties", width: 320) { propertiesMenu() }
+                .spot(1142, 0, 192, 50, s)
+                .accessibilityIdentifier("samplerProperties")
+        }
+    }
+
+    private func selectionText(_ sample: SampleBuffer?) -> String {
+        guard let sample, let sel = selection else { return controller.sampleEditing ? "saving…" : "" }
+        return String(format: "%.3f s", (sel.upperBound - sel.lowerBound) * sample.seconds)
+    }
+
+    private func editButton(_ title: String, _ icon: String, _ s: CGFloat, enabled: Bool, menu: Bool = false,
+                            action: (() -> Void)? = nil) -> some View {
+        let face = ZStack {
+            SamplerMetal(tone: skin.surface, corner: 5 * s)
+            HStack(spacing: 6 * s) {
+                Image(systemName: icon).font(.system(size: 15 * s, weight: .semibold))
+                Text(title).font(.system(size: 14 * s, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6)
+                if menu { Image(systemName: "triangle.fill").rotationEffect(.degrees(180)).font(.system(size: 8 * s)) }
+            }
+            .foregroundColor(enabled ? skin.ink : skin.dim.opacity(0.5))
+            .padding(.horizontal, 6 * s)
+        }
+        .opacity(enabled ? 1 : 0.75)
+        return Group {
+            if let action {
+                Button(action: action) { face }.buttonStyle(SeqPress()).disabled(!enabled)
+                    .accessibilityIdentifier("samplerEdit\(title.replacingOccurrences(of: " ", with: ""))")
+            } else {
+                face.contentShape(Rectangle()).allowsHitTesting(enabled)
+            }
+        }
+    }
+
+    private func pasteMenu() -> [BBMenuItem] {
+        guard let clip = controller.sampleClipboard, let sample = controller.playedSample(pad) else { return [] }
+        let range = frames(sample)
+        let added = SampleEditor.converted(clip, to: sample.sampleRate).count
+        // the pasted audio is selected afterwards
+        func selected(at: Int) -> (Int) -> ClosedRange<Double>? {
+            { old in
+                let total = Double(max(1, old - (range.map { $0.count } ?? 0) + added))
+                return Double(at) / total...min(1, Double(at + added) / total)
+            }
+        }
+        var items: [BBMenuItem] = []
+        if let r = range {
+            items.append(.item("Replace the selection", icon: "rectangle.2.swap") {
+                run(.replace(clip, over: r), select: selected(at: r.lowerBound))
+            })
+            items.append(.item("Insert at the selection's start", icon: "arrow.right.to.line") {
+                let before = controller.state.pads[pad]
+                let old = sample.length
+                controller.editSample(pad, .insert(clip, at: r.lowerBound)) { name in
+                    guard name != nil else { return }
+                    undo.append(before)
+                    let total = Double(max(1, old + added))
+                    selection = Double(r.lowerBound) / total...min(1, Double(r.lowerBound + added) / total)
+                }
+            })
+        }
+        items.append(.item("Insert at the start", icon: "backward.end") {
+            let before = controller.state.pads[pad]
+            let old = sample.length
+            controller.editSample(pad, .insert(clip, at: 0)) { name in
+                guard name != nil else { return }
+                undo.append(before)
+                selection = 0...min(1, Double(added) / Double(max(1, old + added)))
+            }
+        })
+        items.append(.item("Insert at the end", icon: "forward.end") {
+            let before = controller.state.pads[pad]
+            let old = sample.length
+            controller.editSample(pad, .insert(clip, at: old)) { name in
+                guard name != nil else { return }
+                undo.append(before)
+                selection = Double(old) / Double(max(1, old + added))...1
+            }
+        })
+        return items
+    }
+
+    /// Loop points, region markers and beat length (FL's sample properties).
+    private func propertiesMenu() -> [BBMenuItem] {
+        let sel = selection
+        let inSelection = sel.map { r in sm.markers.filter { r.contains(Double($0)) } } ?? []
+        var items: [BBMenuItem] = [.header("Loop")]
+        items.append(.item("Loop the selection", icon: "repeat", enabled: sel != nil) {
+            guard let r = sel else { return }
+            edit { $0.loopStart = Float(r.lowerBound); $0.loopEnd = Float(r.upperBound); $0.useLoop = true }
+        })
+        items.append(.item("Use loop points", checked: sm.useLoop) { edit { $0.useLoop.toggle() } })
+        items.append(.item("Ping pong loop", checked: sm.pingPong) { edit { $0.pingPong.toggle(); if $0.pingPong { $0.useLoop = true } } })
+        let fades: [(String, Float)] = [("Off", 0), ("5%", 0.1), ("10%", 0.2), ("25%", 0.5), ("50%", 1)]
+        let fadeRows: [BBMenuItem] = fades.map { f in
+            BBMenuItem.item(f.0, checked: abs(sm.crossfade - f.1) < 0.01) { edit { $0.crossfade = f.1 } }
+        }
+        items.append(BBMenuItem.submenu("Loop crossfade", icon: "point.topleft.down.curvedto.point.bottomright.up", fadeRows))
+        items.append(.item("Loop the whole sound", icon: "arrow.left.and.right", enabled: sm.customLoop) {
+            edit { $0.loopStart = 0; $0.loopEnd = 1 }
+        })
+        items.append(.header("Region markers"))
+        items.append(.item(sel == nil ? "Add a marker (select a spot first)" : "Add a marker at the selection", icon: "flag", enabled: sel != nil) {
+            guard let r = sel else { return }
+            edit { $0.markers = ($0.markers + [Float(r.lowerBound)]).sorted() }
+        })
+        items.append(.item("Start from the selection", icon: "play", enabled: sel != nil) {
+            guard let r = sel else { return }
+            edit { $0.startOffset = Float(r.lowerBound).clamped(0, 0.99) }
+        })
+        items.append(.item("Remove the markers in the selection", icon: "flag.slash", destructive: true, enabled: !inSelection.isEmpty) {
+            guard let r = sel else { return }
+            edit { $0.markers.removeAll { r.contains(Double($0)) } }
+        })
+        items.append(.item("Clear all markers", icon: "trash", destructive: true, enabled: !sm.markers.isEmpty) { edit { $0.markers = [] } })
+        items.append(.header("Beat length"))
+        let beats: [Double] = [1, 2, 4, 8, 16, 32]
+        var beatRows: [BBMenuItem] = [
+            BBMenuItem.item("(none)", checked: sm.time == .none) { edit { $0.time = SamplerTime.none } },
+            BBMenuItem.item("Autodetect", checked: sm.time == .autodetect) { edit { $0.time = .autodetect } }
+        ]
+        beatRows += beats.map { b in BBMenuItem.item(SamplerTime.beats(b).title, checked: sm.time == .beats(b)) { edit { $0.time = .beats(b) } } }
+        items.append(BBMenuItem.submenu("Length in beats: \(sm.time.title)", icon: "metronome", beatRows))
+        items.append(.item("Lock to the project tempo", detail: "\(Int(controller.state.bpm.rounded())) BPM",
+                           checked: { if case .projectTempo = sm.time { return true }; return false }()) {
+            edit { $0.time = .projectTempo(controller.state.bpm) }
+        })
+        return items
     }
 
     private func scrollBar(_ s: CGFloat) -> some View {
@@ -681,11 +999,11 @@ struct SamplerWindow: View {
     private func envelopePage(_ s: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
             targetTabs(s).spot(36, 168, 1348, 54, s)
-            envelopePanel(s).spot(36, 226, 696, 430, s)
-            lfoPanel(s).spot(742, 226, 384, 430, s)
-            filterPanel(s).spot(1136, 226, 238, 430, s)
-            rootBar(s).spot(36, 666, 1348, 66, s)
-            keyboard(s).spot(36, 736, 1348, 182, s)
+            envelopePanel(s).spot(36, 226, 696, 460, s)
+            lfoPanel(s).spot(742, 226, 384, 460, s)
+            filterPanel(s).spot(1136, 226, 238, 460, s)
+            rootBar(s).spot(36, 696, 1348, 66, s)
+            keyboard(s).spot(36, 770, 1348, 200, s)
         }
     }
 
@@ -733,6 +1051,11 @@ struct SamplerWindow: View {
                 EnvelopeGraph(env: e, color: skin.glow).opacity(e.on ? 1 : 0.35).padding(10 * s)
             }
             .spot(18, 52, 660, 178, s)
+            // AHDSR presets: 808s, kicks, snares and your own
+            menuChip(presetTitle, s, size: 19)
+                .bbMenu(title: "Envelope presets", width: 300) { presetMenu() }
+                .spot(410, 8, 268, 38, s)
+                .accessibilityIdentifier("samplerEnvPresets")
             Group {
             knob("DELAY", e.delay, x: 56, y: 282, d: 64, s, labelY: 327, reset: 0, display: time) { v, _ in editEnv { $0.delay = v } }
             knob("ATT", e.attack, x: 154, y: 282, d: 64, s, labelY: 327, reset: 0.12, display: time) { v, _ in editEnv { $0.attack = v } }
@@ -750,6 +1073,57 @@ struct SamplerWindow: View {
             knob("TENSION", (e.releaseTension + 1) / 2, x: 548, y: 370, d: 46, s, labelY: 407, bipolar: true, reset: 0.5, labelSize: 15, display: tension) { v, _ in editEnv { $0.releaseTension = v * 2 - 1 } }
             smallToggle("Tempo", e.tempo, x: 690, y: 394, s, id: "samplerEnvTempo") { editEnv { $0.tempo.toggle() } }
         }
+    }
+
+    // MARK: Envelope presets
+
+    /// The preset whose envelopes the track has now, if any.
+    private var presetTitle: String {
+        _ = presetsChanged
+        let all = SamplerEnvelopePreset.factory + SamplerEnvelopePreset.saved
+        return all.first { $0.envelopes == sm.envelopes }?.name ?? "Presets"
+    }
+
+    private func presetMenu() -> [BBMenuItem] {
+        let saved = SamplerEnvelopePreset.saved
+        func row(_ p: SamplerEnvelopePreset) -> BBMenuItem {
+            .item(p.name, checked: p.envelopes == sm.envelopes) {
+                edit { $0.envelopes = p.envelopes }
+                target = .volume
+            }
+        }
+        var items: [BBMenuItem] = []
+        for kind in SamplerEnvelopePreset.kinds {
+            var rows: [BBMenuItem] = SamplerEnvelopePreset.factory.filter { $0.kind == kind }.map(row)
+            let mine = saved.filter { $0.kind == kind }
+            if !mine.isEmpty { rows.append(BBMenuItem.header("Yours")); rows += mine.map(row) }
+            items.append(BBMenuItem.submenu(kind == "808" ? "808s" : kind + "s", icon: "waveform.path", rows))
+        }
+        let saveRows: [BBMenuItem] = SamplerEnvelopePreset.kinds.map { kind in
+            let word = kind == "808" ? "808" : kind.lowercased()
+            return BBMenuItem.item("As a\(kind == "808" ? "n" : "") \(word) preset…") {
+                presetName = "My \(word) \(saved.filter { $0.kind == kind }.count + 1)"
+                savingKind = kind
+            }
+        }
+        items.append(BBMenuItem.submenu("Save this envelope", icon: "square.and.arrow.down", saveRows))
+        if !saved.isEmpty {
+            let deleteRows: [BBMenuItem] = saved.map { p in
+                BBMenuItem.item("\(p.name) (\(p.kind))", destructive: true) { SamplerEnvelopePreset.delete(p); presetsChanged += 1 }
+            }
+            items.append(BBMenuItem.submenu("Delete one of yours", icon: "trash", deleteRows))
+        }
+        items.append(.item("Reset the envelopes", icon: "arrow.counterclockwise") { edit { $0.envelopes = SamplerSettings.defaultEnvelopes } })
+        return items
+    }
+
+    private func savePreset() {
+        guard let kind = savingKind else { return }
+        let name = presetName.trimmingCharacters(in: .whitespacesAndNewlines)
+        savingKind = nil
+        guard !name.isEmpty else { return }
+        SamplerEnvelopePreset.save(SamplerEnvelopePreset(name: name, kind: kind, envelopes: sm.envelopes))
+        presetsChanged += 1
     }
 
     /// A label and a small switch, right-aligned on `x`.
@@ -949,8 +1323,14 @@ struct SamplerWaveCanvas: View {
     let color: Color
     let startOffset: Float
     let loop: Bool
+    /// The track's loop points (parts of the sound).
+    var loopPoints: (Float, Float) = (0, 1)
     let region: ClosedRange<Int>?
     let cues: [Int]
+    var markers: [Float] = []
+    var selection: ClosedRange<Double>? = nil
+
+    static let selectionRed = Color(red: 1, green: 0.16, blue: 0.14)
 
     var body: some View {
         Canvas { ctx, size in
@@ -960,6 +1340,11 @@ struct SamplerWaveCanvas: View {
             let first = Double(scroll) * Double(n)
             func x(_ i: Int) -> CGFloat { CGFloat((Double(i) - first) / span) * size.width }
             let mid = size.height / 2
+            // the selection: tinted red behind the wave
+            if let sel = selection {
+                let a = x(Int(sel.lowerBound * Double(n))), b = x(Int(sel.upperBound * Double(n)))
+                ctx.fill(Path(CGRect(x: a, y: 0, width: max(1, b - a), height: size.height)), with: .color(Self.selectionRed.opacity(0.22)))
+            }
             ctx.fill(Path(CGRect(x: 0, y: mid - 0.5, width: size.width, height: 1)), with: .color(color.opacity(0.25)))
             var top = Path()
             let cols = max(1, Int(size.width))
@@ -981,9 +1366,12 @@ struct SamplerWaveCanvas: View {
                 ctx.fill(Path(CGRect(x: 0, y: 0, width: max(0, so), height: size.height)), with: .color(.black.opacity(0.45)))
                 ctx.fill(Path(CGRect(x: so - 1, y: 0, width: 2, height: size.height)), with: .color(.white.opacity(0.8)))
             }
-            // the loop: crossfade start (or the file's region) to the end
+            // the loop: a CROSSFADE's own loop, the file's region, or the loop points
             if loop {
-                let a = region?.lowerBound ?? sample.loopStart, b = region?.upperBound ?? n - 1
+                let last = n - 1
+                var a = Int(Double(loopPoints.0) * Double(last)), b = Int(Double(loopPoints.1) * Double(last))
+                if sample.loopEnd > 0 { a = sample.loopStart; b = sample.loopEnd } else { a = max(a, sample.loopStart) }
+                if let region { a = region.lowerBound; b = region.upperBound }
                 ctx.fill(Path(CGRect(x: x(a), y: 0, width: max(1, x(b) - x(a)), height: 8)), with: .color(color.opacity(0.6)))
                 for p in [a, b] { ctx.fill(Path(CGRect(x: x(p) - 1, y: 0, width: 2, height: size.height)), with: .color(color.opacity(0.7))) }
             }
@@ -994,15 +1382,82 @@ struct SamplerWaveCanvas: View {
                 tri.move(to: CGPoint(x: x(p) - 7, y: size.height)); tri.addLine(to: CGPoint(x: x(p) + 7, y: size.height)); tri.addLine(to: CGPoint(x: x(p), y: size.height - 12))
                 ctx.fill(tri, with: .color(.white.opacity(0.8)))
             }
-            // slice markers
-            for p in cues {
-                ctx.fill(Path(CGRect(x: x(p), y: 0, width: 1, height: size.height)), with: .color(.white.opacity(0.5)))
+            // slice markers (the file's) and region markers (yours, numbered)
+            let regionMarks = markers.map { Int(Double($0) * Double(n - 1)) }
+            for (k, p) in (cues + regionMarks).enumerated() {
+                let mine = k >= cues.count
+                ctx.fill(Path(CGRect(x: x(p), y: 0, width: 1, height: size.height)), with: .color(.white.opacity(mine ? 0.7 : 0.5)))
                 var flag = Path()
-                flag.move(to: CGPoint(x: x(p), y: 0)); flag.addLine(to: CGPoint(x: x(p) + 8, y: 5)); flag.addLine(to: CGPoint(x: x(p), y: 10))
-                ctx.fill(flag, with: .color(.white.opacity(0.8)))
+                flag.move(to: CGPoint(x: x(p), y: 0)); flag.addLine(to: CGPoint(x: x(p) + (mine ? 16 : 8), y: mine ? 7 : 5)); flag.addLine(to: CGPoint(x: x(p), y: mine ? 14 : 10))
+                ctx.fill(flag, with: .color(.white.opacity(0.85)))
+                if mine {
+                    ctx.draw(Text("\(k - cues.count + 1)").font(.system(size: 9, weight: .bold)).foregroundColor(.black),
+                             at: CGPoint(x: x(p) + 5, y: 7))
+                }
+            }
+            // the selection's edges
+            if let sel = selection {
+                for f in [sel.lowerBound, sel.upperBound] {
+                    ctx.fill(Path(CGRect(x: x(Int(f * Double(n))) - 1, y: 0, width: 2, height: size.height)), with: .color(Self.selectionRed))
+                }
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+/// The window's resize corner: three ridges of the window's metal.
+struct SamplerResizeGrip: View {
+    let tone: MetalTone
+    var body: some View {
+        Canvas { ctx, size in
+            for k in 1...3 {
+                let d = CGFloat(k) * size.width / 4
+                var p = Path()
+                p.move(to: CGPoint(x: size.width - d, y: size.height - 3)); p.addLine(to: CGPoint(x: size.width - 3, y: size.height - d))
+                ctx.stroke(p, with: .color(.black.opacity(0.6)), lineWidth: 2.5)
+                ctx.stroke(p.offsetBy(dx: -1, dy: -1), with: .color(tone.bright), lineWidth: 1.2)
+            }
+        }
+    }
+}
+
+/// A red selection handle: a tab at the top and bottom of the edge (the line is drawn on the waveform).
+struct SelectionHandle: View {
+    let scale: CGFloat
+    let leading: Bool
+    var body: some View {
+        VStack {
+            tab
+            Spacer()
+            tab
+        }
+    }
+    private var tab: some View {
+        RoundedRectangle(cornerRadius: 3 * scale)
+            .fill(SamplerWaveCanvas.selectionRed)
+            .overlay(RoundedRectangle(cornerRadius: 3 * scale).stroke(Color.white.opacity(0.7), lineWidth: 1))
+            .frame(width: 16 * scale, height: 22 * scale)
+            .offset(x: (leading ? -7 : 7) * scale)
+            .shadow(color: SamplerWaveCanvas.selectionRed.opacity(0.8), radius: 4 * scale)
+    }
+}
+
+/// A loop point's flag under the waveform, in the mode's light.
+struct LoopFlag: View {
+    let color: Color
+    let leading: Bool
+    var body: some View {
+        Canvas { ctx, size in
+            var p = Path()
+            let x = size.width / 2
+            p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x, y: size.height))
+            p.addLine(to: CGPoint(x: leading ? size.width : 0, y: size.height * 0.62)); p.addLine(to: CGPoint(x: x, y: size.height * 0.25))
+            p.closeSubpath()
+            ctx.fill(p, with: .color(color))
+            ctx.stroke(p, with: .color(.white.opacity(0.6)), lineWidth: 1)
+        }
+        .shadow(color: color, radius: 3)
     }
 }
 
