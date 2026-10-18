@@ -2158,8 +2158,12 @@ enum KnockSelfTest {
                 done += 128
             }
             // skip the attack, count sign changes of the steady tone
-            let x = Array(left[1_024...])
-            return zip(x, x.dropFirst()).filter { ($0 < 0) != ($1 < 0) && abs($0 - $1) > 1e-6 }.count
+            var n = 0
+            for i in 1_025..<frames {
+                let a: Float = left[i - 1], b: Float = left[i]
+                if (a < 0) != (b < 0) && abs(a - b) > 1e-6 { n += 1 }
+            }
+            return n
         }
         // up: 8 192 frames (the tone, 8x faster, lasts 12 000); down: 32 768 frames for enough 27.5 Hz cycles
         let base = crossings(semis: 0, frames: 9_216), high = crossings(semis: 36, frames: 9_216)
