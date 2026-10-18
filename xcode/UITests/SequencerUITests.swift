@@ -240,16 +240,16 @@ final class SequencerUITests: XCTestCase {
         XCTAssertEqual(name(), octave(start, 1), "plus moves the note up an octave")
         print("UITREE keys after plus: \(keys())")
         snap("note-up")
+        // the keys stay on C5 to C7, so the note drops lower on screen (a second minus would be
+        // below the rack's visible rows without scrolling)
         press(noteDown)
         sleep(1)
-        press(noteDown)
-        sleep(1)
-        XCTAssertEqual(name(), octave(start, -1), "minus moves it down an octave")
+        XCTAssertEqual(name(), start, "minus moves it back down an octave")
         XCTAssertEqual(notes(), drawn, "moving octaves keeps one note")
         snap("note-down")
 
-        // UNDO takes the three octave moves and the note away
-        for _ in 0..<4 { app.buttons["undoButton"].tap() }
+        // UNDO takes the two octave moves and the note away
+        for _ in 0..<3 { app.buttons["undoButton"].tap() }
         sleep(1)
         XCTAssertEqual(count(), blank, "UNDO takes the octave moves and the note away")
         arrow.tap()
