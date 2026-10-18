@@ -305,15 +305,18 @@ struct SequencerView: View {
     /// Printing on the metal: black on platinum and cream, white on black and blue (Tyrone's renders).
     private var inkColor: Color { finish == "modern" || finish == "texture" ? Color(white: 0.93) : Color(white: 0.1) }
     /// What lights up on each face (Tyrone's Face 2 renders, Oct 17): the tools, PLAY, the power ring,
-    /// the type chip and the track lamps. Platinum green, black red, vintage amber, texture blue.
+    /// the type chip and the track lamps. Platinum and black red (Tyrone, Oct 18: no lime green on
+    /// Platinum), vintage amber, texture blue.
     private var accent: Color {
         switch finish {
-        case "modern": return Color(red: 1, green: 0.2, blue: 0.16)
         case "vintage": return Color(red: 1, green: 0.74, blue: 0.2)
         case "texture": return Color(red: 0.25, green: 0.6, blue: 1)
-        default: return S.green
+        default: return Color(red: 1, green: 0.2, blue: 0.16)
         }
     }
+    /// The panels' lit green (selected rows, the root note, lit boxes): red on Platinum.
+    private var lit: Color { finish == "platinum" ? accent : S.green }
+    private var litDark: Color { finish == "platinum" ? Color(red: 0.24, green: 0.05, blue: 0.04) : S.greenDark }
     /// The selected track (red in every render) and the open graph's lane chip (blue on Texture).
     private var selectColor: Color { Color(red: 1, green: 0.22, blue: 0.16) }
     private var laneColor: Color { finish == "texture" ? Color(red: 0.25, green: 0.6, blue: 1) : selectColor }
@@ -926,7 +929,7 @@ struct SequencerView: View {
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(ch.name).font(.system(size: 13, weight: .semibold)).foregroundColor(S.green).lineLimit(1)
+                    Text(ch.name).font(.system(size: 13, weight: .semibold)).foregroundColor(lit).lineLimit(1)
                     Text(controller.padName(pad).uppercased()).font(.system(size: 9, design: .monospaced)).foregroundColor(S.dim).lineLimit(1)
                 }
                 .frame(width: 150, alignment: .leading)
@@ -1423,11 +1426,11 @@ struct SequencerView: View {
                 HStack {
                     Spacer()
                     Text(MusicScale.noteName(note)).font(.system(size: 9 * s, design: .monospaced))
-                        .foregroundColor(isRoot ? S.green : (inScale ? Color(white: 0.15) : Color(white: 0.5)))
+                        .foregroundColor(isRoot ? lit : (inScale ? Color(white: 0.15) : Color(white: 0.5)))
                     Text(sm == 0 ? "·" : (sm > 0 ? "+\(sm)" : "\(sm)")).font(.system(size: 8 * s, design: .monospaced)).foregroundColor(Color(white: 0.4)).frame(width: 22 * s, alignment: .trailing)
                 }
                 .padding(.trailing, 12 * s).frame(height: l.pitchRowH)
-                .background(isRoot ? S.green.opacity(0.25) : (inScale ? Color.clear : Color.black.opacity(0.12)))
+                .background(isRoot ? lit.opacity(0.25) : (inScale ? Color.clear : Color.black.opacity(0.12)))
             }
         }
         .frame(width: (A.rackX1 - A.rackX0) * s, height: CGFloat(range.count) * l.pitchRowH, alignment: .top)
@@ -1622,6 +1625,7 @@ struct SequencerView: View {
     /// ticking while a pattern plays (and anything else on Face 2) leaves it alone.
     private func gridKey(_ L: [RowLayout]) -> Int {
         var h = Hasher()
+        h.combine(finish)     // the grid's lit colours follow the finish
         h.combine(origin); h.combine(pageTicks); h.combine(cellTicks); h.combine(snapTicks); h.combine(pattern.lengthTicks)
         for e in pattern.events {
             h.combine(e.tick); h.combine(e.pad); h.combine(e.velocity); h.combine(e.semis)
@@ -1652,7 +1656,7 @@ struct SequencerView: View {
             for (i, l) in L.enumerated() {
                 if let range = l.pitch {
                     // the band: the track's steps, lit where it has notes (any pitch)
-                    ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: l.pitchTop - l.y)), with: .color(S.greenDark.opacity(0.5)))
+                    ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: l.pitchTop - l.y)), with: .color(litDark.opacity(0.5)))
                     ctx.fill(Path(CGRect(x: 0, y: l.y + l.bandH, width: size.width, height: l.pitchTop - l.y - l.bandH)), with: .color(Color(white: 0.06)))
                     drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l, size.width) })
                     for c in 0..<cells {
@@ -1671,12 +1675,12 @@ struct SequencerView: View {
                         let y = l.pitchTop + CGFloat(k) * l.pitchRowH
                         // the key's notes are lit (the root greener), the notes outside it are dark
                         ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: l.pitchRowH)),
-                                 with: .color(isRoot ? S.green.opacity(0.1) : (inScale ? (k % 2 == 0 ? S.rowA : S.rowB) : Color.black.opacity(0.35))))
+                                 with: .color(isRoot ? lit.opacity(0.1) : (inScale ? (k % 2 == 0 ? S.rowA : S.rowB) : Color.black.opacity(0.35))))
                         if inScale && !isRoot { ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: l.pitchRowH)), with: .color(noteColor.opacity(0.07))) }
                         if s == 0 { ctx.fill(Path(CGRect(x: 0, y: y + l.pitchRowH - 1, width: size.width, height: 1)), with: .color(S.dim.opacity(0.5))) }
                     }
-                    ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
-                    ctx.fill(Path(CGRect(x: 0, y: l.y + l.height - 1, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
+                    ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: 1)), with: .color(lit.opacity(0.5)))
+                    ctx.fill(Path(CGRect(x: 0, y: l.y + l.height - 1, width: size.width, height: 1)), with: .color(lit.opacity(0.5)))
                 } else {
                     // the step buttons (the picture's)
                     drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l, size.width) })
@@ -2398,9 +2402,10 @@ struct SequencerView: View {
 
     // MARK: Small pieces
 
-    private func box(lit: Bool, color: Color = S.green) -> some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill(lit ? (color == S.green ? S.greenDark : color.opacity(0.25)) : S.button)
+    private func box(lit: Bool, color: Color? = nil) -> some View {
+        let color = color ?? self.lit
+        return RoundedRectangle(cornerRadius: 6)
+            .fill(lit ? (color == self.lit ? litDark : color.opacity(0.25)) : S.button)
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(lit ? color.opacity(0.9) : S.border, lineWidth: lit ? 1.5 : 1))
             .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
     }
@@ -2452,7 +2457,7 @@ struct SequencerView: View {
             if let icon { Image(systemName: icon).font(.system(size: 15, weight: .medium)) }
             if let title { Text(title).font(.system(size: 13, weight: .medium, design: .monospaced)) }
         }
-        .foregroundColor(lit ? S.green : (enabled ? S.text : S.dim))
+        .foregroundColor(lit ? self.lit : (enabled ? S.text : S.dim))
         .padding(.horizontal, 12).frame(height: 40).background(box(lit: lit))
     }
 }
