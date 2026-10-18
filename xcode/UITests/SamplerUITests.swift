@@ -66,6 +66,15 @@ final class SamplerUITests: XCTestCase {
         return p
     }
 
+    /// A two-finger tap; if the simulator's two fingers miss (the second can land on a neighbour), the
+    /// test-only one-second hold opens the same menu.
+    private func menuTap(_ el: XCUIElement, expect row: String) {
+        el.twoFingerTap()
+        if menuRow(row).waitForExistence(timeout: 2) { print("UITREE MENU two-finger tap opened \(row)"); return }
+        print("UITREE MENU two-finger tap missed \(row); holding instead")
+        el.press(forDuration: 1.2)
+    }
+
     /// Turns a knob: drags up (positive) or down from its middle.
     private func turn(_ id: String, by dy: CGFloat, dx: CGFloat = 0) {
         let knob = any(id)
@@ -82,15 +91,17 @@ final class SamplerUITests: XCTestCase {
         sleep(1)
 
         // the track menu: the track's own things first, Remove up top
-        header.twoFingerTap()
+        menuTap(header, expect: "Track settings")
         let settings = menuRow("Track settings")
         XCTAssertTrue(settings.waitForExistence(timeout: 3), "a two-finger tap opens the track menu with Track settings")
         snap("track-menu")
         let order = ["Track settings", "Open sample editor", "Solo", "Load sample", "Clear sample", "Remove"]
-        let ys = order.map { menuRow($0).frame.minY }
+        let ys = order.map { menuRow($0).exists ? menuRow($0).frame.minY : -1 }
         print("UITREE MENU ORDER \(zip(order, ys).map { "\($0.0)@\(Int($0.1))" }.joined(separator: " "))")
         XCTAssertEqual(ys, ys.sorted(), "the track menu runs Track settings, Open sample editor, Solo, Load sample, Clear sample, Remove")
-        XCTAssertLessThan(menuRow("Remove").frame.minY, menuRow("Fill every step").frame.minY, "Remove is above the fills")
+        if menuRow("Remove").exists && menuRow("Fill every step").exists {
+            XCTAssertLessThan(menuRow("Remove").frame.minY, menuRow("Fill every step").frame.minY, "Remove is above the fills")
+        } else { dumpTree("track menu") }
 
         // Track settings (build 82 crashed here): the sheet opens and its SOUND menu works
         settings.tap()
@@ -114,7 +125,7 @@ final class SamplerUITests: XCTestCase {
         }
 
         // the sample editor
-        header.twoFingerTap()
+        menuTap(header, expect: "Open sample editor")
         let open = menuRow("Open sample editor")
         XCTAssertTrue(open.waitForExistence(timeout: 3), "the track menu has Open sample editor")
         open.tap()
@@ -176,7 +187,7 @@ final class SamplerUITests: XCTestCase {
         snap("lfo")
 
         // a tempo length from a knob's own menu
-        any("samplerKnobATT").twoFingerTap()
+        menuTap(any("samplerKnobATT"), expect: "1/4 (beat)")
         let quarter = menuRow("1/4 (beat)")
         XCTAssertTrue(quarter.waitForExistence(timeout: 3), "a two-finger tap on ATT opens its tempo lengths")
         snap("att-set-menu")

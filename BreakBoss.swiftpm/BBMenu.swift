@@ -137,6 +137,7 @@ private struct BBMenuTrigger: ViewModifier {
             Button(action: { tap?() }) { measured }
                 .buttonStyle(SeqPress())
                 .twoFingerTap { open() }
+                .uiTestHold { open() }
         } else {
             // A real button: a press-and-hold DragGesture next to onTapGesture swallowed the taps on
             // newer iPadOS, so none of these menus opened. The button goes in while your finger is on it.
@@ -160,11 +161,14 @@ private struct BBContextTrigger: ViewModifier {
                     .onAppear { frame = g.frame(in: .named(bbSpace)) }
                     .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
             })
-            .twoFingerTap {
-                let list = items()
-                guard !list.isEmpty else { return }
-                center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: list))
-            }
+            .twoFingerTap { show() }
+            .uiTestHold { show() }
+    }
+
+    private func show() {
+        let list = items()
+        guard !list.isEmpty else { return }
+        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: list))
     }
 }
 
@@ -187,6 +191,16 @@ private extension View {
     /// A two-finger tap or a trackpad / mouse right-click on this view. SwiftUI's own taps can't count
     /// fingers, so these are UIKit recognizers handed to SwiftUI (iPadOS 18 and later; the app's
     /// iPads run 26), which keeps them in SwiftUI's gesture system next to the button's own tap.
+    /// UI tests only (BREAKBOSS_UI_PROBE): a one-second hold opens the same menu, since the simulator's
+    /// synthesized two-finger tap can land its second finger on a neighbouring control.
+    @ViewBuilder func uiTestHold(_ action: @escaping () -> Void) -> some View {
+        if ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil {
+            simultaneousGesture(LongPressGesture(minimumDuration: 1).onEnded { _ in action() })
+        } else {
+            self
+        }
+    }
+
     @ViewBuilder func twoFingerTap(_ action: @escaping () -> Void) -> some View {
         if #available(iOS 18.0, *) {
             gesture(TapRecognizer(touches: 2, action: action))
