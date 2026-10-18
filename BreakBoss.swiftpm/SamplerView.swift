@@ -225,6 +225,8 @@ struct SamplerWindow: View {
     @State private var presetsChanged = 0
     /// Dragging a point or curve on the envelope graph: which one, and the envelope when it started.
     @State private var envDrag: (handle: Int, from: SamplerEnvelope)?
+    /// The envelope point tapped last and when (a second tap on it soon after deletes it).
+    @State private var envPointTap: (index: Int, time: Date) = (-1, .distantPast)
 
     static let artW: CGFloat = 1408, artH: CGFloat = 1000
     static let probing = ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil
@@ -1220,7 +1222,7 @@ struct SamplerWindow: View {
     }
 
     /// The envelope graph's touch layer: drag a point to move it, drag a diamond up or down to bend its
-    /// curve; double tap empty space to add a point there and double tap a point to delete it (FL style:
+    /// curve; tap empty space to add a point there and double tap a point to delete it (FL style:
     /// the knobs' shape turns into free points the first time); a two-finger tap (or a right-click)
     /// opens the points menu (sustain point, straighten, back to the knobs' shape).
     private func envelopeEditor(_ e: SamplerEnvelope) -> some View {
@@ -1243,10 +1245,20 @@ struct SamplerWindow: View {
                         editEnv { $0 = moved }
                     }
                     .onEnded { _ in envDrag = nil })
-                .simultaneousGesture(SpatialTapGesture(count: 2).onEnded { v in
+                .simultaneousGesture(SpatialTapGesture().onEnded { v in
+                    // one tap on empty space adds a point (Tyrone, Oct 18); a double tap on a point deletes it
+                    let handles = EnvelopeGraph.handles(e, width: w, height: h)
                     let pts = e.usesPoints ? EnvelopeGraph.pointXY(e, width: w, height: h) : []
                     if let hit = pts.indices.first(where: { hypot(pts[$0].x - v.location.x, pts[$0].y - v.location.y) < 26 }) {
-                        editEnv(on: true) { $0 = Self.removingPoint(hit, from: $0) }
+                        let now = Date()
+                        if envPointTap.index == hit && now.timeIntervalSince(envPointTap.time) < 0.4 {
+                            envPointTap = (-1, .distantPast)
+                            editEnv(on: true) { $0 = Self.removingPoint(hit, from: $0) }
+                        } else {
+                            envPointTap = (hit, now)
+                        }
+                    } else if handles.contains(where: { hypot($0.x - v.location.x, $0.y - v.location.y) < 26 }) {
+                        // a tap on one of the knob shape's points or a curve handle adds nothing
                     } else {
                         let p = e.withPoints()
                         let time = Float(v.location.x / EnvelopeGraph.pixelsPerUnit(p, width: w))
@@ -1336,7 +1348,7 @@ struct SamplerWindow: View {
                     BBMenuItem.item("Point \(i + 1)", detail: "\(Int((e.points[i].level * 100).rounded()))%", checked: e.sustainPoint == i) { editEnv(on: true) { $0.sustainPoint = i } }
                 }
             return [
-                .header("Double tap the graph to add a point, a point to delete it"),
+                .header("Tap the graph to add a point, double tap a point to delete it"),
                 .submenu("Sustain point", icon: "pause", sustainRows),
                 .item("Delete the last point", icon: "minus.circle", destructive: true) { editEnv(on: true) { $0 = Self.removingPoint($0.points.count - 1, from: $0) } },
                 .item("Straighten the curves", icon: "line.diagonal") { editEnv(on: true) { for i in $0.points.indices { $0.points[i].tension = 0 } } },

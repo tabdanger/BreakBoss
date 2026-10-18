@@ -794,7 +794,7 @@ enum KnockSelfTest {
         let knobShape = SamplerEnvelope().knobPoints()
         check(added.points.count == knobShape.points.count + 1 && added.points.contains { abs($0.level - 0.8) < 0.001 }
               && abs(added.points.reduce(0) { $0 + $1.time } - knobShape.points.reduce(0) { $0 + $1.time }) < 0.0001,
-              "Sampler: double tapping the graph adds a point and the others stay where they were")
+              "Sampler: tapping the graph adds a point and the others stay where they were")
         let removed = SamplerWindow.removingPoint(added.points.firstIndex { abs($0.level - 0.8) < 0.001 } ?? 0, from: added)
         check(removed.points.count == knobShape.points.count && removed.sustainPoint == knobShape.sustain
               && zip(removed.points, knobShape.points).allSatisfy { abs($0.time - $1.time) < 0.0001 && $0.level == $1.level },

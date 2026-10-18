@@ -222,12 +222,12 @@ final class SamplerUITests: XCTestCase {
                 .press(forDuration: 0.05, thenDragTo: graph.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
             sleep(1)
             snap("graph-dragged")
-            // FL-style free points: double tap empty space adds one, the knobs' shape becomes points
+            // FL-style free points: one tap on empty space adds one, the knobs' shape becomes points
             let pointsBefore = probe("before adding a point")
-            graph.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.1)).doubleTap()
+            graph.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.1)).tap()
             sleep(1)
             print("UITREE GRAPH after double tap = \(graph.value ?? "?")")
-            XCTAssertTrue((graph.value as? String)?.hasSuffix("points") == true, "double tapping the graph adds a point (\(graph.value ?? "?"))")
+            XCTAssertTrue((graph.value as? String)?.hasSuffix("points") == true, "tapping the graph adds a point (\(graph.value ?? "?"))")
             _ = probe("after adding a point")
             _ = pointsBefore
             snap("graph-point-added")
