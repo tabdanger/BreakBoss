@@ -198,7 +198,7 @@ struct SequencerView: View {
     @State private var exportURL: URL?
     @State private var tick = Date()
     @State private var clock = ClockState()
-    final class ClockState { var wasLive = false }
+    final class ClockState { var wasLive = false; var wasPlaying = false }
     @State private var newborn = Set<UUID>()
     @State private var settling = Set<UUID>()
     @State private var rackTargeted = false
@@ -424,6 +424,9 @@ struct SequencerView: View {
             let live = controller.isPlaying || controller.recording
             if live || clock.wasLive { tick = now }
             clock.wasLive = live
+            // pressing play (here, on Face 1 or in the host) follows the playhead again, like Logic
+            if controller.isPlaying && !clock.wasPlaying && !follow { follow = true }
+            clock.wasPlaying = controller.isPlaying
             if controller.recording { controller.mergeRecorded(snap: snapTicks) }
             followPlayhead()
         }
@@ -1683,19 +1686,16 @@ struct SequencerView: View {
             ended: { panStart = nil }))
     }
 
+    /// The playhead: a line moved every display frame from the engine's own clock (like Logic's),
+    /// so it glides with the music and the grid never redraws for it. When it runs off the window
+    /// while following, the window catches up with it at once.
     private func playhead(width w: CGFloat) -> some View {
-        let playing = isThisPlaying
-        let start = origin, ticks = Double(pageTicks), color = glowColor
-        let engine = controller
-        return TimelineView(.animation(minimumInterval: nil, paused: !playing)) { _ in
-            Canvas { ctx, size in
-                guard playing, let t = engine.playheadTick else { return }
-                let px = CGFloat((t - start) / ticks) * size.width
-                if px >= 0 && px <= size.width {
-                    ctx.fill(Path(CGRect(x: px - 1, y: 0, width: 2, height: size.height)), with: .color(color))
-                }
-            }
-        }
+        let start = origin, ticks = Double(pageTicks)
+        let controller = controller, loop = loop
+        return PlayheadLine(color: UIColor(glowColor), position: {
+            guard controller.isPlaying, Int(controller.meters.status[1]) == loop, let t = controller.playheadTick else { return nil }
+            return CGFloat((t - start) / ticks)
+        }, offScreen: { followPlayhead() })
     }
 
     /// The slot near the top of a step button (Tyrone's picture): dark when off, a glowing bar when lit.
