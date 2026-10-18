@@ -209,6 +209,9 @@ struct SequencerView: View {
     @State private var updateSounds = false
     @State private var updateTempo = true
     @State private var trackSettingsID: UUID?
+    /// The track whose SAMPLER window is open, and whether it's tucked away (minimized).
+    @State private var samplerPad: Int?
+    @State private var samplerMinimized = false
     @State private var libraryType: SoundType? = .kick
     @State private var search = ""
     @State private var userSounds: [LibrarySound] = UserSoundLibrary.sounds()
@@ -414,6 +417,7 @@ struct SequencerView: View {
             // headers, slider, knob rims and control edges in the faceplate's metal
             .environment(\.seqFinish, finish)
         }
+        .overlay { samplerOverlay }
         .bbMenuHost()
         .background(Color.black.ignoresSafeArea())
         .preferredColorScheme(.dark)
@@ -1178,7 +1182,11 @@ struct SequencerView: View {
                 .allowsHitTesting(false)
             // the body: tap selects the track, a two-finger tap opens its menu (the tab on its left moves it)
             Color.clear.contentShape(Rectangle()).frame(width: 100 * s, height: 52 * s).offset(x: 33 * s, y: 4 * s)
-                .bbTwoFingerMenu(title: ch.name, width: 270, tap: { selectedID = ch.id }) { channelMenu(ch) }
+                // tapping the track that's already selected plays its sound (Tyrone, Oct 18)
+                .bbTwoFingerMenu(title: ch.name, width: 270, tap: {
+                    if selectedID == ch.id { controller.auditionPad(pad) }
+                    selectedID = ch.id
+                }) { channelMenu(ch) }
                 .accessibilityIdentifier("trackHeader\(pad)")
             ArtKnob(value: ps.level, reset: 0.8) { v, _ in set { $0.level = v } }.frame(width: 36 * s, height: 36 * s).offset(x: 135 * s, y: 11.5 * s)
             ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 36 * s, height: 36 * s).offset(x: 184 * s, y: 11.5 * s)
@@ -1218,6 +1226,55 @@ struct SequencerView: View {
         .background(rowTargeted == ch.id ? accent.opacity(0.25) : Color.clear)
         .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: Binding(get: { rowTargeted == ch.id }, set: { rowTargeted = $0 ? ch.id : nil })) { providers in
             dropOnRack(providers, channel: ch)
+        }
+    }
+
+    // MARK: The SAMPLER window
+
+    private func openSampler(_ pad: Int) {
+        if let ch = channel(pad: pad) { selectedID = ch.id }
+        withAnimation(.easeOut(duration: 0.2)) { samplerPad = pad; samplerMinimized = false }
+    }
+
+    /// The open track's SAMPLER window over Face 2 (or, minimized, a tab in the corner that brings it back).
+    @ViewBuilder private var samplerOverlay: some View {
+        if let pad = samplerPad {
+            if samplerMinimized {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button { withAnimation(.easeOut(duration: 0.2)) { samplerMinimized = false } } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "waveform")
+                                Text(String(format: "SAMPLER  CH %02d", (controller.rackOrder.firstIndex(of: pad) ?? pad) + 1))
+                                    .font(.system(size: 13, weight: .semibold))
+                            }
+                            .foregroundColor(MetalTone.of(finish).ink)
+                            .padding(.horizontal, 14).frame(height: 36)
+                            .background(SamplerMetal(tone: MetalTone.of(finish), corner: 8))
+                        }
+                        .buttonStyle(SeqPress())
+                        .accessibilityIdentifier("samplerRestore")
+                    }
+                }
+                .padding(16)
+                .transition(.opacity)
+            } else {
+                ZStack {
+                    Color.black.opacity(0.5).ignoresSafeArea()
+                    SamplerWindow(controller: controller, pad: pad, finish: finish,
+                                  close: { withAnimation(.easeIn(duration: 0.15)) { samplerPad = nil } },
+                                  minimize: { withAnimation(.easeIn(duration: 0.15)) { samplerMinimized = true } },
+                                  switchTo: { openSampler($0) },
+                                  importFile: { importPad = pad },
+                                  drop: { dropOnRack($0, channel: channel(pad: pad)) })
+                        .id(pad)
+                        .padding(12)
+                }
+                .environment(\.seqFinish, finish)
+                .transition(.opacity.combined(with: .scale(scale: 0.97)))
+            }
         }
     }
 
@@ -1385,6 +1442,7 @@ struct SequencerView: View {
         items.append(BBMenuItem.item("Randomize its steps", icon: "dice") { remember(); controller.randomizeChannel(loop: loop, pad: pad) })
         items += feelItems(pad)
         items.append(.header("Track"))
+        items.append(BBMenuItem.item("Open sample editor", icon: "waveform") { openSampler(pad) })
         items.append(BBMenuItem.item("Track settings… (tune, decay, filter, MIDI)", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id })
         items.append(BBMenuItem.item(controller.soloPads[pad] ? "Solo off" : "Solo", icon: "s.square", checked: controller.soloPads[pad]) { controller.toggleSolo(pad) })
         items.append(BBMenuItem.item("Load a sample from Files…", icon: "folder") { importPad = pad })

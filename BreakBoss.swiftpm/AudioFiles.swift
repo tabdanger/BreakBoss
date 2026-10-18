@@ -40,7 +40,49 @@ enum SampleLoader {
         let channels = Int(format.channelCount)
         let left = Array(UnsafeBufferPointer(start: data[0], count: n))
         let right = channels > 1 ? Array(UnsafeBufferPointer(start: data[1], count: n)) : left
-        return SampleBuffer(left: left, right: right, sampleRate: format.sampleRate)
+        let sample = SampleBuffer(left: left, right: right, sampleRate: format.sampleRate)
+        // MP3, AAC and 24-bit sources are converted to 32 bit on loading (as in FL's sampler readout)
+        let bits = file.fileFormat.settings[AVLinearPCMBitDepthKey] as? Int ?? 0
+        let isFloat = file.fileFormat.commonFormat == .pcmFormatFloat32 || file.fileFormat.commonFormat == .pcmFormatFloat64
+        sample.bitDepth = bits == 16 && !isFloat ? 16 : 32
+        sample.stereo = channels > 1
+        let marks = markers(url, rate: format.sampleRate)
+        sample.cues = marks.cues.filter { $0 > 0 && $0 < n }
+        if let r = marks.region, r.lowerBound >= 0, r.upperBound < n, r.count > 32 { sample.region = r }
+        return sample
+    }
+
+    /// A WAV file's cue points (slice markers) and first 'smpl' loop (its region), in frames.
+    static func markers(_ url: URL, rate: Double) -> (cues: [Int], region: ClosedRange<Int>?) {
+        let ext = url.pathExtension.lowercased()
+        guard ext == "wav" || ext == "wave", let data = try? Data(contentsOf: url, options: .mappedIfSafe), data.count > 12 else { return ([], nil) }
+        return data.withUnsafeBytes { (raw: UnsafeRawBufferPointer) -> ([Int], ClosedRange<Int>?) in
+            let count = raw.count
+            func u32(_ o: Int) -> Int {
+                guard o >= 0, o + 4 <= count else { return 0 }
+                return Int(raw[o]) | Int(raw[o + 1]) << 8 | Int(raw[o + 2]) << 16 | Int(raw[o + 3]) << 24
+            }
+            func tag(_ o: Int) -> String {
+                guard o + 4 <= count else { return "" }
+                return String(bytes: [raw[o], raw[o + 1], raw[o + 2], raw[o + 3]], encoding: .ascii) ?? ""
+            }
+            guard tag(0) == "RIFF", tag(8) == "WAVE" else { return ([], nil) }
+            var cues: [Int] = []
+            var region: ClosedRange<Int>?
+            var o = 12
+            while o + 8 <= count {
+                let id = tag(o), size = u32(o + 4), body = o + 8
+                if id == "cue " {
+                    let n = min(u32(body), 512)
+                    for i in 0..<n { cues.append(u32(body + 4 + i * 24 + 20)) }
+                } else if id == "smpl", u32(body + 28) > 0 {
+                    let start = u32(body + 36 + 8), end = u32(body + 36 + 12)
+                    if end > start { region = start...end }
+                }
+                o = body + size + (size & 1)
+            }
+            return (Array(Set(cues)).sorted(), region)
+        }
     }
 
     /// Copies a file into the Samples folder (if it isn't there already) and returns its name.

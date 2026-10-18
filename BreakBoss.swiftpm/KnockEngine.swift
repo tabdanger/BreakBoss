@@ -17,9 +17,11 @@ struct PadSettings: Codable, Equatable {
     var reverse = false
     /// File name in the Samples folder when the pad holds your own sample.
     var sampleFile: String?
+    /// The track's SAMPLER window (nil until it's opened and something is changed).
+    var sampler: SamplerSettings?
 
     private enum CodingKeys: String, CodingKey {
-        case level, pan, tune, decay, filter, reverse, sampleFile
+        case level, pan, tune, decay, filter, reverse, sampleFile, sampler
     }
 
     var gain: Float { level <= 0.001 ? 0 : KnockMath.dbToGain(40 * log10f(level / 0.8)) }
@@ -36,6 +38,7 @@ extension PadSettings {
         filter = try values.decodeIfPresent(Float.self, forKey: .filter) ?? 1
         reverse = try values.decodeIfPresent(Bool.self, forKey: .reverse) ?? false
         sampleFile = try values.decodeIfPresent(String.self, forKey: .sampleFile)
+        sampler = try? values.decodeIfPresent(SamplerSettings.self, forKey: .sampler)
     }
 }
 
@@ -51,6 +54,8 @@ final class KitBuffers {
     /// sounding glide to these, so turning a channel's volume or pan never steps the gain.
     let mixL: [Float]
     let mixR: [Float]
+    /// Each track's sampler as the audio thread plays it (envelopes, LFOs, filter, loop).
+    let sampler: [SamplerRT]
 
     init(name: String, samples: [SampleBuffer], settings: [PadSettings], bassHz: Float,
          renderSampleRate: Double = 48_000) {
@@ -67,6 +72,7 @@ final class KitBuffers {
         }
         mixL = settings.map { $0.gain * cosf(($0.pan.clamped(-1, 1) + 1) * .pi / 4) * 1.414 }
         mixR = settings.map { $0.gain * sinf(($0.pan.clamped(-1, 1) + 1) * .pi / 4) * 1.414 }
+        sampler = settings.map { SamplerRT($0.sampler) }
     }
 }
 
@@ -1006,10 +1012,26 @@ final class KnockEngine {
         guard pad >= 0 && pad < Pad.count, padMask & (1 << UInt16(pad)) != 0, let kit else { return }
         let sample = kit.samples[pad]
         let ps = kit.settings[pad]
+        let rt = pad < kit.sampler.count ? kit.sampler[pad] : SamplerRT()
         let globalSemis = Float(Int(((params[KParam.pitch.rawValue] - 0.5) * 24).rounded()))
         let cents = (params[KParam.tune.rawValue] - 0.5) * 200
-        let totalSemis = globalSemis + cents / 100 + ps.tune + semis
-        let rate = Double(sample.sampleRate / sampleRate) * Double(powf(2, totalSemis / 12))
+        // the sampler's "Enable main pitch" off: this track ignores the faceplate's PITCH and TUNE
+        let mainSemis = rt.active && !rt.mainPitch ? 0 : globalSemis + cents / 100
+        let totalSemis = mainSemis + ps.tune + semis + rt.semis
+        var rate = Double(sample.sampleRate / sampleRate) * Double(powf(2, totalSemis / 12))
+        let beatSamples = samplesPerBeat
+        if rt.active { rate *= rt.tapeRate(sourceSeconds: sample.seconds, bpm: sampleRate * 60 / beatSamples) }
+        // Loaded samples are one-shots (Tyrone, Oct 18): the whole sound plays whatever the note's
+        // length, unless the sampler's Volume envelope is on (the note's end is its release) or it loops.
+        var lengthSamples = lengthSamples
+        if rt.active || ps.sampleFile != nil {
+            if !rt.volume.on && !rt.loop {
+                if !glide { lengthSamples = 0 }
+            } else if lengthSamples == 0 {
+                // a pad tap or a drum step: a 16th with the envelope, a beat for a loop
+                lengthSamples = Int(beatSamples * (rt.volume.on ? 0.25 : 1))
+            }
+        }
 
         // 808 glide: bend the note that's still sounding instead of starting a new one.
         if glide && pad == Pad.bass808.rawValue {
@@ -1053,7 +1075,15 @@ final class KnockEngine {
                              age: voiceAge, remaining: lengthSamples > 0 ? lengthSamples : Int.max, heldNote: heldNote,
                              attackSamples: max(1, Int(sampleRate * 0.0005)), filterCoefficient: kit.filterCoefficients[pad],
                              mixL: ml, mixR: mr)
+        if rt.active { voices[slot].startSampler(rt, sampleRate: sampleRate, samplesPerBeat: beatSamples, clock: sampleClock,
+                                                 loopStart: sample.loopStart, region: rt.regions ? sample.region : nil) }
         padHits[pad] &+= 1
+    }
+
+    /// Samples in one beat at the tempo that's playing (or the display's).
+    private var samplesPerBeat: Double {
+        let bpm = status[4] > 1 ? status[4] : displayBPM.pointee
+        return sampleRate * 60 / max(20, min(bpm, 400))
     }
 
     private func freeVoice() -> Int? {
@@ -1315,6 +1345,8 @@ struct Voice {
     /// The pad's LEVEL / PAN gains right now; render() glides them to the pad's current setting.
     var mixL: Float = 1
     var mixR: Float = 1
+    /// The track's sampler (envelopes, LFOs, filter, loop), when it has one.
+    var sm = SamplerVoice()
 
     init() {}
 
@@ -1358,6 +1390,30 @@ struct Voice {
 
     mutating func release(samples: Int) { startFade(samples: samples) }
 
+    /// The sampler takes over this voice: START OFFSET, loop points and the ENVELOPE page.
+    mutating func startSampler(_ rt: SamplerRT, sampleRate: Double, samplesPerBeat: Double, clock: Int64, loopStart: Int,
+                               region: ClosedRange<Int>?) {
+        sm = SamplerVoice(rt, sampleRate: sampleRate, samplesPerBeat: samplesPerBeat, clock: clock)
+        let last = Double(max(length - 2, 0))
+        let offset = Double(rt.startOffset) * last
+        position = reverse ? last - offset : offset
+        sm.looping = rt.loop && !reverse && length > 64
+        sm.pingPong = rt.pingPong
+        sm.loopStart = min(Double(max(0, loopStart)), last * 0.95)
+        sm.loopEnd = last
+        if let region, Double(region.upperBound) <= last, region.count > 32 {
+            sm.loopStart = Double(region.lowerBound); sm.loopEnd = Double(region.upperBound)
+        }
+    }
+
+    /// The note's length is up: the sampler's envelopes release, or a loop plays out to its end.
+    private mutating func noteEnded(releaseSamples: Int) {
+        guard sm.on else { release(samples: releaseSamples); return }
+        sm.release()
+        // with the Volume envelope the loop keeps going under its release; without it the sound plays out
+        if !sm.env.1.on && sm.looping { sm.looping = false; sm.direction = 1 }
+    }
+
     mutating func glide(to newRate: Double, samples: Int) {
         targetRate = newRate
         glideLeft = max(samples, 1)
@@ -1368,6 +1424,11 @@ struct Voice {
     mutating func render(into outL: UnsafeMutablePointer<Float>, _ outR: UnsafeMutablePointer<Float>, frames: Int, releaseSamples: Int,
                          targetL: Float = 1, targetR: Float = 1, mixStep: Float = 1) {
         guard let left, let right else { active = false; return }
+        if sm.on {
+            renderSampler(left, right, into: outL, outR, frames: frames, releaseSamples: releaseSamples,
+                          targetL: targetL, targetR: targetR, mixStep: mixStep)
+            return
+        }
         let last = Double(length - 1)
         for i in 0..<frames {
             if remaining != Int.max {
@@ -1407,6 +1468,74 @@ struct Voice {
                 if glideLeft == 0 { rate = targetRate }
             }
             position += reverse ? -rate : rate
+        }
+    }
+    /// render() for a voice with a sampler: the envelopes, LFOs and filter are worked out every 16
+    /// samples (the volume glides between them so nothing steps), the loop wraps or ping-pongs.
+    @inline(__always)
+    private mutating func renderSampler(_ left: UnsafeMutablePointer<Float>, _ right: UnsafeMutablePointer<Float>,
+                                        into outL: UnsafeMutablePointer<Float>, _ outR: UnsafeMutablePointer<Float>, frames: Int,
+                                        releaseSamples: Int, targetL: Float, targetR: Float, mixStep: Float) {
+        let last = Double(length - 1)
+        var i = 0
+        while i < frames {
+            let n = min(16, frames - i)
+            let g0 = sm.gain
+            sm.control(n)
+            if sm.done { active = false; return }
+            let gStep = (sm.gain - g0) / Float(n)
+            var gs = g0
+            for j in i..<(i + n) {
+                if remaining != Int.max {
+                    remaining -= 1
+                    if remaining == 0 { noteEnded(releaseSamples: releaseSamples); remaining = Int.max }
+                }
+                if sm.looping {
+                    if sm.direction > 0 && position >= sm.loopEnd {
+                        if sm.pingPong { sm.direction = -1; position = max(sm.loopStart, 2 * sm.loopEnd - position) }
+                        else { position = max(sm.loopStart, position - (sm.loopEnd - sm.loopStart)) }
+                    } else if sm.direction < 0 && position <= sm.loopStart {
+                        sm.direction = 1; position = min(sm.loopEnd, 2 * sm.loopStart - position)
+                    }
+                }
+                if position < 0 || position >= last { active = false; return }
+                let idx = Int(position)
+                let frac = Float(position - Double(idx))
+                var l = left[idx] + (left[idx + 1] - left[idx]) * frac
+                var r = right[idx] + (right[idx + 1] - right[idx]) * frac
+                sm.filter(&l, &r)
+                if filterCoefficient < 1 {
+                    filterL += filterCoefficient * (l - filterL)
+                    filterR += filterCoefficient * (r - filterR)
+                    l = filterL
+                    r = filterR
+                }
+                gs += gStep
+                var g = env * fade
+                if hold > 0 { hold -= 1 } else { env *= decayCoef }
+                if releasing {
+                    fade -= fadeStep
+                    if fade <= 0 { active = false; return }
+                    g = env * fade
+                }
+                if attack < 1 {
+                    g *= attack
+                    attack = min(1, attack + attackStep)
+                }
+                if env < 0.000_05 { active = false; return }
+                if mixL != targetL { mixL = targetL > mixL ? min(targetL, mixL + mixStep) : max(targetL, mixL - mixStep) }
+                if mixR != targetR { mixR = targetR > mixR ? min(targetR, mixR + mixStep) : max(targetR, mixR - mixStep) }
+                g *= gs
+                outL[j] += l * g * gainL * mixL * sm.panL
+                outR[j] += r * g * gainR * mixR * sm.panR
+                if glideLeft > 0 {
+                    rate += rateStep
+                    glideLeft -= 1
+                    if glideLeft == 0 { rate = targetRate }
+                }
+                position += (reverse ? -rate : rate) * sm.rateMul * sm.direction
+            }
+            i += n
         }
     }
 }

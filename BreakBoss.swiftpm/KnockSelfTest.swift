@@ -40,6 +40,7 @@ enum KnockSelfTest {
         phase("checkRecordingTrim", checkRecordingTrim)
         phase("checkDrumRoll", checkDrumRoll)
         phase("checkWorkspaceChannels", checkWorkspaceChannels)
+        phase("checkSampler", checkSampler)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -471,6 +472,82 @@ enum KnockSelfTest {
         contended.hostParameter(.pitch, 0.75)
         _ = block(contended, 128)
         check(finite && contended.param(.pitch) == 0.75, "host automation survives concurrent UI control updates")
+    }
+
+    /// The SAMPLER window: the SAMPLE page's computed sound and the ENVELOPE page while it plays.
+    static func checkSampler() {
+        let rate = 48_000.0
+        let ramp = SampleBuffer(left: (0..<9_600).map { Float($0) / 9_600 * 0.5 }, sampleRate: rate)
+        func process(_ change: (inout SamplerSettings) -> Void) -> SampleBuffer {
+            var s = SamplerSettings(); change(&s)
+            return SamplerProcessor.process(ramp, s.offline(bpm: 120) ?? SamplerOffline(), engineRate: rate)
+        }
+        check(SamplerSettings().offline(bpm: 120) == nil, "Sampler: an untouched sampler leaves the sound as it is")
+        let reversed = process { $0.reverse = true; $0.declick = .off }
+        check(abs(reversed.left[0] - ramp.left[ramp.length - 1]) < 0.000_1, "Sampler: Reverse plays the sound backwards")
+        let trimmed = process { $0.start = 0.25; $0.length = 0.5; $0.declick = .off }
+        check(abs(trimmed.length - 3_600) <= 2, "Sampler: SMP START and LENGTH cut the sound (\(trimmed.length) samples)")
+        let normalized = process { $0.normalize = true }
+        var peak: Float = 0
+        for i in 0..<normalized.length { peak = max(peak, abs(normalized.left[i])) }
+        check(abs(peak - 0.98) < 0.01, "Sampler: Normalize brings the peak to just under full scale")
+        let polarity = process { $0.reversePolarity = true; $0.declick = .off }
+        check(polarity.left[5_000] < 0 && abs(polarity.left[5_000] + ramp.left[5_000]) < 0.000_1, "Sampler: Reverse polarity flips the wave")
+        let cut = process { $0.length = 0.5; $0.declick = .generic }
+        check(cut.length > 4_800 && cut.fadeMarks.1 > 0 && abs(cut.left[cut.length - 1]) < 0.01,
+              "Sampler: a bleeding declick fades out past the cut (\(cut.length) samples)")
+        let tone = SampleBuffer(left: (0..<48_000).map { sinf(Float($0) * 2 * .pi * 220 / 48_000) * 0.5 }, sampleRate: rate)
+        var stretch = SamplerSettings(); stretch.stretch = .stretch; stretch.multiplier = 1
+        let longer = SamplerProcessor.process(tone, stretch.offline(bpm: 120)!, engineRate: rate)
+        check(abs(Double(longer.length) / 48_000 - 4) < 0.05, "Sampler: MUL ×4 with Stretch makes it four times longer (\(longer.length))")
+        var locked = SamplerSettings(); locked.stretch = .stretch; locked.time = .projectTempo(120)
+        let slower = SamplerProcessor.process(tone, locked.offline(bpm: 60)!, engineRate: rate)
+        check(abs(Double(slower.length) / 48_000 - 2) < 0.05, "Sampler: TIME locked to the tempo stretches when the tempo halves")
+        var pitched = SamplerSettings(); pitched.stretch = .stretch; pitched.stretchPitch = 12
+        let up = SamplerProcessor.process(tone, pitched.offline(bpm: 120)!, engineRate: rate)
+        var crossings = 0
+        for i in 1..<min(up.length, 24_000) where (up.left[i - 1] < 0) != (up.left[i] < 0) { crossings += 1 }
+        check(abs(up.length - 48_000) < 600 && crossings > 380 && crossings < 500,
+              "Sampler: PITCH +12 with Stretch keeps the length and doubles the pitch (\(crossings) crossings)")
+        var saved = PadSettings(); saved.sampler = stretch
+        let decoded = (try? JSONEncoder().encode(saved)).flatMap { try? JSONDecoder().decode(PadSettings.self, from: $0) }
+        check(decoded?.sampler == stretch, "Sampler: its settings are saved with the track")
+
+        // playing: the Volume envelope, the filter, a loop and the one-shot rule
+        let long = SampleBuffer(left: (0..<48_000).map { $0 % 2 == 0 ? 0.2 : -0.2 }, sampleRate: rate)
+        func energy(_ settings: PadSettings, _ sample: SampleBuffer = long, blocks: ClosedRange<Int>) -> Float {
+            var all = Array(repeating: PadSettings(), count: Pad.count)
+            all[0] = settings
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0), (.velocity, 0), (.boost, 0), (.clipper, 0),
+                                            (.clipDrive, 0), (.gatedReverb, 0), (.textureDelay, 0)]
+            for (p, v) in quiet { e.setParam(p, v) }
+            e.kitHandoff.publish(KitBuffers(name: "SAMPLER", samples: Array(repeating: sample, count: Pad.count), settings: all, bassHz: 110))
+            e.send(KEvent(kind: .pad, a: 0, value: 1))
+            var total: Float = 0
+            for b in 0...blocks.upperBound {
+                var left = [Float](repeating: 0, count: 128), right = left
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+                if blocks.contains(b) { total += left.reduce(0) { $0 + $1 * $1 } }
+            }
+            return total
+        }
+        let plain = PadSettings()
+        var shaped = PadSettings(); shaped.sampler = SamplerSettings()
+        shaped.sampler?.setEnvelope(.volume) { $0.on = true; $0.attack = 0; $0.hold = 0; $0.decay = 0.15; $0.sustain = 0 }
+        let tail = 100...140
+        check(energy(plain, blocks: tail) > 1 && energy(shaped, blocks: tail) < energy(plain, blocks: tail) * 0.01,
+              "Sampler: the Volume envelope shapes the hit")
+        var filtered = PadSettings(); filtered.sampler = SamplerSettings(); filtered.sampler?.cutoff = 0.2; filtered.sampler?.filterType = .lp
+        check(energy(filtered, blocks: 5...20) < energy(plain, blocks: 5...20) * 0.05, "Sampler: the filter (MOD X) takes the top off")
+        let short = SampleBuffer(left: (0..<3_000).map { _ in 0.2 }, sampleRate: rate)
+        var looped = PadSettings(); looped.sampler = SamplerSettings(); looped.sampler?.useLoop = true
+        check(energy(looped, short, blocks: 60...80) > 1 && energy(plain, short, blocks: 60...80) < energy(looped, short, blocks: 60...80) * 0.01,
+              "Sampler: Use loop points keeps a short sound going")
+        var offset = PadSettings(); offset.sampler = SamplerSettings(); offset.sampler?.startOffset = 0.9
+        check(energy(plain, blocks: 50...60) > 1 && energy(offset, blocks: 50...60) < energy(plain, blocks: 50...60) * 0.01,
+              "Sampler: START OFFSET starts the sound later in")
     }
 
     /// A one-shot's tail is independent of note length. Exercise every sequential pad,
