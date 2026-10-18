@@ -144,7 +144,9 @@ enum MIDIFile {
     /// One track, channel 10. Pads are notes 36...47; chromatic 808 notes are 48...84
     /// (60 = its tuning). MIDI export bounds bass pitches to that chromatic range so they
     /// cannot be mistaken for drum pads on import; audio rendering keeps the full pitch.
-    static func write(_ pattern: PatternData, tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
+    static func write(_ source: PatternData, tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
+        // The file carries what you hear: HUMANIZE's played feel included.
+        let pattern = PatternSet.humanized(source)
         let ppq = Int(PatternData.ppq)
         var events: [(tick: Int, bytes: [UInt8])] = []
         let loopLen = max(1, Int(pattern.lengthTicks))
@@ -190,7 +192,9 @@ enum MIDIFile {
     /// Twelve channels: a track per pad, pad n on MIDI channel n + 1 (the same layout as MIDI OUT's
     /// multi-out), every note around C3 (60 = the pad's own pitch, the 808's tuning) so a DAW's
     /// piano roll has full control of each hit's pitch and velocity. Tracks carry the channel names.
-    static func writeChannels(_ pattern: PatternData, names: [String], tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
+    static func writeChannels(_ source: PatternData, names: [String], tempo: Double, bounce: Float, bars: Int, to url: URL) throws {
+        // The file carries what you hear: HUMANIZE's played feel included.
+        let pattern = PatternSet.humanized(source)
         let ppq = Int(PatternData.ppq)
         let loopLen = max(1, Int(pattern.lengthTicks))
         let repeats = max(1, Int(ceil(Double(bars * ppq * 4) / Double(loopLen))))

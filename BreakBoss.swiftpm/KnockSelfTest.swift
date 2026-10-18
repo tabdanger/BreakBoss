@@ -1327,13 +1327,41 @@ enum KnockSelfTest {
         check(KnockController.padMask(muted: muted, solo: solo) == 0x0FFD, "mute/solo: mute silences one channel")
         solo[0] = true; solo[1] = true
         check(KnockController.padMask(muted: muted, solo: solo) == 0x0001, "mute/solo: solo plays only soloed channels, mutes still win")
-        // Humanize is repeatable and doesn't touch the notes you see.
-        var h = PatternData(name: "H", lengthTicks: bar, events: (0..<16).map { GrooveEvent(tick: Int32($0) * step, pad: 4, velocity: 0.7) })
+        // Humanize = the live drummer: repeatable, and it doesn't touch the notes you see.
+        var h = PatternData(name: "H", lengthTicks: bar * 4, events: [])
+        for b4 in 0..<4 {
+            let b0 = Int32(b4) * bar
+            h.events += (0..<16).map { GrooveEvent(tick: b0 + Int32($0) * step, pad: Int8(Pad.hat.rawValue), velocity: 0.7) }
+            h.events += [GrooveEvent(tick: b0, pad: Int8(Pad.kick.rawValue), velocity: 0.9),
+                         GrooveEvent(tick: b0, pad: Int8(Pad.bass808.rawValue), velocity: 0.9, length: 48),
+                         GrooveEvent(tick: b0 + 4 * step, pad: Int8(Pad.snare.rawValue), velocity: 0.95),
+                         GrooveEvent(tick: b0 + 7 * step, pad: Int8(Pad.snare.rawValue), velocity: 0.35),
+                         GrooveEvent(tick: b0 + 12 * step, pad: Int8(Pad.snare.rawValue), velocity: 0.95)]
+        }
+        h.sort()
         h.humanize = 0.8
         let h1 = PatternSet.humanized(h), h2 = PatternSet.humanized(h)
         check(h1 == h2 && h1.events != h.events, "humanize: same pattern, same feel")
-        check(h1.events.allSatisfy { abs($0.velocity - 0.7) < 0.2 } && zip(h1.events, h.events).allSatisfy { abs($0.0.tick - $0.1.tick) <= 6 },
-              "humanize: small timing and velocity changes")
+        check(zip(h1.events, h.events).allSatisfy { $0.0.tick == $0.1.tick && $0.0.pad == $0.1.pad && abs($0.0.feel) <= LiveDrummer.maxFeel },
+              "humanize: notes stay on their steps, the feel stays small")
+        func avg(_ pick: (GrooveEvent) -> Bool, _ value: (GrooveEvent) -> Float) -> Float {
+            let x = h1.events.filter(pick).map(value)
+            return x.isEmpty ? 0 : x.reduce(0, +) / Float(x.count)
+        }
+        let hat = Int8(Pad.hat.rawValue), snare = Int8(Pad.snare.rawValue)
+        check(avg({ $0.pad == hat && $0.tick % 96 == 0 }, { $0.velocity }) > avg({ $0.pad == hat && $0.tick % 48 == 24 }, { $0.velocity }) + 0.05,
+              "humanize: hats on the beat louder than the e / a")
+        check(avg({ $0.pad == snare && $0.velocity > 0.6 }, { $0.feel }) > avg({ $0.pad == hat }, { $0.feel }) + 0.3,
+              "humanize: backbeats laid back behind the hats")
+        check(h1.events.filter { $0.pad == snare && $0.tick % 96 == 72 }.allSatisfy { $0.velocity < 0.45 }
+              && h1.events.allSatisfy { $0.velocity <= 0.97 }, "humanize: ghosts stay quiet, peaks under 127")
+        check(h1.events.filter { $0.pad == Int8(Pad.bass808.rawValue) }.allSatisfy { b in
+                  h1.events.contains { $0.pad == Int8(Pad.kick.rawValue) && $0.tick == b.tick && $0.feel == b.feel } && b.velocity == 0.9 && b.semis == 0 },
+              "humanize: the 808 stays locked to the kick")
+        let hatPitches = h1.events.filter { $0.pad == hat }.map(\.semis)
+        check(Set(hatPitches).count > 8 && hatPitches.allSatisfy { abs($0) < 0.2 }, "humanize: repeated hits a few cents apart")
+        h.humanize = nil
+        check(PatternSet.humanized(h) == h, "humanize: off plays the pattern as written")
         // Engine: per-hit pitch, mute mask, record ring, playhead.
         let e = KnockEngine()
         e.prepare(sampleRate: 48_000, maxFrames: 256)
