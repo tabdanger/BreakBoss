@@ -55,10 +55,13 @@ enum SamplerDeclick: Int, Codable, CaseIterable {
 
 /// Mode (stretch method): Resample changes pitch with speed, like tape; Stretch keeps pitch while
 /// the length changes (and keeps the length while PITCH changes); Stretch pro uses longer grains for
-/// smoother tonal sounds.
+/// smoother tonal sounds. Realtime does what Stretch does while the sound plays (grains read live),
+/// so tempo changes and every note's pitch keep the length with nothing computed first.
 enum SamplerStretch: Int, Codable, CaseIterable {
-    case resample, stretch, stretchPro
-    var title: String { ["Resample", "Stretch", "Stretch pro"][rawValue] }
+    case resample, stretch, stretchPro, realtime
+    var title: String { ["Resample", "Stretch", "Stretch pro", "Realtime"][rawValue] }
+    /// Computed into the sound before it plays (the other two act while it plays).
+    var precomputed: Bool { self == .stretch || self == .stretchPro }
 }
 
 /// TIME: how long the sample lasts from start to end.
@@ -180,6 +183,11 @@ struct SamplerSettings: Codable, Equatable {
     var startOffset: Float = 0
     var useLoop = false
     var pingPong = false
+    /// Custom loop points (the waveform's loop flags, or the properties menu), as parts of the sound: 0…1.
+    var loopStart: Float = 0
+    var loopEnd: Float = 1
+    /// Region markers added on the waveform (parts of the sound, 0…1); START OFFSET snaps to them.
+    var markers: [Float] = []
     // Time stretching: PITCH ±12 semitones, MUL ×¼…×4 (0.5 = ×1), TIME, Mode
     var stretchPitch: Float = 0
     var multiplier: Float = 0.5
@@ -233,17 +241,43 @@ struct SamplerSettings: Codable, Equatable {
     /// Everything the SAMPLE page computes into the sound, and the tempo when TIME follows it.
     /// Nil when nothing does (the sound is used as it is).
     func offline(bpm: Double) -> SamplerOffline? {
+        let pre = stretch.precomputed
+        // the loop points only change the sound when CROSSFADE blends across them
+        let blend = crossfade > 0.000_1
         let o = SamplerOffline(resample: resample, declick: declick, removeDC: removeDC, normalize: normalize, reverse: reverse,
                                reversePolarity: reversePolarity, fadeStereo: fadeStereo, swapStereo: swapStereo,
                                start: start, length: length, fadeIn: fadeIn, fadeOut: fadeOut, crossfade: crossfade, trim: trim,
-                               stretch: stretch, stretchPitch: stretch == .resample ? 0 : stretchPitch,
-                               multiplier: stretch == .resample ? 0.5 : multiplier, time: stretch == .resample ? .none : time,
-                               bpm: stretch != .resample && time.followsTempo ? bpm : 0)
+                               loopStart: blend ? loopStart : 0, loopEnd: blend ? loopEnd : 1,
+                               stretch: pre ? stretch : .resample, stretchPitch: pre ? stretchPitch : 0,
+                               multiplier: pre ? multiplier : 0.5, time: pre ? time : .none,
+                               bpm: pre && time.followsTempo ? bpm : 0)
         return o == SamplerOffline() ? nil : o
+    }
+
+    /// Custom loop points are set (not the whole sound).
+    var customLoop: Bool { loopStart > 0.000_1 || loopEnd < 0.999_9 }
+
+    /// After a waveform edit: the SAMPLE page's computed settings are in the new file now, so they go
+    /// back to neutral (Resample / Realtime stretching plays live and stays), and the loop points and
+    /// markers move with the audio (`map` takes a part of the old sound to the new one, nil = cut out).
+    mutating func baked(_ map: (Float) -> Float?) {
+        let d = SamplerSettings()
+        resample = d.resample; declick = d.declick; removeDC = d.removeDC; normalize = d.normalize; reverse = d.reverse
+        reversePolarity = d.reversePolarity; fadeStereo = d.fadeStereo; swapStereo = d.swapStereo
+        start = d.start; length = d.length; fadeIn = d.fadeIn; fadeOut = d.fadeOut; crossfade = d.crossfade; trim = d.trim
+        if stretch.precomputed { stretch = .resample; stretchPitch = 0; multiplier = 0.5; time = .none }
+        markers = markers.compactMap(map)
+        if customLoop {
+            let a = map(loopStart) ?? 0, b = map(loopEnd) ?? 1
+            loopStart = min(a, b); loopEnd = max(a, b)
+            if loopEnd - loopStart < 0.001 { loopStart = 0; loopEnd = 1 }
+        }
+        startOffset = map(startOffset) ?? 0
     }
 
     private enum CodingKeys: String, CodingKey {
         case pitch, range, keepOnDisk, resample, loadRegions, loadSliceMarkers, declick, startOffset, useLoop, pingPong
+        case loopStart, loopEnd, markers
         case stretchPitch, multiplier, time, stretch, removeDC, normalize, reverse, reversePolarity, fadeStereo, swapStereo
         case start, length, fadeIn, fadeOut, crossfade, trim, envelopes, lfos, cutoff, resonance, filterType
         case rootNote, mainPitch, addToKey, fineTune
@@ -261,6 +295,7 @@ extension SamplerSettings {
         loadRegions = v(.loadRegions, d.loadRegions); loadSliceMarkers = v(.loadSliceMarkers, d.loadSliceMarkers)
         declick = v(.declick, d.declick); startOffset = v(.startOffset, d.startOffset)
         useLoop = v(.useLoop, d.useLoop); pingPong = v(.pingPong, d.pingPong)
+        loopStart = v(.loopStart, d.loopStart); loopEnd = v(.loopEnd, d.loopEnd); markers = v(.markers, d.markers)
         stretchPitch = v(.stretchPitch, d.stretchPitch); multiplier = v(.multiplier, d.multiplier)
         time = v(.time, d.time); stretch = v(.stretch, d.stretch)
         removeDC = v(.removeDC, d.removeDC); normalize = v(.normalize, d.normalize); reverse = v(.reverse, d.reverse)
@@ -280,6 +315,7 @@ struct SamplerOffline: Equatable {
     var declick: SamplerDeclick = .outOnly
     var removeDC = false, normalize = false, reverse = false, reversePolarity = false, fadeStereo = false, swapStereo = false
     var start: Float = 0, length: Float = 1, fadeIn: Float = 0, fadeOut: Float = 0, crossfade: Float = 0, trim: Float = 0
+    var loopStart: Float = 0, loopEnd: Float = 1
     var stretch: SamplerStretch = .resample
     var stretchPitch: Float = 0
     var multiplier: Float = 0.5
@@ -347,18 +383,25 @@ enum SamplerProcessor {
         let outLen = Int(Double(n) * Double(o.fadeOut * o.fadeOut))
         if outLen > 1 { fade(&ol, &or, from: n - min(outLen, n), count: min(outLen, n), rising: false) }
 
-        // CROSSFADE: the end blends into the start, so the loop (from the end of the blend) is seamless
-        var loopStart = 0
-        let xLen = Int(Double(n / 2) * Double(o.crossfade.clamped(0, 1)))
+        // CROSSFADE: the loop's end blends into the audio leading up to its start, so the jump back is
+        // seamless. With no audio before the loop start, the end blends into the start and the loop
+        // runs from the end of the blend.
+        var loopStart = 0, loopEnd = 0
+        let ls = min(n - 1, max(0, Int(Double(o.loopStart.clamped(0, 1)) * Double(n))))
+        let le = max(ls + 1, min(n, Int(Double(o.loopEnd.clamped(0, 1)) * Double(n))))
+        let xLen = Int(Double((le - ls) / 2) * Double(o.crossfade.clamped(0, 1)))
         if xLen > 1 {
+            let lead = ls >= xLen
             for i in 0..<xLen {
                 let t = Float(i + 1) / Float(xLen)
                 let w = 0.5 - 0.5 * cosf(.pi * t)
-                let j = n - xLen + i
-                ol[j] = ol[j] * (1 - w) + ol[i] * w
-                or[j] = or[j] * (1 - w) + or[i] * w
+                let j = le - xLen + i
+                let k = lead ? ls - xLen + i : ls + i
+                ol[j] = ol[j] * (1 - w) + ol[k] * w
+                or[j] = or[j] * (1 - w) + or[k] * w
             }
-            loopStart = xLen
+            loopStart = lead ? ls : ls + xLen
+            loopEnd = le
         }
 
         // Fade stereo: the sound moves from the left channel to the right
@@ -379,6 +422,7 @@ enum SamplerProcessor {
                 (ol, or) = stretch(ol, or, by: (f * p).clamped(0.1, 10), window: max(256, window))
                 if abs(p - 1) > 0.000_1 { ol = convert(ol, step: p); or = convert(or, step: p) }
                 loopStart = Int(Double(loopStart) * f)
+                loopEnd = Int(Double(loopEnd) * f)
                 stretched = f
                 remap { Int(Double($0) * f) }
             }
@@ -394,6 +438,7 @@ enum SamplerProcessor {
         out.bitDepth = raw.bitDepth
         out.stereo = raw.stereo || o.fadeStereo
         out.loopStart = min(max(0, loopStart), max(0, ol.count - 2))
+        out.loopEnd = loopEnd > out.loopStart + 1 ? min(loopEnd, ol.count - 1) : 0
         out.cues = marks.filter { $0 > 0 && $0 < ol.count }
         if region.count == 2, region[0] >= 0, region[1] < ol.count, region[1] - region[0] > 32 { out.region = region[0]...region[1] }
         if d.bleeds { out.fadeMarks = (Int(Double(fin) * stretched), ol.count - Int(Double(fout) * stretched)) }
@@ -517,6 +562,14 @@ struct SamplerRT {
     var startOffset: Float = 0
     var loop = false
     var pingPong = false
+    /// The loop points, as parts of the sound (a CROSSFADE computes its own into the sound instead).
+    var loopStart: Float = 0
+    var loopEnd: Float = 1
+    /// Realtime stretching: TIME × MUL changes the length and PITCH the pitch, each on its own, live.
+    var realtime = false
+    var rtTime: SamplerTime = .none
+    var rtMul: Double = 1
+    var rtPitch: Float = 0
     /// Load regions: the loop runs over the file's own loop region (WAV 'smpl') when it has one.
     var regions = false
     /// Resample mode's speed: TIME, MUL and PITCH change it as they would a tape.
@@ -540,17 +593,28 @@ struct SamplerRT {
         startOffset = s.startOffset.clamped(0, 0.99)
         loop = s.useLoop
         pingPong = s.pingPong
+        if s.customLoop { loopStart = s.loopStart.clamped(0, 1); loopEnd = s.loopEnd.clamped(0, 1) }
         regions = s.loadRegions
         if s.stretch == .resample {
             tapeTime = s.time
             tapeMul = s.mul
             tapePitch = s.stretchPitch
+        } else if s.stretch == .realtime {
+            realtime = true
+            rtTime = s.time
+            rtMul = s.mul
+            rtPitch = s.stretchPitch
         }
         pan = s.envelope(.pan); volume = s.envelope(.volume); modX = s.envelope(.modX); modY = s.envelope(.modY); pitch = s.envelope(.pitch)
         lfoPan = s.lfo(.pan); lfoVolume = s.lfo(.volume); lfoX = s.lfo(.modX); lfoY = s.lfo(.modY); lfoPitch = s.lfo(.pitch)
         cutoff = s.cutoff.clamped(0, 1)
         resonance = s.resonance.clamped(0, 1)
         filterType = s.filterType
+    }
+
+    /// Realtime mode: how much longer the sound plays (1 = as it is).
+    func realtimeFactor(sourceSeconds: Double, bpm: Double) -> Double {
+        (rtTime.factor(sourceSeconds: sourceSeconds, bpm: bpm) * rtMul).clamped(0.1, 10)
     }
 
     /// Resample mode's playback speed for a sample this long at this tempo.
@@ -694,6 +758,13 @@ struct SamplerVoice {
     var pingPong = false
     var direction: Double = 1
     var loopStart: Double = 0, loopEnd: Double = 0
+    // Realtime stretching: the voice's position moves on at `timeStep` (the length) while two
+    // overlapping grains read the sound from there at the note's speed × `grainPitch` (the pitch).
+    var grains = false
+    var timeStep: Double = 1
+    var grainPitch: Double = 1
+    var grainA: Double = 0, grainB: Double = 0
+    var grainAge = 0, grainHalf = 1_680
 
     init() {}
 
@@ -806,4 +877,163 @@ struct SamplerVoice {
         default: return v2
         }
     }
+}
+
+// MARK: - Editing the waveform (Tyrone, Oct 18: red selection handles, cut / copy / paste, delete,
+// trim silence, fades)
+//
+// Edits work on the sound the track plays now and are saved as a new WAV in Samples/Edits, which
+// the track then loads (the old file stays, so the window's UNDO can go back to it).
+
+enum SampleEdit {
+    case delete(Range<Int>)
+    /// Puts `clip` in at `at` (insert) or over `over` (replace).
+    case insert(SampleClip, at: Int)
+    case replace(SampleClip, over: Range<Int>)
+    case trimSilence
+    case fadeIn(Range<Int>)
+    case fadeOut(Range<Int>)
+}
+
+/// Copied audio (any track can paste it).
+struct SampleClip {
+    var left: [Float]
+    var right: [Float]
+    var sampleRate: Double
+    var count: Int { left.count }
+}
+
+enum SampleEditor {
+    static func clip(_ s: SampleBuffer, _ range: Range<Int>) -> SampleClip {
+        let r = range.clamped(to: 0..<s.length)
+        return SampleClip(left: Array(UnsafeBufferPointer(start: s.left + r.lowerBound, count: r.count)),
+                          right: Array(UnsafeBufferPointer(start: s.right + r.lowerBound, count: r.count)), sampleRate: s.sampleRate)
+    }
+
+    /// The clip at `rate` (smooth cubic if it came from a sound at another rate).
+    static func converted(_ c: SampleClip, to rate: Double) -> SampleClip {
+        guard rate > 0, abs(c.sampleRate - rate) > 0.5 else { return c }
+        let step = c.sampleRate / rate
+        return SampleClip(left: SamplerProcessor.convert(c.left, step: step), right: SamplerProcessor.convert(c.right, step: step), sampleRate: rate)
+    }
+
+    /// The edited audio, and where a point of the old sound (0…1) lands in the new one (nil = cut out).
+    static func apply(_ edit: SampleEdit, to s: SampleBuffer) -> (left: [Float], right: [Float], map: (Float) -> Float?) {
+        var l = Array(UnsafeBufferPointer(start: s.left, count: s.length))
+        var r = Array(UnsafeBufferPointer(start: s.right, count: s.length))
+        let n = max(1, l.count)
+        func clampRange(_ x: Range<Int>) -> Range<Int> { x.clamped(to: 0..<l.count) }
+        /// A part of the old sound to the new: `cut` frames removed at `at`, `added` put in there.
+        func mapper(at: Int, cut: Int, added: Int) -> (Float) -> Float? {
+            let newCount = Float(max(1, n - cut + added))
+            return { f in
+                let i = Int((f * Float(n)).rounded())
+                if i < at { return Float(i) / newCount }
+                if i < at + cut { return cut > 0 && i > at ? nil : Float(at) / newCount }
+                return (Float(i - cut + added) / newCount).clamped(0, 1)
+            }
+        }
+        switch edit {
+        case .delete(let range):
+            let x = clampRange(range)
+            guard !x.isEmpty, x.count < l.count else { return (l, r, { $0 }) }
+            l.removeSubrange(x); r.removeSubrange(x)
+            return (l, r, mapper(at: x.lowerBound, cut: x.count, added: 0))
+        case .insert(let c, let at):
+            let c = converted(c, to: s.sampleRate)
+            let p = min(max(0, at), l.count)
+            l.insert(contentsOf: c.left, at: p); r.insert(contentsOf: c.right, at: p)
+            return (l, r, mapper(at: p, cut: 0, added: c.count))
+        case .replace(let c, let over):
+            let c = converted(c, to: s.sampleRate)
+            let x = clampRange(over)
+            l.replaceSubrange(x, with: c.left); r.replaceSubrange(x, with: c.right)
+            return (l, r, mapper(at: x.lowerBound, cut: x.count, added: c.count))
+        case .trimSilence:
+            // quieter than 60 dB under the peak, at either end (a hair is kept before the first sound)
+            var peak: Float = 0
+            for i in l.indices { peak = max(peak, abs(l[i]), abs(r[i])) }
+            let floor = max(peak * 0.001, 0.000_01)
+            guard let first = l.indices.first(where: { abs(l[$0]) > floor || abs(r[$0]) > floor }),
+                  let last = l.indices.last(where: { abs(l[$0]) > floor || abs(r[$0]) > floor }) else { return (l, r, { $0 }) }
+            let a = max(0, first - Int(s.sampleRate * 0.002))
+            let b = min(l.count, last + 1)
+            guard a > 0 || b < l.count else { return (l, r, { $0 }) }
+            let kept = b - a
+            return (Array(l[a..<b]), Array(r[a..<b]), { f in
+                let i = Int((f * Float(n)).rounded())
+                return i < a || i > b ? nil : Float(i - a) / Float(max(1, kept))
+            })
+        case .fadeIn(let range), .fadeOut(let range):
+            let x = clampRange(range)
+            let rising: Bool
+            if case .fadeIn = edit { rising = true } else { rising = false }
+            let count = max(1, x.count)
+            for (k, i) in x.enumerated() {
+                let t = Float(k) / Float(count)
+                let w = 0.5 - 0.5 * cosf(.pi * t)
+                let g = rising ? w : 1 - w
+                l[i] *= g; r[i] *= g
+            }
+            return (l, r, { $0 })
+        }
+    }
+}
+
+// MARK: - Envelope presets (Tyrone, Oct 18: AHDSR presets for 808s, kicks and snares, and your own)
+
+struct SamplerEnvelopePreset: Codable, Equatable, Identifiable {
+    var name: String
+    /// "808", "Kick" or "Snare".
+    var kind: String
+    /// The five envelopes (SamplerTarget order): presets shape the volume and often the pitch.
+    var envelopes: [SamplerEnvelope]
+    var id: String { kind + "/" + name }
+
+    static let kinds = ["808", "Kick", "Snare"]
+
+    private static func make(_ name: String, _ kind: String, hold: Float, decay: Float, sustain: Float = 0, release: Float,
+                             attack: Float = 0.04, decayTension: Float = 0, drop: Float = 0, dropDecay: Float = 0.25) -> SamplerEnvelopePreset {
+        var e = SamplerSettings.defaultEnvelopes
+        e[SamplerTarget.volume.rawValue] = SamplerEnvelope(on: true, delay: 0, attack: attack, hold: hold, decay: decay, sustain: sustain,
+                                                          release: release, attackTension: 0, decayTension: decayTension, releaseTension: -0.3, amount: 1)
+        if drop != 0 {
+            // the pitch starts `drop` × 12 semitones up and falls to the note (the knock of a kick, an 808's bite)
+            e[SamplerTarget.pitch.rawValue] = SamplerEnvelope(on: true, delay: 0, attack: 0, hold: 0, decay: dropDecay, sustain: 0,
+                                                             release: 0.1, attackTension: 0, decayTension: -0.6, releaseTension: 0, amount: drop)
+        }
+        return SamplerEnvelopePreset(name: name, kind: kind, envelopes: e)
+    }
+
+    /// The factory presets. Knob values: a time of v lasts v³ × 8 s (0.5 ≈ 1 s, 0.3 ≈ 0.2 s).
+    static let factory: [SamplerEnvelopePreset] = [
+        make("Long 808", "808", hold: 0.25, decay: 0.78, sustain: 0, release: 0.4, drop: 0.08),
+        make("Short 808", "808", hold: 0.18, decay: 0.55, release: 0.25, drop: 0.08),
+        make("Sliding 808", "808", hold: 0.3, decay: 0.7, sustain: 0.35, release: 0.45, drop: 0.25, dropDecay: 0.35),
+        make("Held 808", "808", hold: 0.2, decay: 0.6, sustain: 0.8, release: 0.35),
+        make("Punchy kick", "Kick", hold: 0.16, decay: 0.42, release: 0.15, drop: 0.5, dropDecay: 0.18),
+        make("Tight kick", "Kick", hold: 0.1, decay: 0.3, release: 0.1, attack: 0.02, decayTension: -0.5, drop: 0.35, dropDecay: 0.14),
+        make("Boomy kick", "Kick", hold: 0.2, decay: 0.6, release: 0.3, drop: 0.3, dropDecay: 0.3),
+        make("Snappy snare", "Snare", hold: 0.12, decay: 0.35, release: 0.15, attack: 0.02, decayTension: -0.6),
+        make("Fat snare", "Snare", hold: 0.18, decay: 0.48, release: 0.25, drop: 0.12, dropDecay: 0.15),
+        make("Roomy snare", "Snare", hold: 0.18, decay: 0.55, sustain: 0.1, release: 0.42)
+    ]
+
+    /// Your own presets (saved on this device).
+    static var saved: [SamplerEnvelopePreset] {
+        get {
+            guard let d = UserDefaults.standard.data(forKey: key) else { return [] }
+            return (try? JSONDecoder().decode([SamplerEnvelopePreset].self, from: d)) ?? []
+        }
+        set { UserDefaults.standard.set(try? JSONEncoder().encode(newValue), forKey: key) }
+    }
+    private static let key = "samplerEnvelopePresets"
+
+    static func save(_ p: SamplerEnvelopePreset) {
+        var all = saved.filter { $0.id != p.id }
+        all.append(p)
+        saved = all
+    }
+
+    static func delete(_ p: SamplerEnvelopePreset) { saved = saved.filter { $0.id != p.id } }
 }

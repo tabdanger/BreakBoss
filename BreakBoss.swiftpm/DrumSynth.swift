@@ -67,6 +67,8 @@ final class SampleBuffer {
     var stereo = false
     /// Where a loop starts again (the sampler's CROSSFADE moves it in). Set before publishing.
     var loopStart = 0
+    /// Where a CROSSFADE loop ends (0 = the sound's end, or the sampler's own loop points).
+    var loopEnd = 0
     /// The file's slice markers (WAV cue points) and its loop region (WAV 'smpl'), in frames.
     var cues: [Int] = []
     var region: ClosedRange<Int>?

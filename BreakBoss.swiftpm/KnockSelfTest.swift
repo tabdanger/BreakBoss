@@ -548,6 +548,54 @@ enum KnockSelfTest {
         var offset = PadSettings(); offset.sampler = SamplerSettings(); offset.sampler?.startOffset = 0.9
         check(energy(plain, blocks: 50...60) > 1 && energy(offset, blocks: 50...60) < energy(plain, blocks: 50...60) * 0.01,
               "Sampler: START OFFSET starts the sound later in")
+
+        // Realtime stretching: ×2 plays twice as long with nothing computed first
+        let quarter = SampleBuffer(left: (0..<12_000).map { sinf(Float($0) * 2 * .pi * 220 / 48_000) * 0.5 }, sampleRate: rate)
+        var realtime = PadSettings(); realtime.sampler = SamplerSettings()
+        realtime.sampler?.stretch = .realtime; realtime.sampler?.multiplier = 0.75
+        check(realtime.sampler?.offline(bpm: 120) == nil, "Sampler: Realtime stretching computes nothing ahead")
+        let after = 110...160
+        check(energy(plain, quarter, blocks: after) < 0.01 && energy(realtime, quarter, blocks: after) > 1,
+              "Sampler: Realtime ×2 keeps a quarter-second sound going twice as long")
+
+        // custom loop points with a crossfade: the loop's end blends into what leads up to its start
+        var looping = SamplerSettings(); looping.loopStart = 0.5; looping.loopEnd = 0.9; looping.crossfade = 0.5; looping.declick = .off
+        let blended = SamplerProcessor.process(tone, looping.offline(bpm: 120)!, engineRate: rate)
+        check(abs(blended.loopStart - 24_000) < 2 && abs(blended.loopEnd - 43_200) < 2,
+              "Sampler: loop points with CROSSFADE keep the loop where it was set (\(blended.loopStart)…\(blended.loopEnd))")
+        var loopOnly = SamplerSettings(); loopOnly.loopStart = 0.5
+        check(loopOnly.offline(bpm: 120) == nil, "Sampler: loop points alone compute nothing ahead")
+
+        // the waveform's edits
+        let edited = SampleEditor.apply(.delete(0..<4_800), to: ramp)
+        check(edited.left.count == 4_800 && abs(edited.left[0] - ramp.left[4_800]) < 0.000_1,
+              "Sampler: DELETE takes the selection out")
+        check(abs((edited.map(0.75) ?? -1) - 0.5) < 0.001 && edited.map(0.25) == nil,
+              "Sampler: markers after a cut move with the audio, those in it go")
+        let piece = SampleEditor.clip(ramp, 0..<960)
+        let inserted = SampleEditor.apply(.insert(piece, at: 4_800), to: ramp)
+        check(inserted.left.count == 10_560 && abs(inserted.left[4_800] - ramp.left[0]) < 0.000_1,
+              "Sampler: PASTE inserts at the selection")
+        let replaced = SampleEditor.apply(.replace(piece, over: 0..<4_800), to: ramp)
+        check(replaced.left.count == 960 + 4_800, "Sampler: PASTE can replace the selection")
+        let padded = SampleBuffer(left: Array(repeating: 0, count: 4_800) + (0..<4_800).map { sinf(Float($0) * 0.1) * 0.5 } + Array(repeating: 0, count: 9_600),
+                                  sampleRate: rate)
+        let trimmedSilence = SampleEditor.apply(.trimSilence, to: padded)
+        check(trimmedSilence.left.count < 5_000 && trimmedSilence.left.count > 4_700,
+              "Sampler: TRIM takes the silence off both ends (\(trimmedSilence.left.count))")
+        let faded = SampleEditor.apply(.fadeIn(0..<9_600), to: ramp)
+        check(abs(faded.left[1]) < 0.001 && abs(faded.left[9_599] - ramp.left[9_599]) < 0.01, "Sampler: FADE IN rises from silence")
+        var bake = SamplerSettings(); bake.normalize = true; bake.stretch = .stretch; bake.multiplier = 1; bake.markers = [0.75]
+        bake.baked { $0 < 0.5 ? nil : ($0 - 0.5) * 2 }
+        check(bake.offline(bpm: 120) == nil && bake.markers == [0.5], "Sampler: an edit bakes the computed settings into the file")
+
+        // envelope presets
+        let presets = SamplerEnvelopePreset.factory
+        check(SamplerEnvelopePreset.kinds.allSatisfy { k in presets.contains { $0.kind == k } }
+              && presets.allSatisfy { $0.envelopes[SamplerTarget.volume.rawValue].on },
+              "Sampler: envelope presets for 808s, kicks and snares shape the volume")
+        let round = (try? JSONEncoder().encode(presets)).flatMap { try? JSONDecoder().decode([SamplerEnvelopePreset].self, from: $0) }
+        check(round == presets, "Sampler: envelope presets save and load")
     }
 
     /// A one-shot's tail is independent of note length. Exercise every sequential pad,

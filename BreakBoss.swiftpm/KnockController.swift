@@ -684,6 +684,61 @@ final class KnockController: ObservableObject {
         }
     }
 
+    /// Audio copied in a SAMPLER window's waveform (any track can paste it).
+    @Published var sampleClipboard: SampleClip?
+    /// A waveform edit is being saved.
+    @Published var sampleEditing = false
+
+    /// Edits the sound the track plays now and loads the result: a new WAV in Samples/Edits (the
+    /// SAMPLE page's computed settings are in it, so they go back to neutral; the loop points and
+    /// markers move with the audio). `done` gets the file's name, or nil if it couldn't be saved.
+    func editSample(_ pad: Int, _ edit: SampleEdit, done: ((String?) -> Void)? = nil) {
+        guard (0..<Pad.count).contains(pad), !sampleEditing, let source = playedSample(pad) else { done?(nil); return }
+        sampleEditing = true
+        let base = (padName(pad) as NSString).lastPathComponent
+        let generation = kitGeneration
+        kitQueue.async { [weak self] in
+            let (l, r, map) = SampleEditor.apply(edit, to: source)
+            var name: String?
+            var buffer: SampleBuffer?
+            if !l.isEmpty {
+                let folder = KnockFolders.samples.appendingPathComponent("Edits", isDirectory: true)
+                try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                let stem = base.replacingOccurrences(of: #" edit \d+$"#, with: "", options: .regularExpression)
+                var k = 1
+                var url = folder.appendingPathComponent("\(stem) edit \(k).wav")
+                while FileManager.default.fileExists(atPath: url.path) { k += 1; url = folder.appendingPathComponent("\(stem) edit \(k).wav") }
+                if (try? WavWriter.write(left: l, right: r, sampleRate: source.sampleRate, to: url)) != nil,
+                   let loaded = try? SampleLoader.load(url) {
+                    name = "Edits/" + url.lastPathComponent
+                    buffer = loaded
+                }
+            }
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.sampleEditing = false
+                guard let name, let buffer, generation == self.kitGeneration, self.kitSamples.count == Pad.count else {
+                    if name == nil { self.notice = "That edit couldn't be saved." }
+                    done?(nil); return
+                }
+                var ps = self.state.pads[pad]
+                ps.sampleFile = name
+                if var sm = ps.sampler { sm.baked(map); ps.sampler = sm }
+                self.state.pads[pad] = ps
+                self.stockSampleNames[pad] = nil
+                var samples = self.kitSamples
+                samples[pad] = buffer
+                self.kitSamples = samples
+                self.republishKit()
+                self.scheduleSave()
+                done?(name)
+            }
+        }
+    }
+
+    /// Puts a track back as it was before an edit (the window's UNDO).
+    func restorePad(_ pad: Int, _ settings: PadSettings) { setPadSettings(pad, settings) }
+
     // MARK: Pad editor
 
     func setPadSettings(_ pad: Int, _ settings: PadSettings) {
