@@ -740,7 +740,7 @@ final class KnockController: ObservableObject {
                                         renderSampleRate: rate, layers: playedLayers))
         e.send(KEvent(kind: .padPitched, a: Int32(pad + 128 * 64), value: 1))
         let blocks = Int(1.5 * rate / 128)
-        var l2: Double = 0, r2: Double = 0, early: Double = 0, late: Double = 0, diff: Double = 0
+        var l2: Double = 0, r2: Double = 0, early: Double = 0, late: Double = 0, diff: Double = 0, quarter: Double = 0
         var crossings = 0, last: Float = 0
         var left = [Float](repeating: 0, count: 128), right = left
         for b in 0..<blocks {
@@ -750,14 +750,17 @@ final class KnockController: ObservableObject {
                 let x = Double(left[i]), y = Double(right[i])
                 l2 += x * x; r2 += y * y
                 if b < blocks / 8 { early += x * x + y * y } else if b > blocks / 2 { late += x * x + y * y }
+                // crossings and brightness on the mono sum, so a hard-panned sound still counts
+                let m = (left[i] + right[i]) * 0.5
                 if b < blocks / 4 {
-                    if (left[i] >= 0) != (last >= 0) { crossings += 1 }
-                    diff += Double((left[i] - last) * (left[i] - last))
+                    if (m >= 0) != (last >= 0) { crossings += 1 }
+                    diff += Double((m - last) * (m - last))
+                    quarter += Double(m * m)
                 }
-                last = left[i]
+                last = m
             }
         }
-        return String(format: "L=%.4f R=%.4f early=%.4f late=%.4f zc=%d hf=%.4f", l2, r2, early, late, crossings, diff)
+        return String(format: "L=%.4f R=%.4f early=%.4f late=%.4f zc=%d hf=%.4f", l2, r2, early, late, crossings, diff / max(quarter, 1e-12))
     }
 
     /// Audio copied in a SAMPLER window's waveform (any track can paste it).

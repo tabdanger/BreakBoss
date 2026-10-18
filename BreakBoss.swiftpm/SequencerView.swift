@@ -458,6 +458,7 @@ struct SequencerView: View {
         .sheet(item: Binding(get: { trackSettingsID.flatMap { id in channels.first { $0.id == id } } }, set: { trackSettingsID = $0?.id })) { ch in
             VStack(spacing: 0) {
                 Text("TRACK SETTINGS").font(.system(size: 12, weight: .semibold, design: .monospaced)).foregroundColor(S.dim).padding(.top, 16)
+                    .accessibilityIdentifier("trackSettingsSheet")
                 channelStrip(ch).padding(.vertical, 12)
                 Spacer()
             }
@@ -466,7 +467,6 @@ struct SequencerView: View {
             // a sheet is its own window: the SOUND and MIDI menus need a menu layer of their own here
             .bbMenuHost()
             .preferredColorScheme(.dark).presentationDetents([.height(180), .medium])
-            .accessibilityIdentifier("trackSettingsSheet")
         }
         .sheet(item: Binding(get: { recordPad.map { PadID(pad: $0) } }, set: { recordPad = $0?.pad })) { target in
             ChannelRecordSheet(controller: controller, pad: target.pad)
@@ -931,6 +931,7 @@ struct SequencerView: View {
                 }
                 .frame(width: 150, alignment: .leading)
                 labelBox("waveform", "SOUND").bbMenu(title: ch.name, width: 320) { channelSampleItems(ch) }
+                    .accessibilityIdentifier("trackSound\(pad)")
                 labelBox("cable.connector", midiOutLabel(pad), lit: controller.midiOutOn && controller.midiOutChannels[pad] >= 0)
                     .bbMenu(title: "MIDI out · \(ch.name)", width: 240) { midiOutChannelItems(pad) }
                 divider

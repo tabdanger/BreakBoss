@@ -107,7 +107,7 @@ final class SamplerUITests: XCTestCase {
         settings.tap()
         XCTAssertTrue(app.staticTexts["TRACK SETTINGS"].waitForExistence(timeout: 5), "Track settings opens without crashing")
         snap("track-settings")
-        let sound = app.buttons.matching(NSPredicate(format: "label CONTAINS 'SOUND'")).firstMatch
+        let sound = any("trackSound0")
         if sound.waitForExistence(timeout: 2) {
             sound.tap()
             XCTAssertTrue(menuRow("Load a sample").waitForExistence(timeout: 3), "the SOUND menu opens inside Track settings")
@@ -180,10 +180,13 @@ final class SamplerUITests: XCTestCase {
         if box.waitForExistence(timeout: 3) { box.tap() } else { XCTFail("the presets have the box method"); dumpTree("presets") }
         _ = probe("box method")
 
-        // LFO on the volume: picking a shape brings it in
+        // LFO on the volume: picking a shape brings it in; AMT turned left inverts it (a short hit lands
+        // on the square's dip instead of its top)
+        let boxed = probe("before LFO")
         any("samplerLFOShape2").tap()
-        let lfo = probe("square LFO on volume")
-        XCTAssertNotEqual(lfo.l, open0.l, accuracy: 1e-6, "the LFO changes the sound")
+        turn("samplerKnobLFOAMT", by: -160)
+        let lfo = probe("square LFO on volume, inverted")
+        XCTAssertLessThan(lfo.l + lfo.r, (boxed.l + boxed.r) * 0.8, "the LFO changes the level (\(lfo) vs \(boxed))")
         snap("lfo")
 
         // a tempo length from a knob's own menu
@@ -225,6 +228,7 @@ final class SamplerUITests: XCTestCase {
         let arped = probe("arpeggiator up")
         XCTAssertNotEqual(arped.late, echoed.late, accuracy: echoed.late * 0.05 + 1e-6, "the arpeggiator changes the sound (\(arped) vs \(echoed))")
         any("samplerArpRangeUp").tap()
+        sleep(1)
         XCTAssertEqual(any("samplerArpRange").value as? String, "2", "RANGE steps up")
         any("samplerArpChord").tap()
         let major = menuRow("Minor 7")
@@ -235,8 +239,11 @@ final class SamplerUITests: XCTestCase {
         let levels = probe("levels vol down")
         XCTAssertLessThan(levels.l + levels.r, (chord.l + chord.r) * 0.7, "Levels VOL turns it down (\(levels) vs \(chord))")
         any("samplerPolyMaxUp").tap()
+        sleep(1)
+        if (any("samplerPolyMax").value as? String) != "1" { dumpTree("MAX stepper") }
         XCTAssertEqual(any("samplerPolyMax").value as? String, "1", "MAX steps up from no limit")
         any("samplerMono").tap()
+        sleep(1)
         XCTAssertEqual(any("samplerMono").value as? String, "on", "Mono switches on")
         snap("misc-turned")
         XCTAssertEqual(app.state, .runningForeground, "the app is still running")
