@@ -160,7 +160,7 @@ struct KnockState: Codable, Equatable {
             }
             for j in loop.events.indices {
                 loop.events[j].velocity = loop.events[j].velocity.clamped(0, 1)
-                loop.events[j].semis = loop.events[j].semis.clamped(-12, 24)
+                loop.events[j].semis = loop.events[j].semis.clamped(PatternEdit.semisRange.lowerBound, PatternEdit.semisRange.upperBound)
                 loop.events[j].length = loop.events[j].length.clamped(0, PatternEdit.barTicks * Int32(PatternEdit.maxBars))
             }
             loop.sort(); s.editedLoops[i] = loop
