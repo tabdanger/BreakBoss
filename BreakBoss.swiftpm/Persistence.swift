@@ -105,7 +105,7 @@ struct KnockState: Codable, Equatable {
         var pads = Array(source.prefix(Pad.count))
         while pads.count < Pad.count { pads.append(PadSettings()) }
         for i in pads.indices {
-            pads[i].level = pads[i].level.isFinite ? pads[i].level.clamped(0, 1) : 0.8
+            pads[i].level = pads[i].level.isFinite ? pads[i].level.clamped(0, PadSettings.maxLevel) : 0.8
             pads[i].pan = pads[i].pan.isFinite ? pads[i].pan.clamped(-1, 1) : 0
             pads[i].tune = pads[i].tune.isFinite ? pads[i].tune.clamped(-24, 24) : 0
             pads[i].decay = pads[i].decay.isFinite ? pads[i].decay.clamped(0.05, 1) : 1

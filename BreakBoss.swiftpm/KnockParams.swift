@@ -213,10 +213,10 @@ enum KnockMath {
     static func filterCutoff(_ v: Float) -> Float { 120 * powf(20_000 / 120, v) }
     /// CLIP DRIVE: 0 to +18 dB into the clipper.
     static func clipDriveDB(_ v: Float) -> Float { v * 18 }
-    /// OUTPUT: 0.75 is 0 dB, 1.0 is +6 dB, 0 is silent.
+    /// OUTPUT: 0.75 is 0 dB, 1.0 is +12 dB (200%, Tyrone, Oct 18), 0 is silent.
     static func outputDB(_ v: Float) -> Float {
         if v <= 0.001 { return -120 }
-        if v >= 0.75 { return (v - 0.75) / 0.25 * 6 }
+        if v >= 0.75 { return (v - 0.75) / 0.25 * 12 }
         // 40 dB per decade of knob travel: 0.75 -> 0 dB, 0.25 -> -19 dB, 0.05 -> -47 dB
         return 40 * log10f(v / 0.75)
     }

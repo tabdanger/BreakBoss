@@ -29,6 +29,10 @@ final class KnockController: ObservableObject {
     /// Each track's computed sound, and what it was computed from.
     private var samplerCache: [Int: (raw: SampleBuffer, key: SamplerOffline, buffer: SampleBuffer)] = [:]
     private var samplerWorking = false
+    /// Run once the kit being decoded is in the engine (a sound picked while a kit was loading).
+    private var afterKitLoad: [() -> Void] = []
+    /// Counts each pad's sound picks, so only the latest one loads.
+    private var padPicks = [UInt32](repeating: 0, count: Pad.count)
     /// Names for successfully loaded factory samples; these never become device-local imports.
     @Published private(set) var stockSampleNames: [Int: String] = [:]
     @Published private(set) var loadingKit = false
@@ -69,6 +73,16 @@ final class KnockController: ObservableObject {
         state = s
         pushAllToEngine()
         refreshLists()
+        // Once: MY SOUNDS copies of the levelled stock sounds go back to the originals (before the kit loads).
+        let restoreKey = "restoredStockCopies83"
+        if !UserDefaults.standard.bool(forKey: restoreKey) {
+            let stock = stockLibrary.allSounds.map(\.url)
+            kitQueue.async {
+                let n = SampleLoader.restoreStockCopies(stock)
+                if n > 0 { BugLog.shared.note("Reset \(n) saved copies of stock sounds to the originals") }
+                UserDefaults.standard.set(true, forKey: restoreKey)
+            }
+        }
         rebuildKit()
         rebuildLoops()
 
@@ -615,6 +629,9 @@ final class KnockController: ObservableObject {
                 self.stockSampleNames = stockNames
                 self.republishKit() // Apply edits made while decoding the kit.
                 self.loadingKit = false
+                let waiting = self.afterKitLoad
+                self.afterKitLoad = []
+                waiting.forEach { $0() }
                 if !failed.isEmpty {
                     self.notice = "Samples unavailable: \(failed.joined(separator: ", ")). Using synthesized sounds."
                 } else if let failure = stock.failure {
@@ -809,23 +826,34 @@ final class KnockController: ObservableObject {
     }
 
     /// Puts an audio file on a pad (it's copied into the Samples folder first).
-    func importSample(_ url: URL, toPad pad: Int) {
+    /// `loaded` runs once the engine has the new sound (the screen auditions it then, not before).
+    func importSample(_ url: URL, toPad pad: Int, loaded: (() -> Void)? = nil) {
         guard pad >= 0 && pad < Pad.count else { return }
         let generation = kitGeneration
+        // The pick that's wanted: a newer pick on this pad, or a kit / rack change, cancels it.
+        padPicks[pad] &+= 1
+        let pick = padPicks[pad]
+        let row = state.workspaceChannels?.first { $0.pad == pad }?.soundID
+        let kit = (state.kitID, state.userKit)
         kitQueue.async { [weak self] in
             do {
                 let name = try SampleLoader.copyIntoSamples(url)
                 let buffer = try SampleLoader.load(SampleLoader.urlInSamples(name))
                 DispatchQueue.main.async { [weak self] in
-                    guard let self, self.kitGeneration == generation else { return }
+                    guard let self, self.padPicks[pad] == pick, self.state.kitID == kit.0, self.state.userKit == kit.1,
+                          self.state.workspaceChannels?.first(where: { $0.pad == pad })?.soundID == row else { return }
                     self.state.pads[pad].sampleFile = name
                     self.stockSampleNames[pad] = nil
-                    if self.kitSamples.count == Pad.count {
+                    if self.kitGeneration == generation, self.kitSamples.count == Pad.count {
                         var samples = self.kitSamples
                         samples[pad] = buffer
                         self.kitSamples = samples
                         self.republishKit()
+                        loaded?()
                     } else {
+                        // The kit was reloaded meanwhile (a pattern, the audio route): the sound used to be
+                        // dropped here while the rack kept its new name (Tyrone, Oct 18). Load it into the kit.
+                        if let loaded { self.afterKitLoad.append(loaded) }
                         self.rebuildKit()
                     }
                     self.readout = Readout(title: "PAD \(pad + 1)", value: (name as NSString).deletingPathExtension.uppercased(), time: Date())
@@ -904,12 +932,13 @@ final class KnockController: ObservableObject {
     }
 
     /// Drop a sound on a channel: that channel plays it from now on (its steps stay).
-    func replaceRackSound(_ id: UUID, with sound: LibrarySound) {
+    /// `loaded` runs once the engine plays the new sound.
+    func replaceRackSound(_ id: UUID, with sound: LibrarySound, loaded: (() -> Void)? = nil) {
         guard let current = rackChannels.first(where: { $0.id == id }) else { return }
         var rows = (state.workspaceChannels ?? []).filter { $0.pad != current.pad }
         rows.append(WorkspaceChannel(id: current.id, pad: current.pad, soundID: sound.id, name: sound.name, category: sound.type.rawValue))
         state.workspaceChannels = rows
-        importSample(sound.url, toPad: current.pad)
+        importSample(sound.url, toPad: current.pad, loaded: loaded)
         scheduleSave()
     }
 
