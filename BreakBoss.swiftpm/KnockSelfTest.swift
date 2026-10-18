@@ -752,6 +752,12 @@ enum KnockSelfTest {
         tremolo.sampler?.setLFO(.volume) { $0.shape = 2; $0.amount = -1 }
         check(abs(energy(tremolo, blocks: 5...300) - energy(plain, blocks: 5...300)) > energy(plain, blocks: 5...300) * 0.2,
               "Sampler: an LFO on the volume changes the level")
+        var dip = PadSettings(); dip.sampler = SamplerSettings()
+        dip.sampler?.setLFO(.volume) { $0.shape = 2; $0.amount = -1; $0.speed = 0.2 }
+        var peak = PadSettings(); peak.sampler = SamplerSettings()
+        peak.sampler?.setLFO(.volume) { $0.shape = 2; $0.amount = 1; $0.speed = 0.2 }
+        check(energy(dip, blocks: 2...8) < energy(plain, blocks: 2...8) * 0.1 && energy(peak, blocks: 2...8) > energy(plain, blocks: 2...8) * 0.9,
+              "Sampler: AMT turned left inverts the volume LFO (a square starts in its dip)")
         var bent = PadSettings(); bent.sampler = SamplerSettings()
         bent.sampler?.setEnvelope(.pan) { $0.on = true; $0.attack = 0; $0.hold = 0.4; $0.amount = -1 }
         let (bl, br) = stereo(bent, blocks: 5...30)

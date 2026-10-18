@@ -966,7 +966,8 @@ struct SamplerVoice {
         }
         if lfo.1.on {
             let a = abs(lfo.1.amount)
-            g *= (1 - 0.5 * a) + 0.5 * lfo.1.advance(n, age: age) * (lfo.1.amount < 0 ? -1 : 1)
+            // advance() already carries AMT's sign: turned left, the LFO dips where it would peak
+            g *= (1 - 0.5 * a) + 0.5 * lfo.1.advance(n, age: age)
         }
         gain = max(0, g)
 

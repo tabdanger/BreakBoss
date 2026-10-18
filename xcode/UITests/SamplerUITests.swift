@@ -238,9 +238,18 @@ final class SamplerUITests: XCTestCase {
         turn("samplerKnobLevelsVOL", by: -140)
         let levels = probe("levels vol down")
         XCTAssertLessThan(levels.l + levels.r, (chord.l + chord.r) * 0.7, "Levels VOL turns it down (\(levels) vs \(chord))")
+        any("samplerCutUp").tap()
+        sleep(1)
+        print("UITREE STEP Cut after + = \(any("samplerCut").value ?? "?")")
         any("samplerPolyMaxUp").tap()
         sleep(1)
-        if (any("samplerPolyMax").value as? String) != "1" { dumpTree("MAX stepper") }
+        print("UITREE STEP MAX after + = \(any("samplerPolyMax").value ?? "?")")
+        if (any("samplerPolyMax").value as? String) != "1" {
+            any("samplerPolyMaxUp").coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            sleep(1)
+            print("UITREE STEP MAX after a second + = \(any("samplerPolyMax").value ?? "?")")
+            snap("max-stepper")
+        }
         XCTAssertEqual(any("samplerPolyMax").value as? String, "1", "MAX steps up from no limit")
         any("samplerMono").tap()
         sleep(1)
