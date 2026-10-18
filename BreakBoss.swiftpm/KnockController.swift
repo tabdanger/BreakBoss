@@ -22,6 +22,8 @@ final class KnockController: ObservableObject {
     @Published private(set) var userPresets: [String] = []
     /// The 12 pad sounds as loaded (for the pad editor's waveform).
     @Published private(set) var kitSamples: [SampleBuffer] = []
+    /// The multisampled pads of the loaded kit (each tied to the kitSamples buffer it was loaded with).
+    private var kitLayers: [VelocityLayers?] = []
     /// What the engine plays: the kit's sounds with each track's SAMPLER page computed in.
     @Published private(set) var playedSamples: [SampleBuffer] = []
     /// Each track's computed sound, and what it was computed from.
@@ -573,6 +575,7 @@ final class KnockController: ObservableObject {
         stockSampleNames = [:]
         kitQueue.async { [weak self] in
             var samples: [SampleBuffer] = []
+            var layers: [VelocityLayers?] = Array(repeating: nil, count: Pad.count)
             var failed: [String] = []
             var stockNames: [Int: String] = [:]
             for pad in 0..<Pad.count {
@@ -587,6 +590,13 @@ final class KnockController: ObservableObject {
                     if let buffer = try? SampleLoader.load(sample.url) {
                         samples.append(buffer)
                         stockNames[pad] = sample.displayName
+                        if let spec = stock.layers(for: sample) {
+                            // Every layer or none: a file that won't load leaves the pad on its one sample.
+                            let hits = spec.map { layer in layer.urls.compactMap { try? SampleLoader.load($0) } }
+                            if zip(hits, spec).allSatisfy({ $0.0.count == $0.1.urls.count }) {
+                                layers[pad] = VelocityLayers(source: buffer, tops: spec.map(\.top), hits: hits)
+                            }
+                        }
                         continue
                     }
                     failed.append(sample.displayName)
@@ -598,9 +608,10 @@ final class KnockController: ObservableObject {
                 }
                 samples.append(DrumSynth.render(recipe, sampleRate: rate, seed: s.soundSeed &+ UInt32(pad)))
             }
-            DispatchQueue.main.async { [weak self, samples, failed, stockNames] in
+            DispatchQueue.main.async { [weak self, samples, layers, failed, stockNames] in
                 guard let self, generation == self.kitGeneration else { return }
                 self.kitSamples = samples
+                self.kitLayers = layers
                 self.stockSampleNames = stockNames
                 self.republishKit() // Apply edits made while decoding the kit.
                 self.loadingKit = false
@@ -610,6 +621,17 @@ final class KnockController: ObservableObject {
                     self.notice = "\(failure) Using synthesized sounds."
                 }
             }
+        }
+    }
+
+    /// The multisampled pads that play their layers: a pad still on the sample its layers came
+    /// with, and with no SAMPLER page edits (an edited sound is that one sample).
+    private var playedLayers: [VelocityLayers?] {
+        (0..<Pad.count).map { pad in
+            guard pad < kitLayers.count, pad < kitSamples.count, let layers = kitLayers[pad],
+                  layers.source === kitSamples[pad], state.pads[pad].sampleFile == nil,
+                  state.pads[pad].sampler?.offline(bpm: state.bpm) == nil else { return nil }
+            return layers
         }
     }
 
@@ -630,7 +652,7 @@ final class KnockController: ObservableObject {
         }
         playedSamples = samples
         let kit = KitBuffers(name: state.kitName, samples: samples, settings: state.pads,
-                             bassHz: kitDefinition.bassHz, renderSampleRate: engine.sampleRate)
+                             bassHz: kitDefinition.bassHz, renderSampleRate: engine.sampleRate, layers: playedLayers)
         engine.kitHandoff.publish(kit)
         if !todo.isEmpty { computeSamplers(todo) }
     }
@@ -1105,7 +1127,7 @@ final class KnockController: ObservableObject {
         }
         let exportRate: Double = 48_000
         let kit = KitBuffers(name: state.kitName, samples: playedSamples.count == Pad.count ? playedSamples : kitSamples, settings: state.pads,
-                             bassHz: kitDefinition.bassHz, renderSampleRate: exportRate)
+                             bassHz: kitDefinition.bassHz, renderSampleRate: exportRate, layers: playedLayers)
         let patterns = PatternSet(loops)
         var params = [Float](repeating: 0, count: KParam.count)
         for p in KParam.allCases { params[p.rawValue] = value(p) }

@@ -28,6 +28,19 @@ struct StockSampleLibrary {
         let displayName: String
     }
 
+    /// One velocity layer of a multisampled sound (the acoustic drums, acoustic_layers.json):
+    /// the hardest hit it takes (0...1) and its round robins.
+    struct Layer {
+        let top: Float
+        let urls: [URL]
+    }
+
+    private struct LayerFile: Decodable {
+        struct Entry: Decodable { let hi: Float; let files: [String] }
+        let version: Int
+        let sounds: [String: [Entry]]
+    }
+
     enum ManifestError: LocalizedError {
         case tooLarge, invalid, unsupportedVersion, invalidAssignment, duplicateAssignment
 
@@ -43,13 +56,16 @@ struct StockSampleLibrary {
     }
 
     private let samples: [String: [Int: Sample]]
+    /// Each multisampled sound's layers, softest first, by the sound's file name.
+    private let layers: [String: [Layer]]
     /// Every stock sound, sorted by category (the sound menu lists these).
     let allSounds: [Sample]
     /// Shown by the controller when an installed pack cannot be used.
     let failure: String?
 
-    private init(samples: [String: [Int: Sample]] = [:], allSounds: [Sample] = [], failure: String? = nil) {
+    private init(samples: [String: [Int: Sample]] = [:], layers: [String: [Layer]] = [:], allSounds: [Sample] = [], failure: String? = nil) {
         self.samples = samples
+        self.layers = layers
         self.allSounds = allSounds
         self.failure = failure
     }
@@ -65,6 +81,9 @@ struct StockSampleLibrary {
     }()
 
     func sample(kitID: String, pad: Int) -> Sample? { samples[kitID]?[pad] }
+
+    /// The velocity layers of a multisampled stock sound (nil: one sample plays every hit).
+    func layers(for sample: Sample) -> [Layer]? { layers[sample.url.lastPathComponent] }
 
     /// Every kit that has stock audio for this pad (the home-screen dice draws from these).
     func kits(withPad pad: Int) -> [String] { samples.keys.sorted().filter { samples[$0]?[pad] != nil } }
@@ -108,6 +127,21 @@ struct StockSampleLibrary {
         }
         guard (manifest.sounds?.count ?? 0) <= 4096 else { throw ManifestError.invalidAssignment }
         let all = try (manifest.sounds ?? []).map { try sample(file: $0.file, displayName: $0.name) }
-        return StockSampleLibrary(samples: samples, allSounds: all)
+        // Multisampled sounds: a layer file that can't be used leaves that sound as one sample.
+        var layers: [String: [Layer]] = [:]
+        let layerURL = folder.appendingPathComponent("acoustic_layers.json")
+        if let data = try? Data(contentsOf: layerURL), data.count <= maxBytes,
+           let file = try? JSONDecoder().decode(LayerFile.self, from: data), file.version == 1 {
+            let known = Set(all.map { $0.url.lastPathComponent })
+            for (main, entries) in file.sounds where known.contains(main) && !entries.isEmpty && entries.count <= 16 {
+                let parsed = entries.compactMap { e -> Layer? in
+                    guard e.hi.isFinite, e.hi > 0, !e.files.isEmpty, e.files.count <= 8,
+                          let urls = try? e.files.map({ try sample(file: $0, displayName: main).url }) else { return nil }
+                    return Layer(top: min(e.hi, 1), urls: urls)
+                }
+                if parsed.count == entries.count { layers[main] = parsed.sorted { $0.top < $1.top } }
+            }
+        }
+        return StockSampleLibrary(samples: samples, layers: layers, allSounds: all)
     }
 }

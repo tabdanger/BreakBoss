@@ -42,10 +42,35 @@ extension PadSettings {
     }
 }
 
+/// A multisampled pad (the acoustic drums): velocity layers, softest first, each with its round robins.
+/// Made off the audio thread; `source` is the pad's main sample it belongs to.
+final class VelocityLayers {
+    let source: SampleBuffer
+    let tops: [Float]
+    let hits: [[SampleBuffer]]
+
+    init?(source: SampleBuffer, tops: [Float], hits: [[SampleBuffer]]) {
+        guard !tops.isEmpty, tops.count == hits.count, hits.allSatisfy({ !$0.isEmpty }) else { return nil }
+        self.source = source
+        self.tops = tops
+        self.hits = hits
+    }
+
+    /// The layer a hit this hard (0...1) plays.
+    @inline(__always)
+    func layer(for velocity: Float) -> Int {
+        var i = 0
+        while i < tops.count - 1 && velocity > tops[i] { i += 1 }
+        return i
+    }
+}
+
 /// The sounds on the 12 pads, ready for the audio thread (read-only once published).
 final class KitBuffers {
     let name: String
     let samples: [SampleBuffer]
+    /// Pads that play a multisampled sound (nil: the pad's one sample plays every hit).
+    let layers: [VelocityLayers?]
     let settings: [PadSettings]
     let bassHz: Float
     /// One-pole coefficients prepared on the control plane, never at note-on or render time.
@@ -58,9 +83,10 @@ final class KitBuffers {
     let sampler: [SamplerRT]
 
     init(name: String, samples: [SampleBuffer], settings: [PadSettings], bassHz: Float,
-         renderSampleRate: Double = 48_000) {
+         renderSampleRate: Double = 48_000, layers: [VelocityLayers?] = []) {
         self.name = name
         self.samples = samples
+        self.layers = layers
         self.settings = settings
         self.bassHz = bassHz
         let rate = renderSampleRate.isFinite && renderSampleRate > 0 ? renderSampleRate : 48_000
@@ -609,7 +635,8 @@ final class KnockEngine {
             // the new kit holds the same sample, and its level and pan glide to the new values.
             func sameSound(_ pad: Int) -> Bool {
                 guard let kit, pad >= 0, pad < kit.samples.count, pad < newKit.samples.count else { return false }
-                return kit.samples[pad] === newKit.samples[pad]
+                func layers(_ k: KitBuffers) -> VelocityLayers? { pad < k.layers.count ? k.layers[pad] : nil }
+                return kit.samples[pad] === newKit.samples[pad] && layers(kit) === layers(newKit)
             }
             for v in 0..<KnockEngine.maxVoices where voices[v].active && !sameSound(voices[v].pad) {
                 voices[v].startFade(samples: Int(sampleRate * 0.005))
@@ -1010,9 +1037,22 @@ final class KnockEngine {
 
     private func trigger(pad: Int, velocity: Float, semis: Float, lengthSamples: Int, glide: Bool, heldNote: Int = -1) {
         guard pad >= 0 && pad < Pad.count, padMask & (1 << UInt16(pad)) != 0, let kit else { return }
-        let sample = kit.samples[pad]
+        var sample = kit.samples[pad]
         let ps = kit.settings[pad]
         let rt = pad < kit.sampler.count ? kit.sampler[pad] : SamplerRT()
+        // VELOCITY at 0 = every hit full; at 1 = the whole range.
+        let sens = params[KParam.velocity.rawValue]
+        var velGain = (1 - sens) + sens * powf(velocity.clamped(0, 1), 1.5)
+        // A multisampled drum: how hard it's hit picks the layer (a soft hit is a soft recording, not a
+        // loud one turned down), the gain only smooths the steps inside a layer, and each hit takes the
+        // layer's next round robin.
+        if !rt.active, pad < kit.layers.count, let layers = kit.layers[pad] {
+            let v = (1 - sens) + sens * velocity.clamped(0, 1)
+            let l = layers.layer(for: v)
+            let hits = layers.hits[l]
+            sample = hits[Int(padHits[pad] % UInt32(hits.count))]
+            velGain = sqrtf(min(1, v / max(layers.tops[l], 0.001)))
+        }
         let globalSemis = Float(Int(((params[KParam.pitch.rawValue] - 0.5) * 24).rounded()))
         let cents = (params[KParam.tune.rawValue] - 0.5) * 200
         // the sampler's "Enable main pitch" off: this track ignores the faceplate's PITCH and TUNE
@@ -1055,9 +1095,6 @@ final class KnockEngine {
             }
         }
 
-        // Velocity: VELOCITY at 0 = every hit full; at 1 = the whole range.
-        let sens = params[KParam.velocity.rawValue]
-        let velGain = (1 - sens) + sens * powf(velocity.clamped(0, 1), 1.5)
         // LEVEL and PAN are applied while rendering (kit.mixL / mixR), so they can move under a sounding note.
         let ml = pad < kit.mixL.count ? kit.mixL[pad] : ps.gain
         let mr = pad < kit.mixR.count ? kit.mixR[pad] : ps.gain

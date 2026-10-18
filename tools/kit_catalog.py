@@ -219,3 +219,22 @@ KITS = {
         ("ETHNO AMBIENT", "experimental", 90, "looseBreak", ["world", "electronic"], {"fx": True, "perc": ["BEADS", "WOOD", "SHAKER"]}, ["DESERT RITUAL"]),
     ],
 }
+
+# Live acoustic kits (Oct 18): Virtuosity Drums, multisampled with velocity layers and round robins
+# (tools/build_acoustic_sounds.py). The pads named here play the acoustic drums; the clap, 808 and
+# perc pads are picked from the stock sounds like every other kit.
+# Each entry: (kit name, mode bank, genre tab, genre, groove style, tempo, synth voice, tags, likes, {pad: acoustic sound}).
+ACOUSTIC_KITS = [
+    ("SOUL SESSION", "vintage", "SOUL & R&B", "LIVE SOUL", "neoSoul", 88, "neoSoul", ["soul", "jazz", "boombap"],
+     {"dusty": 0.4, "perc": ["SHAKER", "TAMB", "WOOD"]},
+     {0: "VIRTUOSITY KICK", 1: "VIRTUOSITY SNARE", 3: "VIRTUOSITY CROSS STICK RIM", 4: "VIRTUOSITY HIHAT",
+      5: "VIRTUOSITY HALF OPEN HIHAT", 9: "VIRTUOSITY LOW TOM", 10: "VIRTUOSITY HIGH TOM", 11: "VIRTUOSITY RIDE"}),
+    ("BREAK ROOM", "vintage", "BREAKS", "LIVE BREAKS", "funkBreak", 96, "funkBreak", ["funk", "boombap", "soul"],
+     {"room": 0.6, "perc": ["TAMB", "SHAKER", "CONGA"]},
+     {0: "VIRTUOSITY KICK", 1: "VIRTUOSITY RIMSHOT SNARE", 3: "VIRTUOSITY OFF CENTER SNARE", 4: "VIRTUOSITY HIHAT",
+      5: "VIRTUOSITY OPEN HIHAT", 9: "VIRTUOSITY LOW TOM", 10: "VIRTUOSITY HIGH TOM", 11: "VIRTUOSITY CRASH"}),
+    ("STUDIO A", "modern", "POP", "LIVE ROCK", "heavyBreak", 118, "heavyBreak", ["funk", "pop80", "boombap"],
+     {"bright": 0.4, "perc": ["TAMB", "SHAKER", "HIT"]},
+     {0: "VIRTUOSITY KICK", 1: "VIRTUOSITY SNARE", 3: "VIRTUOSITY RIMSHOT SNARE", 4: "VIRTUOSITY HIHAT",
+      5: "VIRTUOSITY OPEN HIHAT", 9: "VIRTUOSITY LOW TOM", 10: "VIRTUOSITY HIGH TOM", 11: "VIRTUOSITY CRASH"}),
+]
