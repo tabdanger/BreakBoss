@@ -31,3 +31,18 @@ chip sprite gets `_modern` / `_vintage` / `_texture` copies with the plate showi
 that metal, and `PlateGrain` is the grain tile the SwiftUI plates use. In Swift, `MetalTone` and the
 `seqFinish` environment value colour the SOUNDS / GENERATE headers, the Face slider, the power button,
 the knob rims and the buttons' lit edges. Needs scipy (`python3 -m pip install scipy`).
+
+## Oct 17 (night): Tyrone's Face 2 renders are the locked design
+
+Tyrone approved four finished Face 2 pictures (`face2/Face2_ModernPlatinum.png`, `Face2_ModernBlack.png`,
+`Face2_Vintage.png`, `Face2_Texture.png`, 1672 x 941, lined up pixel for pixel). They replace everything
+above: `face2/build_face2.py` writes `SeqPlate_<face>`, `SeqRow_<face>`, `SeqHeader_<face>` and every
+button / chip sprite (`SeqBtnTool`, `SeqBtnHost`, `SeqRowBtn`, …`_<face>`) straight from each face's own
+picture, with the live printing taken off. PATTERN and KIT sit further left on the bottom rail (their
+labels and dividers are carried over from the picture) and the FX knobs fill its right end.
+Rectangles live in `face2/rects.py` and `SequencerView.A` (same picture pixels).
+
+    python3 tools/sequencer_art/face2/build_face2.py BreakBoss.swiftpm
+
+Don't run build_controls.py / build_bays.py / build_finishes.py any more: they'd overwrite the plates
+and sprites with the old picture's.

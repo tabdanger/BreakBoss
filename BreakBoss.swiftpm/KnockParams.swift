@@ -46,6 +46,8 @@ enum KParam: Int, CaseIterable {
 
     // Append-only addresses keep existing preset / host parameter IDs stable.
     case resample, instability, textureDelay, gatedReverb, drive
+    // Oct 17: Face 2's Texture knobs (WARP and GLITCH used to follow INSTABILITY).
+    case warp, glitch, reverbDecay, reverbPredelay, delaySync
 
     static let count = KParam.allCases.count
 
@@ -76,6 +78,11 @@ enum KParam: Int, CaseIterable {
         case .textureDelay: return "textureDelay"
         case .gatedReverb: return "gatedReverb"
         case .drive: return "drive"
+        case .warp: return "warp"
+        case .glitch: return "glitch"
+        case .reverbDecay: return "reverbDecay"
+        case .reverbPredelay: return "reverbPredelay"
+        case .delaySync: return "delaySync"
         }
     }
 
@@ -105,16 +112,21 @@ enum KParam: Int, CaseIterable {
         case .textureDelay: return "Delay"
         case .gatedReverb: return "Gated Reverb"
         case .drive: return "Drive"
+        case .warp: return "Warp"
+        case .glitch: return "Glitch"
+        case .reverbDecay: return "Reverb Decay"
+        case .reverbPredelay: return "Reverb Pre-Delay"
+        case .delaySync: return "Delay Sync"
         }
     }
 
     /// Knobs are 0...1. Switches hold whole numbers.
-    var isKnob: Bool { (rawValue <= KParam.noise.rawValue && self != .clipper) || rawValue >= KParam.resample.rawValue }
+    var isKnob: Bool { (rawValue <= KParam.noise.rawValue && self != .clipper) || (rawValue >= KParam.resample.rawValue && self != .delaySync) }
 
     /// Number of positions for switches (nil for knobs).
     var steps: Int? {
         switch self {
-        case .clipper, .tempoSync, .followDAW, .playMode: return 2
+        case .clipper, .tempoSync, .followDAW, .playMode, .delaySync: return 2
         case .soundMode: return 3
         default: return nil
         }
@@ -148,6 +160,11 @@ enum KParam: Int, CaseIterable {
         case .textureDelay: return 0.32
         case .gatedReverb: return 0.5
         case .drive: return 0
+        case .warp: return 0.5
+        case .glitch: return 0.5
+        case .reverbDecay: return 0.5
+        case .reverbPredelay: return 0
+        case .delaySync: return 1
         }
     }
 
@@ -173,6 +190,12 @@ enum KParam: Int, CaseIterable {
             return db < -59 ? "-inf dB" : String(format: "%+.1f dB", db)
         case .clipper, .tempoSync, .followDAW:
             return value > 0.5 ? "ON" : "OFF"
+        case .delaySync:
+            return value > 0.5 ? "TEMPO" : "300 ms"
+        case .reverbDecay:
+            return String(format: "%d ms", Int((0.06 * powf(10, value)) * 1000))
+        case .reverbPredelay:
+            return String(format: "%d ms", Int(value * 120))
         case .soundMode:
             return SoundMode(rawValue: Int(value.rounded()))?.title ?? "MODERN"
         case .playMode:

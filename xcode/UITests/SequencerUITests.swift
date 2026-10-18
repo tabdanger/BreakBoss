@@ -141,10 +141,10 @@ final class SequencerUITests: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()   // close the panel
         sleep(1)
 
-        // drag the grip left of the first track down two places: it moves straight away, no hold
+        // drag the silver tab of the first track down two places: it moves straight away, no hold
         let kickY = app.buttons["trackArrow0"].frame.midY
-        let grip = any("trackGrip0")
-        XCTAssertTrue(grip.exists, "every track has a grip on its left")
+        let grip = app.buttons["trackArrow0"]
+        XCTAssertTrue(grip.exists, "every track has its tab on the left")
         let rowH = app.buttons["trackArrow1"].frame.midY - kickY
         grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.05, thenDragTo: grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: rowH * 2.2)))

@@ -124,16 +124,19 @@ struct SeqArt<Label: View>: View {
     @ViewBuilder var label: () -> Label
     @Environment(\.seqFinish) private var finish
 
-    /// The sprite in the finish (its edges in the plate's metal), when build_finishes.py made one.
+    /// The sprite in the finish: Face 2's buttons are cut out of each face's own render
+    /// (tools/sequencer_art/face2/build_face2.py); older sprites fall back to the bare one.
     private var art: String {
         let name = "\(sprite)_\(finish)"
-        return finish != "platinum" && UIImage(named: name) != nil ? name : sprite
+        return UIImage(named: name) != nil ? name : sprite
     }
+    /// Sprites from the renders already carry their metal; the older ones get the brushed overlay.
+    private var fromRender: Bool { SeqArtSprites.fromRenders.contains(sprite) }
 
     var body: some View {
         ZStack {
             Image(art).resizable()
-            BrushedFinish(corner: corner * scale)
+            if !fromRender { BrushedFinish(corner: corner * scale) }
             if let lit {
                 RoundedRectangle(cornerRadius: corner * scale).fill(lit.opacity(0.16))
                 RoundedRectangle(cornerRadius: corner * scale).stroke(lit, lineWidth: 1.5 * scale)
@@ -143,6 +146,13 @@ struct SeqArt<Label: View>: View {
         }
         .animation(.easeOut(duration: 0.12), value: lit != nil)
     }
+}
+
+/// The buttons and chips build_face2.py cuts out of Tyrone's Face 2 renders (Oct 17), one per finish.
+enum SeqArtSprites {
+    static let fromRenders: Set<String> = ["SeqBtnTool", "SeqBtnTransport", "SeqBtnHost", "SeqChipBpm", "SeqChipBars", "SeqBtnGear",
+                                           "SeqBtnCloud", "SeqChipSnap", "SeqChipSwing", "SeqChipHumanize", "SeqArrowBack", "SeqArrowFwd",
+                                           "SeqChipPattern", "SeqChipKit", "SeqRowBtn"]
 }
 
 /// A chip from the picture (BPM, BARS, PATTERN…) with its live text; attach `.bbMenu` for its menu.
@@ -216,18 +226,16 @@ struct FaceSlider: View {
                     .overlay(Capsule().strokeBorder(LinearGradient(colors: [tone.dark, tone.bright], startPoint: .top, endPoint: .bottom), lineWidth: 1.5 * scale))
                     .overlay(Capsule().fill(color.opacity(0.25 * Double(travel / maxTravel))).padding(2))
                 // where it goes: Face 1's pads
-                Image(systemName: "square.fill").font(.system(size: 13 * scale, weight: .bold))
-                    .foregroundColor(Color(white: travel > maxTravel * 0.5 ? 0.95 : 0.55))
+                Image(systemName: "forward.end.fill").font(.system(size: 14 * scale, weight: .bold))
+                    .foregroundColor(Color(white: travel > maxTravel * 0.5 ? 0.95 : 0.6))
                     .frame(width: knob, height: knob).offset(x: w - knob - 4 * scale)
-                Image(systemName: "chevron.right.2").font(.system(size: 9 * scale, weight: .bold)).foregroundColor(Color(white: 0.45))
+                Image(systemName: "chevron.right").font(.system(size: 12 * scale, weight: .semibold)).foregroundColor(Color(white: 0.35))
                     .offset(x: knob + 6 * scale).opacity(1 - Double(travel / maxTravel))
-                // the knob, in the faceplate's metal
+                // the key: a silver square with the pads' four squares (Tyrone's Face 2 render)
                 ZStack {
-                    Circle().fill(tone.spun)
-                    if tone.pebbled { PebbleGrain(amount: 0.35).clipShape(Circle()) }
-                    Circle().fill(RadialGradient(colors: [Color.white.opacity(0.55), .clear], center: .init(x: 0.35, y: 0.3), startRadius: 0, endRadius: knob * 0.6))
-                    Circle().strokeBorder(LinearGradient(colors: [tone.bright, tone.dark.opacity(0.9), .black.opacity(0.6)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
-                    Image(systemName: "square.grid.3x3.fill").font(.system(size: knob * 0.42, weight: .bold)).foregroundColor(tone.ink)
+                    RoundedRectangle(cornerRadius: knob * 0.22).fill(LinearGradient(colors: [Color(white: 0.97), Color(white: 0.78), Color(white: 0.86)], startPoint: .top, endPoint: .bottom))
+                    RoundedRectangle(cornerRadius: knob * 0.22).strokeBorder(LinearGradient(colors: [.white, Color(white: 0.5)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                    Image(systemName: "square.grid.2x2.fill").font(.system(size: knob * 0.46, weight: .bold)).foregroundColor(Color(white: 0.1))
                 }
                 .frame(width: knob, height: knob)
                 .shadow(color: .black.opacity(0.55), radius: 3 * scale, y: 2 * scale)
