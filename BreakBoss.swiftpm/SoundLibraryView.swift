@@ -35,21 +35,55 @@ enum SoundType: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Imported files: the type from the file and folder names (FL-style pack names).
+    /// Imported files: the folder a sound is in decides what it is (Tyrone, Oct 19: a sound from a
+    /// Kicks folder is a kick, whatever its name), the innermost folder that names a kind first; a
+    /// folder that names none (the pack's own name) leaves it to the file's name; then FX & OTHER.
     static func guess(_ path: String) -> SoundType {
-        let n = path.lowercased()
-        func has(_ words: String...) -> Bool { words.contains { n.contains($0) } }
-        if has("808", "bass", "sub") { return .bass }
-        if has("open", "ohh", "oh ") { return .open }
-        if has("hihat", "hi hat", "hi-hat", "hh", "hat") { return .hat }
-        if has("kick", "kik", "bd") { return .kick }
-        if has("clap", "snap") { return .clap }
-        if has("rim") { return .rim }
-        if has("snare", "sd") { return .snare }
-        if has("tom") { return .tom }
-        if has("crash", "cymbal", "ride", "splash") { return .cymbal }
-        if has("perc", "shaker", "tamb", "conga", "bongo", "cowbell", "clave", "block", "triangle", "bell") { return .perc }
-        return .fx
+        let parts = path.split(separator: "/").map(String.init)
+        for folder in parts.dropLast().reversed() {
+            if let t = named(folder) { return t }
+        }
+        return parts.last.flatMap { named(($0 as NSString).deletingPathExtension) } ?? .fx
+    }
+
+    /// The kind a folder or file name says, by whole words ("Hi-Hats", "OHH", "808s", "[Kick] Astronomy").
+    static func named(_ name: String) -> SoundType? {
+        let words = name.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init)
+        let w = Set(words)
+        func has(_ list: String...) -> Bool { list.contains { w.contains($0) } }
+        func pair(_ a: String, _ b: Set<String>) -> Bool { zip(words, words.dropFirst()).contains { $0 == a && b.contains($1) } }
+        let hats: Set<String> = ["hat", "hats", "hihat", "hihats"]
+        if has("ohh", "ohat", "ohats", "openhat", "openhats") || pair("open", hats) || (has("open") && !w.isDisjoint(with: hats)) { return .open }
+        if has("808", "808s", "bass", "basses", "sub", "subs") { return .bass }
+        if has("hh", "chh", "hihat", "hihats", "hat", "hats") { return .hat }
+        if has("kick", "kicks", "kik", "kiks", "bd") { return .kick }
+        if has("snare", "snares", "sd") { return .snare }
+        if has("clap", "claps") { return .clap }
+        if has("rim", "rims", "rimshot", "rimshots", "snap", "snaps") { return .rim }
+        if has("tom", "toms") { return .tom }
+        if has("crash", "crashes", "cymbal", "cymbals", "ride", "rides", "splash") { return .cymbal }
+        if has("perc", "percs", "percussion", "shaker", "shakers", "tamb", "tambourine", "conga", "congas", "bongo", "bongos",
+               "cowbell", "clave", "block", "triangle", "bell") { return .perc }
+        if has("fx", "sfx", "riser", "risers", "texture", "textures", "scratch", "impact") { return .fx }
+        return nil
+    }
+
+    /// A library section as the stock manifest writes it ("OPEN HAT", "808").
+    init?(section: String) {
+        switch section {
+        case "KICK": self = .kick
+        case "SNARE": self = .snare
+        case "CLAP": self = .clap
+        case "RIM": self = .rim
+        case "HAT": self = .hat
+        case "OPEN HAT": self = .open
+        case "808": self = .bass
+        case "PERC": self = .perc
+        case "TOM": self = .tom
+        case "CYMBAL": self = .cymbal
+        case "FX": self = .fx
+        default: return nil
+        }
     }
 }
 
@@ -92,7 +126,7 @@ extension StockSampleLibrary {
         }
         for s in allSounds where seen.insert(s.url.lastPathComponent).inserted {
             out.append(LibrarySound(id: "stock:" + s.url.lastPathComponent, url: s.url, name: s.displayName,
-                                    type: SoundType.forStockName(s.displayName) ?? .fx,
+                                    type: s.section.flatMap(SoundType.init(section:)) ?? SoundType.forStockName(s.displayName) ?? .fx,
                                     pack: kitOf[s.url.lastPathComponent] ?? "MORE SOUNDS", user: false))
         }
         return out
@@ -112,8 +146,9 @@ enum UserSoundLibrary {
         }
     }
 
-    /// Copies a whole pack (a folder or a .zip's unpacked folder) into Samples/<pack name>/.
-    /// Returns how many sounds came in.
+    /// Copies a whole pack (a folder or a .zip's unpacked folder) into Samples/<pack name>/, each sound
+    /// sorted into its section's folder (KICKS, SNARES, 808s, HI HATS, OPEN HATS…) by the folder it was
+    /// in, or its name (Tyrone, Oct 19). Returns how many sounds came in.
     @discardableResult
     static func importPack(_ folder: URL) -> Int {
         let access = folder.startAccessingSecurityScopedResource()
@@ -125,9 +160,9 @@ enum UserSoundLibrary {
         var count = 0
         guard let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil) else { return 0 }
         for case let url as URL in walker where exts.contains(url.pathExtension.lowercased()) && !url.path.contains("__MACOSX") {
-            // keep the pack's own type folders (Kicks/, Snares/…), flattened one level
-            let parent = url.deletingLastPathComponent().lastPathComponent
-            let sub = parent == folder.lastPathComponent ? dest : dest.appendingPathComponent(KnockFolders.safe(parent), isDirectory: true)
+            // the sound's path inside the pack decides its section
+            let inside = url.standardizedFileURL.path.replacingOccurrences(of: folder.standardizedFileURL.path + "/", with: "")
+            let sub = dest.appendingPathComponent(KnockFolders.safe(SoundType.guess(inside).rawValue), isDirectory: true)
             try? FileManager.default.createDirectory(at: sub, withIntermediateDirectories: true)
             let target = sub.appendingPathComponent(url.lastPathComponent)
             if FileManager.default.fileExists(atPath: target.path) { continue }

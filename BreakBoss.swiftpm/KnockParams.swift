@@ -187,7 +187,7 @@ enum KParam: Int, CaseIterable {
             return String(format: "+%.1f dB", KnockMath.clipDriveDB(value))
         case .output:
             let db = KnockMath.outputDB(value)
-            return db < -59 ? "-inf dB" : String(format: "%+.1f dB", db)
+            return String(format: "%+.1f dB", db)
         case .clipper, .tempoSync, .followDAW:
             return value > 0.5 ? "ON" : "OFF"
         case .delaySync:
@@ -213,12 +213,10 @@ enum KnockMath {
     static func filterCutoff(_ v: Float) -> Float { 120 * powf(20_000 / 120, v) }
     /// CLIP DRIVE: 0 to +18 dB into the clipper.
     static func clipDriveDB(_ v: Float) -> Float { v * 18 }
-    /// OUTPUT: 0.75 is 0 dB, 1.0 is +12 dB (200%, Tyrone, Oct 18), 0 is silent.
+    /// OUTPUT: 0.75 is 0 dB, 1.0 is +12 dB (200%, Tyrone, Oct 18), 0 is −12 dB (Oct 19).
     static func outputDB(_ v: Float) -> Float {
-        if v <= 0.001 { return -120 }
         if v >= 0.75 { return (v - 0.75) / 0.25 * 12 }
-        // 40 dB per decade of knob travel: 0.75 -> 0 dB, 0.25 -> -19 dB, 0.05 -> -47 dB
-        return 40 * log10f(v / 0.75)
+        return (max(0, v) - 0.75) / 0.75 * 12
     }
     static func dbToGain(_ db: Float) -> Float { powf(10, db / 20) }
 }

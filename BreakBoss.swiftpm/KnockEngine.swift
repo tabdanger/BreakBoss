@@ -26,8 +26,12 @@ struct PadSettings: Codable, Equatable {
 
     var gain: Float { level <= 0.001 ? 0 : KnockMath.dbToGain(40 * log10f(level / 0.8)) }
 
-    /// A track's volume goes to 200%, +12 dB (Tyrone, Oct 18). Knobs and sliders turn 0...1 over 0...maxLevel.
+    /// A track's volume goes to 200%, +12 dB (Tyrone, Oct 18), and down to 50%, −12 dB (Oct 19).
     static let maxLevel: Float = 1.6
+    static let minLevel: Float = 0.4
+    /// The volume knobs turn evenly in dB: 0 = −12 dB, the middle 0 dB (100%), the top +12 dB.
+    static func knob(level: Float) -> Float { ((log2f(max(level, 0.000_1) / 0.8) + 1) / 2).clamped(0, 1) }
+    static func level(knob v: Float) -> Float { 0.8 * powf(2, v.clamped(0, 1) * 2 - 1) }
     /// What a volume control shows: 100% at unity, 200% at the top.
     static func levelText(_ level: Float) -> String { String(format: "%.0f%%", level / 0.8 * 100) }
 }
@@ -1154,7 +1158,8 @@ final class KnockEngine {
         // A multisampled drum: how hard it's hit picks the layer (a soft hit is a soft recording, not a
         // loud one turned down), the gain only smooths the steps inside a layer, and each hit takes the
         // layer's next round robin.
-        if !rt.active, pad < kit.layers.count, let layers = kit.layers[pad] {
+        // (a track whose SAMPLER computed a new sound has no layers here: the kit drops them)
+        if pad < kit.layers.count, let layers = kit.layers[pad] {
             let v = (1 - sens) + sens * velocity.clamped(0, 1)
             let l = layers.layer(for: v)
             let hits = layers.hits[l]
@@ -1171,14 +1176,16 @@ final class KnockEngine {
         let beatSamples = samplesPerBeat
         if rt.active { rate *= rt.tapeRate(sourceSeconds: sample.seconds, bpm: sampleRate * 60 / beatSamples) }
         // Loaded samples are one-shots (Tyrone, Oct 18): the whole sound plays whatever the note's
-        // length, unless the sampler's Volume envelope is on (the note's end is its release) or it loops.
+        // length, unless the sampler's Volume envelope releases at the note's end or it loops. A track
+        // whose sampler doesn't do either keeps the note length it had without one (Tyrone, Oct 19);
+        // the notes its arpeggiator and echoes add (arp false) stay one-shots as they were.
         var lengthSamples = lengthSamples
-        if rt.active || ps.sampleFile != nil {
-            if !rt.volume.on && !rt.loop {
+        if ps.sampleFile != nil || (rt.active && (rt.volumeGates || rt.loop || !arp)) {
+            if !rt.volumeGates && !rt.loop {
                 if !glide { lengthSamples = 0 }
             } else if lengthSamples == 0 {
                 // a pad tap or a drum step: a 16th with the envelope, a beat for a loop
-                lengthSamples = Int(beatSamples * (rt.volume.on ? 0.25 : 1))
+                lengthSamples = Int(beatSamples * (rt.volumeGates ? 0.25 : 1))
             }
         }
 
@@ -1842,10 +1849,12 @@ struct Voice {
     private mutating func noteEnded(releaseSamples: Int) {
         guard sm.on else { release(samples: releaseSamples); return }
         // GATE: with no Volume envelope to release, the sound stops at the gate
-        if sm.gateCut && !sm.env.1.on { release(samples: releaseSamples); return }
+        if sm.gateCut && !sm.volumeGates { release(samples: releaseSamples); return }
+        // no Volume envelope release and no loop: the note ends as it would with no sampler
+        if !sm.volumeGates && !sm.looping { release(samples: releaseSamples); return }
         sm.release()
         // with the Volume envelope the loop keeps going under its release; without it the sound plays out
-        if !sm.env.1.on && sm.looping { sm.looping = false; sm.direction = 1 }
+        if !sm.volumeGates && sm.looping { sm.looping = false; sm.direction = 1 }
     }
 
     mutating func glide(to newRate: Double, samples: Int) {

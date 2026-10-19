@@ -368,12 +368,9 @@ struct SamplerWindow: View {
                        display: { v in let p = Int(((v * 2 - 1) * 100).rounded()); return p == 0 ? "C" : (p < 0 ? "L\(-p)" : "R\(p)") }) { v, _ in
                 var ps = controller.state.pads[pad]; let p = v * 2 - 1; ps.pan = abs(p) < 0.03 ? 0 : p; controller.setPadSettings(pad, ps)
             }
-            // VOL: the sampler's own pre-amp, 0…200% (+12 dB) before the mode's effects (Tyrone, Oct 18)
-            headerKnob("VOL", value: sm.volume, bipolar: false, reset: 0.5, x: 1002, s,
-                       display: { v in
-                           let g = SamplerSettings.preGain(v)
-                           return "\(Int((v * 200).rounded()))%  " + (g <= 0.0001 ? "-∞" : String(format: "%+.1f dB", 20 * log10(Double(g))))
-                       }) { v, _ in
+            // VOL: the sampler's own pre-amp before the mode's effects, −12 dB … +12 dB (Tyrone, Oct 19), bigger
+            headerKnob("VOL", value: sm.volume, bipolar: false, reset: 0.5, x: 1002, s, size: 80,
+                       display: SamplerSettings.volumeText) { v, _ in
                 edit { $0.volume = abs(v - 0.5) < 0.01 ? 0.5 : v }
             }
             headerKnob("PITCH", value: (sm.pitch + 1) / 2, bipolar: true, reset: 0.5, x: 1101, s,
@@ -434,14 +431,15 @@ struct SamplerWindow: View {
         .accessibilityIdentifier(["samplerSamplePage", "samplerEnvelopePage", "samplerMiscPage"][min(i, 2)])
     }
 
-    private func headerKnob(_ title: String, value: Float, bipolar: Bool, reset: Float, x: CGFloat, _ s: CGFloat,
+    private func headerKnob(_ title: String, value: Float, bipolar: Bool, reset: Float, x: CGFloat, _ s: CGFloat, size: CGFloat = 66,
                             display: @escaping (Float) -> String, change: @escaping (Float, Bool) -> Void) -> some View {
         VStack(spacing: 4 * s) {
-            SamplerKnob(value: value, skin: skin, bipolar: bipolar, reset: reset, display: display, change: change).frame(width: 66 * s, height: 66 * s)
+            SamplerKnob(value: value, skin: skin, bipolar: bipolar, reset: reset, display: display, change: change).frame(width: size * s, height: size * s)
                 .accessibilityLabel(title).accessibilityIdentifier("samplerKnob" + title)
             label(title, s)
         }
-        .frame(width: 96 * s).offset(x: (x - 48) * s, y: 74 * s)
+        // a bigger knob sits higher, so its label stays on the others' line
+        .frame(width: 96 * s).offset(x: (x - 48) * s, y: (74 - (size - 66)) * s)
     }
 
     private func led(_ text: String, _ title: String, x: CGFloat, _ s: CGFloat) -> some View {
@@ -1227,14 +1225,14 @@ struct SamplerWindow: View {
                 .accessibilityIdentifier("samplerEnvPresets")
             Group {
             knob("DELAY", e.delay, x: 56, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("DELAY", \.delay), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.delay = v } }
-            knob("ATT", e.attack, x: 154, y: 282, d: 64, s, labelY: 327, reset: 0.12, menu: set("ATT", \.attack), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.attack = v } }
-            knob("HOLD", e.hold, x: 254, y: 282, d: 64, s, labelY: 327, reset: 0.18, menu: set("HOLD", \.hold), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.hold = v } }
-            knob("DEC", e.decay, x: 353, y: 282, d: 64, s, labelY: 327, reset: 0.45, menu: set("DEC", \.decay), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.decay = v } }
-            knob("SUS", e.sustain, x: 451, y: 282, d: 64, s, labelY: 327, reset: 0.5, display: { v in "\(Int((v * 100).rounded()))%" }) { v, _ in editEnv(on: true, knobs: true) { $0.sustain = v } }
-            knob("REL", e.release, x: 548, y: 282, d: 64, s, labelY: 327, reset: 0.3, menu: set("REL", \.release), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.release = v } }
+            knob("ATT", e.attack, x: 154, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("ATT", \.attack), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.attack = v } }
+            knob("HOLD", e.hold, x: 254, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("HOLD", \.hold), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.hold = v } }
+            knob("DEC", e.decay, x: 353, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("DEC", \.decay), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.decay = v } }
+            knob("SUS", e.sustain, x: 451, y: 282, d: 64, s, labelY: 327, reset: 1, display: { v in "\(Int((v * 100).rounded()))%" }) { v, _ in editEnv(on: true, knobs: true) { $0.sustain = v } }
+            knob("REL", e.release, x: 548, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("REL", \.release), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.release = v } }
             }
             if target != .volume {
-                knob("AMT", (e.amount + 1) / 2, x: 640, y: 282, d: 54, s, labelY: 327, bipolar: true, reset: 0.75,
+                knob("AMT", (e.amount + 1) / 2, x: 640, y: 282, d: 54, s, labelY: 327, bipolar: true, reset: 0.5,
                      display: { v in "\(Int(((v * 2 - 1) * 100).rounded()))%" }) { v, _ in editEnv(on: true) { $0.amount = abs(v * 2 - 1) < 0.02 ? 0 : v * 2 - 1 } }
             }
             Group {
@@ -1381,7 +1379,7 @@ struct SamplerWindow: View {
                 .item(e.on ? "Turn the envelope off" : "Turn the envelope on", icon: "power", checked: e.on) { editEnv { $0.on.toggle() } },
             ]
         }
-        let d = SamplerEnvelope()
+        let d = SamplerEnvelope.shaped
         let stages: [(String, WritableKeyPath<SamplerEnvelope, Float>, Float)] = [("delay", \.delay, 0.2), ("attack", \.attack, d.attack), ("hold", \.hold, d.hold),
                                                                                ("decay", \.decay, d.decay), ("release", \.release, d.release)]
         var items: [BBMenuItem] = stages.map { name, path, back in
@@ -1600,11 +1598,8 @@ struct SamplerWindow: View {
                  display: { v in let p = Int(((v * 2 - 1) * 100).rounded()); return p == 0 ? "C" : (p < 0 ? "L\(-p)" : "R\(p)") }) { v, _ in
                 edit { $0.levelPan = Self.bipolar(v) }
             }
-            knob("VOL", sm.levelVol, x: 142, y: 120, d: 62, s, labelY: 166, reset: 0.5, id: "LevelsVOL",
-                 display: { v in
-                     let g = SamplerSettings.preGain(v)
-                     return "\(Int((v * 200).rounded()))%  " + (g <= 0.0001 ? "-∞" : String(format: "%+.1f dB", 20 * log10(Double(g))))
-                 }) { v, _ in edit { $0.levelVol = abs(v - 0.5) < 0.01 ? 0.5 : v } }
+            knob("VOL", sm.levelVol, x: 142, y: 120, d: 76, s, labelY: 173, reset: 0.5, id: "LevelsVOL",
+                 display: SamplerSettings.volumeText) { v, _ in edit { $0.levelVol = abs(v - 0.5) < 0.01 ? 0.5 : v } }
             knob("MOD X", (sm.levelX + 1) / 2, x: 229, y: 120, d: 62, s, labelY: 166, bipolar: true, reset: 0.5, id: "LevelsMODX",
                  display: Self.bipolarPercent) { v, _ in edit { $0.levelX = Self.bipolar(v) } }
             knob("MOD Y", (sm.levelY + 1) / 2, x: 316, y: 120, d: 62, s, labelY: 166, bipolar: true, reset: 0.5, id: "LevelsMODY",

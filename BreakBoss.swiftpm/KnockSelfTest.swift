@@ -44,6 +44,7 @@ enum KnockSelfTest {
         phase("checkPianoRollOctaves", checkPianoRollOctaves)
         phase("checkWorkspaceChannels", checkWorkspaceChannels)
         phase("checkSampler", checkSampler)
+        phase("checkUntouchedEnvelopes", checkUntouchedEnvelopes)
         phase("checkSamplerPlayhead", checkSamplerPlayhead)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
@@ -132,6 +133,18 @@ enum KnockSelfTest {
               && SoundType.forStockName("SUKUNA E1 808") == .bass && SoundType.forStockName("ISSA BOUNCE CLAP SNARE") == .snare,
               "a stock sound's last word sorts it")
         check(library.librarySounds().count == 589, "the sound menu lists every stock sound, in a kit or not")
+        // Tyrone, Oct 19: every sound sits in the section of the folder it came from
+        let sections = Dictionary(library.librarySounds().map { ($0.name, $0.type) }, uniquingKeysWith: { a, _ in a })
+        check(library.allSounds.allSatisfy { $0.section.flatMap(SoundType.init(section:)) != nil }, "every stock sound has its folder's section")
+        check(sections["NO 1 TOM"] == .perc && sections["TRIPPY RIDE"] == .hat && sections["SORCERER CLAP"] == .snare
+              && sections["THRONE OPEN HIHAT"] == .open && sections["ASTRONOMY KICK"] == .kick,
+              "a sound's library section is its original folder's (a tom from a percs folder is a PERC)")
+        check(SoundType.guess("Danger Demon/Kicks/808 Kick.wav") == .kick && SoundType.guess("Pack/808s/Big.wav") == .bass
+              && SoundType.guess("Pack/OHH/Hat 3.wav") == .open && SoundType.guess("Pack/Hi-Hats/Open Thing.wav") == .hat
+              && SoundType.guess("Pack/Snares/Clap Layer.wav") == .snare && SoundType.guess("Pack/[Kick] Astronomy.wav") == .kick
+              && SoundType.guess("My Sounds/random.wav") == .fx && SoundType.guess("Pack/Open Hats/a.wav") == .open
+              && SoundType.guess("Pack/HI HATS/a.wav") == .hat && SoundType.guess("Pack/FX & OTHER/a.wav") == .fx,
+              "an imported sound's folder decides its section, then its name")
         var assignments = 0
         for kit in KitLibrary.factory {
             for pad in Pad.allCases {
@@ -843,10 +856,13 @@ enum KnockSelfTest {
         let unity = energy(plain, blocks: 5...20)
         let boost = energy(loud, blocks: 5...20) / unity, down = energy(soft, blocks: 5...20) / unity
         check(boost > 6 && down > 0.15 && down < 0.35,
-              "Sampler: VOL goes from silence to +12 dB, 100% in the middle (×\(boost), ×\(down))")
-        let dragged = SamplerWindow.dragged(SamplerEnvelope(), handle: 4, dx: 0, dy: -0.3)
+              "Sampler: VOL goes from −12 dB to +12 dB, 100% in the middle (×\(boost), ×\(down))")
+        check(abs(20 * log10f(SamplerSettings.preGain(0)) + 12) < 0.1 && abs(20 * log10f(SamplerSettings.preGain(1)) - 12) < 0.1
+              && SamplerSettings.preGain(0.5) == 1 && SamplerSettings.volumeText(0.5).hasPrefix("100%"),
+              "Sampler: the VOL knobs run evenly from −12 dB to +12 dB (Tyrone, Oct 19)")
+        let dragged = SamplerWindow.dragged(SamplerEnvelope.shaped, handle: 4, dx: 0, dy: -0.3)
         check(dragged.on && abs(dragged.sustain - 0.2) < 0.001, "Sampler: dragging the sustain point down lowers the sustain")
-        let bulged = SamplerWindow.dragged(SamplerEnvelope(), handle: 6, dx: 0, dy: 0.25)
+        let bulged = SamplerWindow.dragged(SamplerEnvelope.shaped, handle: 6, dx: 0, dy: 0.25)
         check(bulged.attackTension < -0.4, "Sampler: dragging the attack curve up bends it")
 
         // free envelope points (FL style): add, move, delete, sustain point; the voice follows them
@@ -863,8 +879,8 @@ enum KnockSelfTest {
         var run2 = SamplerEnvRun(through, points: SamplerEnvPoints(through), sampleRate: 48_000, samplesPerBeat: 24_000)
         for _ in 0..<300 { _ = run2.advance(16) }
         check(run2.done, "Sampler: with no sustain point the envelope runs straight through")
-        let added = SamplerWindow.addingPoint(time: 0.3, level: 0.8, to: SamplerEnvelope())
-        let knobShape = SamplerEnvelope().knobPoints()
+        let added = SamplerWindow.addingPoint(time: 0.3, level: 0.8, to: SamplerEnvelope.shaped)
+        let knobShape = SamplerEnvelope.shaped.knobPoints()
         check(added.points.count == knobShape.points.count + 1 && added.points.contains { abs($0.level - 0.8) < 0.001 }
               && abs(added.points.reduce(0) { $0 + $1.time } - knobShape.points.reduce(0) { $0 + $1.time }) < 0.0001,
               "Sampler: tapping the graph adds a point and the others stay where they were")
@@ -1071,6 +1087,123 @@ enum KnockSelfTest {
               "Sampler: envelope presets for 808s, kicks and snares shape the volume")
         let round = (try? JSONEncoder().encode(presets)).flatMap { try? JSONDecoder().decode([SamplerEnvelopePreset].self, from: $0) }
         check(round == presets, "Sampler: envelope presets save and load")
+    }
+
+    /// Tyrone, Oct 19: the ENVELOPE page changes nothing until it's changed. A track whose sampler
+    /// was opened (or whose envelopes were switched on with no knob moved off its start) renders
+    /// sample for sample what it did with no sampler: note lengths, one-shots, the 808 and a
+    /// multisampled drum's velocity layers. Turning one knob is heard as that knob alone.
+    static func checkUntouchedEnvelopes() {
+        let rate = 48_000.0
+        // a long decaying tone (a drum with a tail), so a cut or a fade anywhere shows
+        let tail = SampleBuffer(left: (0..<72_000).map { i in sinf(Float(i) * 2 * .pi * 220 / 48_000) * 0.4 * expf(-Float(i) / 30_000) },
+                                sampleRate: rate)
+        let opened = SamplerSettings()
+        var switchedOn = SamplerSettings()
+        for t in SamplerTarget.allCases { switchedOn.setEnvelope(t) { $0.on = true } }
+        func pads(_ sampler: SamplerSettings?, file: String?) -> [PadSettings] {
+            (0..<Pad.count).map { _ in var p = PadSettings(); p.sampler = sampler; p.sampleFile = file; return p }
+        }
+        // drum notes with and without a length (piano roll / drum roll), and an 808 with a length and a slide
+        let step = Int32(PatternData.ppq / 4)
+        let pattern = PatternData(name: "UNTOUCHED", lengthTicks: PatternData.ppq * 4, events: [
+            GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1, length: step),
+            GrooveEvent(tick: step * 2, pad: Int8(Pad.hat.rawValue), velocity: 0.6),
+            GrooveEvent(tick: step * 4, pad: Int8(Pad.snare.rawValue), velocity: 0.9, length: step * 3),
+            GrooveEvent(tick: step * 6, pad: Int8(Pad.bass808.rawValue), velocity: 1, semis: 3, length: step * 2),
+            GrooveEvent(tick: step * 8, pad: Int8(Pad.bass808.rawValue), velocity: 1, semis: 7, length: step * 2, glide: true),
+            GrooveEvent(tick: step * 12, pad: Int8(Pad.clap.rawValue), velocity: 0.4, length: step)
+        ])
+        var params = [Float](repeating: 0, count: KParam.count)
+        for p in KParam.allCases { params[p.rawValue] = p.defaultValue }
+        func export(_ settings: [PadSettings]) -> [Float] {
+            let kit = KitBuffers(name: "UNTOUCHED", samples: Array(repeating: tail, count: Pad.count), settings: settings, bassHz: 110)
+            let job = Exporter.Job(kit: kit, patterns: PatternSet(Array(repeating: pattern, count: Pad.count)), loop: 0, params: params,
+                                   tempo: 120, bars: 2, baseName: "untouched")
+            return Exporter.render(job, mask: 0xFFFF).0
+        }
+        func difference(_ a: [Float], _ b: [Float]) -> Float {
+            guard a.count == b.count else { return .infinity }
+            var d: Float = 0
+            for i in a.indices { d = max(d, abs(a[i] - b[i])) }
+            return d
+        }
+        for file in [nil, "untouched.wav"] as [String?] {
+            let what = file == nil ? "kit sounds" : "loaded samples"
+            let plain = export(pads(nil, file: file))
+            check(plain.contains { abs($0) > 0.01 } && difference(plain, export(pads(nil, file: file))) == 0,
+                  "Untouched envelopes: the \(what) pattern renders the same twice")
+            let a = difference(plain, export(pads(opened, file: file)))
+            check(a < 1e-5, "Untouched envelopes: an opened sampler leaves \(what) as they were (max difference \(a))")
+            let b = difference(plain, export(pads(switchedOn, file: file)))
+            check(b < 1e-5, "Untouched envelopes: envelopes switched on with no knob moved leave \(what) as they were (max difference \(b))")
+        }
+
+        // pad taps, one at a time: the whole hit, sample for sample
+        func tap(_ settings: PadSettings, velocity: Double = 1, blocks: Int = 600, layers: [VelocityLayers?] = []) -> [Float] {
+            var all = Array(repeating: PadSettings(), count: Pad.count)
+            all[Pad.snare.rawValue] = settings
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            e.setParam(.playMode, 0); e.setParam(.followDAW, 0); e.setParam(.tempoSync, 0)
+            e.setParam(.velocity, 1); e.setParam(.boost, 0); e.setParam(.clipper, 0); e.setParam(.clipDrive, 0)
+            e.kitHandoff.publish(KitBuffers(name: "TAP", samples: Array(repeating: tail, count: Pad.count), settings: all, bassHz: 110, layers: layers))
+            e.send(KEvent(kind: .pad, a: Int32(Pad.snare.rawValue), value: velocity))
+            var out: [Float] = []
+            for _ in 0..<blocks {
+                var left = [Float](repeating: 0, count: 128), right = left
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+                out += left
+            }
+            return out
+        }
+        var loaded = PadSettings(); loaded.sampleFile = "untouched.wav"
+        var loadedOn = loaded; loadedOn.sampler = switchedOn
+        let tapDiff = difference(tap(loaded), tap(loadedOn))
+        check(tapDiff < 1e-5, "Untouched envelopes: a tapped one-shot plays whole with its envelopes switched on (max difference \(tapDiff))")
+
+        // a multisampled drum keeps its velocity layers and round robins with the sampler opened
+        func tone(_ amplitude: Float) -> SampleBuffer {
+            SampleBuffer(left: (0..<12_000).map { sinf(Float($0) * 2 * .pi * 1_000 / 48_000) * amplitude }, sampleRate: rate)
+        }
+        if let layers = VelocityLayers(source: tail, tops: [0.5, 1], hits: [[tone(0.02)], [tone(0.4), tone(0.2)]]) {
+            var padLayers = [VelocityLayers?](repeating: nil, count: Pad.count)
+            padLayers[Pad.snare.rawValue] = layers
+            var withSampler = PadSettings(); withSampler.sampler = opened
+            for velocity in [0.25, 1.0] {
+                let d = difference(tap(PadSettings(), velocity: velocity, blocks: 120, layers: padLayers),
+                                   tap(withSampler, velocity: velocity, blocks: 120, layers: padLayers))
+                check(d < 1e-5, "Untouched envelopes: an opened sampler keeps the drum's velocity layers (velocity \(velocity), max difference \(d))")
+            }
+        } else { check(false, "Untouched envelopes: layers made") }
+
+        // one knob turned: only that knob is heard (ATT fades the start in; the rest of the hit and its
+        // full length stay as they were)
+        var attack = loadedOn
+        attack.sampler?.setEnvelope(.volume) { $0.attack = 0.3 }
+        let plainHit = tap(loaded), slow = tap(attack)
+        func energy(_ x: [Float], _ blocks: ClosedRange<Int>) -> Float { x[(blocks.lowerBound * 128)..<(blocks.upperBound * 128)].reduce(0) { $0 + $1 * $1 } }
+        let early = energy(slow, 0...20) / max(energy(plainHit, 0...20), 1e-9)
+        let late = energy(slow, 200...500) / max(energy(plainHit, 200...500), 1e-9)
+        check(early < 0.2 && abs(late - 1) < 0.001, "Untouched envelopes: turning ATT changes only the attack (early ×\(early), late ×\(late))")
+        var pan = loadedOn
+        pan.sampler?.setEnvelope(.pan) { $0.attack = 0.4 }
+        let panDiff = difference(tap(loaded), tap(pan))
+        check(panDiff < 1e-5, "Untouched envelopes: a Panning envelope moves nothing until its AMT is turned (max difference \(panDiff))")
+
+        // saved before Oct 19: envelopes never switched on take the new defaults; ones in use keep their shape
+        var oldVolume = SamplerEnvelope.shaped; oldVolume.amount = 1
+        var oldPan = SamplerEnvelope.shaped
+        var used = SamplerEnvelope.shaped; used.on = true
+        func roundTrip(_ e: SamplerEnvelope) -> SamplerEnvelope? { (try? JSONEncoder().encode(e)).flatMap { try? JSONDecoder().decode(SamplerEnvelope.self, from: $0) } }
+        oldPan.amount = 0.5
+        var neutralVolume = SamplerEnvelope(); neutralVolume.amount = 1
+        check(roundTrip(oldVolume) == neutralVolume && roundTrip(oldPan) == SamplerEnvelope() && roundTrip(used) == used,
+              "Untouched envelopes: old saves' untouched envelopes load with the new defaults, used ones as they were")
+        check(SamplerSettings.defaultEnvelopes.allSatisfy { !$0.on && $0.attack == 0 && $0.hold == 0 && $0.sustain == 1 && $0.release == 0 && $0.delay == 0 }
+              && SamplerSettings.defaultEnvelopes[SamplerTarget.volume.rawValue].amount == 1
+              && SamplerSettings.defaultEnvelopes.enumerated().allSatisfy { $0.offset == SamplerTarget.volume.rawValue || $0.element.amount == 0 },
+              "Untouched envelopes: the defaults are no attack, full sustain, no release, AMT 0")
     }
 
     /// A multisampled pad: a soft hit plays the soft recording, a hard one the loud one, and repeated
@@ -2384,6 +2517,12 @@ enum KnockSelfTest {
         check(KnockState.normalizedPads([loud])[0].level == PadSettings.maxLevel && KnockState.normalizedPads([PadSettings()])[0].gain == 1,
               "a saved 200% track volume stays 200%, old projects keep their levels")
         check(abs(KnockMath.outputDB(1) - 12) < 0.01 && abs(KnockMath.outputDB(0.75)) < 0.01, "OUTPUT goes to +12 dB, 0.75 stays 0 dB")
+        // Tyrone, Oct 19: every volume knob runs −12 dB … +12 dB
+        var low = PadSettings(); low.level = PadSettings.level(knob: 0)
+        check(abs(KnockMath.outputDB(0) + 12) < 0.01 && abs(20 * log10f(low.gain) + 12) < 0.1
+              && PadSettings.level(knob: 0.5) == 0.8 && abs(PadSettings.level(knob: 1) - PadSettings.maxLevel) < 0.001
+              && abs(PadSettings.knob(level: 0.8) - 0.5) < 0.001 && PadSettings.levelText(low.level) == "50%",
+              "the volume knobs go from −12 dB (50%) to +12 dB (200%), 100% in the middle")
         let rate = 48_000.0
         let sine = (0..<96_000).map { Float(sin(Double($0) * 2 * Double.pi * 220 / rate)) * 0.1 }
         let sample = SampleBuffer(left: sine, sampleRate: rate)

@@ -78,7 +78,7 @@ struct PadEditorView: View {
                 }
 
                 Section("Pad") {
-                    slider("Level", settings.level, 0...PadSettings.maxLevel, text: PadSettings.levelText(settings.level)) { v in
+                    slider("Level", settings.level, PadSettings.minLevel...PadSettings.maxLevel, text: PadSettings.levelText(settings.level)) { v in
                         var s = settings; s.level = v; controller.setPadSettings(pad, s)
                     }
                     slider("Pan", settings.pan, -1...1, text: settings.pan == 0 ? "C" : String(format: "%@%.0f", settings.pan < 0 ? "L" : "R", abs(settings.pan) * 100)) { v in

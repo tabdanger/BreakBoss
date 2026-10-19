@@ -145,7 +145,8 @@ final class SamplerUITests: XCTestCase {
         turn("samplerKnobVOL", by: 120)
         turn("samplerKnobPITCH", by: 150)
         let higher = probe("pitch up")
-        XCTAssertGreaterThan(higher.zc, quieter.zc * 1.05, "PITCH up raises it (\(higher.zc) vs \(quieter.zc) crossings)")
+        // brightness (level doesn't change it): VOL only goes down to −12 dB now, so the quieter hit still sounds
+        XCTAssertGreaterThan(higher.hf, quieter.hf * 1.1, "PITCH up raises it (brightness \(higher.hf) vs \(quieter.hf))")
         turn("samplerKnobPITCH", by: -75)
 
         // precomputed effects

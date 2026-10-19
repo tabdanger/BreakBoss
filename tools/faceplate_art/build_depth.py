@@ -13,7 +13,7 @@ there the first time this runs), so running it again starts from the same pictur
 The controls' rectangles (and so every overlay) are left out of the plate-only steps, so no overlay
 shows a patch. Uses tools/sequencer_art/metal.py.
 
-    python3 tools/faceplate_art/build_depth.py BreakBoss.swiftpm
+    python3 tools/faceplate_art/build_depth.py BreakBoss.swiftpm [--only=modern]
 """
 import json, shutil, sys
 from pathlib import Path
@@ -25,7 +25,9 @@ here = Path(__file__).resolve().parent
 sys.path.insert(0, str(here.parent / "sequencer_art"))
 import metal as M
 
-pkg = Path(sys.argv[1] if len(sys.argv) > 1 else "BreakBoss.swiftpm")
+args = [a for a in sys.argv[1:] if not a.startswith("--only=")]
+only = {a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--only=")}
+pkg = Path(args[0] if args else "BreakBoss.swiftpm")
 assets = pkg / "Resources" / "Assets.xcassets"
 layouts = json.loads((pkg / "Resources" / "KnockLayout.json").read_text())
 base = here / "depth_base"
@@ -33,6 +35,9 @@ base.mkdir(exist_ok=True)
 OVERLAYS = {"oneshot_on": "oneShotButton", "loop_off": "loopButton", "clipper_off": "clipperRect",
             "play_on": "playRect", "led_off": None}
 SEED = {"platinum": 21, "modern": 22, "vintage": 23, "texture": 24}
+# Modern is smooth black metal (Tyrone, Oct 19: the added grain, detail and relief made it look rough): its
+# plate keeps the light and the buttons' shadows only.
+SMOOTH = {"modern"}
 
 
 def source(name):
@@ -73,7 +78,7 @@ def surface(rgb, kind):
 
 
 for kind, L in layouts.items():
-    if L.get("device", "tablet") != "tablet":
+    if L.get("device", "tablet") != "tablet" or (only and kind not in only):
         continue
     plate, mode = source(f"Plate_{kind}")
     rgb = plate[..., :3]
@@ -106,11 +111,15 @@ for kind, L in layouts.items():
     sh = M.contact_shadow(rect_mask((h, w), raised).astype(np.float32), dx=3, dy=5, sigma=5)[..., None]
 
     out = rgb * (1 + lightk)
-    out = out * (1 + 0.32 * r * W) + 22 * np.maximum(r, 0) * W
-    out = out * (1 - 0.14 * ao * W) * (1 - 0.32 * sh * W)
-    out = out + 0.4 * M.clarity(out) * W
-    g = M.grain(kind, h, w, SEED[kind])[..., None]
-    out = out * (1 + M.GRAIN_AMOUNT[kind] * 0.6 * g * W)
+    if kind not in SMOOTH:
+        # (on the black plate the whole surface reads as "dark", so this relief turned its fine noise into dents)
+        out = out * (1 + 0.32 * r * W) + 22 * np.maximum(r, 0) * W
+        out = out * (1 - 0.14 * ao * W)
+    out = out * (1 - 0.32 * sh * W)
+    if kind not in SMOOTH:
+        out = out + 0.4 * M.clarity(out) * W
+        g = M.grain(kind, h, w, SEED[kind])[..., None]
+        out = out * (1 + M.GRAIN_AMOUNT[kind] * 0.6 * g * W)
     save(f"Plate_{kind}", np.concatenate([out, plate[..., 3:]], axis=2), mode)
 
     # the overlays: where they show the plate, exactly the new plate (so they sit on it seamlessly);
