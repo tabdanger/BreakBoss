@@ -885,7 +885,12 @@ enum KnockSelfTest {
     static func checkScope() {
         let rate = 48_000.0
         let n = 24_000
-        let sub = SampleBuffer(left: (0..<n).map { sinf(Float($0) * 2 * .pi * 50 / 48_000) * 0.8 * (1 - Float($0) / Float(n)) }, sampleRate: rate)
+        let subWave: [Float] = (0..<n).map { i -> Float in
+            let t = Float(i)
+            let fade: Float = 1 - t / Float(n)
+            return sinf(t * 2 * Float.pi * 50 / 48_000) * 0.8 * fade
+        }
+        let sub = SampleBuffer(left: subWave, sampleRate: rate)
         var seed: UInt32 = 12_345
         let fizz = SampleBuffer(left: (0..<n).map { i -> Float in
             seed = seed &* 1_664_525 &+ 1_013_904_223
@@ -919,7 +924,7 @@ enum KnockSelfTest {
             return (loud, bass / total, top / total, rings.write)
         }
         render(4)
-        e.send(KEvent(kind: .pad, a: Pad.kick.rawValue, value: 1))
+        e.send(KEvent(kind: .pad, a: Int32(Pad.kick.rawValue), value: 1))
         render(20)
         let low = look()
         render(1)
@@ -930,7 +935,7 @@ enum KnockSelfTest {
         render(Int(rate * 6 / 128))
         let idle = look()
         check(idle.loud == 0, "Scope: the screen goes flat when nothing plays (\(idle.loud))")
-        e.send(KEvent(kind: .pad, a: Pad.hat.rawValue, value: 1))
+        e.send(KEvent(kind: .pad, a: Int32(Pad.hat.rawValue), value: 1))
         render(20)
         let high = look()
         check(high.loud > 0.05 && high.top > 0.6, "Scope: a hat's fizz reads as top end (\(high.top) top, \(high.bass) bass)")
