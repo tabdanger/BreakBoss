@@ -24,6 +24,39 @@ final class SamplerUITests: XCTestCase {
         add(attachment)
     }
 
+    /// A small JPEG of the screen printed as UITREE IMG lines (the log is all the cloud can read).
+    private func picture(_ name: String, width: CGFloat = 1000) {
+        let shot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: shot)
+        attachment.name = "sampler-" + name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        let raw = shot.image
+        let rotate = (raw.size.width < raw.size.height) != (app.frame.width < app.frame.height)
+        let upright = rotate ? CGSize(width: raw.size.height, height: raw.size.width) : raw.size
+        let fmt = UIGraphicsImageRendererFormat(); fmt.scale = 1
+        let size = CGSize(width: width, height: width * upright.height / upright.width)
+        let small = UIGraphicsImageRenderer(size: size, format: fmt).image { r in
+            let k = width / upright.width
+            r.cgContext.scaleBy(x: k, y: k)
+            if rotate {
+                r.cgContext.translateBy(x: 0, y: raw.size.width)
+                r.cgContext.rotate(by: -.pi / 2)
+            }
+            raw.draw(at: .zero)
+        }
+        guard let data = small.jpegData(compressionQuality: 0.6) else { return }
+        let text = data.base64EncodedString()
+        let piece = 6_000
+        let parts = (text.count + piece - 1) / piece
+        var i = text.startIndex, k = 1
+        while i < text.endIndex {
+            let j = text.index(i, offsetBy: piece, limitedBy: text.endIndex) ?? text.endIndex
+            print("UITREE IMG \(name) \(k)/\(parts) \(text[i..<j])")
+            i = j; k += 1
+        }
+    }
+
     private func dumpTree(_ why: String) {
         print("UITREE ---- \(why)")
         for line in app.debugDescription.components(separatedBy: "\n") { print("UITREE \(line)") }
@@ -160,6 +193,28 @@ final class SamplerUITests: XCTestCase {
         XCTAssertLessThan(shorter.late + shorter.early, (beforeReverse.late + beforeReverse.early) * 0.95, "LENGTH shortens the sound (\(shorter))")
         turn("samplerKnobLENGTH", by: 300)
         snap("sample-page-turned")
+
+        // the rest of the precomputed effects (Tyrone, Oct 19): each knob is heard, and double tapped
+        // back to its start the sound is exactly what it was
+        func moved(_ a: Probe, _ b: Probe) -> Double {
+            let pairs = [(a.l + a.r, b.l + b.r), (a.early, b.early), (a.late, b.late), (a.zc, b.zc), (a.hf, b.hf)]
+            return pairs.map { abs($0.0 - $0.1) / max(abs($0.1), 0.000_01) }.max() ?? 0
+        }
+        let base = probe("before new effects")
+        snap("precomputed-effects")
+        picture("sample-page")
+        for (id, dy) in [("samplerKnobPOGO", 120.0), ("samplerKnobEQ", 120.0), ("samplerKnobBOOST", 150.0), ("samplerKnobRMMIX", 150.0),
+                         ("samplerKnobDELAY", 150.0), ("samplerKnobREVERB", 150.0), ("samplerKnobTRIM", 60.0)] {
+            turn(id, by: CGFloat(dy))
+            let on = probe(id)
+            let change = moved(on, base)
+            print("UITREE EFFECT \(id) moved \(change)")
+            if id != "samplerKnobTRIM" { XCTAssertGreaterThan(change, 0.05, "\(id) changes the sound (\(on) vs \(base))") }
+            any(id).doubleTap()
+            sleep(1)
+            let back = probe(id + " reset")
+            XCTAssertLessThan(moved(back, base), 0.01, "\(id) back at its start leaves the sound as it was (\(back) vs \(base))")
+        }
 
         // ENVELOPE: turning a knob turns the Volume envelope on and shapes the hit
         any("samplerEnvelopePage").tap()

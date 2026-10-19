@@ -435,3 +435,82 @@ struct MetalKnob: View {
         }
     }
 }
+
+/// The sound library's preview volume (Tyrone, Oct 19): a fader in a dark slot under the library, the
+/// level lit in the face's own colour, a metal cap in the face's finish with grip lines across it, and
+/// its level beside it. Moving it sets how loud picked sounds are heard; letting go plays the
+/// selected track at that level.
+struct PreviewFader: View {
+    let value: Double
+    var scale: CGFloat = 1
+    var color: Color = .red
+    let change: (Double) -> Void
+    let done: () -> Void
+    @Environment(\.seqFinish) private var finish
+
+    var body: some View {
+        let tone = MetalTone.of(finish)
+        let s = scale
+        HStack(spacing: 6 * s) {
+            Image(systemName: value < 0.01 ? "speaker.slash.fill" : (value < 0.5 ? "speaker.wave.1.fill" : "speaker.wave.2.fill"))
+                .font(.system(size: 13 * s, weight: .medium)).foregroundColor(Color(white: 0.78)).frame(width: 22 * s)
+            GeometryReader { geo in
+                let w = geo.size.width, h = geo.size.height
+                let cap = CGSize(width: 16 * s, height: h)
+                let travel = max(1, w - cap.width)
+                let x = travel * CGFloat(value.clamped(0, 1))
+                ZStack(alignment: .leading) {
+                    // the slot, cut into the panel: shadowed on top, a lit lip underneath
+                    Capsule().fill(LinearGradient(colors: [Color(white: 0.02), Color(white: 0.13)], startPoint: .top, endPoint: .bottom))
+                        .overlay(Capsule().strokeBorder(LinearGradient(colors: [.black, tone.bright.opacity(0.55)], startPoint: .top, endPoint: .bottom), lineWidth: 1))
+                        .frame(height: 8 * s)
+                    // the level, lit
+                    Capsule().fill(LinearGradient(colors: [color.opacity(0.55), color], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: max(0, x + cap.width / 2 - 2 * s), height: 4 * s).padding(.leading, 2 * s)
+                        .shadow(color: color.opacity(0.8), radius: 3 * s)
+                    // the cap: metal, lit on top, with three grip lines
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 3 * s)
+                            .fill(LinearGradient(stops: [.init(color: tone.bright, location: 0), .init(color: tone.light, location: 0.45),
+                                                         .init(color: tone.mid, location: 0.55), .init(color: tone.dark, location: 1)],
+                                                 startPoint: .top, endPoint: .bottom))
+                        RoundedRectangle(cornerRadius: 3 * s)
+                            .strokeBorder(LinearGradient(colors: [.white.opacity(0.7), .black.opacity(0.6)], startPoint: .top, endPoint: .bottom), lineWidth: 0.8)
+                        HStack(spacing: 2.5 * s) {
+                            ForEach(0..<3, id: \.self) { _ in
+                                Rectangle().fill(Color.black.opacity(0.55)).frame(width: 1 * s)
+                                    .overlay(Rectangle().fill(Color.white.opacity(0.45)).frame(width: 0.6 * s).offset(x: 0.9 * s))
+                            }
+                        }
+                        .padding(.vertical, h * 0.22)
+                        // the face's colour on its centre line
+                        Rectangle().fill(color).frame(width: 1.4 * s, height: h * 0.18).offset(y: -h * 0.36)
+                    }
+                    .frame(width: cap.width, height: cap.height)
+                    .shadow(color: .black.opacity(0.6), radius: 2 * s, y: 1.5 * s)
+                    .offset(x: x)
+                }
+                .frame(height: h)
+                .contentShape(Rectangle())
+                .gesture(DragGesture(minimumDistance: 0)
+                    .onChanged { g in change(Double(((g.location.x - cap.width / 2) / travel).clamped(0, 1))) }
+                    .onEnded { _ in done() })
+            }
+            .frame(height: 22 * s)
+            Text("\(Int((value * 100).rounded()))%")
+                .font(.system(size: 11 * s, weight: .semibold, design: .monospaced)).foregroundColor(Color(white: 0.85))
+                .frame(width: 38 * s, alignment: .trailing)
+        }
+        .accessibilityElement()
+        .accessibilityIdentifier("previewVolume")
+        .accessibilityLabel("Preview volume")
+        .accessibilityValue("\(Int((value * 100).rounded()))%")
+        .accessibilityAdjustableAction { dir in
+            switch dir {
+            case .increment: change(min(1, value + 0.05)); done()
+            case .decrement: change(max(0, value - 0.05)); done()
+            default: break
+            }
+        }
+    }
+}

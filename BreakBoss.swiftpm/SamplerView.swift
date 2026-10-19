@@ -666,29 +666,88 @@ struct SamplerWindow: View {
             + beats.map { b in BBMenuItem.item(SamplerTime.beats(b).title, checked: sm.time == .beats(b)) { set(.beats(b)) } }
     }
 
+    /// Precomputed effects (FL's set, Tyrone, Oct 19): the six switches, then two rows of knobs, each
+    /// computed into the track's sound when it's let go (the file on disk is never changed).
     private func effectsPanel(_ s: CGFloat) -> some View {
-        panel("Precomputed effects", s) {
+        let pct: (Float) -> String = { v in "\(Int((v * 100).rounded()))%" }
+        let xs: [CGFloat] = [50, 144, 238, 332, 426, 520, 614]
+        let xs2: [CGFloat] = [46, 128, 210, 292, 374, 456, 538]
+        let row1: CGFloat = 172, row2: CGFloat = 262, d: CGFloat = 52
+        return panel("Precomputed effects", s) {
             Group {
-            toggleRow("Remove DC offset", sm.removeDC, x: 32, y: 52, s, id: "samplerRemoveDC") { edit { $0.removeDC.toggle() } }
-            toggleRow("Normalize", sm.normalize, x: 32, y: 96, s, id: "samplerNormalize") { edit { $0.normalize.toggle() } }
-            toggleRow("Reverse", sm.reverse, x: 32, y: 141, s, id: "samplerReverse") { edit { $0.reverse.toggle() } }
-            toggleRow("Reverse polarity", sm.reversePolarity, x: 338, y: 52, s, id: "samplerPolarity") { edit { $0.reversePolarity.toggle() } }
-            toggleRow("Fade stereo", sm.fadeStereo, x: 338, y: 96, s, id: "samplerFadeStereo") { edit { $0.fadeStereo.toggle() } }
-            toggleRow("Swap stereo", sm.swapStereo, x: 338, y: 141, s, id: "samplerSwapStereo") { edit { $0.swapStereo.toggle() } }
+            toggleRow("Remove DC offset", sm.removeDC, x: 22, y: 46, w: 210, s, id: "samplerRemoveDC") { edit { $0.removeDC.toggle() } }
+            toggleRow("Normalize", sm.normalize, x: 236, y: 46, w: 210, s, id: "samplerNormalize") { edit { $0.normalize.toggle() } }
+            toggleRow("Reverse", sm.reverse, x: 450, y: 46, w: 200, s, id: "samplerReverse") { edit { $0.reverse.toggle() } }
+            toggleRow("Reverse polarity", sm.reversePolarity, x: 22, y: 88, w: 210, s, id: "samplerPolarity") { edit { $0.reversePolarity.toggle() } }
+            toggleRow("Fade stereo", sm.fadeStereo, x: 236, y: 88, w: 210, s, id: "samplerFadeStereo") { edit { $0.fadeStereo.toggle() } }
+            toggleRow("Swap stereo", sm.swapStereo, x: 450, y: 88, w: 200, s, id: "samplerSwapStereo") { edit { $0.swapStereo.toggle() } }
             }
             Rectangle().fill(LinearGradient(colors: [.black.opacity(0.5), skin.surface.bright.opacity(0.5)], startPoint: .top, endPoint: .bottom))
-                .frame(width: 632 * s, height: 2 * s).offset(x: 16 * s, y: 192 * s)
-            let pct: (Float) -> String = { v in "\(Int((v * 100).rounded()))%" }
+                .frame(width: 632 * s, height: 2 * s).offset(x: 16 * s, y: 134 * s)
             Group {
-            knob("SMP START", sm.start, x: 60, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: pct) { v, f in editComputed(f) { $0.start = v } }
-            knob("LENGTH", sm.length, x: 168, y: 248, d: 64, s, labelY: 300, reset: 1, labelSize: 16, display: pct) { v, f in editComputed(f) { $0.length = max(0.005, v) } }
-            knob("IN", sm.fadeIn, x: 274, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeIn = v } }
-            knob("OUT", sm.fadeOut, x: 380, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeOut = v } }
-            knob("CROSSFADE", sm.crossfade, x: 488, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "off" : pct(v / 2) }) { v, f in editComputed(f) { $0.crossfade = v } }
-            knob("TRIM", sm.trim, x: 598, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16,
+            knob("SMP START", sm.start, x: xs[0], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14, display: pct) { v, f in editComputed(f) { $0.start = v } }
+            knob("LENGTH", sm.length, x: xs[1], y: row1, d: d, s, labelY: 210, reset: 1, labelSize: 14, display: pct) { v, f in editComputed(f) { $0.length = max(0.005, v) } }
+            knob("IN", sm.fadeIn, x: xs[2], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeIn = v } }
+            knob("OUT", sm.fadeOut, x: xs[3], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeOut = v } }
+            knob("POGO", (sm.pogo + 1) / 2, x: xs[4], y: row1, d: d, s, labelY: 210, bipolar: true, reset: 0.5, labelSize: 14,
+                 display: { v in abs(v * 2 - 1) < 0.01 ? "off" : String(format: "%+.1f st", Double(v * 2 - 1) * 24) }) { v, f in
+                editComputed(f) { $0.pogo = abs(v * 2 - 1) < 0.01 ? 0 : v * 2 - 1 }
+            }
+            // CROSSFADE (FL's CRF): turned up from off, the loop points come on too, so the blended
+            // loop keeps going for as long as the note is held (Tyrone, Oct 19)
+            knob("CROSSFADE", sm.crossfade, x: xs[5], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "off" : pct(v / 2) }) { v, f in
+                let was = controller.sampler(pad).crossfade
+                editComputed(f) { $0.crossfade = v; if f && was < 0.005 && v >= 0.005 { $0.useLoop = true } }
+            }
+            knob("TRIM", sm.trim, x: xs[6], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14,
                  display: { v in v < 0.0001 ? "silence" : String(format: "%.0f dB", -90 + 70 * Double(v)) }) { v, f in editComputed(f) { $0.trim = v } }
             }
+            Group {
+            knob("EQ", (sm.eq + 1) / 2, x: xs2[0], y: row2, d: d, s, labelY: 300, bipolar: true, reset: 0.5, labelSize: 14,
+                 display: { v in abs(v * 2 - 1) < 0.01 ? "flat" : (v > 0.5 ? "bright " : "dark ") + pct(abs(v * 2 - 1)) }) { v, f in
+                editComputed(f) { $0.eq = abs(v * 2 - 1) < 0.01 ? 0 : v * 2 - 1 }
+            }
+            knob("BOOST", sm.boost, x: xs2[1], y: row2, d: d, s, labelY: 300, reset: 0, labelSize: 14,
+                 display: { v in v < 0.005 ? "0 dB" : String(format: "+%.1f dB", Double(SamplerSettings.boostDB(v))) }) { v, f in
+                editComputed(f) { $0.boost = v < 0.005 ? 0 : v }
+            }
+            knob("RM MIX", sm.rmMix, x: xs2[2], y: row2, d: d, s, labelY: 300, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "off" : pct(v) }) { v, f in
+                editComputed(f) { $0.rmMix = v < 0.005 ? 0 : v }
+            }
+            knob("RM FREQ", sm.rmFreq, x: xs2[3], y: row2, d: d, s, labelY: 300, reset: 0.5, labelSize: 14, display: { v in
+                let hz = SamplerSettings.ringHertz(v)
+                return hz < 1000 ? "\(Int(hz.rounded())) Hz" : String(format: "%.1f kHz", hz / 1000)
+            }) { v, f in editComputed(f) { $0.rmFreq = v } }
+            knob("DELAY", sm.delayMix, x: xs2[4], y: row2, d: d, s, labelY: 300, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "off" : pct(v) }) { v, f in
+                editComputed(f) { $0.delayMix = v < 0.005 ? 0 : v }
+            }
+            knob("DLY TIME", sm.delayTime, x: xs2[5], y: row2, d: d, s, labelY: 300, reset: 0.5, labelSize: 14,
+                 display: { v in SamplerSettings.step(v).0 }) { v, f in editComputed(f) { $0.delayTime = v } }
+            knob("REVERB", sm.reverbMix, x: xs2[6], y: row2, d: d, s, labelY: 300, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "off" : pct(v) }) { v, f in
+                editComputed(f) { $0.reverbMix = v < 0.005 ? 0 : v }
+            }
+            }
+            // the reverb's type: A (room) or B (hall), two keys beside REVERB
+            VStack(spacing: 4 * s) {
+                reverbKey("A", on: !sm.reverbB, s) { edit { $0.reverbB = false } }
+                reverbKey("B", on: sm.reverbB, s) { edit { $0.reverbB = true } }
+            }
+            .frame(width: 44 * s, height: 56 * s).offset(x: 588 * s, y: 234 * s)
+            label("TYPE", s, size: 14).frame(width: 60 * s, height: 24 * s).offset(x: 580 * s, y: 288 * s)
         }
+    }
+
+    private func reverbKey(_ title: String, on: Bool, _ s: CGFloat, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            ZStack {
+                SamplerMetal(tone: skin.surface, corner: 3 * s)
+                Text(title).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(on ? skin.glow : skin.dim)
+                    .shadow(color: on ? skin.glow.opacity(0.8) : .clear, radius: 3 * s)
+            }
+        }
+        .buttonStyle(SeqPress())
+        .accessibilityIdentifier("samplerReverb" + title)
+        .accessibilityValue(on ? "on" : "off")
     }
 
     // MARK: The sample view
