@@ -864,9 +864,17 @@ enum KnockSelfTest {
         check(autoChord.hits[0] >= 4 && autoChord.hits[0] <= 6, "Sampler MISC: Auto (sustain) runs one arpeggio over a held chord (\(autoChord.hits[0]) notes, not 12+)")
         check(autoSingle.hits[0] >= 9 && sum(autoSingle.l, 400...449) > 0.001,
               "Sampler MISC: Auto latch keeps the arpeggio running after the note is let go (\(autoSingle.hits[0]) notes)")
-        let relatched = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: [(0, 0, 0), (250, 0, 12)], blocks: 450)
-        check(sumZ(relatched.zc, 300...449) * 4 > sumZ(autoSingle.zc, 300...449) * 7,
-              "Sampler MISC: Auto latch: a note played after letting go starts a new set (\(sumZ(relatched.zc, 300...449)) vs \(sumZ(autoSingle.zc, 300...449)) crossings)")
+        // a short blip, so the notes don't overlap: crossings per sounding block give each note's pitch
+        // (the latched low note left on the run would pull it down to about 1.3x)
+        let blip1k = SampleBuffer(left: (0..<2_000).map { sinf(Float($0) * 2 * .pi * 1_000 / 48_000) * 0.3 }, sampleRate: rate)
+        func pitchRate(_ z: [Int], _ r: ClosedRange<Int>) -> Double {
+            let on = r.filter { z[$0] > 0 }.count
+            return on == 0 ? 0 : Double(sumZ(z, r)) / Double(on)
+        }
+        let lowRun = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], blip1k, hits: one, blocks: 450)
+        let relatched = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], blip1k, hits: [(0, 0, 0), (250, 0, 12)], blocks: 450)
+        check(pitchRate(relatched.zc, 300...449) > pitchRate(lowRun.zc, 300...449) * 1.6,
+              "Sampler MISC: Auto latch: a note played after letting go starts a new set (\(pitchRate(relatched.zc, 300...449)) vs \(pitchRate(lowRun.zc, 300...449)) crossings a block)")
         check(sumZ(autoChord.zc, 0...199) * 10 > sumZ(autoSingle.zc, 0...199) * 11,
               "Sampler MISC: Auto (sustain) plays the chord's notes (\(sumZ(autoChord.zc, 0...199)) vs \(sumZ(autoSingle.zc, 0...199)) crossings)")
         let joined = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: [(0, 0, 0), (20, 0, 12)], blocks: 200)
