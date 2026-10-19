@@ -145,6 +145,27 @@ enum PatternEdit {
         return p
     }
 
+    /// Pastes copied notes (their ticks counted from the first one) starting at `at`, each with its own
+    /// pitch, velocity, length, offset and chance; `pad` puts them all on one channel instead of their own.
+    /// A note already on the same channel, step and pitch is replaced; notes past the pattern's end stay out.
+    static func paste(_ pattern: PatternData, _ notes: [GrooveEvent], at: Int32, pad: Int? = nil) -> (PatternData, Set<NoteKey>) {
+        var p = pattern
+        var keys = Set<NoteKey>()
+        let end = max(p.lengthTicks, 1)
+        for n in notes {
+            var e = n
+            e.tick = at + n.tick
+            if let pad, (0..<Pad.count).contains(pad) { e.pad = Int8(pad) }
+            guard e.tick >= 0, e.tick < end else { continue }
+            if Int(e.pad) == Pad.bass808.rawValue, e.length > 0 { e.length = min(e.length, max(6, end - e.tick)) }
+            p.events.removeAll { $0.pad == e.pad && abs($0.tick - e.tick) <= 2 && $0.semis == e.semis }
+            p.events.append(e)
+            keys.insert(NoteKey(e))
+        }
+        p.sort()
+        return (p, keys)
+    }
+
     static func remove(_ pattern: PatternData, _ keys: Set<NoteKey>) -> PatternData {
         var p = pattern
         p.events.removeAll { keys.contains(NoteKey($0)) }

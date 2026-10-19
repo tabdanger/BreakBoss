@@ -182,6 +182,11 @@ struct SequencerView: View {
     @State private var rollBottoms: [Int: Int] = [:]
     /// The note whose octave glyphs are showing (a two-finger tap or right-click on it).
     @State private var octaveNote: NoteKey?
+    /// The grid's right-click menu, and the notes it copied (ticks counted from the first one).
+    @State private var gridMenuOpener = BBMenuOpener()
+    @State private var noteClipboard: [GrooveEvent] = []
+    /// When the finger went down on the grid (draw mode: a quick drag selects, a held one paints).
+    @State private var touchDown = Date.distantPast
     @State private var undoStack: [PatternData] = []
     @State private var redoStack: [PatternData] = []
     @State private var rememberedAt: Date?
@@ -396,7 +401,8 @@ struct SequencerView: View {
         var graphH: CGFloat = 0
         var graphTop: CGFloat { y + bandH }
     }
-    private func graphHeight(_ rowH: CGFloat) -> CGFloat { rowH * 1.5 }
+    /// Three boxes of the old height (Tyrone, Oct 19: one more box than the two it had).
+    private func graphHeight(_ rowH: CGFloat) -> CGFloat { rowH * 2.25 - 4 }
     /// The open track's toolbar between its steps and its keys: the lane switch, then KEY · SCALE · SNAP · FIT.
     private func toolbarH(_ rowH: CGFloat) -> CGFloat { rowH * 1.3 }
     private func layouts(rowH: CGFloat) -> [RowLayout] {
@@ -1119,7 +1125,7 @@ struct SequencerView: View {
         let top = l.graphTop, h = l.graphH
         let pad = l.channel.pad
         ctx.fill(Path(CGRect(x: 0, y: top, width: width, height: h)), with: .color(S.lane))
-        for frac in [0.0, 0.5, 1.0] {
+        for frac in [0.0, 1.0 / 3, 2.0 / 3, 1.0] {
             ctx.fill(Path(CGRect(x: 0, y: top + 4 + CGFloat(frac) * (h - 8), width: width, height: 1)), with: .color(S.stepLine))
         }
         var lt = ((pageStart + PatternData.ppq - 1) / PatternData.ppq) * PatternData.ppq
@@ -1302,7 +1308,8 @@ struct SequencerView: View {
                 .accessibilityIdentifier("trackHeader\(pad)")
             // the volume knob, bigger (Tyrone, Oct 19): −12 dB … +12 dB, 100% in the middle
             ArtKnob(value: PadSettings.knob(level: ps.level), reset: 0.5) { v, _ in set { $0.level = abs(v - 0.5) < 0.01 ? 0.8 : PadSettings.level(knob: v) } }.frame(width: 46 * s, height: 46 * s).offset(x: 130 * s, y: 6.5 * s)
-            ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 36 * s, height: 36 * s).offset(x: 184 * s, y: 11.5 * s)
+            // the pan knob the same size as the volume knob (Tyrone, Oct 19: every header knob one size)
+            ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 46 * s, height: 46 * s).offset(x: 179 * s, y: 6.5 * s)
             // the lamp: on / off
             if muted { Circle().fill(Color(white: 0.12)).overlay(Circle().stroke(Color.black, lineWidth: 1)).frame(width: 13 * s, height: 13 * s).offset(x: 231.5 * s, y: 23 * s).allowsHitTesting(false) }
             Button { if soloedOut { controller.clearSolos() } else { controller.toggleMute(pad) } } label: { Color.clear.frame(width: 30 * s, height: 40 * s).contentShape(Rectangle()) }
@@ -1925,7 +1932,8 @@ struct SequencerView: View {
         .contentShape(Rectangle())
         .accessibilityElement()
         .accessibilityIdentifier("grid")
-        .accessibilityValue("\(pattern.events.count) notes")
+        .accessibilityValue("\(pattern.events.count) notes, \(selection.count) selected")
+        .bbMenuOpener(gridMenuOpener)
         .highPriorityGesture(DragGesture(minimumDistance: 0)
             .onChanged { g in if !pinching && !twoFinger { gridChanged(g, w: w, L: L) } }
             .onEnded { g in
@@ -1946,14 +1954,54 @@ struct SequencerView: View {
             sideways: { dx in scroll(to: (panStart ?? origin) - Double(dx / max(1, w)) * Double(windowTicks)) },
             ended: { panStart = nil },
             twoFingerTap: { points in
-                // a two-finger tap or a right-click on a note: its octave glyphs (a touch on the grid hides them)
+                // a two-finger tap or a right-click: the grid's menu (select all, copy, paste, octave up / down)
                 // the tap is over: the next touch on the grid draws again even if no drag ended
                 twoFinger = false; drag = .none; work = nil
-                if let hit = points.lazy.compactMap({ noteAt($0, w: w, L: L) }).first {
-                    octaveNote = NoteKey(hit)
-                    if let l = layout(for: Int(hit.pad), L) { selectedID = l.channel.id }
-                }
+                let hit = points.lazy.compactMap({ noteAt($0, w: w, L: L) }).first
+                guard let p = points.first(where: { noteAt($0, w: w, L: L) != nil }) ?? points.first else { return }
+                openGridMenu(at: p, hit: hit, w: w, L: L)
             }))
+    }
+
+    /// Right-click (or two-finger tap) on the grid (Tyrone, Oct 19): Select all, Copy, Paste, Octave up,
+    /// Octave down. On a note that isn't selected, the note becomes the selection; an octave move leaves
+    /// the note's ⊕ / ⊖ on it for more moves. Paste goes in at the clicked step, on the clicked track
+    /// when the copied notes are all one track's.
+    private func openGridMenu(at p: CGPoint, hit: GrooveEvent?, w: CGFloat, L: [RowLayout]) {
+        guard let l = layout(at: p.y, L) else { return }
+        let pad = l.channel.pad
+        selectedID = l.channel.id
+        octaveNote = nil
+        if let hit, !selection.contains(NoteKey(hit)) { selection = [NoteKey(hit)] }
+        let keys = selection
+        let limits = { (pad: Int) in controller.pitchLimits(pad: pad) }
+        let canMove = { (by: Int) in !keys.isEmpty && PatternEdit.transpose(pattern, keys, by: by, limits: limits) != nil }
+        let at = snapped(tickAt(p.x, w))
+        func octave(_ by: Int) {
+            if let hit { moveOctave(NoteKey(hit), by: by); return }
+            guard let moved = PatternEdit.transpose(pattern, keys, by: 12 * by, limits: limits) else { return }
+            commit(moved.0)
+            selection = moved.1
+        }
+        let items: [BBMenuItem] = [
+            .item("Select all", icon: "checkmark.rectangle.stack") {
+                selection = Set(pattern.events.filter { Int($0.pad) == pad }.map(NoteKey.init))
+            },
+            .item("Copy", icon: "doc.on.doc", enabled: !keys.isEmpty) {
+                let picked = pattern.events.filter { keys.contains(NoteKey($0)) }
+                let first = picked.map(\.tick).min() ?? 0
+                noteClipboard = picked.map { var e = $0; e.tick -= first; return e }
+            },
+            .item("Paste", icon: "doc.on.clipboard", enabled: !noteClipboard.isEmpty) {
+                let onePad = Set(noteClipboard.map(\.pad)).count == 1
+                let (pasted, newKeys) = PatternEdit.paste(pattern, noteClipboard, at: at, pad: onePad ? pad : nil)
+                commit(pasted)
+                selection = newKeys
+            },
+            .item("Octave up", icon: "arrow.up", enabled: canMove(12)) { octave(1) },
+            .item("Octave down", icon: "arrow.down", enabled: canMove(-12)) { octave(-1) },
+        ]
+        gridMenuOpener.show(at: p, title: l.channel.name, width: 240, items: items)
     }
 
     /// The playhead: a line moved every display frame from the engine's own clock (like Logic's),
@@ -2104,6 +2152,7 @@ struct SequencerView: View {
                 return
             }
             if octaveNote != nil { octaveNote = nil }
+            touchDown = g.time
             let start = g.startLocation
             guard let l = layout(at: start.y, L) else { return }
             if inBand(start.y, l) { selectedID = l.channel.id; return }
@@ -2174,6 +2223,15 @@ struct SequencerView: View {
                let hit = noteAt(g.startLocation, w: w, L: L) {
                 startRepeat(pad: pad, like: hit, fromPaint: true)
                 gridChanged(g, w: w, L: L)
+                return
+            }
+            // a quick drag from an empty spot draws a selection box, as in SELECT (Tyrone, Oct 19); hold the
+            // finger still a moment first to paint a run of notes instead
+            if lastCell == Int(snapped(tickAt(g.startLocation.x, w)) / placeTicks), hypot(g.translation.width, g.translation.height) > 8,
+               g.time.timeIntervalSince(touchDown) < 0.35 {
+                work = nil
+                _ = undoStack.popLast()
+                drag = .marquee(start: g.startLocation, current: g.location)
                 return
             }
             let t = snapped(tickAt(g.location.x, w))
