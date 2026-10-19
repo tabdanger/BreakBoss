@@ -113,6 +113,13 @@ struct FaceplateView: View {
                 .resizable()
                 .interpolation(.high)
                 .frame(width: L.width * s, height: L.height * s)
+            // The BreaKing logo is in the picture; this only names it for VoiceOver and the UI tests.
+            Color.white.opacity(0.001)
+                .allowsHitTesting(false)
+                .accessibilityElement()
+                .accessibilityLabel(BrandLogo.name)
+                .accessibilityIdentifier("brandLogo")
+                .place([600, 1004, 850, 1042], s)
             topLeft(L, sfx: sfx, s: s)
             knobs(L, sfx: sfx, s: s)
             transport(L, sfx: sfx, s: s)
