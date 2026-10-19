@@ -2,7 +2,7 @@ import XCTest
 import UIKit
 
 /// Face 2 on an iPad simulator (build.yml, "taps" job): each of the four faces (Modern black, Texture,
-/// Vintage, Platinum) as the sequencer draws it, then with the first track's arrow down (its VELOCITY
+/// Vintage, Platinum) as the sequencer draws it with the first track's arrow down (its VELOCITY
 /// graph open). Small JPEGs of the left part of the screen (the left panel, the rack and the start of
 /// the grid, with the Face 1 / Face 2 button at the bottom left) go into the log as UITREE IMG lines.
 final class Face2UITests: XCTestCase {
@@ -30,7 +30,7 @@ final class Face2UITests: XCTestCase {
     }
 
     /// The left `part` of the screen, upright, as a small JPEG printed in pieces (UITREE IMG <name> <k>/<n> <base64>).
-    private func picture(_ name: String, part: CGFloat = 0.42, width: CGFloat = 1000) {
+    private func picture(_ name: String, part: CGFloat = 0.42, width: CGFloat = 640) {
         let shot = XCUIScreen.main.screenshot()
         let attachment = XCTAttachment(screenshot: shot)
         attachment.name = "face2-" + name
@@ -50,7 +50,7 @@ final class Face2UITests: XCTestCase {
             }
             raw.draw(at: .zero)
         }
-        guard let data = small.jpegData(compressionQuality: 0.6) else { return }
+        guard let data = small.jpegData(compressionQuality: 0.5) else { return }
         let text = data.base64EncodedString()
         let piece = 6_000
         let parts = (text.count + piece - 1) / piece
@@ -62,7 +62,7 @@ final class Face2UITests: XCTestCase {
         }
     }
 
-    /// From Face 1: pick the mode, open the sequencer, picture it, then with the first track's arrow down.
+    /// From Face 1: pick the mode, open the sequencer and picture it with the first track's arrow down.
     private func face2(_ name: String, modeY: CGFloat) {
         at(562, modeY).tap()
         sleep(1)
@@ -70,7 +70,6 @@ final class Face2UITests: XCTestCase {
         let arrow = app.buttons["trackArrow0"]
         XCTAssertTrue(arrow.waitForExistence(timeout: 10), "Face 2 opens (\(name))")
         sleep(1)
-        picture(name)
         arrow.tap()
         sleep(1)
         picture(name + "-velocity")
