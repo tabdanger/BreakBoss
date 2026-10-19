@@ -48,6 +48,7 @@ enum KnockSelfTest {
         phase("checkUntouchedEnvelopes", checkUntouchedEnvelopes)
         phase("checkSamplerPlayhead", checkSamplerPlayhead)
         phase("checkTrackFX", checkTrackFX)
+        phase("checkPrecomputedEffects", checkPrecomputedEffects)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -1328,6 +1329,153 @@ enum KnockSelfTest {
               "Sampler: envelope presets for 808s, kicks and snares shape the volume")
         let round = (try? JSONEncoder().encode(presets)).flatMap { try? JSONDecoder().decode([SamplerEnvelopePreset].self, from: $0) }
         check(round == presets, "Sampler: envelope presets save and load")
+    }
+
+    /// Tyrone, Oct 19: every precomputed effect and time stretch on the SAMPLE page is heard, each
+    /// one off leaves the sound exactly as it loaded (nothing is computed), the file is never touched
+    /// (the processor works on a copy), and the library's preview volume sets how loud a preview plays.
+    static func checkPrecomputedEffects() {
+        let rate = 48_000.0
+        func sine(_ hz: Float, _ seconds: Double, _ amp: Float = 0.5) -> [Float] { (0..<Int(seconds * rate)).map { sinf(Float($0) * 2 * .pi * hz / Float(rate)) * amp } }
+        let tone = SampleBuffer(left: sine(220, 1), sampleRate: rate)
+        func run(_ sample: SampleBuffer = tone, bpm: Double = 120, _ change: (inout SamplerSettings) -> Void) -> SampleBuffer {
+            var st = SamplerSettings(); st.declick = .off; change(&st)
+            return SamplerProcessor.process(sample, st.offline(bpm: bpm) ?? SamplerOffline(declick: .off), engineRate: rate)
+        }
+        func values(_ b: SampleBuffer, right: Bool = false) -> [Float] { Array(UnsafeBufferPointer(start: right ? b.right : b.left, count: b.length)) }
+        func energy(_ x: [Float], _ r: Range<Int>) -> Float { x[r.clamped(to: 0..<x.count)].reduce(0) { $0 + $1 * $1 } }
+        func peak(_ b: SampleBuffer) -> Float { (0..<b.length).reduce(0) { max($0, abs(b.left[$1]), abs(b.right[$1])) } }
+        func crossings(_ x: [Float], _ r: Range<Int>) -> Int { r.clamped(to: 1..<x.count).reduce(0) { $0 + ((x[$1 - 1] < 0) != (x[$1] < 0) ? 1 : 0) } }
+
+        // untouched: nothing is computed, and every new control turned back to its start computes nothing again
+        let changes: [(String, (inout SamplerSettings) -> Void, (inout SamplerSettings) -> Void)] = [
+            ("Remove DC offset", { $0.removeDC = true }, { $0.removeDC = false }),
+            ("Normalize", { $0.normalize = true }, { $0.normalize = false }),
+            ("Reverse", { $0.reverse = true }, { $0.reverse = false }),
+            ("Reverse polarity", { $0.reversePolarity = true }, { $0.reversePolarity = false }),
+            ("Fade stereo", { $0.fadeStereo = true }, { $0.fadeStereo = false }),
+            ("Swap stereo", { $0.swapStereo = true }, { $0.swapStereo = false }),
+            ("POGO", { $0.pogo = 0.6 }, { $0.pogo = 0 }),
+            ("TRIM", { $0.trim = 0.5 }, { $0.trim = 0 }),
+            ("CROSSFADE", { $0.crossfade = 0.5 }, { $0.crossfade = 0 }),
+            ("EQ", { $0.eq = 0.8 }, { $0.eq = 0 }),
+            ("BOOST", { $0.boost = 1 }, { $0.boost = 0 }),
+            ("RM MIX", { $0.rmMix = 1; $0.rmFreq = 0.2 }, { $0.rmMix = 0 }),
+            ("DELAY", { $0.delayMix = 0.6; $0.delayTime = 0.9 }, { $0.delayMix = 0 }),
+            ("REVERB", { $0.reverbMix = 0.6; $0.reverbB = true }, { $0.reverbMix = 0 }),
+            ("Time stretch MUL", { $0.stretch = .stretchPro; $0.multiplier = 0.8 }, { $0.stretch = .resample; $0.multiplier = 0.5 }),
+        ]
+        check(SamplerSettings().offline(bpm: 120) == nil, "Precomputed effects: an untouched sampler computes nothing (the sound plays as it loaded)")
+        for (name, on, off) in changes {
+            var st = SamplerSettings(); on(&st)
+            let changed = st.offline(bpm: 120) != nil
+            off(&st)
+            check(changed && st.offline(bpm: 120) == nil, "Precomputed effects: \(name) computes the sound only while it's on")
+        }
+        let before = values(tone)
+        _ = run { $0.reverse = true; $0.normalize = true; $0.boost = 1; $0.reverbMix = 1 }
+        check(values(tone) == before, "Precomputed effects: processing works on a copy (the original sound is untouched)")
+
+        // the switches
+        let offset = SampleBuffer(left: sine(220, 1).map { $0 + 0.25 }, sampleRate: rate)
+        let centred = values(run(offset) { $0.removeDC = true })
+        let mean = centred.reduce(0, +) / Float(centred.count)
+        check(abs(mean) < 0.001, "Precomputed effects: Remove DC offset centres a skewed wave (mean \(mean))")
+        let faded = run { $0.fadeStereo = true }
+        let fl = values(faded), fr = values(faded, right: true), n = faded.length
+        check(energy(fl, 0..<n / 10) > energy(fr, 0..<n / 10) * 20 && energy(fr, n * 9 / 10..<n) > energy(fl, n * 9 / 10..<n) * 20,
+              "Precomputed effects: Fade stereo moves the sound from left to right")
+        let wide = SampleBuffer(left: sine(220, 0.5), right: sine(220, 0.5, 0.1), sampleRate: rate)
+        let swapped = run(wide) { $0.swapStereo = true }
+        check(abs(swapped.left[1_000] - wide.right[1_000]) < 0.000_1 && abs(swapped.right[1_000] - wide.left[1_000]) < 0.000_1,
+              "Precomputed effects: Swap stereo swaps left and right")
+
+        // time stretching
+        let pro = run { $0.stretch = .stretchPro; $0.multiplier = 0.75 }
+        check(abs(Double(pro.length) / rate - 2) < 0.05, "Precomputed effects: MUL ×2 with Stretch pro doubles the length (\(pro.length))")
+        let fourBeats = SampleBuffer(left: sine(220, 2), sampleRate: rate)
+        let auto = run(fourBeats, bpm: 60) { $0.stretch = .stretch; $0.time = .autodetect }
+        check(abs(Double(auto.length) / rate - 4) < 0.1, "Precomputed effects: TIME Autodetect follows the tempo (\(auto.length))")
+        let fixed = run { $0.stretch = .stretch; $0.time = .seconds(0.5) }
+        check(abs(Double(fixed.length) / rate - 0.5) < 0.03, "Precomputed effects: TIME in seconds sets the length (\(fixed.length))")
+
+        // the knobs
+        let late = SampleBuffer(left: [Float](repeating: 0, count: 14_400) + sine(220, 0.5), sampleRate: rate)
+        let trimmed = run(late) { $0.trim = 0.3 }
+        let firstLoud = values(trimmed).firstIndex { abs($0) > 0.01 } ?? -1
+        check(trimmed.length < late.length - 14_000 && firstLoud >= 0 && firstLoud < 200,
+              "Precomputed effects: TRIM cuts the silence before the sound (\(trimmed.length) samples, sound at \(firstLoud))")
+        let rawZ = crossings(values(tone), 0..<1_200)
+        let dive = run { $0.pogo = 0.5 }, rise = run { $0.pogo = -0.5 }
+        let diveZ = crossings(values(dive), 0..<1_200), riseZ = crossings(values(rise), 0..<1_200)
+        check(Double(diveZ) > Double(rawZ) * 1.6 && Double(riseZ) < Double(rawZ) * 0.75 && dive.length < tone.length && rise.length > tone.length,
+              "Precomputed effects: POGO bends the start's pitch (crossings raw \(rawZ), dive \(diveZ), rise \(riseZ))")
+        let mix = SampleBuffer(left: zip(sine(100, 0.5, 0.3), sine(6_000, 0.5, 0.3)).map { $0 + $1 }, sampleRate: rate)
+        func band(_ b: SampleBuffer, high: Bool) -> Float {
+            // one-pole split at 1 kHz: what's above or below it
+            let x = values(b), a = Float(1 - exp(-2 * Double.pi * 1_000 / rate))
+            var low: Float = 0, e: Float = 0
+            for v in x { low += a * (v - low); let part = high ? v - low : low; e += part * part }
+            return e
+        }
+        let bright = run(mix) { $0.eq = 1 }, dark = run(mix) { $0.eq = -1 }
+        check(band(bright, high: true) > band(mix, high: true) * 2.5 && band(bright, high: false) < band(mix, high: false) * 0.5
+              && band(dark, high: true) < band(mix, high: true) * 0.5,
+              "Precomputed effects: EQ tilts the sound bright (right) or dark (left) (highs ×\(band(bright, high: true) / band(mix, high: true)), lows ×\(band(bright, high: false) / band(mix, high: false)), dark highs ×\(band(dark, high: true) / band(mix, high: true)))")
+        let boosted = peak(run { $0.boost = 1 }) / peak(tone)
+        let normBoost = peak(run { $0.normalize = true; $0.boost = 0.5 })
+        check(abs(boosted - 3.98) < 0.1 && abs(normBoost - 0.98 * 1.995) < 0.05,
+              "Precomputed effects: BOOST adds up to +12 dB, after Normalize too (×\(boosted), \(normBoost))")
+        let ring = values(run { $0.rmMix = 1; $0.rmFreq = 0.5 })
+        var ringDiff: Float = 0
+        for i in 0..<min(ring.count, before.count) { ringDiff = max(ringDiff, abs(ring[i] - before[i])) }
+        let ringZ = crossings(ring, 0..<24_000), toneZ = crossings(before, 0..<24_000)
+        check(ringDiff > 0.2 && ringZ > toneZ, "Precomputed effects: RM MIX ring-modulates the sound (crossings \(toneZ) → \(ringZ))")
+        let hit = SampleBuffer(left: (0..<4_800).map { sinf(Float($0) * 2 * .pi * 200 / Float(rate)) * 0.5 * expf(-Float($0) / 800) }, sampleRate: rate)
+        let echoed = run(hit, bpm: 120) { $0.delayMix = 0.8; $0.delayTime = 0.55 }   // 1/8 at 120 = 0.25 s
+        let el = values(echoed), er = values(echoed, right: true)
+        let first = 12_000..<16_800, second = 24_000..<28_800
+        check(echoed.length > hit.length + 24_000 && energy(el, first) > energy(er, first) * 10 && energy(er, second) > energy(el, second) * 10,
+              "Precomputed effects: DELAY adds ping-pong echoes, left then right (\(echoed.length) samples)")
+        let room = run(hit) { $0.reverbMix = 0.8 }, hall = run(hit) { $0.reverbMix = 0.8; $0.reverbB = true }
+        let roomTail = energy(values(room), 9_600..<24_000), hallLate = energy(values(hall), 28_800..<38_400), roomLate = energy(values(room), 28_800..<38_400)
+        check(roomTail > 0.01 && hall.length > room.length && hallLate > roomLate * 10,
+              "Precomputed effects: REVERB adds a tail, B longer than A (room \(roomTail), hall late \(hallLate))")
+        let looped = run { $0.crossfade = 0.5; $0.loopStart = 0.25; $0.loopEnd = 0.75 }
+        check(looped.loopEnd > looped.loopStart && looped.loopStart > 0, "Precomputed effects: CROSSFADE makes a blended loop (\(looped.loopStart)…\(looped.loopEnd))")
+
+        // saved with the track; older saves load with everything off; an edit bakes them in
+        var all = SamplerSettings(); all.pogo = 0.3; all.eq = -0.2; all.boost = 0.4; all.rmMix = 0.5; all.rmFreq = 0.3
+        all.delayMix = 0.2; all.delayTime = 0.7; all.reverbMix = 0.3; all.reverbB = true
+        let round = (try? JSONEncoder().encode(all)).flatMap { try? JSONDecoder().decode(SamplerSettings.self, from: $0) }
+        check(round == all, "Precomputed effects: the new knobs are saved with the track")
+        let old = try? JSONDecoder().decode(SamplerSettings.self, from: Data(#"{"volume":0.5,"normalize":false}"#.utf8))
+        check(old?.offline(bpm: 120) == nil, "Precomputed effects: a sampler saved before them loads with them off")
+        all.baked { $0 }
+        check(all.offline(bpm: 120) == nil, "Precomputed effects: an edit bakes the new knobs into the file")
+
+        // the library's preview volume: a hit's level follows it
+        func previewPeak(_ gain: Float) -> Float {
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0), (.velocity, 0), (.boost, 0), (.clipper, 0),
+                                            (.clipDrive, 0), (.gatedReverb, 0), (.textureDelay, 0)]
+            for (p, v) in quiet { e.setParam(p, v) }
+            let flat = SampleBuffer(left: [Float](repeating: 0.2, count: 9_600), sampleRate: rate)
+            e.kitHandoff.publish(KitBuffers(name: "PREVIEW", samples: Array(repeating: flat, count: Pad.count),
+                                            settings: Array(repeating: PadSettings(), count: Pad.count), bassHz: 110))
+            e.send(KEvent(kind: .pad, a: 0, value: 1, gain: gain))
+            var top: Float = 0
+            for _ in 0..<20 {
+                var left = [Float](repeating: 0, count: 128), right = left
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+                top = max(top, left.map { abs($0) }.max() ?? 0)
+            }
+            return top
+        }
+        let full = previewPeak(1), half = previewPeak(0.5), none = previewPeak(0)
+        check(full > 0.01 && abs(half / full - 0.5) < 0.05 && none < 0.000_1,
+              "Preview volume: a preview plays at the slider's level (100% \(full), 50% \(half), 0% \(none))")
     }
 
     /// Tyrone, Oct 19: the ENVELOPE page changes nothing until it's changed. A track whose sampler
