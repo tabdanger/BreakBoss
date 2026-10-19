@@ -20,6 +20,10 @@ on:
         description: "Only the sequencer tap check (skip the build and self-test)"
         type: boolean
         default: false
+      only_test:
+        description: "Tap check: run only this UI test class (e.g. TrackFXUITests); empty = all (the whole set now runs past the time limit)"
+        type: string
+        default: ""
   workflow_call:
     inputs:
       tap_check:
@@ -183,9 +187,11 @@ jobs:
       - name: Tap through the sequencer
         run: |
           mkdir -p "$RUNNER_TEMP/uishots"
+          ONLY_TEST="${{ inputs.only_test }}"
           TEST_RUNNER_SHOTS="$RUNNER_TEMP/uishots" xcodebuild test \
             -project xcode/BreakBoss.xcodeproj \
             -scheme BreakBossUITests \
+            ${ONLY_TEST:+-only-testing:BreakBossUITests/$ONLY_TEST} \
             -destination "id=$UDID" \
             -derivedDataPath "$RUNNER_TEMP/dd-ui" \
             -resultBundlePath "$RUNNER_TEMP/ui.xcresult" \

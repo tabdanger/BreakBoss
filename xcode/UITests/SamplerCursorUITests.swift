@@ -125,7 +125,7 @@ final class SamplerCursorUITests: XCTestCase {
 
         // a hit: the cursor follows it (never stepping back), then rests at the start again
         wave.tap()
-        var playingShot = false
+        var playingShot = false, tappedAgain = false
         var now = rest
         let t0 = Date()
         while Date().timeIntervalSince(t0) < 12 {
@@ -134,6 +134,12 @@ final class SamplerCursorUITests: XCTestCase {
             print(String(format: "UITREE CURSOR %.2fs %@", Date().timeIntervalSince(t0), c.description))
             if c.playing && !playingShot && c.far > 0.05 { picture("sample-page-playing", of: window); picture("waveform-playing", of: wave, width: 1200); playingShot = true }
             if c.resets > rest.resets && !c.playing { break }
+            // the first tap after the window opens can land before the audio is running: tap once more
+            if c.hits == rest.hits && !tappedAgain && Date().timeIntervalSince(t0) > 3 {
+                print("UITREE CURSOR no hit after 3 s, tapping again")
+                tappedAgain = true
+                wave.tap()
+            }
         }
         // one tap can be several hits (the track's arpeggiator or chord): the cursor follows each newest one
         XCTAssertGreaterThanOrEqual(now.hits, rest.hits + 1, "the hit restarts the cursor (\(now))")
