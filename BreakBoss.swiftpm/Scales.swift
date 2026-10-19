@@ -60,6 +60,9 @@ struct MusicScale: Equatable {
         return note
     }
 
+    /// The piano roll's keys: C1 (24) to C8 (108).
+    static let lowestNote = 24, highestNote = 108
+
     static func noteName(_ note: Int) -> String {
         "\(noteNames[((note % 12) + 12) % 12])\(Int((Double(note) / 12).rounded(.down)) - 1)"
     }
@@ -81,6 +84,13 @@ extension KnockController {
         let tune = Int(state.pads.indices.contains(pad) ? state.pads[pad].tune.rounded() : 0)
         let root = pad == Pad.bass808.rawValue ? MusicScale.midiNote(hz: kitDefinition.bassHz) : 60
         return root + tune
+    }
+
+    /// The pitches a channel's notes can take, in semitones from its base note: C1 to C8 on the
+    /// piano roll (Tyrone, Oct 18).
+    func pitchLimits(pad: Int) -> ClosedRange<Int> {
+        let base = baseNote(pad: pad)
+        return (MusicScale.lowestNote - base)...(MusicScale.highestNote - base)
     }
 
     /// Snaps a pitch offset (semitones) to the chosen scale when SNAP TO SCALE is on.
