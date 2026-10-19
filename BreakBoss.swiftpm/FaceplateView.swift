@@ -361,15 +361,29 @@ struct RecordButtonView: View {
 struct FaceLight {
     let core: Color
     let glow: Color
+    /// The two colours as 0...1 RGB, for blending between them.
+    let coreRGB: SIMD3<Double>
+    let glowRGB: SIMD3<Double>
+
+    init(core: SIMD3<Double>, glow: SIMD3<Double>) {
+        coreRGB = core / 255; glowRGB = glow / 255
+        self.core = Color(red: coreRGB.x, green: coreRGB.y, blue: coreRGB.z)
+        self.glow = Color(red: glowRGB.x, green: glowRGB.y, blue: glowRGB.z)
+    }
 
     static func of(_ face: String) -> FaceLight {
-        func c(_ r: Double, _ g: Double, _ b: Double) -> Color { Color(red: r / 255, green: g / 255, blue: b / 255) }
         switch face {
-        case "texture": return FaceLight(core: c(189, 236, 254), glow: c(24, 100, 220))
-        case "vintage": return FaceLight(core: c(255, 250, 185), glow: c(236, 186, 72))
-        case "platinum": return FaceLight(core: c(253, 159, 90), glow: c(214, 50, 22))
-        default: return FaceLight(core: c(255, 198, 142), glow: c(232, 52, 24))
+        case "texture": return FaceLight(core: [189, 236, 254], glow: [24, 100, 220])
+        case "vintage": return FaceLight(core: [255, 250, 185], glow: [236, 186, 72])
+        case "platinum": return FaceLight(core: [253, 159, 90], glow: [214, 50, 22])
+        default: return FaceLight(core: [255, 198, 142], glow: [232, 52, 24])
         }
+    }
+
+    /// Between the face's two colours: 0 = its deep glow, 1 = its bright core.
+    func blend(_ t: Double) -> Color {
+        let c = glowRGB + (coreRGB - glowRGB) * min(1, max(0, t))
+        return Color(red: c.x, green: c.y, blue: c.z)
     }
 }
 

@@ -253,43 +253,95 @@ struct MeterSnapshot {
     var scopeWrite = 0
 }
 
+/// The screen's copy of the master waveform (see MasterBus): the line, its low and high edge,
+/// and the bass / top loudness of each point.
+struct ScopeRings {
+    var line = [Float](repeating: 0, count: MasterBus.scopeSize)
+    var low = [Float](repeating: 0, count: MasterBus.scopeSize)
+    var high = [Float](repeating: 0, count: MasterBus.scopeSize)
+    var bass = [Float](repeating: 0, count: MasterBus.scopeSize)
+    var top = [Float](repeating: 0, count: MasterBus.scopeSize)
+    /// Where the next point will go.
+    var write = 0
+}
+
 /// Audio publishes into preallocated storage; UI copies it on the main thread.
 final class SharedMeters {
+    /// The engine's status slots (KnockEngine.status), including [8] the count-in beats left.
+    static let statusCount = 10
     private let lock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
-    private let status = UnsafeMutablePointer<Double>.allocate(capacity: 8)
+    private let status = UnsafeMutablePointer<Double>.allocate(capacity: SharedMeters.statusCount)
     private let hits = UnsafeMutablePointer<UInt32>.allocate(capacity: Pad.count)
     private let scope = UnsafeMutablePointer<Float>.allocate(capacity: MasterBus.scopeSize)
+    private let scopeLow = UnsafeMutablePointer<Float>.allocate(capacity: MasterBus.scopeSize)
+    private let scopeHigh = UnsafeMutablePointer<Float>.allocate(capacity: MasterBus.scopeSize)
+    private let scopeBass = UnsafeMutablePointer<Float>.allocate(capacity: MasterBus.scopeSize)
+    private let scopeTop = UnsafeMutablePointer<Float>.allocate(capacity: MasterBus.scopeSize)
     private var scopeWrite = 0
+    private var scopeCleared = 0
     init() {
         lock.initialize(to: os_unfair_lock())
-        status.initialize(repeating: 0, count: 8)
+        status.initialize(repeating: 0, count: SharedMeters.statusCount)
         status[1] = -1; status[2] = -2
         hits.initialize(repeating: 0, count: Pad.count)
-        scope.initialize(repeating: 0, count: MasterBus.scopeSize)
+        for ring in [scope, scopeLow, scopeHigh, scopeBass, scopeTop] { ring.initialize(repeating: 0, count: MasterBus.scopeSize) }
     }
-    deinit { status.deallocate(); hits.deallocate(); scope.deallocate(); lock.deinitialize(count: 1); lock.deallocate() }
+    deinit {
+        status.deallocate(); hits.deallocate()
+        for ring in [scope, scopeLow, scopeHigh, scopeBass, scopeTop] { ring.deallocate() }
+        lock.deinitialize(count: 1); lock.deallocate()
+    }
     func publish(status source: UnsafeMutablePointer<Double>, hits sourceHits: UnsafeMutablePointer<UInt32>, master: MasterBus) {
         guard os_unfair_lock_trylock(lock) else { return }
-        status.update(from: source, count: 8)
+        status.update(from: source, count: SharedMeters.statusCount)
         hits.update(from: sourceHits, count: Pad.count)
-        scope.update(from: master.scope, count: MasterBus.scopeSize)
-        scopeWrite = master.scopeWrite
         os_unfair_lock_unlock(lock)
     }
-    /// The scope ring and its write position, copied into a buffer the screen reuses
+    /// Copies the waveform points written since the last call (audio thread, every block; if the
+    /// screen holds the lock, the next block catches up).
+    func publishScope(_ master: MasterBus) {
+        let end = master.scopeWrite
+        let cleared = master.scopeCleared != scopeCleared
+        guard end != scopeWrite || cleared, os_unfair_lock_trylock(lock) else { return }
+        let mask = MasterBus.scopeSize - 1
+        if cleared {
+            scopeCleared = master.scopeCleared
+            scope.update(repeating: 0, count: MasterBus.scopeSize)
+            scopeLow.update(repeating: 0, count: MasterBus.scopeSize)
+            scopeHigh.update(repeating: 0, count: MasterBus.scopeSize)
+            scopeBass.update(repeating: 0, count: MasterBus.scopeSize)
+            scopeTop.update(repeating: 0, count: MasterBus.scopeSize)
+        }
+        var i = scopeWrite
+        while i != end {
+            scope[i] = master.scope[i]
+            scopeLow[i] = master.scopeLow[i]
+            scopeHigh[i] = master.scopeHigh[i]
+            scopeBass[i] = master.scopeBass[i]
+            scopeTop[i] = master.scopeTop[i]
+            i = (i + 1) & mask
+        }
+        scopeWrite = end
+        os_unfair_lock_unlock(lock)
+    }
+    /// The scope rings and their write position, copied into buffers the screen reuses
     /// (no allocation, so it can run every display frame).
-    func copyScope(into buffer: inout [Float]) -> Int {
-        if buffer.count != MasterBus.scopeSize { buffer = [Float](repeating: 0, count: MasterBus.scopeSize) }
+    func copyScope(into rings: inout ScopeRings) {
         os_unfair_lock_lock(lock)
         defer { os_unfair_lock_unlock(lock) }
-        buffer.withUnsafeMutableBufferPointer { $0.baseAddress!.update(from: scope, count: MasterBus.scopeSize) }
-        return scopeWrite
+        let n = MasterBus.scopeSize
+        rings.line.withUnsafeMutableBufferPointer { $0.baseAddress!.update(from: scope, count: n) }
+        rings.low.withUnsafeMutableBufferPointer { $0.baseAddress!.update(from: scopeLow, count: n) }
+        rings.high.withUnsafeMutableBufferPointer { $0.baseAddress!.update(from: scopeHigh, count: n) }
+        rings.bass.withUnsafeMutableBufferPointer { $0.baseAddress!.update(from: scopeBass, count: n) }
+        rings.top.withUnsafeMutableBufferPointer { $0.baseAddress!.update(from: scopeTop, count: n) }
+        rings.write = scopeWrite
     }
 
     func snapshot() -> MeterSnapshot {
         os_unfair_lock_lock(lock)
         defer { os_unfair_lock_unlock(lock) }
-        return MeterSnapshot(status: Array(UnsafeBufferPointer(start: status, count: 10)),
+        return MeterSnapshot(status: Array(UnsafeBufferPointer(start: status, count: SharedMeters.statusCount)),
                              padHits: Array(UnsafeBufferPointer(start: hits, count: Pad.count)),
                              scope: Array(UnsafeBufferPointer(start: scope, count: MasterBus.scopeSize)), scopeWrite: scopeWrite)
     }

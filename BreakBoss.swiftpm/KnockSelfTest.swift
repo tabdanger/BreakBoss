@@ -47,6 +47,7 @@ enum KnockSelfTest {
         phase("checkSampler", checkSampler)
         phase("checkUntouchedEnvelopes", checkUntouchedEnvelopes)
         phase("checkSamplerPlayhead", checkSamplerPlayhead)
+        phase("checkScope", checkScope)
         phase("checkTrackFX", checkTrackFX)
         phase("checkPrecomputedEffects", checkPrecomputedEffects)
         let seconds = Date().timeIntervalSince(started)
@@ -962,6 +963,80 @@ enum KnockSelfTest {
         check(worst < 0.000_1, "Sampler waveform: the kept peaks cover the sound's own lows and highs")
         let cols = peaks.columns(sound, count: 1_330, zoom: 1, scroll: 0)
         check(cols.count == 1_330 && cols[0].1 > cols[1_300].1, "Sampler waveform: one column per pixel, louder at the start of a decaying hit")
+    }
+
+    /// The faceplate scope: the engine publishes the master waveform every block, it moves while a
+    /// pad plays, goes flat when nothing does, and its bass / top measure tells an 808 from a hat.
+    static func checkScope() {
+        let rate = 48_000.0
+        let n = 24_000
+        let subWave: [Float] = (0..<n).map { i -> Float in
+            let t = Float(i)
+            let fade: Float = 1 - t / Float(n)
+            return sinf(t * 2 * Float.pi * 50 / 48_000) * 0.8 * fade
+        }
+        let sub = SampleBuffer(left: subWave, sampleRate: rate)
+        var seed: UInt32 = 12_345
+        let fizz = SampleBuffer(left: (0..<n).map { i -> Float in
+            seed = seed &* 1_664_525 &+ 1_013_904_223
+            let white = Float(seed >> 8) / Float(1 << 24) * 2 - 1
+            return white * 0.5 * exp(-Float(i) / 6_000)
+        }, sampleRate: rate)
+        var samples = Array(repeating: sub, count: Pad.count)
+        samples[Pad.hat.rawValue] = fizz
+        let e = KnockEngine()
+        e.prepare(sampleRate: rate, maxFrames: 128)
+        let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0), (.velocity, 0), (.tighten, 0)]
+        for (p, v) in quiet { e.setParam(p, v) }
+        e.kitHandoff.publish(KitBuffers(name: "SCOPE", samples: samples, settings: Array(repeating: PadSettings(), count: Pad.count), bassHz: 110))
+        var left = [Float](repeating: 0, count: 128), right = left
+        func render(_ blocks: Int) {
+            for _ in 0..<blocks {
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+            }
+        }
+        var rings = ScopeRings()
+        // The last ~45 ms on screen: loudest point, and the bass and top shares.
+        func look() -> (loud: Float, bass: Float, top: Float, write: Int) {
+            e.meters.copyScope(into: &rings)
+            var loud: Float = 0, bass: Float = 0, top: Float = 0
+            for k in 1...ScopeTracer.window {
+                let i = (rings.write - k + MasterBus.scopeSize * 2) & (MasterBus.scopeSize - 1)
+                loud = max(loud, abs(rings.low[i]), abs(rings.high[i]))
+                bass += rings.bass[i]; top += rings.top[i]
+            }
+            let total = max(0.000_1, bass + top)
+            return (loud, bass / total, top / total, rings.write)
+        }
+        render(4)
+        e.send(KEvent(kind: .pad, a: Int32(Pad.kick.rawValue), value: 1))
+        render(20)
+        let low = look()
+        render(1)
+        let moved = look().write
+        check(low.loud > 0.05, "Scope: a pad playing puts its waveform on the screen (\(low.loud))")
+        check(moved != low.write, "Scope: the waveform reaches the screen every audio block, not in 30 Hz steps")
+        check(low.bass > 0.7, "Scope: a 50 Hz sub reads as bass (\(low.bass) bass, \(low.top) top)")
+        render(Int(rate * 6 / 128))
+        let idle = look()
+        check(idle.loud == 0, "Scope: the screen goes flat when nothing plays (\(idle.loud))")
+        e.send(KEvent(kind: .pad, a: Int32(Pad.hat.rawValue), value: 1))
+        render(20)
+        let high = look()
+        check(high.loud > 0.05 && high.top > 0.6, "Scope: a hat's fizz reads as top end (\(high.top) top, \(high.bass) bass)")
+        // the fizz fills a band around the line, the sub stays a thin line
+        e.meters.copyScope(into: &rings)
+        var band: Float = 0
+        for k in 1...ScopeTracer.window {
+            let i = (rings.write - k + MasterBus.scopeSize * 2) & (MasterBus.scopeSize - 1)
+            band = max(band, rings.high[i] - rings.low[i])
+        }
+        check(band > 0.1, "Scope: a hat's fizz fills a band on the screen (\(band))")
+        // Every face's trace runs between its own two colours.
+        for face in ["modern", "texture", "vintage", "platinum"] {
+            let light = FaceLight.of(face)
+            check(light.coreRGB.max() <= 1 && light.glowRGB.min() >= 0, "Scope: \(face) light blends inside its own colours")
+        }
     }
 
     static func checkSampler() {

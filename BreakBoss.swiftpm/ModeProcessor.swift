@@ -601,20 +601,55 @@ final class MasterBus {
     private var counter = 0
 
     // Waveform for the screen: 1024 points, written here, read by the UI (tearing is harmless).
+    // Each point keeps the average (the line), the lowest and highest sample it covers (the
+    // band a hi-hat's fizz fills, like a real scope's phosphor) and how loud its lows and highs
+    // are (bass under 150 Hz, top over 2.5 kHz), so the screen can follow what's playing.
     static let scopeSize = 1024
     let scope: UnsafeMutablePointer<Float>
+    let scopeLow: UnsafeMutablePointer<Float>
+    let scopeHigh: UnsafeMutablePointer<Float>
+    let scopeBass: UnsafeMutablePointer<Float>
+    let scopeTop: UnsafeMutablePointer<Float>
     private(set) var scopeWrite = 0
+    /// Counts clearScope calls, so the screen's copy knows to take the whole ring again.
+    private(set) var scopeCleared = 0
     private var scopeAccum: Float = 0
+    private var scopeMin: Float = 0
+    private var scopeMax: Float = 0
+    private var bassAccum: Float = 0
+    private var topAccum: Float = 0
+    private var bassLP: Float = 0
+    private var topLP: Float = 0
+    private var bassCoef: Float = 0.02
+    private var topCoef: Float = 0.28
     private var scopeCount = 0
     private var scopeDecimate = 8
 
     init() {
         scope = .allocate(capacity: MasterBus.scopeSize)
-        scope.initialize(repeating: 0, count: MasterBus.scopeSize)
+        scopeLow = .allocate(capacity: MasterBus.scopeSize)
+        scopeHigh = .allocate(capacity: MasterBus.scopeSize)
+        scopeBass = .allocate(capacity: MasterBus.scopeSize)
+        scopeTop = .allocate(capacity: MasterBus.scopeSize)
+        for ring in [scope, scopeLow, scopeHigh, scopeBass, scopeTop] { ring.initialize(repeating: 0, count: MasterBus.scopeSize) }
         prepare(sampleRate: 48_000)
     }
 
-    deinit { scope.deallocate() }
+    deinit { for ring in [scope, scopeLow, scopeHigh, scopeBass, scopeTop] { ring.deallocate() } }
+
+    /// Silence on the screen (the engine stops calling process when nothing has played for a while).
+    func clearScope() {
+        guard scopeHigh[(scopeWrite - 1) & (MasterBus.scopeSize - 1)] != 0
+                || scopeLow[(scopeWrite - 1) & (MasterBus.scopeSize - 1)] != 0 else { return }
+        scope.update(repeating: 0, count: MasterBus.scopeSize)
+        scopeLow.update(repeating: 0, count: MasterBus.scopeSize)
+        scopeHigh.update(repeating: 0, count: MasterBus.scopeSize)
+        scopeBass.update(repeating: 0, count: MasterBus.scopeSize)
+        scopeTop.update(repeating: 0, count: MasterBus.scopeSize)
+        scopeCleared &+= 1
+        scopeAccum = 0; scopeCount = 0; scopeMin = 0; scopeMax = 0; bassAccum = 0; topAccum = 0
+        bassLP = 0; topLP = 0
+    }
 
     func prepare(sampleRate: Double) {
         sr = Float(sampleRate)
@@ -622,6 +657,8 @@ final class MasterBus {
         drive.configure(ms: 20, sr: sr)
         output.configure(ms: 20, sr: sr)
         scopeDecimate = max(1, Int(sampleRate / 6_000))
+        bassCoef = 1 - exp(-2 * .pi * 150 / sr)
+        topCoef = 1 - exp(-2 * .pi * 2_500 / sr)
         lastCutoff = -1
         for c in 0..<2 { filter[c].reset() }
     }
@@ -670,12 +707,25 @@ final class MasterBus {
             l *= o; r *= o
             left[i] = l; right[i] = r
             // Scope
-            scopeAccum += (l + r) * 0.5
+            let m = (l + r) * 0.5
+            if scopeCount == 0 { scopeMin = m; scopeMax = m }
+            scopeAccum += m
+            scopeMin = min(scopeMin, m); scopeMax = max(scopeMax, m)
+            bassLP += (m - bassLP) * bassCoef
+            topLP += (m - topLP) * topCoef
+            let top = m - topLP
+            bassAccum += bassLP * bassLP
+            topAccum += top * top
             scopeCount += 1
             if scopeCount >= scopeDecimate {
-                scope[scopeWrite] = scopeAccum / Float(scopeCount)
+                let c = Float(scopeCount)
+                scope[scopeWrite] = scopeAccum / c
+                scopeLow[scopeWrite] = scopeMin
+                scopeHigh[scopeWrite] = scopeMax
+                scopeBass[scopeWrite] = (bassAccum / c).squareRoot()
+                scopeTop[scopeWrite] = (topAccum / c).squareRoot()
                 scopeWrite = (scopeWrite + 1) & (MasterBus.scopeSize - 1)
-                scopeAccum = 0
+                scopeAccum = 0; bassAccum = 0; topAccum = 0
                 scopeCount = 0
             }
         }
