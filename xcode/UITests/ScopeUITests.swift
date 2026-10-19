@@ -100,9 +100,9 @@ final class ScopeUITests: XCTestCase {
         tap(210, 83)            // ONE-SHOT
         sleep(2)
         picture(face + "-idle", of: scope)
-        let bass = play((217, 902), face + "-808", scope: scope)     // pad 7, 808 (lower half: harder)
+        let bass = play((217, 760), face + "-808", scope: scope)      // pad 7, 808 (top row, MPC order)
         sleep(2)
-        let hat = play((1038, 760), face + "-hat", scope: scope)      // pad 5, HAT
+        let hat = play((1038, 935), face + "-hat", scope: scope)     // pad 5, HAT (bottom row)
         XCTAssertGreaterThan(bass.level, 0.01, "\(face): the 808 moves the scope")
         XCTAssertGreaterThan(hat.level, 0.01, "\(face): the hat moves the scope")
         XCTAssertGreaterThan(bass.bass, hat.bass, "\(face): the 808 reads more bass than the hat")
