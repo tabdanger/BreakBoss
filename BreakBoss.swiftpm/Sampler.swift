@@ -367,6 +367,25 @@ struct SamplerSettings: Codable, Equatable {
     var fadeOut: Float = 0
     var crossfade: Float = 0
     var trim: Float = 0
+    /// POGO: a pitch bend over the start of the sound, −1…1 (0 = off). Right: it starts up to two
+    /// octaves high and dives to its own pitch (a punchy drop); left: it starts slow and low and spins
+    /// up to speed (a turntable start).
+    var pogo: Float = 0
+    /// EQ: a tilt, −1…1 (0 = flat): right brightens (highs up, lows down, ±6 dB at the ends), left darkens.
+    var eq: Float = 0
+    /// BOOST: gain after everything else, 0…1 = 0…+12 dB (after Normalize, so it still lifts it).
+    var boost: Float = 0
+    /// RM MIX: ring modulation by a sine (0 = off, 1 = all ring), at RM FREQ (20 Hz…5 kHz).
+    var rmMix: Float = 0
+    var rmFreq: Float = 0.5
+    /// DELAY: a stereo ping-pong delay computed into the sound (its echoes lengthen it), level 0…1
+    /// (0 = off), TIME a step of the tempo (the arpeggiator's steps).
+    var delayMix: Float = 0
+    var delayTime: Float = 0.5
+    /// REVERB: a reverb computed into the sound (its tail lengthens it), level 0…1 (0 = off). Type A
+    /// is a tight room, B a long hall.
+    var reverbMix: Float = 0
+    var reverbB = false
     // ENVELOPE page: one envelope and one LFO per target (SamplerTarget order)
     var envelopes: [SamplerEnvelope] = SamplerSettings.defaultEnvelopes
     var lfos: [SamplerLFO] = Array(repeating: SamplerLFO(), count: SamplerTarget.allCases.count)
@@ -445,6 +464,10 @@ struct SamplerSettings: Codable, Equatable {
     }
 
     var mul: Double { pow(4, Double(multiplier.clamped(0, 1) - 0.5) * 2) }
+    /// RM FREQ in Hz (20 Hz…5 kHz, evenly in octaves).
+    static func ringHertz(_ v: Float) -> Double { 20 * pow(250, Double(v.clamped(0, 1))) }
+    /// BOOST in dB.
+    static func boostDB(_ v: Float) -> Float { 12 * v.clamped(0, 1) }
 
     /// VOL's gain: evenly in dB, −12 dB at the bottom, 100% in the middle, +12 dB at the top (Tyrone, Oct 19).
     static func preGain(_ v: Float) -> Float { powf(4, v.clamped(0, 1) * 2 - 1) }
@@ -471,13 +494,17 @@ struct SamplerSettings: Codable, Equatable {
         let pre = stretch.precomputed
         // the loop points only change the sound when CROSSFADE blends across them
         let blend = crossfade > 0.000_1
+        let echo = delayMix > 0.000_1
         let o = SamplerOffline(resample: resample, declick: declick, removeDC: removeDC, normalize: normalize, reverse: reverse,
                                reversePolarity: reversePolarity, fadeStereo: fadeStereo, swapStereo: swapStereo,
                                start: start, length: length, fadeIn: fadeIn, fadeOut: fadeOut, crossfade: crossfade, trim: trim,
                                loopStart: blend ? loopStart : 0, loopEnd: blend ? loopEnd : 1,
                                stretch: pre ? stretch : .resample, stretchPitch: pre ? stretchPitch : 0,
                                multiplier: pre ? multiplier : 0.5, time: pre ? time : .none,
-                               bpm: pre && time.followsTempo ? bpm : 0)
+                               bpm: (pre && time.followsTempo) || echo ? bpm : 0,
+                               pogo: pogo, eq: eq, boost: boost, rmMix: rmMix, rmFreq: rmMix > 0.000_1 ? rmFreq : 0.5,
+                               delayMix: delayMix, delayTime: echo ? delayTime : 0.5,
+                               reverbMix: reverbMix, reverbB: reverbMix > 0.000_1 ? reverbB : false)
         return o == SamplerOffline() ? nil : o
     }
 
@@ -492,6 +519,8 @@ struct SamplerSettings: Codable, Equatable {
         resample = d.resample; declick = d.declick; removeDC = d.removeDC; normalize = d.normalize; reverse = d.reverse
         reversePolarity = d.reversePolarity; fadeStereo = d.fadeStereo; swapStereo = d.swapStereo
         start = d.start; length = d.length; fadeIn = d.fadeIn; fadeOut = d.fadeOut; crossfade = d.crossfade; trim = d.trim
+        pogo = d.pogo; eq = d.eq; boost = d.boost; rmMix = d.rmMix; rmFreq = d.rmFreq
+        delayMix = d.delayMix; delayTime = d.delayTime; reverbMix = d.reverbMix; reverbB = d.reverbB
         if stretch.precomputed { stretch = .resample; stretchPitch = 0; multiplier = 0.5; time = .none }
         markers = markers.compactMap(map)
         if customLoop {
@@ -506,7 +535,8 @@ struct SamplerSettings: Codable, Equatable {
         case volume, pitch, range, keepOnDisk, resample, loadRegions, loadSliceMarkers, declick, startOffset, useLoop, pingPong
         case loopStart, loopEnd, markers, regions
         case stretchPitch, multiplier, time, stretch, removeDC, normalize, reverse, reversePolarity, fadeStereo, swapStereo
-        case start, length, fadeIn, fadeOut, crossfade, trim, envelopes, lfos, cutoff, resonance, filterType
+        case start, length, fadeIn, fadeOut, crossfade, trim, pogo, eq, boost, rmMix, rmFreq, delayMix, delayTime, reverbMix, reverbB
+        case envelopes, lfos, cutoff, resonance, filterType
         case rootNote, mainPitch, addToKey, fineTune
         case polyMax, mono, porta, slide, gate, fullPorta, velTrack, keyTrack, keyMid, cutGroup, cutBy, cutSelf
         case levelPan, levelVol, levelX, levelY
@@ -534,6 +564,9 @@ extension SamplerSettings {
         reversePolarity = v(.reversePolarity, d.reversePolarity); fadeStereo = v(.fadeStereo, d.fadeStereo); swapStereo = v(.swapStereo, d.swapStereo)
         start = v(.start, d.start); length = v(.length, d.length); fadeIn = v(.fadeIn, d.fadeIn); fadeOut = v(.fadeOut, d.fadeOut)
         crossfade = v(.crossfade, d.crossfade); trim = v(.trim, d.trim)
+        pogo = v(.pogo, d.pogo); eq = v(.eq, d.eq); boost = v(.boost, d.boost); rmMix = v(.rmMix, d.rmMix); rmFreq = v(.rmFreq, d.rmFreq)
+        delayMix = v(.delayMix, d.delayMix); delayTime = v(.delayTime, d.delayTime)
+        reverbMix = v(.reverbMix, d.reverbMix); reverbB = v(.reverbB, d.reverbB)
         envelopes = v(.envelopes, d.envelopes); lfos = v(.lfos, d.lfos)
         cutoff = v(.cutoff, d.cutoff); resonance = v(.resonance, d.resonance); filterType = v(.filterType, d.filterType)
         rootNote = v(.rootNote, d.rootNote); mainPitch = v(.mainPitch, d.mainPitch); addToKey = v(.addToKey, d.addToKey)
@@ -563,6 +596,8 @@ struct SamplerOffline: Equatable {
     var multiplier: Float = 0.5
     var time: SamplerTime = .none
     var bpm: Double = 0
+    var pogo: Float = 0, eq: Float = 0, boost: Float = 0, rmMix: Float = 0, rmFreq: Float = 0.5
+    var delayMix: Float = 0, delayTime: Float = 0.5, reverbMix: Float = 0, reverbB = false
 }
 
 // MARK: - Computing the sound (off the audio thread)
@@ -595,12 +630,18 @@ enum SamplerProcessor {
             region.reverse()
         }
 
-        // SMP START and LENGTH, then TRIM the quiet end
+        // SMP START and LENGTH, then TRIM the quiet end (and, turned up, the quiet start: the cut
+        // lands a millisecond before the sound comes in, so its attack stays whole)
         let total = max(1, l.count)
-        let a = min(total - 1, Int(Double(o.start.clamped(0, 1)) * Double(total)))
+        var a = min(total - 1, Int(Double(o.start.clamped(0, 1)) * Double(total)))
         var b = min(total, a + max(1, Int((Double(o.length.clamped(0, 1)) * Double(total - a)).rounded())))
         let threshold: Float = o.trim <= 0.000_1 ? 0 : powf(10, (-90 + 70 * o.trim.clamped(0, 1)) / 20)
         while b > a + 1 && max(abs(l[b - 1]), abs(r[b - 1])) <= threshold { b -= 1 }
+        if o.trim > 0.000_1 {
+            var first = a
+            while first < b - 1 && max(abs(l[first]), abs(r[first])) <= threshold { first += 1 }
+            a = max(a, first - Int(0.001 * rate))
+        }
 
         // Declicking: bleeding fades use the audio just outside the cut
         let d = o.declick
@@ -670,21 +711,167 @@ enum SamplerProcessor {
             }
         }
 
+        var fadeMarks = (Int(Double(fin) * stretched), ol.count - Int(Double(fout) * stretched))
+
+        // POGO: the start bends from high (or low) into the sound's own pitch
+        if abs(o.pogo) > 0.001 && ol.count > 1 {
+            let (pl, pr, map) = pogo(ol, or, amount: Double(o.pogo.clamped(-1, 1)), rate: rate)
+            ol = pl; or = pr
+            loopStart = map(loopStart); loopEnd = map(loopEnd)
+            fadeMarks = (map(fadeMarks.0), map(fadeMarks.1))
+            remap(map)
+        }
+        // EQ: a tilt around 800 Hz
+        if abs(o.eq) > 0.001 { tilt(&ol, amount: o.eq, rate: rate); tilt(&or, amount: o.eq, rate: rate) }
+        // RM MIX: ring modulation by a sine at RM FREQ
+        if o.rmMix > 0.001 {
+            let m = o.rmMix.clamped(0, 1)
+            let step = 2 * Double.pi * SamplerSettings.ringHertz(o.rmFreq) / rate
+            for i in ol.indices {
+                let g = (1 - m) + m * Float(sin(step * Double(i)))
+                ol[i] *= g; or[i] *= g
+            }
+        }
+        // DELAY and REVERB: their echoes and tail are added after the sound's end
+        if o.delayMix > 0.001 {
+            let beats = SamplerSettings.step(o.delayTime).1
+            let seconds = beats * 60 / max(o.bpm > 0 ? o.bpm : 120, 1)
+            (ol, or) = echo(ol, or, mix: o.delayMix.clamped(0, 1), delay: max(1, Int(seconds * rate)), rate: rate)
+        }
+        if o.reverbMix > 0.001 { (ol, or) = reverb(ol, or, mix: o.reverbMix.clamped(0, 1), hall: o.reverbB, rate: rate) }
+
         if o.normalize {
             var peak: Float = 0
             for i in ol.indices { peak = max(peak, abs(ol[i]), abs(or[i])) }
             if peak > 0.000_01 { let g = 0.98 / peak; for i in ol.indices { ol[i] *= g; or[i] *= g } }
         }
+        // BOOST: last, so it lifts a normalized sound too
+        if o.boost > 0.001 {
+            let g = powf(10, SamplerSettings.boostDB(o.boost) / 20)
+            for i in ol.indices { ol[i] *= g; or[i] *= g }
+        }
         if ol.isEmpty { ol = [0]; or = [0] }
         let out = SampleBuffer(left: ol, right: or, sampleRate: rate)
         out.bitDepth = raw.bitDepth
-        out.stereo = raw.stereo || o.fadeStereo
+        out.stereo = raw.stereo || o.fadeStereo || o.delayMix > 0.001 || o.reverbMix > 0.001
         out.loopStart = min(max(0, loopStart), max(0, ol.count - 2))
         out.loopEnd = loopEnd > out.loopStart + 1 ? min(loopEnd, ol.count - 1) : 0
         out.cues = marks.filter { $0 > 0 && $0 < ol.count }
         if region.count == 2, region[0] >= 0, region[1] < ol.count, region[1] - region[0] > 32 { out.region = region[0]...region[1] }
-        if d.bleeds { out.fadeMarks = (Int(Double(fin) * stretched), ol.count - Int(Double(fout) * stretched)) }
+        if d.bleeds { out.fadeMarks = fadeMarks }
         return out
+    }
+
+    /// POGO: reads the sound at a speed that starts `amount` × 2 octaves away from its own and glides
+    /// back to it (most of the way within about a tenth of a second). Also returns where each point of
+    /// the old sound lands in the new one.
+    static func pogo(_ l: [Float], _ r: [Float], amount: Double, rate: Double) -> ([Float], [Float], (Int) -> Int) {
+        let n = l.count
+        let depth = amount * 24
+        let tau = 0.08 * rate
+        var positions: [Double] = []
+        positions.reserveCapacity(n)
+        var pos = 0.0, i = 0.0
+        let cap = n * 4
+        while pos < Double(n - 1) && positions.count < cap {
+            positions.append(pos)
+            pos += pow(2, depth * exp(-i / tau) / 12)
+            i += 1
+        }
+        func at(_ x: [Float], _ p: Double) -> Float {
+            let k = Int(p), t = Float(p - Double(k))
+            func v(_ j: Int) -> Float { x[min(max(j, 0), n - 1)] }
+            let y0 = v(k - 1), y1 = v(k), y2 = v(k + 1), y3 = v(k + 2)
+            let c1 = 0.5 * (y2 - y0)
+            let c2 = y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3
+            let c3 = 0.5 * (y3 - y0) + 1.5 * (y1 - y2)
+            return ((c3 * t + c2) * t + c1) * t + y1
+        }
+        let ol = positions.map { at(l, $0) }, or = positions.map { at(r, $0) }
+        let map: (Int) -> Int = { j in
+            // the first new sample that reads at or past old sample j
+            var lo = 0, hi = positions.count
+            while lo < hi { let mid = (lo + hi) / 2; if positions[mid] < Double(j) { lo = mid + 1 } else { hi = mid } }
+            return lo
+        }
+        return (ol, or, map)
+    }
+
+    /// EQ: a one-pole split at 800 Hz, the highs turned up and the lows down by the same dB (or the
+    /// other way round), ±6 dB at the ends.
+    static func tilt(_ x: inout [Float], amount: Float, rate: Double) {
+        let a = Float(1 - exp(-2 * Double.pi * 800 / rate))
+        let g = powf(10, 6 * amount.clamped(-1, 1) / 20)
+        var low: Float = 0
+        for i in x.indices {
+            low += a * (x[i] - low)
+            x[i] = low / g + (x[i] - low) * g
+        }
+    }
+
+    /// DELAY: ping-pong echoes, the first on the left, then the right, each half as loud (until they
+    /// fade under −60 dB), mixed in at `mix`.
+    static func echo(_ l: [Float], _ r: [Float], mix: Float, delay d: Int, rate: Double) -> ([Float], [Float]) {
+        let feedback: Float = 0.5
+        let repeats = 10
+        let n = l.count
+        let total = min(n + d * repeats, n + Int(8 * rate))
+        var ol = l + [Float](repeating: 0, count: total - n), or = r + [Float](repeating: 0, count: total - n)
+        var el = [Float](repeating: 0, count: total), er = el
+        for i in d..<max(d, total) {
+            let j = i - d
+            let dry = j < n ? (l[j] + r[j]) * 0.5 : 0
+            el[i] = dry + feedback * er[j]
+            er[i] = feedback * el[j]
+        }
+        for i in 0..<total { ol[i] += mix * el[i]; or[i] += mix * er[i] }
+        return (ol, or)
+    }
+
+    /// REVERB: four damped combs and two all-passes a side (Schroeder / Freeverb), A a tight room
+    /// (0.8 s), B a hall (2.4 s, a little pre-delay), mixed in at `mix`; the tail is added to the end.
+    static func reverb(_ l: [Float], _ r: [Float], mix: Float, hall: Bool, rate: Double) -> ([Float], [Float]) {
+        let seconds = hall ? 2.4 : 0.8
+        let damp: Float = hall ? 0.25 : 0.4
+        let pre = hall ? Int(0.02 * rate) : 0
+        let k = rate / 44_100
+        let n = l.count
+        let total = n + Int(seconds * rate) + pre
+        func side(_ x: [Float], spread: Int) -> [Float] {
+            let combs = [1116, 1188, 1277, 1356].map { max(1, Int(Double($0 + spread) * k)) }
+            let passes = [556, 441].map { max(1, Int(Double($0 + spread) * k)) }
+            var out = [Float](repeating: 0, count: total)
+            for c in combs {
+                let g = Float(pow(10, -3 * Double(c) / (seconds * rate)))
+                var buf = [Float](repeating: 0, count: c)
+                var store: Float = 0, at = 0
+                for i in 0..<total {
+                    let j = i - pre
+                    let input = j >= 0 && j < n ? x[j] : 0
+                    let y = buf[at]
+                    store = y * (1 - damp) + store * damp
+                    buf[at] = input + store * g
+                    at += 1; if at == c { at = 0 }
+                    out[i] += y * 0.08
+                }
+            }
+            for p in passes {
+                var buf = [Float](repeating: 0, count: p)
+                var at = 0
+                for i in 0..<total {
+                    let b = buf[at]
+                    let y = -out[i] + b
+                    buf[at] = out[i] + b * 0.5
+                    at += 1; if at == p { at = 0 }
+                    out[i] = y
+                }
+            }
+            return out
+        }
+        let wl = side(l, spread: 0), wr = side(r, spread: 23)
+        var ol = l + [Float](repeating: 0, count: total - n), or = r + [Float](repeating: 0, count: total - n)
+        for i in 0..<total { ol[i] += mix * wl[i]; or[i] += mix * wr[i] }
+        return (ol, or)
     }
 
     private static func removeDC(_ x: inout [Float]) {

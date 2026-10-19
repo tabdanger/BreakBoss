@@ -230,6 +230,8 @@ struct SequencerView: View {
     @AppStorage("samplerWindowX") private var samplerX: Double = -1
     @AppStorage("samplerWindowY") private var samplerY: Double = -1
     @AppStorage("samplerWindowW") private var samplerW: Double = 0
+    /// The library's preview volume (KnockController.previewVolume reads the same key).
+    @AppStorage(KnockController.previewVolumeKey) private var previewVolume: Double = 1
     @State private var samplerMove: CGSize = .zero
     @State private var samplerGrow: CGFloat = 0
     @State private var libraryType: SoundType? = .kick
@@ -922,6 +924,11 @@ struct SequencerView: View {
                 Button { importKind = .pack } label: { smallLabel("folder.badge.plus", "PACK", s) }
                 if let pad = selectedPad, !controller.isPlugin { Button { recordPad = pad } label: { smallLabel("record.circle", "REC", s) } }
             }
+            // how loud picked sounds are heard; let go to hear the selected track at that level
+            PreviewFader(value: previewVolume, scale: s, color: accent,
+                         change: { previewVolume = $0 },
+                         done: { if let pad = selectedPad { controller.previewPad(pad) } })
+                .frame(height: 24 * s)
             Text(libraryNote.isEmpty ? "DRAG A SOUND ONTO THE RACK" : libraryNote).font(.system(size: 8 * s, weight: .semibold)).foregroundColor(S.dim).lineLimit(1)
         }
         .padding(.horizontal, 8 * s).padding(.top, 9 * s).padding(.bottom, 6 * s)
@@ -948,7 +955,7 @@ struct SequencerView: View {
             let pad = ch.pad
             // heard once the engine has it: a fixed wait played the old sound when loading took longer
             controller.replaceRackSound(ch.id, with: sound) {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) { controller.auditionPad(pad) }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) { controller.previewPad(pad) }
             }
         }
         .onDrag {
