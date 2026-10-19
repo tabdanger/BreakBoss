@@ -843,8 +843,8 @@ enum KnockSelfTest {
         func sumZ(_ v: [Int], _ r: ClosedRange<Int>) -> Int { r.reduce(0) { $0 + v[$1] } }
         let one = [(0, 0, 0)]
         // Arpeggiator: a tap becomes a run of notes, TIME apart (a beat's worth at 140 BPM)
-        let arp16 = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], hits: one, blocks: 200).hits[0]
-        let arp8 = play([misc { $0.arpMode = 1; $0.arpTime = 0.55 }], hits: one, blocks: 200).hits[0]
+        let arp16 = play([misc { $0.arpMode = 1; $0.arpTime = 0.35; $0.arpChord = 1 }], hits: one, blocks: 200).hits[0]
+        let arp8 = play([misc { $0.arpMode = 1; $0.arpTime = 0.55; $0.arpChord = 1 }], hits: one, blocks: 200).hits[0]
         let arpOff = play([misc { _ in }], hits: one, blocks: 200).hits[0]
         check(arpOff == 1 && arp16 == 4 && arp8 == 2, "Sampler MISC: the arpeggiator plays 1/16s and 1/8s (\(arp16), \(arp8), off \(arpOff))")
         for mode in 2...5 {
@@ -856,11 +856,17 @@ enum KnockSelfTest {
         let downRun = play([misc { $0.arpMode = 2; $0.arpTime = 0.35; $0.arpChord = 11 }], tone1k, hits: one, blocks: 60)
         check(sumZ(upRun.zc, 2...30) * 3 < sumZ(downRun.zc, 2...30) * 2,
               "Sampler MISC: Up starts on the low note, Down on the high one (\(sumZ(upRun.zc, 2...30)) vs \(sumZ(downRun.zc, 2...30)) crossings)")
-        // Chord "Auto (sustain)": a chord held on the track is arpeggiated as one run, low to high
+        // Chord "Auto (sustain)", latched: a chord held on the track is arpeggiated as one run, low to high,
+        // and keeps running after it is let go until the transport stops
         let chordHits = [(0, 0, 0), (0, 0, 4), (0, 0, 7)]
         let autoChord = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: chordHits, blocks: 200)
-        let autoSingle = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: one, blocks: 200)
-        check(autoChord.hits[0] == 4, "Sampler MISC: Auto (sustain) runs one arpeggio over a held chord (\(autoChord.hits[0]) notes, not 12)")
+        let autoSingle = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: one, blocks: 450)
+        check(autoChord.hits[0] >= 4 && autoChord.hits[0] <= 6, "Sampler MISC: Auto (sustain) runs one arpeggio over a held chord (\(autoChord.hits[0]) notes, not 12+)")
+        check(autoSingle.hits[0] >= 9 && sum(autoSingle.l, 400...449) > 0.001,
+              "Sampler MISC: Auto latch keeps the arpeggio running after the note is let go (\(autoSingle.hits[0]) notes)")
+        let relatched = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: [(0, 0, 0), (250, 0, 12)], blocks: 450)
+        check(sumZ(relatched.zc, 300...449) * 4 > sumZ(autoSingle.zc, 300...449) * 7,
+              "Sampler MISC: Auto latch: a note played after letting go starts a new set (\(sumZ(relatched.zc, 300...449)) vs \(sumZ(autoSingle.zc, 300...449)) crossings)")
         check(sumZ(autoChord.zc, 0...199) * 10 > sumZ(autoSingle.zc, 0...199) * 11,
               "Sampler MISC: Auto (sustain) plays the chord's notes (\(sumZ(autoChord.zc, 0...199)) vs \(sumZ(autoSingle.zc, 0...199)) crossings)")
         let joined = play([misc { $0.arpMode = 1; $0.arpTime = 0.35 }], tone1k, hits: [(0, 0, 0), (20, 0, 12)], blocks: 200)

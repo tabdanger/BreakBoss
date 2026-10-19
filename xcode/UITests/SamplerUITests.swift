@@ -258,37 +258,25 @@ final class SamplerUITests: XCTestCase {
         any("samplerCutUp").tap()
         sleep(1)
         print("UITREE STEP Cut after + = \(any("samplerCut").value ?? "?")")
-        for id in ["samplerCutUp", "samplerPolyMaxUp", "samplerPolyMax", "samplerKnobSLIDE", "samplerPorta"] {
-            let e = any(id)
-            print("UITREE FRAME \(id) \(e.frame) hittable=\(e.exists && e.isHittable)")
-        }
+        // MAX's + can sit over the sound library's chip strip, which takes the touch: move the window
+        // down by its title bar first, as a player would (Tyrone: leave the strip as it is)
+        let title = any("samplerTitleBar")
+        let moveBy: CGFloat = 70
+        let grabDown = title.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        grabDown.press(forDuration: 0.3, thenDragTo: grabDown.withOffset(CGVector(dx: 0, dy: moveBy)))
+        sleep(1)
+        print("UITREE FRAME samplerPolyMaxUp after moving the window \(any("samplerPolyMaxUp").frame)")
         any("samplerPolyMaxUp").tap()
         sleep(1)
         print("UITREE STEP MAX after + = \(any("samplerPolyMax").value ?? "?")")
-        if (any("samplerPolyMax").value as? String) != "1" {
-            any("samplerPolyMaxUp").coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-            sleep(1)
-            print("UITREE STEP MAX after a second + = \(any("samplerPolyMax").value ?? "?")")
-            _ = probe("settings after MAX +")
-            // where does a touch on MAX's + go? try a hold, then the left and right of the button
-            let plus = any("samplerPolyMaxUp")
-            plus.press(forDuration: 0.4); sleep(1)
-            print("UITREE STEP MAX after a hold = \(any("samplerPolyMax").value ?? "?")")
-            for dx in [0.15, 0.85] {
-                plus.coordinate(withNormalizedOffset: CGVector(dx: dx, dy: 0.5)).tap(); sleep(1)
-                print("UITREE STEP MAX after a tap at \(dx) = \(any("samplerPolyMax").value ?? "?")")
-            }
-            any("samplerPolyMaxDown").tap(); sleep(1)
-            print("UITREE STEP MAX after - = \(any("samplerPolyMax").value ?? "?")")
-            print("UITREE TREE near MAX: " + app.descendants(matching: .any).allElementsBoundByIndex
-                .filter { $0.frame.intersects(plus.frame.insetBy(dx: -4, dy: -4)) }
-                .map { "\($0.elementType.rawValue):\($0.identifier):\($0.label)@\($0.frame)" }.joined(separator: " | "))
-            snap("max-stepper")
-        }
+        if (any("samplerPolyMax").value as? String) != "1" { snap("max-stepper") }
         XCTAssertEqual(any("samplerPolyMax").value as? String, "1", "MAX steps up from no limit")
         any("samplerMono").tap()
         sleep(1)
         XCTAssertEqual(any("samplerMono").value as? String, "on", "Mono switches on")
+        let grabUp = title.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        grabUp.press(forDuration: 0.3, thenDragTo: grabUp.withOffset(CGVector(dx: 0, dy: -moveBy)))
+        sleep(1)
         // the keyboard: C3 to C7, as in the render
         XCTAssertTrue(any("samplerKey36").exists && any("samplerKey84").exists, "the keyboard runs from C3 to C7")
         XCTAssertFalse(any("samplerKey86").exists, "the keyboard stops at C7")

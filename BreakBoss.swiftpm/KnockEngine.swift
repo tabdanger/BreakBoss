@@ -178,8 +178,8 @@ final class KnockEngine {
     private var pendingCount = 0
     /// Each track's last note speed, for Porta.
     private let lastRate: UnsafeMutablePointer<Double>
-    /// Chord "Auto (sustain)": the notes held on each track (low to high, up to `arpHeldMax`), how
-    /// long each is still held, and how long the track's arpeggio keeps running.
+    /// Chord "Auto (sustain)", latched: the notes on each track's arpeggio (low to high, up to `arpHeldMax`),
+    /// how long each is still held (0 = let go but latched), and whether the track's arpeggio is running.
     static let arpHeldMax = 8
     private let arpHeld: UnsafeMutablePointer<Float>
     private let arpHeldLeft: UnsafeMutablePointer<Int>
@@ -1092,8 +1092,9 @@ final class KnockEngine {
             holdForArp(pad: pad, semis: semis, length: length)
             // already running on this track: the note joins it; otherwise its run starts (the first
             // step next block, once every note of a chord that lands together has joined)
-            if arpRunLeft[pad] > 0 { arpRunLeft[pad] = max(arpRunLeft[pad], length); return }
-            arpRunLeft[pad] = length
+            // latch: the run keeps going after the notes are let go, until the transport stops
+            if arpRunLeft[pad] > 0 { return }
+            arpRunLeft[pad] = KnockEngine.arpLatched
             arpRunning = true
             scheduleAutoArp(pad: pad, rt: rt, velocity: velocity, length: length)
             return
@@ -1284,10 +1285,12 @@ final class KnockEngine {
             if h.arpStep >= 0 {
                 let kit = self.kit
                 let rt = kit.map { h.pad < $0.sampler.count ? $0.sampler[h.pad] : SamplerRT() } ?? SamplerRT()
-                guard let note = autoArpNote(pad: h.pad, rt: rt, step: h.arpStep) else { continue }
+                // the run stops when the track's arpeggio is turned off or moved off Auto
+                guard rt.active && rt.arpMode != 0 && rt.arpAuto, arpRunLeft[h.pad] > 0,
+                      let note = autoArpNote(pad: h.pad, rt: rt, step: h.arpStep) else { arpRunLeft[h.pad] = 0; continue }
                 trigger(pad: h.pad, velocity: h.velocity, semis: note, lengthSamples: h.length, glide: false,
                         arp: false, echo: true, slide: h.slide && h.arpStep > 0)
-                // the next step, while the run lasts (a note that joins later and holds on longer keeps it going)
+                // the next step (latched: the run lasts until the transport stops)
                 let step = max(1, Int(rt.arpStepBeats * samplesPerBeat))
                 let next = h.due + step
                 if arpRunLeft[h.pad] - next > step / 2 {
@@ -1334,10 +1337,17 @@ final class KnockEngine {
         return (at(0), noteLength)
     }
 
+    /// The run length of a latched Auto arpeggio (runs until the transport stops).
+    static let arpLatched = Int.max / 4
+
     /// Chord "Auto (sustain)": keeps `semis` as held on the track for `length` samples (low to high).
+    /// Latch: a note let go stays on the arpeggio; a note played once every note is let go starts a new set.
     private func holdForArp(pad: Int, semis: Float, length: Int) {
         let base = pad * KnockEngine.arpHeldMax
         var count = arpHeldCount[pad]
+        var anyHeld = false
+        for i in 0..<count where arpHeldLeft[base + i] > 0 { anyHeld = true }
+        if !anyHeld { count = 0 }
         // the same note again just holds on longer
         for i in 0..<count where arpHeld[base + i] == semis { arpHeldLeft[base + i] = max(arpHeldLeft[base + i], length); return }
         if count == KnockEngine.arpHeldMax {
@@ -1357,20 +1367,13 @@ final class KnockEngine {
         arpHeldCount[pad] = count + 1
     }
 
-    /// Lets go of held notes that have ended and stops each track's run when its time is up.
+    /// Counts down how long each note is still held (a note let go stays latched on the arpeggio).
     private func countDownHeld(frames: Int) {
         var any = false
         for pad in 0..<Pad.count where arpRunLeft[pad] > 0 || arpHeldCount[pad] > 0 {
             let base = pad * KnockEngine.arpHeldMax
-            var keep = 0
-            for i in 0..<arpHeldCount[pad] {
-                let left = arpHeldLeft[base + i] - frames
-                if left > 0 { arpHeld[base + keep] = arpHeld[base + i]; arpHeldLeft[base + keep] = left; keep += 1 }
-            }
-            arpHeldCount[pad] = keep
-            arpRunLeft[pad] = max(0, arpRunLeft[pad] - frames)
-            if arpRunLeft[pad] > 0 && keep == 0 { arpRunLeft[pad] = 0 }
-            if arpRunLeft[pad] > 0 || keep > 0 { any = true }
+            for i in 0..<arpHeldCount[pad] { arpHeldLeft[base + i] = max(0, arpHeldLeft[base + i] - frames) }
+            if arpRunLeft[pad] > 0 { arpRunLeft[pad] = max(1, arpRunLeft[pad] - frames); any = true }
         }
         arpRunning = any
     }
