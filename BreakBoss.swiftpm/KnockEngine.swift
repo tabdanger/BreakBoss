@@ -799,7 +799,7 @@ final class KnockEngine {
         case .loopGateOff:
             endGate(Int(e.a))
         case .pad:
-            trigger(pad: Int(e.a), velocity: Float(e.value), semis: 0, lengthSamples: 0, glide: false)
+            trigger(pad: Int(e.a), velocity: Float(e.value), semis: 0, lengthSamples: 0, glide: false, gain: e.gain)
             midiOutHit(pad: Int(e.a), velocity: Float(e.value), semis: 0, length: 0, offset: offset)   // pad taps reach the DAW
             record(pad: Int(e.a), velocity: Float(e.value), semis: 0, offset: offset)
         case .padPitched:
@@ -824,7 +824,8 @@ final class KnockEngine {
             loopStartBeat = 0
             beat = -Double(max(0, e.a))
         case .bass:
-            trigger(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), lengthSamples: 0, glide: false, heldNote: Int(e.a) + Pad.bassRootNote)
+            trigger(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), lengthSamples: 0, glide: false, heldNote: Int(e.a) + Pad.bassRootNote,
+                    gain: e.gain)
             midiOutHit(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), length: 0, offset: offset)
             record(pad: Pad.bass808.rawValue, velocity: Float(e.value), semis: Float(e.a), offset: offset)
         case .padMask:
@@ -1133,7 +1134,7 @@ final class KnockEngine {
     /// `offsets`: this note's own pan, MOD X and MOD Y (echoes). `slide`: glide in from the last note.
     private func trigger(pad: Int, velocity: Float, semis: Float, lengthSamples: Int, glide: Bool, heldNote: Int = -1,
                          arp: Bool = true, echo: Bool = true, offsets: (Float, Float, Float) = (0, 0, 0), slide: Bool = false,
-                         level: Float = 1) {
+                         level: Float = 1, gain: Float = 1) {
         guard pad >= 0 && pad < Pad.count, padMask & (1 << UInt16(pad)) != 0, let kit else { return }
         var sample = kit.samples[pad]
         let ps = kit.settings[pad]
@@ -1155,7 +1156,7 @@ final class KnockEngine {
             let first = scheduleArp(pad: pad, rt: rt, velocity: velocity, semis: semis,
                                     length: lengthSamples > 0 ? lengthSamples : Int(samplesPerBeat))
             trigger(pad: pad, velocity: velocity, semis: semis + Float(first.semis), lengthSamples: first.length, glide: false,
-                    heldNote: heldNote, arp: false, echo: echo, offsets: offsets, level: level)
+                    heldNote: heldNote, arp: false, echo: echo, offsets: offsets, level: level, gain: gain)
             return
         }
         // MISC: the echoes of this note, each one TIME later
@@ -1175,6 +1176,7 @@ final class KnockEngine {
             velGain = sqrtf(min(1, v / max(layers.tops[l], 0.001)))
         }
         if rt.active { velGain *= rt.preGain * rt.levelGain * level }
+        velGain *= gain
         let globalSemis = Float(Int(((params[KParam.pitch.rawValue] - 0.5) * 24).rounded()))
         let cents = (params[KParam.tune.rawValue] - 0.5) * 200
         // the sampler's "Enable main pitch" off: this track ignores the faceplate's PITCH and TUNE
