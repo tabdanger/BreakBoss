@@ -11,6 +11,7 @@ final class SequencerUITests: XCTestCase {
         XCUIDevice.shared.orientation = .landscapeLeft
         app = XCUIApplication()
         app.launchEnvironment["BREAKBOSS_OPEN_SEQUENCER"] = "1"
+        app.launchEnvironment["BREAKBOSS_UI_PROBE"] = "1"
         app.launch()
     }
 
@@ -160,7 +161,8 @@ final class SequencerUITests: XCTestCase {
         let rowH = app.buttons["trackArrow1"].frame.midY - kickY
         grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.05, thenDragTo: grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: rowH * 2.2)))
-        sleep(1)
+        sleep(2)
+        print("UITREE flick \(any("grid").value as? String ?? "") kickY \(kickY) rowH \(rowH) now \(app.buttons["trackArrow0"].frame.midY)")
         XCTAssertGreaterThan(app.buttons["trackArrow0"].frame.midY, kickY + rowH, "the dragged track moved down the rack")
         snap("track-moved")
 

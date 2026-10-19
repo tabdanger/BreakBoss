@@ -23,7 +23,8 @@ final class TrackGrabUITests: XCTestCase {
     private func rows() -> [(pad: Int, notes: Int)] {
         let value = any("grid").value as? String ?? ""
         guard let r = value.range(of: "; rows ") else { return [] }
-        return value[r.upperBound...].split(separator: " ").compactMap { item in
+        let list = value[r.upperBound...].components(separatedBy: "; grab").first ?? ""
+        return list.split(separator: " ").compactMap { item in
             let parts = item.split(whereSeparator: { $0 == ":" || $0 == "@" })
             guard parts.count == 3, let pad = Int(parts[0]), let notes = Int(parts[1]) else { return nil }
             return (pad, notes)
@@ -93,6 +94,8 @@ final class TrackGrabUITests: XCTestCase {
 
         let after = rows()
         print("UITREE grab after \(after)")
+        print("UITREE grab trace \(any("grid").value as? String ?? "")")
+        print("UITREE grab aimed from \(grip.frame.midY) to \(row4.frame.midY + rowH * 0.3), rowH \(rowH)")
         var expected = before.map(\.pad)
         expected.removeFirst()
         expected.insert(pad, at: 3)

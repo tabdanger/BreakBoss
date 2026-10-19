@@ -2624,7 +2624,7 @@ struct SequencerView: View {
     /// "pad:notes@y" (the notes drawn in that lane, its top in points), so a test can see a track's
     /// steps go with it when it moves.
     private func rowsProbe(_ L: [RowLayout]) -> String {
-        "; rows " + L.map { l in "\(l.channel.pad):\(pattern.events.filter { Int($0.pad) == l.channel.pad }.count)@\(Int(l.y))" }.joined(separator: " ")
+        "; rows " + L.map { l in "\(l.channel.pad):\(pattern.events.filter { Int($0.pad) == l.channel.pad }.count)@\(Int(l.y))" }.joined(separator: " ") + "; grab" + TrackGrabStrip.trace
     }
 
     // MARK: Undo, follow

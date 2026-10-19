@@ -13,6 +13,11 @@ struct TrackGrabStrip: UIViewRepresentable {
     let moved: (CGFloat) -> Void
     let ended: () -> Void
 
+    /// UI tests (BREAKBOSS_UI_PROBE): the last grab's touch states and y in the rack (B began, C moved,
+    /// E ended, X cancelled), shown in the grid's probe value.
+    static let probing = ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil
+    static var trace = ""
+
     func makeCoordinator() -> Grab { Grab() }
 
     func makeUIView(context: Context) -> StripView {
@@ -59,15 +64,17 @@ struct TrackGrabStrip: UIViewRepresentable {
             return grip(g.location(in: v).y) != nil
         }
 
-        /// The rack's scroll waits for the grab to fail (a touch off the studs), so a fast drag on the
-        /// studs can never be taken over by the scroll halfway.
-        func gestureRecognizer(_ g: UIGestureRecognizer, shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool {
-            other.view is UIScrollView
-        }
-
         @objc func pressed(_ g: UILongPressGestureRecognizer) {
             guard let v = view else { return }
             let y = g.location(in: v).y
+            if TrackGrabStrip.probing {
+                let mark = ["P", "B", "C", "E", "X", "F"][min(g.state.rawValue, 5)]
+                if g.state == .began { TrackGrabStrip.trace = "" }
+                if g.state != .changed || !TrackGrabStrip.trace.hasSuffix("C") {
+                    TrackGrabStrip.trace += " \(mark)\(Int(y))"
+                }
+                if g.state == .changed { TrackGrabStrip.trace += "C" }
+            }
             switch g.state {
             case .began:
                 guard let pad = grip(y) else { return }
@@ -81,7 +88,7 @@ struct TrackGrabStrip: UIViewRepresentable {
                 if grabbing {
                     grabbing = false
                     stopScrolling()
-                    moved(y)     // a quick flick's last move only comes with the lift
+                    if g.state == .ended { moved(y) }     // a quick flick's last move only comes with the lift
                     ended()
                 }
             }
