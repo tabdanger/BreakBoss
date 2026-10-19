@@ -140,7 +140,7 @@ enum PatternEdit {
         let isBass = pad == Pad.bass808.rawValue
         let len = isBass ? min(max(length > 0 ? length : default808Length, 6), max(p.lengthTicks, 6) - t) : 0
         p.events.append(GrooveEvent(tick: t, pad: Int8(pad), velocity: velocity.clamped(0.05, 1),
-                                    semis: semis.clamped(-12, 24), length: len))
+                                    semis: semis.clamped(semisRange.lowerBound, semisRange.upperBound), length: len))
         p.sort()
         return p
     }
@@ -225,6 +225,28 @@ enum PatternEdit {
         for i in p.events.indices where keys.contains(NoteKey(p.events[i])) {
             let isBass = Int(p.events[i].pad) == Pad.bass808.rawValue
             p.events[i].semis = semis.rounded().clamped(-12, isBass ? 24 : 12)
+            newKeys.insert(NoteKey(p.events[i]))
+        }
+        p.sort()
+        return (p, newKeys)
+    }
+
+    /// The widest pitch a note can be stored with, in semitones from its channel's base note: room for
+    /// C1 to C8 from any base (the piano roll keeps each channel inside its own C1 to C8).
+    static let semisRange: ClosedRange<Float> = -84...84
+
+    /// Moves notes up or down by `semis` (an octave is 12). Nil when any of them would leave its
+    /// channel's `limits`, so the notes keep their intervals.
+    static func transpose(_ pattern: PatternData, _ keys: Set<NoteKey>, by semis: Int,
+                          limits: (Int) -> ClosedRange<Int>) -> (PatternData, Set<NoteKey>)? {
+        var p = pattern
+        var newKeys = Set<NoteKey>()
+        let picked = p.events.indices.filter { keys.contains(NoteKey(p.events[$0])) }
+        guard !picked.isEmpty else { return nil }
+        for i in picked {
+            let to = Int(p.events[i].semis.rounded()) + semis
+            guard limits(Int(p.events[i].pad)).contains(to) else { return nil }
+            p.events[i].semis = Float(to)
             newKeys.insert(NoteKey(p.events[i]))
         }
         p.sort()

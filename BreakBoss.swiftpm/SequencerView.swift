@@ -178,6 +178,10 @@ struct SequencerView: View {
     @State private var pinching = false
     static let zoomSnaps: [Int32] = [24, 12, 6, 3]
     @State private var selection = Set<NoteKey>()
+    /// The lowest key each track's piano roll shows (a C, MIDI note); ⊕ and ⊖ move it an octave.
+    @State private var rollBottoms: [Int: Int] = [:]
+    /// The note whose octave glyphs are showing (a two-finger tap or right-click on it).
+    @State private var octaveNote: NoteKey?
     @State private var undoStack: [PatternData] = []
     @State private var redoStack: [PatternData] = []
     @State private var rememberedAt: Date?
@@ -243,6 +247,8 @@ struct SequencerView: View {
         /// Hold a step and pull down: the step plays `count` even hits (note repeat).
         case noteRepeat(pad: Int, cellStart: Int32, like: GrooveEvent, origin: PatternData, count: Int, fromPaint: Bool)
         case graph(pad: Int, top: CGFloat, height: CGFloat)
+        /// A tap on a note's ⊕ or ⊖ (done when the finger lands; the rest of the touch does nothing).
+        case octave
     }
 
     private typealias S = DrumRollStyle
@@ -335,7 +341,49 @@ struct SequencerView: View {
     private var selected: WorkspaceChannel? { channels.first { $0.id == selectedID } }
     private var selectedPad: Int? { selected?.pad }
     private func channel(pad: Int) -> WorkspaceChannel? { channels.first { $0.pad == pad } }
-    private func pitchRange(_ pad: Int) -> ClosedRange<Int> { pad == Pad.bass808.rawValue ? -12...24 : -12...12 }
+    /// The open piano roll's keys, in semitones from the track's base note: two octaves (the 808
+    /// three) somewhere between C1 and C8.
+    private func pitchRange(_ pad: Int) -> ClosedRange<Int> {
+        let low = rollBottom(pad) - controller.baseNote(pad: pad)
+        return low...(low + rollSpan(pad))
+    }
+    private func rollSpan(_ pad: Int) -> Int { pad == Pad.bass808.rawValue ? 36 : 24 }
+    /// The piano roll's lowest key: where ⊕ / ⊖ left it, else the C under the track's lowest note
+    /// (or under its base note when that is lower).
+    private func rollBottom(_ pad: Int) -> Int {
+        if let b = rollBottoms[pad] { return b }
+        let base = controller.baseNote(pad: pad)
+        let lowest = pattern.events.filter { Int($0.pad) == pad }.map { base + Int($0.semis.rounded()) }.min() ?? base
+        return clampedBottom(octaveC(min(base, lowest)), pad)
+    }
+    private func octaveC(_ note: Int) -> Int { note - ((note % 12) + 12) % 12 }
+    private func clampedBottom(_ b: Int, _ pad: Int) -> Int { b.clamped(MusicScale.lowestNote, MusicScale.highestNote - rollSpan(pad)) }
+    /// The open piano roll keeps its keys while notes are drawn and erased.
+    private func pinRoll() {
+        guard let id = expandedID, let pad = channels.first(where: { $0.id == id })?.pad, rollBottoms[pad] == nil else { return }
+        rollBottoms[pad] = rollBottom(pad)
+    }
+    private func shiftRoll(_ pad: Int, octaves: Int) {
+        rollBottoms[pad] = clampedBottom(rollBottom(pad) + 12 * octaves, pad)
+    }
+
+    /// ⊕ / ⊖ on a note: it (with the rest of the selection when it's selected) goes up or down an
+    /// octave, inside C1 to C8, and the open piano roll follows it.
+    private func moveOctave(_ key: NoteKey, by octaves: Int) {
+        let keys = selection.contains(key) ? selection : [key]
+        guard let moved = PatternEdit.transpose(pattern, keys, by: 12 * octaves, limits: { controller.pitchLimits(pad: $0) }) else { return }
+        let (p, newKeys) = moved
+        commit(p)
+        if selection.contains(key) { selection = newKeys }
+        let newKey = NoteKey(tick: key.tick, pad: key.pad, semis: Float(Int(key.semis.rounded()) + 12 * octaves))
+        octaveNote = newKey
+        let pad = Int(key.pad)
+        let note = controller.baseNote(pad: pad) + Int(newKey.semis)
+        let bottom = rollBottom(pad)
+        if note < bottom || note > bottom + rollSpan(pad) {
+            rollBottoms[pad] = clampedBottom(octaveC(note) - (octaves > 0 ? rollSpan(pad) - 12 : 0), pad)
+        }
+    }
 
     /// Where every row sits in the grid: collapsed rows are one step row; the expanded track is one
     /// row per semitone (its piano roll).
@@ -462,7 +510,11 @@ struct SequencerView: View {
             }
         }
         .modifier(SpaceBarKey { controller.togglePlayback(pattern: loop) })
-        .onChange(of: loop) { _ in viewStart = 0; selection = []; undoStack = []; redoStack = []; controller.showPattern(loop) }
+        .onChange(of: loop) { _ in viewStart = 0; selection = []; undoStack = []; redoStack = []; controller.showPattern(loop); rollBottoms = [:]; octaveNote = nil; pinRoll() }
+        .onChange(of: expandedID) { _ in octaveNote = nil; pinRoll() }
+        // a new pattern or kit: the open piano roll finds its notes again
+        .onChange(of: controller.state.presetName) { _ in rollBottoms = [:]; octaveNote = nil; pinRoll() }
+        .onChange(of: controller.state.kitName) { _ in rollBottoms = [:]; octaveNote = nil; pinRoll() }
         .onDisappear { if controller.recording { controller.setRecording(false) } }
         .task(id: stored) { exportURL = writeMIDI() }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
@@ -1017,6 +1069,7 @@ struct SequencerView: View {
                     }
                     .offset(x: (A.gridX1 + 9 - A.rackX0) * s, y: l.y + (min(l.height, rowH) - 61 * s) / 2)
                 }
+                noteOctaveGlyphs(L, gridW: gridW, s: s)
             }
         }
         .onAppear { proxy.scrollTo("rackTop", anchor: .top) }      // the first row at the top, always
@@ -1026,6 +1079,38 @@ struct SequencerView: View {
         .onDrop(of: [.plainText, .fileURL, .audio], isTargeted: $rackTargeted) { providers in dropOnRack(providers, channel: nil) }
         if rackTargeted {
             RoundedRectangle(cornerRadius: 8 * s).stroke(accent, lineWidth: 2 * s).place([A.rackX0, A.rowsY0 - 4, A.rackX1, A.rowsY1], s).allowsHitTesting(false)
+        }
+    }
+
+    /// Where a note's ⊕ (over it) and ⊖ (under it) sit, in grid points, and their size.
+    private func octaveGlyphCenters(_ r: CGRect, gridW: CGFloat) -> (up: CGPoint, down: CGPoint, size: CGFloat) {
+        let d = 30 * gridW / CGFloat(A.gridX1 - A.gridX0)
+        return (CGPoint(x: r.midX, y: r.minY - d * 0.65), CGPoint(x: r.midX, y: r.maxY + d * 0.65), d)
+    }
+    /// True for a touch on the note's ⊕, false for its ⊖, nil for neither.
+    private func octaveGlyphHit(_ p: CGPoint, _ key: NoteKey, w: CGFloat, L: [RowLayout]) -> Bool? {
+        guard let e = pattern.events.first(where: { NoteKey($0) == key }), visible(e), let r = noteRect(e, w: w, L) else { return nil }
+        let c = octaveGlyphCenters(r, gridW: w), reach = c.size * 0.65
+        if hypot(p.x - c.up.x, p.y - c.up.y) <= reach { return true }
+        if hypot(p.x - c.down.x, p.y - c.down.y) <= reach { return false }
+        return nil
+    }
+
+    /// ⊕ over the note and ⊖ under it after a two-finger tap (or a right-click) on it: the note goes
+    /// up or down an octave, C1 to C8.
+    @ViewBuilder private func noteOctaveGlyphs(_ L: [RowLayout], gridW: CGFloat, s: CGFloat) -> some View {
+        if let key = octaveNote, let e = pattern.events.first(where: { NoteKey($0) == key }), visible(e), let r = noteRect(e, w: gridW, L) {
+            let c = octaveGlyphCenters(r, gridW: gridW), x0 = (A.gridX0 - A.rackX0) * s
+            let keys = selection.contains(key) ? selection : [key]
+            let canMove = { (by: Int) in PatternEdit.transpose(pattern, keys, by: by, limits: { controller.pitchLimits(pad: $0) }) != nil }
+            let name = MusicScale.noteName(controller.baseNote(pad: Int(key.pad)) + Int(key.semis.rounded()))
+            // pictures only: the grid's touch handles them (octaveGlyphHit), so a tap can't land on both
+            octaveGlyphFace(true, size: c.size, enabled: canMove(12))
+                .accessibilityLabel("Note up an octave").accessibilityValue(name).accessibilityIdentifier("noteOctaveUp")
+                .position(x: x0 + c.up.x, y: c.up.y)
+            octaveGlyphFace(false, size: c.size, enabled: canMove(-12))
+                .accessibilityLabel("Note down an octave").accessibilityValue(name).accessibilityIdentifier("noteOctaveDown")
+                .position(x: x0 + c.down.x, y: c.down.y)
         }
     }
 
@@ -1409,11 +1494,11 @@ struct SequencerView: View {
             Button { controller.setScale(snap: !controller.snapToScale) } label: { chip(44, lit: controller.snapToScale) { Text("SNAP") } }.buttonStyle(SeqPress())
             Button {
                 let base = controller.baseNote(pad: pad)
-                let top: Float = pad == Pad.bass808.rawValue ? 24 : 12
+                let limits = controller.pitchLimits(pad: pad)
                 var p = pattern
                 for i in p.events.indices where Int(p.events[i].pad) == pad {
                     let n = controller.scale.snap(base + Int(p.events[i].semis.rounded()), root: controller.scaleRoot)
-                    p.events[i].semis = Float(n - base).clamped(-12, top)
+                    p.events[i].semis = Float((n - base).clamped(limits.lowerBound, limits.upperBound))
                 }
                 commit(p)
             } label: { chip(36) { Text("FIT") } }.buttonStyle(SeqPress())
@@ -1444,6 +1529,40 @@ struct SequencerView: View {
             }
         }
         .frame(width: (A.rackX1 - A.rackX0) * s, height: CGFloat(range.count) * l.pitchRowH, alignment: .top)
+        // ⊕ / ⊖: the keys up or down an octave, C1 to C8
+        .overlay(alignment: .topLeading) {
+            let pad = l.channel.pad, bottom = rollBottom(pad), keys = "\(MusicScale.noteName(bottom)) to \(MusicScale.noteName(bottom + rollSpan(pad)))"
+            VStack(spacing: 6 * s) {
+                octaveGlyph(true, size: 30 * s, enabled: bottom + rollSpan(pad) < MusicScale.highestNote) { shiftRoll(pad, octaves: 1) }
+                    .accessibilityLabel("Keys up an octave").accessibilityValue(keys).accessibilityIdentifier("rollOctaveUp")
+                octaveGlyph(false, size: 30 * s, enabled: bottom > MusicScale.lowestNote) { shiftRoll(pad, octaves: -1) }
+                    .accessibilityLabel("Keys down an octave").accessibilityValue(keys).accessibilityIdentifier("rollOctaveDown")
+            }
+            .padding(.leading, 40 * s).padding(.top, 6 * s)
+        }
+    }
+
+    /// A plus or minus in a see-through circle (Tyrone, Oct 18): the piano roll's octave buttons.
+    private func octaveGlyph(_ up: Bool, size: CGFloat, enabled: Bool = true, action: @escaping () -> Void) -> some View {
+        Button(action: action) { octaveCircle(up, size: size).contentShape(Circle()) }
+            .buttonStyle(SeqPress())
+            .disabled(!enabled)
+            .opacity(enabled ? 1 : 0.35)
+    }
+    private func octaveCircle(_ up: Bool, size: CGFloat) -> some View {
+        Image(systemName: up ? "plus" : "minus").font(.system(size: size * 0.48, weight: .bold)).foregroundColor(.white)
+            .frame(width: size, height: size)
+            .background(Circle().fill(Color.white.opacity(0.1)))
+            .overlay(Circle().stroke(Color.white.opacity(0.8), lineWidth: 1.5))
+            .shadow(color: Color.black.opacity(0.6), radius: 2)
+    }
+    /// The note's ⊕ / ⊖: the picture, a button to VoiceOver and tests; touches go to the grid under it.
+    private func octaveGlyphFace(_ up: Bool, size: CGFloat, enabled: Bool) -> some View {
+        octaveCircle(up, size: size)
+            .opacity(enabled ? 1 : 0.35)
+            .allowsHitTesting(false)
+            .accessibilityElement(children: .ignore)
+            .accessibilityAddTraits(.isButton)
     }
 
 
@@ -1623,7 +1742,9 @@ struct SequencerView: View {
     private func noteRect(_ e: GrooveEvent, w: CGFloat, _ L: [RowLayout]) -> CGRect? {
         guard let l = layout(for: Int(e.pad), L) else { return nil }
         if let range = l.pitch {
-            let s = Int(e.semis.rounded()).clamped(range.lowerBound, range.upperBound)
+            // a note above or below the keys showing isn't drawn (its step still lights in the band)
+            let s = Int(e.semis.rounded())
+            guard range.contains(s) else { return nil }
             let y = l.pitchTop + CGFloat(range.upperBound - s) * l.pitchRowH
             return CGRect(x: x(e.tick, w) + 1.5, y: y + 1.5, width: noteWidth(e, w), height: l.pitchRowH - 3)
         }
@@ -1822,7 +1943,16 @@ struct SequencerView: View {
                 twoFinger = true
             },
             sideways: { dx in scroll(to: (panStart ?? origin) - Double(dx / max(1, w)) * Double(windowTicks)) },
-            ended: { panStart = nil }))
+            ended: { panStart = nil },
+            twoFingerTap: { points in
+                // a two-finger tap or a right-click on a note: its octave glyphs (a touch on the grid hides them)
+                // the tap is over: the next touch on the grid draws again even if no drag ended
+                twoFinger = false; drag = .none; work = nil
+                if let hit = points.lazy.compactMap({ noteAt($0, w: w, L: L) }).first {
+                    octaveNote = NoteKey(hit)
+                    if let l = layout(for: Int(hit.pad), L) { selectedID = l.channel.id }
+                }
+            }))
     }
 
     /// The playhead: a line moved every display frame from the engine's own clock (like Logic's),
@@ -1966,6 +2096,13 @@ struct SequencerView: View {
 
     private func gridChanged(_ g: DragGesture.Value, w: CGFloat, L: [RowLayout]) {
         if case .none = drag {
+            // the note's ⊕ / ⊖ are drawn over the grid; the grid's own touch takes them
+            if let key = octaveNote, let up = octaveGlyphHit(g.startLocation, key, w: w, L: L) {
+                drag = .octave
+                moveOctave(key, by: up ? 1 : -1)
+                return
+            }
+            if octaveNote != nil { octaveNote = nil }
             let start = g.startLocation
             guard let l = layout(at: start.y, L) else { return }
             if inBand(start.y, l) { selectedID = l.channel.id; return }
@@ -2099,7 +2236,7 @@ struct SequencerView: View {
                 work = PatternEdit.remove(pattern, [NoteKey(hit)])
                 selection.remove(NoteKey(hit))
             }
-        case .none:
+        case .none, .octave:
             break
         }
     }
@@ -2152,7 +2289,7 @@ struct SequencerView: View {
             } else {
                 selection = Set(pattern.events.filter { visible($0) && (noteRect($0, w: w, L).map { rect.intersects($0) } ?? false) }.map(NoteKey.init))
             }
-        case .none:
+        case .none, .octave:
             break
         }
     }
@@ -2450,11 +2587,11 @@ struct SequencerView: View {
             items.append(.header("Notes already drawn"))
             items.append(BBMenuItem.item("Fit \(ch.name)'s notes to the scale", icon: "wand.and.stars") {
                 let base = controller.baseNote(pad: pad)
-                let top: Float = pad == Pad.bass808.rawValue ? 24 : 12
+                let limits = controller.pitchLimits(pad: pad)
                 var p = pattern
                 for i in p.events.indices where Int(p.events[i].pad) == pad {
                     let n = controller.scale.snap(base + Int(p.events[i].semis.rounded()), root: controller.scaleRoot)
-                    p.events[i].semis = Float(n - base).clamped(-12, top)
+                    p.events[i].semis = Float((n - base).clamped(limits.lowerBound, limits.upperBound))
                 }
                 commit(p)
             })

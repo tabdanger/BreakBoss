@@ -41,6 +41,7 @@ enum KnockSelfTest {
         phase("checkMIDIPadMap", checkMIDIPadMap)
         phase("checkRecordingTrim", checkRecordingTrim)
         phase("checkDrumRoll", checkDrumRoll)
+        phase("checkPianoRollOctaves", checkPianoRollOctaves)
         phase("checkWorkspaceChannels", checkWorkspaceChannels)
         phase("checkSampler", checkSampler)
         phase("checkSamplerPlayhead", checkSamplerPlayhead)
@@ -2422,6 +2423,67 @@ enum KnockSelfTest {
         check(endL > 0.005 && endL < start * 0.5, "the ringing note glides down to the new level (\(endL))")
         check(endR > endL * 2, "the ringing note glides to the new pan (L \(endL), R \(endR))")
         check(biggestStep < start * 0.08, "level and pan move without a step (\(biggestStep))")
+    }
+
+    /// The piano roll reaches C1 to C8 and ⊕ / ⊖ move notes by octaves (Tyrone, Oct 18).
+    static func checkPianoRollOctaves() {
+        check(MusicScale.noteName(MusicScale.lowestNote) == "C1" && MusicScale.noteName(MusicScale.highestNote) == "C8", "piano roll: keys C1 to C8")
+        // a drum counts from C4 (60): C1 is 36 below, C8 48 above
+        let drum = { (_: Int) in (MusicScale.lowestNote - 60)...(MusicScale.highestNote - 60) }
+        var p = PatternData(name: "OCT", lengthTicks: PatternEdit.barTicks, events: [])
+        p = PatternEdit.addNote(p, pad: Pad.kick.rawValue, tick: 0, velocity: 0.9)
+        var key = NoteKey(p.events[0])
+        var semis: [Int] = []
+        while let up = PatternEdit.transpose(p, [key], by: 12, limits: drum) { p = up.0; key = up.1.first!; semis.append(Int(key.semis)) }
+        check(semis == [12, 24, 36, 48], "piano roll: ⊕ takes a C4 drum note up to C8 and no further (\(semis))")
+        semis = []
+        while let down = PatternEdit.transpose(p, [key], by: -12, limits: drum) { p = down.0; key = down.1.first!; semis.append(Int(key.semis)) }
+        check(semis == [36, 24, 12, 0, -12, -24, -36], "piano roll: ⊖ takes it down to C1 and no further (\(semis))")
+        var two = PatternData(name: "OCT", lengthTicks: PatternEdit.barTicks, events: [])
+        two = PatternEdit.addNote(two, pad: Pad.kick.rawValue, tick: 0, velocity: 0.9)
+        two = PatternEdit.addNote(two, pad: Pad.kick.rawValue, tick: 96, velocity: 0.9, semis: 44)
+        check(PatternEdit.transpose(two, Set(two.events.map(NoteKey.init)), by: 12, limits: drum) == nil,
+              "piano roll: a selection that can't all go up an octave stays put (keeps its intervals)")
+        check(PatternEdit.addNote(two, pad: Pad.kick.rawValue, tick: 192, velocity: 0.9, semis: 48).events.contains { $0.semis == 48 },
+              "piano roll: a note drawn at C8 keeps its pitch")
+        var saved = KnockState()
+        saved.editedLoops = Array(repeating: nil, count: Pad.count)
+        saved.editedLoops[0] = PatternData(name: "HIGH", lengthTicks: 384, events: [GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 0.9, semis: 48),
+                                                                                  GrooveEvent(tick: 24, pad: Int8(Pad.kick.rawValue), velocity: 0.9, semis: -36)])
+        check(saved.normalized().editedLoops[0]?.events.map(\.semis) == [48, -36], "piano roll: C8 and C1 notes survive saving")
+
+        // the engine plays them at those pitches: a 220 Hz tone three octaves up and down
+        let rate = 48_000.0
+        let sine = (0..<96_000).map { Float(sin(Double($0) * 2 * Double.pi * 220 / rate)) * 0.2 }
+        let samples = Array(repeating: SampleBuffer(left: sine, sampleRate: rate), count: Pad.count)
+        func crossings(semis: Int, frames: Int) -> Int {
+            let engine = KnockEngine()
+            engine.prepare(sampleRate: rate, maxFrames: 512)
+            engine.setParam(.playMode, 0); engine.setParam(.followDAW, 0); engine.setParam(.tempoSync, 0)
+            engine.setParam(.boost, 0); engine.setParam(.clipper, 0)
+            engine.kitHandoff.publish(KitBuffers(name: "OCT", samples: samples, settings: Array(repeating: PadSettings(), count: Pad.count), bassHz: 110))
+            engine.send(KEvent(kind: .padPitched, a: Int32(Pad.kick.rawValue + 128 * (semis + 64)), value: 1))
+            var left = [Float](repeating: 0, count: frames), right = left
+            var done = 0
+            while done < frames {
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in
+                    engine.render(frames: 128, left: l.baseAddress! + done, right: r.baseAddress! + done, host: nil) } }
+                done += 128
+            }
+            // skip the attack, count sign changes of the steady tone
+            var n = 0
+            for i in 1_025..<frames {
+                let a: Float = left[i - 1], b: Float = left[i]
+                if (a < 0) != (b < 0) && abs(a - b) > 1e-6 { n += 1 }
+            }
+            return n
+        }
+        // up: 8 192 frames (the tone, 8x faster, lasts 12 000); down: 32 768 frames for enough 27.5 Hz cycles
+        let base = crossings(semis: 0, frames: 9_216), high = crossings(semis: 36, frames: 9_216)
+        let longBase = crossings(semis: 0, frames: 33_792), low = crossings(semis: -36, frames: 33_792)
+        let upRatio = Double(high) / Double(max(base, 1)), downRatio = Double(low) / Double(max(longBase, 1))
+        check(base > 50 && abs(upRatio - 8) < 0.8, "piano roll: a note three octaves up plays 8x the pitch (\(base) -> \(high) crossings)")
+        check(abs(downRatio - 0.125) < 0.03, "piano roll: a note three octaves down plays 1/8 the pitch (\(longBase) -> \(low) crossings)")
     }
 
 }

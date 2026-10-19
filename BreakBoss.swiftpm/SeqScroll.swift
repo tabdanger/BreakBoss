@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UIKit.UIGestureRecognizerSubclass
 
 /// A Canvas that only redraws when `key` changes (SwiftUI otherwise repaints a Canvas every time
 /// its parent's body runs). `key` must cover everything `draw` reads.
@@ -21,6 +22,9 @@ struct GridScrollHook: UIViewRepresentable {
     /// Sideways travel since the two fingers went down, in points.
     var sideways: (CGFloat) -> Void
     var ended: () -> Void
+    /// A two-finger tap or a trackpad / mouse right-click on the grid: where each finger landed and
+    /// the point between them (grid points).
+    var twoFingerTap: ([CGPoint]) -> Void = { _ in }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -57,6 +61,8 @@ struct GridScrollHook: UIViewRepresentable {
         private var pan: UIPanGestureRecognizer?
         private var swipe: UIPanGestureRecognizer?
         private var touch: UILongPressGestureRecognizer?
+        private var tap2: TwoFingerTap?
+        private var rightClick: UITapGestureRecognizer?
         private var startY: CGFloat = 0
         /// After the fingers lift the grid keeps gliding and slows down, like any iOS scroll view.
         private var link: CADisplayLink?
@@ -70,6 +76,8 @@ struct GridScrollHook: UIViewRepresentable {
             if let pan { pan.view?.removeGestureRecognizer(pan) }
             if let swipe { swipe.view?.removeGestureRecognizer(swipe) }
             if let touch { touch.view?.removeGestureRecognizer(touch) }
+            if let tap2 { tap2.view?.removeGestureRecognizer(tap2) }
+            if let rightClick { rightClick.view?.removeGestureRecognizer(rightClick) }
             let pan = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
             pan.minimumNumberOfTouches = 2
             pan.maximumNumberOfTouches = 2
@@ -94,6 +102,22 @@ struct GridScrollHook: UIViewRepresentable {
             touch.delegate = self
             scrollView.addGestureRecognizer(touch)
             self.touch = touch
+            // a two-finger tap (or a right-click) on a note: its octave glyphs. The second finger
+            // landing stops the first one drawing, like the two-finger slide does.
+            let tap2 = TwoFingerTap(target: self, action: #selector(tapped2(_:)))
+            tap2.numberOfTouchesRequired = 2
+            tap2.cancelsTouchesInView = false
+            tap2.delegate = self
+            tap2.secondFinger = { [weak self] in self?.hook?.began(false) }
+            scrollView.addGestureRecognizer(tap2)
+            self.tap2 = tap2
+            let rightClick = UITapGestureRecognizer(target: self, action: #selector(rightClicked(_:)))
+            rightClick.buttonMaskRequired = .secondary
+            rightClick.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.indirectPointer.rawValue)]
+            rightClick.cancelsTouchesInView = false
+            rightClick.delegate = self
+            scrollView.addGestureRecognizer(rightClick)
+            self.rightClick = rightClick
             self.scrollView = scrollView
         }
 
@@ -131,6 +155,16 @@ struct GridScrollHook: UIViewRepresentable {
 
         @objc private func touched(_ g: UILongPressGestureRecognizer) {
             if g.state == .began { stopGlide(notify: true) }
+        }
+
+        @objc private func tapped2(_ g: TwoFingerTap) {
+            guard g.state == .ended, let area, !g.points.isEmpty else { return }
+            hook?.twoFingerTap(g.points.map { area.convert($0, from: nil) } + [g.location(in: area)])
+        }
+
+        @objc private func rightClicked(_ g: UITapGestureRecognizer) {
+            guard g.state == .ended, let area else { return }
+            hook?.twoFingerTap([g.location(in: area)])
         }
 
         private func glide(from x: CGFloat, velocity v: CGPoint, vertical: Bool) {
@@ -176,6 +210,7 @@ struct GridScrollHook: UIViewRepresentable {
         func gestureRecognizerShouldBegin(_ g: UIGestureRecognizer) -> Bool {
             if g === touch { return link != nil }
             guard let area else { return false }
+            if g === tap2, let first = tap2?.points.first { return area.bounds.contains(area.convert(first, from: nil)) }
             return area.bounds.contains(g.location(in: area))
         }
 
@@ -247,5 +282,28 @@ struct PlayheadLine: UIViewRepresentable {
                 if let view { view.tick(link) } else { link.invalidate() }
             }
         }
+    }
+}
+
+/// A two-finger tap that remembers where each finger landed (window points) and says when the
+/// second finger is down on the grid, so the first finger's note isn't drawn or erased.
+final class TwoFingerTap: UITapGestureRecognizer {
+    var points: [CGPoint] = []
+    var secondFinger: () -> Void = {}
+    private var told = false
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        points += touches.map { $0.location(in: nil) }
+        super.touchesBegan(touches, with: event)
+        if points.count >= 2 && !told && (delegate?.gestureRecognizerShouldBegin?(self) ?? true) {
+            told = true
+            secondFinger()
+        }
+    }
+
+    override func reset() {
+        super.reset()
+        points = []
+        told = false
     }
 }

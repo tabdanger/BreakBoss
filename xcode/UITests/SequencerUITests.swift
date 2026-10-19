@@ -174,4 +174,86 @@ final class SequencerUITests: XCTestCase {
         XCTAssertTrue(any("brandLogo").exists, "Face 1 wears the BreaKing logo")
         snap("back-to-face-1")
     }
+
+    /// The piano roll reaches C1 to C8 (Tyrone, Oct 18): ⊕ / ⊖ beside the keys move them an octave,
+    /// and a two-finger tap on a note shows ⊕ over it and ⊖ under it to move the note an octave.
+    func testPianoRollOctaves() {
+        let arrow = app.buttons["trackArrow0"]
+        XCTAssertTrue(arrow.waitForExistence(timeout: 20), "the sequencer opens with the first track's arrow")
+        sleep(1)
+        arrow.tap()
+        XCTAssertTrue(app.buttons["lanePitch"].waitForExistence(timeout: 3), "the arrow opens the lanes")
+        app.buttons["lanePitch"].tap()
+        let keysUp = app.buttons["rollOctaveUp"], keysDown = app.buttons["rollOctaveDown"]
+        XCTAssertTrue(keysUp.waitForExistence(timeout: 3), "the piano roll has a plus beside its keys")
+        XCTAssertTrue(keysDown.exists, "and a minus")
+        let keys = { keysUp.value as? String ?? "" }
+        print("UITREE piano roll opens on \(keys())")
+        let opened = keys()
+        XCTAssertTrue(opened.range(of: "^C[0-9] to C[0-9]$", options: .regularExpression) != nil, "the keys run C to C (\(opened))")
+        snap("roll-open")
+
+        for _ in 0..<8 where keysDown.isEnabled { keysDown.tap() }
+        XCTAssertEqual(keys(), "C1 to C3", "minus takes the keys down to C1")
+        XCTAssertFalse(keysDown.isEnabled, "and no lower")
+        snap("roll-C1")
+        for _ in 0..<8 where keysUp.isEnabled { keysUp.tap() }
+        XCTAssertEqual(keys(), "C6 to C8", "plus takes the keys up to C8")
+        XCTAssertFalse(keysUp.isEnabled, "and no higher")
+        snap("roll-C8")
+        while keysDown.isEnabled && keys() != opened { keysDown.tap() }
+        XCTAssertEqual(keys(), opened, "back where it opened")
+
+        // draw a note where a two-finger tap on the grid lands (the middle of the grid on screen)
+        let grid = any("grid")
+        let notes = { grid.value as? String ?? "" }
+        let count = { Int(notes().components(separatedBy: " ").first ?? "") ?? -1 }
+        let blank = count()
+        let s = grid.frame.width / 950
+        grid.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 475 * s + 20, dy: 212 * s)).tap()
+        sleep(1)
+        let drawn = notes()
+        XCTAssertEqual(count(), blank + 1, "a tap in the piano roll draws a note")
+        snap("roll-note")
+
+        grid.twoFingerTap()
+        sleep(1)
+        let noteUp = app.buttons["noteOctaveUp"], noteDown = app.buttons["noteOctaveDown"]
+        if !noteUp.waitForExistence(timeout: 3) { dumpTree("after the two-finger tap (grid \(grid.frame))") }
+        XCTAssertTrue(noteUp.exists, "a two-finger tap on the note shows a plus over it")
+        XCTAssertTrue(noteDown.exists, "and a minus under it")
+        XCTAssertEqual(notes(), drawn, "the two-finger tap doesn't draw or erase a note")
+        snap("note-glyphs")
+        let name = { noteUp.exists ? (noteUp.value as? String ?? "") : "gone" }
+        print("UITREE glyph up \(noteUp.frame) down \(noteDown.frame) grid \(grid.frame) hittable \(noteUp.isHittable)")
+        let start = name()
+        print("UITREE note \(start)")
+        // the note's glyphs are pictures over the grid (the grid takes the touch): tap where they are
+        func press(_ e: XCUIElement) { e.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
+        func octave(_ n: String, _ by: Int) -> String {
+            let letters = n.prefix { !$0.isNumber && $0 != "-" }
+            return "\(letters)\((Int(n.dropFirst(letters.count)) ?? 0) + by)"
+        }
+        press(noteUp)
+        sleep(1)
+        print("UITREE after plus: \(notes()), keys \(keys()), note \(name())")
+        if !noteUp.exists { dumpTree("after plus") }
+        XCTAssertEqual(name(), octave(start, 1), "plus moves the note up an octave")
+        print("UITREE keys after plus: \(keys())")
+        snap("note-up")
+        // the keys stay on C5 to C7, so the note drops lower on screen (a second minus would be
+        // below the rack's visible rows without scrolling)
+        press(noteDown)
+        sleep(1)
+        XCTAssertEqual(name(), start, "minus moves it back down an octave")
+        XCTAssertEqual(notes(), drawn, "moving octaves keeps one note")
+        snap("note-down")
+
+        // UNDO takes the two octave moves and the note away
+        for _ in 0..<3 { app.buttons["undoButton"].tap() }
+        sleep(1)
+        XCTAssertEqual(count(), blank, "UNDO takes the octave moves and the note away")
+        arrow.tap()
+    }
+
 }
