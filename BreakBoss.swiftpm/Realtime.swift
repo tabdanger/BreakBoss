@@ -265,8 +265,10 @@ struct ScopeRings {
 
 /// Audio publishes into preallocated storage; UI copies it on the main thread.
 final class SharedMeters {
+    /// The engine's status slots (KnockEngine.status), including [8] the count-in beats left.
+    static let statusCount = 10
     private let lock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
-    private let status = UnsafeMutablePointer<Double>.allocate(capacity: 8)
+    private let status = UnsafeMutablePointer<Double>.allocate(capacity: SharedMeters.statusCount)
     private let hits = UnsafeMutablePointer<UInt32>.allocate(capacity: Pad.count)
     private let scope = UnsafeMutablePointer<Float>.allocate(capacity: MasterBus.scopeSize)
     private let scopeLow = UnsafeMutablePointer<Float>.allocate(capacity: MasterBus.scopeSize)
@@ -277,7 +279,7 @@ final class SharedMeters {
     private var scopeCleared = 0
     init() {
         lock.initialize(to: os_unfair_lock())
-        status.initialize(repeating: 0, count: 8)
+        status.initialize(repeating: 0, count: SharedMeters.statusCount)
         status[1] = -1; status[2] = -2
         hits.initialize(repeating: 0, count: Pad.count)
         for ring in [scope, scopeLow, scopeHigh, scopeBass, scopeTop] { ring.initialize(repeating: 0, count: MasterBus.scopeSize) }
@@ -289,7 +291,7 @@ final class SharedMeters {
     }
     func publish(status source: UnsafeMutablePointer<Double>, hits sourceHits: UnsafeMutablePointer<UInt32>, master: MasterBus) {
         guard os_unfair_lock_trylock(lock) else { return }
-        status.update(from: source, count: 8)
+        status.update(from: source, count: SharedMeters.statusCount)
         hits.update(from: sourceHits, count: Pad.count)
         os_unfair_lock_unlock(lock)
     }
@@ -337,7 +339,7 @@ final class SharedMeters {
     func snapshot() -> MeterSnapshot {
         os_unfair_lock_lock(lock)
         defer { os_unfair_lock_unlock(lock) }
-        return MeterSnapshot(status: Array(UnsafeBufferPointer(start: status, count: 10)),
+        return MeterSnapshot(status: Array(UnsafeBufferPointer(start: status, count: SharedMeters.statusCount)),
                              padHits: Array(UnsafeBufferPointer(start: hits, count: Pad.count)),
                              scope: Array(UnsafeBufferPointer(start: scope, count: MasterBus.scopeSize)), scopeWrite: scopeWrite)
     }
