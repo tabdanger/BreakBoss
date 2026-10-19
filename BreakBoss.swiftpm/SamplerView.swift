@@ -966,6 +966,9 @@ struct SamplerWindow: View {
                 .spot(1142, 0, 192, 50, s)
                 .accessibilityIdentifier("samplerProperties")
         }
+        // pinned to its own top left: without this the bar (only as wide as its widest button) sat centred
+        // in its spot, shoved ~570 px right and off the window (Tyrone, Oct 19)
+        .frame(width: 1334 * s, height: 50 * s, alignment: .topLeading)
     }
 
     private func selectionText(_ sample: SampleBuffer?) -> String {

@@ -203,7 +203,7 @@ struct ShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }
 
-/// Face 2 → Face 1: a platinum knob wearing the sequencer's 9 squares in a dark slot. Slide it to
+/// Face 2 → Face 1: a round platinum knob wearing the pads' 4 squares in a dark slot. Slide it to
 /// the right (past halfway) to go back to the faceplate; let go sooner and it springs back. A tap
 /// on the slot's right end (the pads square) does the same slide.
 struct FaceSlider: View {
@@ -231,11 +231,22 @@ struct FaceSlider: View {
                     .frame(width: knob, height: knob).offset(x: w - knob - 4 * scale)
                 Image(systemName: "chevron.right").font(.system(size: 12 * scale, weight: .semibold)).foregroundColor(Color(white: 0.35))
                     .offset(x: knob + 6 * scale).opacity(1 - Double(travel / maxTravel))
-                // the key: a silver square with the pads' four squares (Tyrone's Face 2 render)
+                // the key: a round silver button with the pads' four squares, sitting in the slot's round
+                // end (Tyrone, Oct 19: a circle, not the render's square). Spun metal: a bevelled rim,
+                // circular brushing catching the light, a soft dome highlight on top
                 ZStack {
-                    RoundedRectangle(cornerRadius: knob * 0.22).fill(LinearGradient(colors: [Color(white: 0.97), Color(white: 0.78), Color(white: 0.86)], startPoint: .top, endPoint: .bottom))
-                    RoundedRectangle(cornerRadius: knob * 0.22).strokeBorder(LinearGradient(colors: [.white, Color(white: 0.5)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
-                    Image(systemName: "square.grid.2x2.fill").font(.system(size: knob * 0.46, weight: .bold)).foregroundColor(Color(white: 0.1))
+                    Circle().fill(LinearGradient(colors: [Color(white: 0.98), Color(white: 0.55)], startPoint: .top, endPoint: .bottom))
+                    Circle().fill(LinearGradient(colors: [Color(white: 0.93), Color(white: 0.76), Color(white: 0.86)], startPoint: .top, endPoint: .bottom))
+                        .padding(knob * 0.06)
+                    Circle().fill(AngularGradient(colors: [.white.opacity(0.35), .black.opacity(0.08), .white.opacity(0.3), .black.opacity(0.1), .white.opacity(0.35)], center: .center))
+                        .padding(knob * 0.06)
+                    Circle().strokeBorder(LinearGradient(colors: [.black.opacity(0.25), .white.opacity(0.7)], startPoint: .top, endPoint: .bottom), lineWidth: 0.8)
+                        .padding(knob * 0.06)
+                    Ellipse().fill(RadialGradient(colors: [.white.opacity(0.55), .white.opacity(0)], center: .center, startRadius: 0, endRadius: knob * 0.3))
+                        .frame(width: knob * 0.62, height: knob * 0.34).offset(y: -knob * 0.24)
+                    Circle().strokeBorder(LinearGradient(colors: [.white, Color(white: 0.35)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                    Image(systemName: "square.grid.2x2.fill").font(.system(size: knob * 0.42, weight: .bold)).foregroundColor(Color(white: 0.1))
+                        .shadow(color: .white.opacity(0.6), radius: 0, y: 0.6)
                 }
                 .frame(width: knob, height: knob)
                 .shadow(color: .black.opacity(0.55), radius: 3 * scale, y: 2 * scale)

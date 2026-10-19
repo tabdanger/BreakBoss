@@ -212,47 +212,59 @@ final class SequencerUITests: XCTestCase {
         let s = grid.frame.width / 950
         grid.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 475 * s + 20, dy: 212 * s)).tap()
         sleep(1)
-        let drawn = notes()
         XCTAssertEqual(count(), blank + 1, "a tap in the piano roll draws a note")
         snap("roll-note")
 
+        // a two-finger tap (right-click) on the note opens the grid's menu (Tyrone, Oct 19); its Octave up
+        // moves the note and leaves ⊕ over it and ⊖ under it for more moves
         grid.twoFingerTap()
+        let octaveUp = app.staticTexts["Octave up"]
+        if !octaveUp.waitForExistence(timeout: 3) { dumpTree("after the two-finger tap (grid \(grid.frame))") }
+        XCTAssertTrue(octaveUp.exists, "a two-finger tap on the note opens the menu")
+        for row in ["Select all", "Copy", "Paste", "Octave down"] { XCTAssertTrue(app.staticTexts[row].exists, "the menu has \(row)") }
+        XCTAssertEqual(count(), blank + 1, "the two-finger tap doesn't draw or erase a note")
+        snap("grid-menu")
+        octaveUp.tap()
         sleep(1)
         let noteUp = app.buttons["noteOctaveUp"], noteDown = app.buttons["noteOctaveDown"]
-        if !noteUp.waitForExistence(timeout: 3) { dumpTree("after the two-finger tap (grid \(grid.frame))") }
-        XCTAssertTrue(noteUp.exists, "a two-finger tap on the note shows a plus over it")
+        XCTAssertTrue(noteUp.waitForExistence(timeout: 3), "after Octave up the note shows a plus over it")
         XCTAssertTrue(noteDown.exists, "and a minus under it")
-        XCTAssertEqual(notes(), drawn, "the two-finger tap doesn't draw or erase a note")
-        snap("note-glyphs")
         let name = { noteUp.exists ? (noteUp.value as? String ?? "") : "gone" }
         print("UITREE glyph up \(noteUp.frame) down \(noteDown.frame) grid \(grid.frame) hittable \(noteUp.isHittable)")
-        let start = name()
-        print("UITREE note \(start)")
+        let raised = name()
+        print("UITREE note after Octave up \(raised), keys \(keys())")
         // the note's glyphs are pictures over the grid (the grid takes the touch): tap where they are
         func press(_ e: XCUIElement) { e.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
         func octave(_ n: String, _ by: Int) -> String {
             let letters = n.prefix { !$0.isNumber && $0 != "-" }
             return "\(letters)\((Int(n.dropFirst(letters.count)) ?? 0) + by)"
         }
-        press(noteUp)
-        sleep(1)
-        print("UITREE after plus: \(notes()), keys \(keys()), note \(name())")
-        if !noteUp.exists { dumpTree("after plus") }
-        XCTAssertEqual(name(), octave(start, 1), "plus moves the note up an octave")
-        print("UITREE keys after plus: \(keys())")
         snap("note-up")
-        // the keys stay on C5 to C7, so the note drops lower on screen (a second minus would be
-        // below the rack's visible rows without scrolling)
         press(noteDown)
         sleep(1)
-        XCTAssertEqual(name(), start, "minus moves it back down an octave")
-        XCTAssertEqual(notes(), drawn, "moving octaves keeps one note")
+        XCTAssertEqual(name(), octave(raised, -1), "minus moves it back down an octave")
+        XCTAssertEqual(count(), blank + 1, "moving octaves keeps one note")
         snap("note-down")
 
         // UNDO takes the two octave moves and the note away
         for _ in 0..<3 { app.buttons["undoButton"].tap() }
         sleep(1)
         XCTAssertEqual(count(), blank, "UNDO takes the octave moves and the note away")
+
+        // DRAW mode: a quick drag from an empty spot draws a selection box, not notes (Tyrone, Oct 19)
+        let spot = grid.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 475 * s + 20, dy: 212 * s))
+        spot.tap()
+        sleep(1)
+        XCTAssertEqual(count(), blank + 1, "a tap draws the note again")
+        spot.withOffset(CGVector(dx: -70 * s, dy: -14 * s)).press(forDuration: 0.05, thenDragTo: spot.withOffset(CGVector(dx: 70 * s, dy: 14 * s)))
+        sleep(1)
+        print("UITREE after the draw-mode box: \(notes())")
+        XCTAssertEqual(count(), blank + 1, "the box draws no notes")
+        XCTAssertFalse(notes().hasSuffix(" 0 selected"), "the box selects the note (\(notes()))")
+        snap("draw-box-selected")
+        app.buttons["undoButton"].tap()
+        sleep(1)
+        XCTAssertEqual(count(), blank, "UNDO takes the note away")
         arrow.tap()
     }
 

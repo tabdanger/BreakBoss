@@ -156,6 +156,39 @@ private struct BBMenuTrigger: ViewModifier {
     }
 }
 
+/// Opens a menu from code at a point inside the view it's attached to (the grid's right-click menu,
+/// where the grid's own gesture code knows what was clicked). Attach it with .bbMenuOpener(_:).
+final class BBMenuOpener {
+    fileprivate var center: BBMenuCenter?
+    fileprivate var accent: Color?
+    fileprivate var frame: CGRect = .zero
+
+    /// `point` is in the attached view's own space.
+    func show(at point: CGPoint, title: String? = nil, width: CGFloat = 260, items: [BBMenuItem]) {
+        guard let center, !items.isEmpty else { return }
+        let anchor = CGRect(x: frame.minX + point.x, y: frame.minY + point.y, width: 1, height: 1)
+        center.show(BBMenuSpec(anchor: anchor, width: width, title: title, items: items, accent: accent))
+    }
+}
+
+private struct BBMenuOpenerHook: ViewModifier {
+    @Environment(\.bbMenuCenter) private var center
+    @Environment(\.bbMenuAccent) private var accent
+    let opener: BBMenuOpener
+
+    func body(content: Content) -> some View {
+        content.background(GeometryReader { g in
+            Color.clear
+                .onAppear { opener.center = center; opener.accent = accent; opener.frame = g.frame(in: .named(bbSpace)) }
+                .onChange(of: g.frame(in: .named(bbSpace))) { opener.frame = $0; opener.center = center; opener.accent = accent }
+        })
+    }
+}
+
+extension View {
+    func bbMenuOpener(_ opener: BBMenuOpener) -> some View { modifier(BBMenuOpenerHook(opener: opener)) }
+}
+
 private struct BBContextTrigger: ViewModifier {
     @Environment(\.bbMenuCenter) private var center
     @Environment(\.bbMenuAccent) private var accent
