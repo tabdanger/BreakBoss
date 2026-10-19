@@ -1365,10 +1365,22 @@ enum KnockSelfTest {
         let seededKit = difference(tap(PadSettings()), tap(kitSound))
         check(seededLoaded < 1e-5 && seededKit < 1e-5,
               "Untouched envelopes: the envelope switched on as the sound is changes nothing (loaded \(seededLoaded), kit \(seededKit))")
+        func exportPad(_ settings: [PadSettings], _ mask: UInt16) -> [Float] {
+            let kit = KitBuffers(name: "UNTOUCHED", samples: Array(repeating: tail, count: Pad.count), settings: settings, bassHz: 110)
+            let job = Exporter.Job(kit: kit, patterns: PatternSet(Array(repeating: pattern, count: Pad.count)), loop: 0, params: params,
+                                   tempo: 120, bars: 2, baseName: "untouched")
+            return Exporter.render(job, mask: mask).0
+        }
         for file in [nil, "untouched.wav"] as [String?] {
             let plain = export(pads(nil, file: file)), shaped = export(pads(fromSound, file: file))
             let ratio = shaped.reduce(0) { $0 + $1 * $1 } / max(plain.reduce(0) { $0 + $1 * $1 }, 1e-9)
-            check(abs(ratio - 1) < 0.02, "Untouched envelopes: a pattern plays the same with the envelope as the sound is (\(file == nil ? "kit sounds" : "loaded samples"), level ×\(ratio))")
+            // each drum on its own, so a failure says which note type changed
+            let perPad = [Pad.kick, .snare, .hat, .clap, .bass808].map { p -> String in
+                let a = exportPad(pads(nil, file: file), 1 << UInt16(p.rawValue)).reduce(0) { $0 + $1 * $1 }
+                let b = exportPad(pads(fromSound, file: file), 1 << UInt16(p.rawValue)).reduce(0) { $0 + $1 * $1 }
+                return "\(p.label) ×" + String(format: "%.3f", b / max(a, 1e-9))
+            }
+            check(abs(ratio - 1) < 0.02, "Untouched envelopes: a pattern plays the same with the envelope as the sound is (\(file == nil ? "kit sounds" : "loaded samples"), level ×\(ratio); \(perPad.joined(separator: ", ")))")
         }
         var shorter = loadedSound
         shorter.sampler?.setEnvelope(.volume) { $0.hold = SamplerEnvelope.knob(seconds: 0.1) }
