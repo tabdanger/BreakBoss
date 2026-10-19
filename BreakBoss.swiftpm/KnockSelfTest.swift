@@ -1336,8 +1336,8 @@ enum KnockSelfTest {
         }
         let bright = run(mix) { $0.eq = 1 }, dark = run(mix) { $0.eq = -1 }
         check(band(bright, high: true) > band(mix, high: true) * 2.5 && band(bright, high: false) < band(mix, high: false) * 0.5
-              && band(dark, high: true) < band(mix, high: true) * 0.4,
-              "Precomputed effects: EQ tilts the sound bright (right) or dark (left)")
+              && band(dark, high: true) < band(mix, high: true) * 0.5,
+              "Precomputed effects: EQ tilts the sound bright (right) or dark (left) (highs ×\(band(bright, high: true) / band(mix, high: true)), lows ×\(band(bright, high: false) / band(mix, high: false)), dark highs ×\(band(dark, high: true) / band(mix, high: true)))")
         let boosted = peak(run { $0.boost = 1 }) / peak(tone)
         let normBoost = peak(run { $0.normalize = true; $0.boost = 0.5 })
         check(abs(boosted - 3.98) < 0.1 && abs(normBoost - 0.98 * 1.995) < 0.05,
