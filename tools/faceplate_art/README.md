@@ -1,5 +1,11 @@
 # Faceplate art pipeline
 
+**Oct 19 2026: Face 1 is locked to Tyrone's four renders.** The plates, state sprites and
+`KnockLayout.json` come only from `face1/build_face1.py` (see its header); the steps below are history
+and must not be run again, they would overwrite his art.
+
+    python3 tools/faceplate_art/face1/build_face1.py BreakBoss.swiftpm
+
 Run from the art working folder (sources in art2/src, measurements in knobs.json / rects.json):
 
     python3 platinum.py   # Platinum plates onto Modern (straight-line grid warp)
