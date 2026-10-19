@@ -129,20 +129,23 @@ enum SamplerFilterType: Int, Codable, CaseIterable {
 }
 
 /// DELAY, ATT, HOLD, DEC, SUS, REL and the three TENSIONs. Knob values 0…1.
+/// The defaults leave the sound as it is (Tyrone, Oct 19: nothing on the ENVELOPE page changes a
+/// sound until it's changed): no attack, full sustain, no release, and AMT 0 on the targets other
+/// than Volume, so turning one knob switches the envelope on with only that knob heard.
 struct SamplerEnvelope: Codable, Equatable, Hashable {
     var on = false
     var delay: Float = 0
-    var attack: Float = 0.12
-    var hold: Float = 0.18
-    var decay: Float = 0.45
-    var sustain: Float = 0.5
-    var release: Float = 0.3
+    var attack: Float = 0
+    var hold: Float = 0
+    var decay: Float = 0
+    var sustain: Float = 1
+    var release: Float = 0
     /// −1…1: negative bends the curve so it moves fast first, positive slow first.
     var attackTension: Float = 0
     var decayTension: Float = 0
     var releaseTension: Float = 0
     /// −1…1, how far it moves its target (the volume envelope is the volume itself).
-    var amount: Float = 0.5
+    var amount: Float = 0
     /// Times in beats instead of seconds.
     var tempo = false
     /// Points added on the graph (FL style). Empty = the shape the knobs make; once you add, move
@@ -152,6 +155,14 @@ struct SamplerEnvelope: Codable, Equatable, Hashable {
     var sustainPoint = -1
 
     var usesPoints: Bool { !points.isEmpty }
+
+    /// The Volume envelope: the note's end matters (its release) only once SUS is turned down or REL
+    /// up, or it has graph points; at full sustain with no release a one-shot plays out whole.
+    var gates: Bool { usesPoints || sustain < 0.999 || release > 0.001 }
+
+    /// A shape to add a stage back with (the envelope points menu's "Add a … point").
+    static let shaped = SamplerEnvelope(on: false, delay: 0, attack: 0.12, hold: 0.18, decay: 0.45, sustain: 0.5, release: 0.3,
+                                        attackTension: 0, decayTension: 0, releaseTension: 0, amount: 0.5)
 
     /// The knobs' shape as graph points: delay, peak, hold, sustain (where it waits) and release.
     func knobPoints() -> (points: [SamplerEnvPoint], sustain: Int) {
@@ -221,6 +232,12 @@ extension SamplerEnvelope {
                   sustain: v(.sustain, d.sustain), release: v(.release, d.release), attackTension: v(.attackTension, d.attackTension),
                   decayTension: v(.decayTension, d.decayTension), releaseTension: v(.releaseTension, d.releaseTension),
                   amount: v(.amount, d.amount), tempo: v(.tempo, d.tempo), points: v(.points, d.points), sustainPoint: v(.sustainPoint, d.sustainPoint))
+        // saved before Oct 19: an envelope never switched on still has the old shape (ATT 12%, HOLD 18%,
+        // DEC 45%, SUS 50%, REL 30%, AMT +50%); it takes the new defaults, so turning one knob later
+        // changes only that knob
+        var old = SamplerEnvelope.shaped
+        old.amount = amount == 1 ? 1 : 0.5
+        if self == old { self = d; amount = old.amount == 1 ? 1 : 0 }
     }
 }
 
@@ -775,6 +792,8 @@ struct SamplerRT {
     var tapeMul: Double = 1
     var tapePitch: Float = 0
     var pan = SamplerEnvelope(), volume = SamplerEnvelope(), modX = SamplerEnvelope(), modY = SamplerEnvelope(), pitch = SamplerEnvelope()
+    /// The Volume envelope is on and the note's end starts its release (see SamplerEnvelope.gates).
+    var volumeGates: Bool { volume.on && volume.gates }
     /// Their graph points, copied into fixed storage here (off the audio thread)
     var points = (SamplerEnvPoints(), SamplerEnvPoints(), SamplerEnvPoints(), SamplerEnvPoints(), SamplerEnvPoints())
     var lfoPan = SamplerLFO(), lfoVolume = SamplerLFO(), lfoX = SamplerLFO(), lfoY = SamplerLFO(), lfoPitch = SamplerLFO()
@@ -938,7 +957,9 @@ struct SamplerEnvRun {
         }
         func len(_ v: Float) -> Int { Int(SamplerEnvelope.units(v, tempo: e.tempo) * unit) }
         stage = 0
-        lenDelay = len(e.delay); lenAttack = len(e.attack); lenHold = len(e.hold); lenDecay = len(e.decay); lenRelease = len(e.release)
+        lenDelay = len(e.delay); lenAttack = len(e.attack); lenHold = len(e.hold); lenDecay = len(e.decay)
+        // REL at 0 still fades over 3 ms, so the note's end doesn't click
+        lenRelease = max(len(e.release), Int(sampleRate * 0.003))
         sustain = e.sustain.clamped(0, 1)
         curveA = powf(4, e.attackTension.clamped(-1, 1))
         curveD = powf(4, e.decayTension.clamped(-1, 1))
@@ -1083,6 +1104,8 @@ struct SamplerVoice {
     var filterOn = false
     // this block's results
     var gain: Float = 1
+    /// The Volume envelope releases when the note ends (otherwise it stays at its sustain).
+    var volumeGates = false
     var panL: Float = 1, panR: Float = 1
     var rateMul: Double = 1
     var done = false
@@ -1138,6 +1161,7 @@ struct SamplerVoice {
         filterType = rt.filterType
         // Fast LP fully open with no resonance is bypassed (the default)
         filterOn = filterType != .fastLP || cutoff + xOffset < 0.999 || resonance + yOffset > 0.001 || env.2.on || env.3.on || lfo.2.on || lfo.3.on
+        volumeGates = rt.volumeGates
         gain = env.1.on ? 0 : 1
         control(0)
         gain = env.1.on ? env.1.value : gain
@@ -1145,7 +1169,8 @@ struct SamplerVoice {
 
     /// The note ended: every envelope lets go.
     mutating func release() {
-        env.0.release(); env.1.release(); env.2.release(); env.3.release(); env.4.release()
+        env.0.release(); env.2.release(); env.3.release(); env.4.release()
+        if volumeGates { env.1.release() }
     }
 
     /// Works out the next `n` samples' gain, pan, pitch and filter.

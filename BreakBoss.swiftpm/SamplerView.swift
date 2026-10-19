@@ -1227,14 +1227,14 @@ struct SamplerWindow: View {
                 .accessibilityIdentifier("samplerEnvPresets")
             Group {
             knob("DELAY", e.delay, x: 56, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("DELAY", \.delay), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.delay = v } }
-            knob("ATT", e.attack, x: 154, y: 282, d: 64, s, labelY: 327, reset: 0.12, menu: set("ATT", \.attack), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.attack = v } }
-            knob("HOLD", e.hold, x: 254, y: 282, d: 64, s, labelY: 327, reset: 0.18, menu: set("HOLD", \.hold), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.hold = v } }
-            knob("DEC", e.decay, x: 353, y: 282, d: 64, s, labelY: 327, reset: 0.45, menu: set("DEC", \.decay), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.decay = v } }
-            knob("SUS", e.sustain, x: 451, y: 282, d: 64, s, labelY: 327, reset: 0.5, display: { v in "\(Int((v * 100).rounded()))%" }) { v, _ in editEnv(on: true, knobs: true) { $0.sustain = v } }
-            knob("REL", e.release, x: 548, y: 282, d: 64, s, labelY: 327, reset: 0.3, menu: set("REL", \.release), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.release = v } }
+            knob("ATT", e.attack, x: 154, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("ATT", \.attack), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.attack = v } }
+            knob("HOLD", e.hold, x: 254, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("HOLD", \.hold), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.hold = v } }
+            knob("DEC", e.decay, x: 353, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("DEC", \.decay), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.decay = v } }
+            knob("SUS", e.sustain, x: 451, y: 282, d: 64, s, labelY: 327, reset: 1, display: { v in "\(Int((v * 100).rounded()))%" }) { v, _ in editEnv(on: true, knobs: true) { $0.sustain = v } }
+            knob("REL", e.release, x: 548, y: 282, d: 64, s, labelY: 327, reset: 0, menu: set("REL", \.release), display: time) { v, _ in editEnv(on: true, knobs: true) { $0.release = v } }
             }
             if target != .volume {
-                knob("AMT", (e.amount + 1) / 2, x: 640, y: 282, d: 54, s, labelY: 327, bipolar: true, reset: 0.75,
+                knob("AMT", (e.amount + 1) / 2, x: 640, y: 282, d: 54, s, labelY: 327, bipolar: true, reset: 0.5,
                      display: { v in "\(Int(((v * 2 - 1) * 100).rounded()))%" }) { v, _ in editEnv(on: true) { $0.amount = abs(v * 2 - 1) < 0.02 ? 0 : v * 2 - 1 } }
             }
             Group {
@@ -1381,7 +1381,7 @@ struct SamplerWindow: View {
                 .item(e.on ? "Turn the envelope off" : "Turn the envelope on", icon: "power", checked: e.on) { editEnv { $0.on.toggle() } },
             ]
         }
-        let d = SamplerEnvelope()
+        let d = SamplerEnvelope.shaped
         let stages: [(String, WritableKeyPath<SamplerEnvelope, Float>, Float)] = [("delay", \.delay, 0.2), ("attack", \.attack, d.attack), ("hold", \.hold, d.hold),
                                                                                ("decay", \.decay, d.decay), ("release", \.release, d.release)]
         var items: [BBMenuItem] = stages.map { name, path, back in
