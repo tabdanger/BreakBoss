@@ -190,7 +190,7 @@ jobs:
             -resultBundlePath "$RUNNER_TEMP/ui.xcresult" \
             CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
             > "$RUNNER_TEMP/ui-test.log" 2>&1 || STATUS=$?
-          grep -E "error:|XCTAssert|Test Case|failed|passed|\*\* TEST|^UITREE" "$RUNNER_TEMP/ui-test.log" | tail -400
+          grep -E "error:|XCTAssert|Test Case|failed|passed|\*\* TEST|^UITREE" "$RUNNER_TEMP/ui-test.log" | tail -3000
           xcrun xcresulttool export attachments --path "$RUNNER_TEMP/ui.xcresult" --output-path "$RUNNER_TEMP/uishots/attachments" > /dev/null 2>&1 || true
           ls -R "$RUNNER_TEMP/uishots" | head -40
           exit ${STATUS:-0}

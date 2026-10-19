@@ -723,6 +723,51 @@ final class KnockController: ObservableObject {
         }
     }
 
+    /// One hit of the track as it plays now (its sound, PAN / VOL, the SAMPLER page), rendered offline
+    /// in a quiet engine: what the UI tests read to hear whether a control changed the sound.
+    /// (A pad hit: with the Volume envelope on, its release starts after a 16th.)
+    func probeTrack(_ pad: Int) -> String {
+        guard (0..<Pad.count).contains(pad) else { return "" }
+        let rate = 48_000.0
+        let samples = playedSamples.count == Pad.count ? playedSamples : kitSamples
+        guard samples.count == Pad.count else { return "no kit" }
+        let e = KnockEngine()
+        e.prepare(sampleRate: rate, maxFrames: 128)
+        let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0), (.velocity, 0), (.boost, 0), (.clipper, 0),
+                                        (.clipDrive, 0), (.gatedReverb, 0), (.textureDelay, 0), (.tighten, 0), (.pitch, 0.5), (.tune, 0.5)]
+        for (p, v) in quiet { e.setParam(p, v) }
+        e.kitHandoff.publish(KitBuffers(name: "PROBE", samples: samples, settings: state.pads, bassHz: kitDefinition.bassHz,
+                                        renderSampleRate: rate, layers: playedLayers))
+        e.send(KEvent(kind: .padPitched, a: Int32(pad + 128 * 64), value: 1))
+        let blocks = Int(1.5 * rate / 128)
+        var l2: Double = 0, r2: Double = 0, early: Double = 0, late: Double = 0, diff: Double = 0, quarter: Double = 0
+        var crossings = 0, last: Float = 0
+        var left = [Float](repeating: 0, count: 128), right = left
+        for b in 0..<blocks {
+            for i in 0..<128 { left[i] = 0; right[i] = 0 }
+            left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+            for i in 0..<128 {
+                let x = Double(left[i]), y = Double(right[i])
+                l2 += x * x; r2 += y * y
+                if b < blocks / 8 { early += x * x + y * y } else if b > blocks / 2 { late += x * x + y * y }
+                // crossings and brightness on the mono sum, so a hard-panned sound still counts
+                let m = (left[i] + right[i]) * 0.5
+                if b < blocks / 4 {
+                    if (m >= 0) != (last >= 0) { crossings += 1 }
+                    diff += Double((m - last) * (m - last))
+                    quarter += Double(m * m)
+                }
+                last = m
+            }
+        }
+        // what the engine was given, so a probe that didn't change can be told from a setting that didn't arrive
+        let sm = state.pads.indices.contains(pad) ? state.pads[pad].sampler : nil
+        let lv = sm?.lfo(.volume), ev = sm?.envelope(.volume)
+        let given = String(format: " lfoV=%.2f/%d/%.2f envV=%d/%d/%.2f max=%d cut=%d", lv?.amount ?? 0, lv?.shape ?? 0, lv?.speed ?? 0,
+                           (ev?.on ?? false) ? 1 : 0, (ev?.tempo ?? false) ? 1 : 0, ev?.attack ?? 0, sm?.polyMax ?? -1, sm?.cutGroup ?? -1)
+        return String(format: "L=%.4f R=%.4f early=%.4f late=%.4f zc=%d hf=%.4f", l2, r2, early, late, crossings, diff / max(quarter, 1e-12)) + given
+    }
+
     /// Audio copied in a SAMPLER window's waveform (any track can paste it).
     @Published var sampleClipboard: SampleClip?
     /// A waveform edit is being saved.

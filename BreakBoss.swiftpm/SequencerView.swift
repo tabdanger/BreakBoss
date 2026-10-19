@@ -305,13 +305,23 @@ struct SequencerView: View {
     /// Printing on the metal: black on platinum and cream, white on black and blue (Tyrone's renders).
     private var inkColor: Color { finish == "modern" || finish == "texture" ? Color(white: 0.93) : Color(white: 0.1) }
     /// What lights up on each face (Tyrone's Face 2 renders, Oct 17): the tools, PLAY, the power ring,
-    /// the type chip and the track lamps. Platinum green, black red, vintage amber, texture blue.
+    /// the type chip and the track lamps. Platinum and black red (Tyrone, Oct 18: no lime green on
+    /// Platinum), vintage amber, texture blue.
     private var accent: Color {
         switch finish {
-        case "modern": return Color(red: 1, green: 0.2, blue: 0.16)
         case "vintage": return Color(red: 1, green: 0.74, blue: 0.2)
         case "texture": return Color(red: 0.25, green: 0.6, blue: 1)
-        default: return S.green
+        default: return Color(red: 1, green: 0.2, blue: 0.16)
+        }
+    }
+    /// The panels' lit colour (selected rows, the root note, lit boxes): each mode's own accent
+    /// (Tyrone, Oct 18: red only on Platinum and Black, the other modes their own colour, no lime).
+    private var lit: Color { accent }
+    private var litDark: Color {
+        switch finish {
+        case "vintage": return Color(red: 0.24, green: 0.17, blue: 0.04)
+        case "texture": return Color(red: 0.05, green: 0.13, blue: 0.24)
+        default: return Color(red: 0.24, green: 0.05, blue: 0.04)
         }
     }
     /// The selected track (red in every render) and the open graph's lane chip (blue on Texture).
@@ -422,6 +432,8 @@ struct SequencerView: View {
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
             // headers, slider, knob rims and control edges in the faceplate's metal
             .environment(\.seqFinish, finish)
+            // Face 2's menus check their items in the mode's own colour, not lime
+            .environment(\.bbMenuAccent, accent)
         }
         .overlay { samplerOverlay }
         .bbMenuHost()
@@ -458,10 +470,15 @@ struct SequencerView: View {
         .sheet(item: Binding(get: { trackSettingsID.flatMap { id in channels.first { $0.id == id } } }, set: { trackSettingsID = $0?.id })) { ch in
             VStack(spacing: 0) {
                 Text("TRACK SETTINGS").font(.system(size: 12, weight: .semibold, design: .monospaced)).foregroundColor(S.dim).padding(.top, 16)
+                    .accessibilityIdentifier("trackSettingsSheet")
                 channelStrip(ch).padding(.vertical, 12)
                 Spacer()
             }
-            .background(S.header.ignoresSafeArea()).preferredColorScheme(.dark).presentationDetents([.height(180)])
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(S.header.ignoresSafeArea())
+            // a sheet is its own window: the SOUND and MIDI menus need a menu layer of their own here
+            .bbMenuHost()
+            .preferredColorScheme(.dark).presentationDetents([.height(180), .medium])
         }
         .sheet(item: Binding(get: { recordPad.map { PadID(pad: $0) } }, set: { recordPad = $0?.pad })) { target in
             ChannelRecordSheet(controller: controller, pad: target.pad)
@@ -574,8 +591,11 @@ struct SequencerView: View {
         hostSwitch("FOLLOW DAW", .followDAW, A.followDAW, s)
         // tempo, bars, gear, cloud
         // tempo: slide up for faster, down for slower; a tap opens the tempo panel
-        SeqChip(sprite: "SeqChipBpm", text: "\(Int(controller.liveTempo.rounded())) BPM", size: 17, leading: 24, trailing: 52, scale: s, color: tempoDragStart == nil ? .white : accent)
-            .simultaneousGesture(DragGesture(minimumDistance: 6)
+        SeqChip(sprite: "SeqChipBpm", text: "\(Int((controller.tempoIsExternal ? controller.liveTempo : controller.state.bpm).rounded())) BPM", size: 17, leading: 24, trailing: 52, scale: s, color: tempoDragStart == nil ? .white : accent)
+            .accessibilityIdentifier("tempoChip")
+            .bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
+            // the slide sits outside the tap's button (inside it, the button kept the drag and the tempo never moved)
+            .highPriorityGesture(DragGesture(minimumDistance: 6)
                 .onChanged { g in
                     guard !controller.tempoIsExternal else { return }
                     if tempoDragStart == nil { tempoDragStart = controller.state.bpm }
@@ -583,8 +603,6 @@ struct SequencerView: View {
                     if bpm != controller.state.bpm { controller.setBPM(min(280, max(40, bpm))) }
                 }
                 .onEnded { _ in tempoDragStart = nil })
-            .accessibilityIdentifier("tempoChip")
-            .bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
         SeqChip(sprite: "SeqChipBars", text: "\(bars) BARS", size: 17, leading: 18, trailing: 52, scale: s)
             .accessibilityIdentifier("barsChip")
             .bbMenuPlaced(A.bars, s, title: "Pattern length") {
@@ -921,11 +939,12 @@ struct SequencerView: View {
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(ch.name).font(.system(size: 13, weight: .semibold)).foregroundColor(S.green).lineLimit(1)
+                    Text(ch.name).font(.system(size: 13, weight: .semibold)).foregroundColor(lit).lineLimit(1)
                     Text(controller.padName(pad).uppercased()).font(.system(size: 9, design: .monospaced)).foregroundColor(S.dim).lineLimit(1)
                 }
                 .frame(width: 150, alignment: .leading)
                 labelBox("waveform", "SOUND").bbMenu(title: ch.name, width: 320) { channelSampleItems(ch) }
+                    .accessibilityIdentifier("trackSound\(pad)")
                 labelBox("cable.connector", midiOutLabel(pad), lit: controller.midiOutOn && controller.midiOutChannels[pad] >= 0)
                     .bbMenu(title: "MIDI out · \(ch.name)", width: 240) { midiOutChannelItems(pad) }
                 divider
@@ -1286,6 +1305,17 @@ struct SequencerView: View {
                                   switchTo: { openSampler($0) },
                                   importFile: { importPad = pad },
                                   drop: { dropOnRack($0, channel: channel(pad: pad)) },
+                                  swing: pattern.swing(pad: pad), shift: pattern.shift(pad: pad),
+                                  setFeel: { sw, sh, _ in
+                                      // MISC's SWING / SHIFT: the track's own swing and push / pull, one undo per turn
+                                      var p = pattern
+                                      if let sw { p.setSwing(pad: pad, sw) }
+                                      if let sh { p.setShift(pad: pad, sh) }
+                                      guard p != pattern else { return }
+                                      remember(coalescing: true)
+                                      work = nil
+                                      controller.setLoop(loop, p)
+                                  },
                                   move: { t, done in
                                       if done {
                                           samplerX = Double((x0 + t.width).clamped(80 - w, g.size.width - 80))
@@ -1406,11 +1436,11 @@ struct SequencerView: View {
                 HStack {
                     Spacer()
                     Text(MusicScale.noteName(note)).font(.system(size: 9 * s, design: .monospaced))
-                        .foregroundColor(isRoot ? S.green : (inScale ? Color(white: 0.15) : Color(white: 0.5)))
+                        .foregroundColor(isRoot ? lit : (inScale ? Color(white: 0.15) : Color(white: 0.5)))
                     Text(sm == 0 ? "·" : (sm > 0 ? "+\(sm)" : "\(sm)")).font(.system(size: 8 * s, design: .monospaced)).foregroundColor(Color(white: 0.4)).frame(width: 22 * s, alignment: .trailing)
                 }
                 .padding(.trailing, 12 * s).frame(height: l.pitchRowH)
-                .background(isRoot ? S.green.opacity(0.25) : (inScale ? Color.clear : Color.black.opacity(0.12)))
+                .background(isRoot ? lit.opacity(0.25) : (inScale ? Color.clear : Color.black.opacity(0.12)))
             }
         }
         .frame(width: (A.rackX1 - A.rackX0) * s, height: CGFloat(range.count) * l.pitchRowH, alignment: .top)
@@ -1468,31 +1498,41 @@ struct SequencerView: View {
         }
     }
 
-    /// The menu a two-finger tap opens on a channel: fills, clear, randomize, rename, delete.
+    /// The menu a two-finger tap (or right-click) opens on a channel. Tyrone, Oct 18: the track's own
+    /// things first, top to bottom (Track settings, Open sample editor, Solo, Load sample, Clear sample,
+    /// Remove), then its steps and its feel.
     private func channelMenu(_ ch: WorkspaceChannel) -> [BBMenuItem] {
         let pad = ch.pad
+        let loaded = controller.state.pads[pad].sampleFile != nil
+        var items: [BBMenuItem] = [
+            .item("Track settings…", detail: "Tune, decay, filter, MIDI", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id },
+            .item("Open sample editor", icon: "waveform") { openSampler(pad) },
+            .item(controller.soloPads[pad] ? "Solo off" : "Solo", icon: "s.square", checked: controller.soloPads[pad]) { controller.toggleSolo(pad) },
+            .item("Load sample…", icon: "folder") { importPad = pad },
+            .item("Clear sample", detail: loaded ? "Back to the kit's sound" : "Playing the kit's sound", icon: "xmark",
+                  destructive: loaded, enabled: loaded) {
+                // only the loaded sample goes: the track keeps its level, pan and sampler settings
+                var ps = controller.state.pads[pad]; ps.sampleFile = nil; controller.setPadSettings(pad, ps)
+            },
+            .item("Remove", detail: "Takes this track out of the rack", icon: "trash", destructive: true) {
+                if expandedID == ch.id { expandedID = nil }
+                if openID == ch.id { openID = nil }
+                if selectedID == ch.id { selectedID = nil }
+                if samplerPad == pad { samplerPad = nil }
+                controller.removeRackChannel(ch.id)
+            }
+        ]
         let step = PatternData.stepTicks
         let fills: [(String, Int32)] = [("Fill every step", step), ("Fill every 2 steps", step * 2), ("Fill every 4 steps (beat)", step * 4),
                                         ("Fill every 8 steps (1/2 bar)", step * 8), ("Fill every bar", PatternEdit.barTicks),
                                         ("Fill every 1/2 step (1/32)", step / 2)]
-        var items: [BBMenuItem] = fills.map { f in
+        items.append(.header("Steps"))
+        items += fills.map { f in
             BBMenuItem.item(f.0, icon: "square.grid.4x3.fill") { commit(PatternEdit.fill(pattern, pad: pad, every: f.1, velocity: lastVelocity)) }
         }
-        items.append(.header("This channel"))
         items.append(BBMenuItem.item("Randomize its steps", icon: "dice") { remember(); controller.randomizeChannel(loop: loop, pad: pad) })
+        items.append(BBMenuItem.item("Clear its steps", icon: "xmark.square", destructive: true) { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
         items += feelItems(pad)
-        items.append(.header("Track"))
-        items.append(BBMenuItem.item("Open sample editor", icon: "waveform") { openSampler(pad) })
-        items.append(BBMenuItem.item("Track settings… (tune, decay, filter, MIDI)", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id })
-        items.append(BBMenuItem.item(controller.soloPads[pad] ? "Solo off" : "Solo", icon: "s.square", checked: controller.soloPads[pad]) { controller.toggleSolo(pad) })
-        items.append(BBMenuItem.item("Load a sample from Files…", icon: "folder") { importPad = pad })
-        items.append(BBMenuItem.item("Clear its steps", icon: "xmark", destructive: true) { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
-        items.append(BBMenuItem.item("Delete channel", icon: "trash", destructive: true) {
-            if expandedID == ch.id { expandedID = nil }
-            if openID == ch.id { openID = nil }
-            if selectedID == ch.id { selectedID = nil }
-            controller.removeRackChannel(ch.id)
-        })
         return items
     }
 
@@ -1595,6 +1635,7 @@ struct SequencerView: View {
     /// ticking while a pattern plays (and anything else on Face 2) leaves it alone.
     private func gridKey(_ L: [RowLayout]) -> Int {
         var h = Hasher()
+        h.combine(finish)     // the grid's lit colours follow the finish
         h.combine(origin); h.combine(pageTicks); h.combine(cellTicks); h.combine(snapTicks); h.combine(pattern.lengthTicks)
         for e in pattern.events {
             h.combine(e.tick); h.combine(e.pad); h.combine(e.velocity); h.combine(e.semis)
@@ -1625,7 +1666,7 @@ struct SequencerView: View {
             for (i, l) in L.enumerated() {
                 if let range = l.pitch {
                     // the band: the track's steps, lit where it has notes (any pitch)
-                    ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: l.pitchTop - l.y)), with: .color(S.greenDark.opacity(0.5)))
+                    ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: l.pitchTop - l.y)), with: .color(litDark.opacity(0.5)))
                     ctx.fill(Path(CGRect(x: 0, y: l.y + l.bandH, width: size.width, height: l.pitchTop - l.y - l.bandH)), with: .color(Color(white: 0.06)))
                     drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l, size.width) })
                     for c in 0..<cells {
@@ -1644,12 +1685,12 @@ struct SequencerView: View {
                         let y = l.pitchTop + CGFloat(k) * l.pitchRowH
                         // the key's notes are lit (the root greener), the notes outside it are dark
                         ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: l.pitchRowH)),
-                                 with: .color(isRoot ? S.green.opacity(0.1) : (inScale ? (k % 2 == 0 ? S.rowA : S.rowB) : Color.black.opacity(0.35))))
+                                 with: .color(isRoot ? lit.opacity(0.1) : (inScale ? (k % 2 == 0 ? S.rowA : S.rowB) : Color.black.opacity(0.35))))
                         if inScale && !isRoot { ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: l.pitchRowH)), with: .color(noteColor.opacity(0.07))) }
                         if s == 0 { ctx.fill(Path(CGRect(x: 0, y: y + l.pitchRowH - 1, width: size.width, height: 1)), with: .color(S.dim.opacity(0.5))) }
                     }
-                    ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
-                    ctx.fill(Path(CGRect(x: 0, y: l.y + l.height - 1, width: size.width, height: 1)), with: .color(S.green.opacity(0.5)))
+                    ctx.fill(Path(CGRect(x: 0, y: l.y, width: size.width, height: 1)), with: .color(lit.opacity(0.5)))
+                    ctx.fill(Path(CGRect(x: 0, y: l.y + l.height - 1, width: size.width, height: 1)), with: .color(lit.opacity(0.5)))
                 } else {
                     // the step buttons (the picture's)
                     drawMetalCells(ctx, (0..<cells).map { cellRect($0, cw, l, size.width) })
@@ -2371,9 +2412,10 @@ struct SequencerView: View {
 
     // MARK: Small pieces
 
-    private func box(lit: Bool, color: Color = S.green) -> some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill(lit ? (color == S.green ? S.greenDark : color.opacity(0.25)) : S.button)
+    private func box(lit: Bool, color: Color? = nil) -> some View {
+        let color = color ?? self.lit
+        return RoundedRectangle(cornerRadius: 6)
+            .fill(lit ? (color == self.lit ? litDark : color.opacity(0.25)) : S.button)
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(lit ? color.opacity(0.9) : S.border, lineWidth: lit ? 1.5 : 1))
             .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
     }
@@ -2425,13 +2467,14 @@ struct SequencerView: View {
             if let icon { Image(systemName: icon).font(.system(size: 15, weight: .medium)) }
             if let title { Text(title).font(.system(size: 13, weight: .medium, design: .monospaced)) }
         }
-        .foregroundColor(lit ? S.green : (enabled ? S.text : S.dim))
+        .foregroundColor(lit ? self.lit : (enabled ? S.text : S.dim))
         .padding(.horizontal, 12).frame(height: 40).background(box(lit: lit))
     }
 }
 
 /// The tempo slider panel (header BPM). Follows the DAW / MIDI clock when TEMPO SYNC has one.
 struct TempoPanel: View {
+    @Environment(\.bbMenuAccent) private var accent
     @ObservedObject var controller: KnockController
 
     var body: some View {
@@ -2447,7 +2490,7 @@ struct TempoPanel: View {
                             Text("\(b)").font(.system(size: 13, weight: .medium, design: .monospaced))
                                 .foregroundColor(Int(controller.state.bpm) == b ? .black : BBMenuStyle.text)
                                 .frame(maxWidth: .infinity, minHeight: 34)
-                                .background(RoundedRectangle(cornerRadius: 6).fill(Int(controller.state.bpm) == b ? BBMenuStyle.accent : BBMenuStyle.row))
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Int(controller.state.bpm) == b ? (accent ?? BBMenuStyle.accent) : BBMenuStyle.row))
                         }
                     }
                 }

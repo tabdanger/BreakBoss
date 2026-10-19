@@ -39,6 +39,8 @@ struct BBMenuSpec: Identifiable {
     var title: String?
     var items: [BBMenuItem]
     var custom: AnyView? = nil
+    /// The check marks' colour; nil = the usual lime (the sampler on Platinum lights them red).
+    var accent: Color? = nil
 }
 
 final class BBMenuCenter: ObservableObject {
@@ -60,6 +62,23 @@ enum BBMenuStyle {
 
 private let bbSpace = "bbMenuHost"
 
+/// The menu layer a trigger opens its menu in. Optional, so a menu button in a view with no
+/// .bbMenuHost() above it (a sheet, a new window) does nothing instead of crashing the app
+/// (build 82: Track settings in a sheet hit SwiftUI's "No ObservableObject of type BBMenuCenter").
+private struct BBMenuCenterKey: EnvironmentKey { static let defaultValue: BBMenuCenter? = nil }
+extension EnvironmentValues {
+    var bbMenuCenter: BBMenuCenter? {
+        get { self[BBMenuCenterKey.self] }
+        set { self[BBMenuCenterKey.self] = newValue }
+    }
+    /// The colour the menus opened from inside this view check their items in (nil = lime).
+    var bbMenuAccent: Color? {
+        get { self[BBMenuAccentKey.self] }
+        set { self[BBMenuAccentKey.self] = newValue }
+    }
+}
+private struct BBMenuAccentKey: EnvironmentKey { static let defaultValue: Color? = nil }
+
 extension View {
     /// Adds the layer the BreakBoss menus draw in. Put it on the outermost view of a screen.
     func bbMenuHost() -> some View { modifier(BBMenuHost()) }
@@ -74,6 +93,12 @@ extension View {
     func bbTwoFingerMenu(title: String? = nil, width: CGFloat = 280, tap: @escaping () -> Void,
                          items: @escaping () -> [BBMenuItem]) -> some View {
         modifier(BBMenuTrigger(title: title, width: width, items: items, custom: nil, tap: tap, twoFinger: true))
+    }
+
+    /// Opens a BreakBoss menu on a two-finger tap (or right-click) on a control that keeps its own
+    /// touches, such as a knob or the sampler's waveform: one finger still turns or drags it.
+    func bbContextMenu(title: String? = nil, width: CGFloat = 280, items: @escaping () -> [BBMenuItem]) -> some View {
+        modifier(BBContextTrigger(title: title, width: width, items: items))
     }
 
     /// A menu trigger placed over a painted button (faceplate pixels): the menu goes on BEFORE the
@@ -94,7 +119,8 @@ extension View {
 }
 
 private struct BBMenuTrigger: ViewModifier {
-    @EnvironmentObject var center: BBMenuCenter
+    @Environment(\.bbMenuCenter) private var center
+    @Environment(\.bbMenuAccent) private var accent
     let title: String?
     let width: CGFloat
     let items: () -> [BBMenuItem]
@@ -104,7 +130,7 @@ private struct BBMenuTrigger: ViewModifier {
     @State private var frame: CGRect = .zero
 
     private func open() {
-        center.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?()))
+        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?(), accent: accent))
     }
 
     func body(content: Content) -> some View {
@@ -120,12 +146,39 @@ private struct BBMenuTrigger: ViewModifier {
             Button(action: { tap?() }) { measured }
                 .buttonStyle(SeqPress())
                 .twoFingerTap { open() }
+                .uiTestHold { open() }
         } else {
             // A real button: a press-and-hold DragGesture next to onTapGesture swallowed the taps on
             // newer iPadOS, so none of these menus opened. The button goes in while your finger is on it.
             Button(action: open) { measured }
                 .buttonStyle(MenuPress())
         }
+    }
+}
+
+private struct BBContextTrigger: ViewModifier {
+    @Environment(\.bbMenuCenter) private var center
+    @Environment(\.bbMenuAccent) private var accent
+    let title: String?
+    let width: CGFloat
+    let items: () -> [BBMenuItem]
+    @State private var frame: CGRect = .zero
+
+    func body(content: Content) -> some View {
+        content
+            .background(GeometryReader { g in
+                Color.clear
+                    .onAppear { frame = g.frame(in: .named(bbSpace)) }
+                    .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
+            })
+            .twoFingerTap { show() }
+            .uiTestHold { show() }
+    }
+
+    private func show() {
+        let list = items()
+        guard !list.isEmpty else { return }
+        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: list, accent: accent))
     }
 }
 
@@ -148,6 +201,16 @@ private extension View {
     /// A two-finger tap or a trackpad / mouse right-click on this view. SwiftUI's own taps can't count
     /// fingers, so these are UIKit recognizers handed to SwiftUI (iPadOS 18 and later; the app's
     /// iPads run 26), which keeps them in SwiftUI's gesture system next to the button's own tap.
+    /// UI tests only (BREAKBOSS_UI_PROBE): a one-second hold opens the same menu, since the simulator's
+    /// synthesized two-finger tap can land its second finger on a neighbouring control.
+    @ViewBuilder func uiTestHold(_ action: @escaping () -> Void) -> some View {
+        if ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil {
+            simultaneousGesture(LongPressGesture(minimumDuration: 1).onEnded { _ in action() })
+        } else {
+            self
+        }
+    }
+
     @ViewBuilder func twoFingerTap(_ action: @escaping () -> Void) -> some View {
         if #available(iOS 18.0, *) {
             gesture(TapRecognizer(touches: 2, action: action))
@@ -181,6 +244,7 @@ private struct BBMenuHost: ViewModifier {
     func body(content: Content) -> some View {
         content
             .environmentObject(center)
+            .environment(\.bbMenuCenter, center)
             .overlay(
                 GeometryReader { geo in
                     if let spec = center.open {
@@ -230,7 +294,7 @@ private struct BBMenuPanel: View {
                         Spacer()
                     }
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                    .foregroundColor(M.accent)
+                    .foregroundColor(spec.accent ?? M.accent)
                     .padding(.horizontal, 14).frame(height: 42)
                 }
                 Rectangle().fill(M.line).frame(height: 1)
@@ -240,7 +304,7 @@ private struct BBMenuPanel: View {
                     .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 6)
             }
             if let custom = spec.custom, center.path.isEmpty {
-                custom.padding(14)
+                custom.padding(14).environment(\.bbMenuAccent, spec.accent)
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -284,7 +348,7 @@ private struct BBMenuPanel: View {
                         }
                     }
                     Spacer(minLength: 6)
-                    if item.checked { Image(systemName: "checkmark").foregroundColor(M.accent) }
+                    if item.checked { Image(systemName: "checkmark").foregroundColor(spec.accent ?? M.accent) }
                     if item.children != nil { Image(systemName: "chevron.right").foregroundColor(M.dim) }
                 }
                 .padding(.horizontal, 14)
@@ -305,6 +369,7 @@ struct BBSlider: View {
     var step: Double = 1
     var label: (Double) -> String
     let set: (Double) -> Void
+    @Environment(\.bbMenuAccent) var accent
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -320,7 +385,7 @@ struct BBSlider: View {
                 let f = CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound))
                 ZStack(alignment: .leading) {
                     Capsule().fill(BBMenuStyle.row).frame(height: 8)
-                    Capsule().fill(BBMenuStyle.accent).frame(width: max(8, g.size.width * f), height: 8)
+                    Capsule().fill(accent ?? BBMenuStyle.accent).frame(width: max(8, g.size.width * f), height: 8)
                     Circle().fill(Color.white).frame(width: 26, height: 26)
                         .shadow(color: .black.opacity(0.5), radius: 3)
                         .offset(x: max(0, min(g.size.width - 26, g.size.width * f - 13)))

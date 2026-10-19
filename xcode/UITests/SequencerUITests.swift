@@ -136,11 +136,12 @@ final class SequencerUITests: XCTestCase {
         XCTAssertNotEqual(label("pageLabel"), before, "dragging the beat numbers slides the grid (still \(before))")
         snap("slid-sideways")
 
-        // tempo: slide the BPM chip up
+        // tempo: slide the BPM chip down (the chip sits near the top edge, so a slide up can run off the screen)
         let bpmBefore = label("tempoChip")
         let chip = any("tempoChip")
+        print("UITREE FRAME tempoChip \(chip.frame)")
         chip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            .press(forDuration: 0.1, thenDragTo: chip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: -3)))
+            .press(forDuration: 0.1, thenDragTo: chip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: 90)))
         sleep(1)
         XCTAssertNotEqual(label("tempoChip"), bpmBefore, "sliding the BPM chip changes the tempo (still \(bpmBefore))")
         snap("tempo-slid")
