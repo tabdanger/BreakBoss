@@ -269,6 +269,24 @@ for face, src in pics.items():
     carry(KIT_LABEL, NEW_KIT_LABEL_X)
     for nx in NEW_DIVIDERS_X:
         carry([DIVIDERS_X[0] - 3, DIVIDER_Y[0], DIVIDERS_X[0] + 4, DIVIDER_Y[1]], nx - 3)
+    # the Face 1 / Face 2 slot (Tyrone, Oct 19): the app draws it round-ended round its round key, so
+    # the render's slot (square-cornered left end) and key come off; their own random stream, so
+    # nothing else this script makes changes
+    # (each row the metal right of the slot, carrying the plate's sideways sheen measured just above
+    # it, blended into the picture left of the screw and over the top and bottom edges so no edge
+    # shows; the screw stays as it is)
+    rng, kept = np.random.default_rng(2026_10_19), rng
+    sheen = ndimage.uniform_filter1d(lum(src[710:722, :, :3]).mean(axis=0), 9)
+    sx0, sy0, sx1, sy1 = 44, 722, 190, 796
+    before = a[sy0:sy1, sx0:sx1, :3].copy()
+    fill_rows(a, [sx0, sy0, sx1, sy1], sx1, sx1, light=sheen)
+    yy, xx = np.mgrid[sy0:sy1, sx0:sx1].astype(np.float32)
+    wx = np.clip((xx - sx0) / 12, 0, 1)
+    wy = np.clip(np.minimum(yy - sy0, sy1 - 1 - yy) / 4, 0, 1)
+    screw = np.clip((np.hypot(xx - 52.5, yy - 758.5) - 14) / 2, 0, 1)
+    w = (wx * wy * screw)[..., None]
+    a[sy0:sy1, sx0:sx1, :3] = before * (1 - w) + a[sy0:sy1, sx0:sx1, :3] * w
+    rng = kept
     out = np.concatenate([a, np.full((H, W, 1), 255, np.float32)], axis=2)
     write(f"SeqPlate_{face}", out)
     print("face", face)
