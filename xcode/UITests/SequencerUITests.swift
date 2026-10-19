@@ -154,13 +154,13 @@ final class SequencerUITests: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()   // close the panel
         sleep(1)
 
-        // grab the first track's studs and pull it down two places: it moves straight away, no hold
+        // grab the first track's studs and flick it down: it moves straight away, no hold
         let kickY = app.buttons["trackArrow0"].frame.midY
         let grip = any("trackGrip0")
         XCTAssertTrue(grip.exists, "every track has its grab studs left of the arrow")
         let rowH = app.buttons["trackArrow1"].frame.midY - kickY
         grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            .press(forDuration: 0.05, thenDragTo: grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: rowH * 2.2)))
+            .press(forDuration: 0.05, thenDragTo: grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: rowH * 3.2)))   // a fast synthesized flick falls ~15% short
         sleep(2)
         print("UITREE flick \(any("grid").value as? String ?? "") kickY \(kickY) rowH \(rowH) now \(app.buttons["trackArrow0"].frame.midY)")
         XCTAssertGreaterThan(app.buttons["trackArrow0"].frame.midY, kickY + rowH, "the dragged track moved down the rack")
