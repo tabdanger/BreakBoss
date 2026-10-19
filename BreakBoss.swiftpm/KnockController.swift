@@ -163,6 +163,20 @@ final class KnockController: ObservableObject {
 
     func resetKnob(_ p: KParam) { set(p, p.defaultValue) }
 
+    /// A track's own FX knob on Face 2 (in the current mode): its insert, not the main chain.
+    func trackFX(_ pad: Int, _ p: KParam) -> Float {
+        guard state.pads.indices.contains(pad) else { return TrackFX.neutral(p) }
+        return state.pads[pad].fxValue(p, mode)
+    }
+
+    func setTrackFX(_ pad: Int, _ p: KParam, _ v: Float) {
+        guard state.pads.indices.contains(pad) else { return }
+        var settings = state.pads[pad]
+        settings.setFX(p, mode, v)
+        guard settings != state.pads[pad] else { return }
+        setPadSettings(pad, settings)
+    }
+
     private func pushAllToEngine() {
         for p in KParam.allCases { engine.setParam(p, value(p)) }
         engine.setTempo(state.bpm)
