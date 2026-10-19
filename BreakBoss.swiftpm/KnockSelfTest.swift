@@ -409,7 +409,13 @@ enum KnockSelfTest {
     /// other, each mode keeps its own, an untouched track sounds exactly as before, and they save.
     static func checkTrackFX() {
         let rate = 48_000.0
-        let tone = SampleBuffer(left: (0..<48_000).map { i in sinf(Float(i) * 2 * .pi * 180 / 48_000) * 0.45 * (1 - Float(i) / 60_000) }, sampleRate: rate)
+        var wave = [Float](repeating: 0, count: 48_000)
+        for i in 0..<wave.count {
+            let t = Float(i)
+            let phase: Float = t * 2 * Float.pi * 180 / 48_000
+            wave[i] = sinf(phase) * 0.45 * (1 - t / 60_000)
+        }
+        let tone = SampleBuffer(left: wave, sampleRate: rate)
         func render(_ pads: [PadSettings], mode: SoundMode, hit: Int, blocks: Int = 300) -> [Float] {
             let e = KnockEngine()
             e.prepare(sampleRate: rate, maxFrames: 128)
@@ -427,8 +433,16 @@ enum KnockSelfTest {
             }
             return out
         }
-        func energy(_ x: [Float], from: Int = 0, to: Int? = nil) -> Double { x[from..<(to ?? x.count)].reduce(0) { $0 + Double($1 * $1) } }
-        func difference(_ a: [Float], _ b: [Float]) -> Double { zip(a, b).reduce(0) { $0 + Double(($1.0 - $1.1) * ($1.0 - $1.1)) } }
+        func energy(_ x: [Float], from: Int = 0) -> Double {
+            var e: Double = 0
+            for i in from..<x.count { e += Double(x[i] * x[i]) }
+            return e
+        }
+        func difference(_ a: [Float], _ b: [Float]) -> Double {
+            var e: Double = 0
+            for i in 0..<min(a.count, b.count) { let d = Double(a[i] - b[i]); e += d * d }
+            return e
+        }
         let plain = Array(repeating: PadSettings(), count: Pad.count)
         let a = Pad.kick.rawValue, b = Pad.snare.rawValue
 
