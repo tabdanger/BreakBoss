@@ -212,7 +212,12 @@ struct SamplerWindow: View {
     /// A region marker being dragged along the top of the waveform: which one, and where it is now.
     @State private var markerDrag: (Int, Float)?
     @State private var handleFrom: (Double, Double)?
+    /// Every change made in the window (knobs, switches, menus, waveform edits), as what the track was
+    /// before it: UNDO takes the last one back, REDO puts it back again (Tyrone, Oct 19).
     @State private var undo: [PadSettings] = []
+    @State private var redo: [PadSettings] = []
+    /// When a change was last kept for UNDO: a knob turning sends many changes, kept as one step.
+    @State private var lastKept = Date.distantPast
     /// Dragging a loop flag: the loop points shown until it's let go.
     @State private var loopDrag: (Float, Float)?
     @State private var loopFrom: (Float, Float)?
@@ -237,12 +242,48 @@ struct SamplerWindow: View {
     private var trackNumber: Int { (controller.rackOrder.firstIndex(of: pad) ?? pad) + 1 }
 
     private func edit(_ change: (inout SamplerSettings) -> Void) {
-        var s = controller.sampler(pad); change(&s); controller.setSampler(pad, s)
+        var s = controller.sampler(pad); change(&s)
+        guard s != controller.sampler(pad) else { return }
+        keep(controller.state.pads[pad], merging: true)
+        controller.setSampler(pad, s)
     }
     /// A SAMPLE-page knob: shown while it turns, computed into the sound when it's let go.
     private func editComputed(_ final: Bool, _ change: (inout SamplerSettings) -> Void) {
         var s = sm; change(&s)
-        if final { pending = nil; controller.setSampler(pad, s) } else { pending = s }
+        if final {
+            pending = nil
+            if s != controller.sampler(pad) { keep(controller.state.pads[pad]); controller.setSampler(pad, s) }
+        } else { pending = s }
+    }
+    /// The track's own settings (PAN, its file) changed from the window.
+    private func setPad(_ ps: PadSettings, merging: Bool = false) {
+        guard ps != controller.state.pads[pad] else { return }
+        keep(controller.state.pads[pad], merging: merging)
+        controller.setPadSettings(pad, ps)
+    }
+    /// Keeps what the track was for UNDO (a new change clears REDO). `merging`: a change coming less
+    /// than half a second after the last one (a knob still turning) joins that step.
+    private func keep(_ before: PadSettings, merging: Bool = false) {
+        let now = Date()
+        defer { lastKept = now }
+        if merging && now.timeIntervalSince(lastKept) < 0.5 && !undo.isEmpty { return }
+        undo.append(before)
+        if undo.count > 50 { undo.removeFirst() }
+        redo = []
+    }
+    private func undoStep() {
+        guard let last = undo.popLast() else { return }
+        redo.append(controller.state.pads[pad])
+        pending = nil; lastKept = .distantPast
+        controller.restorePad(pad, last)
+        selection = nil
+    }
+    private func redoStep() {
+        guard let next = redo.popLast() else { return }
+        undo.append(controller.state.pads[pad])
+        pending = nil; lastKept = .distantPast
+        controller.restorePad(pad, next)
+        selection = nil
     }
 
     var body: some View {
@@ -327,6 +368,13 @@ struct SamplerWindow: View {
             Text(String(format: "CH %02d", trackNumber)).font(.system(size: 27 * s, weight: .medium)).foregroundColor(skin.ink)
                 .frame(width: 160 * s, height: 58 * s, alignment: .trailing).offset(x: 1030 * s, y: 8 * s)
                 .allowsHitTesting(false)
+            // UNDO / REDO: every change in the window, on every page
+            titleButton("arrow.uturn.backward", s, red: false, action: undoStep).spot(880, 14, 64, 46, s)
+                .disabled(undo.isEmpty || controller.sampleEditing).opacity(undo.isEmpty ? 0.45 : 1)
+                .accessibilityLabel("Undo").accessibilityIdentifier("samplerUndo")
+            titleButton("arrow.uturn.forward", s, red: false, action: redoStep).spot(950, 14, 64, 46, s)
+                .disabled(redo.isEmpty || controller.sampleEditing).opacity(redo.isEmpty ? 0.45 : 1)
+                .accessibilityLabel("Redo").accessibilityIdentifier("samplerRedo")
             titleButton("minus", s, red: false, action: minimize).spot(1232, 14, 64, 46, s)
                 .accessibilityLabel("Minimize the sampler").accessibilityIdentifier("samplerMinimize")
             titleButton("xmark", s, red: true, action: close).spot(1310, 14, 66, 46, s)
@@ -366,7 +414,7 @@ struct SamplerWindow: View {
             .buttonStyle(SeqPress()).spot(770, 84, 60, 80, s).accessibilityIdentifier("samplerOn")
             headerKnob("PAN", value: (controller.state.pads[pad].pan + 1) / 2, bipolar: true, reset: 0.5, x: 906, s,
                        display: { v in let p = Int(((v * 2 - 1) * 100).rounded()); return p == 0 ? "C" : (p < 0 ? "L\(-p)" : "R\(p)") }) { v, _ in
-                var ps = controller.state.pads[pad]; let p = v * 2 - 1; ps.pan = abs(p) < 0.03 ? 0 : p; controller.setPadSettings(pad, ps)
+                var ps = controller.state.pads[pad]; let p = v * 2 - 1; ps.pan = abs(p) < 0.03 ? 0 : p; setPad(ps, merging: true)
             }
             // VOL: the sampler's own pre-amp before the mode's effects, −12 dB … +12 dB (Tyrone, Oct 19), bigger
             headerKnob("VOL", value: sm.volume, bipolar: false, reset: 0.5, x: 1002, s, size: 80,
@@ -511,17 +559,17 @@ struct SamplerWindow: View {
         if !files.isEmpty {
             items.append(.submenu("Your samples", icon: "waveform", files.map { name in
                 BBMenuItem.item((name as NSString).deletingPathExtension, checked: controller.state.pads[pad].sampleFile == name) {
-                    var ps = controller.state.pads[pad]; ps.sampleFile = name; controller.setPadSettings(pad, ps)
+                    var ps = controller.state.pads[pad]; ps.sampleFile = name; setPad(ps)
                 }
             }))
         }
         if controller.state.pads[pad].sampleFile != nil {
             items.append(.item("Back to the kit's sound", icon: "arrow.uturn.backward") {
-                var ps = controller.state.pads[pad]; ps.sampleFile = nil; controller.setPadSettings(pad, ps)
+                var ps = controller.state.pads[pad]; ps.sampleFile = nil; setPad(ps)
             })
         }
         items.append(.item("Reset the sampler", icon: "arrow.counterclockwise", destructive: true) {
-            var ps = controller.state.pads[pad]; ps.sampler = nil; controller.setPadSettings(pad, ps)
+            var ps = controller.state.pads[pad]; ps.sampler = nil; setPad(ps)
         })
         return items
     }
@@ -560,7 +608,7 @@ struct SamplerWindow: View {
             // back to the kit's sound, on opens Files to load one
             toggleRow("Keep on disk", controller.state.pads[pad].sampleFile != nil, x: 22, y: 56, s, id: "samplerKeepOnDisk") {
                 if controller.state.pads[pad].sampleFile != nil {
-                    var ps = controller.state.pads[pad]; ps.sampleFile = nil; controller.setPadSettings(pad, ps)
+                    var ps = controller.state.pads[pad]; ps.sampleFile = nil; setPad(ps)
                 } else {
                     importFile()
                 }
@@ -666,29 +714,88 @@ struct SamplerWindow: View {
             + beats.map { b in BBMenuItem.item(SamplerTime.beats(b).title, checked: sm.time == .beats(b)) { set(.beats(b)) } }
     }
 
+    /// Precomputed effects (FL's set, Tyrone, Oct 19): the six switches, then two rows of knobs, each
+    /// computed into the track's sound when it's let go (the file on disk is never changed).
     private func effectsPanel(_ s: CGFloat) -> some View {
-        panel("Precomputed effects", s) {
+        let pct: (Float) -> String = { v in "\(Int((v * 100).rounded()))%" }
+        let xs: [CGFloat] = [50, 144, 238, 332, 426, 520, 614]
+        let xs2: [CGFloat] = [46, 128, 210, 292, 374, 456, 538]
+        let row1: CGFloat = 172, row2: CGFloat = 262, d: CGFloat = 52
+        return panel("Precomputed effects", s) {
             Group {
-            toggleRow("Remove DC offset", sm.removeDC, x: 32, y: 52, s, id: "samplerRemoveDC") { edit { $0.removeDC.toggle() } }
-            toggleRow("Normalize", sm.normalize, x: 32, y: 96, s, id: "samplerNormalize") { edit { $0.normalize.toggle() } }
-            toggleRow("Reverse", sm.reverse, x: 32, y: 141, s, id: "samplerReverse") { edit { $0.reverse.toggle() } }
-            toggleRow("Reverse polarity", sm.reversePolarity, x: 338, y: 52, s, id: "samplerPolarity") { edit { $0.reversePolarity.toggle() } }
-            toggleRow("Fade stereo", sm.fadeStereo, x: 338, y: 96, s, id: "samplerFadeStereo") { edit { $0.fadeStereo.toggle() } }
-            toggleRow("Swap stereo", sm.swapStereo, x: 338, y: 141, s, id: "samplerSwapStereo") { edit { $0.swapStereo.toggle() } }
+            toggleRow("Remove DC offset", sm.removeDC, x: 22, y: 46, w: 210, s, id: "samplerRemoveDC") { edit { $0.removeDC.toggle() } }
+            toggleRow("Normalize", sm.normalize, x: 236, y: 46, w: 210, s, id: "samplerNormalize") { edit { $0.normalize.toggle() } }
+            toggleRow("Reverse", sm.reverse, x: 450, y: 46, w: 200, s, id: "samplerReverse") { edit { $0.reverse.toggle() } }
+            toggleRow("Reverse polarity", sm.reversePolarity, x: 22, y: 88, w: 210, s, id: "samplerPolarity") { edit { $0.reversePolarity.toggle() } }
+            toggleRow("Fade stereo", sm.fadeStereo, x: 236, y: 88, w: 210, s, id: "samplerFadeStereo") { edit { $0.fadeStereo.toggle() } }
+            toggleRow("Swap stereo", sm.swapStereo, x: 450, y: 88, w: 200, s, id: "samplerSwapStereo") { edit { $0.swapStereo.toggle() } }
             }
             Rectangle().fill(LinearGradient(colors: [.black.opacity(0.5), skin.surface.bright.opacity(0.5)], startPoint: .top, endPoint: .bottom))
-                .frame(width: 632 * s, height: 2 * s).offset(x: 16 * s, y: 192 * s)
-            let pct: (Float) -> String = { v in "\(Int((v * 100).rounded()))%" }
+                .frame(width: 632 * s, height: 2 * s).offset(x: 16 * s, y: 134 * s)
             Group {
-            knob("SMP START", sm.start, x: 60, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: pct) { v, f in editComputed(f) { $0.start = v } }
-            knob("LENGTH", sm.length, x: 168, y: 248, d: 64, s, labelY: 300, reset: 1, labelSize: 16, display: pct) { v, f in editComputed(f) { $0.length = max(0.005, v) } }
-            knob("IN", sm.fadeIn, x: 274, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeIn = v } }
-            knob("OUT", sm.fadeOut, x: 380, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeOut = v } }
-            knob("CROSSFADE", sm.crossfade, x: 488, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "off" : pct(v / 2) }) { v, f in editComputed(f) { $0.crossfade = v } }
-            knob("TRIM", sm.trim, x: 598, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16,
+            knob("SMP START", sm.start, x: xs[0], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14, display: pct) { v, f in editComputed(f) { $0.start = v } }
+            knob("LENGTH", sm.length, x: xs[1], y: row1, d: d, s, labelY: 210, reset: 1, labelSize: 14, display: pct) { v, f in editComputed(f) { $0.length = max(0.005, v) } }
+            knob("IN", sm.fadeIn, x: xs[2], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeIn = v } }
+            knob("OUT", sm.fadeOut, x: xs[3], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeOut = v } }
+            knob("POGO", (sm.pogo + 1) / 2, x: xs[4], y: row1, d: d, s, labelY: 210, bipolar: true, reset: 0.5, labelSize: 14,
+                 display: { v in abs(v * 2 - 1) < 0.01 ? "off" : String(format: "%+.1f st", Double(v * 2 - 1) * 24) }) { v, f in
+                editComputed(f) { $0.pogo = abs(v * 2 - 1) < 0.01 ? 0 : v * 2 - 1 }
+            }
+            // CROSSFADE (FL's CRF): turned up from off, the loop points come on too, so the blended
+            // loop keeps going for as long as the note is held (Tyrone, Oct 19)
+            knob("CROSSFADE", sm.crossfade, x: xs[5], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "off" : pct(v / 2) }) { v, f in
+                let was = controller.sampler(pad).crossfade
+                editComputed(f) { $0.crossfade = v; if f && was < 0.005 && v >= 0.005 { $0.useLoop = true } }
+            }
+            knob("TRIM", sm.trim, x: xs[6], y: row1, d: d, s, labelY: 210, reset: 0, labelSize: 14,
                  display: { v in v < 0.0001 ? "silence" : String(format: "%.0f dB", -90 + 70 * Double(v)) }) { v, f in editComputed(f) { $0.trim = v } }
             }
+            Group {
+            knob("EQ", (sm.eq + 1) / 2, x: xs2[0], y: row2, d: d, s, labelY: 300, bipolar: true, reset: 0.5, labelSize: 14,
+                 display: { v in abs(v * 2 - 1) < 0.01 ? "flat" : (v > 0.5 ? "bright " : "dark ") + pct(abs(v * 2 - 1)) }) { v, f in
+                editComputed(f) { $0.eq = abs(v * 2 - 1) < 0.01 ? 0 : v * 2 - 1 }
+            }
+            knob("BOOST", sm.boost, x: xs2[1], y: row2, d: d, s, labelY: 300, reset: 0, labelSize: 14,
+                 display: { v in v < 0.005 ? "0 dB" : String(format: "+%.1f dB", Double(SamplerSettings.boostDB(v))) }) { v, f in
+                editComputed(f) { $0.boost = v < 0.005 ? 0 : v }
+            }
+            knob("RM MIX", sm.rmMix, x: xs2[2], y: row2, d: d, s, labelY: 300, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "off" : pct(v) }) { v, f in
+                editComputed(f) { $0.rmMix = v < 0.005 ? 0 : v }
+            }
+            knob("RM FREQ", sm.rmFreq, x: xs2[3], y: row2, d: d, s, labelY: 300, reset: 0.5, labelSize: 14, display: { v in
+                let hz = SamplerSettings.ringHertz(v)
+                return hz < 1000 ? "\(Int(hz.rounded())) Hz" : String(format: "%.1f kHz", hz / 1000)
+            }) { v, f in editComputed(f) { $0.rmFreq = v } }
+            knob("DELAY", sm.delayMix, x: xs2[4], y: row2, d: d, s, labelY: 300, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "off" : pct(v) }) { v, f in
+                editComputed(f) { $0.delayMix = v < 0.005 ? 0 : v }
+            }
+            knob("DLY TIME", sm.delayTime, x: xs2[5], y: row2, d: d, s, labelY: 300, reset: 0.5, labelSize: 14,
+                 display: { v in SamplerSettings.step(v).0 }) { v, f in editComputed(f) { $0.delayTime = v } }
+            knob("REVERB", sm.reverbMix, x: xs2[6], y: row2, d: d, s, labelY: 300, reset: 0, labelSize: 14, display: { v in v < 0.005 ? "off" : pct(v) }) { v, f in
+                editComputed(f) { $0.reverbMix = v < 0.005 ? 0 : v }
+            }
+            }
+            // the reverb's type: A (room) or B (hall), two keys beside REVERB
+            VStack(spacing: 4 * s) {
+                reverbKey("A", on: !sm.reverbB, s) { edit { $0.reverbB = false } }
+                reverbKey("B", on: sm.reverbB, s) { edit { $0.reverbB = true } }
+            }
+            .frame(width: 44 * s, height: 56 * s).offset(x: 588 * s, y: 234 * s)
+            label("TYPE", s, size: 14).frame(width: 60 * s, height: 24 * s).offset(x: 580 * s, y: 288 * s)
         }
+    }
+
+    private func reverbKey(_ title: String, on: Bool, _ s: CGFloat, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            ZStack {
+                SamplerMetal(tone: skin.surface, corner: 3 * s)
+                Text(title).font(.system(size: 13 * s, weight: .semibold)).foregroundColor(on ? skin.glow : skin.dim)
+                    .shadow(color: on ? skin.glow.opacity(0.8) : .clear, radius: 3 * s)
+            }
+        }
+        .buttonStyle(SeqPress())
+        .accessibilityIdentifier("samplerReverb" + title)
+        .accessibilityValue(on ? "on" : "off")
     }
 
     // MARK: The sample view
@@ -902,8 +1009,7 @@ struct SamplerWindow: View {
         let oldLength = controller.playedSample(pad)?.length ?? 0
         controller.editSample(pad, e) { name in
             guard name != nil else { return }
-            undo.append(before)
-            if undo.count > 30 { undo.removeFirst() }
+            keep(before)
             if let select { selection = select(oldLength) } else if !keepSelection { selection = nil }
         }
     }
@@ -949,11 +1055,7 @@ struct SamplerWindow: View {
                     run(.fadeOut(r), keepSelection: true)
                 }
                 .spot(766, 0, 132, 50, s)
-                editButton("UNDO", "arrow.uturn.backward", s, enabled: !undo.isEmpty && !busy) {
-                    guard let last = undo.popLast() else { return }
-                    controller.restorePad(pad, last)
-                    selection = nil
-                }
+                editButton("UNDO", "arrow.uturn.backward", s, enabled: !undo.isEmpty && !busy) { undoStep() }
                 .spot(904, 0, 104, 50, s)
             }
             // the selection's length
@@ -1020,7 +1122,7 @@ struct SamplerWindow: View {
                 let old = sample.length
                 controller.editSample(pad, .insert(clip, at: r.lowerBound)) { name in
                     guard name != nil else { return }
-                    undo.append(before)
+                    keep(before)
                     let total = Double(max(1, old + added))
                     selection = Double(r.lowerBound) / total...min(1, Double(r.lowerBound + added) / total)
                 }
@@ -1031,7 +1133,7 @@ struct SamplerWindow: View {
             let old = sample.length
             controller.editSample(pad, .insert(clip, at: 0)) { name in
                 guard name != nil else { return }
-                undo.append(before)
+                keep(before)
                 selection = 0...min(1, Double(added) / Double(max(1, old + added)))
             }
         })
@@ -1040,7 +1142,7 @@ struct SamplerWindow: View {
             let old = sample.length
             controller.editSample(pad, .insert(clip, at: old)) { name in
                 guard name != nil else { return }
-                undo.append(before)
+                keep(before)
                 selection = Double(old) / Double(max(1, old + added))...1
             }
         })

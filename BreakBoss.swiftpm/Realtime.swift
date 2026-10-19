@@ -92,6 +92,8 @@ struct KEvent {
     var kind: Kind
     var a: Int32 = 0
     var value: Double = 0
+    /// .pad / .bass: how loud the hit is heard on top of its velocity (the library's preview volume; 1 = as it is).
+    var gain: Float = 1
 }
 
 /// Many producers (main thread, MIDI thread), one consumer (the audio thread).
