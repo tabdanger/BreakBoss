@@ -727,6 +727,14 @@ final class KnockEngine {
             for v in 0..<KnockEngine.maxStealTails where stealTails[v].active && !sameSound(stealTails[v].pad) {
                 stealTails[v].startFade(samples: Int(sampleRate * 0.005))
             }
+            // Arpeggio notes and echoes still waiting from the old sound don't play on the new one
+            // (they carry the old track's pitches).
+            var keep = 0
+            for i in 0..<pendingCount where sameSound(pending[i].pad) {
+                pending[keep] = pending[i]
+                keep += 1
+            }
+            pendingCount = keep
             oldKit = kit
             kit = newKit
             oldKitCountdown = Int(sampleRate * 0.015)
@@ -1179,10 +1187,18 @@ final class KnockEngine {
         // length, unless the sampler's Volume envelope releases at the note's end or it loops. A track
         // whose sampler doesn't do either keeps the note length it had without one (Tyrone, Oct 19);
         // the notes its arpeggiator and echoes add (arp false) stay one-shots as they were.
+        // A note that would play whole without the Volume envelope (a pad tap, a drum step, a loaded
+        // one-shot) lets go no sooner than the end of the envelope's run (delay, attack, hold, decay) when
+        // the envelope ends by itself (SUS at 0), so the envelope as it comes (HOLD = the sound's length)
+        // leaves the sound as it was (Tyrone, Oct 19). With a sustain level the note's end is its release.
+        let wholeNote = lengthSamples == 0 || ps.sampleFile != nil
         var lengthSamples = lengthSamples
         if ps.sampleFile != nil || (rt.active && (rt.volumeGates || rt.loop || !arp)) {
             if !rt.volumeGates && !rt.loop {
                 if !glide { lengthSamples = 0 }
+            } else if rt.volumeGates && wholeNote && !glide && rt.volume.sustain < 0.001 && !rt.volume.usesPoints {
+                let run = Int(rt.volume.runUnits * (rt.volume.tempo ? beatSamples : sampleRate))
+                lengthSamples = max(lengthSamples, Int(beatSamples * 0.25), run)
             } else if lengthSamples == 0 {
                 // a pad tap or a drum step: a 16th with the envelope, a beat for a loop
                 lengthSamples = Int(beatSamples * (rt.volumeGates ? 0.25 : 1))

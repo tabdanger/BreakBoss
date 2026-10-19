@@ -21,6 +21,7 @@ enum KnockSelfTest {
         phase("checkKits", checkKits)
         phase("checkStockSamples", checkStockSamples)
         phase("checkSoundSwap", checkSoundSwap)
+        phase("checkFreshSounds", checkFreshSounds)
         phase("checkGrooves", checkGrooves)
         phase("checkSmallBuffersAndVoiceStealing", checkSmallBuffersAndVoiceStealing)
         phase("checkHostMIDIAndAutomation", checkHostMIDIAndAutomation)
@@ -396,6 +397,162 @@ enum KnockSelfTest {
             return distance(b, k) < distance(b, bands(source(hat.url))) && distance(b, k) < distance(b, bands(source(clap.url)))
         }()
         check(heardKit && onMain({ rc.rackChannels[0].soundID }) == "kit", "sound swap: a kit change puts the kit's kick back on the track and in the rack")
+        #endif
+    }
+
+    /// Tyrone, Oct 19: after a kit or pattern change some pads came out silent, quiet or out of tune, and
+    /// the kick and 808 leaned to one side. Every kit and every new sound comes in as itself (its original
+    /// pitch and level, centered, SAMPLER at SMP START 0%, LENGTH 100%, IN 0%, OUT 0%), whatever the last
+    /// kit or sound had been set to, and plays exactly as a cold load of that kit.
+    static func checkFreshSounds() {
+        #if canImport(AVFoundation)
+        var tweaked = PadSettings()
+        tweaked.level = 0.2; tweaked.pan = -1; tweaked.tune = 7; tweaked.decay = 0.3; tweaked.filter = 0.4; tweaked.reverse = true
+        var sm = SamplerSettings()
+        sm.start = 0.5; sm.length = 0.3; sm.fadeIn = 0.5; sm.fadeOut = 0.5; sm.rootNote = 48; sm.pitch = 0.5; sm.volume = 0.1; sm.startOffset = 0.4
+        sm.setEnvelope(.volume) { $0.on = true; $0.hold = 0; $0.decay = 0.1; $0.sustain = 0 }
+        tweaked.sampler = sm
+        let fresh = Array(repeating: PadSettings(), count: Pad.count)
+        var before = KnockState()
+        before.pads = Array(repeating: tweaked, count: Pad.count)
+        let acoustic = KitLibrary.factory.first { $0.id == "soul-session" } ?? KitLibrary.factory[KitLibrary.factory.count - 1]
+        for kit in [KitLibrary.factory[1], acoustic] {
+            check(before.selectingKit(kit).pads == fresh, "fresh sounds: \(kit.name) comes in with every pad as itself, whatever the last kit was set to")
+        }
+        let d = SamplerSettings()
+        check(d.start == 0 && d.length == 1 && d.fadeIn == 0 && d.fadeOut == 0 && d.startOffset == 0 && d.rootNote == 60 &&
+              d.pitch == 0 && d.fineTune == 0 && d.offline(bpm: 120) == nil,
+              "fresh sounds: an untouched SAMPLER is SMP START 0%, LENGTH 100%, IN 0%, OUT 0%, at the sound's own pitch")
+
+        // the kick and the 808 of every kit are centered (every stock file and velocity layer they play)
+        let stock = StockSampleLibrary.bundled
+        var seen = Set<String>(), leaning: [String] = []
+        func lean(_ b: SampleBuffer) -> Double {
+            var el = 0.0, er = 0.0
+            for i in 0..<b.length { el += Double(b.left[i] * b.left[i]); er += Double(b.right[i] * b.right[i]) }
+            return 10 * log10((el + 1e-12) / (er + 1e-12))
+        }
+        for kit in KitLibrary.factory {
+            for pad in [Pad.kick.rawValue, Pad.bass808.rawValue] {
+                guard let sample = stock.sample(kitID: kit.id, pad: pad) else { continue }
+                let urls = [sample.url] + (stock.layers(for: sample) ?? []).flatMap { $0.urls }
+                for url in urls where seen.insert("\(pad)/\(url.lastPathComponent)").inserted {
+                    guard let raw = try? SampleLoader.load(url) else { continue }
+                    let l = lean(KnockController.centered(raw, pad: pad))
+                    if abs(l) > 0.1 { leaning.append("\(url.lastPathComponent) \(String(format: "%.2f", l)) dB") }
+                }
+            }
+        }
+        check(!seen.isEmpty && leaning.isEmpty, "fresh sounds: every kit's kick and 808 files play centered (\(seen.count) files; leaning: \(leaning.prefix(5)))")
+        let hat = SampleBuffer(left: [0.5, -0.5, 0.25], right: [0.1, -0.1, 0.05], sampleRate: 48_000)
+        check(KnockController.centered(hat, pad: Pad.hat.rawValue) === hat, "fresh sounds: pads other than the kick and 808 are left exactly as they are")
+
+        let engine = KnockEngine()
+        engine.prepare(sampleRate: 48_000, maxFrames: 512)
+        var rcOpt: KnockController?
+        DispatchQueue.main.sync { rcOpt = KnockController(engine: engine, isPlugin: true) }
+        guard let rc = rcOpt else { return }
+        let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0), (.velocity, 0), (.boost, 0), (.clipper, 0),
+                                        (.clipDrive, 0), (.gatedReverb, 0), (.textureDelay, 0), (.pitch, 0.5), (.tune, 0.5)]
+        func onMain<T>(_ work: () -> T) -> T { var out: T?; DispatchQueue.main.sync { out = work() }; return out! }
+        func render(_ frames: Int) -> (l: [Float], r: [Float]) {
+            var outL: [Float] = [], outR: [Float] = []
+            var left = [Float](repeating: 0, count: 128), right = left
+            for _ in 0..<(frames / 128) {
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in engine.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+                outL += left; outR += right
+            }
+            return (outL, outR)
+        }
+        func settle(_ seconds: Double = 6, _ done: () -> Bool) -> Bool {
+            let end = Date().addingTimeInterval(seconds)
+            while Date() < end {
+                if onMain(done) { return true }
+                _ = render(1_024)
+                Thread.sleep(forTimeInterval: 0.01)
+            }
+            return onMain(done)
+        }
+        struct Hit { var l: Double; var r: Double; var crossings: Int }
+        func hit(_ pad: Int) -> Hit {
+            engine.send(KEvent(kind: .allOff))
+            _ = render(12_288)                  // the last hit's tail and the effects die away first
+            onMain { rc.auditionPad(pad) }
+            let (l, r) = render(24_576)
+            var c = 0
+            for i in 1..<l.count where (l[i - 1] < 0) != (l[i] < 0) { c += 1 }
+            return Hit(l: l.reduce(0) { $0 + Double($1 * $1) }, r: r.reduce(0) { $0 + Double($1 * $1) }, crossings: c)
+        }
+        func loadKit(_ kit: KitDefinition) -> Bool {
+            onMain { rc.selectKit(kit) }
+            let ok = settle { !rc.loadingKit && rc.kitSamples.count == Pad.count && rc.state.kitID == kit.id }
+            _ = settle(0.3) { false }
+            for (p, v) in quiet { engine.setParam(p, v) }
+            return ok
+        }
+        let kitA = KitLibrary.factory[0]
+        guard settle(10, { rc.kitSamples.count == Pad.count && !rc.loadingKit }), loadKit(kitA) else { check(false, "fresh sounds: the kit loads"); return }
+        let cold = (0..<Pad.count).map(hit)
+        // every pad set as far from the kit's own as it goes, then a pattern and two kit changes
+        onMain { for p in 0..<Pad.count { rc.setPadSettings(p, tweaked) } }
+        _ = settle(2) { false }
+        if let preset = PatternBank.all.dropFirst(7).first { onMain { rc.loadPatternPreset(preset) } }
+        _ = settle(1) { false }
+        let switched = loadKit(acoustic) && loadKit(kitA)
+        check(switched && onMain({ rc.state.pads }) == fresh, "fresh sounds: after a pattern and two kit changes every pad is as the kit made it")
+        func compare(_ when: String) {
+            for pad in 0..<Pad.count {
+                let now = hit(pad), was = cold[pad]
+                let level = (now.l + now.r) / max(was.l + was.r, 1e-12)
+                let pitch = Double(now.crossings) / Double(max(1, was.crossings))
+                check(was.l + was.r > 1e-6 && abs(level - 1) < 0.03 && abs(pitch - 1) < 0.03,
+                      "fresh sounds: \(when), pad \(pad + 1) plays as a cold load of the kit (level ×\(String(format: "%.3f", level)), pitch ×\(String(format: "%.3f", pitch)))")
+            }
+        }
+        compare("after kit changes")
+        if let preset = PatternBank.all.dropFirst(31).first { onMain { rc.loadPatternPreset(preset) } }
+        _ = settle(1) { false }
+        for (p, v) in quiet { engine.setParam(p, v) }
+        compare("after a pattern change")
+
+        // kick and 808 centered as they play, through a drum machine kit and an acoustic kit (round robins too)
+        for kit in [kitA, acoustic] {
+            guard loadKit(kit) else { check(false, "fresh sounds: \(kit.name) loads"); continue }
+            for pad in [Pad.kick.rawValue, Pad.bass808.rawValue] {
+                for k in 0..<3 {
+                    let h = hit(pad)
+                    let db = 10 * log10((h.l + 1e-12) / (h.r + 1e-12))
+                    check(h.l > 1e-6 && abs(db) < 0.3, "fresh sounds: \(kit.name) \(pad == 0 ? "kick" : "808") hit \(k + 1) is centered (L/R \(String(format: "%+.2f", db)) dB)")
+                }
+            }
+        }
+
+        // a sound picked from the library comes in as itself, not with the last sound's settings
+        let all = stock.librarySounds()
+        _ = loadKit(kitA)
+        if let kick = all.first(where: { $0.type == .kick }) {
+            onMain { rc.setPadSettings(0, tweaked) }
+            var ready = false
+            onMain { rc.replaceRackSound(rc.rackChannels[0].id, with: kick) { ready = true } }
+            let loaded = settle { ready }
+            let ps = onMain({ rc.state.pads[0] })
+            var expected = PadSettings(); expected.sampleFile = ps.sampleFile
+            check(loaded && ps.sampleFile != nil && ps == expected, "fresh sounds: a library sound picked onto a track comes in as itself")
+        } else { check(false, "fresh sounds: the library has a kick") }
+        // dice: a pad that gets a new sound comes in as itself
+        _ = loadKit(kitA)
+        onMain { rc.setPadSettings(Pad.snare.rawValue, tweaked); rc.dice() }
+        _ = settle { !rc.loadingKit }
+        check(onMain({ rc.state.pads[Pad.snare.rawValue] }) == PadSettings(), "fresh sounds: dice brings each new sound in as itself")
+        // a saved kit plays its own sounds, not the last dice roll's (that could put the 808 in another key)
+        let name = "SELFTEST FRESH \(Int.random(in: 1000...9999))"
+        onMain { rc.saveKit(as: name) }
+        _ = loadKit(KitLibrary.factory[1])
+        onMain { rc.dice() }
+        onMain { rc.selectUserKit(name) }
+        _ = settle { !rc.loadingKit }
+        check(onMain({ rc.state.stockPicks }) == nil && onMain({ rc.state.userKit }) == name, "fresh sounds: opening a saved kit drops the last dice roll's sounds")
+        onMain { rc.deleteUserKit(name) }
         #endif
     }
 
@@ -1190,6 +1347,34 @@ enum KnockSelfTest {
         pan.sampler?.setEnvelope(.pan) { $0.attack = 0.4 }
         let panDiff = difference(tap(loaded), tap(pan))
         check(panDiff < 1e-5, "Untouched envelopes: a Panning envelope moves nothing until its AMT is turned (max difference \(panDiff))")
+
+        // Tyrone, Oct 19: the Volume envelope knows the sound before it changes it. It starts as the sound
+        // is (HOLD = the sound's length), so switched on as it comes nothing changes, on a tap, a loaded
+        // one-shot or a pattern; turning HOLD down then shortens the sound from there.
+        let soundShape = SamplerEnvelope.measured(tail)
+        check(abs(SamplerEnvelope.units(soundShape.hold, tempo: false) - 1.1 * 1.5 - 0.005) < 0.01 && soundShape.sustain == 0 && !soundShape.on,
+              "Untouched envelopes: the envelope measures the sound's length into HOLD (\(SamplerEnvelope.units(soundShape.hold, tempo: false)) s)")
+        let blip = SampleBuffer(left: (0..<48_000).map { i in i < 9_600 ? sinf(Float(i) * 2 * .pi * 300 / 48_000) * 0.5 * expf(-Float(i) / 1_200) : 0 }, sampleRate: rate)
+        let blipHold = SamplerEnvelope.units(SamplerEnvelope.measured(blip).hold, tempo: false)
+        check(blipHold > 0.15 && blipHold < 0.25, "Untouched envelopes: a short hit's HOLD is its own length, not the silence after it (\(blipHold) s)")
+        var fromSound = SamplerSettings()
+        fromSound.setEnvelope(.volume) { $0 = soundShape; $0.on = true }
+        var loadedSound = loaded; loadedSound.sampler = fromSound
+        var kitSound = PadSettings(); kitSound.sampler = fromSound
+        let seededLoaded = difference(tap(loaded), tap(loadedSound))
+        let seededKit = difference(tap(PadSettings()), tap(kitSound))
+        check(seededLoaded < 1e-5 && seededKit < 1e-5,
+              "Untouched envelopes: the envelope switched on as the sound is changes nothing (loaded \(seededLoaded), kit \(seededKit))")
+        for file in [nil, "untouched.wav"] as [String?] {
+            let plain = export(pads(nil, file: file)), shaped = export(pads(fromSound, file: file))
+            let ratio = shaped.reduce(0) { $0 + $1 * $1 } / max(plain.reduce(0) { $0 + $1 * $1 }, 1e-9)
+            check(abs(ratio - 1) < 0.02, "Untouched envelopes: a pattern plays the same with the envelope as the sound is (\(file == nil ? "kit sounds" : "loaded samples"), level ×\(ratio))")
+        }
+        var shorter = loadedSound
+        shorter.sampler?.setEnvelope(.volume) { $0.hold = SamplerEnvelope.knob(seconds: 0.1) }
+        let cutLate = energy(tap(shorter), 200...500) / max(energy(tap(loaded), 200...500), 1e-9)
+        let keptEarly = energy(tap(shorter), 0...20) / max(energy(tap(loaded), 0...20), 1e-9)
+        check(cutLate < 0.01 && abs(keptEarly - 1) < 0.001, "Untouched envelopes: HOLD turned down shortens the sound from its own shape (late ×\(cutLate), start ×\(keptEarly))")
 
         // saved before Oct 19: envelopes never switched on take the new defaults; ones in use keep their shape
         var oldVolume = SamplerEnvelope.shaped; oldVolume.amount = 1
@@ -2382,14 +2567,13 @@ enum KnockSelfTest {
         source.bpm = 101
         let otherKit = KitLibrary.factory.first { $0.id != source.kitID } ?? KitLibrary.factory[0]
         let changedKit = source.selectingKit(otherKit)
-        var expectedPads = source.pads
-        for i in expectedPads.indices { expectedPads[i].sampleFile = nil }
+        let expectedPads = Array(repeating: PadSettings(), count: Pad.count)
         check(changedKit.kitID == otherKit.id && changedKit.kitName == otherKit.name &&
               changedKit.userKit == nil, "switching kits replaces the drum sounds")
         check(changedKit.values == source.values && changedKit.mode == source.mode &&
               changedKit.playMode == source.playMode && changedKit.presetName == source.presetName,
               "switching kits preserves active mode, FX knobs, clipper, transport and preset identity")
-        check(changedKit.pads == expectedPads, "switching kits preserves per-pad pitch, decay, filter, level and pan")
+        check(changedKit.pads == expectedPads, "switching kits brings every pad in as the kit's own sound: original pitch, level, centered, sampler untouched")
         check(changedKit.editedLoops == source.editedLoops && changedKit.grooveSeed == 777 && changedKit.bpm == 101 &&
               changedKit.patternStyle == KitLibrary.kit(id: source.kitID).style,
               "switching kits keeps the pattern, its edits and the tempo")
