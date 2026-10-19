@@ -14,6 +14,8 @@ struct FaceplateLayout: Decodable {
         let pointerInner: Double
         let pointerOuter: Double
         let bakedAngle: Double?
+        /// Pointer width as a fraction of the cap radius (measured off the picture).
+        let pointerWidth: Double?
     }
 
     struct LEDs: Decodable {
@@ -40,6 +42,8 @@ struct FaceplateLayout: Decodable {
     let playRect: [Double]
     let diceRect: [Double]
     let saveRect: [Double]
+    /// RECORD, drawn in the picture left of the piano-roll button.
+    let recordRect: [Double]?
     let exportRect: [Double]
     let menuRect: [Double]
     /// Pattern editor (piano keys) button, left of EXPORT.

@@ -5,8 +5,8 @@ import UniformTypeIdentifiers
 
 // MARK: - The faceplate
 //
-// The three approved faceplate images are the design (MODERN, VINTAGE, TEXTURE); pressing a
-// mode button swaps the whole plate. Nothing is redrawn in a different style: the plates carry
+// Tyrone's four Face 1 renders are the design (MODERN black, PLATINUM, VINTAGE, TEXTURE), each face
+// with its own buttons, knobs and pads; pressing a mode button swaps the whole plate. The plates carry
 // every label, button and pad, and this view only adds what has to move (knob pointers, the
 // screen, the BPM digits, kit / preset names, lit / unlit buttons, pad flashes) and the touch
 // areas. Positions come from Resources/KnockLayout.json, measured from the images.
@@ -113,7 +113,13 @@ struct FaceplateView: View {
                 .resizable()
                 .interpolation(.high)
                 .frame(width: L.width * s, height: L.height * s)
-            BrandLogo(dark: sfx != "modern", inline: true, scale: s).place([574, 1003, 874, 1043], s)
+            // The BreaKing logo is in the picture; this only names it for VoiceOver and the UI tests.
+            Color.white.opacity(0.001)
+                .allowsHitTesting(false)
+                .accessibilityElement()
+                .accessibilityLabel(BrandLogo.name)
+                .accessibilityIdentifier("brandLogo")
+                .place([600, 1004, 850, 1042], s)
             topLeft(L, sfx: sfx, s: s)
             knobs(L, sfx: sfx, s: s)
             transport(L, sfx: sfx, s: s)
@@ -160,9 +166,8 @@ struct FaceplateView: View {
         }
         hit(L.menuRect, s) { showMenu = true }
         // RECORD (left of the piano-roll button): a 1- or 2-bar count-in, then the pads record
-        if let r = L.editorRect {
-            let gap = L.exportRect[0] - r[2]
-            RecordButtonView(controller: controller, scale: s).place([r[0] - gap - (r[2] - r[0]), r[1], r[0] - gap, r[3]], s)
+        if let r = L.recordRect {
+            RecordButtonView(controller: controller, face: sfx, scale: s).place(r, s)
         }
     }
 
@@ -319,39 +324,52 @@ extension View {
     }
 }
 
-/// RECORD on the faceplate: a small button like its neighbours, with a red dot. Tap: count-in
-/// (1 or 2 bars of clicks), then the pattern plays and every pad you hit lands in it. Red ring
-/// while recording; the beats of the count-in show on the button. Tap again to stop recording.
+/// RECORD on the faceplate: the face's own button with its dot (in the plate). Tap: count-in
+/// (1 or 2 bars of clicks), then the pattern plays and every pad you hit lands in it. The count-in
+/// beats show on the button; it glows in the face's light while recording. Tap again to stop.
 struct RecordButtonView: View {
     @ObservedObject var controller: KnockController
+    let face: String
     let scale: CGFloat
 
     var body: some View {
-        let red = Color(red: 1, green: 0.16, blue: 0.12)
+        let light = FaceLight.of(face).glow
         let counting = controller.countingIn
         Button {
             controller.toggleRecordPads()
         } label: {
             ZStack {
-                RoundedRectangle(cornerRadius: 6 * scale)
-                    .fill(LinearGradient(colors: [Color(white: 0.22), Color(white: 0.06)], startPoint: .top, endPoint: .bottom))
-                RoundedRectangle(cornerRadius: 6 * scale).stroke(Color.black.opacity(0.8), lineWidth: 1.2 * scale)
-                RoundedRectangle(cornerRadius: 5 * scale).stroke(Color.white.opacity(0.12), lineWidth: 1).padding(1.5 * scale)
+                Color.white.opacity(0.001)
                 if counting {
-                    Text("\(controller.countInBeatsLeft)").font(.system(size: 17 * scale, weight: .bold, design: .rounded)).foregroundColor(red)
-                } else {
-                    Circle().fill(red).frame(width: 13 * scale, height: 13 * scale)
-                        .shadow(color: controller.recording ? red : .clear, radius: 5 * scale)
+                    Image("rec_blank_\(face)").resizable()
+                    Text("\(controller.countInBeatsLeft)").font(.system(size: 17 * scale, weight: .bold, design: .rounded)).foregroundColor(light)
                 }
                 if controller.recording {
-                    RoundedRectangle(cornerRadius: 6 * scale).stroke(red, lineWidth: 2.5 * scale)
-                        .shadow(color: red.opacity(0.8), radius: 6 * scale)
+                    RoundedRectangle(cornerRadius: 6 * scale).stroke(light, lineWidth: 2.5 * scale)
+                        .shadow(color: light.opacity(0.8), radius: 6 * scale)
                 }
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(SeqPress())
         .accessibilityLabel("Record")
+    }
+}
+
+/// Each face's light, taken off its picture (the scope trace and lamps): red on Modern Black and
+/// Platinum, blue on Texture, amber on Vintage.
+struct FaceLight {
+    let core: Color
+    let glow: Color
+
+    static func of(_ face: String) -> FaceLight {
+        func c(_ r: Double, _ g: Double, _ b: Double) -> Color { Color(red: r / 255, green: g / 255, blue: b / 255) }
+        switch face {
+        case "texture": return FaceLight(core: c(189, 236, 254), glow: c(24, 100, 220))
+        case "vintage": return FaceLight(core: c(255, 250, 185), glow: c(236, 186, 72))
+        case "platinum": return FaceLight(core: c(253, 159, 90), glow: c(214, 50, 22))
+        default: return FaceLight(core: c(255, 198, 142), glow: c(232, 52, 24))
+        }
     }
 }
 
@@ -399,12 +417,13 @@ struct KnobControl: View {
     var body: some View {
         let r = knob.r * scale
         let v = controller.value(param)
+        let width = knob.pointerWidth ?? 0.13
         ZStack {
             Circle().fill(Color.white.opacity(0.001))
-            KnobPointer(angle: KnobControl.angle(v), inner: knob.pointerInner, outer: knob.pointerOuter, width: 0.13)
+            KnobPointer(angle: KnobControl.angle(v), inner: knob.pointerInner, outer: knob.pointerOuter, width: width)
                 .fill(Color(white: 0.04))
                 .frame(width: r * 2, height: r * 2)
-            KnobPointer(angle: KnobControl.angle(v), inner: knob.pointerInner, outer: knob.pointerOuter, width: 0.13)
+            KnobPointer(angle: KnobControl.angle(v), inner: knob.pointerInner, outer: knob.pointerOuter, width: width)
                 .stroke(Color.white.opacity(0.18), lineWidth: max(0.5, 0.7 * scale))
                 .frame(width: r * 2, height: r * 2)
         }
