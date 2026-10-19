@@ -312,7 +312,14 @@ struct SamplerPlayhead: UIViewRepresentable {
             // the voice has ended (or STOP): it's still heard for the output's latency, then the cursor resets
             if resetAt == nil { resetAt = now + latency }
             if let last, let r = resetAt, now < r {
+                let before = position
                 position = heard(last, now, allowAhead: latency)
+                // a short hit can end in the engine before most of it is heard (a big output buffer):
+                // the cursor still travels here, so the test counts this part too
+                if Self.probing && last.loopEnd < 0 {
+                    if (last.speed > 0 && position < before - 0.001) || (last.speed < 0 && position > before + 0.001) { probeBacksteps += 1 }
+                    probeFurthest = max(probeFurthest, abs(position - last.start))
+                }
                 playedLo = min(playedLo, position); playedHi = max(playedHi, position)
                 place()
                 return

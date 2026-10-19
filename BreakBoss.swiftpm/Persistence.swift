@@ -55,7 +55,8 @@ struct WorkspaceChannel: Codable, Equatable, Identifiable {
 // MARK: - Everything on the faceplate, saved
 
 struct KnockState: Codable, Equatable {
-    var version = 1
+    /// 3 (Oct 19): OUTPUT's top is 0 dB.
+    var version = 3
     var mode: SoundMode = .modern
     var playMode: PlayMode = .loop
     var values: [String: Float] = [:]
@@ -139,7 +140,9 @@ struct KnockState: Codable, Equatable {
 
     func normalized() -> KnockState {
         var s = self
-        s.version = 2
+        // Oct 19: OUTPUT used to go to +12 dB with 0 dB at 0.75; now its top is 0 dB
+        if s.version < 3, let old = s.values[KParam.output.id], old.isFinite { s.values[KParam.output.id] = KnockMath.outputFromOld(old) }
+        s.version = 3
         s.bpm = s.bpm.isFinite ? s.bpm.clamped(40, 240) : 140
         s.pads = Self.normalizedPads(s.pads)
         if let rows = s.workspaceChannels {

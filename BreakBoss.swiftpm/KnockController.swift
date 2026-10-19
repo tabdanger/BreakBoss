@@ -66,6 +66,13 @@ final class KnockController: ObservableObject {
         if !isPlugin, let data = UserDefaults.standard.data(forKey: KnockController.sessionKey),
            let saved = try? JSONDecoder().decode(KnockState.self, from: data) {
             s = saved.normalized()
+            // Tyrone, Oct 19: every volume back to 100% once, now that only the SAMPLER's VOL goes past it
+            let reset = "breakboss.volumesAtUnity"
+            if !UserDefaults.standard.bool(forKey: reset) {
+                for i in s.pads.indices { s.pads[i].level = 0.8 }
+                s.values[KParam.output.id] = KParam.output.defaultValue
+                UserDefaults.standard.set(true, forKey: reset)
+            }
         } else {
             // a fresh start is silent: blank loops until a pattern is loaded or drawn
             s.editedLoops = (0..<Pad.count).map { i in PatternData(name: "LOOP \(i + 1)", lengthTicks: PatternData.ppq * 4 * 2, events: []) }
@@ -162,6 +169,20 @@ final class KnockController: ObservableObject {
     }
 
     func resetKnob(_ p: KParam) { set(p, p.defaultValue) }
+
+    /// A track's own FX knob on Face 2 (in the current mode): its insert, not the main chain.
+    func trackFX(_ pad: Int, _ p: KParam) -> Float {
+        guard state.pads.indices.contains(pad) else { return TrackFX.neutral(p) }
+        return state.pads[pad].fxValue(p, mode)
+    }
+
+    func setTrackFX(_ pad: Int, _ p: KParam, _ v: Float) {
+        guard state.pads.indices.contains(pad) else { return }
+        var settings = state.pads[pad]
+        settings.setFX(p, mode, v)
+        guard settings != state.pads[pad] else { return }
+        setPadSettings(pad, settings)
+    }
 
     private func pushAllToEngine() {
         for p in KParam.allCases { engine.setParam(p, value(p)) }

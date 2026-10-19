@@ -490,6 +490,17 @@ struct SequencerView: View {
                 footer(s)
             }
             .frame(width: Self.artW * s, height: Self.artH * s)
+            // the value of the knob being turned, in a lit readout over it (Tyrone, Oct 19)
+            .overlayPreferenceValue(KnobHUDKey.self) { entries in
+                GeometryReader { g in
+                    ForEach(entries.indices, id: \.self) { i in
+                        let r = g[entries[i].anchor]
+                        KnobHUDView(hud: entries[i].hud, accent: accent, scale: s)
+                            .position(x: min(max(r.midX, 80 * s), g.size.width - 80 * s), y: max(r.minY - 30 * s, 26 * s))
+                    }
+                }
+                .allowsHitTesting(false)
+            }
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
             // headers, slider, knob rims and control edges in the faceplate's metal
             .environment(\.seqFinish, finish)
@@ -594,8 +605,8 @@ struct SequencerView: View {
             .place(r, s)
     }
     /// The picture's knob, turned to the value (drag up or right to turn it up).
-    private func artKnob(_ r: [Double], _ s: CGFloat, value: Float, change: @escaping (Float, Bool) -> Void) -> some View {
-        ArtKnob(value: value, grip: 10 * s, change: change).place([r[0] - 10, r[1] - 10, r[2] + 10, r[3] + 10], s)
+    private func artKnob(_ r: [Double], _ s: CGFloat, value: Float, hud: KnobHUD? = nil, change: @escaping (Float, Bool) -> Void) -> some View {
+        ArtKnob(value: value, grip: 10 * s, hud: hud, change: change).place([r[0] - 10, r[1] - 10, r[2] + 10, r[3] + 10], s)
     }
 
     // MARK: Top bar
@@ -699,7 +710,7 @@ struct SequencerView: View {
                     controller.set(.bounce, Float(($0 - 50) / 22))
                 }
             }
-        artKnob(A.swingKnob, s, value: controller.value(.bounce)) { v, ended in
+        artKnob(A.swingKnob, s, value: controller.value(.bounce), hud: KnobHUD(title: "SWING", value: swingLabel)) { v, ended in
             if swingStart == nil { swingStart = controller.value(.bounce) }
             controller.set(.bounce, v)
             if ended { swingStart = nil }
@@ -714,7 +725,8 @@ struct SequencerView: View {
                 }
             }
         artText((pattern.humanize ?? 0) < 0.01 ? "" : "\(Int((pattern.humanize ?? 0) * 100))%", [A.humanizeKnob[0] - 22, A.humanize[1], A.humanizeKnob[0] - 2, A.humanize[3]], s, size: 10, color: accent, align: .trailing)
-        artKnob(A.humanizeKnob, s, value: pattern.humanize ?? 0) { v, ended in
+        artKnob(A.humanizeKnob, s, value: pattern.humanize ?? 0,
+                hud: KnobHUD(title: "HUMANIZE", value: (pattern.humanize ?? 0) < 0.01 ? "OFF" : "\(Int((pattern.humanize ?? 0) * 100))%")) { v, ended in
             if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(step(pattern)); redoStack = [] }
             var p = pattern
             p.humanize = v < 0.01 ? nil : v
@@ -1362,10 +1374,16 @@ struct SequencerView: View {
                     selectedID = ch.id
                 }) { channelMenu(ch) }
                 .accessibilityIdentifier("trackHeader\(pad)")
-            // the volume knob, bigger (Tyrone, Oct 19): −12 dB … +12 dB, 100% in the middle
-            ArtKnob(value: PadSettings.knob(level: ps.level), reset: 0.5) { v, _ in set { $0.level = abs(v - 0.5) < 0.01 ? 0.8 : PadSettings.level(knob: v) } }.frame(width: 46 * s, height: 46 * s).offset(x: 130 * s, y: 6.5 * s)
+            // the volume knob, bigger (Tyrone, Oct 19): −12 dB … 0 dB (100%) at the top; past 100% only in the SAMPLER
+            ArtKnob(value: PadSettings.knob(level: ps.level), reset: 1,
+                    hud: KnobHUD(title: "\(ch.name) · VOLUME", value: KnobHUD.volume(ps.level))) { v, _ in set { $0.level = PadSettings.level(knob: v) } }.frame(width: 46 * s, height: 46 * s)
+                .accessibilityElement().accessibilityLabel("\(ch.name) volume").accessibilityValue(KnobHUD.volume(ps.level)).accessibilityIdentifier("trackVolume\(pad)")
+                .offset(x: 130 * s, y: 6.5 * s)
             // the pan knob the same size as the volume knob (Tyrone, Oct 19: every header knob one size)
-            ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 46 * s, height: 46 * s).offset(x: 179 * s, y: 6.5 * s)
+            ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5,
+                    hud: KnobHUD(title: "\(ch.name) · PAN", value: KnobHUD.pan(ps.pan))) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 46 * s, height: 46 * s)
+                .accessibilityElement().accessibilityLabel("\(ch.name) pan").accessibilityValue(KnobHUD.pan(ps.pan)).accessibilityIdentifier("trackPan\(pad)")
+                .offset(x: 179 * s, y: 6.5 * s)
             // the lamp: on / off
             if muted { Circle().fill(Color(white: 0.12)).overlay(Circle().stroke(Color.black, lineWidth: 1)).frame(width: 13 * s, height: 13 * s).offset(x: 231.5 * s, y: 23 * s).allowsHitTesting(false) }
             Button { if soloedOut { controller.clearSolos() } else { controller.toggleMute(pad) } } label: { Color.clear.frame(width: 30 * s, height: 40 * s).contentShape(Rectangle()) }
@@ -2469,18 +2487,10 @@ struct SequencerView: View {
         fxKnobs(s)
     }
 
-    /// The FX knobs on the bottom rail. They morph with the mode (Tyrone, Oct 17):
-    /// MODERN   clean analog punch: BOOST, PUNCH, ANALOG EQ, TIGHTEN, GRIT, SHINE, NOISE
-    /// VINTAGE  retro hardware: BOOST becomes DRIVE (warm saturation), the same shaping knobs
-    /// TEXTURE  resampled and lo-fi: RESAMPLE, INSTABILITY, DELAY (double tap: locked to the tempo or
-    ///          free), REVERB (wet / dry), DECAY, PRE-DELAY, WARP, GLITCH
-    static func fxParams(_ mode: SoundMode) -> [KParam] {
-        switch mode {
-        case .modern: return [.boost, .punch, .analogEQ, .tighten, .grit, .shine, .noise]
-        case .vintage: return [.drive, .punch, .analogEQ, .tighten, .grit, .shine, .noise]
-        case .texture: return [.resample, .instability, .textureDelay, .gatedReverb, .reverbDecay, .reverbPredelay, .warp, .glitch]
-        }
-    }
+    /// The FX knobs on the bottom rail. They morph with the mode (Tyrone, Oct 17; TrackFX.params).
+    /// DELAY's double tap locks it to the tempo or frees it. With a track selected on the rack
+    /// they turn that track's own FX (Tyrone, Oct 19); Face 1's knobs stay the main chain's.
+    static func fxParams(_ mode: SoundMode) -> [KParam] { TrackFX.params(mode) }
 
     /// A double tap on DELAY: locked to the tempo (a dotted 1/8) or free (300 ms).
     private func toggleDelaySync() {
@@ -2500,6 +2510,9 @@ struct SequencerView: View {
 
     @ViewBuilder private func fxKnobs(_ s: CGFloat) -> some View {
         let params = Self.fxParams(controller.mode)
+        // the selected track's own knobs; none selected: the main chain's, as on Face 1
+        let track = selected
+        let value: (KParam) -> Float = { p in track.map { controller.trackFX($0.pad, p) } ?? controller.value(p) }
         let slot = (A.fxX1 - A.fxX0) / 8
         let x0 = A.fxX0 + Double(8 - params.count) * slot / 2          // seven knobs sit centred in the eight places
         ForEach(Array(params.enumerated()), id: \.element.rawValue) { i, p in
@@ -2512,7 +2525,7 @@ struct SequencerView: View {
                     Circle().fill(synced ? accent : Color(white: 0.3)).frame(width: 6 * s, height: 6 * s)
                         .shadow(color: synced ? accent : .clear, radius: 2 * s)
                 }
-                Text(turning ? p.text(controller.value(p)) : Self.fxLabel(p))
+                Text(turning ? p.text(value(p)) : Self.fxLabel(p))
                     .font(.system(size: 12 * s, weight: .semibold)).foregroundColor(turning ? accent : inkColor)
                     .lineLimit(1).minimumScaleFactor(0.55)
             }
@@ -2520,15 +2533,16 @@ struct SequencerView: View {
             .place([cx - slot / 2 + 1, A.fxLabelY0, cx + slot / 2 - 1, A.fxLabelY1], s)
             .allowsHitTesting(false)
             let h = A.fxKnobY1 - A.fxKnobY0
-            ArtKnob(value: controller.value(p), grip: 8 * s,
-                    doubleTap: p == .textureDelay ? toggleDelaySync : nil) { v, ended in
+            ArtKnob(value: value(p), grip: 8 * s,
+                    doubleTap: p == .textureDelay ? toggleDelaySync : nil,
+                    hud: KnobHUD(title: track.map { "\($0.name) · \(Self.fxLabel(p))" } ?? "MAIN · \(Self.fxLabel(p))", value: p.text(value(p)))) { v, ended in
                 fxTurning = ended ? nil : p
-                controller.set(p, v)
+                if let track { controller.setTrackFX(track.pad, p, v) } else { controller.set(p, v) }
             }
             .place([cx - h / 2 - 8, A.fxKnobY0 - 8, cx + h / 2 + 8, A.fxKnobY1 + 8], s)
             .accessibilityElement()
             .accessibilityLabel(Self.fxLabel(p))
-            .accessibilityValue(p.text(controller.value(p)))
+            .accessibilityValue(p.text(value(p)))
             .accessibilityIdentifier("fx_\(p.id)")
         }
     }
@@ -2776,14 +2790,22 @@ struct ArtKnob: View {
     var reset: Float? = nil
     /// Or a double tap does this instead (DELAY: tempo lock on / off).
     var doubleTap: (() -> Void)? = nil
+    /// The value readout shown over the knob while it turns (Tyrone, Oct 19).
+    var hud: KnobHUD? = nil
     let change: (Float, Bool) -> Void
     @State private var start: Float?
     @State private var lastTap: Date?
+    @State private var showHUD = false
+    @State private var hudRelease = 0
 
     var body: some View {
         MetalKnob().aspectRatio(1, contentMode: .fit)
             .rotationEffect(.degrees(KnobControl.angle(value)))
             .animation(.easeOut(duration: 0.15), value: value)
+            .anchorPreference(key: KnobHUDKey.self, value: .bounds) { a in
+                guard showHUD, let hud else { return [] }
+                return [KnobHUDEntry(hud: hud, anchor: a)]
+            }
             .padding(grip)
             .contentShape(Rectangle())
             // high priority: the rack's knobs turn instead of scrolling the rack. That drag takes every
@@ -2791,6 +2813,8 @@ struct ArtKnob: View {
             .highPriorityGesture(DragGesture(minimumDistance: 0)
                 .onChanged { g in
                     if start == nil { start = value }
+                    if hud != nil && !showHUD { showHUD = true }
+                    hudRelease += 1
                     let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
                     change(((start ?? value) + d).clamped(0, 1), false)
                 }
@@ -2805,6 +2829,12 @@ struct ArtKnob: View {
                         lastTap = isTap ? Date() : nil
                     }
                     start = nil
+                    // the readout stays a moment after the finger lifts, then goes
+                    hudRelease += 1
+                    let token = hudRelease
+                    DispatchQueue.main.asyncAfter(deadline: .now() + KnobHUD.linger) {
+                        if hudRelease == token { withAnimation(.easeOut(duration: 0.2)) { showHUD = false } }
+                    }
                 })
     }
 }

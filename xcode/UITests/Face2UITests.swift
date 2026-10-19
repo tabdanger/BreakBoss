@@ -62,6 +62,38 @@ final class Face2UITests: XCTestCase {
         }
     }
 
+    /// A close-up of one element (with `margin` points round it), printed like picture().
+    private func closeUp(_ name: String, of element: XCUIElement, margin: CGFloat = 30, width: CGFloat = 480) {
+        let shot = XCUIScreen.main.screenshot()
+        let raw = shot.image
+        let rotate = (raw.size.width < raw.size.height) != (app.frame.width < app.frame.height)
+        let upright = rotate ? CGSize(width: raw.size.height, height: raw.size.width) : raw.size
+        let fmt = UIGraphicsImageRendererFormat(); fmt.scale = raw.scale
+        let image = UIGraphicsImageRenderer(size: upright, format: fmt).image { r in
+            if rotate {
+                r.cgContext.translateBy(x: 0, y: raw.size.width)
+                r.cgContext.rotate(by: -.pi / 2)
+            }
+            raw.draw(at: .zero)
+        }
+        let f = element.frame.insetBy(dx: -margin, dy: -margin).intersection(CGRect(origin: .zero, size: upright))
+        let k = image.scale
+        guard f.width > 10, let cg = image.cgImage?.cropping(to: CGRect(x: f.minX * k, y: f.minY * k, width: f.width * k, height: f.height * k)) else { return }
+        let size = CGSize(width: width, height: (width * f.height / f.width).rounded())
+        let one = UIGraphicsImageRendererFormat(); one.scale = 1
+        let small = UIGraphicsImageRenderer(size: size, format: one).image { _ in UIImage(cgImage: cg).draw(in: CGRect(origin: .zero, size: size)) }
+        guard let data = small.jpegData(compressionQuality: 0.7) else { return }
+        let text = data.base64EncodedString()
+        let piece = 6_000
+        let parts = (text.count + piece - 1) / piece
+        var i = text.startIndex, n = 1
+        while i < text.endIndex {
+            let j = text.index(i, offsetBy: piece, limitedBy: text.endIndex) ?? text.endIndex
+            print("UITREE IMG \(name) \(n)/\(parts) \(text[i..<j])")
+            i = j; n += 1
+        }
+    }
+
     /// From Face 1: pick the mode, open the sequencer and picture it with the first track's arrow down.
     private func face2(_ name: String, modeY: CGFloat) {
         at(562, modeY).tap()
@@ -76,6 +108,7 @@ final class Face2UITests: XCTestCase {
         arrow.tap()
         sleep(1)
         let slider = app.descendants(matching: .any)["faceSlider"].firstMatch
+        closeUp(name + "-slot", of: slider)
         slider.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
             .press(forDuration: 0.1, thenDragTo: slider.coordinate(withNormalizedOffset: CGVector(dx: 1.0, dy: 0.5)))
         sleep(2)

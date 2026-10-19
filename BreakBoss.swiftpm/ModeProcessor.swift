@@ -23,6 +23,11 @@ import Foundation
 // NOISE    hiss / crackle under the drums; follows the drums so silence stays silent.
 //
 // All buffers are made in init(); process() never allocates.
+//
+// Oct 19 (Tyrone): each track on Face 2 has its own copy of these knobs. A track's copy is an
+// insert on that track (`Settings.insert`): only what its own knobs add, none of the mode's fixed
+// colour (Vintage's tape and bump, Texture's grit), which the main chain already gives every drum.
+// So a track with its knobs at zero sounds exactly as it did.
 
 final class BusProcessor {
     private var sr: Float = 48_000
@@ -57,7 +62,7 @@ final class BusProcessor {
     private var driftTarget: Float = 0
     private var driftCount = 0
     // Texture: tempo-synced delay
-    private let delaySize = 262_144
+    private let delaySize: Int
     private let delayL: UnsafeMutablePointer<Float>
     private let delayR: UnsafeMutablePointer<Float>
     private var delayIndex = 0
@@ -68,7 +73,7 @@ final class BusProcessor {
     // Texture: WARP. A two-head pitch shifter whose pitch swings up and down, a resonant filter
     // sweeping against it, and stutters that repeat the start of a 1/16. Its settings are a
     // random "scene" that changes every bar or two.
-    private let warpSize = 16_384
+    private let warpSize: Int
     private let warpL: UnsafeMutablePointer<Float>
     private let warpR: UnsafeMutablePointer<Float>
     private var warpIndex = 0
@@ -79,7 +84,7 @@ final class BusProcessor {
     private var warpFilter = [StateVariableFilter(), StateVariableFilter()]
     private var warpControl = 0
     private var warpMix = Smoothed(0)
-    private let stutterSize = 131_072
+    private let stutterSize: Int
     private let stutterL: UnsafeMutablePointer<Float>
     private let stutterR: UnsafeMutablePointer<Float>
     private var stutterIndex = 0
@@ -110,7 +115,12 @@ final class BusProcessor {
     // Last settings (coefficients are only recomputed when something moves)
     private var lastBoost: Float = -1, lastEQ: Float = -1, lastShine: Float = -1, lastMode = -1
 
-    init() {
+    /// `compact`: a track's insert (Face 2). Shorter delay and stutter memory (still more than the
+    /// longest dotted 1/8 and stutter at 40 BPM, 48 kHz), so twelve tracks stay light.
+    init(compact: Bool = false) {
+        delaySize = compact ? 65_536 : 262_144
+        warpSize = 16_384
+        stutterSize = compact ? 32_768 : 131_072
         wow = .allocate(capacity: wowSize)
         wow.initialize(repeating: 0, count: wowSize)
         delayL = .allocate(capacity: delaySize)
@@ -203,6 +213,8 @@ final class BusProcessor {
         var reverbDecay: Float = 0.5
         var reverbPredelay: Float = 0
         var delaySync = true
+        /// A track's own knobs (Face 2): only what they add, without the mode's fixed colour.
+        var insert = false
         /// The transport's beat at this block's first sample, while playing (stutters land on its 1/16s).
         var beat: Double?
     }
@@ -212,12 +224,16 @@ final class BusProcessor {
         let mode = s.mode
         updateCoefficients(s)
         let vintage = mode == .vintage
-        let texture = mode == .texture
+        // the mode's fixed colour (the main chain's, not a track's insert)
+        let colour = !s.insert
+        let tape = vintage && colour
+        // a track's insert skips the Texture section while all its Texture knobs are at zero
+        let texture = mode == .texture && (colour || max(s.resample, s.instability, s.delay, s.reverb, s.warp, s.glitch) > 0.001)
 
         // Gains
-        let boostGain = 1 + s.boost * 0.6 + (vintage ? 0.35 : 0)
+        let boostGain = 1 + s.boost * 0.6 + (tape ? 0.35 : 0)
         let punchAmount = s.punch * 1.6
-        let gritAmount = s.grit + ((vintage || texture) ? s.drive * 0.8 : 0) + (vintage ? 0.38 : 0) + (texture ? 0.12 : 0)
+        let gritAmount = s.grit + ((vintage || mode == .texture) ? s.drive * 0.8 : 0) + (tape ? 0.38 : 0) + (texture && colour ? 0.12 : 0)
         let drive = 1 + gritAmount * 6
         let gritMakeup = 1 / Saturate.soft(drive) * 0.95
         let gritMix = min(1, gritAmount * 2.2)
@@ -245,7 +261,7 @@ final class BusProcessor {
             var l = left[i] * boostGain, r = right[i] * boostGain
             l = boostShelf[0].process(l); r = boostShelf[1].process(r)
 
-            if vintage {
+            if tape {
                 l = headBump[0].process(l); r = headBump[1].process(r)
             }
 
@@ -276,7 +292,7 @@ final class BusProcessor {
                 r = r * (1 - gritMix) + wr * gritMix
             }
 
-            if vintage {
+            if tape {
                 l = tapeLP[0].process(l); r = tapeLP[1].process(r)
             }
 
@@ -455,8 +471,9 @@ final class BusProcessor {
     }
 
     private func updateCoefficients(_ s: Settings) {
-        if abs(s.boost - lastBoost) > 0.001 || s.mode.rawValue != lastMode {
-            let db = s.boost * 6 + (s.mode == .vintage ? 1.5 : 0)
+        let modeKey = s.mode.rawValue + (s.insert ? 8 : 0)
+        if abs(s.boost - lastBoost) > 0.001 || modeKey != lastMode {
+            let db = s.boost * 6 + (s.mode == .vintage && !s.insert ? 1.5 : 0)
             for c in 0..<2 { boostShelf[c].lowShelf(80, db: db, sr: sr) }
             lastBoost = s.boost
         }
@@ -472,7 +489,7 @@ final class BusProcessor {
             for c in 0..<2 { shineShelf[c].highShelf(12_000, db: s.shine * 4, sr: sr) }
             lastShine = s.shine
         }
-        lastMode = s.mode.rawValue
+        lastMode = modeKey
     }
 }
 
