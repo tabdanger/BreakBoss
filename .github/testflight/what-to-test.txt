@@ -1,8 +1,6 @@
 New in this build:
-- SAMPLER: every control now changes the sound, including the ENVELOPE, LFO and filter pages. Tap the envelope graph once to add a point, double tap a point to delete it. MISC page: Levels offsets, Polyphony (MAX, SLIDE, Porta, Mono), Time, Tracking, Group, arpeggiator, echo delay and a C3 to C7 keyboard.
-- Arpeggiator chord "Auto (sustain)" latches: it keeps running after you let go, and stops when the transport stops or the arp is turned off.
-- Live waveform with a playback cursor; SAMPLE / ENVELOPE / MISC tabs are physical buttons; track REV plays again.
-- Piano roll reaches C1 to C8.
-- Accent colours follow the mode: red in Platinum and Modern, yellow in Vintage, blue in Texture.
-- Track menu crash fixed, and the track menu is in a new order.
-Please try: open a track's sample editor, turn the envelope and LFO knobs while it plays, then set the arp to Auto and play a chord. If MAX + doesn't respond, drag the sampler window up by its title bar.
+- Untouched sounds stay untouched: opening the sampler or switching an envelope on no longer changes a sound until you turn a knob, and multisampled acoustic drums keep their velocity layers.
+- Volume knobs are bigger and run from -12 dB (50%) at the bottom, through 0 dB at 12 o'clock, to +12 dB (200%) at the top.
+- Sound library: every stock sound sits in the section of its original folder (kicks with kicks, 808s with 808s). Imported kits sort themselves into those sections. CLOSED HAT is now HI HATS in the track menu.
+- Modern Black faceplate is smooth black metal again.
+Please try: open a track's sample editor on an acoustic kit and play it, then turn one envelope knob and listen for only that change. Turn a volume knob from bottom to top.
