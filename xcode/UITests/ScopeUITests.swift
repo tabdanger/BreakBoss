@@ -100,7 +100,13 @@ final class ScopeUITests: XCTestCase {
         tap(210, 83)            // ONE-SHOT
         sleep(2)
         picture(face + "-idle", of: scope)
-        let bass = play((217, 760), face + "-808", scope: scope)      // pad 7, 808 (top row, MPC order)
+        // pad 7, 808 (top row, MPC order); a mode switch reloads the kit, which can take a few
+        // seconds on the simulator, so play again while it is still silent
+        var bass = play((217, 760), face + "-808", scope: scope)
+        for _ in 0..<3 where bass.level < 0.01 {
+            sleep(3)
+            bass = play((217, 760), face + "-808", scope: scope)
+        }
         sleep(2)
         let hat = play((1038, 935), face + "-hat", scope: scope)     // pad 5, HAT (bottom row)
         XCTAssertGreaterThan(bass.level, 0.01, "\(face): the 808 moves the scope")
