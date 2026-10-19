@@ -187,14 +187,19 @@ struct SequencerView: View {
     @State private var noteClipboard: [GrooveEvent] = []
     /// When the finger went down on the grid (draw mode: a quick drag selects, a held one paints).
     @State private var touchDown = Date.distantPast
-    @State private var undoStack: [PatternData] = []
-    @State private var redoStack: [PatternData] = []
+    /// One UNDO step: the pattern and the rack's track order as they were (a track move undoes too).
+    struct UndoStep { var pattern: PatternData; var rack: [Int] }
+    @State private var undoStack: [UndoStep] = []
+    @State private var redoStack: [UndoStep] = []
     @State private var rememberedAt: Date?
-    /// The grip left of a track header: drag it and the track moves up or down the rack, the others
-    /// making room as it passes (no hold, no wiggle). movingTop is where the dragged track sits.
+    /// The two studs left of a track's arrow (Tyrone, Oct 19): grab them and the track follows the
+    /// finger up or down the rack, the others sliding out of its way. movingTop is where the dragged
+    /// track sits; grabY where the finger went down; grabOrder the order before the move (for UNDO).
     @State private var movingPad: Int?
     @State private var movingTop: CGFloat = 0
     @State private var movingFrom: CGFloat = 0
+    @State private var grabY: CGFloat = 0
+    @State private var grabOrder: [Int] = []
     @State private var work: PatternData?
     @State private var drag: GridDrag = .none
     @State private var lastVelocity: Float = 0.78
@@ -708,7 +713,7 @@ struct SequencerView: View {
             }
         artText((pattern.humanize ?? 0) < 0.01 ? "" : "\(Int((pattern.humanize ?? 0) * 100))%", [A.humanizeKnob[0] - 22, A.humanize[1], A.humanizeKnob[0] - 2, A.humanize[3]], s, size: 10, color: accent, align: .trailing)
         artKnob(A.humanizeKnob, s, value: pattern.humanize ?? 0) { v, ended in
-            if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(pattern); redoStack = [] }
+            if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(step(pattern)); redoStack = [] }
             var p = pattern
             p.humanize = v < 0.01 ? nil : v
             work = p
@@ -1068,6 +1073,7 @@ struct SequencerView: View {
                             Image(systemName: "dice").font(.system(size: 15 * s)).foregroundColor(Color(white: 0.9))
                         }
                         .frame(width: 30 * s, height: 29 * s)
+                        .accessibilityIdentifier("trackDice\(l.channel.pad)")
                         SeqButton("SeqRowBtn", corner: 6, scale: s, action: { selectedID = l.channel.id; commit(PatternEdit.clearChannel(pattern, pad: l.channel.pad)); selection = [] }) {
                             Image(systemName: "xmark").font(.system(size: 14 * s, weight: .semibold)).foregroundColor(Color(white: 0.9))
                         }
@@ -1194,7 +1200,9 @@ struct SequencerView: View {
 
     private func rackColumn(_ L: [RowLayout], rowH: CGFloat, s: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
-            ForEach(L, id: \.channel.id) { l in
+            // in pad order, not rack order: the rows keep their place in the view tree while a track
+            // moves (each one sits at its own y), so nothing is torn down under the finger
+            ForEach(L.sorted { $0.channel.pad < $1.channel.pad }, id: \.channel.id) { l in
                 let moving = movingPad == l.channel.pad
                 channelRow(l, rowH: rowH, s: s)
                 .scaleEffect(moving ? 1.03 : 1)
@@ -1210,61 +1218,102 @@ struct SequencerView: View {
                 }
                 .frame(width: (A.rackX1 - A.rackX0) * s, height: rowH).offset(y: y)
             }
+            // the grab strip over every track's studs: one UIKit view that never moves, so the grab
+            // holds while the rows shift and the rack scrolls under the finger
+            TrackGrabStrip(
+                grip: { y in
+                    let L = layouts(rowH: A.rowH * s)
+                    guard let l = layout(at: y, L), y - l.y >= 4 * s, y - l.y < 56 * s else { return nil }
+                    return l.channel.pad
+                },
+                began: { pad, y in grabBegan(pad, y: y, s: s) },
+                moved: { y in grabMoved(y, s: s) },
+                ended: { grabEnded() })
+                .frame(width: Self.gripW * s, height: max(L.last.map { $0.y + $0.height } ?? 0, 1))
+                .offset(x: 1 * s)
+                .zIndex(2)
         }
     }
+
+    /// The studs' touch area on the left of each tab (art x 1 to 15); the arrow has the rest.
+    static let gripW: CGFloat = 14
 
     /// Where a dragged track lands: after every other track whose middle is above its middle.
     private func dropIndex(pad: Int, centre: CGFloat, _ L: [RowLayout]) -> Int {
         L.filter { $0.channel.pad != pad && $0.y + $0.height / 2 < centre }.count
     }
 
+    private func grabBegan(_ pad: Int, y: CGFloat, s: CGFloat) {
+        guard let l = layout(for: pad, layouts(rowH: A.rowH * s)) else { return }
+        grabOrder = controller.rackOrder
+        grabY = y
+        movingFrom = l.y; movingTop = l.y
+        movingPad = pad
+        selectedID = l.channel.id
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+
+    /// The track under the finger; the others make room as soon as it passes their middle.
+    private func grabMoved(_ y: CGFloat, s: CGFloat) {
+        guard let pad = movingPad else { return }
+        let L = layouts(rowH: A.rowH * s)
+        guard let l = layout(for: pad, L) else { return }
+        let bottom = L.map { $0.y + $0.height }.max() ?? 0
+        movingTop = (movingFrom + y - grabY).clamped(0, max(0, bottom - l.height))
+        let to = dropIndex(pad: pad, centre: movingTop + l.bandH / 2, L)
+        if to != controller.rackOrder.firstIndex(of: pad) {
+            UISelectionFeedbackGenerator().selectionChanged()
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) { controller.moveRackChannel(pad: pad, to: to) }
+        }
+    }
+
+    /// Let go: the track settles into its slot, and UNDO puts the old order back.
+    private func grabEnded() {
+        guard movingPad != nil else { return }
+        if controller.rackOrder != grabOrder {
+            undoStack.append(UndoStep(pattern: stored, rack: grabOrder))
+            if undoStack.count > 100 { undoStack.removeFirst() }
+            redoStack = []
+        }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { movingPad = nil }
+    }
+
     /// The silver tab on the left of a track header (Tyrone's Face 2 render): its ▶ opens the track's
-    /// VELOCITY graph (or its piano roll); drag the tab up or down and the track goes with your finger,
-    /// the others (and their steps) sliding out of its way.
+    /// VELOCITY graph (or its piano roll). The two studs left of the arrow are the grab handle
+    /// (SeqGrip_<face>, tools/sequencer_art/face2/build_grip.py); TrackGrabStrip takes their touches.
     private func trackTab(_ l: RowLayout, s: CGFloat) -> some View {
         let ch = l.channel, pad = ch.pad
         let moving = movingPad == pad
         let isOpen = openID == ch.id || expandedID == ch.id
-        return ZStack {
+        return ZStack(alignment: .topLeading) {
             Image(systemName: "play.fill").font(.system(size: 17 * s, weight: .bold))
                 .foregroundColor(isOpen ? selectColor : Color(white: 0.1))
                 .rotationEffect(.degrees(isOpen ? 90 : 0))
                 .shadow(color: isOpen ? selectColor.opacity(0.8) : .clear, radius: 3 * s)
+                .offset(x: -3.5 * s)   // centred at x 21 of the row, just right of the studs
+                .frame(width: (33 - Self.gripW) * s, height: 52 * s)
+                .contentShape(Rectangle())
+                .onTapGesture { toggleOpen(ch) }
+                .accessibilityElement()
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel(isOpen ? "Close \(ch.name)'s graph" : "Open \(ch.name)'s graph")
+                .accessibilityIdentifier("trackArrow\(pad)")
+                .accessibilityAction { toggleOpen(ch) }
+                .offset(x: Self.gripW * s)
+            Image("SeqGrip_\(finish)").resizable().frame(width: 10 * s, height: 24 * s)
+                .offset(x: 2 * s, y: 13.5 * s)
+                .shadow(color: moving ? selectColor.opacity(0.9) : .clear, radius: 3 * s)
+                .allowsHitTesting(false)
+                .accessibilityElement()
+                .accessibilityLabel("Move \(ch.name)")
+                .accessibilityIdentifier("trackGrip\(pad)")
             if moving {
                 RoundedRectangle(cornerRadius: 6 * s).stroke(selectColor, lineWidth: 1.5 * s).shadow(color: selectColor.opacity(0.7), radius: 4 * s)
+                    .frame(width: 33 * s, height: 52 * s)
+                    .allowsHitTesting(false)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(Rectangle())
-        .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
-            .onChanged { g in
-                // a tap opens the graph; a drag of more than a few points moves the track
-                guard movingPad == pad || abs(g.translation.height) > 6 else { return }
-                if movingPad != pad {
-                    movingPad = pad; movingFrom = l.y; movingTop = l.y
-                    selectedID = ch.id
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                }
-                movingTop = movingFrom + g.translation.height
-                // the others make room as soon as the track passes their middle
-                let to = dropIndex(pad: pad, centre: movingTop + l.bandH / 2, layouts(rowH: A.rowH * s))   // where the tracks are now
-                if to != controller.rackOrder.firstIndex(of: pad) {
-                    UISelectionFeedbackGenerator().selectionChanged()
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) { controller.moveRackChannel(pad: pad, to: to) }
-                }
-            }
-            .onEnded { g in
-                if movingPad == pad {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { movingPad = nil }
-                } else if abs(g.translation.width) < 10 && abs(g.translation.height) < 10 {
-                    toggleOpen(ch)
-                }
-            })
-        .accessibilityElement()
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(isOpen ? "Close \(ch.name)'s graph; drag to move the track" : "Open \(ch.name)'s graph; drag to move the track")
-        .accessibilityIdentifier("trackArrow\(pad)")
-        .accessibilityAction { toggleOpen(ch) }
+        .frame(width: 33 * s, height: 52 * s, alignment: .topLeading)
     }
 
     private func channelRow(_ l: RowLayout, rowH: CGFloat, s: CGFloat) -> some View {
@@ -1298,7 +1347,7 @@ struct SequencerView: View {
             Text(ch.name).font(.system(size: 16 * s, weight: .medium)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? selectColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 89 * s, height: 52 * s, alignment: .leading).offset(x: 43 * s, y: 4 * s)
                 .allowsHitTesting(false)
-            // the body: tap selects the track, a two-finger tap opens its menu (the tab on its left moves it)
+            // the body: tap selects the track, a two-finger tap opens its menu (the studs on its left move it)
             Color.clear.contentShape(Rectangle()).frame(width: 100 * s, height: 52 * s).offset(x: 33 * s, y: 4 * s)
                 // tapping the track that's already selected plays its sound (Tyrone, Oct 18)
                 .bbTwoFingerMenu(title: ch.name, width: 270, tap: {
@@ -1314,7 +1363,7 @@ struct SequencerView: View {
             if muted { Circle().fill(Color(white: 0.12)).overlay(Circle().stroke(Color.black, lineWidth: 1)).frame(width: 13 * s, height: 13 * s).offset(x: 231.5 * s, y: 23 * s).allowsHitTesting(false) }
             Button { if soloedOut { controller.clearSolos() } else { controller.toggleMute(pad) } } label: { Color.clear.frame(width: 30 * s, height: 40 * s).contentShape(Rectangle()) }
                 .buttonStyle(SeqPress()).offset(x: 223 * s, y: 9.5 * s)
-            // the tab: ▶ opens and closes this track's VELOCITY graph (or its PITCH piano roll); drag it to move the track
+            // the tab: ▶ opens and closes this track's VELOCITY graph (or its PITCH piano roll); its studs move the track
             trackTab(l, s: s).frame(width: 33 * s, height: 52 * s).offset(x: 1 * s, y: 4 * s)
             if l.pitch != nil {
                 scaleToolbar(l, s: s).offset(y: rowH)
@@ -1932,7 +1981,7 @@ struct SequencerView: View {
         .contentShape(Rectangle())
         .accessibilityElement()
         .accessibilityIdentifier("grid")
-        .accessibilityValue("\(pattern.events.count) notes, \(selection.count) selected")
+        .accessibilityValue("\(pattern.events.count) notes, \(selection.count) selected" + (SamplerWindow.probing ? rowsProbe(L) : ""))
         .bbMenuOpener(gridMenuOpener)
         .highPriorityGesture(DragGesture(minimumDistance: 0)
             .onChanged { g in if !pinching && !twoFinger { gridChanged(g, w: w, L: L) } }
@@ -2159,7 +2208,7 @@ struct SequencerView: View {
             if inToolbar(start.y, l) { return }
             if inGraph(start.y, l) {
                 // the dropped-down graph: drag the bars (velocity or pitch, whichever is showing)
-                laneOrigin = pattern; undoStack.append(pattern); redoStack = []
+                laneOrigin = pattern; undoStack.append(step(pattern)); redoStack = []
                 drag = .graph(pad: l.channel.pad, top: l.graphTop, height: l.graphH)
                 selectedID = l.channel.id
                 graphChanged(g, w: w)
@@ -2182,7 +2231,7 @@ struct SequencerView: View {
                     drag = .long808(start: snapped(tickAt(start.x, w)), semis: sem)
                 } else {
                     let t = snapped(tickAt(start.x, w))
-                    undoStack.append(pattern); redoStack = []
+                    undoStack.append(step(pattern)); redoStack = []
                     work = PatternEdit.addNote(pattern, pad: pad, tick: t, velocity: lastVelocity, semis: sem)
                     drag = .paint(pad: pad, semis: sem, lastCell: Int(t / placeTicks))
                 }
@@ -2198,7 +2247,7 @@ struct SequencerView: View {
                     drag = .marquee(start: start, current: start)
                 }
             case .erase:
-                undoStack.append(pattern); redoStack = []
+                undoStack.append(step(pattern)); redoStack = []
                 drag = .erase
             }
         }
@@ -2564,12 +2613,19 @@ struct SequencerView: View {
         }
     }
 
+    /// UI tests (BREAKBOSS_UI_PROBE): the grid's lanes top to bottom as the grid lays them out, each
+    /// "pad:notes@y" (the notes drawn in that lane, its top in points), so a test can see a track's
+    /// steps go with it when it moves.
+    private func rowsProbe(_ L: [RowLayout]) -> String {
+        "; rows " + L.map { l in "\(l.channel.pad):\(pattern.events.filter { Int($0.pad) == l.channel.pad }.count)@\(Int(l.y))" }.joined(separator: " ")
+    }
+
     // MARK: Undo, follow
 
     private func commit(_ p: PatternData) {
         work = nil
         guard p != stored else { return }
-        undoStack.append(stored)
+        undoStack.append(step(stored))
         if undoStack.count > 100 { undoStack.removeFirst() }
         redoStack = []
         controller.setLoop(loop, p)
@@ -2581,22 +2637,31 @@ struct SequencerView: View {
         let now = Date()
         defer { rememberedAt = coalescing ? now : nil }
         if coalescing, let at = rememberedAt, now.timeIntervalSince(at) < 1 { return }
-        undoStack.append(stored)
+        undoStack.append(step(stored))
         if undoStack.count > 100 { undoStack.removeFirst() }
         redoStack = []
     }
 
+    private func step(_ p: PatternData) -> UndoStep { UndoStep(pattern: p, rack: controller.rackOrder) }
+
+    private func restore(_ u: UndoStep) {
+        if u.pattern != stored { controller.setLoop(loop, u.pattern) }
+        if u.rack != controller.rackOrder {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { controller.setRackOrder(u.rack) }
+        }
+    }
+
     private func undo() {
         guard let last = undoStack.popLast() else { return }
-        redoStack.append(pattern)
-        controller.setLoop(loop, last)
+        redoStack.append(step(pattern))
+        restore(last)
         selection = []
     }
 
     private func redo() {
         guard let next = redoStack.popLast() else { return }
-        undoStack.append(pattern)
-        controller.setLoop(loop, next)
+        undoStack.append(step(pattern))
+        restore(next)
         selection = []
     }
 

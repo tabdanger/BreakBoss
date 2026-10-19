@@ -935,6 +935,13 @@ final class KnockController: ObservableObject {
         return order
     }
 
+    /// The rack in this order (UNDO / REDO of a track move).
+    func setRackOrder(_ order: [Int]) {
+        guard order.count == Pad.count, Set(order) == Set(0..<Pad.count) else { return }
+        state.rackOrder = order == Array(0..<Pad.count) ? nil : order
+        scheduleSave()
+    }
+
     /// Drag a track up or down the rack: it lands at `index` (counted without it).
     func moveRackChannel(pad: Int, to index: Int) {
         var order = rackOrder
