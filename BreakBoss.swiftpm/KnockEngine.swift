@@ -4,7 +4,7 @@ import Foundation
 // MARK: - Per-pad settings (pad editor)
 
 struct PadSettings: Codable, Equatable {
-    /// 0...maxLevel, 0.8 = unity (100%), maxLevel = 200% (+12 dB).
+    /// 0...maxLevel, 0.8 = unity (100%), the top (Tyrone, Oct 19: only the SAMPLER's VOL goes past 100%).
     var level: Float = 0.8
     /// -1 (left) ... 1 (right)
     var pan: Float = 0
@@ -19,20 +19,24 @@ struct PadSettings: Codable, Equatable {
     var sampleFile: String?
     /// The track's SAMPLER window (nil until it's opened and something is changed).
     var sampler: SamplerSettings?
+    /// The track's own FX knobs on Face 2 (Tyrone, Oct 19), each mode's separately, keyed
+    /// "<mode>.<param>" (TrackFX.key). Nil until a knob is turned: a track starts untouched.
+    var fx: [String: Float]?
 
     private enum CodingKeys: String, CodingKey {
-        case level, pan, tune, decay, filter, reverse, sampleFile, sampler
+        case level, pan, tune, decay, filter, reverse, sampleFile, sampler, fx
     }
 
     var gain: Float { level <= 0.001 ? 0 : KnockMath.dbToGain(40 * log10f(level / 0.8)) }
 
-    /// A track's volume goes to 200%, +12 dB (Tyrone, Oct 18), and down to 50%, −12 dB (Oct 19).
-    static let maxLevel: Float = 1.6
+    /// A track's volume goes down to 50%, −12 dB (Oct 19), and up to 100%, unity: past 100% (to
+    /// 200%) only in the track's SAMPLER window (its VOL knob), Tyrone, Oct 19. It went to 200% on Oct 18.
+    static let maxLevel: Float = 0.8
     static let minLevel: Float = 0.4
-    /// The volume knobs turn evenly in dB: 0 = −12 dB, the middle 0 dB (100%), the top +12 dB.
-    static func knob(level: Float) -> Float { ((log2f(max(level, 0.000_1) / 0.8) + 1) / 2).clamped(0, 1) }
-    static func level(knob v: Float) -> Float { 0.8 * powf(2, v.clamped(0, 1) * 2 - 1) }
-    /// What a volume control shows: 100% at unity, 200% at the top.
+    /// The volume knobs turn evenly in dB: 0 = −12 dB (50%), the top 0 dB (100%).
+    static func knob(level: Float) -> Float { (log2f(max(level, 0.000_1) / 0.8) + 1).clamped(0, 1) }
+    static func level(knob v: Float) -> Float { 0.8 * powf(2, v.clamped(0, 1) - 1) }
+    /// What a volume control shows: 100% at unity.
     static func levelText(_ level: Float) -> String { String(format: "%.0f%%", level / 0.8 * 100) }
 }
 
@@ -48,6 +52,71 @@ extension PadSettings {
         reverse = try values.decodeIfPresent(Bool.self, forKey: .reverse) ?? false
         sampleFile = try values.decodeIfPresent(String.self, forKey: .sampleFile)
         sampler = try? values.decodeIfPresent(SamplerSettings.self, forKey: .sampler)
+        fx = try? values.decodeIfPresent([String: Float].self, forKey: .fx)
+    }
+
+    /// This track's own value of an FX knob in a mode (its neutral value until it's turned).
+    func fxValue(_ p: KParam, _ mode: SoundMode) -> Float { fx?[TrackFX.key(p, mode)] ?? TrackFX.neutral(p) }
+
+    mutating func setFX(_ p: KParam, _ mode: SoundMode, _ value: Float) {
+        let v = value.isFinite ? value.clamped(0, 1) : TrackFX.neutral(p)
+        var table = fx ?? [:]
+        table[TrackFX.key(p, mode)] = abs(v - TrackFX.neutral(p)) < 0.000_1 ? nil : v
+        fx = table.isEmpty ? nil : table
+    }
+}
+
+/// The FX knobs on Face 2's bottom rail, per track (Tyrone, Oct 19). They morph with the mode:
+/// MODERN   clean analog punch: BOOST, PUNCH, ANALOG EQ, TIGHTEN, GRIT, SHINE, NOISE
+/// VINTAGE  retro hardware: BOOST becomes DRIVE (warm saturation), the same shaping knobs
+/// TEXTURE  resampled and lo-fi: RESAMPLE, INSTABILITY, DELAY, REVERB, DECAY, PRE-DELAY, WARP, GLITCH
+/// With a track selected they turn that track's own insert (BusProcessor, `insert`); Face 1's
+/// knobs (and Face 2 with no track) stay the main chain's.
+enum TrackFX {
+    static func params(_ mode: SoundMode) -> [KParam] {
+        switch mode {
+        case .modern: return [.boost, .punch, .analogEQ, .tighten, .grit, .shine, .noise]
+        case .vintage: return [.drive, .punch, .analogEQ, .tighten, .grit, .shine, .noise]
+        case .texture: return [.resample, .instability, .textureDelay, .gatedReverb, .reverbDecay, .reverbPredelay, .warp, .glitch]
+        }
+    }
+
+    static func key(_ p: KParam, _ mode: SoundMode) -> String { "\(mode.assetSuffix).\(p.id)" }
+
+    /// Where a track's knob starts: nothing added. DECAY sits in the middle (it only shapes the
+    /// track's REVERB, which starts at zero).
+    static func neutral(_ p: KParam) -> Float { p == .reverbDecay ? 0.5 : 0 }
+
+    /// A track's insert in one mode, as the audio thread plays it.
+    struct Insert {
+        var settings = BusProcessor.Settings()
+        /// Something on the insert adds to the sound (it runs only then).
+        var active = false
+        /// The track's own TIGHTEN (done per voice, like the main one).
+        var tighten: Float = 0
+    }
+
+    static func insert(_ pad: PadSettings, _ mode: SoundMode) -> Insert {
+        var r = Insert()
+        r.settings.mode = mode
+        r.settings.insert = true
+        guard pad.fx != nil else { return r }
+        func v(_ p: KParam) -> Float { pad.fxValue(p, mode) }
+        var s = r.settings
+        switch mode {
+        case .modern, .vintage:
+            if mode == .modern { s.boost = v(.boost) } else { s.drive = v(.drive) }
+            s.punch = v(.punch); s.analogEQ = v(.analogEQ); s.grit = v(.grit); s.shine = v(.shine); s.noise = v(.noise)
+            r.tighten = v(.tighten)
+            s.resample = 0; s.instability = 0; s.delay = 0; s.reverb = 0; s.warp = 0; s.glitch = 0
+        case .texture:
+            s.resample = v(.resample); s.instability = v(.instability); s.delay = v(.textureDelay); s.reverb = v(.gatedReverb)
+            s.reverbDecay = v(.reverbDecay); s.reverbPredelay = v(.reverbPredelay); s.warp = v(.warp); s.glitch = v(.glitch)
+        }
+        r.settings = s
+        r.active = max(s.boost, s.drive, s.punch, s.analogEQ, s.grit, s.shine, s.noise,
+                       s.resample, s.instability, s.delay, s.reverb, s.warp, s.glitch) > 0.001
+        return r
     }
 }
 
@@ -90,6 +159,8 @@ final class KitBuffers {
     let mixR: [Float]
     /// Each track's sampler as the audio thread plays it (envelopes, LFOs, filter, loop).
     let sampler: [SamplerRT]
+    /// Each track's own FX insert (Face 2), per mode: index pad * 3 + mode.
+    let inserts: [TrackFX.Insert]
 
     init(name: String, samples: [SampleBuffer], settings: [PadSettings], bassHz: Float,
          renderSampleRate: Double = 48_000, layers: [VelocityLayers?] = []) {
@@ -108,6 +179,13 @@ final class KitBuffers {
         mixL = settings.map { $0.gain * cosf(($0.pan.clamped(-1, 1) + 1) * .pi / 4) * 1.414 }
         mixR = settings.map { $0.gain * sinf(($0.pan.clamped(-1, 1) + 1) * .pi / 4) * 1.414 }
         sampler = settings.map { SamplerRT($0.sampler) }
+        inserts = settings.flatMap { pad in SoundMode.allCases.map { TrackFX.insert(pad, $0) } }
+    }
+
+    @inline(__always)
+    func insert(_ pad: Int, _ mode: SoundMode) -> TrackFX.Insert? {
+        let i = pad * 3 + mode.rawValue
+        return pad >= 0 && i < inserts.count ? inserts[i] : nil
     }
 }
 
@@ -199,6 +277,15 @@ final class KnockEngine {
 
     let bus = BusProcessor()
     let master = MasterBus()
+    /// Each track's own FX insert (Face 2's knobs with that track selected). A track runs through
+    /// its insert only while the insert adds something, and a moment longer so nothing steps.
+    private let trackBus: [BusProcessor] = (0..<Pad.count).map { _ in BusProcessor(compact: true) }
+    static let trackStride = 8_192
+    private let trackL: UnsafeMutablePointer<Float>
+    private let trackR: UnsafeMutablePointer<Float>
+    /// Samples a track keeps running through its insert after its knobs go back to neutral.
+    private let trackHold: UnsafeMutablePointer<Int>
+    private let trackRouted: UnsafeMutablePointer<Bool>
 
     // Transport
     // Fixed storage: last-held note wins, releasing it returns to the previous held note.
@@ -319,6 +406,14 @@ final class KnockEngine {
         mixR = .allocate(capacity: 8_192)
         mixL.initialize(repeating: 0, count: 8_192)
         mixR.initialize(repeating: 0, count: 8_192)
+        trackL = .allocate(capacity: Pad.count * KnockEngine.trackStride)
+        trackR = .allocate(capacity: Pad.count * KnockEngine.trackStride)
+        trackL.initialize(repeating: 0, count: Pad.count * KnockEngine.trackStride)
+        trackR.initialize(repeating: 0, count: Pad.count * KnockEngine.trackStride)
+        trackHold = .allocate(capacity: Pad.count)
+        trackHold.initialize(repeating: 0, count: Pad.count)
+        trackRouted = .allocate(capacity: Pad.count)
+        trackRouted.initialize(repeating: false, count: Pad.count)
         blockEvents = .allocate(capacity: KnockEngine.maxBlockEvents)
         blockEvents.initialize(repeating: BlockEvent(), count: KnockEngine.maxBlockEvents)
         pending = .allocate(capacity: KnockEngine.maxPending)
@@ -359,6 +454,7 @@ final class KnockEngine {
         stealTails.deallocate()
         mixL.deallocate()
         mixR.deallocate()
+        trackL.deallocate(); trackR.deallocate(); trackHold.deallocate(); trackRouted.deallocate()
         blockEvents.deallocate()
     }
 
@@ -369,6 +465,8 @@ final class KnockEngine {
         // The FIR coefficients are a lazy static array. Build them before the first callback.
         _ = HalfBandOversampler.oddTaps
         bus.prepare(sampleRate: sampleRate)
+        for t in trackBus { t.prepare(sampleRate: sampleRate) }
+        for pad in 0..<Pad.count { trackHold[pad] = 0; trackRouted[pad] = false }
         master.prepare(sampleRate: sampleRate)
         for i in 0..<KnockEngine.maxVoices { voices[i].active = false }
         for i in 0..<KnockEngine.maxStealTails { stealTails[i].active = false }
@@ -642,6 +740,8 @@ final class KnockEngine {
         // Voices, segment by segment between events.
         mixL.update(repeating: 0, count: frames)
         mixR.update(repeating: 0, count: frames)
+        let mode = SoundMode(rawValue: Int(params[KParam.soundMode.rawValue].rounded())) ?? .modern
+        routeTracks(mode: mode, frames: frames)
         var cursor = 0
         var keep = 0
         for i in 0..<blockEventCount {
@@ -661,6 +761,7 @@ final class KnockEngine {
         }
         if cursor < frames { renderVoices(from: cursor, to: frames) }
         blockEventCount = keep
+        mixTracks(mode: mode, frames: frames)
 
         // Nothing sounding for 4 s and stopped: skip the chain (tails have long died away).
         var anyVoice = false
@@ -677,7 +778,7 @@ final class KnockEngine {
 
         // The faceplate's sound, then the master section.
         var bs = BusProcessor.Settings()
-        bs.mode = SoundMode(rawValue: Int(params[KParam.soundMode.rawValue].rounded())) ?? .modern
+        bs.mode = mode
         bs.boost = params[KParam.boost.rawValue]
         bs.punch = params[KParam.punch.rawValue]
         bs.analogEQ = params[KParam.analogEQ.rawValue]
@@ -1297,7 +1398,10 @@ final class KnockEngine {
         let mr = pad < kit.mixR.count ? kit.mixR[pad] : ps.gain
 
         // TIGHTEN shortens tails (the 808 half as much); the pad's own DECAY too.
-        let tighten = params[KParam.tighten.rawValue] * (pad == Pad.bass808.rawValue ? 0.5 : 1)
+        // the track's own TIGHTEN (Face 2) on top of the main one
+        let mode = SoundMode(rawValue: Int(params[KParam.soundMode.rawValue].rounded())) ?? .modern
+        let own = kit.insert(pad, mode)?.tighten ?? 0
+        let tighten = (1 - (1 - params[KParam.tighten.rawValue]) * (1 - own)) * (pad == Pad.bass808.rawValue ? 0.5 : 1)
         var tau: Double = .infinity
         if tighten > 0.001 { tau = 0.045 + (1 - Double(tighten)) * (1 - Double(tighten)) * 1.5 }
         if ps.decay < 0.999 { tau = min(tau, 0.03 + Double(ps.decay) * Double(ps.decay) * 2.5) }
@@ -1537,13 +1641,62 @@ final class KnockEngine {
         let release = Int(sampleRate * 0.03)
         for v in 0..<KnockEngine.maxVoices where voices[v].active {
             let (tl, tr) = mixTarget(voices[v])
-            voices[v].render(into: mixL + start, mixR + start, frames: end - start, releaseSamples: release,
+            let (outL, outR) = destination(voices[v].pad)
+            voices[v].render(into: outL + start, outR + start, frames: end - start, releaseSamples: release,
                              targetL: tl, targetR: tr, mixStep: step)
         }
         for v in 0..<KnockEngine.maxStealTails where stealTails[v].active {
             let (tl, tr) = mixTarget(stealTails[v])
-            stealTails[v].render(into: mixL + start, mixR + start, frames: end - start, releaseSamples: release,
+            let (outL, outR) = destination(stealTails[v].pad)
+            stealTails[v].render(into: outL + start, outR + start, frames: end - start, releaseSamples: release,
                                  targetL: tl, targetR: tr, mixStep: step)
+        }
+    }
+
+    /// Where a track's voices go: its own buffer while its FX insert runs, otherwise the mix.
+    @inline(__always)
+    private func destination(_ pad: Int) -> (UnsafeMutablePointer<Float>, UnsafeMutablePointer<Float>) {
+        guard pad >= 0, pad < Pad.count, trackRouted[pad] else { return (mixL, mixR) }
+        let o = pad * KnockEngine.trackStride
+        return (trackL + o, trackR + o)
+    }
+
+    /// Block start: which tracks run through their own FX insert this block (Face 2's knobs).
+    private func routeTracks(mode: SoundMode, frames: Int) {
+        let hold = Int(sampleRate * 0.3)
+        for pad in 0..<Pad.count {
+            let active = kit?.insert(pad, mode)?.active ?? false
+            if active {
+                // coming in from the dry mix: start from silence, not from what it held last time
+                if !trackRouted[pad] { trackBus[pad].reset() }
+                trackHold[pad] = hold
+            } else if trackHold[pad] > 0 {
+                trackHold[pad] = max(0, trackHold[pad] - frames)
+            }
+            trackRouted[pad] = trackHold[pad] > 0
+            if trackRouted[pad] {
+                let o = pad * KnockEngine.trackStride
+                (trackL + o).update(repeating: 0, count: frames)
+                (trackR + o).update(repeating: 0, count: frames)
+            }
+        }
+    }
+
+    /// After the voices: each routed track through its insert, into the mix.
+    private func mixTracks(mode: SoundMode, frames: Int) {
+        for pad in 0..<Pad.count where trackRouted[pad] {
+            var settings = kit?.insert(pad, mode)?.settings ?? BusProcessor.Settings()
+            if !(kit?.insert(pad, mode)?.active ?? false) {
+                // the knobs went back to neutral: the last moment runs clean, then the track is dry again
+                settings = TrackFX.insert(PadSettings(), mode).settings
+            }
+            settings.tempo = status[4] > 0 ? status[4] : 120
+            settings.delaySync = params[KParam.delaySync.rawValue] > 0.5
+            settings.beat = playing ? blockBeat0 : nil
+            let o = pad * KnockEngine.trackStride
+            let l = trackL + o, r = trackR + o
+            trackBus[pad].process(l, r, count: frames, settings)
+            for i in 0..<frames { mixL[i] += l[i]; mixR[i] += r[i] }
         }
     }
 

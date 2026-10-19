@@ -47,6 +47,7 @@ enum KnockSelfTest {
         phase("checkSampler", checkSampler)
         phase("checkUntouchedEnvelopes", checkUntouchedEnvelopes)
         phase("checkSamplerPlayhead", checkSamplerPlayhead)
+        phase("checkTrackFX", checkTrackFX)
         phase("checkPrecomputedEffects", checkPrecomputedEffects)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
@@ -405,6 +406,89 @@ enum KnockSelfTest {
     /// the kick and 808 leaned to one side. Every kit and every new sound comes in as itself (its original
     /// pitch and level, centered, SAMPLER at SMP START 0%, LENGTH 100%, IN 0%, OUT 0%), whatever the last
     /// kit or sound had been set to, and plays exactly as a cold load of that kit.
+    /// Face 2's FX knobs per track (Tyrone, Oct 19): a track's own knobs change that track and no
+    /// other, each mode keeps its own, an untouched track sounds exactly as before, and they save.
+    static func checkTrackFX() {
+        let rate = 48_000.0
+        var wave = [Float](repeating: 0, count: 48_000)
+        for i in 0..<wave.count {
+            let t = Float(i)
+            let phase: Float = t * 2 * Float.pi * 180 / 48_000
+            wave[i] = sinf(phase) * 0.45 * (1 - t / 60_000)
+        }
+        let tone = SampleBuffer(left: wave, sampleRate: rate)
+        func render(_ pads: [PadSettings], mode: SoundMode, hit: Int, blocks: Int = 300) -> [Float] {
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0), (.velocity, 0), (.boost, 0), (.clipper, 0),
+                                            (.clipDrive, 0), (.gatedReverb, 0), (.textureDelay, 0), (.resample, 0), (.instability, 0),
+                                            (.warp, 0), (.glitch, 0), (.soundMode, Float(mode.rawValue))]
+            for (p, v) in quiet { e.setParam(p, v) }
+            e.kitHandoff.publish(KitBuffers(name: "TRACK FX", samples: Array(repeating: tone, count: Pad.count), settings: pads, bassHz: 110))
+            var out: [Float] = []
+            var left = [Float](repeating: 0, count: 128), right = left
+            for b in 0..<blocks {
+                if b == 2 { e.send(KEvent(kind: .pad, a: Int32(hit), value: 1)) }
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+                out += left
+            }
+            return out
+        }
+        func energy(_ x: [Float], from: Int = 0) -> Double {
+            var e: Double = 0
+            for i in from..<x.count { e += Double(x[i] * x[i]) }
+            return e
+        }
+        func difference(_ a: [Float], _ b: [Float]) -> Double {
+            var e: Double = 0
+            for i in 0..<min(a.count, b.count) { let d = Double(a[i] - b[i]); e += d * d }
+            return e
+        }
+        let plain = Array(repeating: PadSettings(), count: Pad.count)
+        let a = Pad.kick.rawValue, b = Pad.snare.rawValue
+
+        // an untouched track: no FX stored, and turning a knob back to its start leaves nothing behind
+        var back = PadSettings(); back.setFX(.grit, .modern, 0.8); back.setFX(.grit, .modern, 0)
+        check(PadSettings().fx == nil && back.fx == nil && back == PadSettings(), "track FX: a track starts untouched; a knob turned back to zero leaves nothing")
+        check(!TrackFX.insert(PadSettings(), .texture).active && !TrackFX.insert(PadSettings(), .vintage).active,
+              "track FX: an untouched track's insert does nothing in every mode")
+
+        for mode in SoundMode.allCases {
+            var pads = plain
+            for p in TrackFX.params(mode) where p != .reverbDecay && p != .reverbPredelay && p != .tighten && p != .noise {
+                pads[a].setFX(p, mode, p == .warp || p == .glitch ? 1 : 0.8)
+            }
+            let dryA = render(plain, mode: mode, hit: a), wetA = render(pads, mode: mode, hit: a)
+            let dryB = render(plain, mode: mode, hit: b), withAB = render(pads, mode: mode, hit: b)
+            let changed = difference(dryA, wetA) / max(energy(dryA), 1e-9)
+            let leaked = difference(dryB, withAB) / max(energy(dryB), 1e-9)
+            check(changed > 0.02, "track FX \(mode.title): track A's own knobs change A's sound (\(String(format: "%.3f", changed)))")
+            check(leaked < 1e-6, "track FX \(mode.title): track A's knobs leave track B exactly as it was (\(leaked))")
+            // the other modes' knobs on A stay where they were: nothing
+            for other in SoundMode.allCases where other != mode {
+                check(TrackFX.insert(pads[a], other).active == false, "track FX \(mode.title): \(other.title)'s knobs on the same track stay untouched")
+            }
+        }
+        // TIGHTEN on one track shortens its tail and no other's
+        var tight = plain; tight[a].setFX(.tighten, .modern, 1)
+        let tailA = energy(render(tight, mode: .modern, hit: a), from: 20_000), plainTail = energy(render(plain, mode: .modern, hit: a), from: 20_000)
+        let tailB = energy(render(tight, mode: .modern, hit: b), from: 20_000), plainB = energy(render(plain, mode: .modern, hit: b), from: 20_000)
+        check(tailA < plainTail * 0.05 && abs(tailB - plainB) < plainB * 1e-6, "track FX: TIGHTEN on track A shortens A's tail only")
+        // Texture's DELAY on a track: echoes after the hit has gone
+        var echo = plain; echo[a].setFX(.textureDelay, .texture, 1)
+        let late = energy(render(echo, mode: .texture, hit: a, blocks: 700), from: 60_000)
+        let lateDry = energy(render(plain, mode: .texture, hit: a, blocks: 700), from: 60_000)
+        check(late > lateDry * 4 + 1e-6, "track FX TEXTURE: DELAY on a track echoes that track (\(late) vs \(lateDry))")
+        // saved with the track and restored
+        var saved = PadSettings(); saved.setFX(.punch, .vintage, 0.6); saved.setFX(.warp, .texture, 0.3)
+        let decoded = (try? JSONEncoder().encode(saved)).flatMap { try? JSONDecoder().decode(PadSettings.self, from: $0) }
+        check(decoded == saved && decoded?.fxValue(.punch, .vintage) == 0.6 && decoded?.fxValue(.punch, .modern) == 0,
+              "track FX: a track's knobs save and come back per mode")
+        // a new kit brings every track in untouched
+        var s = KnockState(); s.pads = Array(repeating: saved, count: Pad.count)
+        check(s.selectingKit(KitLibrary.factory[1]).pads.allSatisfy { $0.fx == nil }, "track FX: a kit change brings every track in with its FX untouched")
+    }
+
     static func checkFreshSounds() {
         #if canImport(AVFoundation)
         var tweaked = PadSettings()
@@ -2854,19 +2938,23 @@ enum KnockSelfTest {
     /// Turning a channel's LEVEL or PAN while its sound rings: the note keeps playing and glides to
     /// the new level, it isn't cut off (each cut was a click).
     static func checkLevelPanGlide() {
-        // Every volume goes to 200%, +12 dB (Tyrone, Oct 18): track LEVEL / VOL and the master OUTPUT.
-        var loud = PadSettings(); loud.level = PadSettings.maxLevel
-        check(abs(20 * log10f(loud.gain) - 12) < 0.1 && PadSettings.levelText(loud.level) == "200%" && PadSettings.levelText(0.8) == "100%",
-              "a track's volume goes to 200% (+12 dB), 100% is unity")
-        check(KnockState.normalizedPads([loud])[0].level == PadSettings.maxLevel && KnockState.normalizedPads([PadSettings()])[0].gain == 1,
-              "a saved 200% track volume stays 200%, old projects keep their levels")
-        check(abs(KnockMath.outputDB(1) - 12) < 0.01 && abs(KnockMath.outputDB(0.75)) < 0.01, "OUTPUT goes to +12 dB, 0.75 stays 0 dB")
-        // Tyrone, Oct 19: every volume knob runs −12 dB … +12 dB
+        // Tyrone, Oct 19: every volume outside the SAMPLER window stops at 100% (0 dB), down to −12 dB (50%)
+        var loud = PadSettings(); loud.level = 1.6
+        check(KnockState.normalizedPads([loud])[0].level == 0.8 && KnockState.normalizedPads([PadSettings()])[0].gain == 1
+              && PadSettings.levelText(PadSettings.maxLevel) == "100%",
+              "a track's volume stops at 100%: a saved 200% comes back at 100%")
+        check(abs(KnockMath.outputDB(1)) < 0.01 && abs(KnockMath.outputDB(0) + 12) < 0.01 && KParam.output.defaultValue == 1
+              && abs(KnockMath.outputFromOld(0.75) - 1) < 0.001 && abs(KnockMath.outputFromOld(1) - 1) < 0.001
+              && abs(KnockMath.outputDB(KnockMath.outputFromOld(0.375)) + 6) < 0.01,
+              "OUTPUT goes from −12 dB to 0 dB; an old project's OUTPUT keeps its level, anything over 0 dB stops at 0 dB")
+        var old = KnockState(); old.version = 2; old.values[KParam.output.id] = 0.375
+        let migrated = old.normalized()
+        check(abs(KnockMath.outputDB(migrated.values[KParam.output.id] ?? 0) + 6) < 0.01 && migrated.normalized() == migrated,
+              "an old project's OUTPUT is moved to the new scale once")
         var low = PadSettings(); low.level = PadSettings.level(knob: 0)
-        check(abs(KnockMath.outputDB(0) + 12) < 0.01 && abs(20 * log10f(low.gain) + 12) < 0.1
-              && PadSettings.level(knob: 0.5) == 0.8 && abs(PadSettings.level(knob: 1) - PadSettings.maxLevel) < 0.001
-              && abs(PadSettings.knob(level: 0.8) - 0.5) < 0.001 && PadSettings.levelText(low.level) == "50%",
-              "the volume knobs go from −12 dB (50%) to +12 dB (200%), 100% in the middle")
+        check(abs(20 * log10f(low.gain) + 12) < 0.1 && PadSettings.level(knob: 1) == 0.8
+              && abs(PadSettings.knob(level: 0.8) - 1) < 0.001 && PadSettings.levelText(low.level) == "50%",
+              "the volume knobs go from −12 dB (50%) to 0 dB (100%) at the top")
         let rate = 48_000.0
         let sine = (0..<96_000).map { Float(sin(Double($0) * 2 * Double.pi * 220 / rate)) * 0.1 }
         let sample = SampleBuffer(left: sine, sampleRate: rate)

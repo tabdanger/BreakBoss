@@ -440,6 +440,101 @@ struct MetalKnob: View {
     }
 }
 
+// MARK: - The knob readout (Tyrone, Oct 19)
+
+/// What a knob shows while it turns: its name and value.
+struct KnobHUD: Equatable {
+    var title: String
+    var value: String
+
+    /// How long the readout stays after the finger lifts (longer under the UI tests, so they can picture it).
+    static let linger: Double = ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] == "1" ? 5 : 0.7
+
+    /// A track's volume in dB (0 dB at 100%) and percent.
+    static func volume(_ level: Float) -> String {
+        guard level > 0.001 else { return "OFF" }
+        let db = 40 * log10f(level / 0.8)
+        return (abs(db) < 0.05 ? "0.0 dB" : String(format: "%+.1f dB", db)) + "  " + PadSettings.levelText(level)
+    }
+
+    /// A track's pan: CENTER, or how far left or right.
+    static func pan(_ pan: Float) -> String {
+        let p = Int((pan * 100).rounded())
+        if p == 0 { return "CENTER" }
+        return p < 0 ? "L \(-p)%" : "R \(p)%"
+    }
+}
+
+struct KnobHUDEntry {
+    let hud: KnobHUD
+    let anchor: Anchor<CGRect>
+}
+
+struct KnobHUDKey: PreferenceKey {
+    static let defaultValue: [KnobHUDEntry] = []
+    static func reduce(value: inout [KnobHUDEntry], nextValue: () -> [KnobHUDEntry]) { value.append(contentsOf: nextValue()) }
+}
+
+/// The readout itself: a small lit display set in the faceplate's metal, like the value window on
+/// a hardware unit. A bezel in the finish's metal (brushed, light caught along its top), a dark
+/// glass window sunk into it, and the value lit in the face's own colour.
+struct KnobHUDView: View {
+    let hud: KnobHUD
+    let accent: Color
+    let scale: CGFloat
+    @Environment(\.seqFinish) private var finish
+
+    var body: some View {
+        let s = scale
+        let metal = MetalTone.of(finish)
+        VStack(spacing: 1 * s) {
+            Text(hud.title.uppercased())
+                .font(.system(size: 9 * s, weight: .semibold, design: .monospaced)).tracking(0.8 * s)
+                .foregroundColor(accent.opacity(0.72))
+            Text(hud.value)
+                .font(.system(size: 16 * s, weight: .bold, design: .monospaced)).monospacedDigit()
+                .foregroundColor(accent)
+                .shadow(color: accent.opacity(0.85), radius: 3 * s)
+                .shadow(color: accent.opacity(0.35), radius: 8 * s)
+        }
+        .lineLimit(1)
+        .padding(.horizontal, 12 * s).padding(.vertical, 5 * s)
+        .frame(minWidth: 96 * s)
+        .background(
+            // the glass: near black, a faint glow of the lit segments, a sheen on its upper half
+            ZStack {
+                RoundedRectangle(cornerRadius: 5 * s)
+                    .fill(LinearGradient(colors: [Color(white: 0.015), Color(white: 0.07)], startPoint: .top, endPoint: .bottom))
+                RoundedRectangle(cornerRadius: 5 * s).fill(accent.opacity(0.07))
+                RoundedRectangle(cornerRadius: 5 * s)
+                    .fill(LinearGradient(colors: [Color.white.opacity(0.09), .clear], startPoint: .top, endPoint: .center))
+                // sunk into the bezel: dark along the top edge, a catch of light along the bottom
+                RoundedRectangle(cornerRadius: 5 * s)
+                    .stroke(LinearGradient(colors: [Color.black.opacity(0.95), Color.white.opacity(0.12)], startPoint: .top, endPoint: .bottom),
+                            lineWidth: 1.2 * s)
+            }
+        )
+        .padding(3.5 * s)
+        .background(
+            // the bezel: the faceplate's metal, brighter where the light catches its top
+            ZStack {
+                RoundedRectangle(cornerRadius: 8 * s)
+                    .fill(LinearGradient(colors: [metal.bright, metal.light, metal.mid, metal.dark], startPoint: .top, endPoint: .bottom))
+                if metal.pebbled { PebbleGrain(amount: 0.35).clipShape(RoundedRectangle(cornerRadius: 8 * s)) }
+                RoundedRectangle(cornerRadius: 8 * s)
+                    .stroke(LinearGradient(colors: [Color.white.opacity(0.55), Color.black.opacity(0.55)], startPoint: .top, endPoint: .bottom),
+                            lineWidth: 0.8 * s)
+            }
+            .shadow(color: .black.opacity(0.55), radius: 5 * s, y: 3 * s)
+        )
+        .fixedSize()
+        .transition(.opacity)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("knobHUD")
+        .accessibilityValue("\(hud.title) \(hud.value)")
+    }
+}
+
 /// The sound library's preview volume (Tyrone, Oct 19): a fader in a dark slot under the library, the
 /// level lit in the face's own colour, a metal cap in the face's finish with grip lines across it, and
 /// its level beside it. Moving it sets how loud picked sounds are heard; letting go plays the
