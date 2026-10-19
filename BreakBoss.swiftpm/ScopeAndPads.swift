@@ -167,11 +167,11 @@ final class ScopeTracer {
     private var bass: Float = 0
     private var top: Float = 0
     /// The screen's gain follows the loudest recent peak, so a soft hat fills the screen as
-    /// clearly as a loud kick (up to 4x; loud sounds are never shrunk).
+    /// clearly as a loud kick (up to 4x), and a sound pushed past full scale (OUTPUT up) still fits.
     private var peak: Float = 0
     private var last: Date?
 
-    /// For the UI tests: the last frame's loudness, bass share and top share.
+    /// For the UI tests: the recent loudness (peak held), bass share and top share.
     private(set) var probeLevel: Float = 0
     var probeText: String { String(format: "level %.3f bass %.2f top %.2f", probeLevel, bass, top) }
 
@@ -200,10 +200,11 @@ final class ScopeTracer {
             bassSum += rings.bass[i]
             topSum += rings.top[i]
         }
-        probeLevel = loud
+        // held for the tests, which read it only about once a second
+        probeLevel = max(loud, probeLevel - dt * 0.4)
         // The gain's peak jumps up at once and lets go over about half a second.
         peak = loud > peak ? loud : peak + (loud - peak) * (1 - exp(-dt / 0.5))
-        let gain = min(4, max(1, 0.8 / max(peak, 0.0001)))
+        let gain = min(4, max(0.2, 0.8 / max(peak, 0.0001)))
 
         let step = Float(Self.window) / Float(Self.pointCount)
         for p in 0..<Self.pointCount {

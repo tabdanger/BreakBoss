@@ -86,8 +86,8 @@ final class ScopeUITests: XCTestCase {
         var best = (level: 0.0, bass: 0.0, top: 0.0)
         for k in 0..<6 {
             at(pad.0, pad.1).tap()
+            if k == 2 { picture(name, of: scope) }     // straight away: a hat is over in a moment
             usleep(120_000)
-            if k == 2 { picture(name, of: scope) }
             if let r = reading(scope), r.level >= best.level { best = r }
         }
         print("UITREE scope \(name): level \(best.level) bass \(best.bass) top \(best.top)")
