@@ -2319,6 +2319,21 @@ enum KnockSelfTest {
                   "rack: a dropped sound takes a free kit channel")
             rc.resetRack()
             check(rc.rackChannels.count == Pad.count && rc.rackChannels[0].soundID == "kit", "rack: back to the kit's channels")
+            // The grab studs (Oct 19): a track moved from row 1 to row 4 takes its steps, mute and MIDI
+            // channel with it (they belong to its pad), and UNDO's setRackOrder puts the rack back.
+            if let preset = PatternBank.all.first(where: { $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } }) {
+                rc.loadPatternPreset(preset)
+                rc.toggleMute(Pad.kick.rawValue)
+                let loopsBefore = rc.loops, mutes = rc.mutedPads, midi = rc.midiOutChannels
+                rc.moveRackChannel(pad: Pad.kick.rawValue, to: 3)
+                check(rc.rackOrder == [1, 2, 3, 0] + Array(4..<Pad.count) && rc.rackChannels[3].name == "KICK",
+                      "rack: the kick dragged from row 1 to row 4 sits on row 4 (\(rc.rackOrder))")
+                check(rc.loops == loopsBefore && rc.mutedPads == mutes && rc.midiOutChannels == midi,
+                      "rack: a moved track keeps its steps, its mute and its MIDI channel")
+                rc.setRackOrder(Array(0..<Pad.count))
+                check(rc.rackOrder == Array(0..<Pad.count) && rc.state.rackOrder == nil, "rack: UNDO puts the rack order back")
+                rc.toggleMute(Pad.kick.rawValue)
+            }
             // Face 1 and Face 2 stay in step: every pad is in the rack, a kit fills rack and pads.
             if let preset = PatternBank.all.first(where: { $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } }) {
                 rc.removeRackChannel(rc.rackChannels[Pad.kick.rawValue].id)

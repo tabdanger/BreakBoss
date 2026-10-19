@@ -11,6 +11,7 @@ final class SequencerUITests: XCTestCase {
         XCUIDevice.shared.orientation = .landscapeLeft
         app = XCUIApplication()
         app.launchEnvironment["BREAKBOSS_OPEN_SEQUENCER"] = "1"
+        app.launchEnvironment["BREAKBOSS_UI_PROBE"] = "1"
         app.launch()
     }
 
@@ -153,14 +154,15 @@ final class SequencerUITests: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()   // close the panel
         sleep(1)
 
-        // drag the silver tab of the first track down two places: it moves straight away, no hold
+        // grab the first track's studs and flick it down: it moves straight away, no hold
         let kickY = app.buttons["trackArrow0"].frame.midY
-        let grip = app.buttons["trackArrow0"]
-        XCTAssertTrue(grip.exists, "every track has its tab on the left")
+        let grip = any("trackGrip0")
+        XCTAssertTrue(grip.exists, "every track has its grab studs left of the arrow")
         let rowH = app.buttons["trackArrow1"].frame.midY - kickY
         grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            .press(forDuration: 0.05, thenDragTo: grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: rowH * 2.2)))
-        sleep(1)
+            .press(forDuration: 0.05, thenDragTo: grip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: rowH * 3.2)))   // a fast synthesized flick falls ~15% short
+        sleep(2)
+        print("UITREE flick \(any("grid").value as? String ?? "") kickY \(kickY) rowH \(rowH) now \(app.buttons["trackArrow0"].frame.midY)")
         XCTAssertGreaterThan(app.buttons["trackArrow0"].frame.midY, kickY + rowH, "the dragged track moved down the rack")
         snap("track-moved")
 
