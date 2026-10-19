@@ -515,7 +515,10 @@ final class KnockController: ObservableObject {
             var pool = stockLibrary.kits(withPad: pad)
             if pad == Pad.bass808.rawValue { pool = pool.filter { abs(KitLibrary.kit(id: $0).bassHz - root) < 0.5 } }
             pool.removeAll { $0 == (picks[pad] ?? state.kitID) }          // always a change
-            if let pick = pool.randomElement() { picks[pad] = pick }
+            if let pick = pool.randomElement() {
+                picks[pad] = pick
+                state.pads[pad] = PadSettings()                            // a new sound comes in as itself
+            }
         }
         state.stockPicks = picks
         rebuildKit()
@@ -545,6 +548,7 @@ final class KnockController: ObservableObject {
         state.userKit = kit.name
         state.soundSeed = kit.soundSeed
         state.pads = KnockState.normalizedPads(kit.pads)
+        state.stockPicks = nil                 // a saved kit plays its own sounds, not the last dice roll's (an 808 in another key)
         state.workspaceChannels = nil          // the rack shows the kit's sounds, the same as the pads
         rebuildKit()
         rebuildLoops()
@@ -595,18 +599,19 @@ final class KnockController: ObservableObject {
             for pad in 0..<Pad.count {
                 if let file = s.pads[pad].sampleFile {
                     if let buffer = try? SampleLoader.load(SampleLoader.urlInSamples(file)) {
-                        samples.append(buffer)
+                        samples.append(KnockController.centered(buffer, pad: pad))
                         continue
                     }
                     failed.append(file)
                 } else if let sample = KnockController.stockPick(s, pad: pad).flatMap({ stock.sample(kitID: $0, pad: pad) })
                             ?? stock.sample(kitID: def.id, pad: pad) {
-                    if let buffer = try? SampleLoader.load(sample.url) {
+                    if let loaded = try? SampleLoader.load(sample.url) {
+                        let buffer = KnockController.centered(loaded, pad: pad)
                         samples.append(buffer)
                         stockNames[pad] = sample.displayName
                         if let spec = stock.layers(for: sample) {
                             // Every layer or none: a file that won't load leaves the pad on its one sample.
-                            let hits = spec.map { layer in layer.urls.compactMap { try? SampleLoader.load($0) } }
+                            let hits = spec.map { layer in layer.urls.compactMap { (try? SampleLoader.load($0)).map { KnockController.centered($0, pad: pad) } } }
                             if zip(hits, spec).allSatisfy({ $0.0.count == $0.1.urls.count }) {
                                 layers[pad] = VelocityLayers(source: buffer, tops: spec.map(\.top), hits: hits)
                             }
@@ -620,7 +625,7 @@ final class KnockController: ObservableObject {
                     var rng = KRandom(seed: s.soundSeed &* 2_654_435_761 &+ UInt32(pad * 977))
                     recipe = recipe.varied(&rng)
                 }
-                samples.append(DrumSynth.render(recipe, sampleRate: rate, seed: s.soundSeed &+ UInt32(pad)))
+                samples.append(KnockController.centered(DrumSynth.render(recipe, sampleRate: rate, seed: s.soundSeed &+ UInt32(pad)), pad: pad))
             }
             DispatchQueue.main.async { [weak self, samples, layers, failed, stockNames] in
                 guard let self, generation == self.kitGeneration else { return }
@@ -795,7 +800,7 @@ final class KnockController: ObservableObject {
                 if (try? WavWriter.write(left: l, right: r, sampleRate: source.sampleRate, to: url)) != nil,
                    let loaded = try? SampleLoader.load(url) {
                     name = "Edits/" + url.lastPathComponent
-                    buffer = loaded
+                    buffer = KnockController.centered(loaded, pad: pad)
                 }
             }
             DispatchQueue.main.async { [weak self] in
@@ -846,11 +851,16 @@ final class KnockController: ObservableObject {
         kitQueue.async { [weak self] in
             do {
                 let name = try SampleLoader.copyIntoSamples(url)
-                let buffer = try SampleLoader.load(SampleLoader.urlInSamples(name))
+                let buffer = try KnockController.centered(SampleLoader.load(SampleLoader.urlInSamples(name)), pad: pad)
                 DispatchQueue.main.async { [weak self] in
                     guard let self, self.padPicks[pad] == pick, self.state.kitID == kit.0, self.state.userKit == kit.1,
                           self.state.workspaceChannels?.first(where: { $0.pad == pad })?.soundID == row else { return }
-                    self.state.pads[pad].sampleFile = name
+                    // A new sound comes in as itself: its own pitch and volume, centered, the SAMPLER at
+                    // its defaults. The last sound's settings (SMP START, LENGTH, root note, tune, level...)
+                    // used to stay on the track and change the new one (Tyrone, Oct 19).
+                    var fresh = PadSettings()
+                    fresh.sampleFile = name
+                    self.state.pads[pad] = fresh
                     self.stockSampleNames[pad] = nil
                     if self.kitGeneration == generation, self.kitSamples.count == Pad.count {
                         var samples = self.kitSamples
@@ -878,6 +888,29 @@ final class KnockController: ObservableObject {
         state.pads[pad] = PadSettings()
         rebuildKit()
         scheduleSave()
+    }
+
+    /// The kick and the 808 always sit in the middle (Tyrone, Oct 19): a stereo file that leans to one
+    /// side (the acoustic kicks' room mics lean left up to ~5 dB) has its two sides evened out, same
+    /// loudness overall and the same stereo width. Every other pad is left exactly as it was.
+    static func centered(_ buffer: SampleBuffer, pad: Int) -> SampleBuffer {
+        guard pad == Pad.kick.rawValue || pad == Pad.bass808.rawValue, buffer.length > 1 else { return buffer }
+        var el: Double = 0, er: Double = 0
+        for i in 0..<buffer.length { el += Double(buffer.left[i] * buffer.left[i]); er += Double(buffer.right[i] * buffer.right[i]) }
+        guard el > 1e-12, er > 1e-12, abs(10 * log10(el / er)) > 0.05 else { return buffer }
+        let mean = (el + er) / 2
+        let gl = Float((mean / el).squareRoot()), gr = Float((mean / er).squareRoot())
+        let l = (0..<buffer.length).map { buffer.left[$0] * gl }
+        let r = (0..<buffer.length).map { buffer.right[$0] * gr }
+        let out = SampleBuffer(left: l, right: r, sampleRate: buffer.sampleRate)
+        out.bitDepth = buffer.bitDepth
+        out.stereo = buffer.stereo
+        out.loopStart = buffer.loopStart
+        out.loopEnd = buffer.loopEnd
+        out.cues = buffer.cues
+        out.region = buffer.region
+        out.fadeMarks = buffer.fadeMarks
+        return out
     }
 
     func padName(_ pad: Int) -> String {

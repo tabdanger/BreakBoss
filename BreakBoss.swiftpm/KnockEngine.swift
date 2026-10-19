@@ -727,6 +727,14 @@ final class KnockEngine {
             for v in 0..<KnockEngine.maxStealTails where stealTails[v].active && !sameSound(stealTails[v].pad) {
                 stealTails[v].startFade(samples: Int(sampleRate * 0.005))
             }
+            // Arpeggio notes and echoes still waiting from the old sound don't play on the new one
+            // (they carry the old track's pitches).
+            var keep = 0
+            for i in 0..<pendingCount where sameSound(pending[i].pad) {
+                pending[keep] = pending[i]
+                keep += 1
+            }
+            pendingCount = keep
             oldKit = kit
             kit = newKit
             oldKitCountdown = Int(sampleRate * 0.015)
@@ -1179,10 +1187,18 @@ final class KnockEngine {
         // length, unless the sampler's Volume envelope releases at the note's end or it loops. A track
         // whose sampler doesn't do either keeps the note length it had without one (Tyrone, Oct 19);
         // the notes its arpeggiator and echoes add (arp false) stay one-shots as they were.
+        // A note that would play whole without the Volume envelope (a pad tap, a drum step, a loaded
+        // one-shot) lets go no sooner than the end of the envelope's run (delay, attack, hold, decay) when
+        // the envelope ends by itself (SUS at 0), so the envelope as it comes (HOLD = the sound's length)
+        // leaves the sound as it was (Tyrone, Oct 19). With a sustain level the note's end is its release.
+        let wholeNote = lengthSamples == 0 || ps.sampleFile != nil
         var lengthSamples = lengthSamples
         if ps.sampleFile != nil || (rt.active && (rt.volumeGates || rt.loop || !arp)) {
             if !rt.volumeGates && !rt.loop {
                 if !glide { lengthSamples = 0 }
+            } else if rt.volumeGates && wholeNote && !glide && rt.volume.sustain < 0.001 && !rt.volume.usesPoints {
+                let run = Int(rt.volume.runUnits * (rt.volume.tempo ? beatSamples : sampleRate))
+                lengthSamples = max(lengthSamples, Int(beatSamples * 0.25), run)
             } else if lengthSamples == 0 {
                 // a pad tap or a drum step: a 16th with the envelope, a beat for a loop
                 lengthSamples = Int(beatSamples * (rt.volumeGates ? 0.25 : 1))
@@ -1191,7 +1207,7 @@ final class KnockEngine {
 
         // 808 glide: bend the note that's still sounding instead of starting a new one.
         if glide && pad == Pad.bass808.rawValue {
-            for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad && !voices[v].releasing {
+            for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad && !voices[v].releasing && !voices[v].letGo {
                 voices[v].glide(to: rate, samples: Int(sampleRate * 0.07))
                 voices[v].remaining = lengthSamples > 0 ? lengthSamples : Int.max
                 padHits[pad] &+= 1
@@ -1209,7 +1225,7 @@ final class KnockEngine {
         if rt.active {
             // Mono with Porta: the sounding note slides to this one (legato)
             if rt.mono && rt.porta {
-                for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad && !voices[v].releasing {
+                for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad && !voices[v].releasing && !voices[v].letGo {
                     voices[v].glide(to: rate, samples: max(1, Int(rt.slideSeconds * sampleRate)))
                     voices[v].remaining = lengthSamples > 0 ? lengthSamples : Int.max
                     lastRate[pad] = rate
@@ -1219,7 +1235,7 @@ final class KnockEngine {
             }
             // Porta (or the arpeggiator's Slide): slide in from the last note; Full porta even after it ended
             var sounding = false
-            for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad && !voices[v].releasing { sounding = true; break }
+            for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad && !voices[v].releasing && !voices[v].letGo { sounding = true; break }
             if (rt.porta || slide) && lastRate[pad] > 0 && (sounding || rt.fullPorta || slide) { pitchFrom = lastRate[pad] }
             // Group: this note cuts the tracks whose By is its Cut; Cut self and polyphony stop its own notes
             if rt.cutGroup > 0 {
@@ -1745,6 +1761,9 @@ struct Voice {
     var fade: Float = 1
     var fadeStep: Float = 0
     var releasing = false
+    /// The note has ended and the sampler's Volume envelope is releasing it: a slide or glide starts a
+    /// new note instead of bending this fading one (it used to bend it and the slid note faded out).
+    var letGo = false
     var chokeGroup = 0
     var age: UInt32 = 0
     var remaining = Int.max
@@ -1853,6 +1872,7 @@ struct Voice {
         // no Volume envelope release and no loop: the note ends as it would with no sampler
         if !sm.volumeGates && !sm.looping { release(samples: releaseSamples); return }
         sm.release()
+        if sm.volumeGates { letGo = true }
         // with the Volume envelope the loop keeps going under its release; without it the sound plays out
         if !sm.volumeGates && sm.looping { sm.looping = false; sm.direction = 1 }
     }
