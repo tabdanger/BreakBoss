@@ -148,6 +148,9 @@ final class KnockEngine {
 
     let meters = SharedMeters()
     private var meterFrames = 0
+    /// Each track's newest voice: where it is in its sound (the SAMPLER's cursor follows it).
+    let playheads = SharedPlayheads()
+    private let playheadRows: UnsafeMutablePointer<Double>
     let queue = EventQueue()
     let kitHandoff = Handoff<KitBuffers>()
     let patternHandoff = Handoff<PatternSet>()
@@ -297,6 +300,8 @@ final class KnockEngine {
         status[2] = -2
         padHits = .allocate(capacity: Pad.count)
         padHits.initialize(repeating: 0, count: Pad.count)
+        playheadRows = .allocate(capacity: Pad.count * SharedPlayheads.stride)
+        playheadRows.initialize(repeating: 0, count: Pad.count * SharedPlayheads.stride)
         voices = .allocate(capacity: KnockEngine.maxVoices)
         voices.initialize(repeating: Voice(), count: KnockEngine.maxVoices)
         stealTails = .allocate(capacity: KnockEngine.maxStealTails)
@@ -340,6 +345,7 @@ final class KnockEngine {
         status.deallocate()
         padHits.deallocate()
         voices.deallocate()
+        playheadRows.deallocate()
         stealTails.deallocate()
         mixL.deallocate()
         mixR.deallocate()
@@ -504,6 +510,40 @@ final class KnockEngine {
         flushMIDIOffs(frames: total)
         sampleClock += Int64(total)
         status[7] += 1
+        publishPlayheads(frames: total)
+    }
+
+    /// Each track's most recently triggered voice that's still sounding: its place in the sound,
+    /// where it started, how fast and which way it moves, and its loop. Fixed storage, no waiting.
+    private func publishPlayheads(frames: Int) {
+        let stride = SharedPlayheads.stride
+        for pad in 0..<Pad.count {
+            let row = playheadRows + pad * stride
+            var newest = -1
+            var age: UInt32 = 0
+            for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad {
+                if newest < 0 || voices[v].age &- age < UInt32.max / 2 { newest = v; age = voices[v].age }
+            }
+            guard newest >= 0, voices[newest].length > 1 else { row[0] = 0; continue }
+            let vp = voices + newest
+            let n = Double(vp.pointee.length)
+            row[0] = Double(max(1, vp.pointee.age))
+            row[1] = vp.pointee.position / n
+            row[2] = vp.pointee.startPosition / n
+            let rate = vp.pointee.reverse ? -vp.pointee.rate : vp.pointee.rate
+            let step: Double
+            if vp.pointee.sm.on {
+                step = vp.pointee.sm.grains ? vp.pointee.sm.timeStep * vp.pointee.sm.direction
+                    : rate * vp.pointee.sm.rateMul * vp.pointee.sm.direction
+            } else {
+                step = rate
+            }
+            row[3] = step * sampleRate / n
+            let loops = vp.pointee.sm.on && vp.pointee.sm.looping
+            row[4] = loops ? vp.pointee.sm.loopStart / n : -1
+            row[5] = loops ? vp.pointee.sm.loopEnd / n : -1
+        }
+        playheads.publish(playheadRows, block: Double(frames) / sampleRate)
     }
 
     @inline(__always)
@@ -1681,6 +1721,8 @@ struct Voice {
     var right: UnsafeMutablePointer<Float>?
     var length = 0
     var position: Double = 0
+    /// Where the note started in the sound (START OFFSET, or the end when it plays backwards).
+    var startPosition: Double = 0
     var rate: Double = 1
     var targetRate: Double = 1
     var rateStep: Double = 0
@@ -1722,7 +1764,9 @@ struct Voice {
         self.rate = rate
         targetRate = rate
         self.reverse = reverse
-        position = reverse ? Double(sample.length - 1) : 0
+        // backwards from the last frame it can read (length - 1 would end the voice before its first sample)
+        position = reverse ? Double(max(0, sample.length - 2)) : 0
+        startPosition = position
         self.gainL = gainL
         self.gainR = gainR
         self.decayCoef = decayCoef
@@ -1759,6 +1803,7 @@ struct Voice {
         let last = Double(max(length - 2, 0))
         let offset = Double(rt.startOffset) * last
         position = reverse ? last - offset : offset
+        startPosition = position
         sm.looping = rt.loop && !reverse && length > 64
         sm.pingPong = rt.pingPong
         if loopEnd > 0 {
@@ -1776,6 +1821,7 @@ struct Voice {
             // a region drawn on the waveform: with no loop, the note plays just that part
             if playRegion && !sm.looping && !reverse {
                 position = max(position, Double(region.lowerBound))
+                startPosition = position
                 sm.regionEnd = Double(region.upperBound)
             }
         }
