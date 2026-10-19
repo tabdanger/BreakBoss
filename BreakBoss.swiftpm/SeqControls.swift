@@ -221,7 +221,11 @@ struct FaceSlider: View {
             let knob = h - 8 * scale
             let maxTravel = max(1, w - knob - 8 * scale)
             ZStack(alignment: .leading) {
-                // the slot
+                // the slot, cut into the plate (Oct 19: the plate no longer has the render's slot under it):
+                // a soft dark edge round the cut and the plate's lip catching the light below it
+                Capsule().fill(Color.black.opacity(0.5)).padding(-2 * scale).blur(radius: 1.5 * scale)
+                Capsule().strokeBorder(LinearGradient(colors: [.clear, tone.bright.opacity(0.75)], startPoint: .top, endPoint: .bottom), lineWidth: 1.2 * scale)
+                    .padding(-2.5 * scale)
                 Capsule().fill(LinearGradient(colors: [Color(white: 0.05), Color(white: 0.16)], startPoint: .top, endPoint: .bottom))
                     .overlay(Capsule().strokeBorder(LinearGradient(colors: [tone.dark, tone.bright], startPoint: .top, endPoint: .bottom), lineWidth: 1.5 * scale))
                     .overlay(Capsule().fill(color.opacity(0.25 * Double(travel / maxTravel))).padding(2))

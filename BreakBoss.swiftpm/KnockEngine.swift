@@ -233,6 +233,9 @@ final class KnockEngine {
     /// Each track's newest voice: where it is in its sound (the SAMPLER's cursor follows it).
     let playheads = SharedPlayheads()
     private let playheadRows: UnsafeMutablePointer<Double>
+    /// Each track's newest voice the cursor has been shown (its age), so a hit that starts and ends
+    /// inside one render call is still shown once.
+    private let playheadShown: UnsafeMutablePointer<UInt32>
     let queue = EventQueue()
     let kitHandoff = Handoff<KitBuffers>()
     let patternHandoff = Handoff<PatternSet>()
@@ -393,6 +396,8 @@ final class KnockEngine {
         padHits.initialize(repeating: 0, count: Pad.count)
         playheadRows = .allocate(capacity: Pad.count * SharedPlayheads.stride)
         playheadRows.initialize(repeating: 0, count: Pad.count * SharedPlayheads.stride)
+        playheadShown = .allocate(capacity: Pad.count)
+        playheadShown.initialize(repeating: 0, count: Pad.count)
         voices = .allocate(capacity: KnockEngine.maxVoices)
         voices.initialize(repeating: Voice(), count: KnockEngine.maxVoices)
         stealTails = .allocate(capacity: KnockEngine.maxStealTails)
@@ -445,6 +450,7 @@ final class KnockEngine {
         padHits.deallocate()
         voices.deallocate()
         playheadRows.deallocate()
+        playheadShown.deallocate()
         stealTails.deallocate()
         mixL.deallocate()
         mixR.deallocate()
@@ -626,7 +632,17 @@ final class KnockEngine {
             for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].pad == pad {
                 if newest < 0 || voices[v].age &- age < UInt32.max / 2 { newest = v; age = voices[v].age }
             }
+            if newest < 0 {
+                // a short hit (or a big buffer) can start and end inside this one render call: show it
+                // once, at the end it reached, so the cursor still follows it
+                let shown = playheadShown[pad]
+                for v in 0..<KnockEngine.maxVoices where !voices[v].active && voices[v].pad == pad && voices[v].age != 0 {
+                    let d = voices[v].age &- shown
+                    if d != 0 && d < UInt32.max / 2 && (newest < 0 || voices[v].age &- age < UInt32.max / 2) { newest = v; age = voices[v].age }
+                }
+            }
             guard newest >= 0, voices[newest].length > 1 else { row[0] = 0; continue }
+            playheadShown[pad] = voices[newest].age
             let vp = voices + newest
             let n = Double(vp.pointee.length)
             row[0] = Double(max(1, vp.pointee.age))
