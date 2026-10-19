@@ -1,5 +1,8 @@
 New in this build:
-- Three live acoustic kits, a real multisampled drum kit: SOUL SESSION (Vintage, Soul & R&B), BREAK ROOM (Vintage, Breaks) and STUDIO A (Modern, Pop). Each drum was recorded at several strengths: a soft hit plays a soft recording, so ghost notes sound like ghost notes, not a loud hit turned down. Repeated hits switch between recordings, so nothing machine-guns.
-- Kick, snare, rimshot, cross-stick, closed / half-open / open hi-hat, two toms, ride and crash, from Versilian Studios' Virtuosity Drums (free, CC0). Clap, 808 and perc pads use stock sounds.
-- From the last build: HUMANIZE plays like a live drummer.
-Please try: load SOUL SESSION, finger-drum the snare soft and hard with VELOCITY up, then play a neo soul pattern with HUMANIZE at 50% to 100%.
+- SAMPLER: every control now changes the sound, including the ENVELOPE, LFO and filter pages. Tap the envelope graph once to add a point, double tap a point to delete it. MISC page: Levels offsets, Polyphony (MAX, SLIDE, Porta, Mono), Time, Tracking, Group, arpeggiator, echo delay and a C3 to C7 keyboard.
+- Arpeggiator chord "Auto (sustain)" latches: it keeps running after you let go, and stops when the transport stops or the arp is turned off.
+- Live waveform with a playback cursor; SAMPLE / ENVELOPE / MISC tabs are physical buttons; track REV plays again.
+- Piano roll reaches C1 to C8.
+- Accent colours follow the mode: red in Platinum and Modern, yellow in Vintage, blue in Texture.
+- Track menu crash fixed, and the track menu is in a new order.
+Please try: open a track's sample editor, turn the envelope and LFO knobs while it plays, then set the arp to Auto and play a chord. If MAX + doesn't respond, drag the sampler window up by its title bar.
