@@ -259,14 +259,25 @@ final class KnockController: ObservableObject {
 
     /// Plays a pad's sound in any mode (drum roll ▶ buttons, previews). While RECORD is armed
     /// and the pattern runs, the engine also writes the hit into the pattern.
-    func auditionPad(_ pad: Int, velocity: Float = 0.85, semis: Float = 0) {
+    func auditionPad(_ pad: Int, velocity: Float = 0.85, semis: Float = 0, gain: Float = 1) {
         guard pad >= 0 && pad < Pad.count else { return }
         if pad == Pad.bass808.rawValue {
-            engine.send(KEvent(kind: .bass, a: Int32(semis.rounded()), value: Double(velocity)))
+            engine.send(KEvent(kind: .bass, a: Int32(semis.rounded()), value: Double(velocity), gain: gain))
         } else {
-            engine.send(KEvent(kind: .pad, a: Int32(pad), value: Double(velocity)))
+            engine.send(KEvent(kind: .pad, a: Int32(pad), value: Double(velocity), gain: gain))
         }
     }
+
+    /// The sound library's preview volume (0…1, 1 = as loud as the track plays): how loud a sound
+    /// picked in the library is heard. Kept on this device.
+    static let previewVolumeKey = "libraryPreviewVolume"
+    var previewVolume: Float {
+        get { UserDefaults.standard.object(forKey: Self.previewVolumeKey) == nil ? 1 : UserDefaults.standard.float(forKey: Self.previewVolumeKey).clamped(0, 1) }
+        set { UserDefaults.standard.set(newValue.clamped(0, 1), forKey: Self.previewVolumeKey) }
+    }
+
+    /// A library preview: the track's sound at the preview volume.
+    func previewPad(_ pad: Int) { auditionPad(pad, gain: previewVolume) }
 
     var mutedPads: [Bool] { state.mutedPads ?? Array(repeating: false, count: Pad.count) }
     var soloPads: [Bool] { state.soloPads ?? Array(repeating: false, count: Pad.count) }
