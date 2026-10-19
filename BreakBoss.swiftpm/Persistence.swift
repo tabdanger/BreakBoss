@@ -116,20 +116,20 @@ struct KnockState: Codable, Equatable {
         return pads
     }
 
-    /// A kit changes the raw sample collection and its generated grooves. Keep the current
-    /// processing chain, including every pad's tone and envelope, when auditioning new sounds.
-    /// Imported sample identities are cleared so every pad actually receives the new kit.
+    /// A kit changes the drum sounds: every pad comes in as the kit's own sound, at its original
+    /// pitch and volume, centered, with the SAMPLER untouched. The last kit's pad settings (level,
+    /// pan, tune, decay, filter, reverse, SMP START / LENGTH / root note...) used to stay and land on
+    /// the new sounds, so some came in quiet, silent or out of tune (Tyrone, Oct 19).
     func selectingKit(_ kit: KitDefinition) -> KnockState {
         var s = self
         s.kitID = kit.id
         s.kitName = kit.name
         s.userKit = nil
         s.soundSeed = 1
-        s.pads = Self.normalizedPads(s.pads)
+        s.pads = Array(repeating: PadSettings(), count: Pad.count)
         if let custom = s.midiCustomNotes { s.midiCustomNotes = MIDIPadMap.clean(custom) }
         s.mutedPads = s.mutedPads.map { Array(($0 + Array(repeating: false, count: Pad.count)).prefix(Pad.count)) }
         s.soloPads = s.soloPads.map { Array(($0 + Array(repeating: false, count: Pad.count)).prefix(Pad.count)) }
-        for i in s.pads.indices { s.pads[i].sampleFile = nil }
         s.stockPicks = nil                      // a kit brings its own sounds back
         s.workspaceChannels = nil               // to the rack as well as the pads: one channel per kit sound
         // KITS change the drum sounds only: the pattern, its edits and the tempo stay put.

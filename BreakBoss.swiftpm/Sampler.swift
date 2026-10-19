@@ -164,6 +164,36 @@ struct SamplerEnvelope: Codable, Equatable, Hashable {
     static let shaped = SamplerEnvelope(on: false, delay: 0, attack: 0.12, hold: 0.18, decay: 0.45, sustain: 0.5, release: 0.3,
                                         attackTension: 0, decayTension: 0, releaseTension: 0, amount: 0.5)
 
+    /// How long the knobs' shape runs before it waits on its sustain (seconds, or beats with Tempo on).
+    var runUnits: Double { Self.units(delay, tempo: tempo) + Self.units(attack, tempo: tempo) + Self.units(hold, tempo: tempo) + Self.units(decay, tempo: tempo) }
+
+    /// The knob setting for a time in seconds (Tempo off).
+    static func knob(seconds: Double) -> Float { Float(min(1, cbrt(max(0, seconds) / 8))) }
+
+    /// The Volume envelope as the sound already is (Tyrone, Oct 19: the envelope knows the sound before
+    /// it changes it). HOLD is the sound's own length, to where it has died away (−60 dB), so switched on
+    /// as it comes it plays the sound exactly as it was; then DEC fades it out, SUS 0, and REL is the 30 ms
+    /// every note ends with anyway. Turning HOLD down shortens the sound from there, ATT fades its start
+    /// in, SUS keeps it going while the note is held.
+    /// `pitchedNotes`: the track plays notes below its root (the 808), which make the sound longer.
+    static func measured(_ sample: SampleBuffer, reversed: Bool = false, pitchedNotes: Bool = false) -> SamplerEnvelope {
+        var e = SamplerSettings.defaultEnvelopes[SamplerTarget.volume.rawValue]
+        var peak: Float = 0
+        for i in 0..<sample.length { peak = max(peak, abs(sample.left[i]), abs(sample.right[i])) }
+        var end = sample.length
+        if peak > 0, !reversed {
+            let floor = peak * 0.001
+            end = 1
+            for i in stride(from: sample.length - 1, through: 0, by: -1) where max(abs(sample.left[i]), abs(sample.right[i])) > floor { end = i + 1; break }
+        }
+        let seconds = Double(end) / max(1, sample.sampleRate)
+        e.hold = knob(seconds: seconds * (pitchedNotes ? 2 : 1.1) + 0.005)
+        e.decay = knob(seconds: 0.02)
+        e.sustain = 0
+        e.release = knob(seconds: 0.03)
+        return e
+    }
+
     /// The knobs' shape as graph points: delay, peak, hold, sustain (where it waits) and release.
     func knobPoints() -> (points: [SamplerEnvPoint], sustain: Int) {
         func u(_ v: Float) -> Float { Float(Self.units(v, tempo: tempo)) }

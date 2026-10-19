@@ -682,8 +682,8 @@ struct SamplerWindow: View {
             Group {
             knob("SMP START", sm.start, x: 60, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: pct) { v, f in editComputed(f) { $0.start = v } }
             knob("LENGTH", sm.length, x: 168, y: 248, d: 64, s, labelY: 300, reset: 1, labelSize: 16, display: pct) { v, f in editComputed(f) { $0.length = max(0.005, v) } }
-            knob("IN", sm.fadeIn, x: 274, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "off" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeIn = v } }
-            knob("OUT", sm.fadeOut, x: 380, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "off" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeOut = v } }
+            knob("IN", sm.fadeIn, x: 274, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeIn = v } }
+            knob("OUT", sm.fadeOut, x: 380, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "0%" : pct(v * v) }) { v, f in editComputed(f) { $0.fadeOut = v } }
             knob("CROSSFADE", sm.crossfade, x: 488, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16, display: { v in v < 0.005 ? "off" : pct(v / 2) }) { v, f in editComputed(f) { $0.crossfade = v } }
             knob("TRIM", sm.trim, x: 598, y: 248, d: 64, s, labelY: 300, reset: 0, labelSize: 16,
                  display: { v in v < 0.0001 ? "silence" : String(format: "%.0f dB", -90 + 70 * Double(v)) }) { v, f in editComputed(f) { $0.trim = v } }
@@ -1141,13 +1141,31 @@ struct SamplerWindow: View {
 
     // MARK: Page 2: ENVELOPE
 
-    private var env: SamplerEnvelope { sm.envelope(target) }
+    private var env: SamplerEnvelope { soundEnvelope ?? sm.envelope(target) }
     private var lfo: SamplerLFO { sm.lfo(target) }
+    /// The Volume envelope before it's ever been touched: its knobs and graph show the sound's own shape
+    /// (HOLD = how long the sound lasts), and the first edit starts from that, so switching it on changes
+    /// nothing and every knob shapes the sound from what it already is (Tyrone, Oct 19). Nil otherwise.
+    private var soundEnvelope: SamplerEnvelope? {
+        guard target == .volume, sm.envelope(.volume) == SamplerSettings.defaultEnvelopes[SamplerTarget.volume.rawValue],
+              let sample = controller.playedSample(pad) else { return nil }
+        return Self.measuredEnvelope(sample, reversed: controller.state.pads[pad].reverse, pitchedNotes: pad == Pad.bass808.rawValue)
+    }
+    /// The last sound measured (the window asks many times a frame).
+    private static var measuredCache: (ObjectIdentifier, Bool, Bool, SamplerEnvelope)?
+    private static func measuredEnvelope(_ sample: SampleBuffer, reversed: Bool, pitchedNotes: Bool) -> SamplerEnvelope {
+        let id = ObjectIdentifier(sample)
+        if let c = measuredCache, c.0 == id, c.1 == reversed, c.2 == pitchedNotes { return c.3 }
+        let e = SamplerEnvelope.measured(sample, reversed: reversed, pitchedNotes: pitchedNotes)
+        measuredCache = (id, reversed, pitchedNotes, e)
+        return e
+    }
     /// `on`: turning one of its knobs or points switches the envelope on, so you hear it straight away.
     /// `knobs`: a knob (or its Set menu) shapes the envelope, so graph points you added give way to the knobs' shape.
     private func editEnv(on: Bool = false, knobs: Bool = false, _ change: @escaping (inout SamplerEnvelope) -> Void) {
         let t = target
-        edit { $0.setEnvelope(t) { e in change(&e); if on { e.on = true }; if knobs { e.points = []; e.sustainPoint = -1 } } }
+        let seed = soundEnvelope
+        edit { $0.setEnvelope(t) { e in if let seed { e = seed }; change(&e); if on { e.on = true }; if knobs { e.points = []; e.sustainPoint = -1 } } }
     }
     /// `bringIn`: an LFO with AMT in the middle does nothing, so picking its shape, speed, delay or
     /// attack brings it in at +50% (turn AMT back to the middle to take it out again).
