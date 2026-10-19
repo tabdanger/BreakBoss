@@ -133,6 +133,18 @@ enum KnockSelfTest {
               && SoundType.forStockName("SUKUNA E1 808") == .bass && SoundType.forStockName("ISSA BOUNCE CLAP SNARE") == .snare,
               "a stock sound's last word sorts it")
         check(library.librarySounds().count == 589, "the sound menu lists every stock sound, in a kit or not")
+        // Tyrone, Oct 19: every sound sits in the section of the folder it came from
+        let sections = Dictionary(library.librarySounds().map { ($0.name, $0.type) }, uniquingKeysWith: { a, _ in a })
+        check(library.allSounds.allSatisfy { $0.section.flatMap(SoundType.init(section:)) != nil }, "every stock sound has its folder's section")
+        check(sections["NO 1 TOM"] == .perc && sections["TRIPPY RIDE"] == .hat && sections["SORCERER CLAP"] == .snare
+              && sections["THRONE OPEN HIHAT"] == .open && sections["ASTRONOMY KICK"] == .kick,
+              "a sound's library section is its original folder's (a tom from a percs folder is a PERC)")
+        check(SoundType.guess("Danger Demon/Kicks/808 Kick.wav") == .kick && SoundType.guess("Pack/808s/Big.wav") == .bass
+              && SoundType.guess("Pack/OHH/Hat 3.wav") == .open && SoundType.guess("Pack/Hi-Hats/Open Thing.wav") == .hat
+              && SoundType.guess("Pack/Snares/Clap Layer.wav") == .snare && SoundType.guess("Pack/[Kick] Astronomy.wav") == .kick
+              && SoundType.guess("My Sounds/random.wav") == .fx && SoundType.guess("Pack/Open Hats/a.wav") == .open
+              && SoundType.guess("Pack/HI HATS/a.wav") == .hat && SoundType.guess("Pack/FX & OTHER/a.wav") == .fx,
+              "an imported sound's folder decides its section, then its name")
         var assignments = 0
         for kit in KitLibrary.factory {
             for pad in Pad.allCases {

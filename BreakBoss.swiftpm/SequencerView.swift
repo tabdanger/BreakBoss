@@ -61,7 +61,7 @@ extension Pad {
         case .snare: return "SNARE"
         case .clap: return "CLAP"
         case .rim: return "RIM"
-        case .hat: return "CLOSED HAT"
+        case .hat: return "HI HATS"
         case .openHat: return "OPEN HAT"
         case .bass808: return "808"
         case .perc1: return "PERC 1"

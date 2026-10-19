@@ -11,10 +11,12 @@ struct StockSampleLibrary {
         let displayName: String
     }
 
-    /// One sound in the library, in a kit or not (named by category: "KICK BOOM 07").
+    /// One sound in the library, in a kit or not (named by category: "KICK BOOM 07"), and the library
+    /// section of the folder it came from ("PERC" for a tom from a percs folder; tools/library_folders.py).
     struct Sound: Decodable {
         let file: String
         let name: String
+        let type: String?
     }
 
     private struct Manifest: Decodable {
@@ -26,6 +28,8 @@ struct StockSampleLibrary {
     struct Sample {
         let url: URL
         let displayName: String
+        /// The library section (the original folder's kind), when the manifest names one.
+        var section: String? = nil
     }
 
     /// One velocity layer of a multisampled sound (the acoustic drums, acoustic_layers.json):
@@ -126,7 +130,11 @@ struct StockSampleLibrary {
             samples[assignment.kitID, default: [:]][assignment.pad] = try sample(file: assignment.file, displayName: assignment.displayName)
         }
         guard (manifest.sounds?.count ?? 0) <= 4096 else { throw ManifestError.invalidAssignment }
-        let all = try (manifest.sounds ?? []).map { try sample(file: $0.file, displayName: $0.name) }
+        let all = try (manifest.sounds ?? []).map { s -> Sample in
+            var one = try sample(file: s.file, displayName: s.name)
+            one.section = s.type
+            return one
+        }
         // Multisampled sounds: a layer file that can't be used leaves that sound as one sample.
         var layers: [String: [Layer]] = [:]
         let layerURL = folder.appendingPathComponent("acoustic_layers.json")
