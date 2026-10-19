@@ -1300,7 +1300,8 @@ struct SequencerView: View {
                     selectedID = ch.id
                 }) { channelMenu(ch) }
                 .accessibilityIdentifier("trackHeader\(pad)")
-            ArtKnob(value: ps.level / PadSettings.maxLevel, reset: 0.8 / PadSettings.maxLevel) { v, _ in set { $0.level = v * PadSettings.maxLevel } }.frame(width: 36 * s, height: 36 * s).offset(x: 135 * s, y: 11.5 * s)
+            // the volume knob, bigger (Tyrone, Oct 19): −12 dB … +12 dB, 100% in the middle
+            ArtKnob(value: PadSettings.knob(level: ps.level), reset: 0.5) { v, _ in set { $0.level = abs(v - 0.5) < 0.01 ? 0.8 : PadSettings.level(knob: v) } }.frame(width: 46 * s, height: 46 * s).offset(x: 130 * s, y: 6.5 * s)
             ArtKnob(value: (ps.pan + 1) / 2, reset: 0.5) { v, _ in let p = v * 2 - 1; set { $0.pan = abs(p) < 0.03 ? 0 : p } }.frame(width: 36 * s, height: 36 * s).offset(x: 184 * s, y: 11.5 * s)
             // the lamp: on / off
             if muted { Circle().fill(Color(white: 0.12)).overlay(Circle().stroke(Color.black, lineWidth: 1)).frame(width: 13 * s, height: 13 * s).offset(x: 231.5 * s, y: 23 * s).allowsHitTesting(false) }

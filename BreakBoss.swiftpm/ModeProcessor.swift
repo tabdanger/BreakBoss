@@ -623,7 +623,7 @@ final class MasterBus {
         let open = s.filter > 0.995
         cutoff.set(KnockMath.filterCutoff(s.filter))
         drive.set(KnockMath.dbToGain(KnockMath.clipDriveDB(s.clipDrive)))
-        output.set(s.output <= 0.001 ? 0 : KnockMath.dbToGain(KnockMath.outputDB(s.output)))
+        output.set(KnockMath.dbToGain(KnockMath.outputDB(s.output)))
         let ceiling = MasterBus.ceiling
         for i in 0..<count {
             var l = left[i], r = right[i]

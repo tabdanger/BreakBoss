@@ -368,12 +368,9 @@ struct SamplerWindow: View {
                        display: { v in let p = Int(((v * 2 - 1) * 100).rounded()); return p == 0 ? "C" : (p < 0 ? "L\(-p)" : "R\(p)") }) { v, _ in
                 var ps = controller.state.pads[pad]; let p = v * 2 - 1; ps.pan = abs(p) < 0.03 ? 0 : p; controller.setPadSettings(pad, ps)
             }
-            // VOL: the sampler's own pre-amp, 0…200% (+12 dB) before the mode's effects (Tyrone, Oct 18)
-            headerKnob("VOL", value: sm.volume, bipolar: false, reset: 0.5, x: 1002, s,
-                       display: { v in
-                           let g = SamplerSettings.preGain(v)
-                           return "\(Int((v * 200).rounded()))%  " + (g <= 0.0001 ? "-∞" : String(format: "%+.1f dB", 20 * log10(Double(g))))
-                       }) { v, _ in
+            // VOL: the sampler's own pre-amp before the mode's effects, −12 dB … +12 dB (Tyrone, Oct 19), bigger
+            headerKnob("VOL", value: sm.volume, bipolar: false, reset: 0.5, x: 1002, s, size: 80,
+                       display: SamplerSettings.volumeText) { v, _ in
                 edit { $0.volume = abs(v - 0.5) < 0.01 ? 0.5 : v }
             }
             headerKnob("PITCH", value: (sm.pitch + 1) / 2, bipolar: true, reset: 0.5, x: 1101, s,
@@ -434,14 +431,15 @@ struct SamplerWindow: View {
         .accessibilityIdentifier(["samplerSamplePage", "samplerEnvelopePage", "samplerMiscPage"][min(i, 2)])
     }
 
-    private func headerKnob(_ title: String, value: Float, bipolar: Bool, reset: Float, x: CGFloat, _ s: CGFloat,
+    private func headerKnob(_ title: String, value: Float, bipolar: Bool, reset: Float, x: CGFloat, _ s: CGFloat, size: CGFloat = 66,
                             display: @escaping (Float) -> String, change: @escaping (Float, Bool) -> Void) -> some View {
         VStack(spacing: 4 * s) {
-            SamplerKnob(value: value, skin: skin, bipolar: bipolar, reset: reset, display: display, change: change).frame(width: 66 * s, height: 66 * s)
+            SamplerKnob(value: value, skin: skin, bipolar: bipolar, reset: reset, display: display, change: change).frame(width: size * s, height: size * s)
                 .accessibilityLabel(title).accessibilityIdentifier("samplerKnob" + title)
             label(title, s)
         }
-        .frame(width: 96 * s).offset(x: (x - 48) * s, y: 74 * s)
+        // a bigger knob sits higher, so its label stays on the others' line
+        .frame(width: 96 * s).offset(x: (x - 48) * s, y: (74 - (size - 66)) * s)
     }
 
     private func led(_ text: String, _ title: String, x: CGFloat, _ s: CGFloat) -> some View {
@@ -1600,11 +1598,8 @@ struct SamplerWindow: View {
                  display: { v in let p = Int(((v * 2 - 1) * 100).rounded()); return p == 0 ? "C" : (p < 0 ? "L\(-p)" : "R\(p)") }) { v, _ in
                 edit { $0.levelPan = Self.bipolar(v) }
             }
-            knob("VOL", sm.levelVol, x: 142, y: 120, d: 62, s, labelY: 166, reset: 0.5, id: "LevelsVOL",
-                 display: { v in
-                     let g = SamplerSettings.preGain(v)
-                     return "\(Int((v * 200).rounded()))%  " + (g <= 0.0001 ? "-∞" : String(format: "%+.1f dB", 20 * log10(Double(g))))
-                 }) { v, _ in edit { $0.levelVol = abs(v - 0.5) < 0.01 ? 0.5 : v } }
+            knob("VOL", sm.levelVol, x: 142, y: 120, d: 76, s, labelY: 173, reset: 0.5, id: "LevelsVOL",
+                 display: SamplerSettings.volumeText) { v, _ in edit { $0.levelVol = abs(v - 0.5) < 0.01 ? 0.5 : v } }
             knob("MOD X", (sm.levelX + 1) / 2, x: 229, y: 120, d: 62, s, labelY: 166, bipolar: true, reset: 0.5, id: "LevelsMODX",
                  display: Self.bipolarPercent) { v, _ in edit { $0.levelX = Self.bipolar(v) } }
             knob("MOD Y", (sm.levelY + 1) / 2, x: 316, y: 120, d: 62, s, labelY: 166, bipolar: true, reset: 0.5, id: "LevelsMODY",

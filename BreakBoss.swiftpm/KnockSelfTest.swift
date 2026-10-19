@@ -844,7 +844,10 @@ enum KnockSelfTest {
         let unity = energy(plain, blocks: 5...20)
         let boost = energy(loud, blocks: 5...20) / unity, down = energy(soft, blocks: 5...20) / unity
         check(boost > 6 && down > 0.15 && down < 0.35,
-              "Sampler: VOL goes from silence to +12 dB, 100% in the middle (×\(boost), ×\(down))")
+              "Sampler: VOL goes from −12 dB to +12 dB, 100% in the middle (×\(boost), ×\(down))")
+        check(abs(20 * log10f(SamplerSettings.preGain(0)) + 12) < 0.1 && abs(20 * log10f(SamplerSettings.preGain(1)) - 12) < 0.1
+              && SamplerSettings.preGain(0.5) == 1 && SamplerSettings.volumeText(0.5).hasPrefix("100%"),
+              "Sampler: the VOL knobs run evenly from −12 dB to +12 dB (Tyrone, Oct 19)")
         let dragged = SamplerWindow.dragged(SamplerEnvelope.shaped, handle: 4, dx: 0, dy: -0.3)
         check(dragged.on && abs(dragged.sustain - 0.2) < 0.001, "Sampler: dragging the sustain point down lowers the sustain")
         let bulged = SamplerWindow.dragged(SamplerEnvelope.shaped, handle: 6, dx: 0, dy: 0.25)
@@ -2502,6 +2505,12 @@ enum KnockSelfTest {
         check(KnockState.normalizedPads([loud])[0].level == PadSettings.maxLevel && KnockState.normalizedPads([PadSettings()])[0].gain == 1,
               "a saved 200% track volume stays 200%, old projects keep their levels")
         check(abs(KnockMath.outputDB(1) - 12) < 0.01 && abs(KnockMath.outputDB(0.75)) < 0.01, "OUTPUT goes to +12 dB, 0.75 stays 0 dB")
+        // Tyrone, Oct 19: every volume knob runs −12 dB … +12 dB
+        var low = PadSettings(); low.level = PadSettings.level(knob: 0)
+        check(abs(KnockMath.outputDB(0) + 12) < 0.01 && abs(20 * log10f(low.gain) + 12) < 0.1
+              && PadSettings.level(knob: 0.5) == 0.8 && abs(PadSettings.level(knob: 1) - PadSettings.maxLevel) < 0.001
+              && abs(PadSettings.knob(level: 0.8) - 0.5) < 0.001 && PadSettings.levelText(low.level) == "50%",
+              "the volume knobs go from −12 dB (50%) to +12 dB (200%), 100% in the middle")
         let rate = 48_000.0
         let sine = (0..<96_000).map { Float(sin(Double($0) * 2 * Double.pi * 220 / rate)) * 0.1 }
         let sample = SampleBuffer(left: sine, sampleRate: rate)

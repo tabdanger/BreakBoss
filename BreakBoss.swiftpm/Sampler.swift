@@ -416,10 +416,12 @@ struct SamplerSettings: Codable, Equatable {
 
     var mul: Double { pow(4, Double(multiplier.clamped(0, 1) - 0.5) * 2) }
 
-    /// VOL's gain: straight up to 100% in the middle, then up to +12 dB.
-    static func preGain(_ v: Float) -> Float {
-        let x = v.clamped(0, 1)
-        return x <= 0.5 ? x * 2 : powf(4, (x - 0.5) * 2)
+    /// VOL's gain: evenly in dB, −12 dB at the bottom, 100% in the middle, +12 dB at the top (Tyrone, Oct 19).
+    static func preGain(_ v: Float) -> Float { powf(4, v.clamped(0, 1) * 2 - 1) }
+    /// What a VOL knob shows: 50%…200% (100% = 0 dB, the tracks' volume scale) and its dB.
+    static func volumeText(_ v: Float) -> String {
+        let x = v.clamped(0, 1) * 2 - 1
+        return "\(Int((powf(2, x) * 100).rounded()))%  " + String(format: "%+.1f dB", Double(x) * 12.04)
     }
 
     func envelope(_ t: SamplerTarget) -> SamplerEnvelope { envelopes.indices.contains(t.rawValue) ? envelopes[t.rawValue] : SamplerEnvelope() }
