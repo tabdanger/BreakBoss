@@ -5,7 +5,9 @@ import UIKit
 /// Taps the waveform (the track sounds) and reads the cursor (BREAKBOSS_UI_PROBE gives it the
 /// cursor's place as its value) while the hit plays and after it ends. Small JPEGs of the window
 /// go into the log as UITREE IMG lines so they can be looked at without the artifacts.
-final class SamplerWaveformUITests: XCTestCase {
+// Named to run before SamplerUITests: the app keeps its settings between launches, and that test
+// leaves track 1's MISC page changed (arpeggiator, Cut, MAX, Mono, levels down).
+final class SamplerCursorUITests: XCTestCase {
     private var app: XCUIApplication!
 
     override func setUp() {
