@@ -601,6 +601,9 @@ final class KnockEngine {
                 meterFrames = 0
                 meters.publish(status: status, hits: padHits, master: master)
             }
+            // The waveform goes out every block (only the new points), so the screen moves with
+            // the sound instead of in 30 Hz steps.
+            meters.publishScope(master)
         }
         pickUpNewKitAndLoops(frames: frames)
         let playMode = params[KParam.playMode.rawValue]
@@ -654,6 +657,7 @@ final class KnockEngine {
         }
         if anyVoice || playing { idleSamples = 0 } else { idleSamples += frames }
         if idleSamples > Int(sampleRate * 4) {
+            master.clearScope()
             left.update(repeating: 0, count: frames)
             right.update(repeating: 0, count: frames)
             return

@@ -4,47 +4,71 @@ import UniformTypeIdentifiers
 
 // MARK: - The screen
 
-/// The red trace of what's coming out, plus a line of text for whatever you just touched
+/// The trace of what's coming out, plus a line of text for whatever you just touched
 /// (knob values, pad names, loop names, kit and preset changes) and the loop that's playing.
+/// The trace follows the sound's frequencies like a real scope: bass swings slow and wide with a
+/// deep, wide glow; hats and cymbals fill a dense band of fizz and burn brighter and thinner.
 struct ScopeView: View {
     @ObservedObject var controller: KnockController
     let scale: CGFloat
 
     static let red = Color(red: 1, green: 0.30, blue: 0.20)
+    static let probing = ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil
 
     @State private var tracer = ScopeTracer()
 
     var body: some View {
-        // Redraw at 60 Hz straight from the audio ring (not the 30 Hz meter copy), so the trace
-        // moves smoothly without spending ProMotion's 120 Hz on it.
+        // Redraw every display frame straight from the audio ring, which the engine fills every
+        // audio block, so the trace moves as smoothly as the screen can show it.
         let light = FaceLight.of(controller.faceKey)
-        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !controller.scopeActive)) { context in
+        TimelineView(.animation(paused: !controller.scopeActive)) { context in
             let now = context.date
             ZStack(alignment: .topLeading) {
                 Canvas { ctx, size in
-                    let points = tracer.advance(meters: controller.engine.meters, now: now)
+                    let frame = tracer.advance(meters: controller.engine.meters, now: now)
                     let mid = size.height / 2
-                    let count = points.count
-                    func pt(_ i: Int) -> CGPoint {
-                        CGPoint(x: CGFloat(i) / CGFloat(count - 1) * size.width,
-                                y: mid - CGFloat(max(-1, min(1, points[i]))) * mid * 0.85)
-                    }
+                    let count = frame.line.count
+                    func y(_ v: Float) -> CGFloat { mid - CGFloat(max(-1, min(1, v))) * mid * 0.85 }
+                    func x(_ i: Int) -> CGFloat { CGFloat(i) / CGFloat(count - 1) * size.width }
                     // Smooth curve through the midpoints, so there are no sharp corners.
-                    var path = Path()
-                    path.move(to: pt(0))
-                    for i in 1..<count - 1 {
-                        let p = pt(i), q = pt(i + 1)
-                        path.addQuadCurve(to: CGPoint(x: (p.x + q.x) / 2, y: (p.y + q.y) / 2), control: p)
+                    func curve(_ values: [Float], into path: inout Path, from first: Bool) {
+                        let p0 = CGPoint(x: x(0), y: y(values[0]))
+                        if first { path.move(to: p0) } else { path.addLine(to: p0) }
+                        for i in 1..<count - 1 {
+                            let p = CGPoint(x: x(i), y: y(values[i]))
+                            let q = CGPoint(x: x(i + 1), y: y(values[i + 1]))
+                            path.addQuadCurve(to: CGPoint(x: (p.x + q.x) / 2, y: (p.y + q.y) / 2), control: p)
+                        }
+                        path.addLine(to: CGPoint(x: x(count - 1), y: y(values[count - 1])))
                     }
-                    path.addLine(to: pt(count - 1))
+                    let top = Double(frame.top), bass = Double(frame.bass)
+                    // The fizz band: everything the points' highs and lows reach, glowing faintly,
+                    // brighter the more top end there is (a hat fills it, an 808 leaves only the line).
+                    if frame.spread > 0.004 {
+                        var band = Path()
+                        curve(frame.high, into: &band, from: true)
+                        var low = Path()
+                        curve(frame.low, into: &low, from: true)
+                        // back along the lows, right to left
+                        for i in stride(from: count - 1, through: 0, by: -1) {
+                            band.addLine(to: CGPoint(x: x(i), y: y(frame.low[i])))
+                        }
+                        band.closeSubpath()
+                        ctx.fill(band, with: .color(light.blend(0.35 + 0.5 * top).opacity(0.10 + 0.22 * top)))
+                        ctx.stroke(low, with: .color(light.glow.opacity(0.12 + 0.2 * top)), lineWidth: 0.8 * scale)
+                    }
+                    var path = Path()
+                    curve(frame.line, into: &path, from: true)
                     // Glow from two soft wide strokes; a blur filter every frame costs far more.
-                    let round = StrokeStyle(lineWidth: 7 * scale, lineCap: .round, lineJoin: .round)
+                    // Bass widens and deepens the glow; top end tightens it and burns the core brighter.
+                    let wide = 7 * scale * CGFloat(1 + 0.9 * bass - 0.25 * top)
+                    let round = StrokeStyle(lineWidth: wide, lineCap: .round, lineJoin: .round)
                     // In the face's own light, like the trace in its picture.
-                    ctx.stroke(path, with: .color(light.glow.opacity(0.14)), style: round)
+                    ctx.stroke(path, with: .color(light.glow.opacity(0.14 + 0.08 * bass)), style: round)
                     ctx.stroke(path, with: .color(light.glow.opacity(0.32)),
-                               style: StrokeStyle(lineWidth: 3.5 * scale, lineCap: .round, lineJoin: .round))
-                    ctx.stroke(path, with: .color(light.core),
-                               style: StrokeStyle(lineWidth: 1.6 * scale, lineCap: .round, lineJoin: .round))
+                               style: StrokeStyle(lineWidth: 3.5 * scale * CGFloat(1 + 0.4 * bass), lineCap: .round, lineJoin: .round))
+                    ctx.stroke(path, with: .color(light.blend(0.6 + 0.4 * top - 0.25 * bass)),
+                               style: StrokeStyle(lineWidth: 1.6 * scale * CGFloat(1 + 0.3 * bass - 0.2 * top), lineCap: .round, lineJoin: .round))
                 }
                 VStack(alignment: .leading, spacing: 2 * scale) {
                     if let r = controller.readout, now.timeIntervalSince(r.time) < 1.8 {
@@ -65,6 +89,7 @@ struct ScopeView: View {
             }
         }
         .allowsHitTesting(false)
+        .modifier(ScopeProbe(tracer: tracer, active: controller.scopeActive))
         .onChange(of: controller.notice) { value in
             guard value != nil else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 4) { controller.notice = nil }
@@ -93,21 +118,69 @@ struct ScopeView: View {
     }
 }
 
+/// UI tests only (BREAKBOSS_UI_PROBE): the scope's loudness and its bass / top share, read about
+/// once a second by XCUITest, so a test can tell a kick from a hat on the screen.
+private struct ScopeProbe: ViewModifier {
+    let tracer: ScopeTracer
+    let active: Bool
+
+    func body(content: Content) -> some View {
+        if ScopeView.probing {
+            TimelineView(.periodic(from: .now, by: 0.25)) { _ in
+                content
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityIdentifier("scope")
+                    .accessibilityValue(tracer.probeText)
+            }
+        } else {
+            content
+        }
+    }
+}
+
 /// Keeps the trace steady and fluid: each frame it lines the wave up on a rising zero
-/// crossing (so it doesn't jump sideways), then eases every point toward the new shape.
+/// crossing (so it doesn't jump sideways), then eases every point toward the new shape. Also
+/// measures how much of the sound is bass and how much is top end, for the trace's colour and glow.
 final class ScopeTracer {
-    static let pointCount = 160
-    /// About 45 ms of audio across the screen (the ring holds roughly 6,000 values a second).
+    static let pointCount = 240
+    /// About 45 ms of audio across the screen (the ring holds roughly 6,000 points a second).
     static let window = 272
-    private var ring = [Float](repeating: 0, count: MasterBus.scopeSize)
-    private var shown = [Float](repeating: 0, count: ScopeTracer.pointCount)
-    private var target = [Float](repeating: 0, count: ScopeTracer.pointCount)
+
+    struct Frame {
+        var line: [Float]
+        var low: [Float]
+        var high: [Float]
+        /// 0...1: how much of what's on screen is bass (under 150 Hz) and top end (over 2.5 kHz).
+        var bass: Float
+        var top: Float
+        /// The widest the fizz band gets, after the screen's gain.
+        var spread: Float
+    }
+
+    private var rings = ScopeRings()
+    private var line = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var low = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var high = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var targetLine = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var targetLow = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var targetHigh = [Float](repeating: 0, count: ScopeTracer.pointCount)
+    private var bass: Float = 0
+    private var top: Float = 0
+    /// The screen's gain follows the loudest recent peak, so a soft hat fills the screen as
+    /// clearly as a loud kick (up to 4x; loud sounds are never shrunk).
+    private var peak: Float = 0
     private var last: Date?
 
-    func advance(meters: SharedMeters, now: Date) -> [Float] {
+    /// For the UI tests: the last frame's loudness, bass share and top share.
+    private(set) var probeLevel: Float = 0
+    var probeText: String { String(format: "level %.3f bass %.2f top %.2f", probeLevel, bass, top) }
+
+    func advance(meters: SharedMeters, now: Date) -> Frame {
         let n = MasterBus.scopeSize
-        let end = meters.copyScope(into: &ring)
-        let dt = min(0.1, max(0.001, now.timeIntervalSince(last ?? now.addingTimeInterval(-1.0 / 60))))
+        let mask = n - 1
+        meters.copyScope(into: &rings)
+        let end = rings.write
+        let dt = Float(min(0.1, max(0.001, now.timeIntervalSince(last ?? now.addingTimeInterval(-1.0 / 60)))))
         last = now
 
         // Look back up to one window for a rising crossing to start from.
@@ -115,27 +188,62 @@ final class ScopeTracer {
         var start = latestStart
         for back in 0..<Self.window {
             let i = latestStart - back
-            let a = ring[(i - 1 + n * 2) & (n - 1)], b = ring[(i + n * 2) & (n - 1)]
+            let a = rings.line[(i - 1 + n * 2) & mask], b = rings.line[(i + n * 2) & mask]
             if a < 0 && b >= 0 && b - a > 0.002 { start = i; break }
         }
+
+        // How loud, and how much bass and top, across what's on screen.
+        var loud: Float = 0, bassSum: Float = 0, topSum: Float = 0
+        for k in 0..<Self.window {
+            let i = (start + k + n * 2) & mask
+            loud = max(loud, abs(rings.low[i]), abs(rings.high[i]))
+            bassSum += rings.bass[i]
+            topSum += rings.top[i]
+        }
+        probeLevel = loud
+        // The gain's peak jumps up at once and lets go over about half a second.
+        peak = loud > peak ? loud : peak + (loud - peak) * (1 - exp(-dt / 0.5))
+        let gain = min(4, max(1, 0.8 / max(peak, 0.0001)))
+
         let step = Float(Self.window) / Float(Self.pointCount)
         for p in 0..<Self.pointCount {
-            // Average the values each point covers, which also takes out fizz.
+            // Average the values each point covers for the line; the band keeps their extremes.
             let from = Float(p) * step, to = from + step
-            var sum: Float = 0
-            var c: Float = 0
+            var sum: Float = 0, c: Float = 0
+            var lo = Float.greatestFiniteMagnitude, hi = -Float.greatestFiniteMagnitude
             var k = Int(from)
-            while Float(k) < to {
-                sum += ring[(start + k + n * 2) & (n - 1)]
+            repeat {
+                let i = (start + k + n * 2) & mask
+                sum += rings.line[i]
+                lo = min(lo, rings.low[i]); hi = max(hi, rings.high[i])
                 c += 1
                 k += 1
-            }
-            target[p] = c > 0 ? sum / c : 0
+            } while Float(k) < to
+            targetLine[p] = sum / c * gain
+            targetLow[p] = lo * gain
+            targetHigh[p] = hi * gain
         }
-        // Ease toward the new frame (about 30 ms), the same at 60 or 120 Hz.
-        let ease = Float(1 - exp(-dt / 0.03))
-        for p in 0..<Self.pointCount { shown[p] += (target[p] - shown[p]) * ease }
-        return shown
+        // Ease toward the new frame, the same at 60 or 120 Hz: the line in about 25 ms; the band
+        // opens at once and closes over about 60 ms, like a phosphor glow fading.
+        let ease = 1 - exp(-dt / 0.025)
+        let fade = 1 - exp(-dt / 0.06)
+        var spread: Float = 0
+        for p in 0..<Self.pointCount {
+            line[p] += (targetLine[p] - line[p]) * ease
+            high[p] = targetHigh[p] > high[p] ? targetHigh[p] : high[p] + (targetHigh[p] - high[p]) * fade
+            low[p] = targetLow[p] < low[p] ? targetLow[p] : low[p] + (targetLow[p] - low[p]) * fade
+            // the band always wraps the line
+            high[p] = max(high[p], line[p]); low[p] = min(low[p], line[p])
+            spread = max(spread, high[p] - low[p])
+        }
+        // The colour follows the sound's balance over about 80 ms (silence keeps the last colour).
+        let total = bassSum + topSum + 0.000_1 * Float(Self.window)
+        let blend = 1 - exp(-dt / 0.08)
+        if loud > 0.001 {
+            bass += (bassSum / total - bass) * blend
+            top += (min(1, topSum / total * 1.6) - top) * blend
+        }
+        return Frame(line: line, low: low, high: high, bass: bass, top: top, spread: spread)
     }
 }
 
