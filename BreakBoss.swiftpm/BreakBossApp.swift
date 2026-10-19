@@ -64,7 +64,7 @@ enum LayoutSnapshots {
         FaceplateView.snapshotMode = true
         defer { FaceplateView.snapshotMode = false }
         for device in [FaceplateLayout.Device.tablet] {
-            let size = CGSize(width: 1448, height: 1086)
+            let size = CGSize(width: 1450, height: 1085)
             for mode in SoundMode.allCases {
                 controller.selectMode(mode)
                 for play in [PlayMode.loop, .oneShot] {

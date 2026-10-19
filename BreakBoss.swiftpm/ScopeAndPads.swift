@@ -17,6 +17,7 @@ struct ScopeView: View {
     var body: some View {
         // Redraw at 60 Hz straight from the audio ring (not the 30 Hz meter copy), so the trace
         // moves smoothly without spending ProMotion's 120 Hz on it.
+        let light = FaceLight.of(controller.faceKey)
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !controller.scopeActive)) { context in
             let now = context.date
             ZStack(alignment: .topLeading) {
@@ -38,16 +39,17 @@ struct ScopeView: View {
                     path.addLine(to: pt(count - 1))
                     // Glow from two soft wide strokes; a blur filter every frame costs far more.
                     let round = StrokeStyle(lineWidth: 7 * scale, lineCap: .round, lineJoin: .round)
-                    ctx.stroke(path, with: .color(ScopeView.red.opacity(0.14)), style: round)
-                    ctx.stroke(path, with: .color(ScopeView.red.opacity(0.32)),
+                    // In the face's own light, like the trace in its picture.
+                    ctx.stroke(path, with: .color(light.glow.opacity(0.14)), style: round)
+                    ctx.stroke(path, with: .color(light.glow.opacity(0.32)),
                                style: StrokeStyle(lineWidth: 3.5 * scale, lineCap: .round, lineJoin: .round))
-                    ctx.stroke(path, with: .color(Color(red: 1, green: 0.55, blue: 0.42)),
+                    ctx.stroke(path, with: .color(light.core),
                                style: StrokeStyle(lineWidth: 1.6 * scale, lineCap: .round, lineJoin: .round))
                 }
                 VStack(alignment: .leading, spacing: 2 * scale) {
                     if let r = controller.readout, now.timeIntervalSince(r.time) < 1.8 {
                         Text(r.title).font(.system(size: 13 * scale, weight: .medium, design: .monospaced))
-                            .foregroundColor(ScopeView.red.opacity(0.85))
+                            .foregroundColor(light.glow.opacity(0.85))
                         Text(r.value).font(.system(size: 22 * scale, weight: .regular, design: .monospaced))
                             .foregroundColor(.white.opacity(0.92))
                             .lineLimit(1).minimumScaleFactor(0.5)
@@ -57,7 +59,7 @@ struct ScopeView: View {
                             .lineLimit(3).minimumScaleFactor(0.6)
                     }
                     Spacer(minLength: 0)
-                    statusLine
+                    statusLine(light.glow)
                 }
                 .padding(10 * scale)
             }
@@ -69,7 +71,7 @@ struct ScopeView: View {
         }
     }
 
-    private var statusLine: some View {
+    private func statusLine(_ color: Color) -> some View {
         let e = controller.meters
         let playing = e.status[0] > 0.5
         let loop = Int(e.status[1])
@@ -87,7 +89,7 @@ struct ScopeView: View {
         }
         return Text(text)
             .font(.system(size: 12 * scale, design: .monospaced))
-            .foregroundColor(ScopeView.red.opacity(0.75))
+            .foregroundColor(color.opacity(0.75))
     }
 }
 
