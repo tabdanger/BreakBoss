@@ -269,7 +269,29 @@ final class SamplerUITests: XCTestCase {
         any("samplerPolyMaxUp").tap()
         sleep(1)
         print("UITREE STEP MAX after + = \(any("samplerPolyMax").value ?? "?")")
-        if (any("samplerPolyMax").value as? String) != "1" { snap("max-stepper") }
+        if (any("samplerPolyMax").value as? String) != "1" {
+            snap("max-stepper")
+            // where in the window does MAX's + take a touch? try it with the window in other places
+            let matches = app.descendants(matching: .any).matching(identifier: "samplerPolyMaxUp").count
+            print("UITREE MAX + elements with its id: \(matches)")
+            var moved = CGVector(dx: 0, dy: moveBy)
+            for step in [CGVector(dx: 0, dy: -200), CGVector(dx: 0, dy: 330), CGVector(dx: -300, dy: -130)] {
+                let grab = title.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                grab.press(forDuration: 0.3, thenDragTo: grab.withOffset(step))
+                sleep(1)
+                moved.dx += step.dx; moved.dy += step.dy
+                let plus = any("samplerPolyMaxUp")
+                plus.tap(); sleep(1)
+                let mid = CGPoint(x: plus.frame.midX, y: plus.frame.midY)
+                print("UITREE STEP MAX window moved \(moved): + at \(plus.frame) hittable=\(plus.isHittable) -> \(any("samplerPolyMax").value ?? "?") under: "
+                      + app.descendants(matching: .any).allElementsBoundByIndex.filter { $0.frame.contains(mid) }
+                        .map { "\($0.elementType.rawValue):\($0.identifier)" }.joined(separator: " | "))
+                if (any("samplerPolyMax").value as? String) == "1" { break }
+            }
+            let back = title.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            back.press(forDuration: 0.3, thenDragTo: back.withOffset(CGVector(dx: -moved.dx, dy: moveBy - moved.dy)))
+            sleep(1)
+        }
         XCTAssertEqual(any("samplerPolyMax").value as? String, "1", "MAX steps up from no limit")
         any("samplerMono").tap()
         sleep(1)
