@@ -216,6 +216,18 @@ final class SamplerUITests: XCTestCase {
             XCTAssertLessThan(moved(back, base), 0.01, "\(id) back at its start leaves the sound as it was (\(back) vs \(base))")
         }
 
+        // UNDO / REDO in the title bar take back and put back any change (Tyrone, Oct 19)
+        turn("samplerKnobBOOST", by: 150)
+        let boosted = probe("boost for undo")
+        any("samplerUndo").tap()
+        let undone = probe("after undo")
+        XCTAssertLessThan(moved(undone, base), 0.01, "UNDO takes the BOOST turn back (\(undone) vs \(base))")
+        any("samplerRedo").tap()
+        let redone = probe("after redo")
+        XCTAssertLessThan(moved(redone, boosted), 0.01, "REDO puts the BOOST turn back (\(redone) vs \(boosted))")
+        any("samplerUndo").tap()
+        sleep(1)
+
         // ENVELOPE: turning a knob turns the Volume envelope on and shapes the hit
         any("samplerEnvelopePage").tap()
         sleep(1)

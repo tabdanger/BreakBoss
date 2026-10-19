@@ -212,7 +212,12 @@ struct SamplerWindow: View {
     /// A region marker being dragged along the top of the waveform: which one, and where it is now.
     @State private var markerDrag: (Int, Float)?
     @State private var handleFrom: (Double, Double)?
+    /// Every change made in the window (knobs, switches, menus, waveform edits), as what the track was
+    /// before it: UNDO takes the last one back, REDO puts it back again (Tyrone, Oct 19).
     @State private var undo: [PadSettings] = []
+    @State private var redo: [PadSettings] = []
+    /// When a change was last kept for UNDO: a knob turning sends many changes, kept as one step.
+    @State private var lastKept = Date.distantPast
     /// Dragging a loop flag: the loop points shown until it's let go.
     @State private var loopDrag: (Float, Float)?
     @State private var loopFrom: (Float, Float)?
@@ -237,12 +242,48 @@ struct SamplerWindow: View {
     private var trackNumber: Int { (controller.rackOrder.firstIndex(of: pad) ?? pad) + 1 }
 
     private func edit(_ change: (inout SamplerSettings) -> Void) {
-        var s = controller.sampler(pad); change(&s); controller.setSampler(pad, s)
+        var s = controller.sampler(pad); change(&s)
+        guard s != controller.sampler(pad) else { return }
+        keep(controller.state.pads[pad], merging: true)
+        controller.setSampler(pad, s)
     }
     /// A SAMPLE-page knob: shown while it turns, computed into the sound when it's let go.
     private func editComputed(_ final: Bool, _ change: (inout SamplerSettings) -> Void) {
         var s = sm; change(&s)
-        if final { pending = nil; controller.setSampler(pad, s) } else { pending = s }
+        if final {
+            pending = nil
+            if s != controller.sampler(pad) { keep(controller.state.pads[pad]); controller.setSampler(pad, s) }
+        } else { pending = s }
+    }
+    /// The track's own settings (PAN, its file) changed from the window.
+    private func setPad(_ ps: PadSettings, merging: Bool = false) {
+        guard ps != controller.state.pads[pad] else { return }
+        keep(controller.state.pads[pad], merging: merging)
+        controller.setPadSettings(pad, ps)
+    }
+    /// Keeps what the track was for UNDO (a new change clears REDO). `merging`: a change coming less
+    /// than half a second after the last one (a knob still turning) joins that step.
+    private func keep(_ before: PadSettings, merging: Bool = false) {
+        let now = Date()
+        defer { lastKept = now }
+        if merging && now.timeIntervalSince(lastKept) < 0.5 && !undo.isEmpty { return }
+        undo.append(before)
+        if undo.count > 50 { undo.removeFirst() }
+        redo = []
+    }
+    private func undoStep() {
+        guard let last = undo.popLast() else { return }
+        redo.append(controller.state.pads[pad])
+        pending = nil; lastKept = .distantPast
+        controller.restorePad(pad, last)
+        selection = nil
+    }
+    private func redoStep() {
+        guard let next = redo.popLast() else { return }
+        undo.append(controller.state.pads[pad])
+        pending = nil; lastKept = .distantPast
+        controller.restorePad(pad, next)
+        selection = nil
     }
 
     var body: some View {
@@ -327,6 +368,13 @@ struct SamplerWindow: View {
             Text(String(format: "CH %02d", trackNumber)).font(.system(size: 27 * s, weight: .medium)).foregroundColor(skin.ink)
                 .frame(width: 160 * s, height: 58 * s, alignment: .trailing).offset(x: 1030 * s, y: 8 * s)
                 .allowsHitTesting(false)
+            // UNDO / REDO: every change in the window, on every page
+            titleButton("arrow.uturn.backward", s, red: false, action: undoStep).spot(880, 14, 64, 46, s)
+                .disabled(undo.isEmpty || controller.sampleEditing).opacity(undo.isEmpty ? 0.45 : 1)
+                .accessibilityLabel("Undo").accessibilityIdentifier("samplerUndo")
+            titleButton("arrow.uturn.forward", s, red: false, action: redoStep).spot(950, 14, 64, 46, s)
+                .disabled(redo.isEmpty || controller.sampleEditing).opacity(redo.isEmpty ? 0.45 : 1)
+                .accessibilityLabel("Redo").accessibilityIdentifier("samplerRedo")
             titleButton("minus", s, red: false, action: minimize).spot(1232, 14, 64, 46, s)
                 .accessibilityLabel("Minimize the sampler").accessibilityIdentifier("samplerMinimize")
             titleButton("xmark", s, red: true, action: close).spot(1310, 14, 66, 46, s)
@@ -366,7 +414,7 @@ struct SamplerWindow: View {
             .buttonStyle(SeqPress()).spot(770, 84, 60, 80, s).accessibilityIdentifier("samplerOn")
             headerKnob("PAN", value: (controller.state.pads[pad].pan + 1) / 2, bipolar: true, reset: 0.5, x: 906, s,
                        display: { v in let p = Int(((v * 2 - 1) * 100).rounded()); return p == 0 ? "C" : (p < 0 ? "L\(-p)" : "R\(p)") }) { v, _ in
-                var ps = controller.state.pads[pad]; let p = v * 2 - 1; ps.pan = abs(p) < 0.03 ? 0 : p; controller.setPadSettings(pad, ps)
+                var ps = controller.state.pads[pad]; let p = v * 2 - 1; ps.pan = abs(p) < 0.03 ? 0 : p; setPad(ps, merging: true)
             }
             // VOL: the sampler's own pre-amp before the mode's effects, −12 dB … +12 dB (Tyrone, Oct 19), bigger
             headerKnob("VOL", value: sm.volume, bipolar: false, reset: 0.5, x: 1002, s, size: 80,
@@ -511,17 +559,17 @@ struct SamplerWindow: View {
         if !files.isEmpty {
             items.append(.submenu("Your samples", icon: "waveform", files.map { name in
                 BBMenuItem.item((name as NSString).deletingPathExtension, checked: controller.state.pads[pad].sampleFile == name) {
-                    var ps = controller.state.pads[pad]; ps.sampleFile = name; controller.setPadSettings(pad, ps)
+                    var ps = controller.state.pads[pad]; ps.sampleFile = name; setPad(ps)
                 }
             }))
         }
         if controller.state.pads[pad].sampleFile != nil {
             items.append(.item("Back to the kit's sound", icon: "arrow.uturn.backward") {
-                var ps = controller.state.pads[pad]; ps.sampleFile = nil; controller.setPadSettings(pad, ps)
+                var ps = controller.state.pads[pad]; ps.sampleFile = nil; setPad(ps)
             })
         }
         items.append(.item("Reset the sampler", icon: "arrow.counterclockwise", destructive: true) {
-            var ps = controller.state.pads[pad]; ps.sampler = nil; controller.setPadSettings(pad, ps)
+            var ps = controller.state.pads[pad]; ps.sampler = nil; setPad(ps)
         })
         return items
     }
@@ -560,7 +608,7 @@ struct SamplerWindow: View {
             // back to the kit's sound, on opens Files to load one
             toggleRow("Keep on disk", controller.state.pads[pad].sampleFile != nil, x: 22, y: 56, s, id: "samplerKeepOnDisk") {
                 if controller.state.pads[pad].sampleFile != nil {
-                    var ps = controller.state.pads[pad]; ps.sampleFile = nil; controller.setPadSettings(pad, ps)
+                    var ps = controller.state.pads[pad]; ps.sampleFile = nil; setPad(ps)
                 } else {
                     importFile()
                 }
@@ -961,8 +1009,7 @@ struct SamplerWindow: View {
         let oldLength = controller.playedSample(pad)?.length ?? 0
         controller.editSample(pad, e) { name in
             guard name != nil else { return }
-            undo.append(before)
-            if undo.count > 30 { undo.removeFirst() }
+            keep(before)
             if let select { selection = select(oldLength) } else if !keepSelection { selection = nil }
         }
     }
@@ -1008,11 +1055,7 @@ struct SamplerWindow: View {
                     run(.fadeOut(r), keepSelection: true)
                 }
                 .spot(766, 0, 132, 50, s)
-                editButton("UNDO", "arrow.uturn.backward", s, enabled: !undo.isEmpty && !busy) {
-                    guard let last = undo.popLast() else { return }
-                    controller.restorePad(pad, last)
-                    selection = nil
-                }
+                editButton("UNDO", "arrow.uturn.backward", s, enabled: !undo.isEmpty && !busy) { undoStep() }
                 .spot(904, 0, 104, 50, s)
             }
             // the selection's length
@@ -1079,7 +1122,7 @@ struct SamplerWindow: View {
                 let old = sample.length
                 controller.editSample(pad, .insert(clip, at: r.lowerBound)) { name in
                     guard name != nil else { return }
-                    undo.append(before)
+                    keep(before)
                     let total = Double(max(1, old + added))
                     selection = Double(r.lowerBound) / total...min(1, Double(r.lowerBound + added) / total)
                 }
@@ -1090,7 +1133,7 @@ struct SamplerWindow: View {
             let old = sample.length
             controller.editSample(pad, .insert(clip, at: 0)) { name in
                 guard name != nil else { return }
-                undo.append(before)
+                keep(before)
                 selection = 0...min(1, Double(added) / Double(max(1, old + added)))
             }
         })
@@ -1099,7 +1142,7 @@ struct SamplerWindow: View {
             let old = sample.length
             controller.editSample(pad, .insert(clip, at: old)) { name in
                 guard name != nil else { return }
-                undo.append(before)
+                keep(before)
                 selection = Double(old) / Double(max(1, old + added))...1
             }
         })
