@@ -75,6 +75,7 @@ struct TrackGrabStrip: UIViewRepresentable {
                 if grabbing {
                     grabbing = false
                     stopScrolling()
+                    if g.state == .ended { moved(y) }     // a quick flick's last move only comes with the lift
                     ended()
                 }
             }
