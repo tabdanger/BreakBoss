@@ -4,7 +4,7 @@ import Foundation
 // MARK: - Per-pad settings (pad editor)
 
 struct PadSettings: Codable, Equatable {
-    /// 0...maxLevel, 0.8 = unity (100%), maxLevel = 200% (+12 dB).
+    /// 0...maxLevel, 0.8 = unity (100%), the top (Tyrone, Oct 19: only the SAMPLER's VOL goes past 100%).
     var level: Float = 0.8
     /// -1 (left) ... 1 (right)
     var pan: Float = 0
@@ -29,13 +29,14 @@ struct PadSettings: Codable, Equatable {
 
     var gain: Float { level <= 0.001 ? 0 : KnockMath.dbToGain(40 * log10f(level / 0.8)) }
 
-    /// A track's volume goes to 200%, +12 dB (Tyrone, Oct 18), and down to 50%, −12 dB (Oct 19).
-    static let maxLevel: Float = 1.6
+    /// A track's volume goes down to 50%, −12 dB (Oct 19), and up to 100%, unity: past 100% (to
+    /// 200%) only in the track's SAMPLER window (its VOL knob), Tyrone, Oct 19. It went to 200% on Oct 18.
+    static let maxLevel: Float = 0.8
     static let minLevel: Float = 0.4
-    /// The volume knobs turn evenly in dB: 0 = −12 dB, the middle 0 dB (100%), the top +12 dB.
-    static func knob(level: Float) -> Float { ((log2f(max(level, 0.000_1) / 0.8) + 1) / 2).clamped(0, 1) }
-    static func level(knob v: Float) -> Float { 0.8 * powf(2, v.clamped(0, 1) * 2 - 1) }
-    /// What a volume control shows: 100% at unity, 200% at the top.
+    /// The volume knobs turn evenly in dB: 0 = −12 dB (50%), the top 0 dB (100%).
+    static func knob(level: Float) -> Float { (log2f(max(level, 0.000_1) / 0.8) + 1).clamped(0, 1) }
+    static func level(knob v: Float) -> Float { 0.8 * powf(2, v.clamped(0, 1) - 1) }
+    /// What a volume control shows: 100% at unity.
     static func levelText(_ level: Float) -> String { String(format: "%.0f%%", level / 0.8 * 100) }
 }
 

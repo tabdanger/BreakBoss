@@ -1318,9 +1318,9 @@ struct SequencerView: View {
                     selectedID = ch.id
                 }) { channelMenu(ch) }
                 .accessibilityIdentifier("trackHeader\(pad)")
-            // the volume knob, bigger (Tyrone, Oct 19): −12 dB … +12 dB, 100% in the middle
-            ArtKnob(value: PadSettings.knob(level: ps.level), reset: 0.5,
-                    hud: KnobHUD(title: "\(ch.name) · VOLUME", value: KnobHUD.volume(ps.level))) { v, _ in set { $0.level = abs(v - 0.5) < 0.01 ? 0.8 : PadSettings.level(knob: v) } }.frame(width: 46 * s, height: 46 * s)
+            // the volume knob, bigger (Tyrone, Oct 19): −12 dB … 0 dB (100%) at the top; past 100% only in the SAMPLER
+            ArtKnob(value: PadSettings.knob(level: ps.level), reset: 1,
+                    hud: KnobHUD(title: "\(ch.name) · VOLUME", value: KnobHUD.volume(ps.level))) { v, _ in set { $0.level = PadSettings.level(knob: v) } }.frame(width: 46 * s, height: 46 * s)
                 .accessibilityElement().accessibilityLabel("\(ch.name) volume").accessibilityValue(KnobHUD.volume(ps.level)).accessibilityIdentifier("trackVolume\(pad)")
                 .offset(x: 130 * s, y: 6.5 * s)
             // the pan knob the same size as the volume knob (Tyrone, Oct 19: every header knob one size)

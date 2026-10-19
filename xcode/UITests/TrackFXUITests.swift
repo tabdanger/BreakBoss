@@ -111,12 +111,17 @@ final class TrackFXUITests: XCTestCase {
         let volume = app.descendants(matching: .any)["trackVolume0"].firstMatch
         let pan = app.descendants(matching: .any)["trackPan0"].firstMatch
         XCTAssertTrue(volume.exists && pan.exists, "the kick's VOLUME and PAN knobs are there (\(name))")
-        turn(volume, up: 40)
+        let volumeBefore = value(volume)
+        turn(volume, up: 200)                      // already at the top (100%): it stays there
+        let volumeTop = value(volume)
+        turn(volume, up: -40)
+        print("UITREE \(name) VOLUME top: \(volumeBefore) -> up \(volumeTop)")
+        XCTAssertTrue(volumeTop.contains("100%"), "the rack's VOLUME stops at 100% (\(name): \(volumeTop))")
         let volShown = hud.waitForExistence(timeout: 2)
         print("UITREE \(name) VOLUME readout: shown \(volShown) '\(volShown ? (hud.value as? String ?? hud.label) : "")' knob \(value(volume))")
         XCTAssertTrue(volShown, "turning VOLUME shows its readout (\(name))")
         picture("\(name)-volume", region: CGRect(x: 0.15, y: 0.25, width: 0.4, height: 0.4))
-        volume.doubleTap()                         // back to 100%
+        volume.doubleTap()                         // back to 100% (the top)
         sleep(6)
         turn(pan, up: -40)
         let panShown = hud.waitForExistence(timeout: 2)

@@ -2790,19 +2790,23 @@ enum KnockSelfTest {
     /// Turning a channel's LEVEL or PAN while its sound rings: the note keeps playing and glides to
     /// the new level, it isn't cut off (each cut was a click).
     static func checkLevelPanGlide() {
-        // Every volume goes to 200%, +12 dB (Tyrone, Oct 18): track LEVEL / VOL and the master OUTPUT.
-        var loud = PadSettings(); loud.level = PadSettings.maxLevel
-        check(abs(20 * log10f(loud.gain) - 12) < 0.1 && PadSettings.levelText(loud.level) == "200%" && PadSettings.levelText(0.8) == "100%",
-              "a track's volume goes to 200% (+12 dB), 100% is unity")
-        check(KnockState.normalizedPads([loud])[0].level == PadSettings.maxLevel && KnockState.normalizedPads([PadSettings()])[0].gain == 1,
-              "a saved 200% track volume stays 200%, old projects keep their levels")
-        check(abs(KnockMath.outputDB(1) - 12) < 0.01 && abs(KnockMath.outputDB(0.75)) < 0.01, "OUTPUT goes to +12 dB, 0.75 stays 0 dB")
-        // Tyrone, Oct 19: every volume knob runs −12 dB … +12 dB
+        // Tyrone, Oct 19: every volume outside the SAMPLER window stops at 100% (0 dB), down to −12 dB (50%)
+        var loud = PadSettings(); loud.level = 1.6
+        check(KnockState.normalizedPads([loud])[0].level == 0.8 && KnockState.normalizedPads([PadSettings()])[0].gain == 1
+              && PadSettings.levelText(PadSettings.maxLevel) == "100%",
+              "a track's volume stops at 100%: a saved 200% comes back at 100%")
+        check(abs(KnockMath.outputDB(1)) < 0.01 && abs(KnockMath.outputDB(0) + 12) < 0.01 && KParam.output.defaultValue == 1
+              && abs(KnockMath.outputFromOld(0.75) - 1) < 0.001 && abs(KnockMath.outputFromOld(1) - 1) < 0.001
+              && abs(KnockMath.outputDB(KnockMath.outputFromOld(0.375)) + 6) < 0.01,
+              "OUTPUT goes from −12 dB to 0 dB; an old project's OUTPUT keeps its level, anything over 0 dB stops at 0 dB")
+        var old = KnockState(); old.version = 2; old.values[KParam.output.id] = 0.375
+        let migrated = old.normalized()
+        check(abs(KnockMath.outputDB(migrated.values[KParam.output.id] ?? 0) + 6) < 0.01 && migrated.normalized() == migrated,
+              "an old project's OUTPUT is moved to the new scale once")
         var low = PadSettings(); low.level = PadSettings.level(knob: 0)
-        check(abs(KnockMath.outputDB(0) + 12) < 0.01 && abs(20 * log10f(low.gain) + 12) < 0.1
-              && PadSettings.level(knob: 0.5) == 0.8 && abs(PadSettings.level(knob: 1) - PadSettings.maxLevel) < 0.001
-              && abs(PadSettings.knob(level: 0.8) - 0.5) < 0.001 && PadSettings.levelText(low.level) == "50%",
-              "the volume knobs go from −12 dB (50%) to +12 dB (200%), 100% in the middle")
+        check(abs(20 * log10f(low.gain) + 12) < 0.1 && PadSettings.level(knob: 1) == 0.8
+              && abs(PadSettings.knob(level: 0.8) - 1) < 0.001 && PadSettings.levelText(low.level) == "50%",
+              "the volume knobs go from −12 dB (50%) to 0 dB (100%) at the top")
         let rate = 48_000.0
         let sine = (0..<96_000).map { Float(sin(Double($0) * 2 * Double.pi * 220 / rate)) * 0.1 }
         let sample = SampleBuffer(left: sine, sampleRate: rate)

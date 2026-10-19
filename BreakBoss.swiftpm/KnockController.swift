@@ -66,6 +66,13 @@ final class KnockController: ObservableObject {
         if !isPlugin, let data = UserDefaults.standard.data(forKey: KnockController.sessionKey),
            let saved = try? JSONDecoder().decode(KnockState.self, from: data) {
             s = saved.normalized()
+            // Tyrone, Oct 19: every volume back to 100% once, now that only the SAMPLER's VOL goes past it
+            let reset = "breakboss.volumesAtUnity"
+            if !UserDefaults.standard.bool(forKey: reset) {
+                for i in s.pads.indices { s.pads[i].level = 0.8 }
+                s.values[KParam.output.id] = KParam.output.defaultValue
+                UserDefaults.standard.set(true, forKey: reset)
+            }
         } else {
             // a fresh start is silent: blank loops until a pattern is loaded or drawn
             s.editedLoops = (0..<Pad.count).map { i in PatternData(name: "LOOP \(i + 1)", lengthTicks: PatternData.ppq * 4 * 2, events: []) }

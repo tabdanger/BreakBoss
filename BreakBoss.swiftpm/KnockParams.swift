@@ -142,7 +142,7 @@ enum KParam: Int, CaseIterable {
         case .velocity: return 0.75
         case .filter: return 1.0
         case .clipDrive: return 0.25
-        case .output: return 0.75
+        case .output: return 1
         case .clipper: return 1
         case .boost: return 0.42
         case .punch: return 0.0
@@ -213,10 +213,12 @@ enum KnockMath {
     static func filterCutoff(_ v: Float) -> Float { 120 * powf(20_000 / 120, v) }
     /// CLIP DRIVE: 0 to +18 dB into the clipper.
     static func clipDriveDB(_ v: Float) -> Float { v * 18 }
-    /// OUTPUT: 0.75 is 0 dB, 1.0 is +12 dB (200%, Tyrone, Oct 18), 0 is −12 dB (Oct 19).
-    static func outputDB(_ v: Float) -> Float {
-        if v >= 0.75 { return (v - 0.75) / 0.25 * 12 }
-        return (max(0, v) - 0.75) / 0.75 * 12
+    /// OUTPUT: 0 is −12 dB, the top 0 dB (100%): only the SAMPLER's VOL goes past 100% (Tyrone, Oct 19).
+    static func outputDB(_ v: Float) -> Float { (v.clamped(0, 1) - 1) * 12 }
+    /// Saved before Oct 19: 0.75 was 0 dB, 1.0 +12 dB, 0 −12 dB. The same level now (anything over 0 dB stops at 0 dB).
+    static func outputFromOld(_ v: Float) -> Float {
+        let db: Float = v >= 0.75 ? (v - 0.75) / 0.25 * 12 : (max(0, v) - 0.75) / 0.75 * 12
+        return (1 + min(db, 0) / 12).clamped(0, 1)
     }
     static func dbToGain(_ db: Float) -> Float { powf(10, db / 20) }
 }
