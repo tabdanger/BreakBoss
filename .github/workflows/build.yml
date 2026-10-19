@@ -145,7 +145,8 @@ jobs:
     # only when asked: Run workflow › "Also tap through the sequencer"
     if: ${{ inputs.tap_check }}
     runs-on: macos-15
-    timeout-minutes: 45
+    # the UI tests alone take ~30-40 min on a slow runner (SamplerUITests ~18 min)
+    timeout-minutes: 75
     steps:
       - name: Get the code
         uses: actions/checkout@v5
