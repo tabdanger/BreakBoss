@@ -59,6 +59,12 @@ struct TrackGrabStrip: UIViewRepresentable {
             return grip(g.location(in: v).y) != nil
         }
 
+        /// The rack's scroll waits for the grab to fail (a touch off the studs), so a fast drag on the
+        /// studs can never be taken over by the scroll halfway.
+        func gestureRecognizer(_ g: UIGestureRecognizer, shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool {
+            other.view is UIScrollView
+        }
+
         @objc func pressed(_ g: UILongPressGestureRecognizer) {
             guard let v = view else { return }
             let y = g.location(in: v).y
@@ -75,7 +81,7 @@ struct TrackGrabStrip: UIViewRepresentable {
                 if grabbing {
                     grabbing = false
                     stopScrolling()
-                    if g.state == .ended { moved(y) }     // a quick flick's last move only comes with the lift
+                    moved(y)     // a quick flick's last move only comes with the lift
                     ended()
                 }
             }
