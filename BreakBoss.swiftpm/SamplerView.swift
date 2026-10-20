@@ -1,5 +1,6 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import SwiftUI
+import GameController
 import UniformTypeIdentifiers
 
 // MARK: - The SAMPLER window (Tyrone's two renders, Oct 18)
@@ -309,6 +310,13 @@ struct SamplerWindow: View {
                 }
             }
             .frame(width: Self.artW * s, height: Self.artH * s, alignment: .topLeading)
+            // every touch inside the window stays in the window (Tyrone, Oct 20): the metal draws with
+            // hit testing off, so a tap on a bare part fell through to the rack, the grid or the
+            // library behind it. The whole window takes touches; the empty tap runs alongside the
+            // controls' own gestures (never instead of them: an exclusive one here beat the
+            // waveform's tap, which waits to rule out a double tap) and only catches the bare spots.
+            .contentShape(RoundedRectangle(cornerRadius: 14 * s))
+            .simultaneousGesture(TapGesture())
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .aspectRatio(Self.artW / Self.artH, contentMode: .fit)
@@ -368,9 +376,6 @@ struct SamplerWindow: View {
             Text(String(format: "CH %02d", trackNumber)).font(.system(size: 27 * s, weight: .medium)).foregroundColor(skin.ink)
                 .frame(width: 160 * s, height: 58 * s, alignment: .trailing).offset(x: 1030 * s, y: 8 * s)
                 .allowsHitTesting(false)
-            // Face 1's screen, live (Tyrone, Oct 20): the same trace following the sound's frequencies,
-            // behind glass in a dark well on the title bar
-            samplerScreen(s).spot(506, 15, 360, 44, s)
             // UNDO / REDO: every change in the window, on every page
             titleButton("arrow.uturn.backward", s, red: false, action: undoStep).spot(880, 14, 64, 46, s)
                 .disabled(undo.isEmpty || controller.sampleEditing).opacity(undo.isEmpty ? 0.45 : 1)
@@ -383,28 +388,6 @@ struct SamplerWindow: View {
             titleButton("xmark", s, red: true, action: close).spot(1310, 14, 66, 46, s)
                 .accessibilityLabel("Close the sampler").accessibilityIdentifier("samplerClose")
         }
-    }
-
-    private func samplerScreen(_ s: CGFloat) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 5 * s)
-        let light = FaceLight.of(controller.faceKey)
-        return ZStack {
-            shape.fill(LinearGradient(colors: [Color(white: 0.01), Color(white: 0.06)], startPoint: .top, endPoint: .bottom))
-            // the screen's faint grid
-            Canvas { ctx, size in
-                var grid = Path()
-                for i in 1..<8 { let x = size.width * CGFloat(i) / 8; grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height)) }
-                grid.move(to: CGPoint(x: 0, y: size.height / 2)); grid.addLine(to: CGPoint(x: size.width, y: size.height / 2))
-                ctx.stroke(grid, with: .color(light.glow.opacity(0.09)), lineWidth: 0.6)
-            }
-            ScopeView(controller: controller, scale: s * 0.8, compact: true).padding(.horizontal, 4 * s)
-            // glass: a soft sheen over the top, the well's edge shadowed above and lit below
-            shape.fill(LinearGradient(stops: [.init(color: .white.opacity(0.09), location: 0), .init(color: .white.opacity(0.02), location: 0.45),
-                                              .init(color: .clear, location: 0.5)], startPoint: .top, endPoint: .bottom))
-            shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.9), skin.surface.bright.opacity(0.5)], startPoint: .top, endPoint: .bottom), lineWidth: 1.2 * s)
-        }
-        .clipShape(shape)
-        .allowsHitTesting(false)
     }
 
     private func titleButton(_ symbol: String, _ s: CGFloat, red: Bool, action: @escaping () -> Void) -> some View {
@@ -689,9 +672,9 @@ struct SamplerWindow: View {
         let sourceSeconds = controller.playedSample(pad)?.seconds ?? 1
         return panel("Time stretching", s) {
             knob("PITCH", (sm.stretchPitch / 12 + 1) / 2, x: 67, y: 86, d: 72, s, labelY: 142, bipolar: true, reset: 0.5,
-                 display: { v in String(format: "%+.2f st", Double(v * 2 - 1) * 12) }) { v, final in
+                 display: { v in Self.stretchPitchText(Self.stretchSemitones(v)) }) { v, final in
                 // like FL: turning PITCH while on Resample switches to a stretch that keeps the length
-                editComputed(final) { $0.stretchPitch = abs(v * 2 - 1) < 0.01 ? 0 : (v * 2 - 1) * 12; if $0.stretch == .resample { $0.stretch = .stretch } }
+                editComputed(final) { $0.stretchPitch = Self.stretchSemitones(v); if $0.stretch == .resample { $0.stretch = .stretch } }
             }
             knob("MUL", sm.multiplier, x: 166, y: 86, d: 72, s, labelY: 142, bipolar: true, reset: 0.5,
                  display: { v in String(format: "× %.2f", pow(4, Double(v - 0.5) * 2)) }) { v, final in
@@ -845,12 +828,12 @@ struct SamplerWindow: View {
                 SamplerWaveCanvas(sample: sample, zoom: zoom, scroll: scrollPos, color: skin.glow, startOffset: startDrag ?? sm.startOffset,
                                   loop: sm.useLoop, loopPoints: loopPoints, region: sm.loadRegions ? sample.region : nil, cues: marks,
                                   markers: markerDrag.map { d in var m = sm.markers; if m.indices.contains(d.0) { m[d.0] = d.1 }; return m } ?? sm.markers,
-                                  regions: sm.regions, selection: selection, bpm: controller.state.bpm)
+                                  regions: sm.regions, selection: selection, bpm: controller.state.bpm, face: controller.faceKey)
                     .equatable()
                     .clipShape(RoundedRectangle(cornerRadius: 6 * s)).spot(2, 2, 1330, 178, s)
                 // the playback cursor and the played part, following the track's newest voice
                 SamplerPlayhead(playheads: controller.engine.playheads, pad: pad, sample: sample, zoom: zoom, scroll: scrollPos,
-                                color: UIColor(skin.glow),
+                                color: UIColor(skin.glow), face: controller.faceKey,
                                 rest: controller.state.pads[pad].reverse ? 1 - Double(startDrag ?? sm.startOffset) : Double(startDrag ?? sm.startOffset))
                     .clipShape(RoundedRectangle(cornerRadius: 6 * s)).spot(2, 2, 1330, 178, s)
                     .allowsHitTesting(false)
@@ -870,6 +853,7 @@ struct SamplerWindow: View {
                 Text(String(format: "%@  ·  %.3f s", fileName, sample.seconds)).font(.system(size: 14 * s, weight: .medium))
                     .foregroundColor(skin.wellInk.opacity(0.55)).padding(10 * s)
                     .frame(width: 900 * s, height: 182 * s, alignment: .bottomLeading).allowsHitTesting(false)
+                    .accessibilityIdentifier("samplerFileInfo")
             }
             if sample == nil || dropping {
                 Text("DROP SAMPLE HERE").font(.system(size: 36 * s, weight: .medium)).kerning(2 * s)
@@ -1085,6 +1069,7 @@ struct SamplerWindow: View {
             }
             // the selection's length
             Text(selectionText(sample)).font(.system(size: 15 * s, weight: .medium, design: .monospaced))
+                .accessibilityIdentifier("samplerSelectionLength")
                 .foregroundColor(skin.ink).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 126 * s, height: 50 * s).offset(x: 1012 * s)
                 .allowsHitTesting(false)
@@ -1138,6 +1123,18 @@ struct SamplerWindow: View {
             }
         }
         var items: [BBMenuItem] = []
+        // mix: the copied audio merges with what's there, from the selection's start (or the start)
+        let mixAt = range?.lowerBound ?? 0
+        items.append(.item(range == nil ? "Mix in at the start" : "Mix in at the selection", icon: "plus.square.on.square") {
+            let before = controller.state.pads[pad]
+            let old = sample.length
+            controller.editSample(pad, .mix(clip, at: mixAt)) { name in
+                guard name != nil else { return }
+                keep(before)
+                let total = Double(max(old, mixAt + added))
+                selection = Double(mixAt) / total...min(1, Double(mixAt + added) / total)
+            }
+        })
         if let r = range {
             items.append(.item("Replace the selection", icon: "rectangle.2.swap") {
                 run(.replace(clip, over: r), select: selected(at: r.lowerBound))
@@ -1245,7 +1242,8 @@ struct SamplerWindow: View {
                 SamplerWell(skin: skin, corner: 4 * s)
                 // the whole sound, small, under the thumb (the zoom-scroll bar)
                 if let sample = controller.playedSample(pad) {
-                    SamplerWaveCanvas(sample: sample, zoom: 1, scroll: 0, color: skin.glow, startOffset: 0, loop: false, region: nil, cues: [])
+                    SamplerWaveCanvas(sample: sample, zoom: 1, scroll: 0, color: skin.glow, startOffset: 0, loop: false, region: nil, cues: [],
+                                      face: controller.faceKey)
                         .opacity(0.55).padding(.horizontal, 36 * s).padding(.vertical, 2 * s)
                 }
                 Capsule().fill(LinearGradient(colors: [skin.surface.bright, skin.surface.dark], startPoint: .top, endPoint: .bottom))
@@ -1732,6 +1730,21 @@ struct SamplerWindow: View {
         .offset(x: x * s, y: y * s)
     }
 
+    /// Time stretching's PITCH (Tyrone, Oct 20, as in FL): whole semitones; hold Shift on a keyboard
+    /// while turning for cents.
+    static func stretchSemitones(_ v: Float) -> Float {
+        let st = (v * 2 - 1) * 12
+        if GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: .leftShift)?.isPressed == true
+            || GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: .rightShift)?.isPressed == true {
+            return abs(st) < 0.01 ? 0 : (st * 100).rounded() / 100
+        }
+        return st.rounded()
+    }
+
+    static func stretchPitchText(_ st: Float) -> String {
+        st == st.rounded() ? String(format: "%+d st", Int(st)) : String(format: "%+.2f st", st)
+    }
+
     private static func percent(_ v: Float) -> String { "\(Int((v * 100).rounded()))%" }
     private static func bipolarPercent(_ v: Float) -> String { "\(Int(((v * 2 - 1) * 100).rounded()))%" }
     private static func cutoffText(_ v: Float) -> String {
@@ -2068,6 +2081,8 @@ struct SamplerWaveCanvas: View, Equatable {
     var selection: ClosedRange<Double>? = nil
     /// The project's tempo: a line every beat, the bar numbers along the top.
     var bpm: Double = 0
+    /// Which face's light the wave is drawn in (FaceLight, as Face 1's screen).
+    var face = "modern"
 
     static let selectionRed = Color(red: 1, green: 0.16, blue: 0.14)
 
@@ -2077,7 +2092,7 @@ struct SamplerWaveCanvas: View, Equatable {
     static func == (a: Self, b: Self) -> Bool {
         a.sample === b.sample && a.zoom == b.zoom && a.scroll == b.scroll && a.color == b.color && a.startOffset == b.startOffset
             && a.loop == b.loop && a.loopPoints == b.loopPoints && a.region == b.region && a.cues == b.cues
-            && a.markers == b.markers && a.regions == b.regions && a.selection == b.selection && a.bpm == b.bpm
+            && a.markers == b.markers && a.regions == b.regions && a.selection == b.selection && a.bpm == b.bpm && a.face == b.face
     }
 
     var body: some View {
@@ -2117,19 +2132,13 @@ struct SamplerWaveCanvas: View, Equatable {
                     }
                 }
             }
-            ctx.fill(Path(CGRect(x: 0, y: mid - 0.5, width: size.width, height: 1)), with: .color(color.opacity(0.25)))
-            var top = Path()
-            if loaded >= 0, let peaks = SamplerPeaks.cached(sample) {
-                for (c, (lo, hi)) in peaks.columns(sample, count: max(1, Int(size.width)), zoom: Double(zoom), scroll: Double(scroll)).enumerated() {
-                    top.addRect(CGRect(x: CGFloat(c), y: mid - CGFloat(hi) * mid * 0.92, width: 1, height: max(1, CGFloat(hi - lo) * mid * 0.92)))
-                }
+            let light = FaceLight.of(face)
+            ctx.fill(Path(CGRect(x: 0, y: mid - 0.5, width: size.width, height: 1)), with: .color(light.glow.opacity(0.3)))
+            // the wave in Face 1's light: a phosphor band edged by glowing traces (Tyrone, Oct 20)
+            if loaded >= 0 {
+                SamplerPhosphor(sample, peaks: SamplerPeaks.cached(sample), size: size, zoom: Double(zoom), scroll: Double(scroll))
+                    .draw(in: &ctx, light: light, thin: min(1, size.height / 120))
             }
-            // a soft glow under the crisp wave
-            ctx.drawLayer { glow in
-                glow.addFilter(.blur(radius: 4))
-                glow.fill(top, with: .color(color.opacity(0.55)))
-            }
-            ctx.fill(top, with: .color(color.opacity(0.9)))
             // START OFFSET: before it is dimmed
             let so = x(Int(Double(startOffset) * Double(n - 1)))
             if startOffset > 0 {

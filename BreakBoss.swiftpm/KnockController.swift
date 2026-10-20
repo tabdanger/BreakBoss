@@ -303,15 +303,22 @@ final class KnockController: ObservableObject {
 
     /// The sound last previewed from the library (the preview fader plays it again at its new level).
     private(set) var previewedSound: SampleBuffer?
-    /// Double tap in the library (Tyrone, Oct 20): hear a sound at the preview volume without putting
-    /// it on any track (dragging it onto the rack does that).
+    private var previewedURL: URL?
+    /// A tap on the picked sound in the library (Tyrone, Oct 20): hear it at the preview volume without
+    /// putting it on any track (dragging it onto the rack does that). Each tap plays it again from the
+    /// top; the same sound is not loaded twice.
     func previewSound(_ sound: LibrarySound) {
         let url = sound.url
+        if url == previewedURL, let buffer = previewedSound {
+            engine.previewHandoff.publish(PreviewSound(buffer, gain: previewVolume))
+            return
+        }
         kitQueue.async { [weak self] in
             guard let buffer = try? SampleLoader.load(url) else { return }
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.previewedSound = buffer
+                self.previewedURL = url
                 self.engine.previewHandoff.publish(PreviewSound(buffer, gain: self.previewVolume))
             }
         }

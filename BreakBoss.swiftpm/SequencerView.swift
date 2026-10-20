@@ -236,6 +236,9 @@ struct SequencerView: View {
     @State private var samplerGrow: CGFloat = 0
     @State private var libraryType: SoundType? = .kick
     @State private var search = ""
+    /// The library sound picked by a first tap; tapping it again plays it (Tyrone, Oct 20).
+    @State private var libraryPick: String?
+    @State private var libraryPreviews = 0
     @State private var userSounds: [LibrarySound] = UserSoundLibrary.sounds()
     @State private var importKind: ImportKind?
     @State private var generateStyle: String?
@@ -948,6 +951,7 @@ struct SequencerView: View {
 
     private func soundRow(_ sound: LibrarySound, _ s: CGFloat) -> some View {
         let onSelected = selected?.soundID == sound.id
+        let picked = libraryPick == sound.id
         return HStack(spacing: 6 * s) {
             Image(systemName: "waveform").font(.system(size: 16 * s)).foregroundColor(onSelected ? accent : Color(white: 0.8)).frame(width: 26 * s)
             VStack(alignment: .leading, spacing: 1 * s) {
@@ -959,13 +963,17 @@ struct SequencerView: View {
             Image(systemName: "line.3.horizontal").font(.system(size: 14 * s)).foregroundColor(Color(white: 0.75))
         }
         .padding(.horizontal, 6 * s).frame(height: 49 * s)
-        .background(RoundedRectangle(cornerRadius: 5 * s).fill(onSelected ? accent.opacity(0.12) : Color.clear))
+        .background(RoundedRectangle(cornerRadius: 5 * s).fill(onSelected || picked ? accent.opacity(0.12) : Color.clear))
+        .overlay { if picked { RoundedRectangle(cornerRadius: 5 * s).stroke(accent.opacity(0.8), lineWidth: 1.5 * s).allowsHitTesting(false) } }
         .overlay(alignment: .bottom) { Rectangle().fill(Color(white: 0.16)).frame(height: 1).allowsHitTesting(false) }
         .contentShape(Rectangle())
-        // double tap: hear it at the preview volume; no track changes (drag it onto the rack for that,
-        // Tyrone, Oct 20)
-        .onTapGesture(count: 2) { controller.previewSound(sound) }
+        // first tap picks the sound, every tap on it after that plays it again at the preview volume;
+        // no track changes (drag it onto the rack for that, Tyrone, Oct 20)
+        .onTapGesture {
+            if picked { controller.previewSound(sound); libraryPreviews += 1 } else { libraryPick = sound.id }
+        }
         .accessibilityIdentifier("librarySound_" + sound.name)
+        .accessibilityValue(picked ? "picked, played \(libraryPreviews)" : "")
         .onDrag {
             NSItemProvider(object: (soundDragPrefix + sound.id) as NSString)
         } preview: {
