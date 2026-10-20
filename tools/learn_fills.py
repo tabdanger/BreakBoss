@@ -6,7 +6,7 @@
     python3 -I tools/learn_fills.py --check STEMS_DIR LOOPS_DIR --oneshots DIR   # score it against loops that have stems
 
 Like tools/learn_from_loops.py, the audio is reference only: nothing from it ships. The tempo is the number
-in the file name ("Aloe [82].wav" or "... - 82 BPM.wav").
+in the file name ("Aloe [82].wav" or "... - 82 BPM.wav"); a name without one is measured (measure_tempo).
 
 How a mixed loop is split:
   bands   the loop is split by FFT into low (< 150 Hz), mid (200 Hz - 4 kHz) and high (> 6 kHz); each band
@@ -98,7 +98,10 @@ def split(path, temps):
             for b, v in more.items(): allowed[b] |= v
     parts = {"low": band(x, sr, 20, 150), "mid": band(x, sr, 200, 4000), "high": band(x, sr, 6000, 20000)}
     found = {}
+    top = float(np.abs(x).max()) + 1e-9
     for name, sig in parts.items():
+        # a loop with no kick (a tops loop) still has a little low end; a kick reaches a quarter of the loop's peak
+        if name == "low" and float(np.abs(sig).max()) < 0.25 * top: continue
         hs = L.onsets(sig, sr)
         if not hs: continue
         loud = float(np.percentile([h["peak"] for h in hs], 95))
@@ -124,11 +127,24 @@ def split(path, temps):
     return lanes, len(x) / sr
 
 
+def measure_tempo(length, times):
+    """A loop with no tempo in its name: the tempo (60-180) at which it is 1, 2, 4, 8 or 16 whole bars and its hits
+    sit on the 16ths. Half a tempo puts 16ths on 32nds, so the slowest tempo that fits about as well as the best wins,
+    from 80 BPM up when one fits: a 65 BPM reading of a 130 BPM half-time loop sounds the same, but its hat rolls
+    fall between the 16ths (the Oct 20 Drum Loops are FL exports at 120-150)."""
+    cands = [240 * n / length for n in (1, 2, 4, 8, 16) if 60 <= 240 * n / length <= 180]
+    if not cands: return 120.0
+    err = {c: L.grid_error(times, c) * 15 / c for c in cands}    # in seconds: a 16th at 140 is half one at 70
+    best = min(err.values())
+    fits = [c for c in cands if err[c] <= best + 0.004]
+    return round(min([c for c in fits if c >= 80] or fits), 1)
+
+
 def learn_mix(path, temps, fill=False):
     name = re.sub(r"(?i)(\.wav)+$", "", os.path.basename(path))
     m = re.search(r"\[(\d+(?:\.\d+)?)\]", name) or re.search(r"(\d+(?:\.\d+)?)\s*BPM", name, re.I)
-    bpm = float(m.group(1))
     hits, length = split(path, temps)
+    bpm = float(m.group(1)) if m else measure_tempo(length, [h["t"] for hs in hits.values() for h in hs])
     bars_f = length * bpm / 240
     if fill:
         # a fill rings past its last hit: its length is the hits' span, rounded up to a quarter bar
@@ -146,6 +162,7 @@ def learn_mix(path, temps, fill=False):
         s, _ = L.to_lane(hs, bpm, steps)
         if lane == "k": s = s.replace("r", "x").replace("q", "x")   # in a mix, a kick "double" is its 808 or tail
         lanes[lane] = s
+    if "c" in lanes and "s" not in lanes: lanes["s"] = lanes.pop("c")   # a mix's lone backbeat sound plays on the snare
     lanes = {k: lanes[k] for k in L.LANE_ORDER if k in lanes}
     title = re.sub(r"\s*\[.*$", "", name).strip().upper()
     out = {"source": os.path.basename(path), "title": title, "bpm": bpm, "lanes": lanes}

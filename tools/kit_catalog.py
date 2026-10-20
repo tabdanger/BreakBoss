@@ -246,4 +246,10 @@ BK_KITS = [
      {"bright": 0.4, "long808": 0.8},
      {0: "BK NO 1 KICK", 1: "BK NO 1 SNARE", 2: "BK NO 1 CLAP", 3: "BK NO 1 RIM", 4: "BK NO 1 HIHAT",
       5: "BK NO 1 OPEN HAT", 7: "BK NO 1 PERC", 8: "BK NO 2 PERC", 9: "BK NO 1 TOM", 11: "BK NO 1 CYMBAL"}),
+    # Oct 20: the sounds of Tyrone's one-shot packs nearest the hits in his Drum Loops (tools/match_loop_sounds.py --bk),
+    # for BK Editions Vol 3; kick and clap from his Drum Kit (the packs have none)
+    ("BK EDITIONS KIT", "modern", "TRAP", "BK", "trapAtlanta", 130, "modernTrap", ["trap", "bounce", "dark"],
+     {"bright": 0.5, "long808": 0.7},
+     {0: "BK NO 7 KICK", 1: "BK NO 23 SNARE", 2: "BK NO 7 CLAP", 3: "BK NO 14 RIM", 4: "BK NO 19 HIHAT",
+      5: "BK NO 14 OPEN HAT", 11: "BK NO 8 CRASH"}),
 ]
