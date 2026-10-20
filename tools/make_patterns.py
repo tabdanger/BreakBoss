@@ -457,9 +457,11 @@ pat(R9, "90S RNB 10 DUNGEON FAMILY", 90, 58, k="X.....x...x..x..X.....x...x.....
 # tempo, length (4 or 8 bars), where every hit sits and how hard. Loops played off the 16ths (triplet
 # feel, grid fit above 0.12) are left out: the lane format can't hold them. Names say what the groove does,
 # not the pack it came from. ----------------
-LEARNED = "Learned Loops"
+# BK Editions (Tyrone, Oct 20: "change the learned patterns to something else like BK Editions"):
+# Vol 1 was Learned Loops, Vol 2 Learned RnB, Vol 3 his Drum Loops pack.
+LEARNED = "BK Editions Vol 1"
 LEARNED_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "learned_patterns.json")
-def learned_name(i, lp, label="LEARNED"):
+def learned_name(i, lp, label="BK V1"):
     l = lp["lanes"]
     bar = lambda lane: [l[lane][j:j + 16] for j in range(0, len(l[lane]), 16)] if lane in l else []
     snare = bar("s") or bar("c") or bar("r")
@@ -467,8 +469,8 @@ def learned_name(i, lp, label="LEARNED"):
     bars_n = max(1, len(hat) // 16)
     if "lt" in l or "ht" in l: what = "TOM GROOVE"
     elif "t" in hat: what = "TRIPLET HATS"
-    # a roll in most bars, not one stray double (Learned Loops keeps the names it first shipped with: any roll)
-    elif hat.count("r") + hat.count("q") >= (1 if label == "LEARNED" else bars_n): what = "HAT ROLLS"
+    # a roll in most bars, not one stray double (Vol 1 keeps the names it first shipped with: any roll)
+    elif hat.count("r") + hat.count("q") >= (1 if label == "BK V1" else bars_n): what = "HAT ROLLS"
     elif "r" in l and "s" not in l and "c" not in l: what = "RIM GROOVE"
     elif snare and lp["bpm"] >= 120 and all(b[4] == "." and b[12] == "." and b[8] != "." for b in snare if b.strip(".")): what = "HALF TIME"
     elif "o" in l: what = "OPEN HATS"
@@ -476,19 +478,39 @@ def learned_name(i, lp, label="LEARNED"):
     return f"{label} {i} {lp['bpm']:g} {what}"
 # Learned RnB: Tyrone's R&B loops (full mixes, no stems), split by tools/learn_fills.py --loops against the
 # one-shots of the kit they were made with (tools/learned_mixed.json).
-LEARNED_RNB = "Learned RnB"
-LEARNED_STYLES = (LEARNED, LEARNED_RNB)
-def add_learned(style, path, label):
+LEARNED_RNB = "BK Editions Vol 2"
+# Vol 3: Tyrone's Drum Loops pack (Oct 20), split by tools/learn_fills.py --loops against his matching one-shots
+# (tools/learned_drumloops.json). They are tops loops with no kick: each keeps its own snares, rims, hats and
+# opens, and plays the kick of the Vol 1 groove nearest its tempo (off the steps where its snare lands).
+LEARNED_DL = "BK Editions Vol 3"
+LEARNED_STYLES = (LEARNED, LEARNED_RNB, LEARNED_DL)
+def clean(lp):          # hats-only loops, and loops played off the 16ths (grid fit above 0.12): lines, not presets
+    return lp.get("gridFit", 0) <= 0.12 and "k" in lp["lanes"]
+def tops(lp):           # timed within 16 ms of the 16ths (the doubled tempo makes gridFit read in 32nds), 8+ hits
+    return lp["gridFit"] * 15 / lp["bpm"] <= 0.016 and sum(c != "." for v in lp["lanes"].values() for c in v) >= 8
+def with_kick(lp, kicks):
+    if "k" in lp["lanes"]: return lp["lanes"]
+    src = min(kicks, key=lambda k: (abs(k["bpm"] - lp["bpm"]), k["title"]))
+    n = len(next(iter(lp["lanes"].values())))
+    kick = (src["lanes"]["k"] * (n // len(src["lanes"]["k"]) + 1))[:n]
+    snare = lp["lanes"].get("s") or lp["lanes"].get("c") or "." * n
+    kick = "".join("." if snare[j] == "X" else ch for j, ch in enumerate(kick))
+    return {"k": kick, **lp["lanes"]}
+def add_learned(style, path, label, keep=clean, kicks=None):
     if not os.path.exists(path): return
-    learned = [lp for lp in json.load(open(path))["learned"] if lp.get("gridFit", 0) <= 0.12 and "k" in lp["lanes"]]   # hat-only loops: lines, not presets
+    learned = [lp for lp in json.load(open(path))["learned"] if keep(lp)]
     learned.sort(key=lambda lp: (lp["bpm"], lp["title"]))
     for i, lp in enumerate(learned, 1):
-        P.append({"style": style, "name": learned_name(i, lp, label), "bpm": lp["bpm"], "swing": 50, "glide": False, "lanes": lp["lanes"]})
+        lanes = with_kick(lp, kicks) if kicks else lp["lanes"]
+        lanes = {k: lanes[k] for k in LANES if k in lanes}
+        P.append({"style": style, "name": learned_name(i, dict(lp, lanes=lanes), label), "bpm": lp["bpm"], "swing": 50, "glide": False, "lanes": lanes})
         for key in ("swingLanes", "shift"):
             if lp.get(key): P[-1][key] = lp[key]
     if learned: STYLES.append(style)
-add_learned(LEARNED, LEARNED_FILE, "LEARNED")
-add_learned(LEARNED_RNB, os.path.join(os.path.dirname(LEARNED_FILE), "learned_mixed.json"), "LEARNED RNB")
+add_learned(LEARNED, LEARNED_FILE, "BK V1")
+add_learned(LEARNED_RNB, os.path.join(os.path.dirname(LEARNED_FILE), "learned_mixed.json"), "BK V2")
+add_learned(LEARNED_DL, os.path.join(os.path.dirname(LEARNED_FILE), "learned_drumloops.json"), "BK V3", keep=tops,
+            kicks=[lp for lp in json.load(open(LEARNED_FILE))["learned"] if clean(lp)])
 
 # ---------------- checks and output ----------------
 cnt = Counter(p["style"] for p in P)

@@ -348,5 +348,635 @@
   "category": "SNARE",
   "library": "SNARE",
   "source": "Cymatics - Snare (Switch).wav"
+ },
+ {
+  "file": "bk_rim_08.wav",
+  "name": "BK NO 8 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (1).wav"
+ },
+ {
+  "file": "bk_rim_09.wav",
+  "name": "BK NO 9 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (2).wav"
+ },
+ {
+  "file": "bk_rim_10.wav",
+  "name": "BK NO 10 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (3).wav"
+ },
+ {
+  "file": "bk_rim_11.wav",
+  "name": "BK NO 11 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (4).wav"
+ },
+ {
+  "file": "bk_rim_12.wav",
+  "name": "BK NO 12 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (5).wav"
+ },
+ {
+  "file": "bk_rim_13.wav",
+  "name": "BK NO 13 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (6).wav"
+ },
+ {
+  "file": "bk_rim_14.wav",
+  "name": "BK NO 14 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (7).wav"
+ },
+ {
+  "file": "bk_rim_15.wav",
+  "name": "BK NO 15 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (8).wav"
+ },
+ {
+  "file": "bk_rim_16.wav",
+  "name": "BK NO 16 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (9).wav"
+ },
+ {
+  "file": "bk_rim_17.wav",
+  "name": "BK NO 17 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Rims/Rim (10).wav"
+ },
+ {
+  "file": "bk_snare_08.wav",
+  "name": "BK NO 8 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (1).wav"
+ },
+ {
+  "file": "bk_snare_09.wav",
+  "name": "BK NO 9 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (2).wav"
+ },
+ {
+  "file": "bk_snare_10.wav",
+  "name": "BK NO 10 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (3).wav"
+ },
+ {
+  "file": "bk_snare_11.wav",
+  "name": "BK NO 11 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (4).wav"
+ },
+ {
+  "file": "bk_snare_12.wav",
+  "name": "BK NO 12 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (5).wav"
+ },
+ {
+  "file": "bk_snare_13.wav",
+  "name": "BK NO 13 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (6).wav"
+ },
+ {
+  "file": "bk_snare_14.wav",
+  "name": "BK NO 14 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (7).wav"
+ },
+ {
+  "file": "bk_snare_15.wav",
+  "name": "BK NO 15 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (8).wav"
+ },
+ {
+  "file": "bk_snare_16.wav",
+  "name": "BK NO 16 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (9).wav"
+ },
+ {
+  "file": "bk_snare_17.wav",
+  "name": "BK NO 17 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (10).wav"
+ },
+ {
+  "file": "bk_snare_18.wav",
+  "name": "BK NO 18 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (11).wav"
+ },
+ {
+  "file": "bk_snare_19.wav",
+  "name": "BK NO 19 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (12).wav"
+ },
+ {
+  "file": "bk_snare_20.wav",
+  "name": "BK NO 20 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (13).wav"
+ },
+ {
+  "file": "bk_snare_21.wav",
+  "name": "BK NO 21 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (14).wav"
+ },
+ {
+  "file": "bk_snare_22.wav",
+  "name": "BK NO 22 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (15).wav"
+ },
+ {
+  "file": "bk_snare_23.wav",
+  "name": "BK NO 23 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (16).wav"
+ },
+ {
+  "file": "bk_snare_24.wav",
+  "name": "BK NO 24 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (17).wav"
+ },
+ {
+  "file": "bk_snare_25.wav",
+  "name": "BK NO 25 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (18).wav"
+ },
+ {
+  "file": "bk_snare_26.wav",
+  "name": "BK NO 26 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (19).wav"
+ },
+ {
+  "file": "bk_snare_27.wav",
+  "name": "BK NO 27 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Snares/Snare (20).wav"
+ },
+ {
+  "file": "bk_hihat_07.wav",
+  "name": "BK NO 7 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (1).wav"
+ },
+ {
+  "file": "bk_hihat_08.wav",
+  "name": "BK NO 8 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (2).wav"
+ },
+ {
+  "file": "bk_hihat_09.wav",
+  "name": "BK NO 9 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (3).wav"
+ },
+ {
+  "file": "bk_hihat_10.wav",
+  "name": "BK NO 10 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (4).wav"
+ },
+ {
+  "file": "bk_hihat_11.wav",
+  "name": "BK NO 11 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (5).wav"
+ },
+ {
+  "file": "bk_hihat_12.wav",
+  "name": "BK NO 12 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (6).wav"
+ },
+ {
+  "file": "bk_hihat_13.wav",
+  "name": "BK NO 13 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (7).wav"
+ },
+ {
+  "file": "bk_hihat_14.wav",
+  "name": "BK NO 14 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (8).wav"
+ },
+ {
+  "file": "bk_hihat_15.wav",
+  "name": "BK NO 15 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (9).wav"
+ },
+ {
+  "file": "bk_hihat_16.wav",
+  "name": "BK NO 16 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (10).wav"
+ },
+ {
+  "file": "bk_hihat_17.wav",
+  "name": "BK NO 17 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (11).wav"
+ },
+ {
+  "file": "bk_hihat_18.wav",
+  "name": "BK NO 18 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (12).wav"
+ },
+ {
+  "file": "bk_hihat_19.wav",
+  "name": "BK NO 19 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (13).wav"
+ },
+ {
+  "file": "bk_hihat_20.wav",
+  "name": "BK NO 20 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (14).wav"
+ },
+ {
+  "file": "bk_hihat_21.wav",
+  "name": "BK NO 21 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (15).wav"
+ },
+ {
+  "file": "bk_hihat_22.wav",
+  "name": "BK NO 22 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (16).wav"
+ },
+ {
+  "file": "bk_hihat_23.wav",
+  "name": "BK NO 23 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (17).wav"
+ },
+ {
+  "file": "bk_hihat_24.wav",
+  "name": "BK NO 24 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (18).wav"
+ },
+ {
+  "file": "bk_hihat_25.wav",
+  "name": "BK NO 25 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (19).wav"
+ },
+ {
+  "file": "bk_hihat_26.wav",
+  "name": "BK NO 26 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Closed Hats/Closed Hats (20).wav"
+ },
+ {
+  "file": "bk_openhat_06.wav",
+  "name": "BK NO 6 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (1).wav"
+ },
+ {
+  "file": "bk_openhat_07.wav",
+  "name": "BK NO 7 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (2).wav"
+ },
+ {
+  "file": "bk_openhat_08.wav",
+  "name": "BK NO 8 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (3).wav"
+ },
+ {
+  "file": "bk_openhat_09.wav",
+  "name": "BK NO 9 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (4).wav"
+ },
+ {
+  "file": "bk_openhat_10.wav",
+  "name": "BK NO 10 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (5).wav"
+ },
+ {
+  "file": "bk_openhat_11.wav",
+  "name": "BK NO 11 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (6).wav"
+ },
+ {
+  "file": "bk_openhat_12.wav",
+  "name": "BK NO 12 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (7).wav"
+ },
+ {
+  "file": "bk_openhat_13.wav",
+  "name": "BK NO 13 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (8).wav"
+ },
+ {
+  "file": "bk_openhat_14.wav",
+  "name": "BK NO 14 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (9).wav"
+ },
+ {
+  "file": "bk_openhat_15.wav",
+  "name": "BK NO 15 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (10).wav"
+ },
+ {
+  "file": "bk_openhat_16.wav",
+  "name": "BK NO 16 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (11).wav"
+ },
+ {
+  "file": "bk_openhat_17.wav",
+  "name": "BK NO 17 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (12).wav"
+ },
+ {
+  "file": "bk_openhat_18.wav",
+  "name": "BK NO 18 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (13).wav"
+ },
+ {
+  "file": "bk_openhat_19.wav",
+  "name": "BK NO 19 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (14).wav"
+ },
+ {
+  "file": "bk_openhat_20.wav",
+  "name": "BK NO 20 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (15).wav"
+ },
+ {
+  "file": "bk_openhat_21.wav",
+  "name": "BK NO 21 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (16).wav"
+ },
+ {
+  "file": "bk_openhat_22.wav",
+  "name": "BK NO 22 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (17).wav"
+ },
+ {
+  "file": "bk_openhat_23.wav",
+  "name": "BK NO 23 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (18).wav"
+ },
+ {
+  "file": "bk_openhat_24.wav",
+  "name": "BK NO 24 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (19).wav"
+ },
+ {
+  "file": "bk_openhat_25.wav",
+  "name": "BK NO 25 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Open Hats/Open Hats (20).wav"
+ },
+ {
+  "file": "bk_crash_01.wav",
+  "name": "BK NO 1 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (1).wav"
+ },
+ {
+  "file": "bk_crash_02.wav",
+  "name": "BK NO 2 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (2).wav"
+ },
+ {
+  "file": "bk_crash_03.wav",
+  "name": "BK NO 3 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (3).wav"
+ },
+ {
+  "file": "bk_crash_04.wav",
+  "name": "BK NO 4 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (4).wav"
+ },
+ {
+  "file": "bk_crash_05.wav",
+  "name": "BK NO 5 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (5).wav"
+ },
+ {
+  "file": "bk_crash_06.wav",
+  "name": "BK NO 6 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (6).wav"
+ },
+ {
+  "file": "bk_crash_07.wav",
+  "name": "BK NO 7 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (7).wav"
+ },
+ {
+  "file": "bk_crash_08.wav",
+  "name": "BK NO 8 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (8).wav"
+ },
+ {
+  "file": "bk_crash_09.wav",
+  "name": "BK NO 9 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (9).wav"
+ },
+ {
+  "file": "bk_crash_10.wav",
+  "name": "BK NO 10 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (10).wav"
+ },
+ {
+  "file": "bk_crash_11.wav",
+  "name": "BK NO 11 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (11).wav"
+ },
+ {
+  "file": "bk_crash_12.wav",
+  "name": "BK NO 12 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (12).wav"
+ },
+ {
+  "file": "bk_crash_13.wav",
+  "name": "BK NO 13 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (13).wav"
+ },
+ {
+  "file": "bk_crash_14.wav",
+  "name": "BK NO 14 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (14).wav"
+ },
+ {
+  "file": "bk_crash_15.wav",
+  "name": "BK NO 15 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (15).wav"
+ },
+ {
+  "file": "bk_crash_16.wav",
+  "name": "BK NO 16 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (16).wav"
+ },
+ {
+  "file": "bk_crash_17.wav",
+  "name": "BK NO 17 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (17).wav"
+ },
+ {
+  "file": "bk_crash_18.wav",
+  "name": "BK NO 18 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (18).wav"
+ },
+ {
+  "file": "bk_crash_19.wav",
+  "name": "BK NO 19 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (19).wav"
+ },
+ {
+  "file": "bk_crash_20.wav",
+  "name": "BK NO 20 CRASH",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Crashes/Crash (20).wav"
  }
 ]
