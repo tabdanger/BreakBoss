@@ -221,6 +221,18 @@ final class KnockEngine {
     /// faceplate retries on subsequent callbacks if the control-plane writer is busy.
     private let hostParams: UnsafeMutablePointer<Float>
     private var hostParamMask: UInt32 = 0
+    /// Host automation that lands inside a render call (AUv3): a value at its sample offset, or a
+    /// ramp from the value there to the new one, which may run on into later calls. Fixed storage.
+    struct HostParamEvent { var offset = 0; var index = 0; var value: Float = 0; var ramp = 0 }
+    struct HostRamp { var from: Float = 0; var to: Float = 0; var length = 1; var done = 0 }
+    static let maxHostParamEvents = 256
+    /// A ramp moves in steps this many samples long, counted from where it started (the chain's own
+    /// smoothing joins the steps). Pieces of the call are rendered at each step's value.
+    static let hostRampStep = 32
+    private let hostParamEvents: UnsafeMutablePointer<HostParamEvent>
+    private var hostParamEventCount = 0
+    private let hostRamps: UnsafeMutablePointer<HostRamp>
+    private var hostRampMask: UInt32 = 0
     /// Tempo of the BPM display (the engine reads it; the controller sets it).
     private let displayBPM: UnsafeMutablePointer<Double>
     /// The standalone app: TEMPO SYNC and FOLLOW DAW only mean something inside a DAW (AUv3), so
@@ -399,6 +411,10 @@ final class KnockEngine {
         hostParams = .allocate(capacity: KParam.count)
         for p in KParam.allCases { (params + p.rawValue).initialize(to: p.defaultValue) }
         for p in KParam.allCases { (hostParams + p.rawValue).initialize(to: p.defaultValue) }
+        hostParamEvents = .allocate(capacity: KnockEngine.maxHostParamEvents)
+        hostParamEvents.initialize(repeating: HostParamEvent(), count: KnockEngine.maxHostParamEvents)
+        hostRamps = .allocate(capacity: KParam.count)
+        hostRamps.initialize(repeating: HostRamp(), count: KParam.count)
         displayBPM = .allocate(capacity: 1)
         displayBPM.initialize(to: 140)
         status = .allocate(capacity: 10)
@@ -458,6 +474,8 @@ final class KnockEngine {
         playheadTick.deallocate()
         params.deallocate()
         hostParams.deallocate()
+        hostParamEvents.deallocate()
+        hostRamps.deallocate()
         displayBPM.deallocate()
         status.deallocate()
         padHits.deallocate()
@@ -492,15 +510,103 @@ final class KnockEngine {
     /// AU render thread only, before render(). Automation is normalized into fixed storage;
     /// render() applies it even if publishing the value to the faceplate cannot try-lock yet.
     /// Control-plane writers keep using setParam(). Parameter addresses stay append-only.
+    /// `offset` counts samples from the start of the next render() call (later offsets carry over
+    /// to the calls after it); `ramp` > 0 glides there over that many samples instead of jumping.
     @inline(__always)
-    func hostParameter(_ p: KParam, _ value: Float) {
-        let finite = value.isFinite ? value : p.defaultValue
-        if let steps = p.steps {
-            hostParams[p.rawValue] = finite.rounded().clamped(0, Float(steps - 1))
-        } else {
-            hostParams[p.rawValue] = finite.clamped(0, 1)
+    func hostParameter(_ p: KParam, _ value: Float, offset: Int = 0, ramp: Int = 0) {
+        let v = KnockEngine.normalized(p.rawValue, value)
+        if offset <= 0 && ramp <= 0 && hostParamEventCount == 0 {
+            // at the call's first sample: part of its opening snapshot, and it ends any ramp
+            hostParams[p.rawValue] = v
+            hostParamMask |= UInt32(1) << p.rawValue
+            hostRampMask &= ~(UInt32(1) << p.rawValue)
+            return
         }
-        hostParamMask |= UInt32(1) << p.rawValue
+        guard hostParamEventCount < KnockEngine.maxHostParamEvents else { return }
+        hostParamEvents[hostParamEventCount] = HostParamEvent(offset: max(0, offset), index: p.rawValue,
+                                                              value: v, ramp: max(0, ramp))
+        hostParamEventCount += 1
+    }
+
+    @inline(__always)
+    private static func normalized(_ index: Int, _ value: Float) -> Float {
+        guard let p = KParam(rawValue: index) else { return value }
+        let finite = value.isFinite ? value : p.defaultValue
+        if let steps = p.steps { return finite.rounded().clamped(0, Float(steps - 1)) }
+        return finite.clamped(0, 1)
+    }
+
+    /// A value the host set inside this call: heard from here on, shown on the faceplate after.
+    @inline(__always)
+    private func setHostValue(_ index: Int, _ value: Float) {
+        params[index] = value
+        hostParams[index] = value
+        hostParamMask |= UInt32(1) << index
+    }
+
+    @inline(__always)
+    private func rampValue(_ index: Int) -> Float {
+        let r = hostRamps[index]
+        guard r.done < r.length else { return r.to }
+        let step = KnockEngine.hostRampStep
+        let at = Float(r.done / step * step) / Float(r.length)
+        return KnockEngine.normalized(index, r.from + (r.to - r.from) * at)
+    }
+
+    /// Timed automation due at `frame` of this call, then each running ramp's current step.
+    /// Returns how many samples may render before the next change.
+    private func applyHostAutomation(at frame: Int, cursor: inout Int, limit: Int) -> Int {
+        while cursor < hostParamEventCount && hostParamEvents[cursor].offset <= frame {
+            let e = hostParamEvents[cursor]
+            cursor += 1
+            let bit = UInt32(1) << e.index
+            if e.ramp > 0 {
+                hostRamps[e.index] = HostRamp(from: params[e.index], to: e.value, length: e.ramp, done: 0)
+                hostRampMask |= bit
+            } else {
+                hostRampMask &= ~bit
+                setHostValue(e.index, e.value)
+            }
+        }
+        var n = limit
+        if cursor < hostParamEventCount { n = min(n, hostParamEvents[cursor].offset - frame) }
+        var ramps = hostRampMask
+        while ramps != 0 {
+            let index = ramps.trailingZeroBitCount
+            ramps &= ramps - 1
+            setHostValue(index, rampValue(index))
+            let r = hostRamps[index]
+            let step = KnockEngine.hostRampStep
+            n = min(n, min(step - r.done % step, r.length - r.done))
+        }
+        return max(1, n)
+    }
+
+    private func advanceHostRamps(by frames: Int) {
+        var ramps = hostRampMask
+        while ramps != 0 {
+            let index = ramps.trailingZeroBitCount
+            ramps &= ramps - 1
+            hostRamps[index].done += frames
+            if hostRamps[index].done >= hostRamps[index].length {
+                hostRampMask &= ~(UInt32(1) << index)
+                setHostValue(index, hostRamps[index].to)
+            }
+        }
+    }
+
+    /// Host automation arrives in time order; keep that order for equal offsets.
+    private func sortHostParamEvents() {
+        guard hostParamEventCount > 1 else { return }
+        for i in 1..<hostParamEventCount {
+            let e = hostParamEvents[i]
+            var j = i - 1
+            while j >= 0 && hostParamEvents[j].offset > e.offset {
+                hostParamEvents[j + 1] = hostParamEvents[j]
+                j -= 1
+            }
+            hostParamEvents[j + 1] = e
+        }
     }
 
     // MARK: Events from outside the audio thread
@@ -617,16 +723,42 @@ final class KnockEngine {
             }
         }
         midiOutCount = 0
+        sortHostParamEvents()
+        var automation = 0
+        let automated = hostParamEventCount > 0 || hostRampMask != 0
         var done = 0
         while done < total {
             renderBase = done
+            var limit = min(total - done, 8_192)
+            // Host automation splits the call where values change, so each is heard from its own sample.
+            if automated { limit = applyHostAutomation(at: done, cursor: &automation, limit: limit) }
             // A loop gate must change transport before its part of the block is scheduled.
             // Splitting at that exact boundary also keeps stop/release fades at the correct
             // sample. Ordinary pad and bass notes remain inexpensive segmented BlockEvents.
-            let n = nextHostTransportBoundary(before: min(total - done, 8_192))
+            let n = nextHostTransportBoundary(before: limit)
             renderBlock(frames: n, left: left + done, right: right + done,
                         host: done == 0 ? host : advanced(host, by: done))
+            if automated { advanceHostRamps(by: n) }
             done += n
+        }
+        if automated {
+            // Events for later calls keep their order, counted from the next call's start.
+            var keep = 0
+            for i in automation..<hostParamEventCount {
+                var e = hostParamEvents[i]
+                e.offset -= total
+                hostParamEvents[keep] = e
+                keep += 1
+            }
+            hostParamEventCount = keep
+            // A ramp still running shows its current step on the faceplate.
+            var ramps = hostRampMask
+            while ramps != 0 {
+                let index = ramps.trailingZeroBitCount
+                ramps &= ramps - 1
+                hostParams[index] = rampValue(index)
+                hostParamMask |= UInt32(1) << index
+            }
         }
         flushMIDIOffs(frames: total)
         sampleClock += Int64(total)

@@ -74,6 +74,25 @@ targets:
         TEST_TARGET_NAME: BreakBoss
     dependencies:
       - target: BreakBoss
+  # The AUv3 render block driven like a host drives it (build.yml, "au_tests"). Compiled from the
+  # plug-in's own sources into one bundle, so the tests reach its internals. Not part of the upload.
+  BreakBossAUTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: build/plugin/Sources
+      - path: ../AUv3
+        includes: ["*.swift"]
+      - path: AUTests
+      - path: build/plugin/Resources
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_NAME: BreakBossAUTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.tabdanger.BreakBoss.AUTests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "2"
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) BREAKBOSS_PLUGIN"
 schemes:
   BreakBoss:
     build:
@@ -92,3 +111,11 @@ schemes:
       config: Debug
       targets:
         - BreakBossUITests
+  BreakBossAUTests:
+    build:
+      targets:
+        BreakBossAUTests: [test]
+    test:
+      config: Debug
+      targets:
+        - BreakBossAUTests

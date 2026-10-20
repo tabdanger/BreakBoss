@@ -81,14 +81,13 @@ public final class BreakBossAudioUnit: AUAudioUnit {
     /// MIDI OUT: the pattern's hits go to the host's MIDI output (route them to other plug-ins
     /// or external gear), each drum channel on its own MIDI channel.
     public override var midiOutputNames: [String] { ["BreaKing MIDI Out"] }
-    /// The host's MIDI output block, read by the render block (set before rendering starts).
-    private final class MIDIOutHolder { var block: AUMIDIOutputEventBlock? }
     private let midiOutHolder = MIDIOutHolder()
 
     /// Hosts (Logic Pro for iPad among them) can hand over their MIDI output block after rendering
-    /// has started, or swap it when the routing changes; keep the render block's copy current.
+    /// has started, or swap it when the routing changes. The render block picks up the new one at
+    /// its next callback; the old one is released off the audio thread.
     public override var midiOutputEventBlock: AUMIDIOutputEventBlock? {
-        didSet { midiOutHolder.block = midiOutputEventBlock }
+        didSet { midiOutHolder.publish(midiOutputEventBlock) }
     }
 
     public override var parameterTree: AUParameterTree? {
@@ -142,7 +141,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
 
     public override func allocateRenderResources() throws {
         try super.allocateRenderResources()
-        midiOutHolder.block = midiOutputEventBlock
+        midiOutHolder.publish(midiOutputEventBlock)
         let format = outputBus.format
         ownBuffers.prepare(format: format, frames: maximumFramesToRender)
         let rate = format.sampleRate
@@ -166,9 +165,10 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             guard list.count > 0, let l = list[0].mData?.assumingMemoryBound(to: Float.self) else { return noErr }
             let r = list.count > 1 ? (list[1].mData?.assumingMemoryBound(to: Float.self) ?? l) : l
 
-            // MIDI keeps sample offsets. Control automation takes one bounded snapshot per
-            // render callback; the processing chain smooths continuous gain/filter controls.
+            // MIDI and automation keep their sample offsets: the engine renders the callback in
+            // pieces where a value changes, and ramps step on through the callbacks that follow.
             let start = timestamp.pointee.mSampleTime
+            midiOut.refresh()
             var event = events
             while let e = event {
                 switch e.pointee.head.eventType {
@@ -179,7 +179,11 @@ public final class BreakBossAudioUnit: AUAudioUnit {
                     engine.hostMIDI(offset: offset, status: bytes.0, data1: bytes.1, data2: bytes.2)
                 case .parameter, .parameterRamp:
                     let p = e.pointee.parameter
-                    if let k = KParam(rawValue: Int(p.parameterAddress)) { engine.hostParameter(k, p.value) }
+                    let offset = max(0, Int(Double(p.eventSampleTime) - start))
+                    let ramp = e.pointee.head.eventType == .parameterRamp ? Int(p.rampDurationSampleFrames) : 0
+                    if let k = KParam(rawValue: Int(p.parameterAddress)) {
+                        engine.hostParameter(k, p.value, offset: offset, ramp: ramp)
+                    }
                 default:
                     break
                 }
@@ -202,7 +206,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             } else {
                 engine.render(frames: Int(frameCount), left: l, right: r, host: host)
             }
-            if engine.midiOutCount > 0, let send = midiOut.block {
+            if engine.midiOutCount > 0, let send = midiOut.current?.block {
                 engine.forEachMIDIOut { frame, status, d1, d2 in
                     var bytes = (status, d1, d2)
                     withUnsafeBytes(of: &bytes) { raw in
@@ -246,6 +250,36 @@ public final class BreakBossAudioUnit: AUAudioUnit {
 
 @inline(__always)
 private func mono(_ list: UnsafeMutableAudioBufferListPointer) -> Bool { list.count == 1 }
+
+/// The host's MIDI output block as the render block sees it. The host may set or replace it on
+/// any thread at any time; it's handed over through a Handoff (the render block tries once per
+/// callback and keeps the block it has if busy), and the replaced one goes back to be released by
+/// the next publish, never on the audio thread. Only the render block touches `current`.
+final class MIDIOutHolder {
+    final class Route {
+        let block: AUMIDIOutputEventBlock?
+        init(_ block: AUMIDIOutputEventBlock?) { self.block = block }
+    }
+    private let handoff = Handoff<Route>()
+    private(set) var current: Route?
+    private var retiring: Route?
+
+    /// Host / main thread: route MIDI out to `block` (nil = nowhere) from the next callback on.
+    func publish(_ block: AUMIDIOutputEventBlock?) { handoff.publish(Route(block)) }
+
+    /// Host / main thread: release routes the render block has finished with.
+    func collect() { handoff.collect() }
+
+    /// Audio thread, once per callback before MIDI goes out. No allocation, no waiting, no release.
+    @inline(__always)
+    func refresh() {
+        if let r = retiring, handoff.retire(r) { retiring = nil }
+        guard retiring == nil, let next = handoff.take() else { return }
+        retiring = current
+        current = next
+        if let r = retiring, handoff.retire(r) { retiring = nil }
+    }
+}
 
 /// Buffers made when rendering starts, never on the audio thread: for hosts that pass empty
 /// buffers (allowed by the AU rules), and the spare right channel when the track is mono.
