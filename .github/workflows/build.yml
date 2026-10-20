@@ -24,6 +24,10 @@ on:
         description: "Tap check: run only this UI test class (e.g. TrackFXUITests); empty = all (the whole set now runs past the time limit)"
         type: string
         default: ""
+      au_tests:
+        description: "Also run the AUv3 render tests (automation timing, ramps, MIDI out) on an iPad simulator"
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       tap_check:
@@ -210,5 +214,65 @@ jobs:
           path: |
             ${{ runner.temp }}/uishots
             ${{ runner.temp }}/ui-test.log
+          retention-days: 14
+          if-no-files-found: ignore
+
+  au-tests:
+    # only when asked: Run workflow › "Also run the AUv3 render tests"
+    if: ${{ inputs.au_tests }}
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v5
+
+      - name: Use Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -vi beta | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; fi
+          xcodebuild -version
+
+      - name: Make the Xcode project
+        run: |
+          brew install xcodegen > "$RUNNER_TEMP/brew.log" 2>&1 || { tail -20 "$RUNNER_TEMP/brew.log"; exit 1; }
+          python3 xcode/generate.py
+          xcodegen generate --spec xcode/project.yml
+
+      - name: Pick an iPad simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, re, sys
+          data = json.load(sys.stdin)["devices"]
+          best = None
+          for runtime, devices in data.items():
+              if "iOS" not in runtime: continue
+              pads = [d for d in devices if d["name"].startswith("iPad")]
+              if not pads: continue
+              version = tuple(int(x) for x in re.findall(r"\d+", runtime))
+              pad = next((d for d in pads if "11-inch" in d["name"]), pads[0])
+              if best is None or version > best[0]: best = (version, pad)
+          print(best[1]["udid"])')
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" || true
+
+      - name: Run the AUv3 render tests
+        run: |
+          xcodebuild test \
+            -project xcode/BreakBoss.xcodeproj \
+            -scheme BreakBossAUTests \
+            -destination "id=$UDID" \
+            -derivedDataPath "$RUNNER_TEMP/dd-au" \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
+            > "$RUNNER_TEMP/au-test.log" 2>&1 || STATUS=$?
+          python3 "$GITHUB_WORKSPACE/.github/scripts/annotate.py" "$RUNNER_TEMP/au-test.log" "AUv3 render tests" || true
+          grep -E "error:|XCTAssert|Test Case|failed|passed|\*\* TEST" "$RUNNER_TEMP/au-test.log" | tail -400
+          exit ${STATUS:-0}
+
+      - name: Keep the log
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: au-render-tests
+          path: ${{ runner.temp }}/au-test.log
           retention-days: 14
           if-no-files-found: ignore
