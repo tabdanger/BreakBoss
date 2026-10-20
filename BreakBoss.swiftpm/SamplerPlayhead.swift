@@ -122,7 +122,7 @@ struct SamplerPhosphor {
     init(_ sample: SampleBuffer, peaks: SamplerPeaks?, size: CGSize, zoom: Double, scroll: Double, pointsPerColumn: CGFloat = 2) {
         let n = sample.length
         guard n > 1, size.width > 1 else { return }
-        let mid = size.height / 2, k = mid * 0.92
+        let mid = size.height / 2, k = mid * 0.88
         func y(_ v: Float) -> CGFloat { mid - CGFloat(max(-1, min(1, v))) * k }
         let span = Double(n) / max(1, zoom), first = scroll * Double(n)
         if span / Double(size.width) <= 3 {
@@ -140,14 +140,11 @@ struct SamplerPhosphor {
         let cols = peaks.columns(sample, count: count, zoom: zoom, scroll: scroll)
         guard cols.count > 1 else { return }
         let step = size.width / CGFloat(count)
-        // smooth curves through the midpoints, so the edges have no sharp corners (Face 1's curve)
+        // each column's lowest and highest point joined straight, the outline closed into one shape
+        // (Tyrone's DrumSampleWaveform, Oct 20)
         func curve(_ values: [Float], into path: inout Path) {
             path.move(to: CGPoint(x: 0, y: y(values[0])))
-            for i in 1..<values.count - 1 {
-                let p = CGPoint(x: CGFloat(i) * step, y: y(values[i])), q = CGPoint(x: CGFloat(i + 1) * step, y: y(values[i + 1]))
-                path.addQuadCurve(to: CGPoint(x: (p.x + q.x) / 2, y: (p.y + q.y) / 2), control: p)
-            }
-            path.addLine(to: CGPoint(x: CGFloat(values.count - 1) * step, y: y(values[values.count - 1])))
+            for i in 1..<values.count { path.addLine(to: CGPoint(x: CGFloat(i) * step, y: y(values[i]))) }
         }
         let hi = cols.map { $0.1 }, lo = cols.map { $0.0 }
         curve(hi, into: &high)
@@ -157,24 +154,16 @@ struct SamplerPhosphor {
         band.closeSubpath()
     }
 
-    /// Draws it in a face's light. `lit` 0 = resting on the page, 1 = lit by the sound playing.
-    /// `thin` < 1 narrows the glow for a small strip (the scroll bar's whole-sound view).
+    /// Draws it in a face's light, in Tyrone's DrumSampleWaveform style (Oct 20): a filled shape with a
+    /// thin edge. `lit` 0 = resting on the page, 1 = the played part. `thin` scales the edge for a small strip.
     func draw(in ctx: inout GraphicsContext, light: FaceLight, lit: Double = 0, thin: CGFloat = 1) {
-        let soft = StrokeStyle(lineWidth: (6 + 3 * lit) * thin, lineCap: .round, lineJoin: .round)
-        let mid = StrokeStyle(lineWidth: (3 + lit) * thin, lineCap: .round, lineJoin: .round)
-        let core = StrokeStyle(lineWidth: max(0.8, (1.3 + 0.4 * lit) * thin), lineCap: .round, lineJoin: .round)
+        let edge = StrokeStyle(lineWidth: max(0.5, (0.6 + 0.2 * lit) * thin), lineJoin: .round)
         if showsLine {
-            ctx.stroke(line, with: .color(light.glow.opacity(0.16 + 0.14 * lit)), style: soft)
-            ctx.stroke(line, with: .color(light.glow.opacity(0.34 + 0.2 * lit)), style: mid)
-            ctx.stroke(line, with: .color(light.blend(0.6 + 0.4 * lit)), style: core)
+            ctx.stroke(line, with: .color(lit > 0 ? light.blend(0.7) : light.glow.opacity(0.8)), style: StrokeStyle(lineWidth: 1, lineJoin: .round))
             return
         }
-        ctx.fill(band, with: .color(light.blend(0.3 + 0.4 * lit).opacity(0.32 + 0.3 * lit)))
-        for edge in [high, low] {
-            ctx.stroke(edge, with: .color(light.glow.opacity(0.16 + 0.14 * lit)), style: soft)
-            ctx.stroke(edge, with: .color(light.glow.opacity(0.34 + 0.2 * lit)), style: mid)
-            ctx.stroke(edge, with: .color(light.blend(0.55 + 0.45 * lit)), style: core)
-        }
+        ctx.fill(band, with: .color(light.glow.opacity(0.34 + 0.54 * lit)))
+        ctx.stroke(band, with: .color(lit > 0 ? light.blend(0.7) : light.glow.opacity(0.6)), style: edge)
     }
 }
 
@@ -252,10 +241,11 @@ struct SamplerPlayhead: UIViewRepresentable {
                 l.actions = ["position": NSNull(), "bounds": NSNull(), "frame": NSNull(), "hidden": NSNull(),
                              "contents": NSNull(), "opacity": NSNull()]
             }
-            doneMask.backgroundColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            // the whole played part shows the tinted wave (Tyrone's DrumSampleWaveform, Oct 20)
+            doneMask.backgroundColor = UIColor.white.cgColor
             trailMask.startPoint = CGPoint(x: 0, y: 0.5)
             trailMask.endPoint = CGPoint(x: 1, y: 0.5)
-            trailMask.colors = [UIColor.white.withAlphaComponent(0.3).cgColor, UIColor.white.cgColor]
+            trailMask.colors = [UIColor.white.cgColor, UIColor.white.cgColor]
             playedMask.addSublayer(doneMask)
             playedMask.addSublayer(trailMask)
             played.mask = playedMask
@@ -264,7 +254,7 @@ struct SamplerPlayhead: UIViewRepresentable {
             bloom.startPoint = CGPoint(x: 0, y: 0.5)
             bloom.endPoint = CGPoint(x: 1, y: 0.5)
             bloom.isHidden = true
-            line.shadowOpacity = 0.9
+            line.shadowOpacity = 0.5
             line.shadowRadius = 3
             line.shadowOffset = .zero
             head.shadowOpacity = 0.9
@@ -320,7 +310,7 @@ struct SamplerPlayhead: UIViewRepresentable {
             head.fillColor = pale
             head.shadowColor = cursor.color.cgColor
             let core = Self.coreColor(cursor.face)
-            bloom.colors = [core.withAlphaComponent(0).cgColor, core.withAlphaComponent(0.55).cgColor, core.withAlphaComponent(0).cgColor]
+            bloom.colors = [core.withAlphaComponent(0.13).cgColor, core.withAlphaComponent(0.13).cgColor]
             if old?.sample !== cursor.sample || old?.pad != cursor.pad {
                 voice = 0; last = nil; resetAt = nil
                 peaks = nil
@@ -355,22 +345,19 @@ struct SamplerPlayhead: UIViewRepresentable {
                 format.scale = scale
                 let image = UIGraphicsImageRenderer(size: size, format: format).image { r in
                     let ctx = r.cgContext
-                    let glow = light.uiColor(0), hot = light.uiColor(1), warm = light.uiColor(0.7)
-                    let edges = wave.showsLine ? [wave.line] : [wave.high, wave.low]
-                    if !wave.showsLine {
+                    // the played part, as Tyrone's DrumSampleWaveform tints it: the shape nearly solid, a pale edge
+                    let glow = light.uiColor(0), pale = light.uiColor(0.7)
+                    ctx.setLineJoin(.round)
+                    if wave.showsLine {
+                        ctx.addPath(wave.line.cgPath)
+                        ctx.setLineWidth(1.2); ctx.setStrokeColor(pale.cgColor); ctx.strokePath()
+                    } else {
                         ctx.addPath(wave.band.cgPath)
-                        ctx.setFillColor(warm.withAlphaComponent(0.6).cgColor)
+                        ctx.setFillColor(glow.withAlphaComponent(0.88).cgColor)
                         ctx.fillPath()
+                        ctx.addPath(wave.band.cgPath)
+                        ctx.setLineWidth(0.8); ctx.setStrokeColor(pale.cgColor); ctx.strokePath()
                     }
-                    ctx.setLineCap(.round); ctx.setLineJoin(.round)
-                    for (width, color) in [(9.0, glow.withAlphaComponent(0.3)), (4.0, glow.withAlphaComponent(0.55)), (1.7, hot)] as [(CGFloat, UIColor)] {
-                        for e in edges { ctx.addPath(e.cgPath) }
-                        ctx.setLineWidth(width)
-                        ctx.setStrokeColor(color.cgColor)
-                        ctx.strokePath()
-                    }
-                    ctx.setFillColor(warm.withAlphaComponent(0.5).cgColor)
-                    ctx.fill(CGRect(x: 0, y: size.height / 2 - 0.5, width: size.width, height: 1))
                 }
                 DispatchQueue.main.async { [weak self] in
                     guard let self, self.imageToken == token else { return }
@@ -475,16 +462,16 @@ struct SamplerPlayhead: UIViewRepresentable {
             let cx = x(position)
             CATransaction.begin(); CATransaction.setDisableActions(true)
             let playing = voice != 0
-            line.frame = CGRect(x: cx - 0.75, y: 0, width: 1.5, height: h)
+            line.frame = CGRect(x: cx - 0.5, y: 0, width: 1, height: h)
             line.opacity = playing ? 1 : 0.55
             line.isHidden = cx < -4 || cx > w + 4
-            let hw: CGFloat = 6
+            let hw: CGFloat = 4
             if head.path == nil {
                 let tri = UIBezierPath()
-                tri.move(to: .zero); tri.addLine(to: CGPoint(x: 2 * hw, y: 0)); tri.addLine(to: CGPoint(x: hw, y: 9)); tri.close()
+                tri.move(to: .zero); tri.addLine(to: CGPoint(x: 2 * hw, y: 0)); tri.addLine(to: CGPoint(x: hw, y: 6)); tri.close()
                 head.path = tri.cgPath
             }
-            head.frame = CGRect(x: cx - hw, y: 0, width: 2 * hw, height: 9)
+            head.frame = CGRect(x: cx - hw, y: 0, width: 2 * hw, height: 6)
             head.opacity = line.opacity
             head.isHidden = line.isHidden
             let a = x(playedLo), b = x(playedHi)
@@ -516,10 +503,9 @@ struct SamplerPlayhead: UIViewRepresentable {
                 trailMask.endPoint = CGPoint(x: forward ? 1 : 0, y: 0.5)
                 doneMask.frame = forward ? CGRect(x: a, y: 0, width: max(0, t0 - a), height: h)
                                          : CGRect(x: t1, y: 0, width: max(0, b - t1), height: h)
-                // the bloom: wider and brighter the louder the sound is right there
-                let bw = 14 + 46 * CGFloat(level)
-                bloom.frame = CGRect(x: cx - bw / 2, y: 0, width: bw, height: h)
-                bloom.opacity = Float(0.35 + 0.65 * level)
+                // the cursor's soft 6 pt light (Tyrone's DrumSampleWaveform)
+                bloom.frame = CGRect(x: cx - 3, y: 0, width: 6, height: h)
+                bloom.opacity = 1
             } else if !played.isHidden && !fading {
                 // the hit has ended: the light fades out like phosphor (the render server runs it)
                 fading = true

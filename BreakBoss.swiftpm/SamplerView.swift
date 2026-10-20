@@ -2099,11 +2099,11 @@ struct SamplerWaveCanvas: View, Equatable {
         let loaded = peaksLoaded
         return Canvas { ctx, size in
             let n = sample.length
-            // the faint grid: 32 across, 6 down
+            // the faint grid: 24 across, 4 down (Tyrone's DrumSampleWaveform, Oct 20)
             var grid = Path()
-            for k in 1..<32 { grid.addRect(CGRect(x: (size.width * CGFloat(k) / 32).rounded(), y: 0, width: 0.5, height: size.height)) }
-            for k in 1..<6 { grid.addRect(CGRect(x: 0, y: (size.height * CGFloat(k) / 6).rounded(), width: size.width, height: 0.5)) }
-            ctx.fill(grid, with: .color(.white.opacity(0.05)))
+            for k in 1..<24 { grid.addRect(CGRect(x: (size.width * CGFloat(k) / 24).rounded(), y: 0, width: 0.5, height: size.height)) }
+            for k in 1..<4 { grid.addRect(CGRect(x: 0, y: (size.height * CGFloat(k) / 4).rounded(), width: size.width, height: 0.5)) }
+            ctx.fill(grid, with: .color(.white.opacity(0.045)))
             guard n > 1 else { return }
             let span = Double(n) / Double(zoom)
             let first = Double(scroll) * Double(n)
@@ -2133,8 +2133,8 @@ struct SamplerWaveCanvas: View, Equatable {
                 }
             }
             let light = FaceLight.of(face)
-            ctx.fill(Path(CGRect(x: 0, y: mid - 0.5, width: size.width, height: 1)), with: .color(light.glow.opacity(0.3)))
-            // the wave in Face 1's light: a phosphor band edged by glowing traces (Tyrone, Oct 20)
+            ctx.fill(Path(CGRect(x: 0, y: mid - 0.25, width: size.width, height: 0.5)), with: .color(light.glow.opacity(0.25)))
+            // the wave in the face's own colour, drawn like Tyrone's DrumSampleWaveform (Oct 20)
             if loaded >= 0 {
                 SamplerPhosphor(sample, peaks: SamplerPeaks.cached(sample), size: size, zoom: Double(zoom), scroll: Double(scroll))
                     .draw(in: &ctx, light: light, thin: min(1, size.height / 120))
