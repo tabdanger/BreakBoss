@@ -9,7 +9,8 @@ import Foundation
 // Styles (rebuilt Oct 17 from the drum research, 10 presets each, written with accents, ghosts and
 // fills): Neo Soul, Dilla Time, Boom Bap, 90s Rap, 70s Soul, 80s Breaks, Rock, Trap, Alt Trap, Drill,
 // UK Drill, NY Drill, Detroit 2026, Bay Area 2026, RnB, 90s RnB and UK RnB. Then Learned Loops (Oct 20):
-// grooves tools/learn_from_loops.py heard in Tyrone's own drum loops (4 or 8 bars, the loop's own tempo).
+// grooves tools/learn_from_loops.py heard in Tyrone's own drum loops (4 or 8 bars, the loop's own tempo),
+// and Learned RnB: his R&B loops, split from the full mix by tools/learn_fills.py.
 
 struct PatternPreset: Decodable, Equatable {
     let style: String
@@ -43,6 +44,7 @@ struct PatternPreset: Decodable, Equatable {
         case "RnB": return .trapSoul
         case "90s RnB", "UK RnB": return .rnb
         case "Learned Loops": return bpm >= 120 ? .trapAtlanta : .boomBap
+        case "Learned RnB": return .rnb
         default:
             if name.contains("AFRO") { return .afrobeats }
             if name.contains("BREAK") { return .funkBreak }

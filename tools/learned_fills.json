@@ -1,0 +1,123 @@
+{
+ "version": 1,
+ "fills": [
+  {
+   "source": "2000's Juice [89].wav",
+   "title": "2000'S JUICE",
+   "bpm": 89.0,
+   "lanes": {
+    "k": "........g...gX..",
+    "s": ".........XXr....",
+    "h": "........o...rg.."
+   },
+   "beats": 2.0
+  },
+  {
+   "source": "Abundance [120].wav",
+   "title": "ABUNDANCE",
+   "bpm": 120.0,
+   "lanes": {
+    "k": "......X.........",
+    "s": "....X...o.......",
+    "c": "......X.X.x.....",
+    "h": ".......X........",
+    "o": "............X..."
+   },
+   "beats": 3.0
+  },
+  {
+   "source": "Aloe [82].wav",
+   "title": "ALOE",
+   "bpm": 82.0,
+   "lanes": {
+    "k": "X.g...X.........",
+    "s": "....xX..........",
+    "h": "r..g..o........."
+   },
+   "beats": 4.0
+  },
+  {
+   "source": "Chill Phil [82].wav",
+   "title": "CHILL PHIL",
+   "bpm": 82.0,
+   "lanes": {
+    "k": ".........r......",
+    "s": "........X..XX...",
+    "h": ".........X......",
+    "o": ".............X.."
+   },
+   "beats": 2.0
+  },
+  {
+   "source": "Elf 2.0 [130].wav.wav",
+   "title": "ELF 2.0",
+   "bpm": 130.0,
+   "lanes": {
+    "k": "X..g..g.........",
+    "s": "o.......X.......",
+    "c": "....X.X.........",
+    "h": "...X............"
+   },
+   "beats": 4.0
+  },
+  {
+   "source": "Fisher [75].wav",
+   "title": "FISHER",
+   "bpm": 75.0,
+   "lanes": {
+    "k": "rX....x.........",
+    "s": "ggrX..X........."
+   },
+   "beats": 4.0
+  },
+  {
+   "source": "Flossy Tom Fill [126].wav",
+   "title": "FLOSSY TOM FILL",
+   "bpm": 126.0,
+   "lanes": {
+    "k": ".....gg.x.r.o.X.",
+    "c": "....X...........",
+    "h": ".....gg.o.X.o.x.",
+    "ht": ".....oo.x.X.o.x."
+   },
+   "beats": 3.0
+  },
+  {
+   "source": "Glossy [75].wav",
+   "title": "GLOSSY",
+   "bpm": 75.0,
+   "lanes": {
+    "k": ".........gXX....",
+    "s": "...............X",
+    "c": "...........Xo.g.",
+    "h": ".........gX.....",
+    "o": "........X......."
+   },
+   "beats": 2.0
+  },
+  {
+   "source": "Tom Fill 1 [89].wav",
+   "title": "TOM FILL 1",
+   "bpm": 89.0,
+   "lanes": {
+    "k": "....xXXX.X......",
+    "h": "....Xxoo.o..g...",
+    "ht": "............X..."
+   },
+   "beats": 3.0
+  },
+  {
+   "source": "Tom Fill 2 [117].wav",
+   "title": "TOM FILL 2",
+   "bpm": 117.0,
+   "lanes": {
+    "k": "rgg.g.xgoox.X...",
+    "s": "X...............",
+    "c": "............X...",
+    "h": "xxx.x.Xooxo.....",
+    "ht": "oxo.X.Xxoox....."
+   },
+   "beats": 4.0
+  }
+ ]
+}
