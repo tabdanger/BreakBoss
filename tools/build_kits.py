@@ -27,6 +27,8 @@ SWIFT = os.path.join(ROOT, "BreakBoss.swiftpm", "FactoryKits.swift")
 SOUNDS = json.load(open(os.path.join(ROOT, "tools", "stock_sounds.json")))
 # The multisampled acoustic drums (tools/build_acoustic_sounds.py): only the ACOUSTIC_KITS play them.
 ACOUSTIC = json.load(open(os.path.join(ROOT, "tools", "acoustic_sounds.json")))
+# Tyrone's own Drum Kit, renamed BK (tools/build_bk_sounds.py): in the library, and the BK kits play them.
+BK = json.load(open(os.path.join(ROOT, "tools", "bk_sounds.json")))
 
 # What each pad holds (KitLibrary.swift, Pad): category, and the character it leans to.
 PADS = [("KICK", None), ("SNARE", None), ("CLAP", None), ("RIM", None), ("HAT", None), ("OPEN HAT", None),
@@ -187,9 +189,9 @@ def build():
                     assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": by_file[f]["name"]})
                 kits.append((kid, name, voice, style, tempo, seed, root_hz(by_file[files[6]]), mode, family, genre))
                 seed += 1
-    # The live acoustic kits, last, so every kit above keeps its sounds.
-    acoustic = {s["name"]: s for s in ACOUSTIC}
-    for name, mode, family, genre, style, tempo, voice, tags, likes, picks in kit_catalog.ACOUSTIC_KITS:
+    # The live acoustic kits, then the BK kits, last, so every kit above keeps its sounds.
+    acoustic = {s["name"]: s for s in ACOUSTIC + BK}
+    for name, mode, family, genre, style, tempo, voice, tags, likes, picks in kit_catalog.ACOUSTIC_KITS + kit_catalog.BK_KITS:
         leans = dict(likes)
         for k, v in kit_catalog.MODE_LIKES[mode].items(): leans[k] = leans.get(k, 0) + v
         files, names = [], []
@@ -216,7 +218,7 @@ def main():
     with open(os.path.join(STOCK, "manifest.json"), "w") as out:
         # "sounds": the whole library (the sound menu lists them all, even those in no kit)
         # "type": the library section, the sound's original folder (tools/library_folders.py)
-        sounds = [{"file": x["file"], "name": x["name"], "type": x.get("library", x["category"])} for x in SOUNDS + ACOUSTIC]
+        sounds = [{"file": x["file"], "name": x["name"], "type": x.get("library", x["category"])} for x in SOUNDS + ACOUSTIC + BK]
         json.dump({"version": 1, "assignments": assignments, "sounds": sounds}, out, separators=(",", ":"))
     ids = [k[0] for k in kits]
     assert len(set(ids)) == len(ids) and len({k[1] for k in kits}) == len(kits), "kit ids and names are unique"

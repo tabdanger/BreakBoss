@@ -375,6 +375,7 @@ desert-ritual|DESERT RITUAL|looseBreak|experimental|90|1320|43.65|texture|WORLD|
 soul-session|SOUL SESSION|neoSoul|neoSoul|88|1321|43.65|vintage|SOUL & R&B|LIVE SOUL
 break-room|BREAK ROOM|funkBreak|funkBreak|96|1322|41.2|vintage|BREAKS|LIVE BREAKS
 studio-a|STUDIO A|heavyBreak|heavyBreak|118|1323|41.2|modern|POP|LIVE ROCK
+bk-drum-kit|BK DRUM KIT|modernTrap|trapAtlanta|140|1324|43.65|modern|TRAP|BK
 """
 
     /// The kits before Oct 17: saved projects and your kits that used one open the nearest new kit.

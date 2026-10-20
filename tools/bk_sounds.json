@@ -1,0 +1,352 @@
+[
+ {
+  "file": "bk_clap_01.wav",
+  "name": "BK NO 1 CLAP",
+  "category": "CLAP",
+  "library": "CLAP",
+  "source": "Cymatics - Clap (Crowd).wav"
+ },
+ {
+  "file": "bk_clap_02.wav",
+  "name": "BK NO 2 CLAP",
+  "category": "CLAP",
+  "library": "CLAP",
+  "source": "Cymatics - Clap (Diss).wav"
+ },
+ {
+  "file": "bk_clap_03.wav",
+  "name": "BK NO 3 CLAP",
+  "category": "CLAP",
+  "library": "CLAP",
+  "source": "Cymatics - Clap (Elm).wav"
+ },
+ {
+  "file": "bk_clap_04.wav",
+  "name": "BK NO 4 CLAP",
+  "category": "CLAP",
+  "library": "CLAP",
+  "source": "Cymatics - Clap (Mystic).wav"
+ },
+ {
+  "file": "bk_clap_05.wav",
+  "name": "BK NO 5 CLAP",
+  "category": "CLAP",
+  "library": "CLAP",
+  "source": "Cymatics - Clap (Ratchet).wav"
+ },
+ {
+  "file": "bk_clap_06.wav",
+  "name": "BK NO 6 CLAP",
+  "category": "CLAP",
+  "library": "CLAP",
+  "source": "Cymatics - Clap (Seismic).wav"
+ },
+ {
+  "file": "bk_clap_07.wav",
+  "name": "BK NO 7 CLAP",
+  "category": "CLAP",
+  "library": "CLAP",
+  "source": "Cymatics - Clap (Slap).wav"
+ },
+ {
+  "file": "bk_cymbal_01.wav",
+  "name": "BK NO 1 CYMBAL",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Cymatics - Cymbal (Dawgs).wav"
+ },
+ {
+  "file": "bk_cymbal_02.wav",
+  "name": "BK NO 2 CYMBAL",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Cymatics - Cymbal (Dying).wav"
+ },
+ {
+  "file": "bk_cymbal_03.wav",
+  "name": "BK NO 3 CYMBAL",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Cymatics - Cymbal (Pluto).wav"
+ },
+ {
+  "file": "bk_cymbal_04.wav",
+  "name": "BK NO 4 CYMBAL",
+  "category": "CYMBAL",
+  "library": "CYMBAL",
+  "source": "Cymatics - Cymbal (Wonderland).wav"
+ },
+ {
+  "file": "bk_hihat_01.wav",
+  "name": "BK NO 1 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Cymatics - Hihat (Graham).wav"
+ },
+ {
+  "file": "bk_hihat_02.wav",
+  "name": "BK NO 2 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Cymatics - Hihat (Lawsuit).wav"
+ },
+ {
+  "file": "bk_hihat_03.wav",
+  "name": "BK NO 3 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Cymatics - Hihat (Raw).wav"
+ },
+ {
+  "file": "bk_hihat_04.wav",
+  "name": "BK NO 4 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Cymatics - Hihat (Red).wav"
+ },
+ {
+  "file": "bk_hihat_05.wav",
+  "name": "BK NO 5 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Cymatics - Hihat (Robo).wav"
+ },
+ {
+  "file": "bk_hihat_06.wav",
+  "name": "BK NO 6 HIHAT",
+  "category": "HAT",
+  "library": "HAT",
+  "source": "Cymatics - Hihat (Sense).wav"
+ },
+ {
+  "file": "bk_kick_01.wav",
+  "name": "BK NO 1 KICK",
+  "category": "KICK",
+  "library": "KICK",
+  "source": "Cymatics - Kick (Blaze).wav"
+ },
+ {
+  "file": "bk_kick_02.wav",
+  "name": "BK NO 2 KICK",
+  "category": "KICK",
+  "library": "KICK",
+  "source": "Cymatics - Kick (Grease).wav"
+ },
+ {
+  "file": "bk_kick_03.wav",
+  "name": "BK NO 3 KICK",
+  "category": "KICK",
+  "library": "KICK",
+  "source": "Cymatics - Kick (Icon).wav"
+ },
+ {
+  "file": "bk_kick_04.wav",
+  "name": "BK NO 4 KICK",
+  "category": "KICK",
+  "library": "KICK",
+  "source": "Cymatics - Kick (Lunar).wav"
+ },
+ {
+  "file": "bk_kick_05.wav",
+  "name": "BK NO 5 KICK",
+  "category": "KICK",
+  "library": "KICK",
+  "source": "Cymatics - Kick (No Fear).wav"
+ },
+ {
+  "file": "bk_kick_06.wav",
+  "name": "BK NO 6 KICK",
+  "category": "KICK",
+  "library": "KICK",
+  "source": "Cymatics - Kick (Rainy).wav"
+ },
+ {
+  "file": "bk_kick_07.wav",
+  "name": "BK NO 7 KICK",
+  "category": "KICK",
+  "library": "KICK",
+  "source": "Cymatics - Kick (Rich).wav"
+ },
+ {
+  "file": "bk_openhat_01.wav",
+  "name": "BK NO 1 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Cymatics - Open Hat (Breathe).wav"
+ },
+ {
+  "file": "bk_openhat_02.wav",
+  "name": "BK NO 2 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Cymatics - Open Hat (Fallen).wav"
+ },
+ {
+  "file": "bk_openhat_03.wav",
+  "name": "BK NO 3 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Cymatics - Open Hat (LoveHer).wav"
+ },
+ {
+  "file": "bk_openhat_04.wav",
+  "name": "BK NO 4 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Cymatics - Open Hat (Plant).wav"
+ },
+ {
+  "file": "bk_openhat_05.wav",
+  "name": "BK NO 5 OPEN HAT",
+  "category": "OPEN HAT",
+  "library": "OPEN HAT",
+  "source": "Cymatics - Open Hat (Truth).wav"
+ },
+ {
+  "file": "bk_perc_01.wav",
+  "name": "BK NO 1 PERC",
+  "category": "PERC",
+  "library": "PERC",
+  "source": "Cymatics - Percussion (Balcony).wav"
+ },
+ {
+  "file": "bk_perc_02.wav",
+  "name": "BK NO 2 PERC",
+  "category": "PERC",
+  "library": "PERC",
+  "source": "Cymatics - Percussion (Cold).wav"
+ },
+ {
+  "file": "bk_perc_03.wav",
+  "name": "BK NO 3 PERC",
+  "category": "PERC",
+  "library": "PERC",
+  "source": "Cymatics - Percussion (Jersey).wav"
+ },
+ {
+  "file": "bk_tom_01.wav",
+  "name": "BK NO 1 TOM",
+  "category": "TOM",
+  "library": "PERC",
+  "source": "Cymatics - Percussion (Tom).wav"
+ },
+ {
+  "file": "bk_perc_04.wav",
+  "name": "BK NO 4 PERC",
+  "category": "PERC",
+  "library": "PERC",
+  "source": "Cymatics - Percussion (Walk).wav"
+ },
+ {
+  "file": "bk_perc_05.wav",
+  "name": "BK NO 5 PERC",
+  "category": "PERC",
+  "library": "PERC",
+  "source": "Cymatics - Percussion (Whistler).wav"
+ },
+ {
+  "file": "bk_perc_06.wav",
+  "name": "BK NO 6 PERC",
+  "category": "PERC",
+  "library": "PERC",
+  "source": "Cymatics - Percussion (Wonder).wav"
+ },
+ {
+  "file": "bk_rim_01.wav",
+  "name": "BK NO 1 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Cymatics - Rim (Champ).wav"
+ },
+ {
+  "file": "bk_rim_02.wav",
+  "name": "BK NO 2 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Cymatics - Rim (Mind).wav"
+ },
+ {
+  "file": "bk_rim_03.wav",
+  "name": "BK NO 3 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Cymatics - Rim (Promise).wav"
+ },
+ {
+  "file": "bk_rim_04.wav",
+  "name": "BK NO 4 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Cymatics - Rim (Sizzle).wav"
+ },
+ {
+  "file": "bk_rim_05.wav",
+  "name": "BK NO 5 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Cymatics - Rim (Stage).wav"
+ },
+ {
+  "file": "bk_rim_06.wav",
+  "name": "BK NO 6 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Cymatics - Rim (Trick).wav"
+ },
+ {
+  "file": "bk_rim_07.wav",
+  "name": "BK NO 7 RIM",
+  "category": "RIM",
+  "library": "RIM",
+  "source": "Cymatics - Rim (Trophy).wav"
+ },
+ {
+  "file": "bk_snare_01.wav",
+  "name": "BK NO 1 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Cymatics - Snare (Classico).wav"
+ },
+ {
+  "file": "bk_snare_02.wav",
+  "name": "BK NO 2 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Cymatics - Snare (Dogs).wav"
+ },
+ {
+  "file": "bk_snare_03.wav",
+  "name": "BK NO 3 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Cymatics - Snare (Gold).wav"
+ },
+ {
+  "file": "bk_snare_04.wav",
+  "name": "BK NO 4 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Cymatics - Snare (Heights).wav"
+ },
+ {
+  "file": "bk_snare_05.wav",
+  "name": "BK NO 5 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Cymatics - Snare (Rattle).wav"
+ },
+ {
+  "file": "bk_snare_06.wav",
+  "name": "BK NO 6 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Cymatics - Snare (Semtex).wav"
+ },
+ {
+  "file": "bk_snare_07.wav",
+  "name": "BK NO 7 SNARE",
+  "category": "SNARE",
+  "library": "SNARE",
+  "source": "Cymatics - Snare (Switch).wav"
+ }
+]

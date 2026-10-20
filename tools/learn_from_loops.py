@@ -8,7 +8,7 @@ loop was played with (each lane's own swing and its push or pull in ticks, 96 a 
 
     python3 -I tools/learn_from_loops.py STEMS_DIR [--loops LOOPS_DIR] [--out tools/learned_patterns.json]
 
-STEMS_DIR holds one folder per loop, named like "<Pack> - <Name> Drum Loop - 131 BPM", with one WAV
+STEMS_DIR holds one folder per loop (or a single-part loop as one WAV, "<Name> Hihat Loop - 120 BPM.wav"), named like "<Pack> - <Name> Drum Loop - 131 BPM", with one WAV
 per sound, the sound named by the last words of the file name (Kick, Snare, Snare 2, Clap, Rim, Hihat,
 Open Hat, Shaker, Percussion, Tom...). The BPM comes from the name and is checked: a loop that is not whole bars at that
 tempo (or whose hits miss its grid) is measured instead and the tool says so. The loop is taken to start
@@ -222,18 +222,28 @@ def merge(a, b):
 
 
 def learn(folder):
-    name = os.path.basename(folder.rstrip("/"))
+    """One loop: a folder of stems, or one WAV that is a single part ("... Hihat Loop - 120 BPM.wav")."""
+    files = None
+    if os.path.isfile(folder):
+        folder, files = os.path.dirname(folder), [os.path.basename(folder)]
+        name = re.sub(r"(?i)\.wav$", "", files[0])
+    else:
+        name = os.path.basename(folder.rstrip("/"))
     m = re.search(r"(\d+(?:\.\d+)?)\s*BPM", name, re.I)
     assert m, f"no BPM in {name}"
     bpm = float(m.group(1))
     title = re.sub(r"\s*-\s*\d+(\.\d+)?\s*BPM.*", "", name, flags=re.I)
     title = re.sub(r"^[^-]+-\s*", "", title)
-    title = re.sub(r"\s*drum loop\s*$", "", title, flags=re.I).strip()
+    title = re.sub(r"\s*(drum|hi ?hat|kick|snare|perc\w*|808|top)s?\s+loop\s*$", "", title, flags=re.I).strip()
     stems, length, skipped = {}, 0, []
-    for f in sorted(os.listdir(folder)):
+    for f in files or sorted(os.listdir(folder)):
         if not f.lower().endswith(".wav") or f.startswith("._"): continue
         sound = re.sub(r"(?i)\.wav$", "", f)
-        sound = re.sub(r".*BPM\s*", "", sound).strip() or "Perc"
+        if files:                              # a single part: its kind is the word before "Loop"
+            m2 = re.search(r"(?i)\b(open hat|hi ?hat|kick|snare|clap|rim|perc\w*|shaker|tom|808|cymbal|ride|crash)s?\s+loop", sound)
+            sound = m2.group(1) if m2 else "Perc"
+        else:
+            sound = re.sub(r".*BPM\s*", "", sound).strip() or "Perc"
         if re.search(r"(?i)revers", sound):   # a reversed swell is not a hit on any pad
             skipped.append(sound); continue
         x, sr = read_wav(os.path.join(folder, f))
@@ -295,7 +305,8 @@ def main(argv):
     if "--loops" in args:
         k = args.index("--loops"); del args[k:k + 2]
     root = args[0]
-    folders = sorted(os.path.join(root, d) for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)))
+    folders = sorted(os.path.join(root, d) for d in os.listdir(root)
+                     if os.path.isdir(os.path.join(root, d)) or (d.lower().endswith(".wav") and not d.startswith("._")))
     learned = []
     for f in folders:
         p = learn(f)

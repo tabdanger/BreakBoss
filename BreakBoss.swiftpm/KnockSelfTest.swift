@@ -131,12 +131,12 @@ enum KnockSelfTest {
 
         let urls = Set(library.allSounds.map(\.url))
         let names = library.allSounds.map(\.displayName)
-        check(library.allSounds.count == 589 && urls.count == 589 && Set(names).count == 589, "the sound library holds 589 sounds, each with its own name")
+        check(library.allSounds.count == 639 && urls.count == 639 && Set(names).count == 639, "the sound library holds 639 sounds (589 + 50 BK), each with its own name")
         check(names.allSatisfy { SoundType.forStockName($0) != nil }, "every stock sound's name ends in what it is")
         check(SoundType.forStockName("THRONE OPEN HIHAT") == .open && SoundType.forStockName("THRONE HIHAT") == .hat
               && SoundType.forStockName("SUKUNA E1 808") == .bass && SoundType.forStockName("ISSA BOUNCE CLAP SNARE") == .snare,
               "a stock sound's last word sorts it")
-        check(library.librarySounds().count == 589, "the sound menu lists every stock sound, in a kit or not")
+        check(library.librarySounds().count == 639, "the sound menu lists every stock sound, in a kit or not")
         // Tyrone, Oct 19: every sound sits in the section of the folder it came from
         let sections = Dictionary(library.librarySounds().map { ($0.name, $0.type) }, uniquingKeysWith: { a, _ in a })
         check(library.allSounds.allSatisfy { $0.section.flatMap(SoundType.init(section:)) != nil }, "every stock sound has its folder's section")
@@ -2837,8 +2837,8 @@ enum KnockSelfTest {
         let new = old.normalized()
         check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
-        check(KitLibrary.factory.count == 365 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
-              "365 factory kits: the 42 A/B kits, the named ones, the live acoustic ones")
+        check(KitLibrary.factory.count == 366 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
+              "366 factory kits: the 42 A/B kits, the named ones, the live acoustic ones, BK DRUM KIT")
         check(Set(KitLibrary.factory.map(\.name)).count == KitLibrary.factory.count, "every factory kit has its own name")
         for mode in SoundMode.allCases {
             for family in KitLibrary.families {

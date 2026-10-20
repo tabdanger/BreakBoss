@@ -473,7 +473,7 @@ def learned_name(i, lp):
     else: what = "BOUNCE"
     return f"LEARNED {i} {lp['bpm']:g} {what}"
 if os.path.exists(LEARNED_FILE):
-    learned = [lp for lp in json.load(open(LEARNED_FILE))["learned"] if lp.get("gridFit", 0) <= 0.12]
+    learned = [lp for lp in json.load(open(LEARNED_FILE))["learned"] if lp.get("gridFit", 0) <= 0.12 and "k" in lp["lanes"]]   # hat-only loops: lines, not presets
     learned.sort(key=lambda lp: (lp["bpm"], lp["title"]))
     for i, lp in enumerate(learned, 1):
         P.append({"style": LEARNED, "name": learned_name(i, lp), "bpm": lp["bpm"], "swing": 50, "glide": False, "lanes": lp["lanes"]})
