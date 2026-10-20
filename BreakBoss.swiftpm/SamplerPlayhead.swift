@@ -387,7 +387,17 @@ struct SamplerPlayhead: UIViewRepresentable {
                                               : CAFrameRateRange(minimum: 8, maximum: 15, preferred: 10)
         }
 
+        /// For the UI tests: the main thread's time per playing frame (the animation's own cost), averaged.
+        private var probeTickTime: Double = 0, probeTickCount = 0
+
         fileprivate func tick(_ link: CADisplayLink) {
+            guard Self.probing else { step(link); return }
+            let t0 = CACurrentMediaTime()
+            step(link)
+            if voice != 0 { probeTickTime += CACurrentMediaTime() - t0; probeTickCount += 1 }
+        }
+
+        private func step(_ link: CADisplayLink) {
             guard let cursor else { return }
             let now = link.targetTimestamp
             let row = cursor.playheads.row(cursor.pad)
@@ -524,8 +534,9 @@ struct SamplerPlayhead: UIViewRepresentable {
             CATransaction.commit()
             // for the UI tests: where the cursor is (part of the sound), whether a hit is playing, and the counts above
             guard Self.probing else { return }
-            let value = String(format: "%.3f %@ hits=%d resets=%d back=%d far=%.3f cpu=%.1f", position, playing ? "playing" : "rest",
-                               probeHits, probeResets, probeBacksteps, probeFurthest, Self.processCPU())
+            let value = String(format: "%.3f %@ hits=%d resets=%d back=%d far=%.3f cpu=%.1f frame=%.0fus", position, playing ? "playing" : "rest",
+                               probeHits, probeResets, probeBacksteps, probeFurthest, Self.processCPU(),
+                               probeTickCount > 0 ? probeTickTime / Double(probeTickCount) * 1e6 : 0)
             if value != shownValue { shownValue = value; accessibilityValue = value }
         }
 

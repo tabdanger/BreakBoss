@@ -295,8 +295,6 @@ struct SamplerWindow: View {
                 // grid or the library behind it
                 RoundedRectangle(cornerRadius: 14 * s).fill(Color.black.opacity(0.001))
                     .frame(width: Self.artW * s, height: Self.artH * s)
-                    .contentShape(RoundedRectangle(cornerRadius: 14 * s))
-                    .onTapGesture {}
                 // the window's own id sits on its bezel: on the whole window it would replace every control's id
                 bezel(s).accessibilityElement().accessibilityIdentifier("samplerWindow")
                 titleBar(s)

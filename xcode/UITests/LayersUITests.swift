@@ -66,12 +66,14 @@ final class LayersUITests: XCTestCase {
         // the app's CPU with the window open, resting and while the sound plays (from the cursor's
         // probe; the test's own reads of the screen add some, so these are upper bounds)
         let playhead = any("samplerPlayhead")
-        func cpu() -> String { (playhead.value as? String ?? "").components(separatedBy: " ").first { $0.hasPrefix("cpu=") } ?? "?" }
+        func cpu() -> String {
+            (playhead.value as? String ?? "").components(separatedBy: " ").filter { $0.hasPrefix("cpu=") || $0.hasPrefix("frame=") }.joined(separator: " ")
+        }
         sleep(4)
-        print("UITREE CPU sampler open, resting: \(cpu())")
-        let wave = any("samplerWaveform")
-        for _ in 0..<6 { wave.tap(); usleep(500_000) }
-        print("UITREE CPU sampler playing: \(cpu())")
+        print("UITREE CPU sampler open, resting (whole app, % of one core): \(cpu())")
+        let wave = any("samplerWaveform").coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        for _ in 0..<8 { wave.tap(); usleep(250_000) }
+        print("UITREE CPU sampler playing (whole app incl. the test's taps; frame = the animation's main-thread time per frame): \(cpu())")
         XCTAssertEqual(app.state, .runningForeground, "the app is still running")
     }
 }
