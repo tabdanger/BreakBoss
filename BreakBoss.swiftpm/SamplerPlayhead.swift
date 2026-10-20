@@ -9,15 +9,20 @@ import AVFoundation
 // threads and kept per sound) and stays still. Over it a thin cursor follows the track's newest
 // voice from the engine (KnockEngine.playheads): it restarts at the voice's real start on every
 // hit and moves at the voice's real speed, backwards when the voice plays backwards, round the
-// loop when it loops. The part already played is gently brighter. Only the cursor and that
-// brighter part move while it plays; when nothing plays the display link drops to a slow check
-// and nothing is redrawn, and it stops when the window is closed, minimized or on another page.
+// loop when it loops. As on Face 1's screen (Tyrone, Oct 20) the sound lights the wave up like
+// phosphor: a bloom at the cursor that swells with how loud the sound is right there, a lit trail
+// behind it that fades, and the played part left gently brighter. All of that is layers moved by
+// the display link (no redrawing while it plays); when nothing plays the link drops to a slow
+// check (10 a second) and nothing is redrawn, and it stops when the window is closed, minimized
+// or on another page.
 
 /// A sound's peaks (low and high, the two channels mixed) in blocks of 32 and 1024 frames, so
 /// any zoom draws from at most a few dozen numbers per pixel column.
 final class SamplerPeaks {
     static let fine = 32, coarse = 1_024
     let length: Int
+    /// The loudest the sound gets (for the cursor's bloom: a soft sound lights up as clearly as a loud one).
+    let loudest: Float
     private let fineLo: [Float], fineHi: [Float], coarseLo: [Float], coarseHi: [Float]
 
     init(_ sample: SampleBuffer) {
@@ -42,6 +47,7 @@ final class SamplerPeaks {
             clo[c] = lo; chi[c] = hi
         }
         fineLo = flo; fineHi = fhi; coarseLo = clo; coarseHi = chi
+        loudest = max(clo.map { -$0 }.max() ?? 0, chi.max() ?? 0)
     }
 
     /// Low and high of frames a..<b (a few frames are read from the sound itself).
@@ -103,6 +109,75 @@ final class SamplerPeaks {
     }
 }
 
+
+/// The SAMPLE page's waveform in Face 1's light (Tyrone, Oct 20): the sound's highs and lows as a
+/// faint phosphor band edged by glowing traces, and once zoomed in far enough the wave itself as
+/// one glowing line, like the trace on Face 1's screen. Glow comes from wide soft strokes under a
+/// bright core, as on Face 1 (no blur), so a redraw stays cheap. Built once per sound, zoom and size.
+struct SamplerPhosphor {
+    var band = Path(), high = Path(), low = Path(), line = Path()
+    /// Zoomed in far enough to see the wave itself (a few frames per point).
+    var showsLine = false
+
+    init(_ sample: SampleBuffer, peaks: SamplerPeaks?, size: CGSize, zoom: Double, scroll: Double, pointsPerColumn: CGFloat = 2) {
+        let n = sample.length
+        guard n > 1, size.width > 1 else { return }
+        let mid = size.height / 2, k = mid * 0.92
+        func y(_ v: Float) -> CGFloat { mid - CGFloat(max(-1, min(1, v))) * k }
+        let span = Double(n) / max(1, zoom), first = scroll * Double(n)
+        if span / Double(size.width) <= 3 {
+            // a few frames per point: the wave itself, through every frame
+            showsLine = true
+            let a = max(0, Int(first) - 1), b = min(n - 1, Int(first + span) + 1)
+            for i in a...b {
+                let p = CGPoint(x: CGFloat((Double(i) - first) / span) * size.width, y: y((sample.left[i] + sample.right[i]) * 0.5))
+                if i == a { line.move(to: p) } else { line.addLine(to: p) }
+            }
+            return
+        }
+        guard let peaks else { return }
+        let count = max(2, Int(size.width / pointsPerColumn))
+        let cols = peaks.columns(sample, count: count, zoom: zoom, scroll: scroll)
+        guard cols.count > 1 else { return }
+        let step = size.width / CGFloat(count)
+        // smooth curves through the midpoints, so the edges have no sharp corners (Face 1's curve)
+        func curve(_ values: [Float], into path: inout Path) {
+            path.move(to: CGPoint(x: 0, y: y(values[0])))
+            for i in 1..<values.count - 1 {
+                let p = CGPoint(x: CGFloat(i) * step, y: y(values[i])), q = CGPoint(x: CGFloat(i + 1) * step, y: y(values[i + 1]))
+                path.addQuadCurve(to: CGPoint(x: (p.x + q.x) / 2, y: (p.y + q.y) / 2), control: p)
+            }
+            path.addLine(to: CGPoint(x: CGFloat(values.count - 1) * step, y: y(values[values.count - 1])))
+        }
+        let hi = cols.map { $0.1 }, lo = cols.map { $0.0 }
+        curve(hi, into: &high)
+        curve(lo, into: &low)
+        band = high
+        for i in stride(from: lo.count - 1, through: 0, by: -1) { band.addLine(to: CGPoint(x: CGFloat(i) * step, y: y(lo[i]))) }
+        band.closeSubpath()
+    }
+
+    /// Draws it in a face's light. `lit` 0 = resting on the page, 1 = lit by the sound playing.
+    /// `thin` < 1 narrows the glow for a small strip (the scroll bar's whole-sound view).
+    func draw(in ctx: inout GraphicsContext, light: FaceLight, lit: Double = 0, thin: CGFloat = 1) {
+        let soft = StrokeStyle(lineWidth: (6 + 3 * lit) * thin, lineCap: .round, lineJoin: .round)
+        let mid = StrokeStyle(lineWidth: (3 + lit) * thin, lineCap: .round, lineJoin: .round)
+        let core = StrokeStyle(lineWidth: max(0.8, (1.3 + 0.4 * lit) * thin), lineCap: .round, lineJoin: .round)
+        if showsLine {
+            ctx.stroke(line, with: .color(light.glow.opacity(0.16 + 0.14 * lit)), style: soft)
+            ctx.stroke(line, with: .color(light.glow.opacity(0.34 + 0.2 * lit)), style: mid)
+            ctx.stroke(line, with: .color(light.blend(0.6 + 0.4 * lit)), style: core)
+            return
+        }
+        ctx.fill(band, with: .color(light.blend(0.3 + 0.4 * lit).opacity(0.32 + 0.3 * lit)))
+        for edge in [high, low] {
+            ctx.stroke(edge, with: .color(light.glow.opacity(0.16 + 0.14 * lit)), style: soft)
+            ctx.stroke(edge, with: .color(light.glow.opacity(0.34 + 0.2 * lit)), style: mid)
+            ctx.stroke(edge, with: .color(light.blend(0.55 + 0.45 * lit)), style: core)
+        }
+    }
+}
+
 /// The cursor and the brighter played part over the waveform.
 struct SamplerPlayhead: UIViewRepresentable {
     let playheads: SharedPlayheads
@@ -111,6 +186,8 @@ struct SamplerPlayhead: UIViewRepresentable {
     let zoom: CGFloat
     let scroll: CGFloat
     let color: UIColor
+    /// Which face's light (FaceLight) the lit wave glows in.
+    var face = "modern"
     /// Where a hit starts (START OFFSET; the end when the track plays backwards): the cursor waits there.
     let rest: Double
 
@@ -128,9 +205,18 @@ struct SamplerPlayhead: UIViewRepresentable {
 
     final class CursorView: UIView {
         var cursor: SamplerPlayhead? { didSet { changed(from: oldValue) } }
-        private let wash = CALayer()
         private let played = CALayer()
         private let playedMask = CALayer()
+        /// The lit trail behind the cursor (bright at the cursor, fading back to the played part's glow).
+        private let trailMask = CAGradientLayer()
+        /// The played part before the trail: gently lit.
+        private let doneMask = CALayer()
+        /// The phosphor bloom at the cursor.
+        private let bloom = CAGradientLayer()
+        /// How loud the sound is at the cursor, 0...1 of its loudest (eased like Face 1's glow).
+        private var level: Double = 0
+        private var lastTick: Double = 0
+        private var fading = false
         private let line = CALayer()
         private let head = CAShapeLayer()
         private var link: CADisplayLink?
@@ -162,23 +248,30 @@ struct SamplerPlayhead: UIViewRepresentable {
 
         override init(frame: CGRect) {
             super.init(frame: frame)
-            for l in [wash, played, playedMask, line, head] as [CALayer] {
+            for l in [played, playedMask, trailMask, doneMask, bloom, line, head] as [CALayer] {
                 l.actions = ["position": NSNull(), "bounds": NSNull(), "frame": NSNull(), "hidden": NSNull(),
                              "contents": NSNull(), "opacity": NSNull()]
             }
-            playedMask.backgroundColor = UIColor.white.cgColor
+            doneMask.backgroundColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            trailMask.startPoint = CGPoint(x: 0, y: 0.5)
+            trailMask.endPoint = CGPoint(x: 1, y: 0.5)
+            trailMask.colors = [UIColor.white.withAlphaComponent(0.3).cgColor, UIColor.white.cgColor]
+            playedMask.addSublayer(doneMask)
+            playedMask.addSublayer(trailMask)
             played.mask = playedMask
             played.contentsGravity = .resize
-            wash.isHidden = true
             played.isHidden = true
+            bloom.startPoint = CGPoint(x: 0, y: 0.5)
+            bloom.endPoint = CGPoint(x: 1, y: 0.5)
+            bloom.isHidden = true
             line.shadowOpacity = 0.9
             line.shadowRadius = 3
             line.shadowOffset = .zero
             head.shadowOpacity = 0.9
             head.shadowRadius = 3
             head.shadowOffset = .zero
-            layer.addSublayer(wash)
             layer.addSublayer(played)
+            layer.addSublayer(bloom)
             layer.addSublayer(line)
             layer.addSublayer(head)
         }
@@ -201,6 +294,7 @@ struct SamplerPlayhead: UIViewRepresentable {
             super.layoutSubviews()
             CATransaction.begin(); CATransaction.setDisableActions(true)
             played.frame = bounds
+            playedMask.frame = bounds
             CATransaction.commit()
             redrawPlayedImage()
             place()
@@ -208,6 +302,9 @@ struct SamplerPlayhead: UIViewRepresentable {
 
         /// The cursor's pale light: the mode's colour lifted toward white.
         private var paleColor: UIColor { cursor.map { Self.lifted($0.color, 0.6) } ?? .white }
+
+        /// A face's bright core (FaceLight), for the bloom.
+        static func coreColor(_ face: String) -> UIColor { FaceLight.of(face).uiColor(1) }
 
         private static func lifted(_ c: UIColor, _ amount: CGFloat) -> UIColor {
             var r: CGFloat = 1, g: CGFloat = 1, b: CGFloat = 1, a: CGFloat = 1
@@ -222,7 +319,8 @@ struct SamplerPlayhead: UIViewRepresentable {
             line.shadowColor = cursor.color.cgColor
             head.fillColor = pale
             head.shadowColor = cursor.color.cgColor
-            wash.backgroundColor = cursor.color.withAlphaComponent(0.07).cgColor
+            let core = Self.coreColor(cursor.face)
+            bloom.colors = [core.withAlphaComponent(0).cgColor, core.withAlphaComponent(0.55).cgColor, core.withAlphaComponent(0).cgColor]
             if old?.sample !== cursor.sample || old?.pad != cursor.pad {
                 voice = 0; last = nil; resetAt = nil
                 peaks = nil
@@ -243,28 +341,36 @@ struct SamplerPlayhead: UIViewRepresentable {
             guard let cursor, let peaks, bounds.width > 1, bounds.height > 1 else { return }
             let scale = window?.screen.scale ?? 2
             let key = [Double(ObjectIdentifier(cursor.sample).hashValue), Double(cursor.zoom), Double(cursor.scroll),
-                       Double(bounds.width), Double(bounds.height), Double(scale), Double(paleColor.hashValue)]
+                       Double(bounds.width), Double(bounds.height), Double(scale), Double(cursor.face.hashValue)]
             guard key != imageKey else { return }
             imageKey = key
             imageToken += 1
             let token = imageToken
             let size = bounds.size, sample = cursor.sample, zoom = Double(cursor.zoom), scroll = Double(cursor.scroll)
-            // the played part: the mode's light lifted a little toward white, not the cursor's pale
-            let bright = cursor.color, lift = Self.lifted(cursor.color, 0.3)
+            // the lit wave: the same phosphor band and traces as the page's, in the face's light, burning bright
+            let light = FaceLight.of(cursor.face)
             DispatchQueue.global(qos: .userInitiated).async {
-                let cols = peaks.columns(sample, count: max(1, Int(size.width * scale)), zoom: zoom, scroll: scroll)
+                let wave = SamplerPhosphor(sample, peaks: peaks, size: size, zoom: zoom, scroll: scroll)
                 let format = UIGraphicsImageRendererFormat()
                 format.scale = scale
                 let image = UIGraphicsImageRenderer(size: size, format: format).image { r in
                     let ctx = r.cgContext
-                    let mid = size.height / 2, w = 1 / scale
-                    ctx.setFillColor(lift.withAlphaComponent(0.5).cgColor)
-                    for (c, (lo, hi)) in cols.enumerated() {
-                        ctx.fill(CGRect(x: CGFloat(c) * w, y: mid - CGFloat(hi) * mid * 0.92, width: w,
-                                        height: max(w, CGFloat(hi - lo) * mid * 0.92)))
+                    let glow = light.uiColor(0), hot = light.uiColor(1), warm = light.uiColor(0.7)
+                    let edges = wave.showsLine ? [wave.line] : [wave.high, wave.low]
+                    if !wave.showsLine {
+                        ctx.addPath(wave.band.cgPath)
+                        ctx.setFillColor(warm.withAlphaComponent(0.6).cgColor)
+                        ctx.fillPath()
                     }
-                    ctx.setFillColor(bright.withAlphaComponent(0.5).cgColor)
-                    ctx.fill(CGRect(x: 0, y: mid - 0.5, width: size.width, height: 1))
+                    ctx.setLineCap(.round); ctx.setLineJoin(.round)
+                    for (width, color) in [(9.0, glow.withAlphaComponent(0.3)), (4.0, glow.withAlphaComponent(0.55)), (1.7, hot)] as [(CGFloat, UIColor)] {
+                        for e in edges { ctx.addPath(e.cgPath) }
+                        ctx.setLineWidth(width)
+                        ctx.setStrokeColor(color.cgColor)
+                        ctx.strokePath()
+                    }
+                    ctx.setFillColor(warm.withAlphaComponent(0.5).cgColor)
+                    ctx.fill(CGRect(x: 0, y: size.height / 2 - 0.5, width: size.width, height: 1))
                 }
                 DispatchQueue.main.async { [weak self] in
                     guard let self, self.imageToken == token else { return }
@@ -278,7 +384,7 @@ struct SamplerPlayhead: UIViewRepresentable {
             guard let link, on != fast || force else { return }
             fast = on
             link.preferredFrameRateRange = on ? CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
-                                              : CAFrameRateRange(minimum: 15, maximum: 30, preferred: 30)
+                                              : CAFrameRateRange(minimum: 8, maximum: 15, preferred: 10)
         }
 
         fileprivate func tick(_ link: CADisplayLink) {
@@ -308,7 +414,7 @@ struct SamplerPlayhead: UIViewRepresentable {
                 place()
                 return
             }
-            guard voice != 0 else { setFast(false); return }
+            guard voice != 0 else { setFast(false); if Self.probing { place() }; return }
             // the voice has ended (or STOP): it's still heard for the output's latency, then the cursor resets
             if resetAt == nil { resetAt = now + latency }
             if let last, let r = resetAt, now < r {
@@ -369,22 +475,74 @@ struct SamplerPlayhead: UIViewRepresentable {
             head.opacity = line.opacity
             head.isHidden = line.isHidden
             let a = x(playedLo), b = x(playedHi)
-            let showPlayed = playing && b - a > 0.5
-            played.isHidden = !showPlayed
-            wash.isHidden = !showPlayed
-            if showPlayed {
-                playedMask.frame = CGRect(x: a, y: 0, width: b - a, height: h)
-                wash.frame = CGRect(x: a, y: 0, width: b - a, height: h)
+            if playing {
+                // how loud the sound is at the cursor (of its loudest): up at once, letting go over
+                // about 80 ms, like Face 1's glow
+                let t = CACurrentMediaTime(), dt = min(0.1, max(0.001, t - lastTick))
+                lastTick = t
+                var loud = 0.0
+                if let peaks, peaks.loudest > 0.000_1 {
+                    let i = Int(position * Double(peaks.length))
+                    let (lo, hi) = peaks.range(cursor.sample, i - 384, i + 384)
+                    loud = Double(min(1, max(-lo, hi) / peaks.loudest))
+                }
+                level = loud > level ? loud : level + (loud - level) * (1 - exp(-dt / 0.08))
+                if fading || played.isHidden {
+                    fading = false
+                    played.removeAllAnimations(); bloom.removeAllAnimations()
+                    played.opacity = 1; bloom.opacity = 1
+                }
+                played.isHidden = false
+                bloom.isHidden = cx < -40 || cx > w + 40
+                // the lit trail: about a third of a second of the sound behind the cursor, fading back
+                let forward = (last?.speed ?? 1) >= 0
+                let trail = max(18, CGFloat(abs(last?.speed ?? 0) * 0.3 * Double(cursor.zoom)) * w)
+                let t0 = forward ? max(a, cx - trail) : cx, t1 = forward ? cx : min(b, cx + trail)
+                trailMask.frame = CGRect(x: t0, y: 0, width: max(0, t1 - t0), height: h)
+                trailMask.startPoint = CGPoint(x: forward ? 0 : 1, y: 0.5)
+                trailMask.endPoint = CGPoint(x: forward ? 1 : 0, y: 0.5)
+                doneMask.frame = forward ? CGRect(x: a, y: 0, width: max(0, t0 - a), height: h)
+                                         : CGRect(x: t1, y: 0, width: max(0, b - t1), height: h)
+                // the bloom: wider and brighter the louder the sound is right there
+                let bw = 14 + 46 * CGFloat(level)
+                bloom.frame = CGRect(x: cx - bw / 2, y: 0, width: bw, height: h)
+                bloom.opacity = Float(0.35 + 0.65 * level)
+            } else if !played.isHidden && !fading {
+                // the hit has ended: the light fades out like phosphor (the render server runs it)
+                fading = true
+                for l in [played, bloom] as [CALayer] {
+                    let fade = CABasicAnimation(keyPath: "opacity")
+                    fade.fromValue = l.opacity
+                    fade.toValue = 0
+                    fade.duration = 0.35
+                    fade.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                    l.opacity = 0
+                    l.add(fade, forKey: "fade")
+                }
+                level = 0
             }
             CATransaction.commit()
             // for the UI tests: where the cursor is (part of the sound), whether a hit is playing, and the counts above
             guard Self.probing else { return }
-            let value = String(format: "%.3f %@ hits=%d resets=%d back=%d far=%.3f", position, playing ? "playing" : "rest",
-                               probeHits, probeResets, probeBacksteps, probeFurthest)
+            let value = String(format: "%.3f %@ hits=%d resets=%d back=%d far=%.3f cpu=%.1f", position, playing ? "playing" : "rest",
+                               probeHits, probeResets, probeBacksteps, probeFurthest, Self.processCPU())
             if value != shownValue { shownValue = value; accessibilityValue = value }
         }
 
         static let probing = ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] == "1"
+
+        /// For the UI tests: the whole app's CPU (percent of one core) over the last second or so.
+        private static var cpuMark: (wall: Double, cpu: Double)?
+        private static var cpuShown: Double = 0
+        static func processCPU() -> Double {
+            var u = rusage()
+            getrusage(RUSAGE_SELF, &u)
+            let cpu = Double(u.ru_utime.tv_sec + u.ru_stime.tv_sec) + Double(u.ru_utime.tv_usec + u.ru_stime.tv_usec) / 1e6
+            let wall = CACurrentMediaTime()
+            guard let m = cpuMark else { cpuMark = (wall, cpu); return 0 }
+            if wall - m.wall >= 1 { cpuShown = (cpu - m.cpu) / (wall - m.wall) * 100; cpuMark = (wall, cpu) }
+            return cpuShown
+        }
 
         /// Keeps the display link from holding the view alive.
         private final class Proxy: NSObject {
@@ -394,5 +552,13 @@ struct SamplerPlayhead: UIViewRepresentable {
                 if let view { view.tick(link) } else { link.invalidate() }
             }
         }
+    }
+}
+
+extension FaceLight {
+    /// `blend` as a UIColor (safe off the main thread, for the lit wave drawn in the background).
+    func uiColor(_ t: Double) -> UIColor {
+        let c = glowRGB + (coreRGB - glowRGB) * min(1, max(0, t))
+        return UIColor(red: c.x, green: c.y, blue: c.z, alpha: 1)
     }
 }

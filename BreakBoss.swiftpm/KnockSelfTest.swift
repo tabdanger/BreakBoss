@@ -50,6 +50,7 @@ enum KnockSelfTest {
         phase("checkScope", checkScope)
         phase("checkTrackFX", checkTrackFX)
         phase("checkPrecomputedEffects", checkPrecomputedEffects)
+        phase("checkAudioCPU", checkAudioCPU)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -2973,6 +2974,44 @@ enum KnockSelfTest {
     /// and every pattern lane is one of those 12 pads, so what's left is the pattern: each of a preset's
     /// 12 loops has notes (an INTRO with no hats to keep falls back on the groove) and, through a kit,
     /// MAIN A makes sound and every other loop hits its pads.
+    /// How hard the audio thread works at a 128-frame buffer (Tyrone, Oct 20: "like 1% CPU at 128"):
+    /// a busy pattern plays in each mode for 20 s of audio, rendered in 128-frame blocks as the
+    /// audio thread would, timed against real time. Printed for the record; the check only catches
+    /// a gross slowdown (the simulator's core is shared and noisier than an iPad's).
+    static func checkAudioCPU() {
+        guard let preset = PatternBank.all.max(by: { $0.pattern.events.count < $1.pattern.events.count }) else { return }
+        let kit = kitBuffers(KitLibrary.drumMastery)
+        let loops = GrooveGenerator.loops(fromMain: preset.pattern, style: preset.grooveStyle, seed: PatternPreset.seed(preset.name))
+        var l = [Float](repeating: 0, count: 128), r = l
+        var report: [String] = []
+        for mode in SoundMode.allCases {
+            let e = KnockEngine()
+            e.prepare(sampleRate: 48_000, maxFrames: 128)
+            e.setParam(.followDAW, 0)
+            e.setParam(.soundMode, Float(mode.rawValue))
+            e.setTempo(preset.bpm)
+            e.kitHandoff.publish(kit)
+            e.patternHandoff.publish(PatternSet(loops))
+            e.send(KEvent(kind: .play, value: Double(LoopSlot.mainA.rawValue + 1)))
+            func run(_ blocks: Int) {
+                for _ in 0..<blocks {
+                    l.withUnsafeMutableBufferPointer { lp in r.withUnsafeMutableBufferPointer { rp in
+                        e.render(frames: 128, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+                }
+            }
+            run(375)   // 1 s to settle (kit and pattern picked up, voices going)
+            let blocks = 7_500   // 20 s of audio
+            let started = CFAbsoluteTimeGetCurrent()
+            run(blocks)
+            let seconds = CFAbsoluteTimeGetCurrent() - started
+            let percent = seconds / (Double(blocks) * 128 / 48_000) * 100
+            report.append(String(format: "%@ %.2f%%", mode.title, percent))
+            check(percent < 25, String(format: "\(mode.title): audio at 128 frames takes %.2f%% of real time (\(preset.name))", percent))
+            e.send(KEvent(kind: .allOff))
+        }
+        log("BreakBoss audio CPU at 128 frames, 48 kHz, \(preset.name): " + report.joined(separator: ", "))
+    }
+
     static func checkEveryPatternAudible() {
         let kit = kitBuffers(KitLibrary.drumMastery)
         var l = [Float](repeating: 0, count: 512), r = l
