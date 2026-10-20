@@ -2,9 +2,10 @@
 """Builds BreakBoss.swiftpm/Resources/PatternBank.json, the factory PRESETS (patterns only).
 
 Started fresh on Oct 17 from the drum research (/mnt/project-files/research/realistic-drums-and-genres.md):
-17 styles, 10 presets each, in the order of the genre guide. Every pattern is written the way the
-genre's producers and drummers play it (tempo, swing, where the kick and snare sit, what the hats do,
-ghost notes, fills), "in the style of", never a transcription.
+17 styles, 10 presets each, in the order of the genre guide (West Coast, which replaced Bay Area 2026
+on Oct 20, has 20). Every pattern is written the way the genre's producers and drummers play it (tempo,
+swing, where the kick and snare sit, what the hats do, ghost notes, fills), "in the style of", never a
+transcription.
 
 Lanes are step strings, 16 steps per bar (1, 2 or 4 bars). Codes:
   .  rest          x  hit (0.82)    X  accent (1.0)   o  medium (0.62)   g  ghost (0.38)
@@ -32,7 +33,7 @@ def pat(style, name, bpm, swing=50, glide=False, **lanes):
 
 # Browser order: the genre guide's order.
 STYLES = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock", "Trap", "Alt Trap",
-          "Drill", "UK Drill", "NY Drill", "Detroit 2026", "Bay Area 2026", "RnB", "90s RnB", "UK RnB"]
+          "Drill", "UK Drill", "NY Drill", "Detroit 2026", "West Coast", "RnB", "90s RnB", "UK RnB"]
 # Played by one drummer: never more than two hand-played sounds on a step.
 DRUMMER = {"Neo Soul", "Dilla Time", "70s Soul", "80s Breaks", "Rock"}
 
@@ -244,28 +245,72 @@ pat(AT, "ALT TRAP 9 DROP OUT", 152, k=st(32, 0, 10), c=st(32, 8, ch="X"), h=rep(
 pat(AT, "ALT TRAP 10 ETHEREAL RAGE", 156, k=st(32, 0, 16, 26), c=HALF, h=rep("x...x...x...x..."), cr=st(32, 0), p1=rep("..o...o.", 32),
     b=bass((0, "0", 16), (16, "5", 10), (26, "7", 6)), glide=True)
 
-# ---------------- Bay Area 2026 (mobb and hyphy roots: 808 bounce, slapping claps on 2 and 4,
-# light-swung 8th hats with few rolls, long melodic 808s that jump octaves, chant / FX percussion) ----------------
-BA = "Bay Area 2026"
-pat(BA, "BAY AREA 1 SLAP", 100, 56, k="X..x..x...x.....X..x..x...x..x..", c=BACK, s=st(32, 4, 12, 20, 28, ch="o"), h=rep("x.o.x.o.x.o.x.o."),
-    p1=st(32, 7, 14, 23, 30, ch="o"), b=bass((0, "0", 3), (3, "0", 3), (6, "c", 4), (10, "0", 6), (16, "0", 3), (19, "0", 3), (22, "c", 4), (26, "5", 6)))
-pat(BA, "BAY AREA 2 HYPHY", 106, 54, k="X..x..x.x.x.....X..x..x.x..x.x..", c=BACK, h=rep("xoxoxoxoxoxoxoxo"), p2=st(32, 15, 31, ch="X"), o=st(32, 14, 30),
-    b=bass((0, "0", 3), (3, "0", 3), (6, "0", 2), (8, "3", 2), (10, "5", 6), (16, "0", 3), (19, "0", 3), (22, "c", 10)))
-pat(BA, "BAY AREA 3 MOBB SLOW", 86, 58, k="X......x..x.....X......x.x......", c=BACK, h=rep("x.x.x.x.x.x.x.x."), r=st(32, 14, 30, ch="g"),
-    b=bass((0, "0", 7), (7, "0", 3), (10, "7", 6), (16, "0", 7), (23, "5", 2), (25, "3", 7)), glide=True)
-pat(BA, "BAY AREA 4 LO-FI HYPHY", 98, 58, k="X.....x...x.....X.....x...x.....", c=BACK, h=rep("x...x...x...x..."), p1=rep("..g...g.", 32),
-    b=bass((0, "0", 6), (6, "0", 4), (10, "5", 6), (16, "0", 6), (22, "0", 4), (26, "3", 6)))
-pat(BA, "BAY AREA 5 HEAVY BASS", 96, 56, k="X..x......x..x..X..x......x.....", c=BACK, s=st(32, 15, 31, ch="g"), h=rep("x.x.x.x.x.x.x.x."), o=st(32, 6, 22, ch="o"),
-    b=bass((0, "0", 3), (3, "c", 7), (10, "0", 3), (13, "5", 3), (16, "0", 3), (19, "c", 7), (26, "3", 6)))
-pat(BA, "BAY AREA 6 SIDESHOW", 104, 54, k="X.x...x.x.x...x.X.x...x.x.x.x...", c=BACK, h=rep("x.x.x.x.x.x.x.xr"), p2=st(32, 3, 19, ch="o"),
-    b=bass((0, "0", 2), (2, "0", 4), (6, "0", 2), (8, "c", 2), (10, "0", 4), (14, "3", 2), (16, "0", 2), (18, "0", 4), (22, "0", 2), (24, "c", 2), (26, "5", 6)))
-pat(BA, "BAY AREA 7 SOUL CRUISE", 88, 60, k="X......x..x.....X..x......x.....", s=BACK, h=rep("xgxgxgxgxgxgxgxg"), o=st(32, 14, 30, ch="o"), r=st(32, 10, 26, ch="g"))
-pat(BA, "BAY AREA 8 SNAP BOUNCE", 102, 56, k="X..x..x...x..x..X..x..x...x.....", c=BACK, p1=st(32, 4, 12, 20, 28, ch="o"), h=rep("x.o.x.o.x.o.x.o."),
-    b=bass((0, "0", 3), (3, "0", 3), (6, "7", 4), (10, "0", 3), (13, "5", 3), (16, "0", 3), (19, "0", 3), (22, "c", 4), (26, "7", 6)))
-pat(BA, "BAY AREA 9 VALLEJO", 94, 58, k="X.....x.x.....x.X.....x.x.......", c=BACK, h=rep("x.x.x.x.x.x.x.x."), p2=st(32, 7, 23, ch="g"),
-    b=bass((0, "0", 6), (6, "3", 2), (8, "5", 6), (14, "7", 2), (16, "0", 6), (22, "3", 2), (24, "5", 8)), glide=True)
-pat(BA, "BAY AREA 10 TURF", 108, 54, k="X..x..x...x.x...X..x..x...x.x.x.", c=BACK, h=rep("xoxoxoxoxoxoxoxo"), o=st(32, 14), cr=st(32, 0),
-    b=bass((0, "0", 3), (3, "0", 3), (6, "c", 4), (10, "0", 2), (12, "5", 4), (16, "0", 3), (19, "0", 3), (22, "c", 4), (26, "0", 2), (28, "7", 4)))
+# ---------------- West Coast (Oct 20, replaces Bay Area 2026; Tyrone: "remove ALL the current WEST COAST patterns
+# and replace them with 20 fresh patterns in the style of these loops"). Learned from his West Coast drum loops
+# (LA, Cali and NorCal bounce at 86-102: clap on 2 and 4 every bar, the kick bouncing on the 1, the "a" of 1 and
+# the "and" of 2, sparse syncopated hats with open hats on the off-beats, rim and snare pickups into the next
+# bar) by tools/learn_west_coast.py (tools/learned_westcoast.json; the audio itself never ships). Each preset is
+# four bars of one loop. Split from full mixes, so a few things are cleaned up: a snare or rim on the kick's
+# step that isn't a backbeat is the kick's own crack, the kick's soft hits play medium (its low end, not a
+# ghost), one loop's kick reads as hats (its click), so it plays as the kick, and one loop's clap reads as hats. Tops loops (no low end) play
+# the kick of another of his loops, off the steps where their backbeat lands (and its backbeat, for the one
+# loop of hats alone). ----------------
+WC = "West Coast"
+WEST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "learned_westcoast.json")
+# (name, loop, its four bars, the loop and bars the kick comes from when it has none of its own)
+WEST = [
+    ("WEST COAST 1 BOUNCE BACK", "BABYSTONEGORRILAS DRUMS", [0, 1, 2, 3], None),
+    ("WEST COAST 2 DROP BAR", "BABYSTONEGORRILAS DRUMS", [4, 5, 6, 7], None),
+    ("WEST COAST 3 SLOW ROLL", "BIGSAD1900 DRUM LOOP", [0, 1, 2, 3], None),
+    ("WEST COAST 4 HAT ROLLS", "WEST COAST X LA DRUMS", [4, 5, 6, 7], None),
+    ("WEST COAST 5 THREE KICKS", "BIGSAD1900 DRUMS", [4, 5, 6, 7], None),
+    ("WEST COAST 6 ONE CLAP", "BIGSAD1900 DRUMS", [12, 13, 14, 15], None),
+    ("WEST COAST 7 NORCAL BOUNCE", "EBK X NORCAL DRUMS", [4, 5, 6, 7], None),
+    ("WEST COAST 8 CALI KNOCK", "CALI DRUMS (FAVS)", [0, 1, 2, 3], None),
+    ("WEST COAST 9 CALI SKIP", "CALI DRUMS (FAVS)", [4, 5, 6, 7], None),
+    ("WEST COAST 10 OPEN ONE", "CALI DRUMS (FAVS)", [8, 9, 10, 11], ("CALI DRUMS (FAVS)", [0, 1, 2, 3])),
+    ("WEST COAST 11 NORCAL STOMP", "EBK X NORCAL DRUMS", [0, 1, 2, 3], None),
+    ("WEST COAST 12 NORCAL OPEN", "EBK X NORCAL DRUMS", [8, 9, 10, 11], ("EBK X NORCAL DRUMS", [4, 5, 6, 7])),
+    ("WEST COAST 13 FILTERED", "FILTERED LA DRUMS", [0, 1, 2, 3], ("BIGSAD1900 DRUMS", [16, 17, 18, 19])),
+    ("WEST COAST 14 KNOCK AND SNARE", "HIP HOP DRUMS", [0, 1, 2, 3], None),
+    ("WEST COAST 15 OPEN HAT RIDE", "LA BLUEBUCKSCLAN DRUMS", [0, 1, 2, 3], ("LA DRUMS (FAVS)", [4, 5, 6, 7])),
+    ("WEST COAST 16 LA STEP", "LA DRUMS (FAVS)", [0, 1, 2, 3], None),
+    ("WEST COAST 17 LA HAT RUN", "LA DRUMS (FAVS)", [4, 5, 6, 7], None),
+    ("WEST COAST 18 HAT SLIDE", "MODERN WEST COAST DRUMS", [0, 1, 2, 3], ("BIGSAD1900 DRUM LOOP", [0, 1, 2, 3])),
+    ("WEST COAST 19 CLAP CRUISE", "WEST COAST DRUMS (FAVS)", [0, 1, 2, 3], ("WEST COAST X LA DRUMS", [0, 1, 2, 3])),
+    ("WEST COAST 20 HAT SKIPS", "WEST COAST X LA DRUMS", [0, 1, 2, 3], None),
+]
+KICK_IS_HATS = {"HIP HOP DRUMS"}
+CLAP_IS_HATS = {"WEST COAST X LA DRUMS"}          # its clap on 2 and 4 reads as hats
+def west_coast():
+    loops = {lp["title"]: lp for lp in json.load(open(WEST_FILE))["learned"]}
+    take = lambda lane, bars: "".join(lane[b * 16:b * 16 + 16] for b in bars)
+    for name, title, bars, kick_from in WEST:
+        lp = loops[title]
+        lanes = {k: take(v, bars) for k, v in lp["lanes"].items()}
+        if title in KICK_IS_HATS:
+            lanes["k"] = lanes.pop("h")
+            lanes.pop("r", None)
+        if title in CLAP_IS_HATS:
+            h = lanes["h"]
+            lanes["c"] = "".join("X" if h[j] != "." and j % 16 in (4, 12) else "." for j in range(len(h)))
+            lanes["h"] = "".join("." if j % 16 in (4, 12) else ch for j, ch in enumerate(h))
+        if kick_from:
+            assert not lanes.get("k", "").strip(".") or title == "MODERN WEST COAST DRUMS", name   # that one's kick plays only on bars 1 and 5
+            src = loops[kick_from[0]]["lanes"]
+            if not (lanes.get("s") or lanes.get("c")):          # a hats loop: the other loop's backbeat too
+                lanes.update({b: take(src[b], kick_from[1]) for b in ("s", "c") if b in src})
+            back = lanes.get("s") or lanes.get("c")
+            lanes["k"] = "".join("." if back[j] != "." and j % 16 in (4, 12) else ch for j, ch in enumerate(take(src["k"], kick_from[1])))
+            lanes.pop("r", None) if title == "MODERN WEST COAST DRUMS" else None
+        lanes["k"] = lanes["k"].replace("g", "o")
+        for lane in ("s", "r"):
+            if lane in lanes:
+                lanes[lane] = "".join("." if lanes["k"][j] != "." and j % 16 not in (4, 12) else ch for j, ch in enumerate(lanes[lane]))
+        lanes = {k: v for k, v in lanes.items() if v.strip(".")}
+        assert len(lanes["k"]) == 64 and sum((lanes.get("s", "") + "." * 64)[j] != "." or (lanes.get("c", "") + "." * 64)[j] != "." for j in range(4, 64, 8)) >= 4, name
+        pat(WC, name, lp["bpm"], 50, **{k: lanes[k] for k in LANES if k in lanes})
+west_coast()
 
 # ---------------- Detroit 2026 (the half-time bounce at 92-100: soft or pitched-up snare, the second backbeat
 # pushed half a beat late, the 808 is the kick with quick octave rolls, quiet hats, piano stabs as drums) ----------------
@@ -519,7 +564,7 @@ add_learned(LEARNED_DANGER, os.path.join(os.path.dirname(LEARNED_FILE), "learned
 # ---------------- checks and output ----------------
 cnt = Counter(p["style"] for p in P)
 assert list(cnt) and set(cnt) == set(STYLES), set(cnt) ^ set(STYLES)
-for style, n in cnt.items(): assert n == 10 or style in LEARNED_STYLES, (style, n)
+for style, n in cnt.items(): assert n == (20 if style == WC else 10) or style in LEARNED_STYLES, (style, n)
 P.sort(key=lambda p: STYLES.index(p["style"]))                      # stable: each style keeps its own order
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)

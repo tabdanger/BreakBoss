@@ -259,3 +259,33 @@ BK_KITS = [
      {0: "FUNK KICK", 1: "BK NO 12 SNARE", 2: "BK NO 5 CLAP", 3: "NEW LAND RIM", 4: "BK NO 20 HIHAT",
       5: "DEMON 7 OPEN HAT"}),
 ]
+
+# West Coast (Oct 20): a kit for each of the 20 West Coast presets, from the same loop of Tyrone's West Coast
+# pack (tools/learn_west_coast.py: "sounds" in tools/learned_westcoast.json, the library sounds nearest to what
+# the loop plays on each pad, nearest first). A pad takes the nearest sound no kit before it in this list
+# has; pads the loop doesn't play are picked like any kit. The kick comes from the loop the preset takes its
+# kick from when the loop has none. Each entry: (kit name, loop, the loop its kick comes from or None).
+WEST_COAST_KITS = [
+    ("HAWTHORNE", "BABYSTONEGORRILAS DRUMS", None),
+    ("GARDENA", "BABYSTONEGORRILAS DRUMS", None),
+    ("LYNWOOD", "BIGSAD1900 DRUM LOOP", None),
+    ("LEIMERT PARK", "WEST COAST X LA DRUMS", None),
+    ("BALDWIN HILLS", "BIGSAD1900 DRUMS", None),
+    ("HYDE PARK", "BIGSAD1900 DRUMS", None),
+    ("ANTIOCH", "EBK X NORCAL DRUMS", None),
+    ("PARAMOUNT", "CALI DRUMS (FAVS)", None),
+    ("BELLFLOWER", "CALI DRUMS (FAVS)", None),
+    ("SAN PEDRO", "CALI DRUMS (FAVS)", None),
+    ("EAST PALO ALTO", "EBK X NORCAL DRUMS", None),
+    ("HUNTERS POINT", "EBK X NORCAL DRUMS", None),
+    ("VENICE BEACH", "FILTERED LA DRUMS", "BIGSAD1900 DRUMS"),
+    ("ATHENS PARK", "HIP HOP DRUMS", None),
+    ("WESTMONT", "LA BLUEBUCKSCLAN DRUMS", "LA DRUMS (FAVS)"),
+    ("MANCHESTER AVE", "LA DRUMS (FAVS)", None),
+    ("FLORENCE AVE", "LA DRUMS (FAVS)", None),
+    ("HUNTINGTON PARK", "MODERN WEST COAST DRUMS", "BIGSAD1900 DRUM LOOP"),
+    ("NORWALK", "WEST COAST DRUMS (FAVS)", "WEST COAST X LA DRUMS"),
+    ("RIALTO", "WEST COAST X LA DRUMS", None),
+]
+WEST_COAST_LOOK = ("WEST COAST", "westBounce", "westBounce", ["west", "trap", "detroit"],
+                   {"wide": 0.6, "punch": 0.4, "perc": ["SHAKER", "HIT", "WOOD"]})

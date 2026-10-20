@@ -2909,8 +2909,8 @@ enum KnockSelfTest {
         let new = old.normalized()
         check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
-        check(KitLibrary.factory.count == 368 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
-              "368 factory kits: the 42 A/B kits, the named ones, the live acoustic ones, BK DRUM KIT, BK EDITIONS KIT, BK DANGER KIT")
+        check(KitLibrary.factory.count == 388 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
+              "388 factory kits: the 42 A/B kits, the named ones, the live acoustic ones, BK DRUM KIT, BK EDITIONS KIT, BK DANGER KIT, 20 West Coast kits")
         check(Set(KitLibrary.factory.map(\.name)).count == KitLibrary.factory.count, "every factory kit has its own name")
         for mode in SoundMode.allCases {
             for family in KitLibrary.families {
@@ -2947,11 +2947,19 @@ enum KnockSelfTest {
         let presets = PatternBank.all
         check(presets.count >= 150 && Set(presets.map { $0.name }).count == presets.count, "pattern bank loads with unique names (\(presets.count))")
         let wanted = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock", "Trap", "Alt Trap",
-                      "Drill", "UK Drill", "NY Drill", "Detroit 2026", "Bay Area 2026", "RnB", "90s RnB", "UK RnB"]
+                      "Drill", "UK Drill", "NY Drill", "Detroit 2026", "West Coast", "RnB", "90s RnB", "UK RnB"]
         let learnedStyles = ["BK Editions Vol 1", "BK Editions Vol 2", "BK Editions Vol 3", "BK Editions Vol 4"]
-        check(PatternBank.styles == wanted + learnedStyles && presets.filter { !learnedStyles.contains($0.style) }.count == 170,
-              "170 presets in the 17 research styles, in the genre guide's order, then BK Editions Vol 1 to 4")
-        for style in wanted { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
+        check(PatternBank.styles == wanted + learnedStyles && presets.filter { !learnedStyles.contains($0.style) }.count == 180,
+              "180 presets in the 17 research styles, in the genre guide's order, then BK Editions Vol 1 to 4")
+        for style in wanted where style != "West Coast" { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
+        // West Coast (Oct 20): 20 grooves from Tyrone's West Coast loops in place of the 10 Bay Area 2026 presets;
+        // a save made with a Bay Area preset keeps its notes and randomizes in West Coast.
+        let west = PatternBank.presets(in: "West Coast")
+        check(west.count == 20 && west.allSatisfy { $0.pattern.bars == 4 && $0.grooveStyle == .westBounce && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } } &&
+              PatternRandomizer.style(for: "BAY AREA 1 SLAP") == "West Coast",
+              "West Coast: 20 presets learned from Tyrone's West Coast loops, 4 bars, each with its kick; old Bay Area saves randomize as West Coast")
+        let westKits = KitLibrary.factory.suffix(20)
+        check(westKits.allSatisfy { $0.family == "WEST COAST" && $0.preferredMode == .modern }, "20 West Coast kits in the Modern bank's WEST COAST tab")
         let learned = PatternBank.presets(in: "BK Editions Vol 1")
         check(learned.count >= 19 && learned.allSatisfy { [4, 8].contains($0.pattern.bars) && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } },
               "BK Editions Vol 1: the grooves learned from Tyrone's loops, 4 or 8 bars, each with its kick (\(learned.count))")
