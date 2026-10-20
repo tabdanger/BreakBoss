@@ -383,18 +383,21 @@ struct SamplerPlayhead: UIViewRepresentable {
         private func setFast(_ on: Bool, force: Bool = false) {
             guard let link, on != fast || force else { return }
             fast = on
-            link.preferredFrameRateRange = on ? CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
+            link.preferredFrameRateRange = on ? CAFrameRateRange(minimum: 30, maximum: 60, preferred: 60)
                                               : CAFrameRateRange(minimum: 8, maximum: 15, preferred: 10)
         }
 
         /// For the UI tests: the main thread's time per playing frame (the animation's own cost), averaged.
         private var probeTickTime: Double = 0, probeTickCount = 0
+        /// The probe's own time inside a frame (its text and the CPU reading), left out of the frame's cost.
+        private var probeOwnTime: Double = 0
 
         fileprivate func tick(_ link: CADisplayLink) {
             guard Self.probing else { step(link); return }
             let t0 = CACurrentMediaTime()
+            probeOwnTime = 0
             step(link)
-            if voice != 0 { probeTickTime += CACurrentMediaTime() - t0; probeTickCount += 1 }
+            if voice != 0 { probeTickTime += CACurrentMediaTime() - t0 - probeOwnTime; probeTickCount += 1 }
         }
 
         private func step(_ link: CADisplayLink) {
@@ -534,6 +537,8 @@ struct SamplerPlayhead: UIViewRepresentable {
             CATransaction.commit()
             // for the UI tests: where the cursor is (part of the sound), whether a hit is playing, and the counts above
             guard Self.probing else { return }
+            let p0 = CACurrentMediaTime()
+            defer { probeOwnTime += CACurrentMediaTime() - p0 }
             let value = String(format: "%.3f %@ hits=%d resets=%d back=%d far=%.3f cpu=%.1f frame=%.0fus", position, playing ? "playing" : "rest",
                                probeHits, probeResets, probeBacksteps, probeFurthest, Self.processCPU(),
                                probeTickCount > 0 ? probeTickTime / Double(probeTickCount) * 1e6 : 0)

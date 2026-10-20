@@ -290,11 +290,6 @@ struct SamplerWindow: View {
         GeometryReader { geo in
             let s = min(geo.size.width / Self.artW, geo.size.height / Self.artH)
             ZStack(alignment: .topLeading) {
-                // every touch inside the window stays in the window (Tyrone, Oct 20): the metal draws with
-                // hit testing off, so without this a tap on a bare part fell through to the rack, the
-                // grid or the library behind it
-                RoundedRectangle(cornerRadius: 14 * s).fill(Color.black.opacity(0.001))
-                    .frame(width: Self.artW * s, height: Self.artH * s)
                 // the window's own id sits on its bezel: on the whole window it would replace every control's id
                 bezel(s).accessibilityElement().accessibilityIdentifier("samplerWindow")
                 titleBar(s)
@@ -314,6 +309,12 @@ struct SamplerWindow: View {
                 }
             }
             .frame(width: Self.artW * s, height: Self.artH * s, alignment: .topLeading)
+            // every touch inside the window stays in the window (Tyrone, Oct 20): the metal draws with
+            // hit testing off, so a tap on a bare part fell through to the rack, the grid or the
+            // library behind it. The whole window takes touches; its own controls (children) still
+            // come first, this empty tap only catches what they don't.
+            .contentShape(RoundedRectangle(cornerRadius: 14 * s))
+            .onTapGesture {}
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .aspectRatio(Self.artW / Self.artH, contentMode: .fit)
