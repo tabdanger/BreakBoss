@@ -894,6 +894,42 @@ enum KnockSelfTest {
         contended.hostParameter(.pitch, 0.75)
         _ = block(contended, 128)
         check(finite && contended.param(.pitch) == 0.75, "host automation survives concurrent UI control updates")
+
+        // Timed automation (Tyrone, Oct 20): a value lands on its own sample inside the callback,
+        // exactly as if the host had split the callback there, not at the start of the buffer.
+        let timed = engine(), splitAt = engine(), plain = engine()
+        for e in [timed, splitAt, plain] { e.hostMIDI(offset: 0, status: 0x90, data1: 36, data2: 127) }
+        var timedOut = block(timed, 128), splitOut = block(splitAt, 128), plainOut = block(plain, 128)
+        timed.hostParameter(.output, 0, offset: 37)
+        timedOut += block(timed, 128)
+        check(timed.param(.output) == 0, "timed host automation is readable right after its callback")
+        splitOut += block(splitAt, 37)
+        splitAt.hostParameter(.output, 0)
+        splitOut += block(splitAt, 91)
+        plainOut += block(plain, 128)
+        for _ in 0..<2 { timedOut += block(timed, 128); splitOut += block(splitAt, 128); plainOut += block(plain, 128) }
+        check(maxDifference(timedOut, splitOut) < 0.000_001, "timed host automation lands on its sample offset")
+        check(maxDifference(Array(timedOut.prefix(128 + 37)), Array(plainOut.prefix(128 + 37))) < 0.000_001 &&
+              maxDifference(timedOut, plainOut) > 0.000_1, "timed host automation leaves earlier samples alone")
+
+        // Ramps glide over the host's duration, across callbacks, and end exactly on the target.
+        let ramped = engine()
+        ramped.hostParameter(.output, 0, offset: 0, ramp: 256)
+        let rampedOut = block(ramped, 128)
+        let midway = ramped.param(.output)
+        check(midway > 0.5 && midway < 0.75, "host ramp is part way after its first callback (\(midway))")
+        _ = block(ramped, 128)
+        check(ramped.param(.output) == 0 && rampedOut.allSatisfy { $0.isFinite }, "host ramp reaches its target on time")
+        let interrupted = engine()
+        interrupted.hostParameter(.output, 0, offset: 0, ramp: 4_800)
+        _ = block(interrupted, 128)
+        interrupted.hostParameter(.output, 0.5)
+        _ = block(interrupted, 128); _ = block(interrupted, 128)
+        check(interrupted.param(.output) == 0.5, "a new host value replaces a ramp in progress")
+        let late = engine()
+        late.hostParameter(.output, 0.25, offset: 500)
+        _ = block(late, 128)
+        check(late.param(.output) == 0.25, "host automation timed past the callback still lands")
     }
 
     /// The SAMPLER window: the SAMPLE page's computed sound and the ENVELOPE page while it plays.

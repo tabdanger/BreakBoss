@@ -194,6 +194,20 @@ final class SharedControls {
         os_unfair_lock_unlock(lock)
         return true
     }
+    /// Audio thread: publish the host's pending values without taking a snapshot, so the
+    /// faceplate and a save made right after this callback see the automation it applied.
+    @discardableResult
+    func merge(hostValues: UnsafePointer<Float>, hostMask: UInt32) -> Bool {
+        guard os_unfair_lock_trylock(lock) else { return false }
+        var dirty = hostMask
+        while dirty != 0 {
+            let index = dirty.trailingZeroBitCount
+            values[index] = hostValues[index]
+            dirty &= dirty - 1
+        }
+        os_unfair_lock_unlock(lock)
+        return true
+    }
 }
 
 /// Where each track's newest voice is in its sound, for the SAMPLER's playback cursor.

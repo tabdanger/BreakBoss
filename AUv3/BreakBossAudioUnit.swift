@@ -81,14 +81,13 @@ public final class BreakBossAudioUnit: AUAudioUnit {
     /// MIDI OUT: the pattern's hits go to the host's MIDI output (route them to other plug-ins
     /// or external gear), each drum channel on its own MIDI channel.
     public override var midiOutputNames: [String] { ["BreaKing MIDI Out"] }
-    /// The host's MIDI output block, read by the render block (set before rendering starts).
-    private final class MIDIOutHolder { var block: AUMIDIOutputEventBlock? }
-    private let midiOutHolder = MIDIOutHolder()
+    private let midiOutLink = MIDIOutLink()
 
     /// Hosts (Logic Pro for iPad among them) can hand over their MIDI output block after rendering
-    /// has started, or swap it when the routing changes; keep the render block's copy current.
+    /// has started, or swap it when the routing changes; the render block picks the new one up
+    /// through a handoff, never by reading this property from the audio thread.
     public override var midiOutputEventBlock: AUMIDIOutputEventBlock? {
-        didSet { midiOutHolder.block = midiOutputEventBlock }
+        didSet { midiOutLink.publish(midiOutputEventBlock) }
     }
 
     public override var parameterTree: AUParameterTree? {
@@ -142,7 +141,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
 
     public override func allocateRenderResources() throws {
         try super.allocateRenderResources()
-        midiOutHolder.block = midiOutputEventBlock
+        midiOutLink.publish(midiOutputEventBlock)
         let format = outputBus.format
         ownBuffers.prepare(format: format, frames: maximumFramesToRender)
         let rate = format.sampleRate
@@ -159,15 +158,15 @@ public final class BreakBossAudioUnit: AUAudioUnit {
         let own = ownBuffers
         let musical = musicalContextBlock
         let transport = transportStateBlock
-        let midiOut = midiOutHolder
+        let midiOut = midiOutLink
         return { _, timestamp, frameCount, _, outputData, events, _ in
             own.fillIfEmpty(outputData, frames: frameCount)
             let list = UnsafeMutableAudioBufferListPointer(outputData)
             guard list.count > 0, let l = list[0].mData?.assumingMemoryBound(to: Float.self) else { return noErr }
             let r = list.count > 1 ? (list[1].mData?.assumingMemoryBound(to: Float.self) ?? l) : l
 
-            // MIDI keeps sample offsets. Control automation takes one bounded snapshot per
-            // render callback; the processing chain smooths continuous gain/filter controls.
+            // MIDI and automation keep their sample offsets; ramps glide over the host's duration
+            // (the engine steps them every few samples and the chain smooths the rest).
             let start = timestamp.pointee.mSampleTime
             var event = events
             while let e = event {
@@ -179,7 +178,11 @@ public final class BreakBossAudioUnit: AUAudioUnit {
                     engine.hostMIDI(offset: offset, status: bytes.0, data1: bytes.1, data2: bytes.2)
                 case .parameter, .parameterRamp:
                     let p = e.pointee.parameter
-                    if let k = KParam(rawValue: Int(p.parameterAddress)) { engine.hostParameter(k, p.value) }
+                    if let k = KParam(rawValue: Int(p.parameterAddress)) {
+                        let ramp = e.pointee.head.eventType == .parameterRamp ? Int(p.rampDurationSampleFrames) : 0
+                        engine.hostParameter(k, p.value, offset: eventOffset(p.eventSampleTime, start: start, frames: frameCount),
+                                             ramp: ramp)
+                    }
                 default:
                     break
                 }
@@ -202,7 +205,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             } else {
                 engine.render(frames: Int(frameCount), left: l, right: r, host: host)
             }
-            if engine.midiOutCount > 0, let send = midiOut.block {
+            if let send = midiOut.renderBlock(), engine.midiOutCount > 0 {
                 engine.forEachMIDIOut { frame, status, d1, d2 in
                     var bytes = (status, d1, d2)
                     withUnsafeBytes(of: &bytes) { raw in
@@ -246,6 +249,47 @@ public final class BreakBossAudioUnit: AUAudioUnit {
 
 @inline(__always)
 private func mono(_ list: UnsafeMutableAudioBufferListPointer) -> Bool { list.count == 1 }
+
+/// Where an AU render event falls in this render call: host sample times, or offsets from
+/// AUEventSampleTimeImmediate, clamped into the call.
+@inline(__always)
+private func eventOffset(_ time: AUEventSampleTime, start: Double, frames: AUAudioFrameCount) -> Int {
+    let immediate = AUEventSampleTimeImmediate
+    let offset = time >= immediate && time < immediate + AUEventSampleTime(UInt32.max)
+        ? Int(time - immediate)
+        : Int(Double(time) - start)
+    return min(max(0, offset), max(0, Int(frames) - 1))
+}
+
+/// The host's MIDI output block, handed to the render thread without a data race: the main
+/// thread publishes each new block through a Handoff, the render thread swaps it in with a
+/// try-lock (keeping the one it has if the lock is busy) and hands the old one back, so no block
+/// is ever released on the audio thread.
+final class MIDIOutLink {
+    final class Sender {
+        let block: AUMIDIOutputEventBlock?
+        init(_ block: AUMIDIOutputEventBlock?) { self.block = block }
+    }
+    private let handoff = Handoff<Sender>()
+    // Render thread only.
+    private var current: Sender?
+    private var retiring: Sender?
+
+    /// Main thread (any non-audio thread): the host gave a new block, or took it away (nil).
+    func publish(_ block: AUMIDIOutputEventBlock?) { handoff.publish(Sender(block)) }
+
+    /// Render thread: the block to send this callback's MIDI to.
+    @inline(__always)
+    func renderBlock() -> AUMIDIOutputEventBlock? {
+        if let r = retiring, handoff.retire(r) { retiring = nil }
+        if retiring == nil, let next = handoff.take() {
+            retiring = current
+            current = next
+            if let r = retiring, handoff.retire(r) { retiring = nil }
+        }
+        return current?.block
+    }
+}
 
 /// Buffers made when rendering starts, never on the audio thread: for hosts that pass empty
 /// buffers (allowed by the AU rules), and the spare right channel when the track is mono.
