@@ -43,21 +43,36 @@ def library():
 
 def learn(path, lib):
     temps = [(lane, f) for lane, f, _ in lib]
-    p = F.learn_mix(path, temps)
+    split, seen = F.split, {}
+    def once(path, temps):                     # the lanes and the sounds come from the same split of the loop
+        if path not in seen: seen[path] = split(path, temps)
+        return seen[path]
+    F.split = once
+    try: p = F.learn_mix(path, temps)
+    finally: F.split = split
     x, sr = L.read_wav(path)
-    hits, _ = F.split(path, temps)
+    hits = {lane: list(hs) for lane, hs in seen[path][0].items()}
     lows = L.onsets(F.band(x, sr, 20, 150), sr)
     if not lows or float(np.percentile([h["peak"] for h in lows], 95)) < 0.05:
         p["lanes"].pop("k", None); hits.pop("k", None)
         p["tops"] = True
-    p["sounds"] = {}
-    for lane, hs in hits.items():
-        if lane not in KIND: continue
+    def nearest(hs, lane):
         top = max(h["peak"] for h in hs)
         fs = [F.features(x, sr, int(h["t"] * sr), h["ring"]) for h in hs if h["peak"] >= 0.5 * top]
         target = np.median(np.array(fs), axis=0)
         ranked = sorted((float(np.sum((f - target) ** 2)), n) for l, f, n in lib if l == lane)
-        p["sounds"][lane] = [n for _, n in ranked[:20]]
+        return [n for _, n in ranked[:20]]
+    p["sounds"] = {lane: nearest(hs, lane) for lane, hs in hits.items() if lane in KIND}
+    # every hit on 2 and 4, whatever lane it was heard in, against the claps: for a loop whose clap reads as
+    # hats (tools/make_patterns.py moves those hits to the clap lane)
+    step = 60 / p["bpm"] / 4
+    back = [h for hs in hits.values() for h in hs if round(h["t"] / step) % 16 in (4, 12)]
+    if back: p["backbeat"] = nearest(back, "c")
+    if "c" in p["sounds"] and "c" not in p["lanes"]:   # learn_mix plays a lone clap backbeat on the snare: a clap plays on the clap pad here
+        p["lanes"] = {k: p["lanes"]["s"] if k == "c" else v for k, v in p["lanes"].items() if k != "s"} | {"c": p["lanes"]["s"]}
+        p["lanes"] = {k: p["lanes"][k] for k in L.LANE_ORDER if k in p["lanes"]}
+        for key in ("shift", "swingLanes"):
+            if "s" in p.get(key, {}): p[key]["c"] = p[key].pop("s")
     return p
 
 

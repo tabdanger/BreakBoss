@@ -263,11 +263,13 @@ BK_KITS = [
       5: "DEMON 7 OPEN HAT", **EMPTY_REST}),
 ]
 
-# West Coast (Oct 20): a kit for each of the 20 West Coast presets, from the same loop of Tyrone's West Coast
-# pack (tools/learn_west_coast.py: "sounds" in tools/learned_westcoast.json, the library sounds nearest to what
-# the loop plays on each pad, nearest first). A pad takes the nearest sound no kit before it in this list
-# has; pads the loop doesn't play are picked like any kit. The kick comes from the loop the preset takes its
-# kick from when the loop has none. Each entry: (kit name, loop, the loop its kick comes from or None).
+# West Coast (Oct 20): a kit for each of the 20 West Coast presets (the n-th kit goes with the n-th preset), from
+# the same loop of Tyrone's West Coast pack. Tyrone: a kit from a loop with fewer than 12 sounds holds only the
+# sounds the loop plays, the other pads stay empty, and no sound sits on two pads. So each kit has a pad for each
+# lane its preset plays, holding the library sound nearest to what the loop plays there (tools/learn_west_coast.py:
+# "sounds" in tools/learned_westcoast.json, nearest first) that no kit before it in this list has. The kick
+# comes from the loop the preset takes its kick from when the loop has none.
+# Each entry: (kit name, loop, the loop its kick comes from or None).
 WEST_COAST_KITS = [
     ("HAWTHORNE", "BABYSTONEGORRILAS DRUMS", None),
     ("GARDENA", "BABYSTONEGORRILAS DRUMS", None),
@@ -290,5 +292,4 @@ WEST_COAST_KITS = [
     ("NORWALK", "WEST COAST DRUMS (FAVS)", "WEST COAST X LA DRUMS"),
     ("RIALTO", "WEST COAST X LA DRUMS", None),
 ]
-WEST_COAST_LOOK = ("WEST COAST", "westBounce", "westBounce", ["west", "trap", "detroit"],
-                   {"wide": 0.6, "punch": 0.4, "perc": ["SHAKER", "HIT", "WOOD"]})
+WEST_COAST_LOOK = ("WEST COAST", "westBounce", "westBounce")   # genre on the card, groove style, synth voice

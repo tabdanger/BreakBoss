@@ -148,23 +148,29 @@ def slug(name):
 
 
 def west_coast_kits(named):
-    """kit_catalog.WEST_COAST_KITS as kit entries: each pad the loop plays takes the sound nearest it (tools/learned_westcoast.json)
-    that no West Coast kit before it has."""
+    """kit_catalog.WEST_COAST_KITS: the n-th kit holds only the sounds the n-th West Coast preset plays (Tyrone, Oct 20:
+    a kit from a loop with fewer than 12 sounds uses only the loop's sounds, never one sound on two pads). Each of
+    those pads takes the sound nearest the loop's hits (tools/learned_westcoast.json) that no kit before it has.
+    The pads its preset doesn't play are EMPTY."""
     loops = {lp["title"]: lp for lp in json.load(open(os.path.join(ROOT, "tools", "learned_westcoast.json")))["learned"]}
-    genre, style, voice, tags, likes = kit_catalog.WEST_COAST_LOOK
+    bank = json.load(open(os.path.join(ROOT, "BreakBoss.swiftpm", "Resources", "PatternBank.json")))["patterns"]
+    presets = [p for p in bank if p["style"] == "West Coast"]
+    assert len(presets) == len(kit_catalog.WEST_COAST_KITS)
     pad_of = {"k": 0, "s": 1, "c": 2, "r": 3, "h": 4, "o": 5, "cr": 11}
     had, out = set(), []
-    for name, title, kick_from in kit_catalog.WEST_COAST_KITS:
-        sounds = dict(loops[title]["sounds"])
-        if kick_from: sounds["k"] = loops[kick_from]["sounds"]["k"]
-        if title in ("HIP HOP DRUMS",): sounds.pop("h", None)        # its "hats" are the kick's click (tools/make_patterns.py)
-        picks = {}
-        for lane, near in sounds.items():
-            if lane not in pad_of: continue
-            pick = next((n for n in near if n not in had), near[0])
+    for (name, title, kick_from), preset in zip(kit_catalog.WEST_COAST_KITS, presets):
+        own = loops[title]["sounds"]
+        other = loops[kick_from]["sounds"] if kick_from else {}
+        picks = {pad: kit_catalog.EMPTY for pad in range(12)}
+        for lane in preset["lanes"]:
+            near = (other if lane == "k" and kick_from else own).get(lane) or other.get(lane)
+            if not near and lane == "c": near = loops[title].get("backbeat")       # its clap read as hats
+            assert near, (name, lane)
+            pick = next(n for n in near if n not in had)
             assert named[pick]["category"] == PADS[pad_of[lane]][0], (name, lane, pick)
             picks[pad_of[lane]] = pick; had.add(pick)
-        out.append((name, "modern", "WEST COAST", genre, style, int(round(loops[title]["bpm"])), voice, tags, likes, picks))
+        genre, style, voice = kit_catalog.WEST_COAST_LOOK
+        out.append((name, "modern", "WEST COAST", genre, style, int(round(preset["bpm"])), voice, ["west"], {}, picks))
     return out
 
 
