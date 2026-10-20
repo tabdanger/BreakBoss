@@ -865,9 +865,9 @@ final class KnockEngine {
             meters.publishScope(master)
         }
         pickUpNewKitAndLoops(frames: frames)
-        if let r = retiringPreview, previewHandoff.retire(r) { retiringPreview = nil }
+        _ = previewHandoff.retire(&retiringPreview)
         if retiringPreview == nil, let p = previewHandoff.take() {
-            retiringPreview = preview
+            swap(&retiringPreview, &preview)
             preview = p
             previewPos = 0
         }
@@ -962,7 +962,10 @@ final class KnockEngine {
         ms.clipperOn = params[KParam.clipper.rawValue] > 0.5
         master.process(mixL, mixR, count: frames, ms)
         if metronomeOn || recordArmed || countingIn || clickRemaining > 0 { addClicks(frames: frames) }
-        if preview != nil { mixPreview(frames: frames) }
+        if preview != nil, mixPreview(frames: frames) {
+            // done: handed back to be freed (moved, never copied, so the main thread holds the last reference)
+            if retiringPreview == nil { swap(&retiringPreview, &preview) } else { _ = previewHandoff.retire(&preview) }
+        }
 
         left.update(from: mixL, count: frames)
         right.update(from: mixR, count: frames)
@@ -970,8 +973,9 @@ final class KnockEngine {
 
     /// The library preview, after the master section (heard as the sound is, not through the mode's
     /// effects), read at the engine's rate; done, it's handed back to be freed.
-    private func mixPreview(frames: Int) {
-        guard let p = preview else { return }
+    /// True when the preview has played to its end.
+    private func mixPreview(frames: Int) -> Bool {
+        guard let p = preview else { return false }
         let sample = p.sample
         let n = sample.length
         let step = sample.sampleRate / max(1, sampleRate)
@@ -984,10 +988,7 @@ final class KnockEngine {
             mixR[i] += (sample.right[k] + (sample.right[k + 1] - sample.right[k]) * t) * g
             previewPos += step
         }
-        if Int(previewPos) >= n - 1 {
-            if retiringPreview == nil { retiringPreview = p; preview = nil }
-            else if previewHandoff.retire(p) { preview = nil }
-        }
+        return Int(previewPos) >= n - 1
     }
 
     private func advanced(_ host: HostTiming?, by frames: Int) -> HostTiming? {
@@ -997,15 +998,17 @@ final class KnockEngine {
     }
 
     private func pickUpNewKitAndLoops(frames: Int) {
-        if let r = retiringKit, kitHandoff.retire(r) { retiringKit = nil }
-        if let r = retiringPatterns, patternHandoff.retire(r) { retiringPatterns = nil }
+        // Old kits, loops and previews only move between these slots and the handoff (swaps, never
+        // copies), so the audio thread never holds the last reference to one when the main thread
+        // releases it.
+        _ = kitHandoff.retire(&retiringKit)
+        _ = patternHandoff.retire(&retiringPatterns)
         if oldKit != nil {
             // Counted in samples: the old kit's voices fade for 5 ms; free it after 15 ms.
             oldKitCountdown -= frames
             if oldKitCountdown <= 0 && retiringKit == nil {
-                retiringKit = oldKit
-                oldKit = nil
-                if let r = retiringKit, kitHandoff.retire(r) { retiringKit = nil }
+                swap(&retiringKit, &oldKit)
+                _ = kitHandoff.retire(&retiringKit)
             }
         }
         if oldKit == nil, retiringKit == nil, let newKit = kitHandoff.take() {
@@ -1036,9 +1039,9 @@ final class KnockEngine {
             oldKitCountdown = Int(sampleRate * 0.015)
         }
         if retiringPatterns == nil, let newPatterns = patternHandoff.take() {
-            retiringPatterns = patterns
+            swap(&retiringPatterns, &patterns)
             patterns = newPatterns
-            if let r = retiringPatterns, patternHandoff.retire(r) { retiringPatterns = nil }
+            _ = patternHandoff.retire(&retiringPatterns)
         }
     }
 
