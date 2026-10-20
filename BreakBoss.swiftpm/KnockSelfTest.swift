@@ -2909,8 +2909,8 @@ enum KnockSelfTest {
         let new = old.normalized()
         check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
-        check(KitLibrary.factory.count == 367 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
-              "367 factory kits: the 42 A/B kits, the named ones, the live acoustic ones, BK DRUM KIT, BK EDITIONS KIT")
+        check(KitLibrary.factory.count == 368 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
+              "368 factory kits: the 42 A/B kits, the named ones, the live acoustic ones, BK DRUM KIT, BK EDITIONS KIT, BK DANGER KIT")
         check(Set(KitLibrary.factory.map(\.name)).count == KitLibrary.factory.count, "every factory kit has its own name")
         for mode in SoundMode.allCases {
             for family in KitLibrary.families {
@@ -2948,9 +2948,9 @@ enum KnockSelfTest {
         check(presets.count >= 150 && Set(presets.map { $0.name }).count == presets.count, "pattern bank loads with unique names (\(presets.count))")
         let wanted = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock", "Trap", "Alt Trap",
                       "Drill", "UK Drill", "NY Drill", "Detroit 2026", "Bay Area 2026", "RnB", "90s RnB", "UK RnB"]
-        let learnedStyles = ["BK Editions Vol 1", "BK Editions Vol 2", "BK Editions Vol 3"]
+        let learnedStyles = ["BK Editions Vol 1", "BK Editions Vol 2", "BK Editions Vol 3", "BK Editions Vol 4"]
         check(PatternBank.styles == wanted + learnedStyles && presets.filter { !learnedStyles.contains($0.style) }.count == 170,
-              "170 presets in the 17 research styles, in the genre guide's order, then BK Editions Vol 1, 2 and 3")
+              "170 presets in the 17 research styles, in the genre guide's order, then BK Editions Vol 1 to 4")
         for style in wanted { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
         let learned = PatternBank.presets(in: "BK Editions Vol 1")
         check(learned.count >= 19 && learned.allSatisfy { [4, 8].contains($0.pattern.bars) && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } },
@@ -2961,6 +2961,9 @@ enum KnockSelfTest {
         let vol3 = PatternBank.presets(in: "BK Editions Vol 3")
         check(vol3.count == 20 && vol3.allSatisfy { [1, 2, 4, 8].contains($0.pattern.bars) && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } },
               "BK Editions Vol 3: 20 grooves from Tyrone's Drum Loops, 1 to 8 bars, each with its kick (\(vol3.count))")
+        let vol4 = PatternBank.presets(in: "BK Editions Vol 4")
+        check(vol4.count == 5 && vol4.allSatisfy { $0.pattern.bars == 4 && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } && $0.grooveStyle == .westBounce },
+              "BK Editions Vol 4: Tyrone's 5 danger drum loops, 4 bars, each with its kick (\(vol4.count))")
         check(presets.filter { $0.shift != nil || $0.swingLanes != nil || $0.ghostChance != nil }.count >= 60, "the live styles carry their feel")
         for p in presets {
             let pat = p.pattern

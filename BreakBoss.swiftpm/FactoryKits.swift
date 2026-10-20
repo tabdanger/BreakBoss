@@ -377,6 +377,7 @@ break-room|BREAK ROOM|funkBreak|funkBreak|96|1322|41.2|vintage|BREAKS|LIVE BREAK
 studio-a|STUDIO A|heavyBreak|heavyBreak|118|1323|41.2|modern|POP|LIVE ROCK
 bk-drum-kit|BK DRUM KIT|modernTrap|trapAtlanta|140|1324|43.65|modern|TRAP|BK
 bk-editions-kit|BK EDITIONS KIT|modernTrap|trapAtlanta|130|1325|41.2|modern|TRAP|BK
+bk-danger-kit|BK DANGER KIT|westBounce|westBounce|94|1326|49.0|modern|WEST COAST|BK
 """
 
     /// The kits before Oct 17: saved projects and your kits that used one open the nearest new kit.
