@@ -2379,6 +2379,35 @@ enum KnockSelfTest {
             check(onlyPad(hits(UInt8(36 + pad), host: false), pad), "MPK Mini: pad note \(36 + pad) on channel 10 plays BB pad \(pad + 1)")
             check(onlyPad(hits(UInt8(36 + pad), host: true), pad), "MPK Mini via the AUv3 host: note \(36 + pad) plays BB pad \(pad + 1)")
         }
+        // Bank B pads 5-8 (notes 48-51) are the 808 range: they play the 808 only, never pad 10 pitched.
+        for note in 48...51 {
+            check(onlyPad(hits(UInt8(note), host: true), Pad.bass808.rawValue), "MPK Mini via the AUv3 host: bank B note \(note) plays only the 808")
+        }
+        // A program that sends MPC notes (A01-A08, B01-B04), learned with LEARN ALL 12 pads in a row:
+        // every controller pad plays exactly one pad, its own, with MIDI OUT on (pad 10 owns channel 10).
+        let mpcNotes = [37, 36, 42, 82, 40, 38, 46, 44, 48, 47, 45, 43]
+        var learnedAll = MIDIPadMap.standardNotes
+        for (pad, note) in mpcNotes.enumerated() { learnedAll = MIDIPadMap.learn(learnedAll, pad: pad, note: note) }
+        check(learnedAll == mpcNotes && Set(learnedAll).count == Pad.count, "LEARN ALL 12: each pad keeps its own note, none shared")
+        e.send(KEvent(kind: .mapNote, a: -1))
+        for (pad, note) in learnedAll.enumerated() { e.send(KEvent(kind: .mapNote, a: Int32(note), value: Double(pad))) }
+        renderBlock(e)
+        for (pad, note) in learnedAll.enumerated() {
+            check(onlyPad(hits(UInt8(note), host: false), pad), "Learned controller: note \(note) on channel 10 plays only BB pad \(pad + 1)")
+            check(onlyPad(hits(UInt8(note), host: true), pad), "Learned controller via the AUv3 host: note \(note) plays only BB pad \(pad + 1)")
+        }
+        e.send(KEvent(kind: .mapNote, a: -1))
+        for (pad, note) in MIDIPadMap.standardNotes.enumerated() { e.send(KEvent(kind: .mapNote, a: Int32(note), value: Double(pad))) }
+        // The one-channel MIDI OUT layout (every drum on channel 10, GM notes) still plays its own notes back.
+        let gm = [36, 38, 39, 37, 42, 46, 35, 56, 54, 45, 50, 49]
+        for p in 0..<Pad.count {
+            let ch = p == Pad.bass808.rawValue ? p : 9
+            e.send(KEvent(kind: .midiOut, a: Int32(p), value: Double(ch * 128 + gm[p])))
+        }
+        renderBlock(e)
+        check(onlyPad(hits(38, host: true), Pad.snare.rawValue), "One-channel MIDI OUT layout: GM note 38 on channel 10 plays back the snare")
+        for p in 0..<Pad.count { e.send(KEvent(kind: .midiOut, a: Int32(p), value: Double(KnockController.defaultMIDIOutChannels[p] * 128 + KnockController.defaultMIDIOutNotes[p]))) }
+        renderBlock(e)
         // Recorded into the sequencer like an on-screen tap.
         var loops = Array(repeating: PatternData(name: "E", lengthTicks: Int32(PatternData.ppq) * 4, events: []), count: Pad.count)
         loops[0] = PatternData(name: "R", lengthTicks: Int32(PatternData.ppq) * 4, events: [])
