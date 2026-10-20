@@ -79,6 +79,18 @@ struct FaceplateView: View {
             }
         }
         .fullScreenCover(item: $browser) { kind in BrowserView(controller: controller, kind: kind) }
+        // the tutorial walks across both faces: its Face 2 steps open the sequencer, its Face 1 steps close it
+        .onReceive(TutorialGuide.shared.$index) { i in
+            guard let i, TutorialStep.all.indices.contains(i) else { return }
+            if TutorialStep.all[i].surface == .face2 {
+                if patternEditor == nil {
+                    let current = Int(controller.meters.status[1])
+                    patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : controller.screenPattern)
+                }
+            } else if patternEditor != nil {
+                patternEditor = nil
+            }
+        }
         .alert(namePrompt == .kit ? "Save Kit" : "Save Preset", isPresented: Binding(
             get: { namePrompt != nil }, set: { if !$0 { namePrompt = nil } })) {
             TextField("Name", text: $nameText)
@@ -125,6 +137,8 @@ struct FaceplateView: View {
             transport(L, sfx: sfx, s: s)
             windows(L, s: s)
             pads(L, s: s)
+            // the tutorial's lit part and card, over the face's own art (Tyrone, Oct 20)
+            TutorialOverlay(surface: .face1, art: CGSize(width: L.width, height: L.height), scale: s, finish: sfx) { $0.face1(L) }
         }
     }
 

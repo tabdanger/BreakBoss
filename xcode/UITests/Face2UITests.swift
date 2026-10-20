@@ -15,7 +15,7 @@ final class Face2UITests: XCTestCase {
 
     private func launch(platinum: Bool) {
         app = XCUIApplication()
-        app.launchArguments += ["-breakboss.platinumFace", platinum ? "YES" : "NO"]
+        app.launchArguments += ["-breakboss.platinumFace", platinum ? "YES" : "NO", "-breakboss.tutorialSeen", "YES"]
         app.launch()
         sleep(3)
     }
