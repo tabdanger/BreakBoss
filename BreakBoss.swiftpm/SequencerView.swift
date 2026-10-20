@@ -939,7 +939,7 @@ struct SequencerView: View {
             // how loud picked sounds are heard; let go to hear the selected track at that level
             PreviewFader(value: previewVolume, scale: s, color: accent,
                          change: { previewVolume = $0 },
-                         done: { if let pad = selectedPad { controller.previewPad(pad) } })
+                         done: { controller.previewAgain(orPad: selectedPad) })
                 .frame(height: 24 * s)
             Text(libraryNote.isEmpty ? "DRAG A SOUND ONTO THE RACK" : libraryNote).font(.system(size: 8 * s, weight: .semibold)).foregroundColor(S.dim).lineLimit(1)
         }
@@ -962,14 +962,10 @@ struct SequencerView: View {
         .background(RoundedRectangle(cornerRadius: 5 * s).fill(onSelected ? accent.opacity(0.12) : Color.clear))
         .overlay(alignment: .bottom) { Rectangle().fill(Color(white: 0.16)).frame(height: 1).allowsHitTesting(false) }
         .contentShape(Rectangle())
-        .onTapGesture {
-            guard let ch = selected else { return }
-            let pad = ch.pad
-            // heard once the engine has it: a fixed wait played the old sound when loading took longer
-            controller.replaceRackSound(ch.id, with: sound) {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) { controller.previewPad(pad) }
-            }
-        }
+        // double tap: hear it at the preview volume; no track changes (drag it onto the rack for that,
+        // Tyrone, Oct 20)
+        .onTapGesture(count: 2) { controller.previewSound(sound) }
+        .accessibilityIdentifier("librarySound_" + sound.name)
         .onDrag {
             NSItemProvider(object: (soundDragPrefix + sound.id) as NSString)
         } preview: {

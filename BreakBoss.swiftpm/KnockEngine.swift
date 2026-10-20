@@ -3,6 +3,13 @@ import Foundation
 
 // MARK: - Per-pad settings (pad editor)
 
+/// A sound for the library's preview: its buffer and how loud (the preview volume).
+final class PreviewSound {
+    let sample: SampleBuffer
+    let gain: Float
+    init(_ sample: SampleBuffer, gain: Float) { self.sample = sample; self.gain = gain }
+}
+
 struct PadSettings: Codable, Equatable {
     /// 0...maxLevel, 0.8 = unity (100%), the top (Tyrone, Oct 19: only the SAMPLER's VOL goes past 100%).
     var level: Float = 0.8
@@ -239,6 +246,12 @@ final class KnockEngine {
     let queue = EventQueue()
     let kitHandoff = Handoff<KitBuffers>()
     let patternHandoff = Handoff<PatternSet>()
+    /// The sound library's preview (Tyrone, Oct 20): a sound heard once, clean, at the preview volume,
+    /// without touching any track.
+    let previewHandoff = Handoff<PreviewSound>()
+    private var preview: PreviewSound?
+    private var retiringPreview: PreviewSound?
+    private var previewPos: Double = 0
 
     private(set) var sampleRate: Double = 48_000
     private var maxFrames = 4_096
@@ -720,6 +733,12 @@ final class KnockEngine {
             meters.publishScope(master)
         }
         pickUpNewKitAndLoops(frames: frames)
+        if let r = retiringPreview, previewHandoff.retire(r) { retiringPreview = nil }
+        if retiringPreview == nil, let p = previewHandoff.take() {
+            retiringPreview = preview
+            preview = p
+            previewPos = 0
+        }
         let playMode = params[KParam.playMode.rawValue]
         if lastPlayMode >= 0 && playMode != lastPlayMode { clearGates(); playing = false; queuedLoop = -2; releaseAll() }
         lastPlayMode = playMode
@@ -772,6 +791,7 @@ final class KnockEngine {
         if !anyVoice {
             for v in 0..<KnockEngine.maxStealTails where stealTails[v].active { anyVoice = true; break }
         }
+        if preview != nil { anyVoice = true }
         if anyVoice || playing { idleSamples = 0 } else { idleSamples += frames }
         if idleSamples > Int(sampleRate * 4) {
             master.clearScope()
@@ -810,9 +830,32 @@ final class KnockEngine {
         ms.clipperOn = params[KParam.clipper.rawValue] > 0.5
         master.process(mixL, mixR, count: frames, ms)
         if metronomeOn || recordArmed || countingIn || clickRemaining > 0 { addClicks(frames: frames) }
+        if preview != nil { mixPreview(frames: frames) }
 
         left.update(from: mixL, count: frames)
         right.update(from: mixR, count: frames)
+    }
+
+    /// The library preview, after the master section (heard as the sound is, not through the mode's
+    /// effects), read at the engine's rate; done, it's handed back to be freed.
+    private func mixPreview(frames: Int) {
+        guard let p = preview else { return }
+        let sample = p.sample
+        let n = sample.length
+        let step = sample.sampleRate / max(1, sampleRate)
+        let g = p.gain
+        for i in 0..<frames {
+            let k = Int(previewPos)
+            if k >= n - 1 { break }
+            let t = Float(previewPos - Double(k))
+            mixL[i] += (sample.left[k] + (sample.left[k + 1] - sample.left[k]) * t) * g
+            mixR[i] += (sample.right[k] + (sample.right[k + 1] - sample.right[k]) * t) * g
+            previewPos += step
+        }
+        if Int(previewPos) >= n - 1 {
+            if retiringPreview == nil { retiringPreview = p; preview = nil }
+            else if previewHandoff.retire(p) { preview = nil }
+        }
     }
 
     private func advanced(_ host: HostTiming?, by frames: Int) -> HostTiming? {

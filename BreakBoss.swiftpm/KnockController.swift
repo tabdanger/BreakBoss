@@ -97,6 +97,7 @@ final class KnockController: ObservableObject {
         let collect = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.engine.kitHandoff.collect()
             self?.engine.patternHandoff.collect()
+            self?.engine.previewHandoff.collect()
         }
         RunLoop.main.add(collect, forMode: .common)
         timers.append(collect)
@@ -299,6 +300,27 @@ final class KnockController: ObservableObject {
 
     /// A library preview: the track's sound at the preview volume.
     func previewPad(_ pad: Int) { auditionPad(pad, gain: previewVolume) }
+
+    /// The sound last previewed from the library (the preview fader plays it again at its new level).
+    private(set) var previewedSound: SampleBuffer?
+    /// Double tap in the library (Tyrone, Oct 20): hear a sound at the preview volume without putting
+    /// it on any track (dragging it onto the rack does that).
+    func previewSound(_ sound: LibrarySound) {
+        let url = sound.url
+        kitQueue.async { [weak self] in
+            guard let buffer = try? SampleLoader.load(url) else { return }
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.previewedSound = buffer
+                self.engine.previewHandoff.publish(PreviewSound(buffer, gain: self.previewVolume))
+            }
+        }
+    }
+    /// The preview fader let go: the last previewed sound again at the new level, or the selected track.
+    func previewAgain(orPad pad: Int?) {
+        if let buffer = previewedSound { engine.previewHandoff.publish(PreviewSound(buffer, gain: previewVolume)) }
+        else if let pad { previewPad(pad) }
+    }
 
     var mutedPads: [Bool] { state.mutedPads ?? Array(repeating: false, count: Pad.count) }
     var soloPads: [Bool] { state.soloPads ?? Array(repeating: false, count: Pad.count) }

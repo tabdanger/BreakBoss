@@ -11,6 +11,8 @@ import UniformTypeIdentifiers
 struct ScopeView: View {
     @ObservedObject var controller: KnockController
     let scale: CGFloat
+    /// Just the trace (the SAMPLER window's screen, Tyrone, Oct 20): no readout or status line.
+    var compact = false
 
     static let red = Color(red: 1, green: 0.30, blue: 0.20)
     static let probing = ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil
@@ -70,6 +72,7 @@ struct ScopeView: View {
                     ctx.stroke(path, with: .color(light.blend(0.6 + 0.4 * top - 0.25 * bass)),
                                style: StrokeStyle(lineWidth: 1.6 * scale * CGFloat(1 + 0.3 * bass - 0.2 * top), lineCap: .round, lineJoin: .round))
                 }
+                if !compact {
                 VStack(alignment: .leading, spacing: 2 * scale) {
                     if let r = controller.readout, now.timeIntervalSince(r.time) < 1.8 {
                         Text(r.title).font(.system(size: 13 * scale, weight: .medium, design: .monospaced))
@@ -86,10 +89,11 @@ struct ScopeView: View {
                     statusLine(light.glow)
                 }
                 .padding(10 * scale)
+                }
             }
         }
         .allowsHitTesting(false)
-        .modifier(ScopeProbe(tracer: tracer, active: controller.scopeActive))
+        .modifier(ScopeProbe(tracer: tracer, active: controller.scopeActive, id: compact ? "samplerScope" : "scope"))
         .onChange(of: controller.notice) { value in
             guard value != nil else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 4) { controller.notice = nil }
@@ -123,13 +127,14 @@ struct ScopeView: View {
 private struct ScopeProbe: ViewModifier {
     let tracer: ScopeTracer
     let active: Bool
+    var id = "scope"
 
     func body(content: Content) -> some View {
         if ScopeView.probing {
             TimelineView(.periodic(from: .now, by: 0.25)) { _ in
                 content
                     .accessibilityElement(children: .ignore)
-                    .accessibilityIdentifier("scope")
+                    .accessibilityIdentifier(id)
                     .accessibilityValue(tracer.probeText)
             }
         } else {

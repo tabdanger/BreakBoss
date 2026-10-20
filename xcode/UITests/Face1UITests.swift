@@ -113,4 +113,25 @@ final class Face1UITests: XCTestCase {
         switchBack()
         app.terminate()
     }
+
+    /// Face 2's key on Face 1 (Tyrone, Oct 20): sliding it opens Face 2; Face 2's key brings Face 1
+    /// back with its key home again.
+    func testFaceKeyOpensFace2() {
+        launch(platinum: false)
+        let key = app.descendants(matching: .any)["faceSlider1"].firstMatch
+        XCTAssertTrue(key.waitForExistence(timeout: 10), "Face 1 has the Face 1 / Face 2 key")
+        key.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+            .press(forDuration: 0.1, thenDragTo: key.coordinate(withNormalizedOffset: CGVector(dx: 1.0, dy: 0.5)))
+        XCTAssertTrue(app.buttons["trackArrow0"].waitForExistence(timeout: 10), "sliding Face 1's key opens Face 2")
+        let back = app.descendants(matching: .any)["faceSlider"].firstMatch
+        back.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+            .press(forDuration: 0.1, thenDragTo: back.coordinate(withNormalizedOffset: CGVector(dx: 1.0, dy: 0.5)))
+        sleep(2)
+        XCTAssertTrue(key.waitForExistence(timeout: 10), "Face 2's key brings Face 1 back")
+        picture("face-key-home")
+        // a tap on the slot's right end works too
+        key.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["trackArrow0"].waitForExistence(timeout: 10), "tapping the key's right end opens Face 2")
+        app.terminate()
+    }
 }
