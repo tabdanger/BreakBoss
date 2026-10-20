@@ -967,10 +967,11 @@ struct SequencerView: View {
         .overlay { if picked { RoundedRectangle(cornerRadius: 5 * s).stroke(accent.opacity(0.8), lineWidth: 1.5 * s).allowsHitTesting(false) } }
         .overlay(alignment: .bottom) { Rectangle().fill(Color(white: 0.16)).frame(height: 1).allowsHitTesting(false) }
         .contentShape(Rectangle())
-        // first tap picks the sound, every tap on it after that plays it again at the preview volume;
-        // no track changes (drag it onto the rack for that, Tyrone, Oct 20)
+        // the first tap picks the sound and plays it, every tap on it after that plays it again at the
+        // preview volume; no track changes (drag it onto the rack for that, Tyrone, Oct 20)
         .onTapGesture {
-            if picked { controller.previewSound(sound); libraryPreviews += 1 } else { libraryPick = sound.id }
+            libraryPick = sound.id
+            controller.previewSound(sound); libraryPreviews += 1
         }
         .accessibilityIdentifier("librarySound_" + sound.name)
         .accessibilityValue(picked ? "picked, played \(libraryPreviews)" : "")

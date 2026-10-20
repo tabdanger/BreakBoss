@@ -34,17 +34,17 @@ final class LibraryUITests: XCTestCase {
         row.tap(); usleep(500_000)
         let first = any(rowID).value as? String ?? ""
         print("UITREE LIBRARY after first tap \(rowID) value='\(first)'")
-        XCTAssertEqual(first, "picked, played 0", "the first tap picks the sound without playing it")
+        XCTAssertEqual(first, "picked, played 1", "the first tap picks the sound and plays it")
 
         for n in 1...3 {
             any(rowID).tap(); usleep(500_000)
             let v = any(rowID).value as? String ?? ""
             print("UITREE LIBRARY tap \(n + 1) value='\(v)'")
-            XCTAssertEqual(v, "picked, played \(n)", "every tap on the picked sound plays it again")
+            XCTAssertEqual(v, "picked, played \(n + 1)", "every tap on the picked sound plays it again")
         }
         XCTAssertEqual(rackNames(), before, "no tap in the library changes a track's sound")
 
-        // another sound: its first tap picks it (the old one lets go)
+        // another sound: its first tap picks and plays it (the old one lets go)
         let other = rows.element(boundBy: min(4, rows.count - 1))
         let otherID = other.identifier
         if otherID != rowID {
