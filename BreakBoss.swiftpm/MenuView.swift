@@ -20,6 +20,8 @@ struct MenuView: View {
     @State private var bugReport = false
     @State private var learningPad: Int?
     @State private var learnBase: Int32 = 0
+    /// LEARN ALL 12: after each pad learns its note, the next pad starts learning (pad 1 to 12).
+    @State private var learnAll = false
     private let learnTicker = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     private let accent = Color(red: 1, green: 0.30, blue: 0.20)
@@ -112,6 +114,18 @@ struct MenuView: View {
                                 if controller.midiMap == map { Image(systemName: "checkmark").foregroundColor(accent) }
                             }
                         }
+                    }
+                    Button(learnAll ? "Cancel learning" : "Learn all 12 pads") {
+                        if learnAll { learnAll = false; learningPad = nil } else {
+                            learnBase = controller.lastMIDINoteOn.count
+                            learnAll = true
+                            learningPad = 0
+                        }
+                    }
+                    if learnAll, let pad = learningPad {
+                        Text(pad < 8 ? "Hit the controller pad for pad \(pad + 1). On an 8-pad controller, bank A pads 1–8 are pads 1–8."
+                                     : "Hit the controller pad for pad \(pad + 1). On an 8-pad controller, switch to bank B: its pads 1–4 are pads 9–12.")
+                            .font(.footnote).foregroundColor(accent)
                     }
                     ForEach(0..<Pad.count, id: \.self) { pad in learnRow(pad) }
                 } header: {
@@ -267,6 +281,7 @@ struct MenuView: View {
                 .font(.system(.caption, design: .monospaced))
                 .foregroundColor(learning ? accent : .primary)
             Button(learning ? "Cancel" : "Learn") {
+                learnAll = false
                 if learning { learningPad = nil } else {
                     learnBase = controller.lastMIDINoteOn.count
                     learningPad = pad
@@ -279,7 +294,13 @@ struct MenuView: View {
             let last = controller.lastMIDINoteOn
             if last.count != learnBase {
                 controller.learnMIDINote(pad: pad, note: last.note)
-                learningPad = nil
+                if learnAll && pad + 1 < Pad.count {
+                    learnBase = last.count
+                    learningPad = pad + 1
+                } else {
+                    learnAll = false
+                    learningPad = nil
+                }
             }
         }
     }
