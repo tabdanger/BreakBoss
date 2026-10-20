@@ -250,7 +250,7 @@ pat(AT, "ALT TRAP 10 ETHEREAL RAGE", 156, k=st(32, 0, 16, 26), c=HALF, h=rep("x.
 # (LA, Cali and NorCal bounce at 86-102: clap on 2 and 4 every bar, the kick bouncing on the 1, the "a" of 1 and
 # the "and" of 2, sparse syncopated hats with open hats on the off-beats, rim and snare pickups into the next
 # bar) by tools/learn_west_coast.py (tools/learned_westcoast.json; the audio itself never ships). Each preset is
-# four bars of one loop. Split from full mixes, so a few things are cleaned up: a snare or rim on the kick's
+# four bars of one loop. Split from full mixes, so a few things are cleaned up: a snare, clap or rim on the kick's
 # step that isn't a backbeat is the kick's own crack, the kick's soft hits play medium (its low end, not a
 # ghost), one loop's kick reads as hats (its click), so it plays as the kick, and one loop's clap reads as hats. Tops loops (no low end) play
 # the kick of another of his loops, off the steps where their backbeat lands (and its backbeat, for the one
@@ -304,7 +304,7 @@ def west_coast():
             lanes["k"] = "".join("." if back[j] != "." and j % 16 in (4, 12) else ch for j, ch in enumerate(take(src["k"], kick_from[1])))
             lanes.pop("r", None) if title == "MODERN WEST COAST DRUMS" else None
         lanes["k"] = lanes["k"].replace("g", "o")
-        for lane in ("s", "r"):
+        for lane in ("s", "c", "r"):
             if lane in lanes:
                 lanes[lane] = "".join("." if lanes["k"][j] != "." and j % 16 not in (4, 12) else ch for j, ch in enumerate(lanes[lane]))
         lanes = {k: v for k, v in lanes.items() if v.strip(".")}

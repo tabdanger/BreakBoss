@@ -7,7 +7,7 @@
    "bpm": 92.0,
    "lanes": {
     "k": "g..g..g.......................g.X..X..X...X.....................g..X..X.......................X.X..X..X...X.....................",
-    "s": "....X...............X.......X.......X.......X.......................X.......X.......X.......X...............X...................",
+    "c": "....X...............X.......X.......X.......X.......................X.......X.......X.......X...............X...................",
     "r": "X.................g...........X.X.....X.........................X.................g...........X.X.....X.........................",
     "h": "X.gX..Xgo...g......o....o.....g.X.gx..X.g.g...x....og.o.o.g.x...X.gX..Xg...........o....o.....g.X.gxg.X.g.g...x....og.o.o.g.x...",
     "o": "..............X.......x.................................................o.....X.......x........................................."
@@ -129,7 +129,29 @@
      "PATTERNS V4 OPEN HAT",
      "BK NO 16 OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "SUNG JIN WOO CLAP",
+    "RULERS CLAP",
+    "BK NO 1 CLAP",
+    "RIVAL CLAP",
+    "INTERSTELLAR CLAP",
+    "INTERSTELLAR V2 CLAP",
+    "GALACTIC CLAP",
+    "PLANETS V3 CLAP",
+    "PLANETS V4 CLAP",
+    "PLANETS V2 CLAP",
+    "OG 12 CLAP",
+    "GALACTIC V4 CLAP",
+    "GALACTIC V2 CLAP",
+    "OG 11 CLAP",
+    "CLOCK CLAP",
+    "BK NO 4 CLAP",
+    "KENZO CLAP",
+    "ALONE CLAP",
+    "GALACTIC V3 CLAP",
+    "PLANETS CLAP"
+   ]
   },
   {
    "source": "BigSad1900 Drum Loop [92].wav",
@@ -279,7 +301,29 @@
      "BK NO 10 OPEN HAT",
      "OG 4 OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "DEMON 2 CLAP",
+    "HOME V2 CLAP",
+    "HOME CLAP",
+    "DEMON 3 CLAP",
+    "KIA CLAP",
+    "OG 11 CLAP",
+    "DEMON 15 V2 CLAP",
+    "MINDFUL V2 CLAP",
+    "DEMON 15 CLAP",
+    "MINDFUL CLAP",
+    "KENZO CLAP",
+    "ALONE CLAP",
+    "OG 8 CLAP",
+    "ASTEROIDS V2 CLAP",
+    "ASTEROIDS CLAP",
+    "ASTEROIDS V3 CLAP",
+    "OG 5 CLAP",
+    "LEVELS CLAP",
+    "OG 3 CLAP",
+    "DEMON 19 CLAP"
+   ]
   },
   {
    "source": "BigSad1900 Drums [90].wav",
@@ -429,7 +473,29 @@
      "PARALLAX V2 OPEN HAT",
      "PARALLAX V3 OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "OG 7 CLAP",
+    "BK NO 2 CLAP",
+    "GOTO CLAP",
+    "TANK CLAP",
+    "DEMON 17 CLAP",
+    "DEMON 17 V2 CLAP",
+    "OG 3 CLAP",
+    "OG 5 CLAP",
+    "MOTIVE CLAP",
+    "OG 8 CLAP",
+    "DEMON 15 CLAP",
+    "ASTEROIDS V2 CLAP",
+    "ASTEROIDS V3 CLAP",
+    "DEMON 15 V2 CLAP",
+    "ASTEROIDS CLAP",
+    "BK NO 5 CLAP",
+    "MINDFUL CLAP",
+    "DEMON 19 CLAP",
+    "MINDFUL V2 CLAP",
+    "KENZO CLAP"
+   ]
   },
   {
    "source": "Cali Drums (Favs) [86].wav",
@@ -582,7 +648,29 @@
      "OG 2 OPEN HAT",
      "VERSION OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "BK NO 2 CLAP",
+    "OG 7 CLAP",
+    "TANK CLAP",
+    "GOTO CLAP",
+    "OG 3 CLAP",
+    "DEMON 17 CLAP",
+    "OG 5 CLAP",
+    "MOTIVE CLAP",
+    "DEMON 17 V2 CLAP",
+    "DEMON 15 CLAP",
+    "DEMON 15 V2 CLAP",
+    "ASTEROIDS V3 CLAP",
+    "ASTEROIDS V2 CLAP",
+    "ASTEROIDS CLAP",
+    "OG 8 CLAP",
+    "BK NO 6 CLAP",
+    "BK NO 5 CLAP",
+    "DEMON 19 CLAP",
+    "DEMON 3 CLAP",
+    "PLANETS CLAP"
+   ]
   },
   {
    "source": "EBK x NorCal Drums [88].wav",
@@ -735,7 +823,29 @@
      "BK NO 19 OPEN HAT",
      "OG 6 OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "SUNG JIN WOO CLAP",
+    "RIVAL CLAP",
+    "BK NO 1 CLAP",
+    "INTERSTELLAR CLAP",
+    "INTERSTELLAR V2 CLAP",
+    "RULERS CLAP",
+    "PLANETS V3 CLAP",
+    "PLANETS V4 CLAP",
+    "PLANETS V2 CLAP",
+    "KENZO CLAP",
+    "PLANETS CLAP",
+    "ALONE CLAP",
+    "BK NO 5 CLAP",
+    "ASTEROIDS CLAP",
+    "ASTEROIDS V3 CLAP",
+    "ASTEROIDS V2 CLAP",
+    "GALACTIC CLAP",
+    "OG 11 CLAP",
+    "CLOCK CLAP",
+    "DEMON 19 CLAP"
+   ]
   },
   {
    "source": "Filtered LA Drums [102].wav",
@@ -866,7 +976,29 @@
      "PATTERNS V3 OPEN HAT",
      "OG 6 OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "OG 8 CLAP",
+    "MINDFUL V2 CLAP",
+    "DEMON 2 CLAP",
+    "MINDFUL CLAP",
+    "DEMON 3 CLAP",
+    "ALONE CLAP",
+    "HOME V2 CLAP",
+    "OG 3 CLAP",
+    "OG 11 CLAP",
+    "DEMON 19 CLAP",
+    "KENZO CLAP",
+    "HOME CLAP",
+    "ASTEROIDS V2 CLAP",
+    "DEMON 15 V2 CLAP",
+    "ASTEROIDS V3 CLAP",
+    "DEMON 15 CLAP",
+    "ASTEROIDS CLAP",
+    "OG 7 CLAP",
+    "DEMON 17 V2 CLAP",
+    "OG 5 CLAP"
+   ]
   },
   {
    "source": "Hip Hop Drums [92].wav",
@@ -970,14 +1102,36 @@
      "SONIC V2 HIHAT",
      "SONIC HIHAT"
     ]
-   }
+   },
+   "backbeat": [
+    "GOTO CLAP",
+    "BK NO 2 CLAP",
+    "OG 5 CLAP",
+    "TANK CLAP",
+    "DEMON 15 CLAP",
+    "DEMON 15 V2 CLAP",
+    "OG 3 CLAP",
+    "OG 7 CLAP",
+    "BK NO 6 CLAP",
+    "ASTEROIDS V2 CLAP",
+    "ASTEROIDS V3 CLAP",
+    "DEMON 2 CLAP",
+    "OG 8 CLAP",
+    "MINDFUL CLAP",
+    "MINDFUL V2 CLAP",
+    "ASTEROIDS CLAP",
+    "PLANETS V4 CLAP",
+    "KENZO CLAP",
+    "PLANETS CLAP",
+    "PLANETS V2 CLAP"
+   ]
   },
   {
    "source": "LA BlueBucksClan Drums [95].wav",
    "title": "LA BLUEBUCKSCLAN DRUMS",
    "bpm": 95.0,
    "lanes": {
-    "s": "....X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X...",
+    "c": "....X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X.......X...",
     "r": ".................X.......X.......................X.......X.......................X.......X.......................X.......X......",
     "h": "X.....x.......g.......x.........X.....x...x...g.x.....x...............x.......g.......x.........X.....x.......g.x.....x.........",
     "o": "..........X.....X.........X..o.X..........................X..o.X..........X.....X.........X..o.X..........X...............X..o.X"
@@ -1075,7 +1229,29 @@
      "OG 6 V2 OPEN HAT",
      "OG 6 OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "DEMON 2 CLAP",
+    "HOME V2 CLAP",
+    "HOME CLAP",
+    "DEMON 3 CLAP",
+    "KIA CLAP",
+    "DEMON 15 V2 CLAP",
+    "OG 11 CLAP",
+    "MINDFUL V2 CLAP",
+    "DEMON 15 CLAP",
+    "MINDFUL CLAP",
+    "KENZO CLAP",
+    "ASTEROIDS V2 CLAP",
+    "OG 8 CLAP",
+    "ALONE CLAP",
+    "ASTEROIDS CLAP",
+    "OG 5 CLAP",
+    "ASTEROIDS V3 CLAP",
+    "LEVELS CLAP",
+    "OG 3 CLAP",
+    "DEMON 19 CLAP"
+   ]
   },
   {
    "source": "LA Drums (Favs) [90].wav",
@@ -1083,7 +1259,7 @@
    "bpm": 90.0,
    "lanes": {
     "k": "o.....g...................X..g..X.........X.....g..X..g...X.....X.....X...................X..X..g.........X.....X..g..X...X.....",
-    "s": "....X.......X.......X.......X.......X.......X.......X.........X.....X.......X.......X.......X.......X.......X.......X...........",
+    "c": "....X.......X.......X.......X.......X.......X.......X.........X.....X.......X.......X.......X.......X.......X.......X...........",
     "r": "................................X.........................X.....X.........................................X.....X...............",
     "h": "g..g.xx...x...........X...x...g.x.........x....X..X...x.g.XX...Xg..g.xx...o...........X...x...g.x.........x....X......x.g.XXX.XX",
     "o": "..............g.XXg................X..X.......g...............................g.XXg................X..X.......g...X............."
@@ -1205,7 +1381,29 @@
      "HELIOSPHERE V4 OPEN HAT",
      "ANIGMA OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "SUNG JIN WOO CLAP",
+    "RIVAL CLAP",
+    "BK NO 1 CLAP",
+    "INTERSTELLAR CLAP",
+    "INTERSTELLAR V2 CLAP",
+    "PLANETS V3 CLAP",
+    "KENZO CLAP",
+    "PLANETS V4 CLAP",
+    "PLANETS V2 CLAP",
+    "RULERS CLAP",
+    "ASTEROIDS CLAP",
+    "PLANETS CLAP",
+    "ALONE CLAP",
+    "BK NO 5 CLAP",
+    "ASTEROIDS V3 CLAP",
+    "ASTEROIDS V2 CLAP",
+    "DEMON 19 CLAP",
+    "OG 11 CLAP",
+    "GALACTIC CLAP",
+    "CLOCK CLAP"
+   ]
   },
   {
    "source": "Modern West Coast Drums [92].wav",
@@ -1309,7 +1507,29 @@
      "BK NO 18 OPEN HAT",
      "PATTERNS V2 OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "BK NO 7 CLAP",
+    "RULERS CLAP",
+    "BK NO 4 CLAP",
+    "SUNG JIN WOO CLAP",
+    "GALACTIC CLAP",
+    "GALACTIC V3 CLAP",
+    "GALACTIC V2 CLAP",
+    "CLOCK CLAP",
+    "BK NO 1 CLAP",
+    "GALACTIC V4 CLAP",
+    "OG 12 CLAP",
+    "RIVAL CLAP",
+    "INTERSTELLAR CLAP",
+    "INTERSTELLAR V2 CLAP",
+    "PLANETS V3 CLAP",
+    "PLANETS V4 CLAP",
+    "PLANETS V2 CLAP",
+    "OG 11 CLAP",
+    "PLANETS CLAP",
+    "KENZO CLAP"
+   ]
   },
   {
    "source": "West Coast Drums (Favs) [90].wav",
@@ -1391,7 +1611,29 @@
      "EXPLORER HAT",
      "EXPLORER V3 HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "RIVAL CLAP",
+    "SUNG JIN WOO CLAP",
+    "BK NO 1 CLAP",
+    "INTERSTELLAR CLAP",
+    "PLANETS V3 CLAP",
+    "INTERSTELLAR V2 CLAP",
+    "KENZO CLAP",
+    "PLANETS V4 CLAP",
+    "PLANETS V2 CLAP",
+    "ASTEROIDS CLAP",
+    "ASTEROIDS V3 CLAP",
+    "PLANETS CLAP",
+    "ASTEROIDS V2 CLAP",
+    "BK NO 5 CLAP",
+    "ALONE CLAP",
+    "RULERS CLAP",
+    "DEMON 19 CLAP",
+    "OG 11 CLAP",
+    "GALACTIC CLAP",
+    "MINDFUL CLAP"
+   ]
   },
   {
    "source": "West Coast x LA Drums [90].wav",
@@ -1518,7 +1760,29 @@
      "BK NO 25 OPEN HAT",
      "OG 4 OPEN HAT"
     ]
-   }
+   },
+   "backbeat": [
+    "DEMON 2 CLAP",
+    "HOME V2 CLAP",
+    "HOME CLAP",
+    "DEMON 3 CLAP",
+    "KIA CLAP",
+    "OG 11 CLAP",
+    "DEMON 15 V2 CLAP",
+    "MINDFUL V2 CLAP",
+    "DEMON 15 CLAP",
+    "MINDFUL CLAP",
+    "KENZO CLAP",
+    "ALONE CLAP",
+    "ASTEROIDS V2 CLAP",
+    "ASTEROIDS CLAP",
+    "OG 8 CLAP",
+    "LEVELS CLAP",
+    "ASTEROIDS V3 CLAP",
+    "OG 5 CLAP",
+    "DEMON 19 CLAP",
+    "OG 3 CLAP"
+   ]
   }
  ]
 }
