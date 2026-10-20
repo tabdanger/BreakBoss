@@ -210,7 +210,9 @@ struct SequencerView: View {
     @State private var importPad: Int?
     @State private var recordPad: Int?
     @State private var exportURL: URL?
-    @State private var tick = Date()
+    /// The engine's clock for the few things that show it (PLAY, the count-in, a host's tempo). A class
+    /// held in @State: its ticks redraw those alone, never all of Face 2.
+    @State private var engineTick = EngineTick()
     @State private var clock = ClockState()
     final class ClockState { var wasLive = false; var wasPlaying = false }
     @State private var newborn = Set<UUID>()
@@ -232,8 +234,8 @@ struct SequencerView: View {
     @AppStorage("samplerWindowW") private var samplerW: Double = 0
     /// The library's preview volume (KnockController.previewVolume reads the same key).
     @AppStorage(KnockController.previewVolumeKey) private var previewVolume: Double = 1
-    @State private var samplerMove: CGSize = .zero
-    @State private var samplerGrow: CGFloat = 0
+    /// The SAMPLER window's drag in progress (only the window's placement watches it).
+    @State private var samplerDrag = SamplerWindowDrag()
     @State private var libraryType: SoundType? = .kick
     @State private var search = ""
     /// The library sound picked by a first tap; tapping it again plays it (Tyrone, Oct 20).
@@ -480,7 +482,6 @@ struct SequencerView: View {
     var body: some View {
         GeometryReader { geo in
             let s = min(geo.size.width / Self.artW, geo.size.height / Self.artH)
-            let _ = tick      // lamps, PLAY and the count-in follow the engine's clock while it plays
             ZStack(alignment: .topLeading) {
                 // the plate carries the BreaKing logo, as in the renders
                 Image(plateSprite).resizable().frame(width: Self.artW * s, height: Self.artH * s)
@@ -516,10 +517,11 @@ struct SequencerView: View {
         .preferredColorScheme(.dark)
         .background(spaceBar)
         .onReceive(ticker) { now in
-            // the clock only redraws Face 2 while something is playing (and once more as it stops):
-            // a redraw every tenth of a second made scrolling the rack stutter
+            // the clock only redraws PLAY, the count-in and the tempo, while something plays (and once
+            // more as it stops): redrawing all of Face 2 ten times a second made the playhead, the rack
+            // and the SAMPLER window stutter
             let live = controller.isPlaying || controller.recording
-            if live || clock.wasLive { tick = now }
+            if live || clock.wasLive { engineTick.now = now }
             clock.wasLive = live
             // pressing play (here, on Face 1 or in the host) follows the playhead again, like Logic
             if controller.isPlaying && !clock.wasPlaying && !follow { follow = true }
@@ -651,17 +653,21 @@ struct SequencerView: View {
             RoundedRectangle(cornerRadius: 2 * s).fill(Color(white: 0.92)).frame(width: 21 * s, height: 21 * s)
         }
         .place(A.stop, s)
-        SeqButton("SeqBtnTransport", lit: isThisPlaying ? accent : nil, corner: 8, scale: s, action: { controller.playPattern(loop) }) {
-            Image(systemName: "play.fill").font(.system(size: 24 * s)).foregroundColor(isThisPlaying ? accent : Color(white: 0.92))
-                .shadow(color: isThisPlaying ? accent : .clear, radius: 5 * s)
+        EngineTicking(tick: engineTick) {
+            SeqButton("SeqBtnTransport", lit: isThisPlaying ? accent : nil, corner: 8, scale: s, action: { controller.playPattern(loop) }) {
+                Image(systemName: "play.fill").font(.system(size: 24 * s)).foregroundColor(isThisPlaying ? accent : Color(white: 0.92))
+                    .shadow(color: isThisPlaying ? accent : .clear, radius: 5 * s)
+            }
         }
         .place(A.play, s)
-        SeqButton("SeqBtnTransport", lit: controller.recording ? S.red : nil, corner: 8, scale: s, action: { if !controller.recording { remember() }; controller.toggleRecordPads(loop: loop) }) {
-            if controller.countingIn {
-                Text("\(controller.countInBeatsLeft)").font(.system(size: 24 * s, weight: .bold, design: .rounded)).foregroundColor(S.red)
-            } else {
-                Circle().fill(RadialGradient(colors: [Color(red: 1, green: 0.35, blue: 0.3), S.red], center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: 14 * s))
-                    .frame(width: 25 * s, height: 25 * s).shadow(color: controller.recording ? S.red : .clear, radius: 6 * s)
+        EngineTicking(tick: engineTick) {
+            SeqButton("SeqBtnTransport", lit: controller.recording ? S.red : nil, corner: 8, scale: s, action: { if !controller.recording { remember() }; controller.toggleRecordPads(loop: loop) }) {
+                if controller.countingIn {
+                    Text("\(controller.countInBeatsLeft)").font(.system(size: 24 * s, weight: .bold, design: .rounded)).foregroundColor(S.red)
+                } else {
+                    Circle().fill(RadialGradient(colors: [Color(red: 1, green: 0.35, blue: 0.3), S.red], center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: 14 * s))
+                        .frame(width: 25 * s, height: 25 * s).shadow(color: controller.recording ? S.red : .clear, radius: 6 * s)
+                }
             }
         }
         .place(A.rec, s)
@@ -670,7 +676,9 @@ struct SequencerView: View {
         hostSwitch("FOLLOW DAW", .followDAW, A.followDAW, s)
         // tempo, bars, gear, cloud
         // tempo: slide up for faster, down for slower; a tap opens the tempo panel
-        SeqChip(sprite: "SeqChipBpm", text: "\(Int((controller.tempoIsExternal ? controller.liveTempo : controller.state.bpm).rounded())) BPM", size: 17, leading: 24, trailing: 52, scale: s, color: tempoDragStart == nil ? .white : accent)
+        EngineTicking(tick: engineTick) {
+            SeqChip(sprite: "SeqChipBpm", text: "\(Int((controller.tempoIsExternal ? controller.liveTempo : controller.state.bpm).rounded())) BPM", size: 17, leading: 24, trailing: 52, scale: s, color: tempoDragStart == nil ? .white : accent)
+        }
             .accessibilityIdentifier("tempoChip")
             .bbPanelPlaced(A.bpm, s, title: "Tempo", width: 340) { TempoPanel(controller: controller) }
             // the slide sits outside the tap's button (inside it, the button kept the drag and the tempo never moved)
@@ -1463,13 +1471,14 @@ struct SequencerView: View {
                 GeometryReader { g in
                     let aspect = SamplerWindow.artW / SamplerWindow.artH
                     let maxW = max(320, min(g.size.width - 16, (g.size.height - 16) * aspect))
-                    let w = ((samplerW > 0 ? CGFloat(samplerW) : g.size.width * 0.62) + samplerGrow).clamped(min(480, maxW), maxW)
+                    let minW = min(480, maxW)
+                    let w = (samplerW > 0 ? CGFloat(samplerW) : g.size.width * 0.62).clamped(minW, maxW)
                     let h = w / aspect
                     let x0 = samplerX >= 0 ? CGFloat(samplerX) : (g.size.width - w) / 2
                     let y0 = samplerY >= 0 ? CGFloat(samplerY) : (g.size.height - h) / 2
-                    // keep the title bar on screen
-                    let x = (x0 + samplerMove.width).clamped(80 - w, g.size.width - 80)
-                    let y = (y0 + samplerMove.height).clamped(0, g.size.height - 48)
+                    let drag = samplerDrag
+                    // where the window lands with the drag in it (the title bar stays on screen)
+                    let spot = { SamplerWindowPlacement.spot(x0: x0, y0: y0, width: w, minWidth: minW, maxWidth: maxW, bounds: g.size, drag: drag) }
                     SamplerWindow(controller: controller, pad: pad, finish: finish,
                                   close: { withAnimation(.easeIn(duration: 0.15)) { samplerPad = nil } },
                                   minimize: { withAnimation(.easeIn(duration: 0.15)) { samplerMinimized = true } },
@@ -1488,13 +1497,12 @@ struct SequencerView: View {
                                       controller.setLoop(loop, p)
                                   },
                                   move: { t, done in
-                                      if done {
-                                          samplerX = Double((x0 + t.width).clamped(80 - w, g.size.width - 80))
-                                          samplerY = Double((y0 + t.height).clamped(0, g.size.height - 48))
-                                          samplerMove = .zero
-                                      } else {
-                                          samplerMove = t
-                                      }
+                                      drag.move = t
+                                      guard done else { return }
+                                      let p = spot()
+                                      samplerX = Double(p.x)
+                                      samplerY = Double(p.y)
+                                      drag.move = .zero
                                   })
                         .id(pad)
                         .frame(width: w, height: h)
@@ -1503,15 +1511,17 @@ struct SequencerView: View {
                                 .frame(width: 34, height: 34)
                                 .contentShape(Rectangle())
                                 .gesture(DragGesture(minimumDistance: 1, coordinateSpace: .global)
-                                    .onChanged { v in samplerGrow = max(v.translation.width, v.translation.height * aspect) }
+                                    .onChanged { v in drag.grow = max(v.translation.width, v.translation.height * aspect) }
                                     .onEnded { v in
-                                        samplerW = Double(w)
-                                        if samplerX < 0 { samplerX = Double(x); samplerY = Double(y) }
-                                        samplerGrow = 0
+                                        drag.grow = max(v.translation.width, v.translation.height * aspect)
+                                        let p = spot()
+                                        samplerW = Double(p.width)
+                                        if samplerX < 0 { samplerX = Double(p.x); samplerY = Double(p.y) }
+                                        drag.grow = 0
                                     })
                                 .accessibilityIdentifier("samplerResize")
                         }
-                        .offset(x: x, y: y)
+                        .modifier(SamplerWindowPlacement(drag: drag, x0: x0, y0: y0, width: w, minWidth: minW, maxWidth: maxW, bounds: g.size))
                 }
                 .environment(\.seqFinish, finish)
                 .transition(.opacity.combined(with: .scale(scale: 0.97)))
@@ -2088,10 +2098,11 @@ struct SequencerView: View {
     private func playhead(width w: CGFloat) -> some View {
         let start = origin, ticks = Double(pageTicks)
         let controller = controller, loop = loop
-        return PlayheadLine(color: UIColor(glowColor), position: {
+        let length = Double(max(pattern.lengthTicks, 1))
+        return PlayheadLine(color: UIColor(glowColor), clock: {
             guard controller.isPlaying, Int(controller.meters.status[1]) == loop, let t = controller.playheadTick else { return nil }
-            return CGFloat((t - start) / ticks)
-        }, offScreen: { followPlayhead() })
+            return (t, controller.liveTempo / 60 * Double(PatternData.ppq), length)
+        }, place: { t in CGFloat((t - start) / ticks) }, offScreen: { followPlayhead() })
     }
 
     /// The slot near the top of a step button (Tyrone's picture): dark when off, a glowing bar when lit.

@@ -218,11 +218,13 @@ struct GridScrollHook: UIViewRepresentable {
     }
 }
 
-/// A thin line the display link moves every frame: `position` is the playhead's place across the
-/// view (0...1, nil when nothing plays here); `offScreen` is called when it leaves the view.
+/// A thin line the display link moves every frame. `clock` is the engine's playhead (ticks), how many
+/// ticks a second it moves and the pattern's length (nil when nothing plays here); `place` says where a
+/// tick sits across the view (0...1); `offScreen` is called when it leaves the view.
 struct PlayheadLine: UIViewRepresentable {
     var color: UIColor
-    var position: () -> CGFloat?
+    var clock: () -> (tick: Double, perSecond: Double, length: Double)?
+    var place: (Double) -> CGFloat
     var offScreen: () -> Void
 
     func makeUIView(context: Context) -> LineView {
@@ -240,6 +242,7 @@ struct PlayheadLine: UIViewRepresentable {
         private let bar = CALayer()
         private var link: CADisplayLink?
         private var lastNudge: CFTimeInterval = 0
+        private var smooth = PlayheadSmoother()
 
         override init(frame: CGRect) {
             super.init(frame: frame)
@@ -263,7 +266,10 @@ struct PlayheadLine: UIViewRepresentable {
         deinit { link?.invalidate() }
 
         fileprivate func tick(_ link: CADisplayLink) {
-            guard let line, let f = line.position() else { bar.isHidden = true; return }
+            guard let line, let c = line.clock() else { smooth.reset(); bar.isHidden = true; return }
+            // where the playhead is when this frame reaches the screen, not where the last audio block left it
+            let t = smooth.step(raw: c.tick, perSecond: c.perSecond, length: c.length, at: link.targetTimestamp)
+            let f = line.place(t)
             if f < 0 || f > 1 {
                 bar.isHidden = true
                 // ask the window to catch up, at most every tenth of a second
@@ -282,6 +288,34 @@ struct PlayheadLine: UIViewRepresentable {
                 if let view { view.tick(link) } else { link.invalidate() }
             }
         }
+    }
+}
+
+/// The engine only says where the playhead is once per audio block (every 3 to 20 ms, whatever the
+/// device's buffer is), which made the line step instead of glide. This runs its own clock at the
+/// tempo, frame by frame, and pulls it gently toward the engine's; a jump (a loop change, a tempo
+/// change, a stop and start) is taken at once.
+struct PlayheadSmoother {
+    private var shown: Double?
+    private var at: CFTimeInterval = 0
+
+    mutating func reset() { shown = nil }
+
+    mutating func step(raw: Double, perSecond: Double, length: Double, at now: CFTimeInterval) -> Double {
+        guard let last = shown, perSecond > 0, length > 0, now > at, now - at < 0.25 else {
+            shown = raw
+            at = now
+            return raw
+        }
+        var t = last + perSecond * (now - at)
+        at = now
+        var err = raw - t
+        err -= (err / length).rounded() * length          // across the loop's end, the short way
+        if abs(err) > perSecond * 0.06 { t = raw } else { t += err * 0.04 }
+        t = t.truncatingRemainder(dividingBy: length)
+        if t < 0 { t += length }
+        shown = t
+        return t
     }
 }
 
@@ -305,5 +339,48 @@ final class TwoFingerTap: UITapGestureRecognizer {
         super.reset()
         points = []
         told = false
+    }
+}
+
+/// The engine's clock on Face 2, ticking while something plays.
+final class EngineTick: ObservableObject {
+    @Published var now = Date()
+}
+
+/// Redraws its content with the engine's clock, and nothing around it.
+struct EngineTicking<Content: View>: View {
+    @ObservedObject var tick: EngineTick
+    @ViewBuilder var content: () -> Content
+    var body: some View { content() }
+}
+
+/// The SAMPLER window while its title bar or corner is being dragged. Only the window's placement
+/// watches it, so a drag moves the window frame by frame without redrawing Face 2 or what's inside.
+final class SamplerWindowDrag: ObservableObject {
+    @Published var move: CGSize = .zero
+    @Published var grow: CGFloat = 0
+}
+
+/// Puts the SAMPLER window where it sits plus the drag in progress. While the corner is pulled the
+/// window is scaled (its art is laid out to its width, so it looks the same); at let go it's laid out
+/// at the new size.
+struct SamplerWindowPlacement: ViewModifier {
+    @ObservedObject var drag: SamplerWindowDrag
+    let x0: CGFloat, y0: CGFloat, width: CGFloat, minWidth: CGFloat, maxWidth: CGFloat, bounds: CGSize
+
+    func body(content: Content) -> some View {
+        let p = SamplerWindowPlacement.spot(x0: x0, y0: y0, width: width, minWidth: minWidth, maxWidth: maxWidth, bounds: bounds, drag: drag)
+        content
+            .scaleEffect(p.width / width, anchor: .topLeading)
+            .offset(x: p.x, y: p.y)
+    }
+
+    /// The window's width and top-left corner with the drag in it; the title bar stays on screen.
+    static func spot(x0: CGFloat, y0: CGFloat, width: CGFloat, minWidth: CGFloat, maxWidth: CGFloat, bounds: CGSize,
+                     drag: SamplerWindowDrag) -> (width: CGFloat, x: CGFloat, y: CGFloat) {
+        let w = (width + drag.grow).clamped(minWidth, maxWidth)
+        let x = (x0 + drag.move.width).clamped(80 - w, bounds.width - 80)
+        let y = (y0 + drag.move.height).clamped(0, bounds.height - 48)
+        return (w, x, y)
     }
 }

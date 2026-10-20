@@ -42,6 +42,7 @@ enum KnockSelfTest {
         phase("checkMIDIPadMap", checkMIDIPadMap)
         phase("checkRecordingTrim", checkRecordingTrim)
         phase("checkDrumRoll", checkDrumRoll)
+        phase("checkPlayheadGlide", checkPlayheadGlide)
         phase("checkPianoRollOctaves", checkPianoRollOctaves)
         phase("checkWorkspaceChannels", checkWorkspaceChannels)
         phase("checkSampler", checkSampler)
@@ -2135,6 +2136,64 @@ enum KnockSelfTest {
             r.withUnsafeMutableBufferPointer { rp in
                 engine.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil)
             }
+        }
+    }
+
+    /// Face 2's playhead line (PlayheadSmoother): with the engine's clock arriving once per audio
+    /// block, the line still moves the same distance every 120 Hz frame, follows the engine and
+    /// wraps at the loop's end.
+    static func checkPlayheadGlide() {
+        for block in [256, 1_024] {
+            let e = KnockEngine()
+            e.prepare(sampleRate: 48_000, maxFrames: block)
+            e.setParam(.playMode, 1)
+            e.setParam(.followDAW, 0)
+            e.setParam(.tempoSync, 0)
+            e.setTempo(120)
+            e.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+            let bar = PatternEdit.barTicks
+            let p = PatternData(name: "GLIDE", lengthTicks: bar, events: [GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1)])
+            e.patternHandoff.publish(PatternSet(Array(repeating: p, count: Pad.count)))
+            var l = [Float](repeating: 0, count: block), r = l
+            var audio = 0.0
+            func render() {
+                l.withUnsafeMutableBufferPointer { lp in
+                    r.withUnsafeMutableBufferPointer { rp in
+                        e.render(frames: block, left: lp.baseAddress!, right: rp.baseAddress!, host: nil)
+                    }
+                }
+                audio += Double(block) / 48_000
+            }
+            render()
+            e.send(KEvent(kind: .loopPad, a: 0))
+            render()
+            let perSecond = 120.0 / 60 * Double(PatternData.ppq)
+            let length = Double(bar)
+            var smooth = PlayheadSmoother()
+            var lastRaw: Double?, lastShown: Double?
+            var rawWorst = 0.0, shownWorst = 0.0, lag = 0.0, wrapped = false
+            let frame = 1.0 / 120
+            for i in 0..<480 {                                   // 4 seconds: two trips round the bar
+                let now = audio + Double(i) * frame
+                while audio < now { render() }                   // the audio thread runs ahead of the screen
+                let raw = e.playheadTick.pointee
+                guard raw >= 0 else { continue }
+                let shown = smooth.step(raw: raw, perSecond: perSecond, length: length, at: now)
+                func step(_ a: Double, _ b: Double) -> Double { var d = b - a; if d < -length / 2 { d += length }; return d }
+                if i > 30, let lastRaw, let lastShown {
+                    rawWorst = max(rawWorst, abs(step(lastRaw, raw) - perSecond * frame))
+                    shownWorst = max(shownWorst, abs(step(lastShown, shown) - perSecond * frame))
+                    var d = abs(raw - shown); d = min(d, length - d)
+                    lag = max(lag, d)
+                    if shown < lastShown { wrapped = true }
+                }
+                lastRaw = raw
+                lastShown = shown
+            }
+            log("BreakBoss playhead glide (\(block)-frame blocks): engine clock jitters \(String(format: "%.2f", rawWorst)) ticks a frame, the line \(String(format: "%.2f", shownWorst))")
+            check(shownWorst < perSecond * frame * 0.2, "playhead glide (\(block)-frame blocks): the line moves evenly every frame")
+            check(lag < perSecond * Double(block) / 48_000 + 1, "playhead glide (\(block)-frame blocks): the line stays with the engine's clock")
+            check(wrapped, "playhead glide (\(block)-frame blocks): the line wraps at the loop's end")
         }
     }
 
