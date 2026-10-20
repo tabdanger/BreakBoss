@@ -272,12 +272,14 @@ final class MIDIOutHolder {
 
     /// Audio thread, once per callback before MIDI goes out. No allocation, no waiting, no release.
     @inline(__always)
+    /// Routes only ever move between `current`, `retiring` and the handoff (swaps, no copies), so
+    /// the last reference to one is never dropped here.
     func refresh() {
-        if let r = retiring, handoff.retire(r) { retiring = nil }
+        _ = handoff.retire(&retiring)
         guard retiring == nil, let next = handoff.take() else { return }
-        retiring = current
+        swap(&retiring, &current)
         current = next
-        if let r = retiring, handoff.retire(r) { retiring = nil }
+        _ = handoff.retire(&retiring)
     }
 }
 

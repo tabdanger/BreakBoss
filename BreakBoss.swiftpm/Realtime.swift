@@ -62,6 +62,16 @@ final class Handoff<T: AnyObject> {
         retired = value
         return true
     }
+
+    /// Audio thread: hand `value` back and clear it in the same locked step, so the main thread can
+    /// never release it while the audio thread still holds a reference. False = try later.
+    func retire(_ value: inout T?) -> Bool {
+        guard value != nil, os_unfair_lock_trylock(lock) else { return false }
+        defer { os_unfair_lock_unlock(lock) }
+        if retired != nil { return false }
+        swap(&retired, &value)
+        return true
+    }
 }
 
 /// Something for the engine to do, sent from the faceplate, a MIDI port or the host.
