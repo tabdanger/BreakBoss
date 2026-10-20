@@ -238,3 +238,12 @@ ACOUSTIC_KITS = [
      {0: "VIRTUOSITY KICK", 1: "VIRTUOSITY SNARE", 3: "VIRTUOSITY RIMSHOT SNARE", 4: "VIRTUOSITY HIHAT",
       5: "VIRTUOSITY OPEN HIHAT", 9: "VIRTUOSITY LOW TOM", 10: "VIRTUOSITY HIGH TOM", 11: "VIRTUOSITY CRASH"}),
 ]
+
+# Tyrone's own Drum Kit as BK sounds (Oct 20, tools/build_bk_sounds.py): the first of each kind on its pad;
+# the kit has no 808 and one tom, so the 808 and high tom pads are picked from the library like any kit.
+BK_KITS = [
+    ("BK DRUM KIT", "modern", "TRAP", "BK", "trapAtlanta", 140, "modernTrap", ["trap", "rage", "dark"],
+     {"bright": 0.4, "long808": 0.8},
+     {0: "BK NO 1 KICK", 1: "BK NO 1 SNARE", 2: "BK NO 1 CLAP", 3: "BK NO 1 RIM", 4: "BK NO 1 HIHAT",
+      5: "BK NO 1 OPEN HAT", 7: "BK NO 1 PERC", 8: "BK NO 2 PERC", 9: "BK NO 1 TOM", 11: "BK NO 1 CYMBAL"}),
+]

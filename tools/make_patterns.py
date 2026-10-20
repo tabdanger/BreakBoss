@@ -452,10 +452,39 @@ pat(R9, "90S RNB 8 SAMPLE SOUL", 92, 58, k="X......x..x.....X.......x.x.....", s
 pat(R9, "90S RNB 9 VIRGINIA KNOCK", 100, 52, k="X.......X.x.....X.......X.......", s=BACK, p1=st(32, 2, 10, 18, 26, ch="o"), r=st(32, 7, 23, ch="g"))
 pat(R9, "90S RNB 10 DUNGEON FAMILY", 90, 58, k="X.....x...x..x..X.....x...x.....", s=put(BACK, (7, "g"), (23, "g")), h=two("xgoxxgoxxgoxxgox"), o=st(32, 14, ch="o"), p2=st(32, 30, ch="o"))
 
+# ---------------- Learned Loops (Oct 20): the grooves tools/learn_from_loops.py heard in Tyrone's own
+# drum loops and stems (tools/learned_patterns.json; the audio itself never ships). Each keeps the loop's
+# tempo, length (4 or 8 bars), where every hit sits and how hard. Loops played off the 16ths (triplet
+# feel, grid fit above 0.12) are left out: the lane format can't hold them. Names say what the groove does,
+# not the pack it came from. ----------------
+LEARNED = "Learned Loops"
+LEARNED_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "learned_patterns.json")
+def learned_name(i, lp):
+    l = lp["lanes"]
+    bar = lambda lane: [l[lane][j:j + 16] for j in range(0, len(l[lane]), 16)] if lane in l else []
+    snare = bar("s") or bar("c") or bar("r")
+    hat = l.get("h", "")
+    if "lt" in l or "ht" in l: what = "TOM GROOVE"
+    elif "t" in hat: what = "TRIPLET HATS"
+    elif "r" in hat or "q" in hat: what = "HAT ROLLS"
+    elif "r" in l and "s" not in l and "c" not in l: what = "RIM GROOVE"
+    elif snare and lp["bpm"] >= 120 and all(b[4] == "." and b[12] == "." and b[8] != "." for b in snare if b.strip(".")): what = "HALF TIME"
+    elif "o" in l: what = "OPEN HATS"
+    else: what = "BOUNCE"
+    return f"LEARNED {i} {lp['bpm']:g} {what}"
+if os.path.exists(LEARNED_FILE):
+    learned = [lp for lp in json.load(open(LEARNED_FILE))["learned"] if lp.get("gridFit", 0) <= 0.12 and "k" in lp["lanes"]]   # hat-only loops: lines, not presets
+    learned.sort(key=lambda lp: (lp["bpm"], lp["title"]))
+    for i, lp in enumerate(learned, 1):
+        P.append({"style": LEARNED, "name": learned_name(i, lp), "bpm": lp["bpm"], "swing": 50, "glide": False, "lanes": lp["lanes"]})
+        for key in ("swingLanes", "shift"):
+            if lp.get(key): P[-1][key] = lp[key]
+    if learned: STYLES.append(LEARNED)
+
 # ---------------- checks and output ----------------
 cnt = Counter(p["style"] for p in P)
 assert list(cnt) and set(cnt) == set(STYLES), set(cnt) ^ set(STYLES)
-for style, n in cnt.items(): assert n == 10, (style, n)
+for style, n in cnt.items(): assert n == 10 or style == LEARNED, (style, n)
 P.sort(key=lambda p: STYLES.index(p["style"]))                      # stable: each style keeps its own order
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)
@@ -471,6 +500,7 @@ for p in P:
             assert lane in LANES and lane in p["lanes"], (p["name"], key, lane)
             assert (-24 <= v <= 24) if key == "shift" else (0 <= v <= 1), (p["name"], key, v)
     for lane, s in p["lanes"].items():
+        assert len(s) in ((16, 32, 64, 128) if p["style"] == LEARNED else (16, 32, 64)), (p["name"], lane, len(s))
         allowed = set(".-0123456789abcABCDEFGHIJKL") if lane == "b" else VALID
         bad = set(s) - allowed
         assert not bad, (p["name"], lane, bad)
