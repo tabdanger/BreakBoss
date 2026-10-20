@@ -4,13 +4,15 @@
   python3 -I tools/build_bk_sounds.py "DRUM_KIT_DIR"     # copies the WAVs, writes tools/bk_sounds.json
   python3 tools/build_kits.py                            # then: manifest + the BK DRUM KIT kit
 
-Each file is copied byte for byte (no resampling, no level change) to StockSamples/bk_<kind>_NN.wav.
+Each file is converted to the stock format, 48 kHz 16-bit WAV (ffmpeg, SoX resampler, triangular dither),
+with no level, trim or tone change, to StockSamples/bk_<kind>_NN.wav. The pack's files are 44.1 kHz at
+16/24/32-bit float; every stock sound must decode at 48 kHz (KnockSelfTest checkStockSamples).
 The pack names its files "<Pack> - Kind (Name).wav"; the kind decides the BreaKing name, numbered in the pack's
 alphabetical order, the number before the last word like "NO 3 TOM": "Kick (Blaze)" -> "BK NO 1 KICK",
 "Open Hat (Truth)" -> "BK NO 3 OPEN HAT", "Percussion (Tom)" -> "BK NO 1 TOM" (its own name says tom; it sits
 with the PERCS, its folder).
 """
-import json, os, re, shutil, sys
+import json, os, re, subprocess, sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STOCK = os.path.join(ROOT, "BreakBoss.swiftpm", "Resources", "StockSamples")
@@ -33,7 +35,9 @@ def main(src):
         n = count[word]
         name = f"BK NO {n} {word}"                # the last word says what it is (SoundType.forStockName)
         file = f"bk_{word.lower().replace(' ', '')}_{n:02d}.wav"
-        shutil.copyfile(os.path.join(src, f), os.path.join(STOCK, file))
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(src, f), "-map_metadata", "-1",
+                        "-af", "aresample=48000:resampler=soxr:precision=28:dither_method=triangular",
+                        "-c:a", "pcm_s16le", os.path.join(STOCK, file)], check=True)
         rows.append({"file": file, "name": name, "category": cat, "library": section, "source": f})
     json.dump(rows, open(OUT, "w"), indent=1)
     print(len(rows), "BK sounds:", count)
