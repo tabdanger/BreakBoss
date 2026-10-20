@@ -311,10 +311,11 @@ struct SamplerWindow: View {
             .frame(width: Self.artW * s, height: Self.artH * s, alignment: .topLeading)
             // every touch inside the window stays in the window (Tyrone, Oct 20): the metal draws with
             // hit testing off, so a tap on a bare part fell through to the rack, the grid or the
-            // library behind it. The whole window takes touches; its own controls (children) still
-            // come first, this empty tap only catches what they don't.
+            // library behind it. The whole window takes touches; the empty tap runs alongside the
+            // controls' own gestures (never instead of them: an exclusive one here beat the
+            // waveform's tap, which waits to rule out a double tap) and only catches the bare spots.
             .contentShape(RoundedRectangle(cornerRadius: 14 * s))
-            .onTapGesture {}
+            .simultaneousGesture(TapGesture())
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .aspectRatio(Self.artW / Self.artH, contentMode: .fit)
