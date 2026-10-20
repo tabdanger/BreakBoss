@@ -252,4 +252,10 @@ BK_KITS = [
      {"bright": 0.5, "long808": 0.7},
      {0: "BK NO 7 KICK", 1: "BK NO 23 SNARE", 2: "BK NO 7 CLAP", 3: "BK NO 14 RIM", 4: "BK NO 19 HIHAT",
       5: "BK NO 14 OPEN HAT", 11: "BK NO 8 CRASH"}),
+    # Oct 20: the library and BK sounds nearest the hits in Tyrone's danger drum loops (match_loop_sounds.py, with and
+    # without --bk, the nearer one per pad), for BK Editions Vol 4
+    ("BK DANGER KIT", "modern", "WEST COAST", "BK", "westBounce", 94, "westBounce", ["west", "rnb", "bounce"],
+     {"punch": 0.3},
+     {0: "FUNK KICK", 1: "BK NO 12 SNARE", 2: "BK NO 5 CLAP", 3: "NEW LAND RIM", 4: "BK NO 20 HIHAT",
+      5: "DEMON 7 OPEN HAT"}),
 ]

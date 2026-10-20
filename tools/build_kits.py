@@ -191,6 +191,7 @@ def build():
                 seed += 1
     # The live acoustic kits, then the BK kits, last, so every kit above keeps its sounds.
     acoustic = {s["name"]: s for s in ACOUSTIC + BK}
+    for s in SOUNDS: acoustic.setdefault(s["name"], s)      # a BK kit may also pick a library sound by name
     for name, mode, family, genre, style, tempo, voice, tags, likes, picks in kit_catalog.ACOUSTIC_KITS + kit_catalog.BK_KITS:
         leans = dict(likes)
         for k, v in kit_catalog.MODE_LIKES[mode].items(): leans[k] = leans.get(k, 0) + v

@@ -483,7 +483,10 @@ LEARNED_RNB = "BK Editions Vol 2"
 # (tools/learned_drumloops.json). They are tops loops with no kick: each keeps its own snares, rims, hats and
 # opens, and plays the kick of the Vol 1 groove nearest its tempo (off the steps where its snare lands).
 LEARNED_DL = "BK Editions Vol 3"
-LEARNED_STYLES = (LEARNED, LEARNED_RNB, LEARNED_DL)
+# Vol 4: Tyrone's danger drum loops (Oct 20, West Coast R&B), split the same way (tools/learned_danger.json),
+# each with the lanes' own lay-back (shift); all five kept, as he asked ("recreate them").
+LEARNED_DANGER = "BK Editions Vol 4"
+LEARNED_STYLES = (LEARNED, LEARNED_RNB, LEARNED_DL, LEARNED_DANGER)
 def clean(lp):          # hats-only loops, and loops played off the 16ths (grid fit above 0.12): lines, not presets
     return lp.get("gridFit", 0) <= 0.12 and "k" in lp["lanes"]
 def tops(lp):           # timed within 16 ms of the 16ths (the doubled tempo makes gridFit read in 32nds), 8+ hits
@@ -511,6 +514,7 @@ add_learned(LEARNED, LEARNED_FILE, "BK V1")
 add_learned(LEARNED_RNB, os.path.join(os.path.dirname(LEARNED_FILE), "learned_mixed.json"), "BK V2")
 add_learned(LEARNED_DL, os.path.join(os.path.dirname(LEARNED_FILE), "learned_drumloops.json"), "BK V3", keep=tops,
             kicks=[lp for lp in json.load(open(LEARNED_FILE))["learned"] if clean(lp)])
+add_learned(LEARNED_DANGER, os.path.join(os.path.dirname(LEARNED_FILE), "learned_danger.json"), "BK V4", keep=lambda lp: "k" in lp["lanes"])
 
 # ---------------- checks and output ----------------
 cnt = Counter(p["style"] for p in P)

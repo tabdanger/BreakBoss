@@ -156,13 +156,16 @@ def learn_mix(path, temps, fill=False):
         named, bpm = bpm, L.check_tempo(bpm, length, times)
         if bpm != named: print(f"  {name}: the name says {named:g} BPM, the loop is {bpm:g} BPM")
         steps, offset = max(1, int(round(length * bpm / 240))) * 16, 0
-    lanes = {}
+    lanes, feel = {}, {}
     for lane, hs in hits.items():
         hs = [dict(h, t=h["t"] + offset * 60 / bpm / 4) for h in hs]
-        s, _ = L.to_lane(hs, bpm, steps)
+        s, offs = L.to_lane(hs, bpm, steps)
+        if not fill: feel[lane] = L.feel(offs, steps)     # how far behind the grid the lane sits, its swing
         if lane == "k": s = s.replace("r", "x").replace("q", "x")   # in a mix, a kick "double" is its 808 or tail
         lanes[lane] = s
-    if "c" in lanes and "s" not in lanes: lanes["s"] = lanes.pop("c")   # a mix's lone backbeat sound plays on the snare
+    if "c" in lanes and "s" not in lanes:      # a mix's lone backbeat sound plays on the snare
+        lanes["s"] = lanes.pop("c")
+        if "c" in feel: feel["s"] = feel.pop("c")
     lanes = {k: lanes[k] for k in L.LANE_ORDER if k in lanes}
     title = re.sub(r"\s*\[.*$", "", name).strip().upper()
     out = {"source": os.path.basename(path), "title": title, "bpm": bpm, "lanes": lanes}
@@ -171,6 +174,10 @@ def learn_mix(path, temps, fill=False):
         out["bars"] = steps // 16
         out["gridFit"] = round(L.grid_error([h["t"] for hs in hits.values() for h in hs], bpm), 3)
         out["mixed"] = True                    # split from a full mix, not from stems
+        shift = {k: max(-24, min(24, sh)) for k, (sh, _) in feel.items() if abs(sh) >= 2 and k in lanes}
+        swing = {k: sw for k, (_, sw) in feel.items() if sw and k in lanes}
+        if shift: out["shift"] = shift
+        if swing: out["swingLanes"] = swing
     return out
 
 
