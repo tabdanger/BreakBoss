@@ -2173,8 +2173,9 @@ enum KnockSelfTest {
             var lastRaw: Double?, lastShown: Double?
             var rawWorst = 0.0, shownWorst = 0.0, lag = 0.0, wrapped = false, jumps = 0
             let frame = 1.0 / 120
+            let start = audio
             for i in 0..<480 {                                   // 4 seconds: two trips round the bar
-                let now = audio + Double(i) * frame
+                let now = start + Double(i) * frame
                 while audio < now { render() }                   // the audio thread runs ahead of the screen
                 let raw = e.playheadTick.pointee
                 guard raw >= 0 else { continue }
