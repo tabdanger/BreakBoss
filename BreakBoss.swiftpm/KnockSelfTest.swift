@@ -2171,7 +2171,7 @@ enum KnockSelfTest {
             let length = Double(bar)
             var smooth = PlayheadSmoother()
             var lastRaw: Double?, lastShown: Double?
-            var rawWorst = 0.0, shownWorst = 0.0, lag = 0.0, wrapped = false
+            var rawWorst = 0.0, shownWorst = 0.0, lag = 0.0, wrapped = false, jumps = 0
             let frame = 1.0 / 120
             for i in 0..<480 {                                   // 4 seconds: two trips round the bar
                 let now = audio + Double(i) * frame
@@ -2181,8 +2181,15 @@ enum KnockSelfTest {
                 let shown = smooth.step(raw: raw, perSecond: perSecond, length: length, at: now)
                 func step(_ a: Double, _ b: Double) -> Double { var d = b - a; if d < -length / 2 { d += length }; return d }
                 if i > 30, let lastRaw, let lastShown {
-                    rawWorst = max(rawWorst, abs(step(lastRaw, raw) - perSecond * frame))
-                    shownWorst = max(shownWorst, abs(step(lastShown, shown) - perSecond * frame))
+                    let rawStep = abs(step(lastRaw, raw) - perSecond * frame)
+                    // the engine's own jump (the queued pattern starting on its bar line): the line
+                    // follows it at once, so that frame isn't a glide
+                    if rawStep > perSecond * Double(block) / 48_000 * 2 + 1 {
+                        jumps += 1
+                    } else {
+                        rawWorst = max(rawWorst, rawStep)
+                        shownWorst = max(shownWorst, abs(step(lastShown, shown) - perSecond * frame))
+                    }
                     var d = abs(raw - shown); d = min(d, length - d)
                     lag = max(lag, d)
                     if shown < lastShown { wrapped = true }
@@ -2190,10 +2197,11 @@ enum KnockSelfTest {
                 lastRaw = raw
                 lastShown = shown
             }
-            log("BreakBoss playhead glide (\(block)-frame blocks): engine clock jitters \(String(format: "%.2f", rawWorst)) ticks a frame, the line \(String(format: "%.2f", shownWorst))")
+            log("BreakBoss playhead glide (\(block)-frame blocks): engine clock jitters \(String(format: "%.2f", rawWorst)) ticks a frame, the line \(String(format: "%.2f", shownWorst)), \(jumps) jump(s)")
             check(shownWorst < perSecond * frame * 0.2, "playhead glide (\(block)-frame blocks): the line moves evenly every frame")
             check(lag < perSecond * Double(block) / 48_000 + 1, "playhead glide (\(block)-frame blocks): the line stays with the engine's clock")
             check(wrapped, "playhead glide (\(block)-frame blocks): the line wraps at the loop's end")
+            check(jumps <= 1, "playhead glide (\(block)-frame blocks): the engine's clock only jumps when the pattern starts")
         }
     }
 
