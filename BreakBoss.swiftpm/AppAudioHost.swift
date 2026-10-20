@@ -2,6 +2,7 @@
 import AVFoundation
 import CoreMIDI
 import Foundation
+import UIKit
 
 // MARK: - The standalone app's audio and MIDI
 //
@@ -25,8 +26,12 @@ final class AppAudioHost {
     private let outList = UnsafeMutableRawPointer.allocate(byteCount: 4096, alignment: 8)
     private var observers: [NSObjectProtocol] = []
     private var hostTicksToSeconds: Double = 1e-9
+    /// The app in the background lets controller MIDI go (Tyrone, Oct 20): with BreaKing open in a host
+    /// as well, both copies used to play every note, one with the old sound. Read on the MIDI thread.
+    private let midiQuiet = UnsafeMutablePointer<Bool>.allocate(capacity: 1)
 
     private init() {
+        midiQuiet.initialize(to: false)
         var info = mach_timebase_info_data_t()
         mach_timebase_info(&info)
         hostTicksToSeconds = Double(info.numer) / Double(info.denom) / 1e9
@@ -53,6 +58,14 @@ final class AppAudioHost {
             } else if AVAudioSession.InterruptionType(rawValue: raw) == .ended {
                 self?.restart()
             }
+        })
+        observers.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let self else { return }
+            self.midiQuiet.pointee = true
+            self.engine.send(KEvent(kind: .allOff))   // notes held when it went quiet never get their note off
+        })
+        observers.append(center.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.midiQuiet.pointee = false
         })
         observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { [weak self] _ in
             self?.configureSession()
@@ -129,7 +142,9 @@ final class AppAudioHost {
         guard MIDIClientCreateWithBlock("BreaKing" as CFString, &midiClient, notify) == noErr else { return }
         let engine = self.engine
         let toSeconds = hostTicksToSeconds
+        let quiet = midiQuiet
         let status = MIDIInputPortCreateWithProtocol(midiClient, "BreaKing In" as CFString, ._1_0, &midiPort) { list, _ in
+            if quiet.pointee { return }
             for packet in list.unsafeSequence() {
                 let time = packet.pointee.timeStamp > 0 ? Double(packet.pointee.timeStamp) * toSeconds
                                                         : ProcessInfo.processInfo.systemUptime
