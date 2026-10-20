@@ -1548,6 +1548,27 @@ enum KnockSelfTest {
             }
             return top
         }
+        // a library sound previewed (double tap): heard at the preview volume, no track plays or changes
+        func libraryPreview(_ gain: Float) -> (Float, UInt32) {
+            let e = KnockEngine()
+            e.prepare(sampleRate: rate, maxFrames: 128)
+            let quiet: [(KParam, Float)] = [(.playMode, 0), (.followDAW, 0), (.tempoSync, 0)]
+            for (p, v) in quiet { e.setParam(p, v) }
+            let silent = SampleBuffer(left: [Float](repeating: 0, count: 64), sampleRate: rate)
+            e.kitHandoff.publish(KitBuffers(name: "PREVIEW", samples: Array(repeating: silent, count: Pad.count),
+                                            settings: Array(repeating: PadSettings(), count: Pad.count), bassHz: 110))
+            e.previewHandoff.publish(PreviewSound(SampleBuffer(left: [Float](repeating: 0.25, count: 4_800), sampleRate: 44_100), gain: gain))
+            var top: Float = 0
+            for _ in 0..<30 {
+                var left = [Float](repeating: 0, count: 128), right = left
+                left.withUnsafeMutableBufferPointer { l in right.withUnsafeMutableBufferPointer { r in e.render(frames: 128, left: l.baseAddress!, right: r.baseAddress!, host: nil) } }
+                top = max(top, left.map { abs($0) }.max() ?? 0)
+            }
+            return (top, (0..<Pad.count).reduce(0) { $0 + e.padHits[$1] })
+        }
+        let (libFull, libHits) = libraryPreview(1), (libHalf, _) = libraryPreview(0.5)
+        check(abs(libFull - 0.25) < 0.01 && abs(libHalf - 0.125) < 0.01 && libHits == 0,
+              "Library preview: a double-tapped sound is heard at the preview volume and no track plays (\(libFull), \(libHalf), hits \(libHits))")
         let full = previewPeak(1), half = previewPeak(0.5), none = previewPeak(0)
         check(full > 0.01 && abs(half / full - 0.5) < 0.05 && none < 0.000_1,
               "Preview volume: a preview plays at the slider's level (100% \(full), 50% \(half), 0% \(none))")

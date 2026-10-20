@@ -368,6 +368,9 @@ struct SamplerWindow: View {
             Text(String(format: "CH %02d", trackNumber)).font(.system(size: 27 * s, weight: .medium)).foregroundColor(skin.ink)
                 .frame(width: 160 * s, height: 58 * s, alignment: .trailing).offset(x: 1030 * s, y: 8 * s)
                 .allowsHitTesting(false)
+            // Face 1's screen, live (Tyrone, Oct 20): the same trace following the sound's frequencies,
+            // behind glass in a dark well on the title bar
+            samplerScreen(s).spot(506, 15, 360, 44, s)
             // UNDO / REDO: every change in the window, on every page
             titleButton("arrow.uturn.backward", s, red: false, action: undoStep).spot(880, 14, 64, 46, s)
                 .disabled(undo.isEmpty || controller.sampleEditing).opacity(undo.isEmpty ? 0.45 : 1)
@@ -380,6 +383,28 @@ struct SamplerWindow: View {
             titleButton("xmark", s, red: true, action: close).spot(1310, 14, 66, 46, s)
                 .accessibilityLabel("Close the sampler").accessibilityIdentifier("samplerClose")
         }
+    }
+
+    private func samplerScreen(_ s: CGFloat) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 5 * s)
+        let light = FaceLight.of(controller.faceKey)
+        return ZStack {
+            shape.fill(LinearGradient(colors: [Color(white: 0.01), Color(white: 0.06)], startPoint: .top, endPoint: .bottom))
+            // the screen's faint grid
+            Canvas { ctx, size in
+                var grid = Path()
+                for i in 1..<8 { let x = size.width * CGFloat(i) / 8; grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height)) }
+                grid.move(to: CGPoint(x: 0, y: size.height / 2)); grid.addLine(to: CGPoint(x: size.width, y: size.height / 2))
+                ctx.stroke(grid, with: .color(light.glow.opacity(0.09)), lineWidth: 0.6)
+            }
+            ScopeView(controller: controller, scale: s * 0.8, compact: true).padding(.horizontal, 4 * s)
+            // glass: a soft sheen over the top, the well's edge shadowed above and lit below
+            shape.fill(LinearGradient(stops: [.init(color: .white.opacity(0.09), location: 0), .init(color: .white.opacity(0.02), location: 0.45),
+                                              .init(color: .clear, location: 0.5)], startPoint: .top, endPoint: .bottom))
+            shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.9), skin.surface.bright.opacity(0.5)], startPoint: .top, endPoint: .bottom), lineWidth: 1.2 * s)
+        }
+        .clipShape(shape)
+        .allowsHitTesting(false)
     }
 
     private func titleButton(_ symbol: String, _ s: CGFloat, red: Bool, action: @escaping () -> Void) -> some View {

@@ -165,6 +165,17 @@ struct FaceplateView: View {
             }
         }
         hit(L.menuRect, s) { showMenu = true }
+        // Face 2's key on Face 1 too (Tyrone, Oct 20): the round spun-silver button with the pads'
+        // squares in its slot, on the plate's bottom strip under pad 1; slide it (or tap its right
+        // end) to open Face 2, like the piano-roll button
+        if !FaceplateView.snapshotMode {
+            FaceSlider(scale: s, color: FaceLight.of(sfx).glow, id: "faceSlider1", label: "Slide right to open Face 2") {
+                let current = Int(controller.meters.status[1])
+                patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : controller.screenPattern)
+            }
+            .environment(\.seqFinish, sfx)
+            .place([125, 1004, 235, 1040], s)
+        }
         // RECORD (left of the piano-roll button): a 1- or 2-bar count-in, then the pads record
         if let r = L.recordRect {
             RecordButtonView(controller: controller, face: sfx, scale: s).place(r, s)

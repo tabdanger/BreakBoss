@@ -209,6 +209,9 @@ struct ShareSheet: UIViewControllerRepresentable {
 struct FaceSlider: View {
     var scale: CGFloat = 1
     var color: Color = .green
+    /// Face 1 has the same key (Tyrone, Oct 20): its own id and what it says, sliding over to Face 2.
+    var id = "faceSlider"
+    var label = "Slide right to go back to Face 1"
     let back: () -> Void
     @State private var travel: CGFloat = 0
     @State private var leaving = false
@@ -269,15 +272,19 @@ struct FaceSlider: View {
                     if travel > maxTravel * 0.5 || tapRight {
                         leaving = true
                         withAnimation(.easeOut(duration: 0.15)) { travel = maxTravel }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.17) { back() }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.17) {
+                            back()
+                            // Face 1 stays under Face 2: the key is back home when it's seen again
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { leaving = false; travel = 0 }
+                        }
                     } else {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { travel = 0 }
                     }
                 })
         }
         .accessibilityElement()
-        .accessibilityIdentifier("faceSlider")
-        .accessibilityLabel("Slide right to go back to Face 1")
+        .accessibilityIdentifier(id)
+        .accessibilityLabel(label)
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { back() }
     }
