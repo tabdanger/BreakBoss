@@ -54,17 +54,9 @@ final class Handoff<T: AnyObject> {
         return value
     }
 
-    /// Audio thread: hand an old value back for the main thread to release. False = try later.
-    func retire(_ value: T) -> Bool {
-        guard os_unfair_lock_trylock(lock) else { return false }
-        defer { os_unfair_lock_unlock(lock) }
-        if retired != nil { return false }
-        retired = value
-        return true
-    }
-
-    /// Audio thread: hand `value` back and clear it in the same locked step, so the main thread can
-    /// never release it while the audio thread still holds a reference. False = try later.
+    /// Audio thread: hand an old value back for the main thread to release, clearing `value` in
+    /// the same locked step, so the main thread can never release it while the audio thread still
+    /// holds a reference (it would be freed here). False = try later; `value` keeps it.
     func retire(_ value: inout T?) -> Bool {
         guard value != nil, os_unfair_lock_trylock(lock) else { return false }
         defer { os_unfair_lock_unlock(lock) }

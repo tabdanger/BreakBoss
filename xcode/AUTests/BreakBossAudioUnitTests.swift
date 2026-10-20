@@ -433,4 +433,77 @@ final class BreakBossAudioUnitTests: XCTestCase {
         rig.render(128)
         XCTAssertGreaterThan(last.count, 0, "after the swaps the newest block gets MIDI")
     }
+
+    // MARK: Kits, loops and previews handed to the render thread
+
+    /// Rides on a kit, loop set or preview (as an associated object) and notes where it's freed.
+    final class Tracker {
+        static let lock = NSLock()
+        static var freed = 0
+        static var freedOnRenderThread = 0
+        static var key = 0
+        deinit {
+            Tracker.lock.lock()
+            Tracker.freed += 1
+            if Thread.current.threadDictionary[BreakBossAudioUnitTests.renderMark] != nil { Tracker.freedOnRenderThread += 1 }
+            Tracker.lock.unlock()
+        }
+        static func reset() { lock.lock(); freed = 0; freedOnRenderThread = 0; lock.unlock() }
+        @discardableResult
+        static func track<T: AnyObject>(_ object: T) -> T {
+            objc_setAssociatedObject(object, &key, Tracker(), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            return object
+        }
+    }
+
+    func testKitsLoopsAndPreviewsSwappedWhileRenderingAreFreedOffTheRenderThread() throws {
+        Tracker.reset()
+        let rig = try Rig()
+        let engine = rig.unit.engine
+        let short = SampleBuffer(left: (0..<200).map { sinf(Float($0) * 0.1) * 0.2 }, sampleRate: Self.rate)
+        let hit = PatternData(name: "SWAP", lengthTicks: PatternData.ppq * 4,
+                              events: [GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1)])
+        let stop = DispatchSemaphore(value: 0)
+        final class Count { var value = 0; var finite = true }
+        let rendered = Count()
+        let renderer = Thread {
+            Thread.current.threadDictionary[BreakBossAudioUnitTests.renderMark] = true
+            for i in 0..<3_000 {
+                let e = Events()
+                e.midi(0x90, 36 + UInt8(i % 12), 110, at: (i * 29) % 128)
+                rendered.finite = rendered.finite && rig.render(128, e).allSatisfy { $0.isFinite }
+                rendered.value += 1
+            }
+            stop.signal()
+        }
+        renderer.start()
+        var swaps = 0
+        while stop.wait(timeout: .now()) == .timedOut {
+            autoreleasepool {
+                let kit = KitBuffers(name: "SWAP \(swaps)", samples: Self.kit.samples, settings: Self.kit.settings, bassHz: 110)
+                engine.kitHandoff.publish(Tracker.track(kit))
+                engine.patternHandoff.publish(Tracker.track(PatternSet(Array(repeating: hit, count: Pad.count))))
+                engine.previewHandoff.publish(Tracker.track(PreviewSound(short, gain: 1)))
+                if swaps % 3 == 0 {
+                    engine.kitHandoff.collect(); engine.patternHandoff.collect(); engine.previewHandoff.collect()
+                }
+            }
+            swaps += 1
+        }
+        XCTAssertEqual(rendered.value, 3_000)
+        XCTAssertTrue(rendered.finite)
+        XCTAssertGreaterThan(swaps, 10)
+        // Let the engine hand the last ones back, then release them here.
+        for _ in 0..<8 {
+            rig.render(128)
+            engine.kitHandoff.collect(); engine.patternHandoff.collect(); engine.previewHandoff.collect()
+        }
+        XCTAssertGreaterThan(Tracker.freed, 10, "replaced kits, loops and previews are freed")
+        XCTAssertEqual(Tracker.freedOnRenderThread, 0, "none is freed on the render thread")
+
+        // still plays after all that
+        let e = Events()
+        e.midi(0x90, 36, 127, at: 0)
+        XCTAssertTrue(rig.render(512, e).contains { abs($0) > 0.001 })
+    }
 }
