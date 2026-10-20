@@ -1,5 +1,6 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import SwiftUI
+import GameController
 import UniformTypeIdentifiers
 
 // MARK: - The SAMPLER window (Tyrone's two renders, Oct 18)
@@ -671,9 +672,9 @@ struct SamplerWindow: View {
         let sourceSeconds = controller.playedSample(pad)?.seconds ?? 1
         return panel("Time stretching", s) {
             knob("PITCH", (sm.stretchPitch / 12 + 1) / 2, x: 67, y: 86, d: 72, s, labelY: 142, bipolar: true, reset: 0.5,
-                 display: { v in String(format: "%+.2f st", Double(v * 2 - 1) * 12) }) { v, final in
+                 display: { v in Self.stretchPitchText(Self.stretchSemitones(v)) }) { v, final in
                 // like FL: turning PITCH while on Resample switches to a stretch that keeps the length
-                editComputed(final) { $0.stretchPitch = abs(v * 2 - 1) < 0.01 ? 0 : (v * 2 - 1) * 12; if $0.stretch == .resample { $0.stretch = .stretch } }
+                editComputed(final) { $0.stretchPitch = Self.stretchSemitones(v); if $0.stretch == .resample { $0.stretch = .stretch } }
             }
             knob("MUL", sm.multiplier, x: 166, y: 86, d: 72, s, labelY: 142, bipolar: true, reset: 0.5,
                  display: { v in String(format: "× %.2f", pow(4, Double(v - 0.5) * 2)) }) { v, final in
@@ -852,6 +853,7 @@ struct SamplerWindow: View {
                 Text(String(format: "%@  ·  %.3f s", fileName, sample.seconds)).font(.system(size: 14 * s, weight: .medium))
                     .foregroundColor(skin.wellInk.opacity(0.55)).padding(10 * s)
                     .frame(width: 900 * s, height: 182 * s, alignment: .bottomLeading).allowsHitTesting(false)
+                    .accessibilityIdentifier("samplerFileInfo")
             }
             if sample == nil || dropping {
                 Text("DROP SAMPLE HERE").font(.system(size: 36 * s, weight: .medium)).kerning(2 * s)
@@ -1067,6 +1069,7 @@ struct SamplerWindow: View {
             }
             // the selection's length
             Text(selectionText(sample)).font(.system(size: 15 * s, weight: .medium, design: .monospaced))
+                .accessibilityIdentifier("samplerSelectionLength")
                 .foregroundColor(skin.ink).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 126 * s, height: 50 * s).offset(x: 1012 * s)
                 .allowsHitTesting(false)
@@ -1120,6 +1123,18 @@ struct SamplerWindow: View {
             }
         }
         var items: [BBMenuItem] = []
+        // mix: the copied audio merges with what's there, from the selection's start (or the start)
+        let mixAt = range?.lowerBound ?? 0
+        items.append(.item(range == nil ? "Mix in at the start" : "Mix in at the selection", icon: "plus.square.on.square") {
+            let before = controller.state.pads[pad]
+            let old = sample.length
+            controller.editSample(pad, .mix(clip, at: mixAt)) { name in
+                guard name != nil else { return }
+                keep(before)
+                let total = Double(max(old, mixAt + added))
+                selection = Double(mixAt) / total...min(1, Double(mixAt + added) / total)
+            }
+        })
         if let r = range {
             items.append(.item("Replace the selection", icon: "rectangle.2.swap") {
                 run(.replace(clip, over: r), select: selected(at: r.lowerBound))
@@ -1713,6 +1728,21 @@ struct SamplerWindow: View {
         }
         .frame(width: w * s)
         .offset(x: x * s, y: y * s)
+    }
+
+    /// Time stretching's PITCH (Tyrone, Oct 20, as in FL): whole semitones; hold Shift on a keyboard
+    /// while turning for cents.
+    static func stretchSemitones(_ v: Float) -> Float {
+        let st = (v * 2 - 1) * 12
+        if GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: .leftShift)?.isPressed == true
+            || GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: .rightShift)?.isPressed == true {
+            return abs(st) < 0.01 ? 0 : (st * 100).rounded() / 100
+        }
+        return st.rounded()
+    }
+
+    static func stretchPitchText(_ st: Float) -> String {
+        st == st.rounded() ? String(format: "%+d st", Int(st)) : String(format: "%+.2f st", st)
     }
 
     private static func percent(_ v: Float) -> String { "\(Int((v * 100).rounded()))%" }

@@ -1516,6 +1516,9 @@ enum SampleEdit {
     /// Puts `clip` in at `at` (insert) or over `over` (replace).
     case insert(SampleClip, at: Int)
     case replace(SampleClip, over: Range<Int>)
+    /// Mixes `clip` into the sound from `at` (Tyrone, Oct 20: paste merges with what's there); the
+    /// sound gets longer if the clip runs past its end.
+    case mix(SampleClip, at: Int)
     case trimSilence
     case fadeIn(Range<Int>)
     case fadeOut(Range<Int>)
@@ -1575,6 +1578,15 @@ enum SampleEditor {
             let x = clampRange(over)
             l.replaceSubrange(x, with: c.left); r.replaceSubrange(x, with: c.right)
             return (l, r, mapper(at: x.lowerBound, cut: x.count, added: c.count))
+        case .mix(let c, let at):
+            let c = converted(c, to: s.sampleRate)
+            let p = min(max(0, at), l.count)
+            let extra = max(0, p + c.count - l.count)
+            if extra > 0 { l += [Float](repeating: 0, count: extra); r += [Float](repeating: 0, count: extra) }
+            for k in 0..<c.count { l[p + k] += c.left[k]; r[p + k] += c.right[k] }
+            // nothing moves: a point of the old sound stays where it was (in a longer sound if it grew)
+            let grown = Float(l.count) / Float(n)
+            return (l, r, { f in f / grown })
         case .trimSilence:
             // quieter than 60 dB under the peak, at either end (a hair is kept before the first sound)
             var peak: Float = 0

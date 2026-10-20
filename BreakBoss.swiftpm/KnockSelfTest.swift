@@ -51,6 +51,7 @@ enum KnockSelfTest {
         phase("checkTrackFX", checkTrackFX)
         phase("checkPrecomputedEffects", checkPrecomputedEffects)
         phase("checkAudioCPU", checkAudioCPU)
+        phase("checkSampleEdits", checkSampleEdits)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -3010,6 +3011,44 @@ enum KnockSelfTest {
             e.send(KEvent(kind: .allOff))
         }
         log("BreakBoss audio CPU at 128 frames, 48 kHz, \(preset.name): " + report.joined(separator: ", "))
+    }
+
+    /// The SAMPLER's edit bar (Tyrone, Oct 20: every tool above the waveform works): cut / delete take
+    /// the selection out, copy + paste (insert, replace, mix into what's there) put it back, trim cuts
+    /// the silence at the ends, fade in / out shape only the selection. Worked on a ramp so every frame
+    /// can be told apart.
+    static func checkSampleEdits() {
+        let n = 1_000
+        let ramp = (0..<n).map { Float($0) / Float(n) * 0.5 }
+        let sound = SampleBuffer(left: ramp, right: ramp.map { -$0 }, sampleRate: 48_000)
+        let sel = 200..<400
+        let clip = SampleEditor.clip(sound, sel)
+        check(clip.count == 200 && clip.left.first == ramp[200] && clip.right.last == -ramp[399], "COPY takes exactly the selection")
+        let cut = SampleEditor.apply(.delete(sel), to: sound)
+        check(cut.left.count == 800 && cut.left[199] == ramp[199] && cut.left[200] == ramp[400], "CUT / DELETE take out exactly the selection")
+        check(cut.map(0.1) == 0.125 && cut.map(0.3) == nil, "CUT moves the points after it and drops the ones inside")
+        let inserted = SampleEditor.apply(.insert(clip, at: 0), to: sound)
+        check(inserted.left.count == 1_200 && inserted.left[0] == ramp[200] && inserted.left[200] == ramp[0], "PASTE insert puts the clip in and keeps everything")
+        let replaced = SampleEditor.apply(.replace(clip, over: 600..<700), to: sound)
+        check(replaced.left.count == 1_100 && replaced.left[600] == ramp[200] && replaced.left[800] == ramp[700], "PASTE replace swaps the selection for the clip")
+        let mixed = SampleEditor.apply(.mix(clip, at: 500), to: sound)
+        check(mixed.left.count == n && abs(mixed.left[500] - (ramp[500] + ramp[200])) < 1e-6 && mixed.left[499] == ramp[499]
+              && abs(mixed.right[699] - (-ramp[699] - ramp[399])) < 1e-6 && mixed.left[700] == ramp[700],
+              "PASTE mix adds the clip onto what's there, both channels, nothing else touched")
+        let longer = SampleEditor.apply(.mix(clip, at: 900), to: sound)
+        check(longer.left.count == 1_100 && abs(longer.left[950] - (ramp[950] + ramp[250])) < 1e-6 && longer.left[1_050] == ramp[350],
+              "PASTE mix past the end makes the sound longer")
+        let fadedIn = SampleEditor.apply(.fadeIn(sel), to: sound)
+        check(fadedIn.left[200] == 0 && fadedIn.left[199] == ramp[199] && fadedIn.left[400] == ramp[400]
+              && fadedIn.left[300] < ramp[300] && fadedIn.left[300] > 0, "FADE IN rises from silence across the selection only")
+        let fadedOut = SampleEditor.apply(.fadeOut(sel), to: sound)
+        check(fadedOut.left[200] == ramp[200] && fadedOut.left[399] < ramp[399] * 0.01 && fadedOut.left[400] == ramp[400],
+              "FADE OUT falls to silence across the selection only")
+        var padded = [Float](repeating: 0, count: 4_800) + ramp.map { $0 + 0.1 } + [Float](repeating: 0, count: 4_800)
+        padded[0] = 0
+        let quiet = SampleBuffer(left: padded, sampleRate: 48_000)
+        let trimmed = SampleEditor.apply(.trimSilence, to: quiet)
+        check(trimmed.left.count == n + 96 && trimmed.left[96] == ramp[0] + 0.1, "TRIM cuts the silence at both ends (2 ms kept before the sound)")
     }
 
     static func checkEveryPatternAudible() {
