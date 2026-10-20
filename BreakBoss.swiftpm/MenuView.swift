@@ -28,6 +28,18 @@ struct MenuView: View {
         NavigationView {
             Form {
                 Section {
+                    Button {
+                        dismiss()
+                        // after the menu has gone, so the tour starts on the faceplate
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { TutorialGuide.shared.start() }
+                    } label: { Label("Play the tutorial", systemImage: "graduationcap") }
+                    .accessibilityIdentifier("menuTutorial")
+                } header: {
+                    Text("Tutorial")
+                } footer: {
+                    Text("Every feature, step by step: the modes, the pads, recording live into your DAW, the sequencer, the dice and the FX. SKIP ends it at any step.")
+                }
+                Section {
                     ForEach([false, true], id: \.self) { plat in
                         Button { controller.setPlatinumFace(plat); if controller.mode != .modern { controller.selectMode(.modern) } } label: {
                             HStack {

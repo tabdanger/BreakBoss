@@ -492,6 +492,8 @@ struct SequencerView: View {
                 leftPanel(s)
                 editor(s)
                 footer(s)
+                // the tutorial's Face 2 steps (Tyrone, Oct 20)
+                TutorialOverlay(surface: .face2, art: CGSize(width: Self.artW, height: Self.artH), scale: s, finish: finish) { $0.face2 }
             }
             .frame(width: Self.artW * s, height: Self.artH * s)
             // the value of the knob being turned, in a lit readout over it (Tyrone, Oct 19)

@@ -33,6 +33,10 @@ struct ContentView: View {
                 AppAudioHost.shared.start()
                 // After a crash, the report opens by itself so the details get sent back.
                 if BugLog.shared.lastCrash != nil { crashReport = true }
+                // first launch: the tutorial (SKIP at any step; MENU › Tutorial plays it again)
+                if !crashReport {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { TutorialGuide.shared.startIfFirstLaunch() }
+                }
                 if ProcessInfo.processInfo.environment["BREAKBOSS_SNAPSHOTS"] == "1" {
                     let c = controller
                     Task { @MainActor in
