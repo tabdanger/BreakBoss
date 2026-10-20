@@ -11,6 +11,13 @@ struct StockSampleLibrary {
         let displayName: String
     }
 
+    /// A factory pad that plays nothing: the kit came from a loop that has no such sound (Tyrone, Oct 20,
+    /// "if a kit doesnt have 12 sounds only use the amount in that loop").
+    struct EmptyPad: Decodable {
+        let kitID: String
+        let pad: Int
+    }
+
     /// One sound in the library, in a kit or not (named by category: "KICK BOOM 07"), and the library
     /// section of the folder it came from ("PERC" for a tom from a percs folder; tools/library_folders.py).
     struct Sound: Decodable {
@@ -22,6 +29,7 @@ struct StockSampleLibrary {
     private struct Manifest: Decodable {
         let version: Int
         let assignments: [Assignment]
+        let emptyPads: [EmptyPad]?
         let sounds: [Sound]?
     }
 
@@ -60,6 +68,8 @@ struct StockSampleLibrary {
     }
 
     private let samples: [String: [Int: Sample]]
+    /// Each kit's EMPTY pads.
+    private let empty: [String: Set<Int>]
     /// Each multisampled sound's layers, softest first, by the sound's file name.
     private let layers: [String: [Layer]]
     /// Every stock sound, sorted by category (the sound menu lists these).
@@ -67,8 +77,10 @@ struct StockSampleLibrary {
     /// Shown by the controller when an installed pack cannot be used.
     let failure: String?
 
-    private init(samples: [String: [Int: Sample]] = [:], layers: [String: [Layer]] = [:], allSounds: [Sample] = [], failure: String? = nil) {
+    private init(samples: [String: [Int: Sample]] = [:], empty: [String: Set<Int>] = [:], layers: [String: [Layer]] = [:],
+                 allSounds: [Sample] = [], failure: String? = nil) {
         self.samples = samples
+        self.empty = empty
         self.layers = layers
         self.allSounds = allSounds
         self.failure = failure
@@ -85,6 +97,9 @@ struct StockSampleLibrary {
     }()
 
     func sample(kitID: String, pad: Int) -> Sample? { samples[kitID]?[pad] }
+
+    /// The kit plays nothing on this pad (no stock sound, and no synthesized one in its place).
+    func isEmpty(kitID: String, pad: Int) -> Bool { empty[kitID]?.contains(pad) == true }
 
     /// The velocity layers of a multisampled stock sound (nil: one sample plays every hit).
     func layers(for sample: Sample) -> [Layer]? { layers[sample.url.lastPathComponent] }
@@ -129,6 +144,13 @@ struct StockSampleLibrary {
             guard samples[assignment.kitID]?[assignment.pad] == nil else { throw ManifestError.duplicateAssignment }
             samples[assignment.kitID, default: [:]][assignment.pad] = try sample(file: assignment.file, displayName: assignment.displayName)
         }
+        var empty: [String: Set<Int>] = [:]
+        guard (manifest.emptyPads?.count ?? 0) <= maxAssignments else { throw ManifestError.invalidAssignment }
+        for e in manifest.emptyPads ?? [] {
+            guard knownKitIDs.contains(e.kitID), (0..<padCount).contains(e.pad) else { throw ManifestError.invalidAssignment }
+            guard samples[e.kitID]?[e.pad] == nil, empty[e.kitID]?.contains(e.pad) != true else { throw ManifestError.duplicateAssignment }
+            empty[e.kitID, default: []].insert(e.pad)
+        }
         guard (manifest.sounds?.count ?? 0) <= 4096 else { throw ManifestError.invalidAssignment }
         let all = try (manifest.sounds ?? []).map { s -> Sample in
             var one = try sample(file: s.file, displayName: s.name)
@@ -150,6 +172,6 @@ struct StockSampleLibrary {
                 if parsed.count == entries.count { layers[main] = parsed.sorted { $0.top < $1.top } }
             }
         }
-        return StockSampleLibrary(samples: samples, layers: layers, allSounds: all)
+        return StockSampleLibrary(samples: samples, empty: empty, layers: layers, allSounds: all)
     }
 }

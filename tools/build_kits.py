@@ -170,7 +170,7 @@ def west_coast_kits(named):
 
 def build():
     uses = collections.Counter()
-    kits, assignments = [], []
+    kits, assignments, empty = [], [], []
     by_file = {s["file"]: s for s in SOUNDS}
     taken = collections.defaultdict(set)     # genre -> sounds its kits already play (kits of a genre share none)
     seed = 601
@@ -218,6 +218,9 @@ def build():
         for k, v in kit_catalog.MODE_LIKES[mode].items(): leans[k] = leans.get(k, 0) + v
         files, names = [], []
         for pad in range(12):
+            if pad in picks and picks[pad] is None:    # EMPTY: the loop has no such sound, so the pad plays nothing
+                files.append(None); names.append(None)
+                continue
             if pad in picks:
                 a = acoustic[picks[pad]]
                 assert a["category"] == PADS[pad][0] or (pad == 3 and a["category"] == "SNARE"), (name, pad)
@@ -229,20 +232,24 @@ def build():
             files.append(best["file"]); names.append(best["name"]); uses[best["file"]] += 1
             taken[genre].add(best["file"])
         kid = slug(name)
+        assert len({f for f in files if f}) == sum(1 for f in files if f), (name, "a sound on two pads")
         for pad, f in enumerate(files):
-            assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": names[pad]})
-        kits.append((kid, name, voice, style, tempo, seed, root_hz(by_file[files[6]]), mode, family, genre))
+            if f: assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": names[pad]})
+            else: empty.append({"kitID": kid, "pad": pad})
+        root = root_hz(by_file[files[6]]) if files[6] in by_file else 41.2   # no 808 of its own: the 808 lane's default E1
+        kits.append((kid, name, voice, style, tempo, seed, root, mode, family, genre))
         seed += 1
-    return kits, assignments, uses
+    return kits, assignments, uses, empty
 
 
 def main():
-    kits, assignments, uses = build()
+    kits, assignments, uses, empty = build()
     with open(os.path.join(STOCK, "manifest.json"), "w") as out:
         # "sounds": the whole library (the sound menu lists them all, even those in no kit)
         # "type": the library section, the sound's original folder (tools/library_folders.py)
         sounds = [{"file": x["file"], "name": x["name"], "type": x.get("library", x["category"])} for x in SOUNDS + ACOUSTIC + BK]
-        json.dump({"version": 1, "assignments": assignments, "sounds": sounds}, out, separators=(",", ":"))
+        # "emptyPads": factory pads that play nothing (Tyrone, Oct 20: a kit from a loop holds only that loop's sounds)
+        json.dump({"version": 1, "assignments": assignments, "emptyPads": empty, "sounds": sounds}, out, separators=(",", ":"))
     ids = [k[0] for k in kits]
     assert len(set(ids)) == len(ids) and len({k[1] for k in kits}) == len(kits), "kit ids and names are unique"
     for mode in kit_catalog.MODE_LIKES:

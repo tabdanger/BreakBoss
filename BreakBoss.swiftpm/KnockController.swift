@@ -35,6 +35,8 @@ final class KnockController: ObservableObject {
     private var padPicks = [UInt32](repeating: 0, count: Pad.count)
     /// Names for successfully loaded factory samples; these never become device-local imports.
     @Published private(set) var stockSampleNames: [Int: String] = [:]
+    /// The kit's EMPTY pads that have no sound of their own (silent, shown as EMPTY).
+    @Published private(set) var emptyPads: Set<Int> = []
     @Published private(set) var loadingKit = false
     /// A short message for the screen (errors, "saved", ...).
     @Published var notice: String?
@@ -657,6 +659,7 @@ final class KnockController: ObservableObject {
             var layers: [VelocityLayers?] = Array(repeating: nil, count: Pad.count)
             var failed: [String] = []
             var stockNames: [Int: String] = [:]
+            var empties: Set<Int> = []
             for pad in 0..<Pad.count {
                 if let file = s.pads[pad].sampleFile {
                     if let buffer = try? SampleLoader.load(SampleLoader.urlInSamples(file)) {
@@ -681,6 +684,12 @@ final class KnockController: ObservableObject {
                     }
                     failed.append(sample.displayName)
                 }
+                // an EMPTY factory pad plays nothing: one silent frame, not a synthesized stand-in
+                if s.pads[pad].sampleFile == nil, KnockController.stockPick(s, pad: pad) == nil, stock.isEmpty(kitID: def.id, pad: pad) {
+                    samples.append(SampleBuffer(left: [0], sampleRate: rate))
+                    empties.insert(pad)
+                    continue
+                }
                 var recipe = def.pads[pad]
                 if s.soundSeed > 1 {
                     var rng = KRandom(seed: s.soundSeed &* 2_654_435_761 &+ UInt32(pad * 977))
@@ -688,11 +697,12 @@ final class KnockController: ObservableObject {
                 }
                 samples.append(KnockController.centered(DrumSynth.render(recipe, sampleRate: rate, seed: s.soundSeed &+ UInt32(pad)), pad: pad))
             }
-            DispatchQueue.main.async { [weak self, samples, layers, failed, stockNames] in
+            DispatchQueue.main.async { [weak self, samples, layers, failed, stockNames, empties] in
                 guard let self, generation == self.kitGeneration else { return }
                 self.kitSamples = samples
                 self.kitLayers = layers
                 self.stockSampleNames = stockNames
+                self.emptyPads = empties
                 self.republishKit() // Apply edits made while decoding the kit.
                 self.loadingKit = false
                 let waiting = self.afterKitLoad
@@ -876,6 +886,7 @@ final class KnockController: ObservableObject {
                 if var sm = ps.sampler { sm.baked(map); ps.sampler = sm }
                 self.state.pads[pad] = ps
                 self.stockSampleNames[pad] = nil
+                self.emptyPads.remove(pad)
                 var samples = self.kitSamples
                 samples[pad] = buffer
                 self.kitSamples = samples
@@ -923,6 +934,7 @@ final class KnockController: ObservableObject {
                     fresh.sampleFile = name
                     self.state.pads[pad] = fresh
                     self.stockSampleNames[pad] = nil
+                    self.emptyPads.remove(pad)
                     if self.kitGeneration == generation, self.kitSamples.count == Pad.count {
                         var samples = self.kitSamples
                         samples[pad] = buffer
@@ -978,6 +990,7 @@ final class KnockController: ObservableObject {
         guard (0..<Pad.count).contains(pad) else { return "" }
         if let f = state.pads[pad].sampleFile { return (f as NSString).deletingPathExtension }
         if let name = stockSampleNames[pad] { return name }
+        if emptyPads.contains(pad) { return "EMPTY" }
         return kitDefinition.pads[pad].label
     }
 

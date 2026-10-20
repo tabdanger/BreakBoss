@@ -377,23 +377,23 @@ break-room|BREAK ROOM|funkBreak|funkBreak|96|1322|41.2|vintage|BREAKS|LIVE BREAK
 studio-a|STUDIO A|heavyBreak|heavyBreak|118|1323|41.2|modern|POP|LIVE ROCK
 bk-drum-kit|BK DRUM KIT|modernTrap|trapAtlanta|140|1324|43.65|modern|TRAP|BK
 bk-editions-kit|BK EDITIONS KIT|modernTrap|trapAtlanta|130|1325|41.2|modern|TRAP|BK
-bk-danger-kit|BK DANGER KIT|westBounce|westBounce|94|1326|49.0|modern|WEST COAST|BK
+bk-danger-kit|BK DANGER KIT|westBounce|westBounce|94|1326|41.2|modern|WEST COAST|BK
 hawthorne|HAWTHORNE|westBounce|westBounce|92|1327|43.65|modern|WEST COAST|WEST COAST
 gardena|GARDENA|westBounce|westBounce|92|1328|41.2|modern|WEST COAST|WEST COAST
 lynwood|LYNWOOD|westBounce|westBounce|92|1329|41.2|modern|WEST COAST|WEST COAST
-leimert-park|LEIMERT PARK|westBounce|westBounce|90|1330|51.91|modern|WEST COAST|WEST COAST
-baldwin-hills|BALDWIN HILLS|westBounce|westBounce|90|1331|49.0|modern|WEST COAST|WEST COAST
+leimert-park|LEIMERT PARK|westBounce|westBounce|90|1330|41.2|modern|WEST COAST|WEST COAST
+baldwin-hills|BALDWIN HILLS|westBounce|westBounce|90|1331|51.91|modern|WEST COAST|WEST COAST
 hyde-park|HYDE PARK|westBounce|westBounce|90|1332|49.0|modern|WEST COAST|WEST COAST
-antioch|ANTIOCH|westBounce|westBounce|88|1333|46.25|modern|WEST COAST|WEST COAST
-paramount|PARAMOUNT|westBounce|westBounce|86|1334|55.0|modern|WEST COAST|WEST COAST
-bellflower|BELLFLOWER|westBounce|westBounce|86|1335|41.2|modern|WEST COAST|WEST COAST
-san-pedro|SAN PEDRO|westBounce|westBounce|86|1336|41.2|modern|WEST COAST|WEST COAST
-east-palo-alto|EAST PALO ALTO|westBounce|westBounce|88|1337|43.65|modern|WEST COAST|WEST COAST
-hunters-point|HUNTERS POINT|westBounce|westBounce|88|1338|43.65|modern|WEST COAST|WEST COAST
+antioch|ANTIOCH|westBounce|westBounce|88|1333|49.0|modern|WEST COAST|WEST COAST
+paramount|PARAMOUNT|westBounce|westBounce|86|1334|49.0|modern|WEST COAST|WEST COAST
+bellflower|BELLFLOWER|westBounce|westBounce|86|1335|46.25|modern|WEST COAST|WEST COAST
+san-pedro|SAN PEDRO|westBounce|westBounce|86|1336|55.0|modern|WEST COAST|WEST COAST
+east-palo-alto|EAST PALO ALTO|westBounce|westBounce|88|1337|41.2|modern|WEST COAST|WEST COAST
+hunters-point|HUNTERS POINT|westBounce|westBounce|88|1338|41.2|modern|WEST COAST|WEST COAST
 venice-beach|VENICE BEACH|westBounce|westBounce|102|1339|43.65|modern|WEST COAST|WEST COAST
 athens-park|ATHENS PARK|westBounce|westBounce|92|1340|43.65|modern|WEST COAST|WEST COAST
-westmont|WESTMONT|westBounce|westBounce|95|1341|41.2|modern|WEST COAST|WEST COAST
-manchester-ave|MANCHESTER AVE|westBounce|westBounce|90|1342|49.0|modern|WEST COAST|WEST COAST
+westmont|WESTMONT|westBounce|westBounce|95|1341|43.65|modern|WEST COAST|WEST COAST
+manchester-ave|MANCHESTER AVE|westBounce|westBounce|90|1342|43.65|modern|WEST COAST|WEST COAST
 florence-ave|FLORENCE AVE|westBounce|westBounce|90|1343|49.0|modern|WEST COAST|WEST COAST
 huntington-park|HUNTINGTON PARK|westBounce|westBounce|92|1344|51.91|modern|WEST COAST|WEST COAST
 norwalk|NORWALK|westBounce|westBounce|90|1345|49.0|modern|WEST COAST|WEST COAST

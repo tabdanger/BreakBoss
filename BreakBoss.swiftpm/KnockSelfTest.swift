@@ -154,10 +154,15 @@ enum KnockSelfTest {
               && SoundType.guess("My Sounds/random.wav") == .fx && SoundType.guess("Pack/Open Hats/a.wav") == .open
               && SoundType.guess("Pack/HI HATS/a.wav") == .hat && SoundType.guess("Pack/FX & OTHER/a.wav") == .fx,
               "an imported sound's folder decides its section, then its name")
-        var assignments = 0
+        var assignments = 0, empties = 0
         for kit in KitLibrary.factory {
             for pad in Pad.allCases {
                 let sample = library.sample(kitID: kit.id, pad: pad.rawValue)
+                if library.isEmpty(kitID: kit.id, pad: pad.rawValue) {
+                    check(sample == nil, "\(kit.name) pad \(pad.rawValue + 1) is EMPTY and has no sound")
+                    empties += 1
+                    continue
+                }
                 check(sample != nil, "\(kit.name) pad \(pad.rawValue + 1) has bundled stock audio")
                 guard let sample else { continue }
                 assignments += 1
@@ -172,6 +177,8 @@ enum KnockSelfTest {
                 }
                 check(fits, "\(kit.name) pad \(pad.rawValue + 1) holds a sound of its kind (\(sample.displayName))")
             }
+            let played = Pad.allCases.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url }
+            check(Set(played).count == played.count, "\(kit.name) plays no sound on two pads")
             let pair = KitLibrary.factory.filter { $0.genre == kit.genre }
             let mine = Set(Pad.allCases.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url })
             for other in pair where other.id != kit.id {
@@ -179,9 +186,16 @@ enum KnockSelfTest {
                 check(mine.isDisjoint(with: theirs), "\(kit.name) and \(other.name) share no sounds")
             }
         }
-        check(assignments == KitLibrary.factory.count * Pad.count, "stock audio covers every factory pad")
+        check(assignments + empties == KitLibrary.factory.count * Pad.count, "stock audio covers every factory pad that isn't EMPTY")
+        // Tyrone, Oct 20: a kit from a loop holds only the sounds that loop plays
+        for id in ["bk-editions-kit", "bk-danger-kit"] {
+            check((0..<6).allSatisfy { library.sample(kitID: id, pad: $0) != nil } && (6..<Pad.count).allSatisfy { library.isEmpty(kitID: id, pad: $0) },
+                  "\(id): its loops' 6 sounds, pads 7-12 EMPTY")
+        }
         // Home dice draws each pad's sound from every kit's sound for that pad.
-        check(Pad.allCases.allSatisfy { library.kits(withPad: $0.rawValue).count == KitLibrary.factory.count }, "dice: every pad has a sound in every kit")
+        check(Pad.allCases.allSatisfy { pad in
+            library.kits(withPad: pad.rawValue).count == KitLibrary.factory.filter { !library.isEmpty(kitID: $0.id, pad: pad.rawValue) }.count
+        }, "dice: every pad has a sound in every kit that doesn't leave it EMPTY")
         var picked = KnockState(); picked.stockPicks = Array(repeating: nil, count: Pad.count); picked.stockPicks?[0] = "detroit-2026-a"
         check(KnockController.stockPick(picked, pad: 0) == "detroit-2026-a" && KnockController.stockPick(picked, pad: 1) == nil, "dice: per-pad picks")
         check(picked.selectingKit(KitLibrary.factory[1]).stockPicks == nil, "dice: choosing a kit brings its own sounds back")

@@ -241,23 +241,26 @@ ACOUSTIC_KITS = [
 
 # Tyrone's own Drum Kit as BK sounds (Oct 20, tools/build_bk_sounds.py): the first of each kind on its pad;
 # the kit has no 808 and one tom, so the 808 and high tom pads are picked from the library like any kit.
+EMPTY = None                                   # a pick of EMPTY: the pad plays nothing (manifest "emptyPads")
+EMPTY_REST = {pad: EMPTY for pad in range(6, 12)}   # the 808, perc, tom and cymbal pads a kick-to-open-hat loop never plays
 BK_KITS = [
     ("BK DRUM KIT", "modern", "TRAP", "BK", "trapAtlanta", 140, "modernTrap", ["trap", "rage", "dark"],
      {"bright": 0.4, "long808": 0.8},
      {0: "BK NO 1 KICK", 1: "BK NO 1 SNARE", 2: "BK NO 1 CLAP", 3: "BK NO 1 RIM", 4: "BK NO 1 HIHAT",
       5: "BK NO 1 OPEN HAT", 7: "BK NO 1 PERC", 8: "BK NO 2 PERC", 9: "BK NO 1 TOM", 11: "BK NO 1 CYMBAL"}),
     # Oct 20: the sounds of Tyrone's one-shot packs nearest the hits in his Drum Loops (tools/match_loop_sounds.py --bk),
-    # for BK Editions Vol 3; kick and clap from his Drum Kit (the packs have none)
+    # for BK Editions Vol 3; kick and clap from his Drum Kit (the packs have none). Pads its loops don't play are EMPTY
+# (None): Tyrone, Oct 20, "if a kit doesnt have 12 sounds only use the amount in that loop".
     ("BK EDITIONS KIT", "modern", "TRAP", "BK", "trapAtlanta", 130, "modernTrap", ["trap", "bounce", "dark"],
      {"bright": 0.5, "long808": 0.7},
      {0: "BK NO 7 KICK", 1: "BK NO 23 SNARE", 2: "BK NO 7 CLAP", 3: "BK NO 14 RIM", 4: "BK NO 19 HIHAT",
-      5: "BK NO 14 OPEN HAT", 11: "BK NO 8 CRASH"}),
+      5: "BK NO 14 OPEN HAT", **EMPTY_REST}),
     # Oct 20: the library and BK sounds nearest the hits in Tyrone's danger drum loops (match_loop_sounds.py, with and
     # without --bk, the nearer one per pad), for BK Editions Vol 4
     ("BK DANGER KIT", "modern", "WEST COAST", "BK", "westBounce", 94, "westBounce", ["west", "rnb", "bounce"],
      {"punch": 0.3},
      {0: "FUNK KICK", 1: "BK NO 12 SNARE", 2: "BK NO 5 CLAP", 3: "NEW LAND RIM", 4: "BK NO 20 HIHAT",
-      5: "DEMON 7 OPEN HAT"}),
+      5: "DEMON 7 OPEN HAT", **EMPTY_REST}),
 ]
 
 # West Coast (Oct 20): a kit for each of the 20 West Coast presets, from the same loop of Tyrone's West Coast
