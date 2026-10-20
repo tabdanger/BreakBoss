@@ -147,6 +147,27 @@ def slug(name):
     return "".join(c if c.isalnum() else "-" for c in name.lower().replace("&", "and")).strip("-").replace("--", "-").replace("--", "-")
 
 
+def west_coast_kits(named):
+    """kit_catalog.WEST_COAST_KITS as kit entries: each pad the loop plays takes the sound nearest it (tools/learned_westcoast.json)
+    that no West Coast kit before it has."""
+    loops = {lp["title"]: lp for lp in json.load(open(os.path.join(ROOT, "tools", "learned_westcoast.json")))["learned"]}
+    genre, style, voice, tags, likes = kit_catalog.WEST_COAST_LOOK
+    pad_of = {"k": 0, "s": 1, "c": 2, "r": 3, "h": 4, "o": 5, "cr": 11}
+    had, out = set(), []
+    for name, title, kick_from in kit_catalog.WEST_COAST_KITS:
+        sounds = dict(loops[title]["sounds"])
+        if kick_from: sounds["k"] = loops[kick_from]["sounds"]["k"]
+        if title in ("HIP HOP DRUMS",): sounds.pop("h", None)        # its "hats" are the kick's click (tools/make_patterns.py)
+        picks = {}
+        for lane, near in sounds.items():
+            if lane not in pad_of: continue
+            pick = next((n for n in near if n not in had), near[0])
+            assert named[pick]["category"] == PADS[pad_of[lane]][0], (name, lane, pick)
+            picks[pad_of[lane]] = pick; had.add(pick)
+        out.append((name, "modern", "WEST COAST", genre, style, int(round(loops[title]["bpm"])), voice, tags, likes, picks))
+    return out
+
+
 def build():
     uses = collections.Counter()
     kits, assignments = [], []
@@ -189,10 +210,10 @@ def build():
                     assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": by_file[f]["name"]})
                 kits.append((kid, name, voice, style, tempo, seed, root_hz(by_file[files[6]]), mode, family, genre))
                 seed += 1
-    # The live acoustic kits, then the BK kits, last, so every kit above keeps its sounds.
+    # The live acoustic kits, then the BK kits, then the West Coast kits, last, so every kit above keeps its sounds.
     acoustic = {s["name"]: s for s in ACOUSTIC + BK}
     for s in SOUNDS: acoustic.setdefault(s["name"], s)      # a BK kit may also pick a library sound by name
-    for name, mode, family, genre, style, tempo, voice, tags, likes, picks in kit_catalog.ACOUSTIC_KITS + kit_catalog.BK_KITS:
+    for name, mode, family, genre, style, tempo, voice, tags, likes, picks in kit_catalog.ACOUSTIC_KITS + kit_catalog.BK_KITS + west_coast_kits(acoustic):
         leans = dict(likes)
         for k, v in kit_catalog.MODE_LIKES[mode].items(): leans[k] = leans.get(k, 0) + v
         files, names = [], []
@@ -203,6 +224,7 @@ def build():
                 files.append(a["file"]); names.append(a["name"])
                 continue
             cands = [s for s in pool(pad, leans) if s["file"] not in taken[genre] and s["file"] not in files]
+            cands = cands or [s for s in pool(pad, leans) if s["file"] not in files]    # 20 West Coast kits outnumber the toms
             best = max(cands, key=lambda s: (score(s, pad, tags, leans) - 1.2 * uses[s["file"]], s["file"]))
             files.append(best["file"]); names.append(best["name"]); uses[best["file"]] += 1
             taken[genre].add(best["file"])

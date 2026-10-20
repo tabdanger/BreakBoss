@@ -8,7 +8,8 @@ import Foundation
 // built from the preset's pattern (main, variations, fills, breakdown, tops, roll).
 // Styles (rebuilt Oct 17 from the drum research, 10 presets each, written with accents, ghosts and
 // fills): Neo Soul, Dilla Time, Boom Bap, 90s Rap, 70s Soul, 80s Breaks, Rock, Trap, Alt Trap, Drill,
-// UK Drill, NY Drill, Detroit 2026, Bay Area 2026, RnB, 90s RnB and UK RnB. Then the BK Editions (Oct 20):
+// UK Drill, NY Drill, Detroit 2026, West Coast (Oct 20: 20 grooves learned from Tyrone's West Coast loops by
+// tools/learn_west_coast.py, in place of Bay Area 2026), RnB, 90s RnB and UK RnB. Then the BK Editions (Oct 20):
 // Vol 1, grooves tools/learn_from_loops.py heard in Tyrone's own drum loops (4 or 8 bars, the loop's own tempo);
 // Vol 2, his R&B loops, split from the full mix by tools/learn_fills.py; Vol 3, his Drum Loops pack (tops loops,
 // split the same way, each with the kick of the Vol 1 groove nearest its tempo); Vol 4, his danger drum loops.
@@ -41,7 +42,7 @@ struct PatternPreset: Decodable, Equatable {
         case "80s Breaks", "Rock": return .heavyBreak
         case "Trap", "Alt Trap", "Detroit 2026": return .trapAtlanta
         case "Drill", "UK Drill", "NY Drill": return .trapMemphis
-        case "Bay Area 2026": return .baySlap
+        case "West Coast": return .westBounce
         case "RnB": return .trapSoul
         case "90s RnB", "UK RnB": return .rnb
         case "BK Editions Vol 1", "BK Editions Vol 3": return bpm >= 120 ? .trapAtlanta : .boomBap
@@ -171,7 +172,8 @@ enum PatternBank {
 
 enum PatternRandomizer {
     static func style(for presetName: String) -> String {
-        PatternBank.preset(named: presetName)?.style ?? PatternBank.styles.first ?? "Trap"
+        if presetName.hasPrefix("BAY AREA ") && PatternBank.preset(named: presetName) == nil { return "West Coast" }   // retired Oct 20
+        return PatternBank.preset(named: presetName)?.style ?? PatternBank.styles.first ?? "Trap"
     }
 
     static func randomPattern(style: String, length: Int32, seed: UInt32) -> PatternData {
