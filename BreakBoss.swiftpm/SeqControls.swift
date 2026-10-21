@@ -75,6 +75,18 @@ struct SeqPress: ButtonStyle {
     }
 }
 
+/// Pressed look for a cap set flush in the plate: it darkens and sinks a touch into its hole.
+struct FlushPress: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .compositingGroup()
+            .brightness(configuration.isPressed ? -0.15 : 0)
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
+            .contentShape(Rectangle())
+    }
+}
+
 /// Pressed look for a metal plate that sits flush in a panel: it darkens but keeps its size, so no
 /// gap opens at its edges.
 struct PlatePress: ButtonStyle {
@@ -333,12 +345,58 @@ struct PowerButton: View {
     var scale: CGFloat = 1
     var color: Color = .green
     var id = "powerButton"
+    /// Face 1's (Tyrone, Oct 21): set flat into the plate, flush with the metal, not standing on it.
+    var flush = false
     let action: () -> Void
     @Environment(\.seqFinish) private var finish
 
     var body: some View {
+        if flush { flushBody } else { raisedBody }
+    }
+
+    /// A flat cap in the plate's own metal, level with it, in a hole cut through the plate like the
+    /// slider's slot: a soft dark edge round the cut, the lip catching the light below, a thin dark
+    /// seam round the cap with the lamp line in it. Pressed, it darkens and sinks a little.
+    private var flushBody: some View {
         let tone = MetalTone.of(finish)
-        Button(action: action) {
+        return Button(action: action) {
+            GeometryReader { g in
+                let d = min(g.size.width, g.size.height)
+                ZStack {
+                    // the cut in the plate
+                    Circle().fill(Color.black.opacity(0.5)).padding(-2 * scale).blur(radius: 1.5 * scale)
+                    Circle().strokeBorder(LinearGradient(colors: [.clear, tone.bright.opacity(0.75)], startPoint: .top, endPoint: .bottom), lineWidth: 1.2 * scale)
+                        .padding(-2.5 * scale)
+                    Circle().fill(Color(white: 0.03))
+                    // the lamp line in the seam
+                    Circle().stroke(on ? color : Color(white: 0.18), lineWidth: 1.6 * scale)
+                        .shadow(color: on ? color.opacity(0.8) : .clear, radius: 3 * scale)
+                        .padding(2 * scale)
+                    // the cap: flat metal, no dome, shaded only by the cut's edge above it
+                    ZStack {
+                        Circle().fill(tone.spun)
+                        if tone.pebbled { PebbleGrain(amount: 0.35).clipShape(Circle()) }
+                        Circle().fill(LinearGradient(colors: [.black.opacity(0.28), .clear, .white.opacity(0.06)], startPoint: .top, endPoint: .bottom))
+                        Circle().strokeBorder(LinearGradient(colors: [.black.opacity(0.7), tone.dark.opacity(0.6), tone.bright.opacity(0.5)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                        Image(systemName: "power").font(.system(size: d * 0.36, weight: .bold))
+                            .foregroundColor(on ? color : tone.ink.opacity(0.8))
+                            .shadow(color: on ? color.opacity(0.9) : .clear, radius: 2.5 * scale)
+                    }
+                    .padding(4 * scale)
+                }
+                .frame(width: d, height: d)
+                .position(x: g.size.width / 2, y: g.size.height / 2)
+            }
+        }
+        .buttonStyle(FlushPress())
+        .animation(.easeOut(duration: 0.15), value: on)
+        .accessibilityIdentifier(id)
+        .accessibilityLabel(on ? "Power on: tap to turn the sequencer and pads off" : "Power off: tap to turn the sequencer and pads on")
+    }
+
+    private var raisedBody: some View {
+        let tone = MetalTone.of(finish)
+        return Button(action: action) {
             GeometryReader { g in
                 let d = min(g.size.width, g.size.height)
                 ZStack {
