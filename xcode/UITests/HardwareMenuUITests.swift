@@ -73,7 +73,8 @@ final class HardwareMenuUITests: XCTestCase {
     /// the UI-test build (BREAKBOSS_UI_PROBE) opens it with a one-second hold.
     private func openTrackMenu(_ header: XCUIElement, _ label: String) -> Bool {
         print("UITREE HW \(label): header hittable=\(header.isHittable) frame=\(header.frame)")
-        header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 1.3)
+        // the header's frame here is its layout spot; the body it draws sits 33 art px to the right
+        header.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.55)).press(forDuration: 1.3)
         let ok = any("trackMenu.settings").waitForExistence(timeout: 3)
         print("UITREE HW \(label): opened = \(ok)")
         return ok

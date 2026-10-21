@@ -215,7 +215,7 @@ private struct BBHardwareTrigger: ViewModifier {
             Button(action: { tap?() }) { measured }
                 .buttonStyle(SeqPress())
                 .rightClick { open() }
-                .uiTestHold { open() }
+                .uiTestPress { open() }
                 .accessibilityAction(named: "Track menu") { open() }
         } else {
             Button(action: open) { measured }
@@ -331,6 +331,21 @@ private extension View {
 }
 
 private extension View {
+    /// UI tests only (BREAKBOSS_UI_PROBE): a one-second hold through a UIKit recognizer, the same kind
+    /// as the right-click's, standing in for it (the simulator can't right-click). A SwiftUI long press
+    /// never fired on the rack's headers (inside its scroll view), so it can't be the stand-in.
+    @ViewBuilder func uiTestPress(_ action: @escaping () -> Void) -> some View {
+        if #available(iOS 18.0, *) {
+            if ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil {
+                gesture(HoldRecognizer(action: action))
+            } else {
+                self
+            }
+        } else {
+            self
+        }
+    }
+
     /// A trackpad / mouse right-click on this view only (the track menu, Tyrone Oct 21: no two-finger
     /// tap, no hold).
     @ViewBuilder func rightClick(_ action: @escaping () -> Void) -> some View {
@@ -339,6 +354,21 @@ private extension View {
         } else {
             self
         }
+    }
+}
+
+@available(iOS 18.0, *)
+private struct HoldRecognizer: UIGestureRecognizerRepresentable {
+    let action: () -> Void
+
+    func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
+        let g = UILongPressGestureRecognizer()
+        g.minimumPressDuration = 1
+        return g
+    }
+
+    func handleUIGestureRecognizerAction(_ recognizer: UILongPressGestureRecognizer, context: Context) {
+        if recognizer.state == .began { action() }
     }
 }
 
