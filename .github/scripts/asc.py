@@ -174,6 +174,11 @@ def check():
     status, js = call("GET", f"/v1/bundleIds?filter[identifier]={BUNDLE_ID}&limit=50")
     if status == 200:
         found = any(d["attributes"].get("identifier") == BUNDLE_ID for d in js.get("data", []))
+        # Codemagic runs without an APPLE_TEAM_ID secret: the bundle ID's prefix is the Team ID.
+        seed = next((d["attributes"].get("seedId") for d in js.get("data", []) if d["attributes"].get("seedId")), None)
+        if seed and not os.environ.get("APPLE_TEAM_ID") and github_env:
+            with open(github_env, "a") as f:
+                f.write(f"APPLE_TEAM_ID={seed}\n")
         say("notice", "Bundle ID", f"{BUNDLE_ID} is {'registered' if found else 'not registered yet (the upload will register it)'}.")
     else:
         say("warning", "Bundle ID", f"Can't read identifiers (HTTP {status} {problem(js)}). Signing needs an Admin API key.")
