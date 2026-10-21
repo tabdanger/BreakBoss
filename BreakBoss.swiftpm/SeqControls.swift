@@ -327,10 +327,12 @@ struct PlatinumPlate: View {
 
 /// The Face 2 power button: a platinum knob like the slider's, with the power mark. Lit (the mark
 /// and a ring in green) while the sequencer and pads are on; dark when everything is off.
+/// Face 1 has the same button next to its slider (Tyrone, Oct 21), with its own id.
 struct PowerButton: View {
     let on: Bool
     var scale: CGFloat = 1
     var color: Color = .green
+    var id = "powerButton"
     let action: () -> Void
     @Environment(\.seqFinish) private var finish
 
@@ -365,7 +367,7 @@ struct PowerButton: View {
         }
         .buttonStyle(SeqPress())
         .animation(.easeOut(duration: 0.15), value: on)
-        .accessibilityIdentifier("powerButton")
+        .accessibilityIdentifier(id)
         .accessibilityLabel(on ? "Power on: tap to turn the sequencer and pads off" : "Power off: tap to turn the sequencer and pads on")
     }
 }
