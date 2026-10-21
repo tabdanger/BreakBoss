@@ -77,11 +77,6 @@ extension EnvironmentValues {
     }
 }
 
-private struct BBPanelSizeKey: PreferenceKey {
-    static let defaultValue: CGSize = .zero
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
-}
-
 // MARK: The layer
 
 /// The open hardware panel over the whole view: a clear catcher that closes it on a tap outside,
@@ -97,7 +92,9 @@ struct BBHardwareLayer: View {
 
     var body: some View {
         let fit = BBPanelMetrics.fit(bounds)
-        let spot = BBPanelMetrics.origin(anchor: anchor, size: size, bounds: bounds, placement: spec.placement)
+        // until the panel has measured itself, place it as if it were as tall as it may grow
+        let known = size.height > 0 ? size : CGSize(width: fit.width, height: fit.maxHeight)
+        let spot = BBPanelMetrics.origin(anchor: anchor, size: known, bounds: bounds, placement: spec.placement)
         let opensUp = spec.placement == .above && spot.y < anchor.minY
         ZStack(alignment: .topLeading) {
             // a touch anywhere else closes the menu and goes no further: it doesn't toggle a step or play a pad
@@ -111,10 +108,15 @@ struct BBHardwareLayer: View {
                 .accessibilityIdentifier("hwMenuOutside")
             BBHardwarePanel(spec: spec, maxHeight: fit.maxHeight, close: close)
                 .frame(width: fit.width)
-                .background(GeometryReader { g in Color.clear.preference(key: BBPanelSizeKey.self, value: g.size) })
-                .onPreferenceChange(BBPanelSizeKey.self) { size = $0 }
+                // measured the way the menu triggers measure their buttons (a preference here never
+                // reported on the iPad, so the panel stayed invisible)
+                .background(GeometryReader { g in
+                    Color.clear
+                        .onAppear { size = g.size }
+                        .onChange(of: g.size) { size = $0 }
+                })
                 .scaleEffect(shown || reduceMotion ? 1 : 0.97, anchor: opensUp ? .bottom : .top)
-                .opacity(shown && size != .zero ? 1 : 0)
+                .opacity(shown ? 1 : 0)
                 .offset(x: spot.x, y: spot.y)
             // Escape on a hardware keyboard
             Button("", action: close)
@@ -152,8 +154,6 @@ struct BBHardwarePanel: View {
         .background(shape.fill(Color.black)
             .shadow(color: .black.opacity(0.75), radius: 2, y: 1)
             .shadow(color: .black.opacity(0.5), radius: 20, y: 12))
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("hwMenu.\(spec.title)")
     }
 
     private func header(_ skin: SamplerSkin) -> some View {
@@ -342,7 +342,7 @@ struct BBPanelSearch: View {
                 .accessibilityIdentifier("hwMenuSearch")
             if !text.isEmpty {
                 Button { text = "" } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundColor(Color(white: 0.55)).frame(width: 36, height: 36)
+                    Image(systemName: "xmark.circle.fill").foregroundColor(Color(white: 0.55)).frame(width: 44, height: 44).contentShape(Rectangle())
                 }
                 .accessibilityLabel("Clear search")
             }
@@ -457,7 +457,6 @@ struct KitBrowserPanel: View {
                 .onAppear { scrollToCurrent(proxy) }
             }
         }
-        .accessibilityIdentifier("kitBrowser")
     }
 
     private func scrollToCurrent(_ proxy: ScrollViewProxy) {
@@ -552,7 +551,6 @@ struct PatternBrowserPanel: View {
                 }
             }
         }
-        .accessibilityIdentifier("patternBrowser")
     }
 
     private func pick(_ id: String) {
@@ -566,7 +564,7 @@ struct PatternBrowserPanel: View {
 
 // MARK: The track menu
 
-/// A track's menu (right-click, two-finger tap or a hold on its name). The order is Tyrone's:
+/// A track's menu (a right-click on its name; nothing else opens it). The order is Tyrone's:
 /// Track Settings, Open Sample Editor, Solo, Load Sample, Clear Sample, then the STEPS. There's no
 /// Remove here (Tyrone, Oct 21).
 struct TrackMenuPanel: View {
@@ -610,7 +608,6 @@ struct TrackMenuPanel: View {
             .padding(.horizontal, 1).padding(.bottom, 2)
         }
         .frame(maxHeight: max(BBPanelMetrics.rowH * 2, bodyH))
-        .accessibilityIdentifier("trackMenu")
     }
 
     private func run(_ action: @escaping () -> Void) {

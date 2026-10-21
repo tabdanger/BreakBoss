@@ -1397,16 +1397,16 @@ struct SequencerView: View {
             Text(ch.name).font(.system(size: 16 * s, weight: .medium)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? selectColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 89 * s, height: 52 * s, alignment: .leading).offset(x: 43 * s, y: 4 * s)
                 .allowsHitTesting(false)
-            // the body: tap selects the track; a right-click, a two-finger tap or a hold opens its menu
-            // beside the track (the studs on its left move it)
-            Color.clear.contentShape(Rectangle()).frame(width: 100 * s, height: 52 * s)
+            // the body: tap selects the track; a right-click opens its menu beside the track (the studs on
+            // its left move it)
+            // (the offset stays inside the menu's button, as before #61: outside it the header wasn't hittable)
+            Color.clear.contentShape(Rectangle()).frame(width: 100 * s, height: 52 * s).offset(x: 33 * s, y: 4 * s)
                 // tapping the track that's already selected plays its sound (Tyrone, Oct 18)
-                .bbTrackMenu(title: ch.name, finish: finish, extraWidth: 126 * s, tap: {
+                .bbTrackMenu(title: ch.name, finish: finish, extraWidth: 160 * s, tap: {
                     if selectedID == ch.id { controller.auditionPad(pad) }
                     selectedID = ch.id
                 }) { trackMenu(ch) }
                 .accessibilityIdentifier("trackHeader\(pad)")
-                .offset(x: 33 * s, y: 4 * s)
             // the volume knob, bigger (Tyrone, Oct 19): −12 dB … 0 dB (100%) at the top; past 100% only in the SAMPLER
             ArtKnob(value: PadSettings.knob(level: ps.level), reset: 1,
                     hud: KnobHUD(title: "\(ch.name) · VOLUME", value: KnobHUD.volume(ps.level))) { v, _ in set { $0.level = PadSettings.level(knob: v) } }.frame(width: 46 * s, height: 46 * s)
@@ -2462,14 +2462,14 @@ struct SequencerView: View {
         SeqButton("SeqArrowBack", corner: 7, scale: s) { cycleLoop(-1) }.place(A.patternBack, s)
         SeqButton("SeqArrowFwd", corner: 7, scale: s) { cycleLoop(1) }.place(A.patternForward, s)
         SeqChip(sprite: "SeqChipPattern", text: controller.state.presetName, size: 17, leading: 16, trailing: 44, scale: s)
-            .bbHardwarePlaced(A.patternChip, s, title: "Patterns", finish: finish) {
+            .bbHardwarePlaced(A.patternChip, s, title: "Patterns", finish: finish, id: "patternChip") {
                 PatternBrowserPanel(controller: controller) { loop = 0; selection = [] }
             }
         // KIT
         SeqButton("SeqArrowBack", corner: 7, scale: s) { cycleKit(-1) }.place(A.kitBack, s)
         SeqButton("SeqArrowFwd", corner: 7, scale: s) { cycleKit(1) }.place(A.kitForward, s)
         SeqChip(sprite: "SeqChipKit", text: controller.state.kitName, size: 17, leading: 16, trailing: 44, scale: s)
-            .bbHardwarePlaced(A.kitChip, s, title: "Kits", finish: finish) { KitBrowserPanel(controller: controller) }
+            .bbHardwarePlaced(A.kitChip, s, title: "Kits", finish: finish, id: "kitChip") { KitBrowserPanel(controller: controller) }
         fxKnobs(s)
     }
 
