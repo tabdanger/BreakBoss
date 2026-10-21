@@ -945,7 +945,7 @@ struct SequencerView: View {
                 .padding(.horizontal, 8 * s)
             }
             .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.027),
-                                         .init(color: .black, location: 0.966), .init(color: .clear, location: 0.98)],
+                                         .init(color: .black, location: 0.963), .init(color: .clear, location: 0.969)],
                                  startPoint: .leading, endPoint: .trailing))
             .padding(.horizontal, -8 * s)
             HStack(spacing: 5 * s) {
