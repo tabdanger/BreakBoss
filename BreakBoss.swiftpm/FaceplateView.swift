@@ -187,11 +187,12 @@ struct FaceplateView: View {
             }
             .environment(\.seqFinish, sfx)
             .place([125, 1004, 235, 1040], s)
-            // Face 2's power button on Face 1 too (Tyrone, Oct 21): right of the slider, the same job
-            // (the sequencer and pads all the way on or off), in this face's metal and light
-            PowerButton(on: controller.powerOn, scale: s * 0.62, color: FaceLight.of(sfx).glow, id: "powerButton1") { controller.togglePower() }
+            // Face 2's power button on Face 1 too (Tyrone, Oct 21): right beside the slider, set flush
+            // into the plate, the same job (the sequencer and pads all the way on or off), in this
+            // face's metal and light
+            PowerButton(on: controller.powerOn, scale: s, color: FaceLight.of(sfx).glow, id: "powerButton1", flush: true) { controller.togglePower() }
                 .environment(\.seqFinish, sfx)
-                .place([322, 1002, 362, 1042], s)
+                .place([245, 1004, 281, 1040], s)
         }
         // RECORD (left of the piano-roll button): a 1- or 2-bar count-in, then the pads record
         if let r = L.recordRect {
