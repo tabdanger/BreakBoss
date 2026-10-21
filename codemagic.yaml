@@ -134,11 +134,11 @@ workflows:
             exit 1
           fi
           mkdir -p "$SIGNING" ~/.appstoreconnect/private_keys
-          printf '%s\n' "$KEY" | tr -d '\r' > "$SIGNING/AuthKey.p8"
+          KEY="$KEY" python3 -I .github/scripts/p8key.py > "$SIGNING/AuthKey.p8" || true
           cp "$SIGNING/AuthKey.p8" "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
           chmod 600 "$SIGNING/AuthKey.p8" "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
           if ! openssl pkey -in "$SIGNING/AuthKey.p8" -noout 2>/dev/null; then
-            echo "::error title=API key::The uploaded .p8 isn't a readable private key. Upload the file again, exactly as downloaded."
+            echo "::error title=API key::The .p8 isn't a readable private key ($(KEY="$KEY" python3 -I .github/scripts/p8key.py 2>&1 >/dev/null)). Upload the AuthKey_XXXXXXXXXX.p8 file again, exactly as downloaded."
             exit 1
           fi
           {
