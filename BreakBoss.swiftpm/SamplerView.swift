@@ -210,6 +210,8 @@ struct SamplerWindow: View {
     /// The waveform's selection (parts of the sound, 0…1) and the edits UNDO can take back.
     @State private var selection: ClosedRange<Double>?
     @State private var selectFrom: Double?
+    /// When the finger went down on the waveform: only a quick tap plays it, a hold does nothing.
+    @State private var waveDown: Date?
     /// A region marker being dragged along the top of the waveform: which one, and where it is now.
     @State private var markerDrag: (Int, Float)?
     @State private var handleFrom: (Double, Double)?
@@ -314,7 +316,7 @@ struct SamplerWindow: View {
             // hit testing off, so a tap on a bare part fell through to the rack, the grid or the
             // library behind it. The whole window takes touches; the empty tap runs alongside the
             // controls' own gestures (never instead of them: an exclusive one here beat the
-            // waveform's tap, which waits to rule out a double tap) and only catches the bare spots.
+            // waveform's tap) and only catches the bare spots.
             .contentShape(RoundedRectangle(cornerRadius: 14 * s))
             .simultaneousGesture(TapGesture())
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
@@ -860,10 +862,16 @@ struct SamplerWindow: View {
                     .foregroundColor(dropping ? skin.glow : skin.wellInk.opacity(0.3))
                     .frame(width: 1334 * s, height: 182 * s).allowsHitTesting(false)
             }
-            // tap: play it; drag: select; pinch: zoom; tap twice: load another sample from Files
+            // tap: play it; drag: select; pinch: zoom; a hold does nothing (Tyrone, Oct 21: no more
+            // tap twice to load a file, so quick taps each play at once instead of waiting out a double tap)
             Color.clear.contentShape(Rectangle()).frame(width: w, height: h)
-                .onTapGesture(count: 2) { importFile() }
-                .onTapGesture { controller.auditionPad(pad) }
+                .simultaneousGesture(DragGesture(minimumDistance: 0)
+                    .onChanged { _ in if waveDown == nil { waveDown = Date() } }
+                    .onEnded { v in
+                        let quick = Date().timeIntervalSince(waveDown ?? .distantPast) < 0.4
+                        waveDown = nil
+                        if quick && hypot(v.translation.width, v.translation.height) < 6 { controller.auditionPad(pad) }
+                    })
                 .gesture(DragGesture(minimumDistance: 6)
                     .onChanged { v in
                         // a drag that starts on a marker's flag (along the top) moves that marker
