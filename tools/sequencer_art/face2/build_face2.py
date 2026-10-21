@@ -129,6 +129,28 @@ def sprite(a, r, radius=7):
     return out
 
 
+def deglow(spr, rows):
+    """Take a lit control's coloured light off a plate's edge rows (it showed where the picture's lit
+    chip or button sat next to the header): each pixel keeps its brightness in its row's own metal."""
+    for y in rows:
+        med = np.median(spr[y, :, :3], axis=0)
+        k = lum(spr[y, :, :3])[:, None] / max(1.0, float(lum(med[None])[0]))
+        spr[y, :, :3] = med[None] * k
+    return spr
+
+
+def regrain(a, src, r, sx):
+    """Take a label off a plate: the shading runs straight across from the clean metal either side,
+    and the grain on top is the same plate's own, lifted from the clean stretch starting at column sx
+    (on the cream and blue plates an invented grain shows as a smear)."""
+    x0, y0, x1, y1 = r
+    L, R = col(src, x0 - 1, y0, y1), col(src, x1, y0, y1)
+    t = ((np.arange(x0, x1) - (x0 - 1)) / (x1 - x0 + 1))[None, :, None]
+    base = L[:, None, :] * (1 - t) + R[:, None, :] * t
+    p = src[y0:y1, sx:sx + (x1 - x0), :3]
+    a[y0:y1, x0:x1, :3] = base + p - ndimage.uniform_filter1d(p, 31, axis=1, mode="nearest")
+
+
 def narrower(s, width, keep_right=48):
     """A chip made narrower by taking columns out of its flat middle (the chevron end stays whole)."""
     w = s.shape[1]
@@ -200,7 +222,33 @@ for face, src in pics.items():
     hb = src.copy()
     fill_rows(hb, [58, 229, 146, 258], 57, 146, amount=0.8)            # SOUNDS
     fill_rows(hb, [290, 231, 322, 257], 289, 322, amount=0.8)          # its chevron
-    write(f"SeqHeader_{face}", sprite(hb, hdr, 9))
+    regrain(hb, src, [58, 229, 146, 258], 160)                         # (then the plate's own grain over
+    regrain(hb, src, [290, 231, 322, 257], 250)                        # both, as for GENERATE below)
+    # square: the panel's own rounded corners are the picture's (the app clips the panel to them and
+    # the plate under it is the same picture), so no second, tighter corner shows inside them
+    write(f"SeqHeader_{face}", deglow(sprite(hb, hdr, 0), range(HEADER_H - 5, HEADER_H)))
+    # GENERATE gets its own plate from the picture's GENERATE header (Tyrone, Oct 21: SOUNDS' plate at
+    # the bottom put SOUNDS' top lip and corners where GENERATE's edge is). SeqHeaderGen_ sits at the
+    # panel's foot exactly over the picture; SeqHeaderGenMid_ is the same plate with its bottom
+    # corners squared off, for when it slides up and the GENERATE well opens under it.
+    gen = [LEFT_PANEL[0], LEFT_PANEL[3] - HEADER_H, LEFT_PANEL[2], LEFT_PANEL[3]]
+    gb = src.copy()
+    regrain(gb, src, [60, 675, 166, 699], 170)                         # GENERATE
+    regrain(gb, src, [292, 677, 319, 695], 250)                        # its chevron
+    edges = list(range(0, 5)) + list(range(HEADER_H - 5, HEADER_H))
+    write(f"SeqHeaderGen_{face}", deglow(sprite(gb, gen, 0), edges))
+    # squared corners: only the rounded rim is redrawn, as the straight bottom edge and the side edge
+    # meeting; the flat metal inside the rim stays the picture's
+    gm = gb.copy()
+    yb, ys = LEFT_PANEL[3] + 1, LEFT_PANEL[3] - 15                     # the panel's foot; a clean side row above
+    for xe, xb, xs in ((43, 80, range(LEFT_PANEL[0], 58)), (335, 280, range(320, LEFT_PANEL[2]))):
+        cx = xe + 15 if xe < 100 else xe - 15
+        for x in xs:
+            dx = abs(x - xe)
+            for y in range(ys, yb):
+                if np.hypot(x - cx, y - (yb - 15)) > 9:
+                    gm[y, x, :3] = gb[y, xb, :3] if yb - 1 - y < dx else gb[ys - 1, x, :3]
+    write(f"SeqHeaderGenMid_{face}", deglow(sprite(gm, gen, 0), edges))
 
     # the track header: name and knobs off the body, the arrow off the tab (the app draws them live)
     rb = src.copy()

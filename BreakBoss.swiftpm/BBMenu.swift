@@ -41,6 +41,8 @@ struct BBMenuSpec: Identifiable {
     var custom: AnyView? = nil
     /// The check marks' colour; nil = the usual lime (the sampler on Platinum lights them red).
     var accent: Color? = nil
+    /// KITS, PATTERNS and the track menu: a hardware panel (HardwareMenu.swift) instead of the list.
+    var hardware: BBHardwareSpec? = nil
 }
 
 final class BBMenuCenter: ObservableObject {
@@ -60,7 +62,7 @@ enum BBMenuStyle {
     static let danger = Color(red: 0.95, green: 0.33, blue: 0.28)
 }
 
-private let bbSpace = "bbMenuHost"
+let bbSpace = "bbMenuHost"
 
 /// The menu layer a trigger opens its menu in. Optional, so a menu button in a view with no
 /// .bbMenuHost() above it (a sheet, a new window) does nothing instead of crashing the app
@@ -112,6 +114,28 @@ extension View {
         bbPanel(title: title, width: width, content: content).place(r, s)
     }
 
+    /// Opens one of the hardware panels (KITS, PATTERNS) when tapped: up from the control, or down
+    /// when there's no room above.
+    func bbHardwareMenu<Content: View>(title: String, finish: String, placement: BBPanelPlacement = .above, id: String? = nil,
+                                       @ViewBuilder content: @escaping () -> Content) -> some View {
+        modifier(BBHardwareTrigger(title: title, finish: finish, placement: placement, panel: { AnyView(content()) }, id: id))
+    }
+
+    /// A hardware panel's trigger placed over a painted button (see bbMenuPlaced).
+    func bbHardwarePlaced<Content: View>(_ r: [Double], _ s: CGFloat, title: String, finish: String, id: String? = nil,
+                                         @ViewBuilder content: @escaping () -> Content) -> some View {
+        bbHardwareMenu(title: title, finish: finish, id: id, content: content).place(r, s)
+    }
+
+    /// The track menu (Tyrone, Oct 21): a trackpad / mouse right-click opens it beside the track; a
+    /// normal tap still runs `tap`. No two-finger tap and no hold (Tyrone, Oct 21 08:44). `extraWidth` stretches the anchor over the rest
+    /// of the track's row so the panel opens clear of its knobs.
+    func bbTrackMenu<Content: View>(title: String, finish: String, extraWidth: CGFloat = 0, tap: @escaping () -> Void,
+                                    @ViewBuilder content: @escaping () -> Content) -> some View {
+        modifier(BBHardwareTrigger(title: title, finish: finish, placement: .beside, extraWidth: extraWidth,
+                                   panel: { AnyView(content()) }, tap: tap))
+    }
+
     /// Makes this view open a BreakBoss panel with custom content (e.g. a slider).
     func bbPanel<Content: View>(title: String? = nil, width: CGFloat = 320, @ViewBuilder content: @escaping () -> Content) -> some View {
         modifier(BBMenuTrigger(title: title, width: width, items: { [] }, custom: { AnyView(content()) }))
@@ -153,6 +177,63 @@ private struct BBMenuTrigger: ViewModifier {
             Button(action: open) { measured }
                 .buttonStyle(MenuPress())
         }
+    }
+}
+
+/// Opens a hardware panel. As a track menu (`tap` set) it's a real button: a tap runs `tap`, a
+/// right-click opens the panel.
+private struct BBHardwareTrigger: ViewModifier {
+    @Environment(\.bbMenuCenter) private var center
+    let title: String
+    let finish: String
+    let placement: BBPanelPlacement
+    var extraWidth: CGFloat = 0
+    let panel: () -> AnyView
+    var tap: (() -> Void)? = nil
+    /// The button's id for the UI tests (KITS and PATTERNS chips).
+    var id: String? = nil
+    @State private var frame: CGRect = .zero
+
+    /// UI tests: how often this trigger opened its panel, and whether it had a menu layer to open it in.
+    @State private var opens = 0
+
+    private func open() {
+        opens += 1
+        var anchor = frame
+        anchor.size.width += extraWidth
+        center?.show(BBMenuSpec(anchor: anchor, width: BBPanelMetrics.width, title: title, items: [],
+                                hardware: BBHardwareSpec(title: title, finish: finish, placement: placement, content: panel())))
+    }
+
+    func body(content: Content) -> some View {
+        let measured = content
+            .background(GeometryReader { g in
+                Color.clear
+                    .onAppear { frame = g.frame(in: .named(bbSpace)) }
+                    .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
+            })
+            .contentShape(Rectangle())
+        if tap != nil {
+            // a tap selects / auditions; only a right-click opens the menu (Tyrone, Oct 21). UI tests can't
+            // right-click on the iPad simulator, so they get the one-second hold (BREAKBOSS_UI_PROBE only).
+            Button(action: { tap?() }) { measured }
+                .buttonStyle(SeqPress())
+                .rightClick { open() }
+                .uiTestPress { open() }
+                .accessibilityAction(named: "Track menu") { open() }
+                .accessibilityValue(SamplerWindow.probing ? "menu opens \(opens) layer \(center == nil ? "none" : "ok")" : "")
+        } else {
+            Button(action: open) { measured }
+                .buttonStyle(MenuPress())
+                .modifier(TriggerID(id: id))
+        }
+    }
+}
+
+private struct TriggerID: ViewModifier {
+    let id: String?
+    func body(content: Content) -> some View {
+        if let id { content.accessibilityIdentifier(id) } else { content }
     }
 }
 
@@ -254,6 +335,34 @@ private extension View {
     }
 }
 
+private extension View {
+    /// UI tests only (BREAKBOSS_UI_PROBE): a one-second hold standing in for the right-click (the
+    /// simulator can't right-click). It has to be high priority: a simultaneous or normal-priority hold
+    /// never reached the rack's header buttons.
+    @ViewBuilder func uiTestPress(_ action: @escaping () -> Void) -> some View {
+        if #available(iOS 18.0, *) {
+            if ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil {
+                // high priority: the button's own press otherwise keeps a one-finger hold to itself
+                highPriorityGesture(LongPressGesture(minimumDuration: 1).onEnded { _ in action() })
+            } else {
+                self
+            }
+        } else {
+            self
+        }
+    }
+
+    /// A trackpad / mouse right-click on this view only (the track menu, Tyrone Oct 21: no two-finger
+    /// tap, no hold).
+    @ViewBuilder func rightClick(_ action: @escaping () -> Void) -> some View {
+        if #available(iOS 18.0, *) {
+            gesture(TapRecognizer(secondaryClick: true, action: action))
+        } else {
+            self
+        }
+    }
+}
+
 @available(iOS 18.0, *)
 private struct TapRecognizer: UIGestureRecognizerRepresentable {
     var touches = 1
@@ -280,7 +389,13 @@ private struct BBMenuHost: ViewModifier {
             .environment(\.bbMenuCenter, center)
             .overlay(
                 GeometryReader { geo in
-                    if let spec = center.open {
+                    if let spec = center.open, let hardware = spec.hardware {
+                        // sized and placed by the view it's in (the app or the plug-in), never the screen
+                        BBHardwareLayer(spec: hardware, anchor: spec.anchor, bounds: geo.size, close: { center.close() })
+                            .environment(\.bbMenuCenter, center)
+                            .id(spec.id)
+                            .transition(.opacity)
+                    } else if let spec = center.open {
                         ZStack(alignment: .topLeading) {
                             Color.black.opacity(0.25)
                                 .contentShape(Rectangle())

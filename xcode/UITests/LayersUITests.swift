@@ -39,9 +39,9 @@ final class LayersUITests: XCTestCase {
         XCTAssertTrue(header.waitForExistence(timeout: 20), "the rack shows its first track")
         sleep(1)
         header.twoFingerTap()
-        if !menuRow("Open sample editor").waitForExistence(timeout: 2) { header.press(forDuration: 1.2) }
-        let open = menuRow("Open sample editor")
-        XCTAssertTrue(open.waitForExistence(timeout: 3), "the track menu has Open sample editor")
+        if !menuRow("Open Sample Editor").waitForExistence(timeout: 2) { header.press(forDuration: 1.2) }
+        let open = menuRow("Open Sample Editor")
+        XCTAssertTrue(open.waitForExistence(timeout: 3), "the track menu has Open Sample Editor")
         open.tap()
         let window = any("samplerWindow")
         XCTAssertTrue(window.waitForExistence(timeout: 5), "the sampler opens")
@@ -72,7 +72,7 @@ final class LayersUITests: XCTestCase {
         sleep(4)
         print("UITREE CPU sampler open, resting (whole app, % of one core): \(cpu())")
         let wave = any("samplerWaveform").coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        // far enough apart that no two make a double tap (that opens Files)
+        // spaced like a player's taps (each one plays)
         for _ in 0..<6 { wave.tap(); usleep(600_000) }
         print("UITREE CPU sampler playing (whole app incl. the test's taps; frame = the animation's main-thread time per frame): \(cpu())")
         XCTAssertEqual(app.state, .runningForeground, "the app is still running")

@@ -2573,6 +2573,68 @@ enum KnockSelfTest {
               "rack: identical sounds never share their MIDI events")
     }
 
+    /// The track menu's STEPS (Tyrone, Oct 21): fills on steps 1, 1+N, 1+2N... across the whole pattern,
+    /// hits already on those steps keep their velocity and offset, other tracks untouched.
+    static func checkTrackMenuFills(_ p: PatternData, bar: Int32, step: Int32) {
+        let hat = Pad.hat.rawValue
+        var long = p
+        long.lengthTicks = bar * 4
+        // a soft, late hit on step 5 (stays for every 1, 2 and 4) and one on step 2 (only every 1 keeps it)
+        long.events.append(GrooveEvent(tick: step * 4, pad: Int8(hat), velocity: 0.31, offset: 3))
+        long.events.append(GrooveEvent(tick: step, pad: Int8(hat), velocity: 0.44))
+        long.sort()
+        let others = long.events.filter { Int($0.pad) != hat }
+        let total = Int(long.lengthTicks / step)
+        for n in [1, 2, 4, 8] {
+            let f = PatternEdit.fillKeeping(long, pad: hat, every: step * Int32(n), cell: step, velocity: 0.78)
+            let ticks = f.events.filter { Int($0.pad) == hat }.map(\.tick)
+            check(ticks == stride(from: 0, to: total, by: n).map { Int32($0) * step },
+                  "track menu: Fill Every \(n) puts hits on steps 1, \(1 + n), \(1 + 2 * n)... through all \(total) steps")
+            check(f.events.filter { Int($0.pad) != hat } == others, "track menu: Fill Every \(n) leaves the other tracks alone")
+            let kept = f.events.first { Int($0.pad) == hat && $0.tick == step * 4 }
+            if n <= 4 { check(kept?.velocity == 0.31 && kept?.offset == 3, "track menu: Fill Every \(n) keeps an existing hit's velocity and offset") }
+            check(f.events.first { Int($0.pad) == hat && $0.tick == step * 8 }.map { n > 8 || $0.velocity == 0.78 } ?? (n > 8),
+                  "track menu: Fill Every \(n) draws new hits at the draw velocity")
+        }
+        check(!PatternEdit.fillKeeping(long, pad: hat, every: step * 2, cell: step, velocity: 0.78).events.contains { Int($0.pad) == hat && $0.tick == step },
+              "track menu: Fill Every 2 drops the track's hits between its steps")
+        let cleared = PatternEdit.clearChannel(long, pad: hat)
+        check(!cleared.events.contains { Int($0.pad) == hat } && cleared.events.filter { Int($0.pad) != hat } == others,
+              "track menu: Clear Steps empties only that track")
+    }
+
+    /// The hardware menus stay inside the view they open in, at every edge and at small plug-in sizes.
+    static func checkHardwarePanelPlacement() {
+        let sizes = [CGSize(width: 1366, height: 1024), CGSize(width: 1180, height: 820), CGSize(width: 700, height: 420), CGSize(width: 420, height: 300)]
+        var inside = true, roomy = true
+        for b in sizes {
+            let fit = BBPanelMetrics.fit(b)
+            let panel = CGSize(width: fit.width, height: fit.maxHeight)
+            roomy = roomy && fit.maxHeight <= b.height * BBPanelMetrics.heightShare + 0.5 || b.height < 300
+            let anchors = [CGRect(x: 0, y: 0, width: 80, height: 40), CGRect(x: b.width - 80, y: 0, width: 80, height: 40),
+                           CGRect(x: 0, y: b.height - 40, width: 80, height: 40), CGRect(x: b.width - 80, y: b.height - 40, width: 80, height: 40),
+                           CGRect(x: b.width / 2 - 40, y: b.height / 2 - 20, width: 80, height: 40)]
+            for a in anchors {
+                for placement in [BBPanelPlacement.above, .beside] {
+                    let o = BBPanelMetrics.origin(anchor: a, size: panel, bounds: b, placement: placement)
+                    let r = CGRect(origin: o, size: panel)
+                    if r.minX < BBPanelMetrics.inset - 0.5 || r.minY < BBPanelMetrics.inset - 0.5
+                        || r.maxX > b.width - BBPanelMetrics.inset + 0.5 || r.maxY > b.height - BBPanelMetrics.inset + 0.5 { inside = false }
+                }
+            }
+        }
+        check(inside, "menus: KITS, PATTERNS and the track menu stay inside the app / plug-in view at every edge and size")
+        check(roomy, "menus: a panel takes at most about 68% of the view's height")
+        // a bottom-rail control with room above: the panel opens upward, clear of the control
+        let rail = CGRect(x: 500, y: 900, width: 200, height: 40)
+        let up = BBPanelMetrics.origin(anchor: rail, size: CGSize(width: 340, height: 600), bounds: CGSize(width: 1366, height: 1024), placement: .above)
+        check(up.y + 600 <= rail.minY, "menus: KITS and PATTERNS open upward from the bottom rail")
+        // a track header with room to its right: the panel sits beside it
+        let header = CGRect(x: 300, y: 400, width: 260, height: 52)
+        let side = BBPanelMetrics.origin(anchor: header, size: CGSize(width: 340, height: 560), bounds: CGSize(width: 1366, height: 1024), placement: .beside)
+        check(side.x >= header.maxX, "menus: the track menu opens beside its track")
+    }
+
     static func checkDrumRoll() {
         let bar = PatternEdit.barTicks, step = PatternData.stepTicks
         // Note operations.
@@ -2616,6 +2678,8 @@ enum KnockSelfTest {
         check(barFill.events.filter { Int($0.pad) == Pad.bass808.rawValue }.map { $0.tick } == [0, bar]
               && barFill.events.allSatisfy { Int($0.pad) != Pad.bass808.rawValue || $0.length > step }, "drum roll: fill every bar (808 holds)")
         check(!PatternEdit.clearChannel(filled, pad: Pad.hat.rawValue).events.contains { Int($0.pad) == Pad.hat.rawValue }, "drum roll: clear channel")
+        checkTrackMenuFills(p, bar: bar, step: step)
+        checkHardwarePanelPlacement()
         // Note repeat: hold a step and pull down.
         let hatHit = GrooveEvent(tick: step * 2, pad: Int8(Pad.hat.rawValue), velocity: 0.6, semis: 0)
         let one = PatternData(name: "N", lengthTicks: bar, events: [hatHit, GrooveEvent(tick: step * 3, pad: Int8(Pad.hat.rawValue), velocity: 0.7)])

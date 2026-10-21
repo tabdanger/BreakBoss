@@ -843,14 +843,15 @@ struct SequencerView: View {
         return list
     }
 
-    /// A section header: the render's header plate (SeqHeader_<face>, the face's own metal) the full
-    /// width of the panel, flush against the well under it. Tap it to slide the panels over.
+    /// A section header: the render's own header plate (SeqHeader_<face> for SOUNDS, SeqHeaderGen_<face>
+    /// for GENERATE, cut from the picture where each one sits) the full width of the panel, flush
+    /// against the well under it. Tap it to slide the panels over.
     private func sectionHeader(_ title: String, open: Bool, _ s: CGFloat) -> some View {
         Button {
             withAnimation(.easeInOut(duration: 0.3)) { section = section == .sounds ? .generate : .sounds }
         } label: {
             ZStack {
-                Image("SeqHeader_\(finish)").resizable()
+                Image(headerPlate(title)).resizable()
                 HStack {
                     Text(title).font(.system(size: 19 * s, weight: .semibold)).foregroundColor(inkColor)
                     Spacer()
@@ -865,8 +866,16 @@ struct SequencerView: View {
         .accessibilityIdentifier(title == "SOUNDS" ? "soundsHeader" : "generateHeader")
     }
 
+    /// GENERATE at the panel's foot is the picture's own plate there (rounded bottom corners); slid up
+    /// over the open GENERATE well it wears the same plate with square bottom corners.
+    private func headerPlate(_ title: String) -> String {
+        title == "SOUNDS" ? "SeqHeader_\(finish)" : section == .generate ? "SeqHeaderGenMid_\(finish)" : "SeqHeaderGen_\(finish)"
+    }
+
     /// The left panel: SOUNDS and GENERATE, each a platinum plate over its dark well. Opening one
     /// slides the GENERATE plate up or down like a piece of metal, closing the other well under it.
+    /// Its edges are the picture's: the clip follows the picture's own corner (the plate under it is
+    /// the same picture), and no outline is drawn on top (Tyrone, Oct 21: flush, no second edge).
     @ViewBuilder private func leftPanel(_ s: CGFloat) -> some View {
         let r = A.leftPanel
         let headerH = A.headerH * s
@@ -877,8 +886,7 @@ struct SequencerView: View {
             sectionHeader("GENERATE", open: section == .generate, s)
             well(generatePanel(s), height: wellH, open: section == .generate, s)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 9 * s))
-        .overlay(RoundedRectangle(cornerRadius: 9 * s).strokeBorder(Color.black.opacity(0.55), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 14 * s))
         .place(r, s)
     }
 
@@ -953,12 +961,20 @@ struct SequencerView: View {
     /// The sound library (SOUNDS open): type chips, search, the list, import. Drag a sound to the rack.
     private func soundsPanel(_ s: CGFloat) -> some View {
         VStack(spacing: 7 * s) {
+            // the chips run the well's full width and sink into its edges as they scroll, instead of
+            // being cut off short of the panel's edge (Tyrone, Oct 21); at rest they sit where they did
+            // and the next chip's sliver past RIMS is under the right edge, not showing
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4 * s) {
                     typeChip("ALL", on: libraryType == nil, s) { libraryType = nil }
                     ForEach(SoundType.allCases) { t in typeChip(t.rawValue, on: libraryType == t, s) { libraryType = t } }
                 }
+                .padding(.horizontal, 8 * s)
             }
+            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.027),
+                                         .init(color: .black, location: 0.963), .init(color: .clear, location: 0.969)],
+                                 startPoint: .leading, endPoint: .trailing))
+            .padding(.horizontal, -8 * s)
             HStack(spacing: 5 * s) {
                 Image(systemName: "magnifyingglass").font(.system(size: 16 * s)).foregroundColor(Color(white: 0.78))
                 TextField("Search", text: $search).font(.system(size: 16 * s)).foregroundColor(.white).autocorrectionDisabled().focused($searchFocused)
@@ -1408,13 +1424,15 @@ struct SequencerView: View {
             Text(ch.name).font(.system(size: 16 * s, weight: .medium)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? selectColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 89 * s, height: 52 * s, alignment: .leading).offset(x: 43 * s, y: 4 * s)
                 .allowsHitTesting(false)
-            // the body: tap selects the track, a two-finger tap opens its menu (the studs on its left move it)
+            // the body: tap selects the track; a right-click opens its menu beside the track (the studs on
+            // its left move it)
+            // (the offset stays inside the menu's button, as before #61: outside it the header wasn't hittable)
             Color.clear.contentShape(Rectangle()).frame(width: 100 * s, height: 52 * s).offset(x: 33 * s, y: 4 * s)
                 // tapping the track that's already selected plays its sound (Tyrone, Oct 18)
-                .bbTwoFingerMenu(title: ch.name, width: 270, tap: {
+                .bbTrackMenu(title: ch.name, finish: finish, extraWidth: 160 * s, tap: {
                     if selectedID == ch.id { controller.auditionPad(pad) }
                     selectedID = ch.id
-                }) { channelMenu(ch) }
+                }) { trackMenu(ch) }
                 .accessibilityIdentifier("trackHeader\(pad)")
             // the volume knob, bigger (Tyrone, Oct 19): −12 dB … 0 dB (100%) at the top; past 100% only in the SAMPLER
             ArtKnob(value: PadSettings.knob(level: ps.level), reset: 1,
@@ -1743,76 +1761,24 @@ struct SequencerView: View {
         }
     }
 
-    /// The menu a two-finger tap (or right-click) opens on a channel. Tyrone, Oct 18: the track's own
-    /// things first, top to bottom (Track settings, Open sample editor, Solo, Load sample, Clear sample,
-    /// Remove), then its steps and its feel.
-    private func channelMenu(_ ch: WorkspaceChannel) -> [BBMenuItem] {
+    /// The track's menu (Tyrone's mockup, Oct 21): Track Settings, Open Sample Editor, Solo, Load
+    /// Sample, Clear Sample, then the STEPS fills and Clear Steps. Each fill or clear is one undo.
+    private func trackMenu(_ ch: WorkspaceChannel) -> TrackMenuPanel {
         let pad = ch.pad
-        let loaded = controller.state.pads[pad].sampleFile != nil
-        var items: [BBMenuItem] = [
-            .item("Track settings…", detail: "Tune, decay, filter, MIDI", icon: "slider.horizontal.3") { selectedID = ch.id; trackSettingsID = ch.id },
-            .item("Open sample editor", icon: "waveform") { openSampler(pad) },
-            .item(controller.soloPads[pad] ? "Solo off" : "Solo", icon: "s.square", checked: controller.soloPads[pad]) { controller.toggleSolo(pad) },
-            .item("Load sample…", icon: "folder") { importPad = pad },
-            .item("Clear sample", detail: loaded ? "Back to the kit's sound" : "Playing the kit's sound", icon: "xmark",
-                  destructive: loaded, enabled: loaded) {
-                // only the loaded sample goes: the track keeps its level, pan and sampler settings
+        return TrackMenuPanel(
+            controller: controller, pad: pad,
+            settings: { selectedID = ch.id; trackSettingsID = ch.id },
+            openEditor: { openSampler(pad) },
+            loadSample: { importPad = pad },
+            clearSample: {
+                // only the loaded sample goes: the track keeps its notes, level, pan and sampler settings
                 var ps = controller.state.pads[pad]; ps.sampleFile = nil; controller.setPadSettings(pad, ps)
             },
-            .item("Remove", detail: "Takes this track out of the rack", icon: "trash", destructive: true) {
-                if expandedID == ch.id { expandedID = nil }
-                if openID == ch.id { openID = nil }
-                if selectedID == ch.id { selectedID = nil }
-                if samplerPad == pad { samplerPad = nil }
-                controller.removeRackChannel(ch.id)
-            }
-        ]
-        let step = PatternData.stepTicks
-        let fills: [(String, Int32)] = [("Fill every step", step), ("Fill every 2 steps", step * 2), ("Fill every 4 steps (beat)", step * 4),
-                                        ("Fill every 8 steps (1/2 bar)", step * 8), ("Fill every bar", PatternEdit.barTicks),
-                                        ("Fill every 1/2 step (1/32)", step / 2)]
-        items.append(.header("Steps"))
-        items += fills.map { f in
-            BBMenuItem.item(f.0, icon: "square.grid.4x3.fill") { commit(PatternEdit.fill(pattern, pad: pad, every: f.1, velocity: lastVelocity)) }
-        }
-        items.append(BBMenuItem.item("Randomize its steps", icon: "dice") { remember(); controller.randomizeChannel(loop: loop, pad: pad) })
-        items.append(BBMenuItem.item("Clear its steps", icon: "xmark.square", destructive: true) { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
-        items += feelItems(pad)
-        return items
-    }
-
-    // MARK: Feel: a track's own swing, push / pull and chance
-
-    private func trackSwingLabel(_ pad: Int) -> String {
-        let v = pattern.swing(pad: pad)
-        return v < 0 ? "SWING knob" : "\(Int((50 + v * 22).rounded()))%"
-    }
-
-    /// Ticks as the ear hears them at this tempo.
-    private func ticksLabel(_ t: Float) -> String {
-        guard t != 0 else { return "On the grid" }
-        let ms = Int((abs(t) * 60_000 / Float(max(controller.state.bpm, 1)) / Float(PatternData.ppq)).rounded())
-        return "\(Int(abs(t))) ticks \(t < 0 ? "early" : "late") (≈ \(ms) ms)"
-    }
-
-    private func feelItems(_ pad: Int) -> [BBMenuItem] {
-        let own = pattern.swing(pad: pad), shift = pattern.shift(pad: pad)
-        func edit(_ change: (inout PatternData) -> Void) { var p = pattern; change(&p); commit(p) }
-        let swings = [BBMenuItem.item("Follow the SWING knob", checked: own < 0) { edit { $0.setSwing(pad: pad, -1) } }]
-            + [50, 54, 56, 58, 60, 62, 64, 66, 70].map { pct -> BBMenuItem in
-                let v = Float(pct - 50) / 22
-                return BBMenuItem.item(pct == 50 ? "50% (straight)" : "\(pct)%", checked: own >= 0 && abs(own - v) < 0.01) { edit { $0.setSwing(pad: pad, v) } }
-            }
-        let shifts = [-12, -8, -6, -4, -2, 0, 2, 4, 6, 8, 12].map { t in
-            BBMenuItem.item(ticksLabel(Float(t)), checked: shift == Float(t)) { edit { $0.setShift(pad: pad, Float(t)) } }
-        }
-        let chances = [100, 90, 75, 50, 25].map { c in
-            BBMenuItem.item("\(c)%") { commit(PatternEdit.setChance(pattern, [], pad: pad, Float(c) / 100)) }
-        }
-        return [.header("Feel"),
-                .submenu("Swing: \(trackSwingLabel(pad))", icon: "metronome", swings),
-                .submenu("Push / pull: \(ticksLabel(shift).lowercased())", icon: "arrow.left.and.right", shifts),
-                .submenu("Chance for all its notes", icon: "dice", chances)]
+            fill: { n in
+                // steps 1, 1+n, 1+2n... across the whole pattern; hits already on those steps keep their feel
+                commit(PatternEdit.fillKeeping(pattern, pad: pad, every: PatternData.stepTicks * Int32(n), cell: PatternData.stepTicks, velocity: lastVelocity))
+            },
+            clearSteps: { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
     }
 
     // MARK: MIDI out
@@ -2569,12 +2535,14 @@ struct SequencerView: View {
         SeqButton("SeqArrowBack", corner: 7, scale: s) { cycleLoop(-1) }.place(A.patternBack, s)
         SeqButton("SeqArrowFwd", corner: 7, scale: s) { cycleLoop(1) }.place(A.patternForward, s)
         SeqChip(sprite: "SeqChipPattern", text: controller.state.presetName, size: 17, leading: 16, trailing: 44, scale: s)
-            .bbMenuPlaced(A.patternChip, s, title: "Presets", width: 340) { presetItems() }
+            .bbHardwarePlaced(A.patternChip, s, title: "Patterns", finish: finish, id: "patternChip") {
+                PatternBrowserPanel(controller: controller) { loop = 0; selection = [] }
+            }
         // KIT
         SeqButton("SeqArrowBack", corner: 7, scale: s) { cycleKit(-1) }.place(A.kitBack, s)
         SeqButton("SeqArrowFwd", corner: 7, scale: s) { cycleKit(1) }.place(A.kitForward, s)
         SeqChip(sprite: "SeqChipKit", text: controller.state.kitName, size: 17, leading: 16, trailing: 44, scale: s)
-            .bbMenuPlaced(A.kitChip, s, title: "Kits · drum sounds", width: 320) { kitItems() }
+            .bbHardwarePlaced(A.kitChip, s, title: "Kits", finish: finish, id: "kitChip") { KitBrowserPanel(controller: controller) }
         fxKnobs(s)
     }
 
@@ -2637,47 +2605,6 @@ struct SequencerView: View {
             .accessibilityIdentifier("fx_\(p.id)")
         }
     }
-
-    /// PRESETS: every preset pattern by style, and your own.
-    private func presetItems() -> [BBMenuItem] {
-        // one vertical list: every style's patterns under its name
-        var items: [BBMenuItem] = []
-        for style in PatternBank.styles {
-            items.append(.header(style))
-            for p in PatternBank.presets(in: style) {
-                items.append(BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
-                                             checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p); loop = 0; selection = [] })
-            }
-        }
-        if !controller.userPresets.isEmpty {
-            items.append(.header("My presets"))
-            for name in controller.userPresets {
-                items.append(BBMenuItem.item(name, checked: controller.state.presetName == name) { controller.loadUserPreset(name); selection = [] })
-            }
-        }
-        return items
-    }
-
-    private func kitItems() -> [BBMenuItem] {
-        // one vertical list: each genre's kits under its name (MODERN, then VINTAGE, then TEXTURE), your kits
-        var items: [BBMenuItem] = []
-        for mode in SoundMode.allCases {
-            for g in KitLibrary.genreGroups(for: mode) {
-                items.append(.header("\(g.genre) · \(mode.title)"))
-                for def in g.kits {
-                    items.append(BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) { controller.selectKit(def) })
-                }
-            }
-        }
-        if !controller.userKits.isEmpty {
-            items.append(.header("My kits"))
-            for name in controller.userKits {
-                items.append(BBMenuItem.item(name, checked: controller.state.userKit == name) { controller.selectUserKit(name) })
-            }
-        }
-        return items
-    }
-
 
     private func cycleKit(_ step: Int) {
         let kits = orderedKits
