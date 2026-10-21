@@ -187,6 +187,12 @@ struct SequencerView: View {
     @State private var noteClipboard: [GrooveEvent] = []
     /// When the finger went down on the grid (draw mode: a quick drag selects, a held one paints).
     @State private var touchDown = Date.distantPast
+    /// Where the finger is while it draws a note in the piano roll (Tyrone, Oct 21): a shadow of the
+    /// note follows it until the finger lifts.
+    @State private var trace: Trace?
+    struct Trace { var from: CGPoint; var at: CGPoint }
+    /// The library's Search field has the keyboard (its Delete key edits the text, not the notes).
+    @FocusState private var searchFocused: Bool
     /// One UNDO step: the pattern and the rack's track order as they were (a track move undoes too).
     struct UndoStep { var pattern: PatternData; var rack: [Int] }
     @State private var undoStack: [UndoStep] = []
@@ -518,6 +524,7 @@ struct SequencerView: View {
         .background(Color.black.ignoresSafeArea())
         .preferredColorScheme(.dark)
         .background(spaceBar)
+        .background(deleteKey)
         .onReceive(ticker) { now in
             // the clock only redraws PLAY, the count-in and the tempo, while something plays (and once
             // more as it stops): redrawing all of Face 2 ten times a second made the playhead, the rack
@@ -599,6 +606,26 @@ struct SequencerView: View {
                 .keyboardShortcut(.space, modifiers: [])
                 .opacity(0).frame(width: 0, height: 0).accessibilityHidden(true)
         }
+    }
+
+    /// Delete / Backspace on a hardware keyboard deletes the selected notes (Tyrone, Oct 21).
+    @ViewBuilder private var deleteKey: some View {
+        let off = selection.isEmpty || searchFocused
+        ZStack {
+            Button("") { deleteSelection() }.keyboardShortcut(.delete, modifiers: [])
+            Button("") { deleteSelection() }.keyboardShortcut(.deleteForward, modifiers: [])
+        }
+        .disabled(off)
+        .opacity(0).frame(width: 0, height: 0).accessibilityHidden(true)
+    }
+
+    /// The selected notes go, as one UNDO step.
+    private func deleteSelection() {
+        let keys = selection
+        guard !keys.isEmpty, pattern.events.contains(where: { keys.contains(NoteKey($0)) }) else { selection = []; return }
+        commit(PatternEdit.remove(pattern, keys))
+        selection = []
+        octaveNote = nil
     }
 
     /// An invisible press area over a painted button.
@@ -950,7 +977,7 @@ struct SequencerView: View {
             .padding(.horizontal, -8 * s)
             HStack(spacing: 5 * s) {
                 Image(systemName: "magnifyingglass").font(.system(size: 16 * s)).foregroundColor(Color(white: 0.78))
-                TextField("Search", text: $search).font(.system(size: 16 * s)).foregroundColor(.white).autocorrectionDisabled()
+                TextField("Search", text: $search).font(.system(size: 16 * s)).foregroundColor(.white).autocorrectionDisabled().focused($searchFocused)
                 if !search.isEmpty { Button { search = "" } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 14 * s)).foregroundColor(S.dim) } }
             }
             .padding(.horizontal, 10 * s).frame(height: 33 * s).background(RoundedRectangle(cornerRadius: 6 * s).fill(Color(white: 0.11)))
@@ -1819,7 +1846,7 @@ struct SequencerView: View {
 
     /// Everything the grid's drawing reads. The grid only redraws when this changes, so the clock
     /// ticking while a pattern plays (and anything else on Face 2) leaves it alone.
-    private func gridKey(_ L: [RowLayout]) -> Int {
+    private func gridKey(_ L: [RowLayout], w: CGFloat) -> Int {
         var h = Hasher()
         h.combine(finish)     // the grid's lit colours follow the finish
         h.combine(origin); h.combine(pageTicks); h.combine(cellTicks); h.combine(snapTicks); h.combine(pattern.lengthTicks)
@@ -1840,11 +1867,12 @@ struct SequencerView: View {
         case let .noteRepeat(pad, cellStart, _, _, count, _): h.combine(2); h.combine(pad); h.combine(cellStart); h.combine(count)
         default: h.combine(0)
         }
+        if let r = traceRect(L, w: w) { h.combine(3); h.combine(r.minX); h.combine(r.minY); h.combine(r.width) }
         return h.finalize()
     }
 
     private func grid(_ L: [RowLayout], width w: CGFloat, rowH: CGFloat) -> some View {
-        EquatableCanvas(key: gridKey(L)) { ctx, size in
+        EquatableCanvas(key: gridKey(L, w: w)) { ctx, size in
             ctx.clip(to: Path(CGRect(x: 0, y: -20, width: size.width, height: size.height + 40)))
             let cw = cellWidth(size.width)
             // one more cell than fits: while sliding, the first and last are partly on screen
@@ -1968,6 +1996,15 @@ struct SequencerView: View {
                                style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
                 }
             }
+            // the note being drawn: its shadow under the finger, lit at the edge in the mode's colour
+            if let r = traceRect(L, w: size.width) {
+                ctx.drawLayer { g in
+                    g.addFilter(.shadow(color: Color.black.opacity(0.8), radius: 5, y: 2))
+                    g.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.45)))
+                }
+                ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(glowColor.opacity(0.22)))
+                ctx.stroke(Path(roundedRect: r.insetBy(dx: 0.5, dy: 0.5), cornerRadius: 3), with: .color(glowColor.opacity(0.85)), lineWidth: 1)
+            }
             if case let .marquee(a, b) = drag {
                 let rect = CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(a.x - b.x), height: abs(a.y - b.y))
                 ctx.fill(Path(rect), with: .color(S.orange.opacity(0.12)))
@@ -2021,7 +2058,7 @@ struct SequencerView: View {
     }
 
     /// Right-click (or two-finger tap) on the grid (Tyrone, Oct 19): Select all, Copy, Paste, Octave up,
-    /// Octave down. On a note that isn't selected, the note becomes the selection; an octave move leaves
+    /// Octave down, Delete (Oct 21). On a note that isn't selected, the note becomes the selection; an octave move leaves
     /// the note's ⊕ / ⊖ on it for more moves. Paste goes in at the clicked step, on the clicked track
     /// when the copied notes are all one track's.
     private func openGridMenu(at p: CGPoint, hit: GrooveEvent?, w: CGFloat, L: [RowLayout]) {
@@ -2057,6 +2094,7 @@ struct SequencerView: View {
             },
             .item("Octave up", icon: "arrow.up", enabled: canMove(12)) { octave(1) },
             .item("Octave down", icon: "arrow.down", enabled: canMove(-12)) { octave(-1) },
+            .item("Delete", icon: "trash", enabled: !keys.isEmpty) { deleteSelection() },
         ]
         gridMenuOpener.show(at: p, title: l.channel.name, width: 240, items: items)
     }
@@ -2202,6 +2240,12 @@ struct SequencerView: View {
     }
 
     private func gridChanged(_ g: DragGesture.Value, w: CGFloat, L: [RowLayout]) {
+        defer {
+            switch drag {
+            case .paint, .long808: trace = Trace(from: g.startLocation, at: g.location)
+            default: if trace != nil { trace = nil }
+            }
+        }
         if case .none = drag {
             // the note's ⊕ / ⊖ are drawn over the grid; the grid's own touch takes them
             if let key = octaveNote, let up = octaveGlyphHit(g.startLocation, key, w: w, L: L) {
@@ -2374,18 +2418,47 @@ struct SequencerView: View {
         selectedID = channels.first { $0.pad == pad }?.id ?? selectedID
     }
 
+    /// The 808 note a held draw makes: from where the finger went down to the step under it now, at the
+    /// pitch under it in the piano roll (its trace shows the same note). A tap gives the last length.
+    private func long808Note(start: Int32, semis sem: Float, from a: CGPoint, at p: CGPoint, w: CGFloat, L: [RowLayout]) -> (Int32, Float) {
+        let end = snapped(tickAt(p.x, w))
+        let length = max(placeTicks, (end > start ? end - start : 0) + placeTicks)
+        let len = abs(p.x - a.x) < 6 ? last808Length : length
+        let pad = Pad.bass808.rawValue
+        guard let l = layout(for: pad, L), l.pitch != nil, p.y >= l.pitchTop, p.y < l.y + l.height else { return (len, sem) }
+        return (len, controller.scaleSnapped(semis(at: p.y, in: l), pad: pad))
+    }
+
+    /// Where the shadow of the note being drawn sits: in the piano roll, the step and key under the
+    /// finger; on the 808, the whole note from where the finger went down.
+    private func traceRect(_ L: [RowLayout], w: CGFloat) -> CGRect? {
+        guard let tr = trace else { return nil }
+        let e: GrooveEvent
+        switch drag {
+        case .paint(let pad, _, _):
+            guard let l = layout(for: pad, L), l.pitch != nil, tr.at.y >= l.pitchTop, tr.at.y < l.y + l.height else { return nil }
+            e = GrooveEvent(tick: snapped(tickAt(tr.at.x, w)), pad: Int8(pad), velocity: lastVelocity,
+                            semis: controller.scaleSnapped(semis(at: tr.at.y, in: l), pad: pad))
+        case .long808(let start, let sem):
+            let (len, s) = long808Note(start: start, semis: sem, from: tr.from, at: tr.at, w: w, L: L)
+            e = GrooveEvent(tick: start, pad: Int8(Pad.bass808.rawValue), velocity: lastVelocity, semis: s, length: len)
+        default:
+            return nil
+        }
+        guard visible(e) else { return nil }
+        return noteRect(e, w: w, L)
+    }
+
     private func gridEnded(_ g: DragGesture.Value, w: CGFloat, L: [RowLayout]) {
-        defer { drag = .none }
+        defer { drag = .none; trace = nil }
         switch drag {
         case .tapOnNote(let key):
             commit(PatternEdit.remove(pattern, [key]))
             selection.remove(key)
         case .long808(let start, let sem):
-            let end = snapped(tickAt(g.location.x, w))
-            let length = max(placeTicks, (end > start ? end - start : 0) + placeTicks)
-            let len = abs(g.translation.width) < 6 ? last808Length : length
+            let (len, s) = long808Note(start: start, semis: sem, from: g.startLocation, at: g.location, w: w, L: L)
             last808Length = len
-            commit(PatternEdit.addNote(pattern, pad: Pad.bass808.rawValue, tick: start, length: len, velocity: lastVelocity, semis: sem))
+            commit(PatternEdit.addNote(pattern, pad: Pad.bass808.rawValue, tick: start, length: len, velocity: lastVelocity, semis: s))
         case .paint, .erase:
             if let p = work { work = nil; controller.setLoop(loop, p) }
             else { _ = undoStack.popLast() }
