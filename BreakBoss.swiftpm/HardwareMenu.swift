@@ -562,7 +562,7 @@ struct PatternBrowserPanel: View {
 
 // MARK: The track menu
 
-/// A track's menu (right-click, two-finger tap or a hold on its name). The order is Tyrone's:
+/// A track's menu (a right-click on its name; nothing else opens it). The order is Tyrone's:
 /// Track Settings, Open Sample Editor, Solo, Load Sample, Clear Sample, then the STEPS. There's no
 /// Remove here (Tyrone, Oct 21).
 struct TrackMenuPanel: View {

@@ -1,8 +1,8 @@
 import XCTest
 import UIKit
 
-/// The hardware menus (Tyrone, Oct 21): the track menu opens from a rack track (two-finger tap, else a
-/// hold), runs in Tyrone's order with no Remove, Solo shows its state, the fills and Clear Steps change
+/// The hardware menus (Tyrone, Oct 21): the track menu opens from a rack track (right-click on the iPad;
+/// the test build's hold here), runs in Tyrone's order with no Remove, Solo shows its state, the fills and Clear Steps change
 /// only that track and undo in one step, a tap outside closes the menu without touching the grid, and
 /// Open Sample Editor opens the SAMPLER. KITS and PATTERNS open from their chips. Prints a picture of each.
 final class HardwareMenuUITests: XCTestCase {
@@ -69,17 +69,13 @@ final class HardwareMenuUITests: XCTestCase {
         }
     }
 
-    /// Opens a track's menu: a two-finger tap first (it's what right-click shares), then a hold.
+    /// Opens a track's menu. On the iPad it's a right-click only; the simulator can't right-click, so
+    /// the UI-test build (BREAKBOSS_UI_PROBE) opens it with a one-second hold.
     private func openTrackMenu(_ header: XCUIElement, _ label: String) -> Bool {
         print("UITREE HW \(label): header hittable=\(header.isHittable) frame=\(header.frame)")
-        if header.isHittable {
-            header.twoFingerTap()
-            if any("trackMenu.settings").waitForExistence(timeout: 2) { print("UITREE HW \(label): two-finger tap opened it"); return true }
-            print("UITREE HW \(label): two-finger tap missed; holding")
-        }
-        header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.9)
+        header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 1.3)
         let ok = any("trackMenu.settings").waitForExistence(timeout: 3)
-        print("UITREE HW \(label): hold opened it = \(ok)")
+        print("UITREE HW \(label): opened = \(ok)")
         return ok
     }
 

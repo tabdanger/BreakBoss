@@ -1381,8 +1381,8 @@ struct SequencerView: View {
             Text(ch.name).font(.system(size: 16 * s, weight: .medium)).foregroundColor(muted ? Color(white: 0.5) : (isSel ? selectColor : .white)).lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: 89 * s, height: 52 * s, alignment: .leading).offset(x: 43 * s, y: 4 * s)
                 .allowsHitTesting(false)
-            // the body: tap selects the track; a right-click, a two-finger tap or a hold opens its menu
-            // beside the track (the studs on its left move it)
+            // the body: tap selects the track; a right-click opens its menu beside the track (the studs on
+            // its left move it)
             // (the offset stays inside the menu's button, as before #61: outside it the header wasn't hittable)
             Color.clear.contentShape(Rectangle()).frame(width: 100 * s, height: 52 * s).offset(x: 33 * s, y: 4 * s)
                 // tapping the track that's already selected plays its sound (Tyrone, Oct 18)

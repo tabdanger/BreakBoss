@@ -127,8 +127,8 @@ extension View {
         bbHardwareMenu(title: title, finish: finish, id: id, content: content).place(r, s)
     }
 
-    /// The track menu (Tyrone, Oct 21): a right-click, a two-finger tap or a deliberate hold opens it
-    /// beside the track; a normal tap still runs `tap`. `extraWidth` stretches the anchor over the rest
+    /// The track menu (Tyrone, Oct 21): a trackpad / mouse right-click opens it beside the track; a
+    /// normal tap still runs `tap`. No two-finger tap and no hold (Tyrone, Oct 21 08:44). `extraWidth` stretches the anchor over the rest
     /// of the track's row so the panel opens clear of its knobs.
     func bbTrackMenu<Content: View>(title: String, finish: String, extraWidth: CGFloat = 0, tap: @escaping () -> Void,
                                     @ViewBuilder content: @escaping () -> Content) -> some View {
@@ -180,8 +180,8 @@ private struct BBMenuTrigger: ViewModifier {
     }
 }
 
-/// Opens a hardware panel. As a track menu (`tap` set) it's a real button: one finger runs `tap`,
-/// a right-click, a two-finger tap or a half-second hold opens the panel.
+/// Opens a hardware panel. As a track menu (`tap` set) it's a real button: a tap runs `tap`, a
+/// right-click opens the panel.
 private struct BBHardwareTrigger: ViewModifier {
     @Environment(\.bbMenuCenter) private var center
     let title: String
@@ -193,9 +193,6 @@ private struct BBHardwareTrigger: ViewModifier {
     /// The button's id for the UI tests (KITS and PATTERNS chips).
     var id: String? = nil
     @State private var frame: CGRect = .zero
-    /// A hold is down, or just let go: the release isn't a tap (no select, no audition).
-    @State private var holding = false
-    @State private var releasedAt = Date.distantPast
 
     private func open() {
         var anchor = frame
@@ -212,17 +209,13 @@ private struct BBHardwareTrigger: ViewModifier {
                     .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
             })
             .contentShape(Rectangle())
-        if let tap {
-            Button(action: {
-                // the finger that held the menu open lets go here: that's not a tap (no select, no audition)
-                if holding || Date().timeIntervalSince(releasedAt) < 0.4 { return }
-                tap()
-            }) { measured }
+        if tap != nil {
+            // a tap selects / auditions; only a right-click opens the menu (Tyrone, Oct 21). UI tests can't
+            // right-click on the iPad simulator, so they get the one-second hold (BREAKBOSS_UI_PROBE only).
+            Button(action: { tap?() }) { measured }
                 .buttonStyle(SeqPress())
-                .twoFingerTap { open() }
-                // the hold is a UIKit recognizer like the two-finger tap (build 116: a SwiftUI long press on
-                // this button stopped the right-click and two-finger tap from opening the menu)
-                .holdToOpen(began: { holding = true; open() }, ended: { holding = false; releasedAt = Date() })
+                .rightClick { open() }
+                .uiTestHold { open() }
                 .accessibilityAction(named: "Track menu") { open() }
         } else {
             Button(action: open) { measured }
@@ -338,34 +331,13 @@ private extension View {
 }
 
 private extension View {
-    /// A deliberate half-second hold (finger, or the trackpad / mouse button held). A UIKit recognizer
-    /// next to the two-finger tap's, so the button's own tap, the rack's scrolling and the knobs keep
-    /// their touches: moving more than a few points before the half second is up isn't a hold.
-    @ViewBuilder func holdToOpen(began: @escaping () -> Void, ended: @escaping () -> Void) -> some View {
+    /// A trackpad / mouse right-click on this view only (the track menu, Tyrone Oct 21: no two-finger
+    /// tap, no hold).
+    @ViewBuilder func rightClick(_ action: @escaping () -> Void) -> some View {
         if #available(iOS 18.0, *) {
-            gesture(HoldRecognizer(began: began, ended: ended))
+            gesture(TapRecognizer(secondaryClick: true, action: action))
         } else {
             self
-        }
-    }
-}
-
-@available(iOS 18.0, *)
-private struct HoldRecognizer: UIGestureRecognizerRepresentable {
-    let began: () -> Void
-    let ended: () -> Void
-
-    func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
-        let g = UILongPressGestureRecognizer()
-        g.minimumPressDuration = 0.5
-        return g
-    }
-
-    func handleUIGestureRecognizerAction(_ recognizer: UILongPressGestureRecognizer, context: Context) {
-        switch recognizer.state {
-        case .began: began()
-        case .ended, .cancelled, .failed: ended()
-        default: break
         }
     }
 }
