@@ -336,14 +336,14 @@ private extension View {
 }
 
 private extension View {
-    /// UI tests only (BREAKBOSS_UI_PROBE): a one-second hold through a UIKit recognizer, the same kind
-    /// as the right-click's, standing in for it (the simulator can't right-click). Neither a SwiftUI long
-    /// press nor a normal-priority one reached the rack's header buttons.
+    /// UI tests only (BREAKBOSS_UI_PROBE): a one-second hold standing in for the right-click (the
+    /// simulator can't right-click). It has to be high priority: a simultaneous or normal-priority hold
+    /// never reached the rack's header buttons.
     @ViewBuilder func uiTestPress(_ action: @escaping () -> Void) -> some View {
         if #available(iOS 18.0, *) {
             if ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil {
                 // high priority: the button's own press otherwise keeps a one-finger hold to itself
-                highPriorityGesture(HoldRecognizer(action: action))
+                highPriorityGesture(LongPressGesture(minimumDuration: 1).onEnded { _ in action() })
             } else {
                 self
             }
@@ -360,21 +360,6 @@ private extension View {
         } else {
             self
         }
-    }
-}
-
-@available(iOS 18.0, *)
-private struct HoldRecognizer: UIGestureRecognizerRepresentable {
-    let action: () -> Void
-
-    func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
-        let g = UILongPressGestureRecognizer()
-        g.minimumPressDuration = 1
-        return g
-    }
-
-    func handleUIGestureRecognizerAction(_ recognizer: UILongPressGestureRecognizer, context: Context) {
-        if recognizer.state == .began { action() }
     }
 }
 
