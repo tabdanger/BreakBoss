@@ -23,6 +23,31 @@ enum PatternEdit {
         return p
     }
 
+    /// The track menu's fills (Tyrone, Oct 21): a hit on step 1 and then every `every` ticks across the
+    /// whole pattern. A step that already has hits keeps them as they are (velocity, offset, pitch,
+    /// chance, a roll); new hits are drawn like `fill`'s; the track's hits off those steps go and the
+    /// other tracks aren't touched. A hit belongs to the step it sits in, the same window `toggle` uses.
+    static func fillKeeping(_ pattern: PatternData, pad: Int, every: Int32, cell: Int32, velocity: Float) -> PatternData {
+        guard every > 0, cell > 0 else { return pattern }
+        var p = pattern
+        let mine = p.events.filter { Int($0.pad) == pad }
+        p.events.removeAll { Int($0.pad) == pad }
+        let bass = pad == Pad.bass808.rawValue
+        var t: Int32 = 0
+        while t < p.lengthTicks {
+            let lo = t - cell / 4, hi = t + cell * 3 / 4
+            let here = mine.filter { $0.tick >= lo && $0.tick < hi }
+            if here.isEmpty {
+                p.events.append(GrooveEvent(tick: t, pad: Int8(pad), velocity: velocity, length: bass ? max(6, min(every, p.lengthTicks - t) - 2) : 0))
+            } else {
+                p.events += here
+            }
+            t += every
+        }
+        p.sort()
+        return p
+    }
+
     /// Removes every hit of one channel.
     static func clearChannel(_ pattern: PatternData, pad: Int) -> PatternData {
         var p = pattern

@@ -24,7 +24,6 @@ struct FaceplateView: View {
     @State private var showExport = false
     @State private var showMenu = false
     @State private var patternEditor: PatternTarget?
-    @State private var browser: BrowserView.Kind?
     @State private var namePrompt: NamePrompt?
     @State private var nameText = ""
 
@@ -78,7 +77,6 @@ struct FaceplateView: View {
                 patternEditor = PatternTarget(loop: 0)
             }
         }
-        .fullScreenCover(item: $browser) { kind in BrowserView(controller: controller, kind: kind) }
         // the tutorial walks across both faces: its Face 2 steps open the sequencer, its Face 1 steps close it
         .onReceive(TutorialGuide.shared.$index) { i in
             guard let i, TutorialStep.all.indices.contains(i) else { return }
@@ -213,11 +211,11 @@ struct FaceplateView: View {
     private func windows(_ L: FaceplateLayout, s: CGFloat) -> some View {
         NameWindow(text: controller.loadingKit ? "LOADING..." : controller.kitDisplayName,
                    textRect: L.kitText, color: L.textColor, scale: s)
-        if !FaceplateView.snapshotMode { kitsMenu.place(L.kitBox, s) }
+        if !FaceplateView.snapshotMode { kitsMenu(L, s: s) }
         NameWindow(text: controller.state.presetName,
                    textRect: L.presetText,
                    color: L.textColor, scale: s)
-        if !FaceplateView.snapshotMode { presetsMenu.place(L.presetBox, s) }
+        if !FaceplateView.snapshotMode { presetsMenu(L, s: s) }
         hit(L.saveRect, s) {
             nameText = controller.state.presetName == "INIT" ? "" : controller.state.presetName.capitalized
             namePrompt = .preset
@@ -304,12 +302,20 @@ struct FaceplateView: View {
         return items
     }
 
-    private var kitsMenu: some View {
-        Color.white.opacity(0.001).contentShape(Rectangle()).onTapGesture { browser = .kits }
+    /// KITS and PATTERNS (Tyrone, Oct 21): the hardware panels, the same as Face 2's, opening from the
+    /// name windows in this face's metal and light. Face 1 keeps what its browsers had: picking a kit
+    /// plays its kick, INIT tops the patterns, and your own kits and presets can be saved and deleted.
+    private func kitsMenu(_ L: FaceplateLayout, s: CGFloat) -> some View {
+        PressGlow().bbHardwarePlaced(L.kitBox, s, title: "Kits", finish: controller.faceKey) {
+            KitBrowserPanel(controller: controller, audition: true,
+                            saveAs: { nameText = controller.state.userKit ?? ""; namePrompt = .kit }, allowDelete: true)
+        }
     }
 
-    private var presetsMenu: some View {
-        Color.white.opacity(0.001).contentShape(Rectangle()).onTapGesture { browser = .presets }
+    private func presetsMenu(_ L: FaceplateLayout, s: CGFloat) -> some View {
+        PressGlow().bbHardwarePlaced(L.presetBox, s, title: "Patterns", finish: controller.faceKey) {
+            PatternBrowserPanel(controller: controller, showInit: true, allowDelete: true)
+        }
     }
 }
 
