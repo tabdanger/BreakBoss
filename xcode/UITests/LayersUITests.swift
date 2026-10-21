@@ -39,9 +39,9 @@ final class LayersUITests: XCTestCase {
         XCTAssertTrue(header.waitForExistence(timeout: 20), "the rack shows its first track")
         sleep(1)
         header.twoFingerTap()
-        if !menuRow("Open sample editor").waitForExistence(timeout: 2) { header.press(forDuration: 1.2) }
-        let open = menuRow("Open sample editor")
-        XCTAssertTrue(open.waitForExistence(timeout: 3), "the track menu has Open sample editor")
+        if !menuRow("Open Sample Editor").waitForExistence(timeout: 2) { header.press(forDuration: 1.2) }
+        let open = menuRow("Open Sample Editor")
+        XCTAssertTrue(open.waitForExistence(timeout: 3), "the track menu has Open Sample Editor")
         open.tap()
         let window = any("samplerWindow")
         XCTAssertTrue(window.waitForExistence(timeout: 5), "the sampler opens")

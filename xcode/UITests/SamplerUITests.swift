@@ -123,18 +123,19 @@ final class SamplerUITests: XCTestCase {
         XCTAssertTrue(header.waitForExistence(timeout: 20), "the rack shows its first track")
         sleep(1)
 
-        // the track menu: the track's own things first, Remove up top
-        menuTap(header, expect: "Track settings")
-        let settings = menuRow("Track settings")
-        XCTAssertTrue(settings.waitForExistence(timeout: 3), "a two-finger tap opens the track menu with Track settings")
+        // the track menu (Tyrone, Oct 21): Track Settings, Open Sample Editor, Solo, Load Sample, Clear Sample,
+        // then the STEPS; no Remove
+        menuTap(header, expect: "Track Settings")
+        let settings = menuRow("Track Settings")
+        XCTAssertTrue(settings.waitForExistence(timeout: 3), "a two-finger tap opens the track menu with Track Settings")
         snap("track-menu")
-        let order = ["Track settings", "Open sample editor", "Solo", "Load sample", "Clear sample", "Remove"]
+        let order = ["Track Settings", "Open Sample Editor", "Solo", "Load Sample", "Clear Sample",
+                     "Fill Every Step", "Fill Every 2 Steps", "Fill Every 4 Steps", "Fill Every 8 Steps", "Clear Steps"]
         let ys = order.map { menuRow($0).exists ? menuRow($0).frame.minY : -1 }
         print("UITREE MENU ORDER \(zip(order, ys).map { "\($0.0)@\(Int($0.1))" }.joined(separator: " "))")
-        XCTAssertEqual(ys, ys.sorted(), "the track menu runs Track settings, Open sample editor, Solo, Load sample, Clear sample, Remove")
-        if menuRow("Remove").exists && menuRow("Fill every step").exists {
-            XCTAssertLessThan(menuRow("Remove").frame.minY, menuRow("Fill every step").frame.minY, "Remove is above the fills")
-        } else { dumpTree("track menu") }
+        XCTAssertEqual(ys, ys.sorted(), "the track menu runs in Tyrone's order")
+        XCTAssertFalse(menuRow("Remove").exists, "the track menu has no Remove")
+        if !menuRow("Clear Steps").exists { dumpTree("track menu") }
 
         // Track settings (build 82 crashed here): the sheet opens and its SOUND menu works
         settings.tap()
@@ -158,9 +159,9 @@ final class SamplerUITests: XCTestCase {
         }
 
         // the sample editor
-        menuTap(header, expect: "Open sample editor")
-        let open = menuRow("Open sample editor")
-        XCTAssertTrue(open.waitForExistence(timeout: 3), "the track menu has Open sample editor")
+        menuTap(header, expect: "Open Sample Editor")
+        let open = menuRow("Open Sample Editor")
+        XCTAssertTrue(open.waitForExistence(timeout: 3), "the track menu has Open Sample Editor")
         open.tap()
         XCTAssertTrue(any("samplerWindow").waitForExistence(timeout: 5), "the sampler opens")
         snap("sampler")
