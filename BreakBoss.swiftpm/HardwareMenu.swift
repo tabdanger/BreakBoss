@@ -152,8 +152,6 @@ struct BBHardwarePanel: View {
         .background(shape.fill(Color.black)
             .shadow(color: .black.opacity(0.75), radius: 2, y: 1)
             .shadow(color: .black.opacity(0.5), radius: 20, y: 12))
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("hwMenu.\(spec.title)")
     }
 
     private func header(_ skin: SamplerSkin) -> some View {
@@ -342,7 +340,7 @@ struct BBPanelSearch: View {
                 .accessibilityIdentifier("hwMenuSearch")
             if !text.isEmpty {
                 Button { text = "" } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundColor(Color(white: 0.55)).frame(width: 36, height: 36)
+                    Image(systemName: "xmark.circle.fill").foregroundColor(Color(white: 0.55)).frame(width: 44, height: 44).contentShape(Rectangle())
                 }
                 .accessibilityLabel("Clear search")
             }
@@ -457,7 +455,6 @@ struct KitBrowserPanel: View {
                 .onAppear { scrollToCurrent(proxy) }
             }
         }
-        .accessibilityIdentifier("kitBrowser")
     }
 
     private func scrollToCurrent(_ proxy: ScrollViewProxy) {
@@ -552,7 +549,6 @@ struct PatternBrowserPanel: View {
                 }
             }
         }
-        .accessibilityIdentifier("patternBrowser")
     }
 
     private func pick(_ id: String) {
@@ -610,7 +606,6 @@ struct TrackMenuPanel: View {
             .padding(.horizontal, 1).padding(.bottom, 2)
         }
         .frame(maxHeight: max(BBPanelMetrics.rowH * 2, bodyH))
-        .accessibilityIdentifier("trackMenu")
     }
 
     private func run(_ action: @escaping () -> Void) {

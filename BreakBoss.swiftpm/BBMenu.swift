@@ -116,15 +116,15 @@ extension View {
 
     /// Opens one of the hardware panels (KITS, PATTERNS) when tapped: up from the control, or down
     /// when there's no room above.
-    func bbHardwareMenu<Content: View>(title: String, finish: String, placement: BBPanelPlacement = .above,
+    func bbHardwareMenu<Content: View>(title: String, finish: String, placement: BBPanelPlacement = .above, id: String? = nil,
                                        @ViewBuilder content: @escaping () -> Content) -> some View {
-        modifier(BBHardwareTrigger(title: title, finish: finish, placement: placement, panel: { AnyView(content()) }))
+        modifier(BBHardwareTrigger(title: title, finish: finish, placement: placement, panel: { AnyView(content()) }, id: id))
     }
 
     /// A hardware panel's trigger placed over a painted button (see bbMenuPlaced).
-    func bbHardwarePlaced<Content: View>(_ r: [Double], _ s: CGFloat, title: String, finish: String,
+    func bbHardwarePlaced<Content: View>(_ r: [Double], _ s: CGFloat, title: String, finish: String, id: String? = nil,
                                          @ViewBuilder content: @escaping () -> Content) -> some View {
-        bbHardwareMenu(title: title, finish: finish, content: content).place(r, s)
+        bbHardwareMenu(title: title, finish: finish, id: id, content: content).place(r, s)
     }
 
     /// The track menu (Tyrone, Oct 21): a right-click, a two-finger tap or a deliberate hold opens it
@@ -190,8 +190,12 @@ private struct BBHardwareTrigger: ViewModifier {
     var extraWidth: CGFloat = 0
     let panel: () -> AnyView
     var tap: (() -> Void)? = nil
+    /// The button's id for the UI tests (KITS and PATTERNS chips).
+    var id: String? = nil
     @State private var frame: CGRect = .zero
-    @State private var heldAt: Date?
+    /// A hold is down, or just let go: the release isn't a tap (no select, no audition).
+    @State private var holding = false
+    @State private var releasedAt = Date.distantPast
 
     private func open() {
         var anchor = frame
@@ -211,19 +215,27 @@ private struct BBHardwareTrigger: ViewModifier {
         if let tap {
             Button(action: {
                 // the finger that held the menu open lets go here: that's not a tap (no select, no audition)
-                if let at = heldAt {
-                    heldAt = nil
-                    if Date().timeIntervalSince(at) < 5 { return }
-                }
+                if holding || Date().timeIntervalSince(releasedAt) < 0.4 { return }
                 tap()
             }) { measured }
                 .buttonStyle(SeqPress())
                 .twoFingerTap { open() }
-                .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in heldAt = Date(); open() })
+                // the hold is a UIKit recognizer like the two-finger tap (build 116: a SwiftUI long press on
+                // this button stopped the right-click and two-finger tap from opening the menu)
+                .holdToOpen(began: { holding = true; open() }, ended: { holding = false; releasedAt = Date() })
+                .accessibilityAction(named: "Track menu") { open() }
         } else {
             Button(action: open) { measured }
                 .buttonStyle(MenuPress())
+                .modifier(TriggerID(id: id))
         }
+    }
+}
+
+private struct TriggerID: ViewModifier {
+    let id: String?
+    func body(content: Content) -> some View {
+        if let id { content.accessibilityIdentifier(id) } else { content }
     }
 }
 
@@ -321,6 +333,39 @@ private extension View {
                 .gesture(TapRecognizer(secondaryClick: true, action: action))
         } else {
             self
+        }
+    }
+}
+
+private extension View {
+    /// A deliberate half-second hold (finger, or the trackpad / mouse button held). A UIKit recognizer
+    /// next to the two-finger tap's, so the button's own tap, the rack's scrolling and the knobs keep
+    /// their touches: moving more than a few points before the half second is up isn't a hold.
+    @ViewBuilder func holdToOpen(began: @escaping () -> Void, ended: @escaping () -> Void) -> some View {
+        if #available(iOS 18.0, *) {
+            gesture(HoldRecognizer(began: began, ended: ended))
+        } else {
+            self
+        }
+    }
+}
+
+@available(iOS 18.0, *)
+private struct HoldRecognizer: UIGestureRecognizerRepresentable {
+    let began: () -> Void
+    let ended: () -> Void
+
+    func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
+        let g = UILongPressGestureRecognizer()
+        g.minimumPressDuration = 0.5
+        return g
+    }
+
+    func handleUIGestureRecognizerAction(_ recognizer: UILongPressGestureRecognizer, context: Context) {
+        switch recognizer.state {
+        case .began: began()
+        case .ended, .cancelled, .failed: ended()
+        default: break
         }
     }
 }
