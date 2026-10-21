@@ -816,14 +816,15 @@ struct SequencerView: View {
         return list
     }
 
-    /// A section header: the render's header plate (SeqHeader_<face>, the face's own metal) the full
-    /// width of the panel, flush against the well under it. Tap it to slide the panels over.
+    /// A section header: the render's own header plate (SeqHeader_<face> for SOUNDS, SeqHeaderGen_<face>
+    /// for GENERATE, cut from the picture where each one sits) the full width of the panel, flush
+    /// against the well under it. Tap it to slide the panels over.
     private func sectionHeader(_ title: String, open: Bool, _ s: CGFloat) -> some View {
         Button {
             withAnimation(.easeInOut(duration: 0.3)) { section = section == .sounds ? .generate : .sounds }
         } label: {
             ZStack {
-                Image("SeqHeader_\(finish)").resizable()
+                Image(headerPlate(title)).resizable()
                 HStack {
                     Text(title).font(.system(size: 19 * s, weight: .semibold)).foregroundColor(inkColor)
                     Spacer()
@@ -838,8 +839,16 @@ struct SequencerView: View {
         .accessibilityIdentifier(title == "SOUNDS" ? "soundsHeader" : "generateHeader")
     }
 
+    /// GENERATE at the panel's foot is the picture's own plate there (rounded bottom corners); slid up
+    /// over the open GENERATE well it wears the same plate with square bottom corners.
+    private func headerPlate(_ title: String) -> String {
+        title == "SOUNDS" ? "SeqHeader_\(finish)" : section == .generate ? "SeqHeaderGenMid_\(finish)" : "SeqHeaderGen_\(finish)"
+    }
+
     /// The left panel: SOUNDS and GENERATE, each a platinum plate over its dark well. Opening one
     /// slides the GENERATE plate up or down like a piece of metal, closing the other well under it.
+    /// Its edges are the picture's: the clip follows the picture's own corner (the plate under it is
+    /// the same picture), and no outline is drawn on top (Tyrone, Oct 21: flush, no second edge).
     @ViewBuilder private func leftPanel(_ s: CGFloat) -> some View {
         let r = A.leftPanel
         let headerH = A.headerH * s
@@ -850,8 +859,7 @@ struct SequencerView: View {
             sectionHeader("GENERATE", open: section == .generate, s)
             well(generatePanel(s), height: wellH, open: section == .generate, s)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 9 * s))
-        .overlay(RoundedRectangle(cornerRadius: 9 * s).strokeBorder(Color.black.opacity(0.55), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 14 * s))
         .place(r, s)
     }
 
@@ -926,12 +934,19 @@ struct SequencerView: View {
     /// The sound library (SOUNDS open): type chips, search, the list, import. Drag a sound to the rack.
     private func soundsPanel(_ s: CGFloat) -> some View {
         VStack(spacing: 7 * s) {
+            // the chips run the well's full width and sink into its edges as they scroll, instead of
+            // being cut off short of the panel's edge (Tyrone, Oct 21); at rest they sit where they did
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4 * s) {
                     typeChip("ALL", on: libraryType == nil, s) { libraryType = nil }
                     ForEach(SoundType.allCases) { t in typeChip(t.rawValue, on: libraryType == t, s) { libraryType = t } }
                 }
+                .padding(.horizontal, 8 * s)
             }
+            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.027),
+                                         .init(color: .black, location: 0.973), .init(color: .clear, location: 1)],
+                                 startPoint: .leading, endPoint: .trailing))
+            .padding(.horizontal, -8 * s)
             HStack(spacing: 5 * s) {
                 Image(systemName: "magnifyingglass").font(.system(size: 16 * s)).foregroundColor(Color(white: 0.78))
                 TextField("Search", text: $search).font(.system(size: 16 * s)).foregroundColor(.white).autocorrectionDisabled()
