@@ -194,7 +194,11 @@ private struct BBHardwareTrigger: ViewModifier {
     var id: String? = nil
     @State private var frame: CGRect = .zero
 
+    /// UI tests: how often this trigger opened its panel, and whether it had a menu layer to open it in.
+    @State private var opens = 0
+
     private func open() {
+        opens += 1
         var anchor = frame
         anchor.size.width += extraWidth
         center?.show(BBMenuSpec(anchor: anchor, width: BBPanelMetrics.width, title: title, items: [],
@@ -217,6 +221,7 @@ private struct BBHardwareTrigger: ViewModifier {
                 .rightClick { open() }
                 .uiTestPress { open() }
                 .accessibilityAction(named: "Track menu") { open() }
+                .accessibilityValue(SamplerWindow.probing ? "menu opens \(opens) layer \(center == nil ? "none" : "ok")" : "")
         } else {
             Button(action: open) { measured }
                 .buttonStyle(MenuPress())

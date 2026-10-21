@@ -76,7 +76,8 @@ final class HardwareMenuUITests: XCTestCase {
         // the header's frame here is its layout spot; the body it draws sits 33 art px to the right
         header.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.55)).press(forDuration: 1.3)
         let ok = any("trackMenu.settings").waitForExistence(timeout: 3)
-        print("UITREE HW \(label): opened = \(ok)")
+        print("UITREE HW \(label): opened = \(ok) header=\(header.value as? String ?? "-") outside=\(any("hwMenuOutside").exists) title=\(any("hwMenuTitle").exists)")
+        if !ok { picture("after-hold-\(label)") }
         return ok
     }
 
@@ -85,6 +86,23 @@ final class HardwareMenuUITests: XCTestCase {
         XCTAssertTrue(header.waitForExistence(timeout: 20), "the rack shows its first track")
         sleep(1)
         XCTAssertTrue(header.isHittable, "the first track's header takes touches (build 116 lost them)")
+
+        // KITS and PATTERNS from their chips
+        for (chip, panel) in [("kitChip", "KITS"), ("patternChip", "PATTERNS")] {
+            let c = any(chip)
+            guard c.waitForExistence(timeout: 3) else { dumpTree("no \(chip)"); XCTFail("there is a \(chip)"); continue }
+            c.tap()
+            let title = any("hwMenuTitle")
+            _ = title.waitForExistence(timeout: 3)
+            print("UITREE HW \(chip): outside=\(any("hwMenuOutside").exists) title=\(title.exists)")
+            XCTAssertTrue(title.waitForExistence(timeout: 3) && title.label == panel, "\(chip) opens \(panel)")
+            XCTAssertTrue(any("hwMenuSearch").exists, "\(panel) has its search field")
+            sleep(1)
+            print("UITREE HW \(panel) title=\(title.exists ? title.label : "-") at=\(title.frame) chip=\(c.frame) app=\(app.frame)")
+            picture(panel)
+            any("hwMenuClose").tap(); sleep(1)
+            XCTAssertFalse(any("hwMenuTitle").exists, "the close button closes \(panel)")
+        }
 
         // the track menu, its order, no Remove
         guard openTrackMenu(header, "first") else { dumpTree("no track menu"); XCTFail("the track menu opens"); return }
@@ -140,19 +158,5 @@ final class HardwareMenuUITests: XCTestCase {
         sleep(1)
         if any("samplerClose").exists { any("samplerClose").tap(); sleep(1) }
 
-        // KITS and PATTERNS from their chips
-        for (chip, panel) in [("kitChip", "KITS"), ("patternChip", "PATTERNS")] {
-            let c = any(chip)
-            guard c.waitForExistence(timeout: 3) else { dumpTree("no \(chip)"); XCTFail("there is a \(chip)"); continue }
-            c.tap()
-            let title = any("hwMenuTitle")
-            XCTAssertTrue(title.waitForExistence(timeout: 3) && title.label == panel, "\(chip) opens \(panel)")
-            XCTAssertTrue(any("hwMenuSearch").exists, "\(panel) has its search field")
-            sleep(1)
-            print("UITREE HW \(panel) title=\(title.exists ? title.label : "-") at=\(title.frame) chip=\(c.frame) app=\(app.frame)")
-            picture(panel)
-            any("hwMenuClose").tap(); sleep(1)
-            XCTAssertFalse(any("hwMenuTitle").exists, "the close button closes \(panel)")
-        }
     }
 }
