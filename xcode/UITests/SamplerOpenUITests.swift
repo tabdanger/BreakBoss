@@ -18,7 +18,7 @@ final class SamplerOpenUITests: XCTestCase {
     private func any(_ id: String) -> XCUIElement { app.descendants(matching: .any)[id].firstMatch }
 
     private func menuRow(_ prefix: String) -> XCUIElement {
-        app.buttons.matching(NSPredicate(format: "label CONTAINS %@", prefix)).firstMatch
+        app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", prefix)).firstMatch
     }
 
     func testOpenSampleEditorOnEveryTrack() {
