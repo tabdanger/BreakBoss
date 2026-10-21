@@ -2234,9 +2234,31 @@ struct SequencerView: View {
     private func noteAt(_ p: CGPoint, w: CGFloat, L: [RowLayout]) -> GrooveEvent? {
         guard let l = layout(at: p.y, L) else { return nil }
         let pad = l.channel.pad
+        if l.pitch == nil {
+            // a step row: the step button under the finger, the same cell the grid lights (a longer note
+            // or a hit just past a step's edge never answers for the step beside it)
+            let at = stepStart(at: p.x, w)
+            return pattern.events.last { Int($0.pad) == pad && visible($0) && $0.tick >= at && $0.tick < at + cellTicks }
+        }
         return pattern.events.last { e in
             Int(e.pad) == pad && visible(e) && (noteRect(e, w: w, L)?.insetBy(dx: -4, dy: l.pitch == nil ? -4 : -1).contains(p) ?? false)
         }
+    }
+
+    /// The first tick of the step button under x (the cells the grid draws, gaps belong to the step left of them).
+    private func stepStart(at x: CGFloat, _ w: CGFloat) -> Int32 {
+        let c = max(1, cellTicks)
+        let cell = Int(((x - self.x(pageStart, w)) / max(1, cellWidth(w))).rounded(.down))
+        return pageStart + Int32(max(0, cell)) * c
+    }
+    /// Where a new note goes for a touch at x: the SNAP grid, kept inside the step button pressed in a
+    /// step row, so a coarse SNAP (a beat, 1/8, triplets) never lights the step beside the finger.
+    private func placeTick(at x: CGFloat, _ w: CGFloat, _ l: RowLayout?) -> Int32 {
+        let t = snapped(tickAt(x, w))
+        guard let l, l.pitch == nil else { return t }
+        let at = stepStart(at: x, w)
+        guard at < pattern.lengthTicks else { return t }
+        return min(max(t, at), at + max(1, cellTicks) - 1, max(pattern.lengthTicks, 1) - 1)
     }
 
     private func gridChanged(_ g: DragGesture.Value, w: CGFloat, L: [RowLayout]) {
@@ -2281,9 +2303,9 @@ struct SequencerView: View {
                     }
                     lastVelocity = hit.velocity
                 } else if pad == Pad.bass808.rawValue {
-                    drag = .long808(start: snapped(tickAt(start.x, w)), semis: sem)
+                    drag = .long808(start: placeTick(at: start.x, w, l), semis: sem)
                 } else {
-                    let t = snapped(tickAt(start.x, w))
+                    let t = placeTick(at: start.x, w, l)
                     undoStack.append(step(pattern)); redoStack = []
                     work = PatternEdit.addNote(pattern, pad: pad, tick: t, velocity: lastVelocity, semis: sem)
                     drag = .paint(pad: pad, semis: sem, lastCell: Int(t / placeTicks))
@@ -2321,7 +2343,8 @@ struct SequencerView: View {
             }
         case .paint(let pad, let sem, let lastCell):
             // pressed an empty step and pulled straight down: the new note repeats
-            if let l = layout(for: pad, L), l.pitch == nil, lastCell == Int(snapped(tickAt(g.startLocation.x, w)) / placeTicks), pullsDown(g, l),
+            let startCell = Int(placeTick(at: g.startLocation.x, w, layout(for: pad, L)) / placeTicks)
+            if let l = layout(for: pad, L), l.pitch == nil, lastCell == startCell, pullsDown(g, l),
                let hit = noteAt(g.startLocation, w: w, L: L) {
                 startRepeat(pad: pad, like: hit, fromPaint: true)
                 gridChanged(g, w: w, L: L)
@@ -2329,17 +2352,20 @@ struct SequencerView: View {
             }
             // a quick drag from an empty spot draws a selection box, as in SELECT (Tyrone, Oct 19); hold the
             // finger still a moment first to paint a run of notes instead
-            if lastCell == Int(snapped(tickAt(g.startLocation.x, w)) / placeTicks), hypot(g.translation.width, g.translation.height) > 8,
+            if lastCell == startCell, hypot(g.translation.width, g.translation.height) > 8,
                g.time.timeIntervalSince(touchDown) < 0.35 {
                 work = nil
                 _ = undoStack.popLast()
                 drag = .marquee(start: g.startLocation, current: g.location)
                 return
             }
-            let t = snapped(tickAt(g.location.x, w))
-            let cell = Int(t / placeTicks)
             // painting inside an open piano roll follows the finger's pitch
             let l = layout(for: pad, L)
+            // a step that only rolls or drifts as the finger lifts stays the one step pressed; painting a
+            // run of steps starts once the finger really moves
+            if l?.pitch == nil, lastCell == startCell, hypot(g.translation.width, g.translation.height) <= 10 { return }
+            let t = placeTick(at: g.location.x, w, l)
+            let cell = Int(t / placeTicks)
             let s = l?.pitch != nil ? controller.scaleSnapped(semis(at: g.location.y, in: l!), pad: pad) : sem
             if (cell != lastCell || s != sem) && Double(t) >= origin && Double(t) < origin + Double(pageTicks) {
                 work = PatternEdit.addNote(pattern, pad: pad, tick: t, velocity: lastVelocity, semis: s)
