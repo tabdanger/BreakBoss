@@ -109,10 +109,14 @@ final class Face2PanelUITests: XCTestCase {
         let snares = app.buttons["SNARES"].firstMatch
         XCTAssertTrue(snares.exists, "SNARES chip (\(name))")
         snares.tap()
-        app.buttons["ALL"].firstMatch.swipeLeft()
+        let rims = app.buttons["RIMS"].firstMatch, all = app.buttons["ALL"].firstMatch
+        closeUp(name + "-chips-rest", of: rims, margin: 40, width: 500)
+        rims.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .press(forDuration: 0.05, thenDragTo: all.coordinate(withNormalizedOffset: CGVector(dx: -1.5, dy: 0.5)))
         sleep(1)
         closeUp(name + "-chips-end", of: sounds, margin: 50, width: 700)
-        app.buttons["SNARES"].firstMatch.swipeRight()
+        app.buttons["SNARES"].firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .press(forDuration: 0.05, thenDragTo: sounds.coordinate(withNormalizedOffset: CGVector(dx: 1.0, dy: 1.6)))
         sleep(1)
         // GENERATE slides up over the sounds and back down
         let footY = generate.frame.minY

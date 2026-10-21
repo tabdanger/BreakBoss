@@ -936,6 +936,7 @@ struct SequencerView: View {
         VStack(spacing: 7 * s) {
             // the chips run the well's full width and sink into its edges as they scroll, instead of
             // being cut off short of the panel's edge (Tyrone, Oct 21); at rest they sit where they did
+            // and the next chip's sliver past RIMS is under the right edge, not showing
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4 * s) {
                     typeChip("ALL", on: libraryType == nil, s) { libraryType = nil }
@@ -944,7 +945,7 @@ struct SequencerView: View {
                 .padding(.horizontal, 8 * s)
             }
             .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.027),
-                                         .init(color: .black, location: 0.973), .init(color: .clear, location: 1)],
+                                         .init(color: .black, location: 0.966), .init(color: .clear, location: 0.98)],
                                  startPoint: .leading, endPoint: .trailing))
             .padding(.horizontal, -8 * s)
             HStack(spacing: 5 * s) {
