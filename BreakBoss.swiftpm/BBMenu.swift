@@ -337,12 +337,13 @@ private extension View {
 
 private extension View {
     /// UI tests only (BREAKBOSS_UI_PROBE): a one-second hold through a UIKit recognizer, the same kind
-    /// as the right-click's, standing in for it (the simulator can't right-click). A SwiftUI long press
-    /// never fired on the rack's headers (inside its scroll view), so it can't be the stand-in.
+    /// as the right-click's, standing in for it (the simulator can't right-click). Neither a SwiftUI long
+    /// press nor a normal-priority one reached the rack's header buttons.
     @ViewBuilder func uiTestPress(_ action: @escaping () -> Void) -> some View {
         if #available(iOS 18.0, *) {
             if ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil {
-                gesture(HoldRecognizer(action: action))
+                // high priority: the button's own press otherwise keeps a one-finger hold to itself
+                highPriorityGesture(HoldRecognizer(action: action))
             } else {
                 self
             }
