@@ -180,6 +180,13 @@ struct SamplerSwitch: View {
     }
 }
 
+/// The window's parts as views of no particular type: written out in full, the window's type nests so
+/// deep that Swift running it as the TestFlight app runs out of stack working the type out on opening
+/// (b120 crash, Oct 22; Swift Playgrounds never hit it).
+extension View {
+    func erased() -> AnyView { AnyView(self) }
+}
+
 struct SamplerWindow: View {
     @ObservedObject var controller: KnockController
     let pad: Int
@@ -294,13 +301,13 @@ struct SamplerWindow: View {
             let s = min(geo.size.width / Self.artW, geo.size.height / Self.artH)
             ZStack(alignment: .topLeading) {
                 // the window's own id sits on its bezel: on the whole window it would replace every control's id
-                bezel(s).accessibilityElement().accessibilityIdentifier("samplerWindow")
-                titleBar(s)
-                tabStrip(s)
+                bezel(s).erased().accessibilityElement().accessibilityIdentifier("samplerWindow")
+                titleBar(s).erased()
+                tabStrip(s).erased()
                 switch page {
-                case 0: samplePage(s)
-                case 1: envelopePage(s)
-                default: miscPage(s)
+                case 0: samplePage(s).erased()
+                case 1: envelopePage(s).erased()
+                default: miscPage(s).erased()
                 }
                 if Self.probing {
                     // UI tests only: renders a hit of the track as it is now and shows its numbers
@@ -521,13 +528,13 @@ struct SamplerWindow: View {
 
     private func samplePage(_ s: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
-            filePanel(s).spot(36, 182, 664, 86, s)
-            contentPanel(s).spot(36, 274, 664, 234, s)
-            playbackPanel(s).spot(36, 514, 664, 170, s)
-            stretchPanel(s).spot(710, 182, 664, 166, s)
-            effectsPanel(s).spot(710, 354, 664, 330, s)
-            editBar(s).spot(38, 694, 1334, 52, s)
-            waveform(s).spot(38, 754, 1334, 216, s)
+            filePanel(s).erased().spot(36, 182, 664, 86, s)
+            contentPanel(s).erased().spot(36, 274, 664, 234, s)
+            playbackPanel(s).erased().spot(36, 514, 664, 170, s)
+            stretchPanel(s).erased().spot(710, 182, 664, 166, s)
+            effectsPanel(s).erased().spot(710, 354, 664, 330, s)
+            editBar(s).erased().spot(38, 694, 1334, 52, s)
+            waveform(s).erased().spot(38, 754, 1334, 216, s)
         }
     }
 
@@ -909,11 +916,11 @@ struct SamplerWindow: View {
                 .bbContextMenu(title: "Sample", width: 320) { waveformMenu() }
                 .accessibilityIdentifier("samplerWaveform")
             if sample != nil {
-                selectionHandles(w: w, h: h, s)
-                if sm.useLoop { loopFlags(w: w, h: h, s) }
-                startFlag(w: w, s)
+                selectionHandles(w: w, h: h, s).erased()
+                if sm.useLoop { loopFlags(w: w, h: h, s).erased() }
+                startFlag(w: w, s).erased()
             }
-            scrollBar(s).spot(0, 186, 1334, 30, s)
+            scrollBar(s).erased().spot(0, 186, 1334, 30, s)
         }
     }
 
@@ -1309,12 +1316,12 @@ struct SamplerWindow: View {
 
     private func envelopePage(_ s: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
-            targetTabs(s).spot(36, 168, 1348, 54, s)
-            envelopePanel(s).spot(36, 226, 696, 460, s)
-            lfoPanel(s).spot(742, 226, 384, 460, s)
-            filterPanel(s).spot(1136, 226, 238, 460, s)
-            rootBar(s).spot(36, 696, 1348, 66, s)
-            keyboard(s).spot(36, 770, 1348, 200, s)
+            targetTabs(s).erased().spot(36, 168, 1348, 54, s)
+            envelopePanel(s).erased().spot(36, 226, 696, 460, s)
+            lfoPanel(s).erased().spot(742, 226, 384, 460, s)
+            filterPanel(s).erased().spot(1136, 226, 238, 460, s)
+            rootBar(s).erased().spot(36, 696, 1348, 66, s)
+            keyboard(s).erased().spot(36, 770, 1348, 200, s)
         }
     }
 
@@ -1369,7 +1376,7 @@ struct SamplerWindow: View {
             ZStack {
                 SamplerWell(skin: skin)
                 EnvelopeGraph(env: e, color: skin.glow).opacity(e.on ? 1 : 0.35).padding(10 * s)
-                envelopeEditor(e).padding(10 * s)
+                envelopeEditor(e).erased().padding(10 * s)
             }
             .spot(18, 52, 660, 178, s)
             // AHDSR presets: 808s, kicks, snares, the box method and your own
@@ -1701,15 +1708,15 @@ struct SamplerWindow: View {
 
     private func miscPage(_ s: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
-            levelsPanel(s).spot(36, 176, 372, 244, s)
-            polyphonyPanel(s).spot(414, 176, 300, 244, s)
-            timePanel(s).spot(720, 176, 320, 244, s)
-            trackingPanel(s).spot(1046, 176, 338, 244, s)
-            groupPanel(s).spot(36, 426, 250, 260, s)
-            arpPanel(s).spot(292, 426, 560, 260, s)
-            echoPanel(s).spot(858, 426, 526, 260, s)
-            rootBar(s).spot(36, 696, 1348, 66, s)
-            keyboard(s).spot(36, 770, 1348, 200, s)
+            levelsPanel(s).erased().spot(36, 176, 372, 244, s)
+            polyphonyPanel(s).erased().spot(414, 176, 300, 244, s)
+            timePanel(s).erased().spot(720, 176, 320, 244, s)
+            trackingPanel(s).erased().spot(1046, 176, 338, 244, s)
+            groupPanel(s).erased().spot(36, 426, 250, 260, s)
+            arpPanel(s).erased().spot(292, 426, 560, 260, s)
+            echoPanel(s).erased().spot(858, 426, 526, 260, s)
+            rootBar(s).erased().spot(36, 696, 1348, 66, s)
+            keyboard(s).erased().spot(36, 770, 1348, 200, s)
         }
     }
 
