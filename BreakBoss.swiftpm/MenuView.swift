@@ -29,154 +29,18 @@ struct MenuView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section {
-                    Button {
-                        dismiss()
-                        // after the menu has gone, so the tour starts on the faceplate
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { TutorialGuide.shared.start() }
-                    } label: { Label("Play the tutorial", systemImage: "graduationcap") }
-                    .accessibilityIdentifier("menuTutorial")
-                } header: {
-                    Text("Tutorial")
-                } footer: {
-                    Text("Every feature, step by step: the modes, the pads, recording live into your DAW, the sequencer, the dice and the FX. SKIP ends it at any step.")
-                }
-                Section {
-                    ForEach([false, true], id: \.self) { plat in
-                        Button { controller.setPlatinumFace(plat); if controller.mode != .modern { controller.selectMode(.modern) } } label: {
-                            HStack {
-                                Text(plat ? "PLATINUM" : "MODERN (BLACK)").foregroundColor(.primary)
-                                Spacer()
-                                if controller.platinumFace == plat { Image(systemName: "checkmark").foregroundColor(accent) }
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Modern faceplate")
-                } footer: {
-                    Text("Platinum is Modern's alternate face: same sound and controls, brushed-silver plate. Free while we test.")
-                }
-                Section {
-                    Picker("Count-in", selection: Binding(get: { controller.countInBars }, set: { controller.setCountInBars($0) })) {
-                        Text("1 bar").tag(1)
-                        Text("2 bars").tag(2)
-                    }
-                    Toggle(isOn: Binding(get: { controller.metronome }, set: { controller.setMetronome($0) })) { Text("Metronome while playing") }
-                } header: {
-                    Text("Record")
-                } footer: {
-                    Text("The RECORD button (top right) counts in with the metronome, then the pattern plays and every pad you hit lands in it on that pad's own channel. Open the sequencer to see and edit the notes in each pad's piano roll.")
-                }
-                Section {
-                    Button { bugReport = true } label: { Label("Bug report", systemImage: "ladybug") }
-                } header: {
-                    Text("Testing")
-                } footer: {
-                    Text("BreakBoss keeps a log while you play. If something goes wrong, open this, write what happened, and Copy or Share the report.")
-                }
-                Section("Performance") {
-                    Button("Open the 12 performance pads") { performance = true }
-                    Button("Engine controls") { engineControls = true }
-                    Button("Share / import a complete preset") { portable = true }
-                    Button("All notes and loops off") { controller.panic() }
-                }
-                Section {
-                    ForEach(0..<Pad.count, id: \.self) { pad in padRow(pad) }
-                } header: {
-                    Text("Your samples on the pads")
-                } footer: {
-                    Text("Tap Import to put an audio file (WAV, AIFF, MP3, M4A, FLAC) on a pad. You can also drag a file from Files straight onto a pad, or hold a pad for its editor. Imported files are copied to "
-                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreaKing › Samples on this device."))
-                }
-
-                Section("Kits") {
-                    Button { kitName = controller.state.userKit ?? ""; savingKit = true } label: {
-                        Label("Save these pads as a kit…", systemImage: "square.and.arrow.down")
-                    }
-                    if !controller.userKits.isEmpty {
-                        ForEach(controller.userKits, id: \.self) { name in
-                            HStack {
-                                Button(name) { controller.selectUserKit(name); dismiss() }
-                                Spacer()
-                                Button(role: .destructive) { controller.deleteUserKit(name) } label: { Image(systemName: "trash") }
-                                    .buttonStyle(.borderless)
-                            }
-                        }
-                    }
-                }
-
-                Section {
-                    ForEach(MIDIPadMap.allCases, id: \.self) { map in
-                        Button { controller.setMIDIMap(map) } label: {
-                            HStack {
-                                Text(map.title).foregroundColor(.primary)
-                                Spacer()
-                                if controller.midiMap == map { Image(systemName: "checkmark").foregroundColor(accent) }
-                            }
-                        }
-                    }
-                    Button(learnAll ? "Cancel learning" : "Learn all 12 pads") {
-                        if learnAll { learnAll = false; learningPad = nil } else {
-                            learnBase = controller.lastMIDINoteOn.count
-                            learnAll = true
-                            learningPad = 0
-                        }
-                    }
-                    if learnAll, let pad = learningPad {
-                        Text(pad < 8 ? "Hit the controller pad for pad \(pad + 1). On an 8-pad controller, bank A pads 1–8 are pads 1–8."
-                                     : "Hit the controller pad for pad \(pad + 1). On an 8-pad controller, switch to bank B: its pads 1–4 are pads 9–12.")
-                            .font(.footnote).foregroundColor(accent)
-                    }
-                    ForEach(0..<Pad.count, id: \.self) { pad in learnRow(pad) }
-                } header: {
-                    Text("MIDI controller (MPC and other pad controllers)")
-                } footer: {
-                    Text("On an MPC, pick the same pad note setting on the MPC (Classic MPC or Chromatic C1), or tap Learn next to a pad here and hit the MPC pad you want for it. MPC pads A01–A12 line up with pads 1–12, bottom-left first. This only changes live playing; MIDI files and MIDI export keep notes 36–47.")
-                }
-
-                Section {
-                    mapRow("36 – 47", "Pads 1 – 12, in order (with the standard pad notes above). ONE-SHOT plays a full strike regardless of note length. LOOP plays a rhythm while the key is held; release stops it. Last-held note takes priority.")
-                    mapRow("48 – 84", "The 808, chromatic. Note 60 is the kit's tuning. Note numbers stay the same when a DAW uses different octave names.")
-                    mapRow("MIDI clock", "TEMPO SYNC follows its tempo, FOLLOW DAW its start / stop.")
-                } header: { Text("MIDI") }
-
-                Section {
-                    Toggle(isOn: Binding(get: { controller.midiOutOn }, set: { controller.setMIDIOut($0) })) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("MIDI out to your DAW")
-                            Text(controller.isPlugin ? "Sent from the plug-in's MIDI output" : "Sent on the \"BreaKing Out\" MIDI port")
-                                .font(.caption).foregroundColor(.secondary)
-                        }
-                    }
-                    Button { controller.setMIDIOutLayout(multi: true) } label: {
-                        mapRow("Multi-out", "Each pad on its own MIDI channel (1–12), notes C1 up")
-                    }
-                    Button { controller.setMIDIOutLayout(multi: false) } label: {
-                        mapRow("One channel", "Every pad on MIDI channel 10 (General MIDI drums)")
-                    }
-                } header: { Text("MIDI out") } footer: {
-                    Text("Everything you play on the pads and every note the patterns and drum roll play goes out as MIDI. In your DAW, record BreaKing's MIDI output onto a track and the notes land in its piano roll, ready to edit. The 808 sends the note it plays. Pick each channel's MIDI channel and note in the drum roll (tap a channel name).")
-                }
-
-                Section("How it works") {
-                    guide("ONE-SHOT / LOOP", "ONE-SHOT: the pads play drums. LOOP: the pads play grooves made from the kit; a new pick starts on the next bar, tap the same pad again to stop at the end of the bar.")
-                    guide("MODERN / VINTAGE / TEXTURE", "Modern is clean and punchy. Vintage is home to soul, boom bap and break grooves, with tape drive, low-end warmth and a rolled-off top. Texture adds resampling, instability, synced delay and gated reverb. You can play any kit or imported acoustic sample in every mode.")
-                    guide("KITS / PRESETS", "KITS change the drum sounds only; the pattern keeps playing. PRESETS change the pattern only (groove, variation and tempo); the sounds and knobs stay. Mix any pattern with any kit. SAVE stores everything as your own preset.")
-                    guide("DICE", "The dice randomizes. LOOP: a new pattern in the preset's style. ONE-SHOT: new variations of the kit's sounds. In the drum roll, each channel has its own dice that changes only that channel.")
-                    guide("KNOBS", "Drag up or right to turn up. Double-tap to reset.")
-                    guide("BPM", "Drag up or down on the display. Double-tap for the kit's tempo. With TEMPO SYNC on, the DAW or MIDI clock sets it.")
-                    guide("HOLD A PAD", "ONE-SHOT: pad editor (level, pan, tune, decay, filter, reverse, your sample). LOOP: step editor for that loop, or drop in a MIDI file.")
-                    guide("DRUM ROLL", "The piano-keys button opens the drum roll for the pattern that's playing. DRAW: tap to add, tap a note to delete, drag a note to move, drag along a row to paint, drag on the 808 row for a long note. SELECT: box notes, then move, DUPLICATE or CLEAR. ERASE: wipe over notes. The lane underneath sets velocity or pitch. Tap a channel name to load or record a sample onto it, or open its piano roll. M / S mute and solo. RECORD writes what you play on the ▶ buttons or a MIDI controller into the pattern. Space bar plays and stops.")
-                    guide("EXPORT", "The arrow button renders MIDI, a stereo mix and stems you can drag into a DAW or share.")
-                }
-
-                Section {
-                    HStack {
-                        Text("BreaKing")
-                        Spacer()
-                        Text(versionText).foregroundColor(.secondary).font(.system(.body, design: .monospaced))
-                    }
-                }
+                tutorialSection
+                faceSection
+                recordSection
+                testingSection
+                performanceSection
+                padsSection
+                kitsSection
+                controllerSection
+                midiMapSection
+                midiOutSection
+                guideSection
+                versionSection
             }
             .navigationTitle("Menu")
             .navigationBarTitleDisplayMode(.inline)
@@ -204,6 +68,198 @@ struct MenuView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Saves the 12 pads (your samples and pad settings) as a kit.")
+        }
+    }
+
+    // MARK: The menu's sections
+
+    /// The tutorial.
+    private var tutorialSection: some View {
+        Section {
+            Button {
+                dismiss()
+                // after the menu has gone, so the tour starts on the faceplate
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { TutorialGuide.shared.start() }
+            } label: { Label("Play the tutorial", systemImage: "graduationcap") }
+            .accessibilityIdentifier("menuTutorial")
+        } header: {
+            Text("Tutorial")
+        } footer: {
+            Text("Every feature, step by step: the modes, the pads, recording live into your DAW, the sequencer, the dice and the FX. SKIP ends it at any step.")
+        }
+    }
+
+    /// Modern or Platinum face.
+    private var faceSection: some View {
+        Section {
+            ForEach([false, true], id: \.self) { plat in
+                Button { controller.setPlatinumFace(plat); if controller.mode != .modern { controller.selectMode(.modern) } } label: {
+                    HStack {
+                        Text(plat ? "PLATINUM" : "MODERN (BLACK)").foregroundColor(.primary)
+                        Spacer()
+                        if controller.platinumFace == plat { Image(systemName: "checkmark").foregroundColor(accent) }
+                    }
+                }
+            }
+        } header: {
+            Text("Modern faceplate")
+        } footer: {
+            Text("Platinum is Modern's alternate face: same sound and controls, brushed-silver plate. Free while we test.")
+        }
+    }
+
+    /// RECORD: count-in and metronome.
+    private var recordSection: some View {
+        Section {
+            Picker("Count-in", selection: Binding(get: { controller.countInBars }, set: { controller.setCountInBars($0) })) {
+                Text("1 bar").tag(1)
+                Text("2 bars").tag(2)
+            }
+            Toggle(isOn: Binding(get: { controller.metronome }, set: { controller.setMetronome($0) })) { Text("Metronome while playing") }
+        } header: {
+            Text("Record")
+        } footer: {
+            Text("The RECORD button (top right) counts in with the metronome, then the pattern plays and every pad you hit lands in it on that pad's own channel. Open the sequencer to see and edit the notes in each pad's piano roll.")
+        }
+    }
+
+    /// Bug report.
+    private var testingSection: some View {
+        Section {
+            Button { bugReport = true } label: { Label("Bug report", systemImage: "ladybug") }
+        } header: {
+            Text("Testing")
+        } footer: {
+            Text("BreakBoss keeps a log while you play. If something goes wrong, open this, write what happened, and Copy or Share the report.")
+        }
+    }
+
+    /// Performance pads, engine controls, portable presets, panic.
+    private var performanceSection: some View {
+        Section("Performance") {
+            Button("Open the 12 performance pads") { performance = true }
+            Button("Engine controls") { engineControls = true }
+            Button("Share / import a complete preset") { portable = true }
+            Button("All notes and loops off") { controller.panic() }
+        }
+    }
+
+    /// Your samples on the 12 pads.
+    private var padsSection: some View {
+        Section {
+            ForEach(0..<Pad.count, id: \.self) { pad in padRow(pad) }
+        } header: {
+            Text("Your samples on the pads")
+        } footer: {
+            Text("Tap Import to put an audio file (WAV, AIFF, MP3, M4A, FLAC) on a pad. You can also drag a file from Files straight onto a pad, or hold a pad for its editor. Imported files are copied to "
+                 + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreaKing › Samples on this device."))
+        }
+    }
+
+    /// Saving and loading your own kits.
+    private var kitsSection: some View {
+        Section("Kits") {
+            Button { kitName = controller.state.userKit ?? ""; savingKit = true } label: {
+                Label("Save these pads as a kit…", systemImage: "square.and.arrow.down")
+            }
+            if !controller.userKits.isEmpty {
+                ForEach(controller.userKits, id: \.self) { name in
+                    HStack {
+                        Button(name) { controller.selectUserKit(name); dismiss() }
+                        Spacer()
+                        Button(role: .destructive) { controller.deleteUserKit(name) } label: { Image(systemName: "trash") }
+                            .buttonStyle(.borderless)
+                    }
+                }
+            }
+        }
+    }
+
+    /// MIDI controller: pad note maps and LEARN.
+    private var controllerSection: some View {
+        Section {
+            ForEach(MIDIPadMap.allCases, id: \.self) { map in
+                Button { controller.setMIDIMap(map) } label: {
+                    HStack {
+                        Text(map.title).foregroundColor(.primary)
+                        Spacer()
+                        if controller.midiMap == map { Image(systemName: "checkmark").foregroundColor(accent) }
+                    }
+                }
+            }
+            Button(learnAll ? "Cancel learning" : "Learn all 12 pads") {
+                if learnAll { learnAll = false; learningPad = nil } else {
+                    learnBase = controller.lastMIDINoteOn.count
+                    learnAll = true
+                    learningPad = 0
+                }
+            }
+            if learnAll, let pad = learningPad {
+                Text(pad < 8 ? "Hit the controller pad for pad \(pad + 1). On an 8-pad controller, bank A pads 1–8 are pads 1–8."
+                             : "Hit the controller pad for pad \(pad + 1). On an 8-pad controller, switch to bank B: its pads 1–4 are pads 9–12.")
+                    .font(.footnote).foregroundColor(accent)
+            }
+            ForEach(0..<Pad.count, id: \.self) { pad in learnRow(pad) }
+        } header: {
+            Text("MIDI controller (MPC and other pad controllers)")
+        } footer: {
+            Text("On an MPC, pick the same pad note setting on the MPC (Classic MPC or Chromatic C1), or tap Learn next to a pad here and hit the MPC pad you want for it. MPC pads A01–A12 line up with pads 1–12, bottom-left first. This only changes live playing; MIDI files and MIDI export keep notes 36–47.")
+        }
+    }
+
+    /// The MIDI note map.
+    private var midiMapSection: some View {
+        Section {
+            mapRow("36 – 47", "Pads 1 – 12, in order (with the standard pad notes above). ONE-SHOT plays a full strike regardless of note length. LOOP plays a rhythm while the key is held; release stops it. Last-held note takes priority.")
+            mapRow("48 – 84", "The 808, chromatic. Note 60 is the kit's tuning. Note numbers stay the same when a DAW uses different octave names.")
+            mapRow("MIDI clock", "TEMPO SYNC follows its tempo, FOLLOW DAW its start / stop.")
+        } header: { Text("MIDI") }
+    }
+
+    /// MIDI out to a DAW.
+    private var midiOutSection: some View {
+        Section {
+            Toggle(isOn: Binding(get: { controller.midiOutOn }, set: { controller.setMIDIOut($0) })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("MIDI out to your DAW")
+                    Text(controller.isPlugin ? "Sent from the plug-in's MIDI output" : "Sent on the \"BreaKing Out\" MIDI port")
+                        .font(.caption).foregroundColor(.secondary)
+                }
+            }
+            Button { controller.setMIDIOutLayout(multi: true) } label: {
+                mapRow("Multi-out", "Each pad on its own MIDI channel (1–12), notes C1 up")
+            }
+            Button { controller.setMIDIOutLayout(multi: false) } label: {
+                mapRow("One channel", "Every pad on MIDI channel 10 (General MIDI drums)")
+            }
+        } header: { Text("MIDI out") } footer: {
+            Text("Everything you play on the pads and every note the patterns and drum roll play goes out as MIDI. In your DAW, record BreaKing's MIDI output onto a track and the notes land in its piano roll, ready to edit. The 808 sends the note it plays. Pick each channel's MIDI channel and note in the drum roll (tap a channel name).")
+        }
+    }
+
+    /// How it works: a short guide.
+    private var guideSection: some View {
+        Section("How it works") {
+            guide("ONE-SHOT / LOOP", "ONE-SHOT: the pads play drums. LOOP: the pads play grooves made from the kit; a new pick starts on the next bar, tap the same pad again to stop at the end of the bar.")
+            guide("MODERN / VINTAGE / TEXTURE", "Modern is clean and punchy. Vintage is home to soul, boom bap and break grooves, with tape drive, low-end warmth and a rolled-off top. Texture adds resampling, instability, synced delay and gated reverb. You can play any kit or imported acoustic sample in every mode.")
+            guide("KITS / PRESETS", "KITS change the drum sounds only; the pattern keeps playing. PRESETS change the pattern only (groove, variation and tempo); the sounds and knobs stay. Mix any pattern with any kit. SAVE stores everything as your own preset.")
+            guide("DICE", "The dice randomizes. LOOP: a new pattern in the preset's style. ONE-SHOT: new variations of the kit's sounds. In the drum roll, each channel has its own dice that changes only that channel.")
+            guide("KNOBS", "Drag up or right to turn up. Double-tap to reset.")
+            guide("BPM", "Drag up or down on the display. Double-tap for the kit's tempo. With TEMPO SYNC on, the DAW or MIDI clock sets it.")
+            guide("HOLD A PAD", "ONE-SHOT: pad editor (level, pan, tune, decay, filter, reverse, your sample). LOOP: step editor for that loop, or drop in a MIDI file.")
+            guide("DRUM ROLL", "The piano-keys button opens the drum roll for the pattern that's playing. DRAW: tap to add, tap a note to delete, drag a note to move, drag along a row to paint, drag on the 808 row for a long note. SELECT: box notes, then move, DUPLICATE or CLEAR. ERASE: wipe over notes. The lane underneath sets velocity or pitch. Tap a channel name to load or record a sample onto it, or open its piano roll. M / S mute and solo. RECORD writes what you play on the ▶ buttons or a MIDI controller into the pattern. Space bar plays and stops.")
+            guide("EXPORT", "The arrow button renders MIDI, a stereo mix and stems you can drag into a DAW or share.")
+        }
+    }
+
+    /// The version.
+    private var versionSection: some View {
+        Section {
+            HStack {
+                Text("BreaKing")
+                Spacer()
+                Text(versionText).foregroundColor(.secondary).font(.system(.body, design: .monospaced))
+            }
         }
     }
 

@@ -22,87 +22,11 @@ struct PadEditorView: View {
         let settings = controller.state.pads[pad]
         NavigationView {
             Form {
-                Section {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("PAD \(pad + 1) · \(Pad(rawValue: pad)?.label ?? "")")
-                                .font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
-                            Text(controller.padName(pad).uppercased())
-                                .font(.system(.title3, design: .monospaced))
-                        }
-                        Spacer()
-                        Button { controller.padDown(pad, velocity: 1) } label: {
-                            Label("Play", systemImage: "play.fill")
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(accent)
-                    }
-                    if pad < controller.kitSamples.count {
-                        Waveform(points: controller.kitSamples[pad].overview, reverse: settings.reverse)
-                            .frame(height: 70)
-                    }
-                }
-
-                Section("Your sound") {
-                    Button { importing = true } label: { Label("Files…", systemImage: "folder") }
-                        .disabled(recorder.isRecording)
-                    if !controller.isPlugin { recordRow }
-                    if let message = recorder.message {
-                        Text(message).font(.footnote).foregroundColor(accent)
-                    }
-                    if settings.sampleFile != nil {
-                        Button(role: .destructive) { controller.revertPad(pad) } label: {
-                            Label("Back to the kit's sound", systemImage: "arrow.uturn.backward")
-                        }
-                    }
-                    Text("You can also drag an audio file from Files straight onto a pad. Imported sounds are copied to "
-                         + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreaKing › Samples on this device."))
-                        .font(.footnote).foregroundColor(.secondary)
-                }
-
-                if !files.isEmpty {
-                    Section("Samples folder") {
-                        ForEach(files, id: \.self) { url in
-                            Button {
-                                controller.importSample(url, toPad: pad)
-                            } label: {
-                                HStack {
-                                    Image(systemName: "waveform")
-                                    Text(url.deletingPathExtension().lastPathComponent)
-                                    Spacer()
-                                    if settings.sampleFile == url.lastPathComponent { Image(systemName: "checkmark").foregroundColor(accent) }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Section("Pad") {
-                    slider("Level", settings.level, PadSettings.minLevel...PadSettings.maxLevel, text: PadSettings.levelText(settings.level)) { v in
-                        var s = settings; s.level = v; controller.setPadSettings(pad, s)
-                    }
-                    slider("Pan", settings.pan, -1...1, text: settings.pan == 0 ? "C" : String(format: "%@%.0f", settings.pan < 0 ? "L" : "R", abs(settings.pan) * 100)) { v in
-                        var s = settings; s.pan = abs(v) < 0.03 ? 0 : v; controller.setPadSettings(pad, s)
-                    }
-                    slider("Tune", settings.tune, -24...24, text: String(format: "%+.1f st", settings.tune)) { v in
-                        var s = settings; s.tune = (v * 2).rounded() / 2; controller.setPadSettings(pad, s)
-                    }
-                    slider("Decay", settings.decay, 0.05...1, text: settings.decay >= 0.999 ? "FULL" : String(format: "%.0f%%", settings.decay * 100)) { v in
-                        var s = settings; s.decay = v; controller.setPadSettings(pad, s)
-                    }
-                    slider("Filter", settings.filter, 0...1, text: settings.filter >= 0.999_999 ? "OPEN" : String(format: "%.0f Hz", 40 * powf(450, settings.filter))) { v in
-                        var s = settings; s.filter = v; controller.setPadSettings(pad, s)
-                    }
-                    Toggle("Reverse", isOn: Binding(get: { settings.reverse }, set: { v in
-                        var s = settings; s.reverse = v; controller.setPadSettings(pad, s)
-                    }))
-                    .tint(accent)
-                }
-
-                Section {
-                    Text("Save these pads as your own kit from the KITS window (Save Kit As…).")
-                        .font(.footnote).foregroundColor(.secondary)
-                }
+                headerSection(settings)
+                soundSection(settings)
+                samplesSection(settings)
+                padSection(settings)
+                kitNoteSection
             }
             .navigationTitle("Pad \(pad + 1)")
             .navigationBarTitleDisplayMode(.inline)
@@ -117,6 +41,103 @@ struct PadEditorView: View {
                 controller.importSample(url, toPad: pad)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { files = KnockFolders.sampleFiles() }
             }
+        }
+    }
+
+    /// The pad, its name, PLAY and its waveform.
+    private func headerSection(_ settings: PadSettings) -> some View {
+        Section {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("PAD \(pad + 1) · \(Pad(rawValue: pad)?.label ?? "")")
+                        .font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
+                    Text(controller.padName(pad).uppercased())
+                        .font(.system(.title3, design: .monospaced))
+                }
+                Spacer()
+                Button { controller.padDown(pad, velocity: 1) } label: {
+                    Label("Play", systemImage: "play.fill")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(accent)
+            }
+            if pad < controller.kitSamples.count {
+                Waveform(points: controller.kitSamples[pad].overview, reverse: settings.reverse)
+                    .frame(height: 70)
+            }
+        }
+    }
+
+    /// Your sound: Files, the mic, back to the kit.
+    private func soundSection(_ settings: PadSettings) -> some View {
+        Section("Your sound") {
+            Button { importing = true } label: { Label("Files…", systemImage: "folder") }
+                .disabled(recorder.isRecording)
+            if !controller.isPlugin { recordRow }
+            if let message = recorder.message {
+                Text(message).font(.footnote).foregroundColor(accent)
+            }
+            if settings.sampleFile != nil {
+                Button(role: .destructive) { controller.revertPad(pad) } label: {
+                    Label("Back to the kit's sound", systemImage: "arrow.uturn.backward")
+                }
+            }
+            Text("You can also drag an audio file from Files straight onto a pad. Imported sounds are copied to "
+                 + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreaKing › Samples on this device."))
+                .font(.footnote).foregroundColor(.secondary)
+        }
+    }
+
+    /// The Samples folder's sounds, one tap loads one.
+    @ViewBuilder private func samplesSection(_ settings: PadSettings) -> some View {
+        if !files.isEmpty {
+            Section("Samples folder") {
+                ForEach(files, id: \.self) { url in
+                    Button {
+                        controller.importSample(url, toPad: pad)
+                    } label: {
+                        HStack {
+                            Image(systemName: "waveform")
+                            Text(url.deletingPathExtension().lastPathComponent)
+                            Spacer()
+                            if settings.sampleFile == url.lastPathComponent { Image(systemName: "checkmark").foregroundColor(accent) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Level, pan, tune, decay, filter, reverse.
+    private func padSection(_ settings: PadSettings) -> some View {
+        Section("Pad") {
+            slider("Level", settings.level, PadSettings.minLevel...PadSettings.maxLevel, text: PadSettings.levelText(settings.level)) { v in
+                var s = settings; s.level = v; controller.setPadSettings(pad, s)
+            }
+            slider("Pan", settings.pan, -1...1, text: settings.pan == 0 ? "C" : String(format: "%@%.0f", settings.pan < 0 ? "L" : "R", abs(settings.pan) * 100)) { v in
+                var s = settings; s.pan = abs(v) < 0.03 ? 0 : v; controller.setPadSettings(pad, s)
+            }
+            slider("Tune", settings.tune, -24...24, text: String(format: "%+.1f st", settings.tune)) { v in
+                var s = settings; s.tune = (v * 2).rounded() / 2; controller.setPadSettings(pad, s)
+            }
+            slider("Decay", settings.decay, 0.05...1, text: settings.decay >= 0.999 ? "FULL" : String(format: "%.0f%%", settings.decay * 100)) { v in
+                var s = settings; s.decay = v; controller.setPadSettings(pad, s)
+            }
+            slider("Filter", settings.filter, 0...1, text: settings.filter >= 0.999_999 ? "OPEN" : String(format: "%.0f Hz", 40 * powf(450, settings.filter))) { v in
+                var s = settings; s.filter = v; controller.setPadSettings(pad, s)
+            }
+            Toggle("Reverse", isOn: Binding(get: { settings.reverse }, set: { v in
+                var s = settings; s.reverse = v; controller.setPadSettings(pad, s)
+            }))
+            .tint(accent)
+        }
+    }
+
+    /// Where to save a kit.
+    private var kitNoteSection: some View {
+        Section {
+            Text("Save these pads as your own kit from the KITS window (Save Kit As…).")
+                .font(.footnote).foregroundColor(.secondary)
         }
     }
 
@@ -291,60 +312,8 @@ struct ExportView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section("What to export") {
-                    Picker("Loop", selection: $loop) {
-                        ForEach(0..<controller.loops.count, id: \.self) { i in
-                            Text("\(i + 1)  \(controller.loops[i].name)").tag(i)
-                        }
-                    }
-                    .pickerStyle(.inline)
-                    Picker("Length", selection: $bars) {
-                        ForEach([1, 2, 4, 8, 16], id: \.self) { Text("\($0) bars").tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    HStack {
-                        Text("Tempo")
-                        Spacer()
-                        Text("\(Int(controller.liveTempo.rounded())) BPM").font(.system(.body, design: .monospaced))
-                    }
-                    Button {
-                        render()
-                    } label: {
-                        HStack {
-                            Label(working ? "Rendering…" : "Render MIDI, mix and stems", systemImage: "waveform.badge.plus")
-                            if working { Spacer(); ProgressView() }
-                        }
-                    }
-                    .disabled(working)
-                }
-
-                if let error {
-                    Section { Text(error).foregroundColor(.red) }
-                }
-
-                if let out = output {
-                    Section {
-                        Text("Drag any of these into your DAW's timeline, or share them.")
-                            .font(.footnote).foregroundColor(.secondary)
-                        if let midi = out.midi { DragTile(title: "MIDI", subtitle: midi.lastPathComponent, icon: "pianokeys", url: midi) }
-                        if let mix = out.mix { DragTile(title: "STEREO MIX", subtitle: mix.lastPathComponent, icon: "waveform", url: mix) }
-                    } header: { Text("Exported") }
-                    if !out.stems.isEmpty {
-                        Section("Stems") {
-                            Text("Each stem includes processing independently. Nonlinear saturation and clipping mean these stems may not sum exactly to the stereo mix.")
-                                .font(.footnote).foregroundColor(.secondary)
-                            ForEach(out.stems, id: \.url) { stem in
-                                DragTile(title: stem.name, subtitle: stem.url.lastPathComponent, icon: "waveform.path", url: stem.url)
-                            }
-                        }
-                    }
-                    Section {
-                        ShareLink(items: allURLs(out)) { Label("Share or save everything…", systemImage: "square.and.arrow.up") }
-                        if !controller.isPlugin {
-                            Text("Also in Files › BreaKing › Exports on this device.").font(.footnote).foregroundColor(.secondary)
-                        }
-                    }
-                }
+                whatSection
+                resultSections
             }
             .navigationTitle("Export")
             .navigationBarTitleDisplayMode(.inline)
@@ -355,6 +324,67 @@ struct ExportView: View {
         .onAppear {
             loop = controller.exportLoopIndex
             bars = max(2, controller.loops.indices.contains(loop) ? controller.loops[loop].bars : 2) * 2
+        }
+    }
+
+    /// Loop, length, tempo and RENDER.
+    private var whatSection: some View {
+        Section("What to export") {
+            Picker("Loop", selection: $loop) {
+                ForEach(0..<controller.loops.count, id: \.self) { i in
+                    Text("\(i + 1)  \(controller.loops[i].name)").tag(i)
+                }
+            }
+            .pickerStyle(.inline)
+            Picker("Length", selection: $bars) {
+                ForEach([1, 2, 4, 8, 16], id: \.self) { Text("\($0) bars").tag($0) }
+            }
+            .pickerStyle(.segmented)
+            HStack {
+                Text("Tempo")
+                Spacer()
+                Text("\(Int(controller.liveTempo.rounded())) BPM").font(.system(.body, design: .monospaced))
+            }
+            Button {
+                render()
+            } label: {
+                HStack {
+                    Label(working ? "Rendering…" : "Render MIDI, mix and stems", systemImage: "waveform.badge.plus")
+                    if working { Spacer(); ProgressView() }
+                }
+            }
+            .disabled(working)
+        }
+    }
+
+    /// What went wrong, or the files: MIDI, the mix, the stems, SHARE.
+    @ViewBuilder private var resultSections: some View {
+        if let error {
+            Section { Text(error).foregroundColor(.red) }
+        }
+
+        if let out = output {
+            Section {
+                Text("Drag any of these into your DAW's timeline, or share them.")
+                    .font(.footnote).foregroundColor(.secondary)
+                if let midi = out.midi { DragTile(title: "MIDI", subtitle: midi.lastPathComponent, icon: "pianokeys", url: midi) }
+                if let mix = out.mix { DragTile(title: "STEREO MIX", subtitle: mix.lastPathComponent, icon: "waveform", url: mix) }
+            } header: { Text("Exported") }
+            if !out.stems.isEmpty {
+                Section("Stems") {
+                    Text("Each stem includes processing independently. Nonlinear saturation and clipping mean these stems may not sum exactly to the stereo mix.")
+                        .font(.footnote).foregroundColor(.secondary)
+                    ForEach(out.stems, id: \.url) { stem in
+                        DragTile(title: stem.name, subtitle: stem.url.lastPathComponent, icon: "waveform.path", url: stem.url)
+                    }
+                }
+            }
+            Section {
+                ShareLink(items: allURLs(out)) { Label("Share or save everything…", systemImage: "square.and.arrow.up") }
+                if !controller.isPlugin {
+                    Text("Also in Files › BreaKing › Exports on this device.").font(.footnote).foregroundColor(.secondary)
+                }
+            }
         }
     }
 
