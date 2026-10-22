@@ -181,7 +181,7 @@ def character(cat, names, f, cut):
     return ""
 
 
-# The first word of a name says its category (SoundType.forStockName in SoundLibraryView.swift).
+# The first word of a name says its category (SoundType.forStockName in SoundLibrary.swift).
 PERC_WORDS = {"SHAKER", "TAMB", "CLAVE", "TRIANGLE", "CONGA", "BONGO", "BELL", "BEADS"}
 def display(cat, char):
     if cat == "PERC" and char in PERC_WORDS: return char
