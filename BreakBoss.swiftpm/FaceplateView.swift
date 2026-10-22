@@ -81,10 +81,7 @@ struct FaceplateView: View {
         .onReceive(TutorialGuide.shared.$index) { i in
             guard let i, TutorialStep.all.indices.contains(i) else { return }
             if TutorialStep.all[i].surface == .face2 {
-                if patternEditor == nil {
-                    let current = Int(controller.meters.status[1])
-                    patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : controller.screenPattern)
-                }
+                if patternEditor == nil { openFace2() }
             } else if patternEditor != nil {
                 patternEditor = nil
             }
@@ -101,6 +98,12 @@ struct FaceplateView: View {
             Text(namePrompt == .kit ? "Saves the 12 pads (your samples and pad settings) as a kit."
                                     : "Saves the whole faceplate: mode, knobs, kit and loops.")
         }
+    }
+
+    /// Face 2 opens on the loop that's playing, otherwise the one PLAY starts.
+    private func openFace2() {
+        let current = Int(controller.meters.status[1])
+        patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : controller.screenPattern)
     }
 
     /// Space bar (hardware keyboard) = PLAY / STOP in the standalone app. In a DAW the space
@@ -130,11 +133,13 @@ struct FaceplateView: View {
                 .accessibilityLabel(BrandLogo.name)
                 .accessibilityIdentifier("brandLogo")
                 .place([600, 1004, 850, 1042], s)
-            topLeft(L, sfx: sfx, s: s)
-            knobs(L, sfx: sfx, s: s)
-            transport(L, sfx: sfx, s: s)
-            windows(L, s: s)
-            pads(L, s: s)
+            // each part erased to a plain view so Face 1's type can't nest deep enough to overflow the
+            // stack in the TestFlight app (the SAMPLER window's b120 crash)
+            ZStack(alignment: .topLeading) { topLeft(L, sfx: sfx, s: s) }.erased()
+            ZStack(alignment: .topLeading) { knobs(L, sfx: sfx, s: s) }.erased()
+            ZStack(alignment: .topLeading) { transport(L, sfx: sfx, s: s) }.erased()
+            ZStack(alignment: .topLeading) { windows(L, s: s) }.erased()
+            ZStack(alignment: .topLeading) { pads(L, s: s) }.erased()
             // the tutorial's lit part and card, over the face's own art (Tyrone, Oct 20)
             TutorialOverlay(surface: .face1, art: CGSize(width: L.width, height: L.height), scale: s, finish: sfx) { $0.face1(L) }
         }
@@ -170,21 +175,14 @@ struct FaceplateView: View {
         hit(L.clipperRect, s) { controller.toggle(.clipper) }
         hit(L.exportRect, s) { showExport = true }
         if let r = L.editorRect {
-            hit(r, s) {
-                // Opens on the loop that's playing, otherwise the one PLAY starts.
-                let current = Int(controller.meters.status[1])
-                patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : controller.screenPattern)
-            }
+            hit(r, s) { openFace2() }
         }
         hit(L.menuRect, s) { showMenu = true }
         // Face 2's key on Face 1 too (Tyrone, Oct 20): the round spun-silver button with the pads'
         // squares in its slot, on the plate's bottom strip under pad 1; slide it (or tap its right
         // end) to open Face 2, like the piano-roll button
         if !FaceplateView.snapshotMode {
-            FaceSlider(scale: s, color: FaceLight.of(sfx).glow, id: "faceSlider1", label: "Slide right to open Face 2") {
-                let current = Int(controller.meters.status[1])
-                patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : controller.screenPattern)
-            }
+            FaceSlider(scale: s, color: FaceLight.of(sfx).glow, id: "faceSlider1", label: "Slide right to open Face 2") { openFace2() }
             .environment(\.seqFinish, sfx)
             .place([125, 1004, 235, 1040], s)
             // Face 2's power button on Face 1 too (Tyrone, Oct 21): right beside the slider, set flush
@@ -234,15 +232,9 @@ struct FaceplateView: View {
             PadView(controller: controller, pad: L.padIndex(forLayoutPosition: i), rect: L.pads[i], scale: s) { loopEditor in
                 editor = EditorTarget(pad: L.padIndex(forLayoutPosition: i), loop: loopEditor)
             }
-            // Drop a sound file (Files, a sample app, Split View) onto a pad to load it there.
-            .onDrop(of: [UTType.fileURL, UTType.audio], isTargeted: nil) { providers in
-                controller.importDropped(providers, toPad: L.padIndex(forLayoutPosition: i))
-            }
+            // (a sound or MIDI file dropped on a pad loads there: PadView's own drop target)
         }
     }
-
-    private func width(_ r: [Double], _ s: CGFloat) -> CGFloat { (r[2] - r[0]) * s }
-    private func height(_ r: [Double], _ s: CGFloat) -> CGFloat { (r[3] - r[1]) * s }
 
     /// LED plus its printed label (the overlay rect plus label is about 5 overlay-widths).
     private func ledHitRect(_ L: FaceplateLayout, _ r: [Double]) -> [Double] {
@@ -251,62 +243,10 @@ struct FaceplateView: View {
     }
 
     private func hit(_ r: [Double], _ s: CGFloat, action: @escaping () -> Void) -> some View {
-        PressableArea(action: action)
-            .frame(width: width(r, s), height: height(r, s))
-            .place(r, s)
+        PressableArea(action: action).place(r, s)
     }
 
     // MARK: Menus
-
-    /// KITS: the drum sounds, by mode and genre, plus your own kits. (BreakBoss menu, not Apple's.)
-    func kitMenuItems() -> [BBMenuItem] {
-        var items: [BBMenuItem] = []
-        for mode in SoundMode.allCases {
-            items.append(.submenu("\(mode.title) kits", icon: "square.grid.3x3",
-                KitLibrary.genreGroups(for: mode).map { g in
-                    BBMenuItem.submenu(g.genre, icon: "music.note.list", g.kits.map { def in
-                        BBMenuItem.item(def.name, detail: "\(Int(def.tempo)) BPM", checked: def.id == controller.state.kitID && controller.state.userKit == nil) {
-                            controller.selectKit(def)
-                        }
-                    })
-                }))
-        }
-        if !controller.userKits.isEmpty {
-            items.append(.submenu("My kits", icon: "person.crop.square", controller.userKits.map { name in
-                BBMenuItem.item(name, checked: controller.state.userKit == name) { controller.selectUserKit(name) }
-            }))
-        }
-        items.append(.item("Save Kit As…", icon: "square.and.arrow.down") {
-            nameText = controller.state.userKit ?? ""; namePrompt = .kit
-        })
-        if !controller.userKits.isEmpty {
-            items.append(.submenu("Delete a Kit", icon: "trash", controller.userKits.map { name in
-                BBMenuItem.item(name, destructive: true) { controller.deleteUserKit(name) }
-            }))
-        }
-        return items
-    }
-
-    /// PRESETS: patterns, grouped by style, plus your own presets.
-    func presetMenuItems() -> [BBMenuItem] {
-        var items: [BBMenuItem] = [.item("INIT", checked: controller.state.presetName == "INIT") { controller.loadInit() }]
-        for style in PatternBank.styles {
-            items.append(.submenu(style, icon: "music.note.list",
-                PatternBank.presets(in: style).map { p in
-                    BBMenuItem.item(p.name, detail: "\(Int(p.bpm)) BPM\(p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")",
-                          checked: controller.state.presetName == p.name) { controller.loadPatternPreset(p) }
-                }))
-        }
-        if !controller.userPresets.isEmpty {
-            items.append(.submenu("My presets", icon: "person.crop.square", controller.userPresets.map { name in
-                BBMenuItem.item(name) { controller.loadUserPreset(name) }
-            }))
-            items.append(.submenu("Delete a Preset", icon: "trash", controller.userPresets.map { name in
-                BBMenuItem.item(name, destructive: true) { controller.deleteUserPreset(name) }
-            }))
-        }
-        return items
-    }
 
     /// KITS and PATTERNS (Tyrone, Oct 21): the hardware panels, the same as Face 2's, opening from the
     /// name windows in this face's metal and light. Face 1 keeps what its browsers had: picking a kit
