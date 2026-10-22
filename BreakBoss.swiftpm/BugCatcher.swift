@@ -32,7 +32,20 @@ enum BugCatcher {
             BugCatcher.writeCrash(title: "Uncaught exception \(exception.name.rawValue): \(exception.reason ?? "")",
                                   stack: exception.callStackSymbols)
         }
-        for sig in caught { if let previous = signal(sig, bugSignalHandler) { previousHandlers[sig] = previous } }
+        // The handler runs on a stack of its own: a crash from running out of stack (calls that never end)
+        // leaves no room on the main thread's stack, so without this nothing would be written down.
+        var alt = stack_t()
+        alt.ss_size = 256 * 1_024
+        alt.ss_sp = UnsafeMutableRawPointer.allocate(byteCount: alt.ss_size, alignment: 16)
+        alt.ss_flags = 0
+        sigaltstack(&alt, nil)
+        for sig in caught {
+            var action = sigaction()
+            action.__sigaction_u.__sa_handler = bugSignalHandler
+            action.sa_flags = SA_ONSTACK
+            var previous = sigaction()
+            if sigaction(sig, &action, &previous) == 0 { previousHandlers[sig] = previous.__sigaction_u.__sa_handler }
+        }
         watchScreen()
         observeSystem()
     }
