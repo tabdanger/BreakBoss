@@ -13,7 +13,7 @@ Each entry: (genre on the card, groove style, tempo, synth voice, tags, likes, [
 Tags and likes mean what they mean in build_kits.py GENRES. Kits that share a genre never share a sound.
 """
 
-# The browser's genre tabs, in order (BrowserView chips, KitLibrary.families).
+# The genre groups, in order (KitLibrary.families).
 FAMILIES = ["TRAP", "WEST COAST", "SOUL & R&B", "BREAKS", "POP", "WORLD"]
 
 # Which tab each of the 21 A/B genres sits under. FX LAB is under ALL only.
