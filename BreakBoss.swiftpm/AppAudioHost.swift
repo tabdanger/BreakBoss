@@ -41,6 +41,15 @@ final class AppAudioHost {
     private var restarting = false
     private var connectedSources: Set<MIDIEndpointRef> = []
 
+    /// True only in the simulator self-test (BREAKBOSS_SELFTEST=1): the live output is left off.
+    static var skipLiveAudio: Bool {
+        #if targetEnvironment(simulator)
+        return ProcessInfo.processInfo.environment["BREAKBOSS_SELFTEST"] == "1"
+        #else
+        return false
+        #endif
+    }
+
     func start() {
         guard !started else { return }
         started = true

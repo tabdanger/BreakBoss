@@ -30,7 +30,9 @@ struct ContentView: View {
             .persistentSystemOverlays(.hidden)
             .preferredColorScheme(.dark)
             .onAppear {
-                AppAudioHost.shared.start()
+                // Build-machine simulator self-test only: Codemagic's Mac has no sound device, so starting the
+                // audio output hangs and iOS aborts the app (run 3, Oct 23). The self-test renders offline.
+                if !AppAudioHost.skipLiveAudio { AppAudioHost.shared.start() }
                 // After a crash, the report opens by itself so the details get sent back.
                 if BugLog.shared.lastCrash != nil { crashReport = true }
                 // first launch: the tutorial (SKIP at any step; MENU › Tutorial plays it again)
