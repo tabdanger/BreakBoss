@@ -565,8 +565,8 @@ struct PatternBrowserPanel: View {
 // MARK: The track menu
 
 /// A track's menu (a right-click on its name; nothing else opens it). The order is Tyrone's:
-/// Track Settings, Open Sample Editor, Solo, Load Sample, Clear Sample, then the STEPS. There's no
-/// Remove here (Tyrone, Oct 21).
+/// Track Settings, Open Sample Editor, Solo, Load Sample, Clear Sample. There's no Remove here
+/// (Tyrone, Oct 21); the STEPS fills moved to the grid's right-click menu (Oct 23).
 struct TrackMenuPanel: View {
     @ObservedObject var controller: KnockController
     let pad: Int
@@ -574,14 +574,9 @@ struct TrackMenuPanel: View {
     let openEditor: () -> Void
     let loadSample: () -> Void
     let clearSample: () -> Void
-    /// Fill every N steps (1, 2, 4, 8) across the whole pattern; one undo.
-    let fill: (Int) -> Void
-    let clearSteps: () -> Void
     @Environment(\.bbMenuCenter) private var center
     @Environment(\.bbPanelBody) private var bodyH
     @Environment(\.seqFinish) private var finish
-
-    static let fills = [1, 2, 4, 8]
 
     var body: some View {
         let accent = SamplerSkin.of(finish).glow
@@ -598,12 +593,6 @@ struct TrackMenuPanel: View {
                 }
                 BBActionRow(icon: { Image(systemName: "folder") }, title: "Load Sample…", accent: accent, id: "trackMenu.load") { run(loadSample) }
                 BBActionRow(icon: { Image(systemName: "xmark") }, title: "Clear Sample", accent: accent, enabled: loaded, id: "trackMenu.clearSample") { run(clearSample) }
-                BBSectionHeading(title: "Steps")
-                ForEach(Self.fills, id: \.self) { n in
-                    BBActionRow(icon: { BBFillGlyph(every: n, accent: accent) }, title: n == 1 ? "Fill Every Step" : "Fill Every \(n) Steps",
-                                accent: accent, id: "trackMenu.fill\(n)") { run { fill(n) } }
-                }
-                BBActionRow(icon: { BBFillGlyph(every: 0, accent: accent) }, title: "Clear Steps", accent: accent, id: "trackMenu.clearSteps") { run(clearSteps) }
             }
             .padding(.horizontal, 1).padding(.bottom, 2)
         }
@@ -691,29 +680,6 @@ struct BBSwitchPill: View {
         }
         .padding(.horizontal, 10).frame(height: 28)
         .background(Capsule().fill(Color(white: 0.03)).overlay(Capsule().strokeBorder(Color(white: on ? 0.5 : 0.3), lineWidth: 1)))
-    }
-}
-
-/// The fills' icon: eight little steps in two rows, lit where that fill puts a hit (0 = Clear Steps).
-struct BBFillGlyph: View {
-    let every: Int
-    let accent: Color
-    var body: some View {
-        VStack(spacing: 2) {
-            ForEach(0..<2, id: \.self) { r in
-                HStack(spacing: 2) {
-                    ForEach(0..<4, id: \.self) { c in
-                        let step = r * 4 + c
-                        let lit = every > 0 && step % every == 0
-                        RoundedRectangle(cornerRadius: 1)
-                            .fill(lit ? accent : Color(white: 0.16))
-                            .overlay(RoundedRectangle(cornerRadius: 1).strokeBorder(Color(white: lit ? 0.9 : 0.5).opacity(0.6), lineWidth: 0.6))
-                            .frame(width: 5, height: 6)
-                    }
-                }
-            }
-        }
-        .frame(width: 26, height: 26)
     }
 }
 

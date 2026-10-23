@@ -245,8 +245,9 @@ extension SequencerView {
     }
 
     /// Right-click (or two-finger tap) on the grid (Tyrone, Oct 19): Select all, Copy, Paste, Octave up,
-    /// Octave down, Delete (Oct 21). On a note that isn't selected, the note becomes the selection; an octave move leaves
-    /// the note's ⊕ / ⊖ on it for more moves. Paste goes in at the clicked step, on the clicked track
+    /// Octave down, Delete (Oct 21), then the clicked track's STEPS (Oct 23, moved here from the track
+    /// menu): Fill Every Step / 2 / 4 / 8 Steps and Clear Steps, each one undo. On a note that isn't
+    /// selected, the note becomes the selection; an octave move leaves the note's ⊕ / ⊖ on it for more moves. Paste goes in at the clicked step, on the clicked track
     /// when the copied notes are all one track's.
     func openGridMenu(at p: CGPoint, hit: GrooveEvent?, w: CGFloat, L: [RowLayout]) {
         guard let l = layout(at: p.y, L) else { return }
@@ -264,7 +265,7 @@ extension SequencerView {
             commit(moved.0)
             selection = moved.1
         }
-        let items: [BBMenuItem] = [
+        var items: [BBMenuItem] = [
             .item("Select all", icon: "checkmark.rectangle.stack") {
                 selection = Set(pattern.events.filter { Int($0.pad) == pad }.map(NoteKey.init))
             },
@@ -283,6 +284,14 @@ extension SequencerView {
             .item("Octave down", icon: "arrow.down", enabled: canMove(-12)) { octave(-1) },
             .item("Delete", icon: "trash", enabled: !keys.isEmpty) { deleteSelection() },
         ]
+        items.append(.header("Steps"))
+        for (n, icon) in [(1, "square.grid.4x3.fill"), (2, "square.grid.3x3"), (4, "square.grid.2x2"), (8, "square")] {
+            items.append(.item(n == 1 ? "Fill Every Step" : "Fill Every \(n) Steps", icon: icon) {
+                // steps 1, 1+n, 1+2n... across the whole pattern; hits already on those steps keep their feel
+                commit(PatternEdit.fillKeeping(pattern, pad: pad, every: PatternData.stepTicks * Int32(n), cell: PatternData.stepTicks, velocity: lastVelocity))
+            })
+        }
+        items.append(.item("Clear Steps", icon: "xmark.square") { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
         gridMenuOpener.show(at: p, title: l.channel.name, width: 240, items: items)
     }
 

@@ -223,7 +223,8 @@ final class SequencerUITests: XCTestCase {
         let octaveUp = app.staticTexts["Octave up"]
         if !octaveUp.waitForExistence(timeout: 3) { dumpTree("after the two-finger tap (grid \(grid.frame))") }
         XCTAssertTrue(octaveUp.exists, "a two-finger tap on the note opens the menu")
-        for row in ["Select all", "Copy", "Paste", "Octave down", "Delete"] { XCTAssertTrue(app.staticTexts[row].exists, "the menu has \(row)") }
+        for row in ["Select all", "Copy", "Paste", "Octave down", "Delete",
+                    "Fill Every Step", "Fill Every 2 Steps", "Fill Every 4 Steps", "Fill Every 8 Steps", "Clear Steps"] { XCTAssertTrue(app.staticTexts[row].exists, "the menu has \(row)") }
         XCTAssertEqual(count(), blank + 1, "the two-finger tap doesn't draw or erase a note")
         snap("grid-menu")
         octaveUp.tap()
