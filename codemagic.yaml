@@ -127,21 +127,33 @@ workflows:
 
       - name: Check the API key
         script: |
-          ASC_KEY_ID=$(printf '%s' "${ASC_KEY_ID:-$APP_STORE_CONNECT_KEY_IDENTIFIER}" | tr -d '[:space:]')
-          ASC_ISSUER_ID=$(printf '%s' "${ASC_ISSUER_ID:-$APP_STORE_CONNECT_ISSUER_ID}" | tr -d '[:space:]')
-          KEY="${ASC_KEY_P8:-$APP_STORE_CONNECT_PRIVATE_KEY}"
-          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$KEY" ]; then
+          # The Break Boss integration comes first; ASC_* app variables only if the integration gives nothing.
+          ASC_KEY_ID=$(printf '%s' "${APP_STORE_CONNECT_KEY_IDENTIFIER:-$ASC_KEY_ID}" | tr -d '[:space:]')
+          ASC_ISSUER_ID=$(printf '%s' "${APP_STORE_CONNECT_ISSUER_ID:-$ASC_ISSUER_ID}" | tr -d '[:space:]')
+          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ]; then
             echo "::error title=API key::Add the App Store Connect key in Codemagic: settings › Integrations › Developer Portal, named Break Boss."
             exit 1
           fi
           mkdir -p "$SIGNING" ~/.appstoreconnect/private_keys
-          KEY="$KEY" python3 -I .github/scripts/p8key.py > "$SIGNING/AuthKey.p8" || true
-          cp "$SIGNING/AuthKey.p8" "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
-          chmod 600 "$SIGNING/AuthKey.p8" "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
-          if ! openssl pkey -in "$SIGNING/AuthKey.p8" -noout 2>/dev/null; then
-            echo "::error title=API key::The .p8 isn't a readable private key ($(KEY="$KEY" python3 -I .github/scripts/p8key.py 2>&1 >/dev/null)). Upload the AuthKey_XXXXXXXXXX.p8 file again, exactly as downloaded."
+          TRIED=""
+          for SOURCE in APP_STORE_CONNECT_PRIVATE_KEY ASC_KEY_P8; do
+            VALUE=$(printenv "$SOURCE" || true)
+            [ -n "$VALUE" ] || continue
+            KEY="$VALUE" python3 -I .github/scripts/p8key.py > "$SIGNING/AuthKey.p8" 2> "$SIGNING/key-shape.txt" || true
+            if openssl pkey -in "$SIGNING/AuthKey.p8" -noout 2>/dev/null; then
+              echo "Key read from $SOURCE ($(cat "$SIGNING/key-shape.txt"))."
+              TRIED=""
+              break
+            fi
+            TRIED="$TRIED $SOURCE: $(cat "$SIGNING/key-shape.txt");"
+          done
+          rm -f "$SIGNING/key-shape.txt"
+          if [ -n "$TRIED" ] || ! openssl pkey -in "$SIGNING/AuthKey.p8" -noout 2>/dev/null; then
+            echo "::error title=API key::No readable private key (${TRIED:- no key text at all}). In Codemagic › Settings › Integrations › Developer Portal › Manage keys, remove Break Boss and add it again with the AuthKey_XXXXXXXXXX.p8 file."
             exit 1
           fi
+          cp "$SIGNING/AuthKey.p8" "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          chmod 600 "$SIGNING/AuthKey.p8" "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
           {
             echo "ASC_KEY_ID=$ASC_KEY_ID"
             echo "ASC_ISSUER_ID=$ASC_ISSUER_ID"
