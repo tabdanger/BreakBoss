@@ -3283,7 +3283,9 @@ enum KnockSelfTest {
             e.kitHandoff.publish(kit)
             e.patternHandoff.publish(PatternSet(loops))
             for (i, loop) in loops.enumerated() {
-                let blocks = Int(Double(loop.lengthTicks) / Double(PatternData.ppq) * 60 / preset.bpm * 48_000 / 512) + 2
+                let beats: Double = Double(loop.lengthTicks) / Double(PatternData.ppq)
+                let seconds: Double = beats * 60 / preset.bpm
+                let blocks = Int(seconds * 48_000 / 512) + 2
                 e.send(KEvent(kind: .allOff))
                 _ = block(e)
                 let before = hits(e)
