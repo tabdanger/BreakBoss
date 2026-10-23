@@ -135,6 +135,14 @@ def capture_diagnostics(family, udid, output, started):
         print(f"::group::{family} startup diagnostics (last 40 lines)", flush=True)
         print("\n".join(result.stdout.splitlines()[-40:]) or "No matching system log entries.", flush=True)
         print("::endgroup::", flush=True)
+        # The app's own last words (Swift "Fatal error", uncaught exceptions, aborts) are lost in the
+        # tail above under SpringBoard's lines, so print them on their own.
+        words = ("fatal", "error", "exception", "abort", "terminat", "assert", "crash", "precondition")
+        own = [l for l in result.stdout.splitlines()
+               if " BreakBoss[" in l and any(w in l.lower() for w in words)]
+        print(f"::group::{family} app error lines from the system log (last 40)", flush=True)
+        print("\n".join(own[-40:]) or "No error lines from the app in the system log.", flush=True)
+        print("::endgroup::", flush=True)
     except subprocess.TimeoutExpired:
         path.write_text("Simulator system-log query timed out after 20 seconds.\n")
     reports = output / "crash-reports"
@@ -142,10 +150,16 @@ def capture_diagnostics(family, udid, output, started):
     roots = [Path.home() / "Library/Logs/DiagnosticReports",
              Path.home() / "Library/Developer/CoreSimulator/Devices" / udid / "data/Library/Logs"]
     candidates = []
-    for root in roots:
-        if root.is_dir():
-            candidates.extend(p for p in root.rglob("*.ips")
-                              if ("BreakBoss" in p.name or "JetsamEvent" in p.name) and p.stat().st_mtime >= started)
+    # ReportCrash writes the .ips a few seconds after the app dies: wait up to 30 s for it.
+    deadline = time.monotonic() + 30
+    while True:
+        for root in roots:
+            if root.is_dir():
+                candidates.extend(p for p in root.rglob("*.ips")
+                                  if ("BreakBoss" in p.name or "JetsamEvent" in p.name) and p.stat().st_mtime >= started)
+        if candidates or time.monotonic() > deadline:
+            break
+        time.sleep(2)
     for source in sorted(candidates, key=lambda p: p.stat().st_mtime, reverse=True)[:3]:
         shutil.copy2(source, reports / f"{family}-{source.name}")
         try:
@@ -155,6 +169,17 @@ def capture_diagnostics(family, udid, output, started):
             report = json.loads(body or header)
             summary = {key: report.get(key) for key in ("procName", "exception", "termination", "faultingThread", "asi")}
             print(f"{family} crash summary: {json.dumps(summary, ensure_ascii=True)[:6000]}", flush=True)
+            # The crashing thread's calls, top first, so the failing function shows in the step log.
+            images = report.get("usedImages") or []
+            threads = report.get("threads") or []
+            faulting = report.get("faultingThread")
+            if isinstance(faulting, int) and 0 <= faulting < len(threads):
+                print(f"::group::{family} crashing thread {faulting}", flush=True)
+                for frame in (threads[faulting].get("frames") or [])[:40]:
+                    index = frame.get("imageIndex")
+                    image = images[index].get("name", "?") if isinstance(index, int) and 0 <= index < len(images) else "?"
+                    print(f"  {image}  {frame.get('symbol', '?')} +{frame.get('symbolLocation', 0)}", flush=True)
+                print("::endgroup::", flush=True)
         except (ValueError, OSError):
             print(f"{family} crash report retained: {source.name}", flush=True)
 
@@ -265,6 +290,13 @@ def run_device(family, device, app, bundle_id, output, timeout):
             if not captured:
                 print(f"::warning title=Simulator screenshot::{family} live screenshot not captured "
                       "(self-test and faceplate renders are what count)", flush=True)
+        # The app's crash catcher (BugCatcher) writes the crash and its call stack in Documents.
+        if failure and data:
+            crash = data / "Documents" / "Bug Reports" / "crash.txt"
+            if crash.exists():
+                print(f"::group::{family} app crash report (Bug Reports/crash.txt)", flush=True)
+                print(crash.read_text(errors="replace")[:12000], flush=True)
+                print("::endgroup::", flush=True)
         # Copy a bounded tail to job stdout so result counts, phase timings and failures remain
         # inspectable through the GitHub logs connector even when artifact downloads are unavailable.
         text = combined_log(console, data, launch_started)
