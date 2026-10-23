@@ -2573,7 +2573,7 @@ enum KnockSelfTest {
               "rack: identical sounds never share their MIDI events")
     }
 
-    /// The track menu's STEPS (Tyrone, Oct 21): fills on steps 1, 1+N, 1+2N... across the whole pattern,
+    /// The note menu's STEPS (Tyrone, Oct 21; moved from the track menu Oct 23): fills on steps 1, 1+N, 1+2N... across the whole pattern,
     /// hits already on those steps keep their velocity and offset, other tracks untouched.
     static func checkTrackMenuFills(_ p: PatternData, bar: Int32, step: Int32) {
         let hat = Pad.hat.rawValue
@@ -2589,18 +2589,18 @@ enum KnockSelfTest {
             let f = PatternEdit.fillKeeping(long, pad: hat, every: step * Int32(n), cell: step, velocity: 0.78)
             let ticks = f.events.filter { Int($0.pad) == hat }.map(\.tick)
             check(ticks == stride(from: 0, to: total, by: n).map { Int32($0) * step },
-                  "track menu: Fill Every \(n) puts hits on steps 1, \(1 + n), \(1 + 2 * n)... through all \(total) steps")
-            check(f.events.filter { Int($0.pad) != hat } == others, "track menu: Fill Every \(n) leaves the other tracks alone")
+                  "note menu: Fill Every \(n) puts hits on steps 1, \(1 + n), \(1 + 2 * n)... through all \(total) steps")
+            check(f.events.filter { Int($0.pad) != hat } == others, "note menu: Fill Every \(n) leaves the other tracks alone")
             let kept = f.events.first { Int($0.pad) == hat && $0.tick == step * 4 }
-            if n <= 4 { check(kept?.velocity == 0.31 && kept?.offset == 3, "track menu: Fill Every \(n) keeps an existing hit's velocity and offset") }
+            if n <= 4 { check(kept?.velocity == 0.31 && kept?.offset == 3, "note menu: Fill Every \(n) keeps an existing hit's velocity and offset") }
             check(f.events.first { Int($0.pad) == hat && $0.tick == step * 8 }.map { n > 8 || $0.velocity == 0.78 } ?? (n > 8),
-                  "track menu: Fill Every \(n) draws new hits at the draw velocity")
+                  "note menu: Fill Every \(n) draws new hits at the draw velocity")
         }
         check(!PatternEdit.fillKeeping(long, pad: hat, every: step * 2, cell: step, velocity: 0.78).events.contains { Int($0.pad) == hat && $0.tick == step },
-              "track menu: Fill Every 2 drops the track's hits between its steps")
+              "note menu: Fill Every 2 drops the track's hits between its steps")
         let cleared = PatternEdit.clearChannel(long, pad: hat)
         check(!cleared.events.contains { Int($0.pad) == hat } && cleared.events.filter { Int($0.pad) != hat } == others,
-              "track menu: Clear Steps empties only that track")
+              "note menu: Clear Steps empties only that track")
     }
 
     /// The hardware menus stay inside the view they open in, at every edge and at small plug-in sizes.

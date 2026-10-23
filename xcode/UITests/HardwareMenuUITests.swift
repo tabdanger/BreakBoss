@@ -2,8 +2,8 @@ import XCTest
 import UIKit
 
 /// The hardware menus (Tyrone, Oct 21): the track menu opens from a rack track (right-click on the iPad;
-/// the test build's hold here), runs in Tyrone's order with no Remove, Solo shows its state, the fills and Clear Steps change
-/// only that track and undo in one step, a tap outside closes the menu without touching the grid, and
+/// the test build's hold here), runs in Tyrone's order with no Remove and no fills (those moved to the grid's menu, Oct 23),
+/// Solo shows its state, a tap outside closes the menu without touching the grid, and
 /// Open Sample Editor opens the SAMPLER. KITS and PATTERNS open from their chips. Prints a picture of each.
 final class HardwareMenuUITests: XCTestCase {
     private var app: XCUIApplication!
@@ -108,13 +108,13 @@ final class HardwareMenuUITests: XCTestCase {
         guard openTrackMenu(header, "first") else { dumpTree("no track menu"); XCTFail("the track menu opens"); return }
         sleep(1)
         picture("track-menu")
-        let order = ["trackMenu.settings", "trackMenu.editor", "trackMenu.solo", "trackMenu.load", "trackMenu.clearSample",
-                     "trackMenu.fill1", "trackMenu.fill2", "trackMenu.fill4", "trackMenu.fill8", "trackMenu.clearSteps"]
+        let order = ["trackMenu.settings", "trackMenu.editor", "trackMenu.solo", "trackMenu.load", "trackMenu.clearSample"]
         let ys = order.map { any($0).exists ? any($0).frame.minY : -1 }
         print("UITREE HW ORDER \(zip(order, ys).map { "\($0.0)@\(Int($0.1))" }.joined(separator: " "))")
         XCTAssertFalse(ys.contains(-1), "every track-menu row is there")
         XCTAssertEqual(ys, ys.sorted(), "the track menu runs in Tyrone's order")
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Remove")).firstMatch.exists, "no Remove in the track menu")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Fill Every")).firstMatch.exists, "no fills in the track menu")
         let title = any("hwMenuTitle")
         print("UITREE HW title=\(title.exists ? title.label : "-") at=\(title.frame) settings=\(any("trackMenu.settings").frame) app=\(app.frame)")
 
@@ -126,22 +126,6 @@ final class HardwareMenuUITests: XCTestCase {
         print("UITREE HW solo \(before) -> \(after)")
         XCTAssertNotEqual(before, after, "Solo switches and the menu shows it")
         any("trackMenu.solo").tap(); sleep(1)
-
-        // Fill Every Step / Every 4 / Clear Steps, each one undo
-        any("trackMenu.fill1").tap(); sleep(1)
-        XCTAssertFalse(any("trackMenu.settings").exists, "a fill closes the menu")
-        let n1 = notes(0)
-        _ = openTrackMenu(header, "fill4")
-        any("trackMenu.fill4").tap(); sleep(1)
-        let n4 = notes(0)
-        print("UITREE HW fills every1=\(n1) every4=\(n4)")
-        XCTAssertTrue(n4 > 0 && n1 == n4 * 4, "Fill Every 4 puts a hit on one step in four across the whole pattern")
-        any("undoButton").tap(); sleep(1)
-        XCTAssertEqual(notes(0), n1, "UNDO takes the fill back in one step")
-        _ = openTrackMenu(header, "clear")
-        any("trackMenu.clearSteps").tap(); sleep(1)
-        XCTAssertEqual(notes(0), 0, "Clear Steps empties the track")
-        any("undoButton").tap(); sleep(1)
 
         // a tap outside closes the menu and doesn't reach the grid
         _ = openTrackMenu(header, "outside")

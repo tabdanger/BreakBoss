@@ -123,19 +123,19 @@ final class SamplerUITests: XCTestCase {
         XCTAssertTrue(header.waitForExistence(timeout: 20), "the rack shows its first track")
         sleep(1)
 
-        // the track menu (Tyrone, Oct 21): Track Settings, Open Sample Editor, Solo, Load Sample, Clear Sample,
-        // then the STEPS; no Remove
+        // the track menu (Tyrone, Oct 21): Track Settings, Open Sample Editor, Solo, Load Sample, Clear Sample;
+        // no Remove, no fills (they're in the grid's menu since Oct 23)
         menuTap(header, expect: "Track Settings")
         let settings = menuRow("Track Settings")
         XCTAssertTrue(settings.waitForExistence(timeout: 3), "a two-finger tap opens the track menu with Track Settings")
         snap("track-menu")
-        let order = ["Track Settings", "Open Sample Editor", "Solo", "Load Sample", "Clear Sample",
-                     "Fill Every Step", "Fill Every 2 Steps", "Fill Every 4 Steps", "Fill Every 8 Steps", "Clear Steps"]
+        let order = ["Track Settings", "Open Sample Editor", "Solo", "Load Sample", "Clear Sample"]
         let ys = order.map { menuRow($0).exists ? menuRow($0).frame.minY : -1 }
         print("UITREE MENU ORDER \(zip(order, ys).map { "\($0.0)@\(Int($0.1))" }.joined(separator: " "))")
         XCTAssertEqual(ys, ys.sorted(), "the track menu runs in Tyrone's order")
         XCTAssertFalse(menuRow("Remove").exists, "the track menu has no Remove")
-        if !menuRow("Clear Steps").exists { dumpTree("track menu") }
+        XCTAssertFalse(menuRow("Fill Every Step").exists, "the fills left the track menu")
+        if !menuRow("Clear Sample").exists { dumpTree("track menu") }
 
         // Track settings (build 82 crashed here): the sheet opens and its SOUND menu works
         settings.tap()

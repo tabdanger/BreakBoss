@@ -284,7 +284,7 @@ extension SequencerView {
     }
 
     /// The track's menu (Tyrone's mockup, Oct 21): Track Settings, Open Sample Editor, Solo, Load
-    /// Sample, Clear Sample, then the STEPS fills and Clear Steps. Each fill or clear is one undo.
+    /// Sample, Clear Sample. The STEPS fills live in the grid's right-click menu (Oct 23).
     func trackMenu(_ ch: WorkspaceChannel) -> TrackMenuPanel {
         let pad = ch.pad
         return TrackMenuPanel(
@@ -295,12 +295,7 @@ extension SequencerView {
             clearSample: {
                 // only the loaded sample goes: the track keeps its notes, level, pan and sampler settings
                 var ps = controller.state.pads[pad]; ps.sampleFile = nil; controller.setPadSettings(pad, ps)
-            },
-            fill: { n in
-                // steps 1, 1+n, 1+2n... across the whole pattern; hits already on those steps keep their feel
-                commit(PatternEdit.fillKeeping(pattern, pad: pad, every: PatternData.stepTicks * Int32(n), cell: PatternData.stepTicks, velocity: lastVelocity))
-            },
-            clearSteps: { commit(PatternEdit.clearChannel(pattern, pad: pad)) })
+            })
     }
 
     // MARK: MIDI out
