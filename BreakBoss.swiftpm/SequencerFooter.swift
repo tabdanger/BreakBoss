@@ -43,7 +43,7 @@ extension SequencerView {
         switch p {
         case .analogEQ: return "ANALOG EQ"
         case .textureDelay: return "DELAY"
-        case .gatedReverb: return "REVERB"
+        case .gatedReverb: return "GATED REVERB"
         case .reverbDecay: return "DECAY"
         case .reverbPredelay: return "PRE-DELAY"
         default: return p.name.uppercased()
