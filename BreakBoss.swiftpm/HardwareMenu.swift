@@ -562,6 +562,32 @@ struct PatternBrowserPanel: View {
     }
 }
 
+// MARK: Faces
+
+/// Holding Face 1's MODERN button (Tyrone, Oct 24): Modern's two faces, so the face is right there
+/// instead of deep in MENU. Picking one also switches to Modern, like MENU's Modern faceplate rows.
+struct FacePickerPanel: View {
+    @ObservedObject var controller: KnockController
+    @Environment(\.bbMenuCenter) private var center
+    @Environment(\.seqFinish) private var finish
+
+    var body: some View {
+        let accent = SamplerSkin.of(finish).glow
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach([false, true], id: \.self) { plat in
+                BBBrowserRow(title: plat ? "PLATINUM" : "DEFAULT", detail: plat ? "Brushed silver" : "Modern black",
+                             selected: controller.mode == .modern && controller.platinumFace == plat, accent: accent) {
+                    center?.close()
+                    controller.setPlatinumFace(plat)
+                    if controller.mode != .modern { controller.selectMode(.modern) }
+                }
+                .accessibilityIdentifier(plat ? "facePicker.platinum" : "facePicker.default")
+            }
+        }
+        .padding(.horizontal, 1).padding(.bottom, 2)
+    }
+}
+
 // MARK: The track menu
 
 /// A track's menu (a right-click on its name; nothing else opens it). The order is Tyrone's:

@@ -157,7 +157,17 @@ struct FaceplateView: View {
         hit(L.oneShotButton, s) { controller.selectPlayMode(.oneShot) }
         hit(L.loopButton, s) { controller.selectPlayMode(.loop) }
         ForEach(SoundMode.allCases, id: \.rawValue) { m in
-            if let r = L.modeButtons[m.assetSuffix] { hit(r, s) { controller.selectMode(m) } }
+            if let r = L.modeButtons[m.assetSuffix] {
+                if m == .modern && !FaceplateView.snapshotMode {
+                    // hold MODERN to pick its face, Default or Platinum, without going into MENU (Tyrone, Oct 24)
+                    PressGlow().bbHoldMenu(title: "Faces", finish: sfx, id: "modeModern", tap: { controller.selectMode(m) }) {
+                        FacePickerPanel(controller: controller)
+                    }
+                    .place(r, s)
+                } else {
+                    hit(r, s) { controller.selectMode(m) }
+                }
+            }
         }
     }
 
