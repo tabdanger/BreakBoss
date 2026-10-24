@@ -73,20 +73,34 @@ extension PadSettings {
     }
 }
 
-/// The FX knobs on Face 2's bottom rail, per track (Tyrone, Oct 19). They morph with the mode:
+/// Each mode's FX section: the seven knobs on Face 1's bottom row and on Face 2's bottom rail, per
+/// track (Tyrone, Oct 19). They morph with the mode:
 /// MODERN   clean analog punch: BOOST, PUNCH, ANALOG EQ, TIGHTEN, GRIT, SHINE, NOISE
-/// VINTAGE  retro hardware: BOOST becomes DRIVE (warm saturation), the same shaping knobs
-/// TEXTURE  resampled and lo-fi: RESAMPLE, INSTABILITY, DELAY, REVERB, DECAY, PRE-DELAY, WARP, GLITCH
-/// With a track selected they turn that track's own insert (BusProcessor, `insert`); Face 1's
-/// knobs (and Face 2 with no track) stay the main chain's.
+/// VINTAGE  (Tyrone, Oct 24) DRIVE, PUNCH, ANALOG EQ, GRIT, SHINE, TIGHTEN, NOISE: DRIVE takes BOOST's
+///          place, so every hit runs hotter and rounder (BOOST's push plus tape saturation)
+/// TEXTURE  (Tyrone, Oct 24) DRIVE, RESAMPLE, INSTABILITY, DELAY, SHINE, GATED REVERB, NOISE:
+///          INSTABILITY also drives the warp and the stutters (as before Oct 17); the reverb's
+///          DECAY and PRE-DELAY sit at their middle / zero
+/// Only a mode's own knobs reach its sound (BusProcessor.Settings.keepSection), so every label
+/// matches what you hear. With a track selected they turn that track's own insert (BusProcessor,
+/// `insert`); Face 1's knobs (and Face 2 with no track) stay the main chain's.
 enum TrackFX {
     static func params(_ mode: SoundMode) -> [KParam] {
         switch mode {
         case .modern: return [.boost, .punch, .analogEQ, .tighten, .grit, .shine, .noise]
-        case .vintage: return [.drive, .punch, .analogEQ, .tighten, .grit, .shine, .noise]
-        case .texture: return [.resample, .instability, .textureDelay, .gatedReverb, .reverbDecay, .reverbPredelay, .warp, .glitch]
+        case .vintage: return [.drive, .punch, .analogEQ, .grit, .shine, .tighten, .noise]
+        case .texture: return [.drive, .resample, .instability, .textureDelay, .shine, .gatedReverb, .noise]
         }
     }
+
+    /// The knob a Face 1 bottom-row place turns in a mode. The places are named by Modern's art
+    /// (BOOST, PUNCH, ANALOG EQ, GRIT, SHINE, TIGHTEN, NOISE); Vintage and Texture print their own
+    /// section there, in order.
+    static func face1(_ place: KParam, _ mode: SoundMode) -> KParam {
+        guard mode != .modern, let i = face1Places.firstIndex(of: place) else { return place }
+        return params(mode)[i]
+    }
+    static let face1Places: [KParam] = [.boost, .punch, .analogEQ, .grit, .shine, .tighten, .noise]
 
     static func key(_ p: KParam, _ mode: SoundMode) -> String { "\(mode.assetSuffix).\(p.id)" }
 
@@ -117,9 +131,10 @@ enum TrackFX {
             r.tighten = v(.tighten)
             s.resample = 0; s.instability = 0; s.delay = 0; s.reverb = 0; s.warp = 0; s.glitch = 0
         case .texture:
-            s.resample = v(.resample); s.instability = v(.instability); s.delay = v(.textureDelay); s.reverb = v(.gatedReverb)
-            s.reverbDecay = v(.reverbDecay); s.reverbPredelay = v(.reverbPredelay); s.warp = v(.warp); s.glitch = v(.glitch)
+            s.drive = v(.drive); s.resample = v(.resample); s.instability = v(.instability); s.delay = v(.textureDelay)
+            s.shine = v(.shine); s.reverb = v(.gatedReverb); s.noise = v(.noise)
         }
+        s.keepSection()
         r.settings = s
         r.active = max(s.boost, s.drive, s.punch, s.analogEQ, s.grit, s.shine, s.noise,
                        s.resample, s.instability, s.delay, s.reverb, s.warp, s.glitch) > 0.001
@@ -963,6 +978,7 @@ final class KnockEngine {
         bs.reverbDecay = params[KParam.reverbDecay.rawValue]
         bs.reverbPredelay = params[KParam.reverbPredelay.rawValue]
         bs.delaySync = params[KParam.delaySync.rawValue] > 0.5
+        bs.keepSection()
         bs.beat = playing ? blockBeat0 : nil
         bus.process(mixL, mixR, count: frames, bs)
 
@@ -1594,7 +1610,8 @@ final class KnockEngine {
         // the track's own TIGHTEN (Face 2) on top of the main one
         let mode = SoundMode(rawValue: Int(params[KParam.soundMode.rawValue].rounded())) ?? .modern
         let own = kit.insert(pad, mode)?.tighten ?? 0
-        let tighten = (1 - (1 - params[KParam.tighten.rawValue]) * (1 - own)) * (pad == Pad.bass808.rawValue ? 0.5 : 1)
+        let mainTighten = mode == .texture ? 0 : params[KParam.tighten.rawValue]     // Texture's section has no TIGHTEN
+        let tighten = (1 - (1 - mainTighten) * (1 - own)) * (pad == Pad.bass808.rawValue ? 0.5 : 1)
         var tau: Double = .infinity
         if tighten > 0.001 { tau = 0.045 + (1 - Double(tighten)) * (1 - Double(tighten)) * 1.5 }
         if ps.decay < 0.999 { tau = min(tau, 0.03 + Double(ps.decay) * Double(ps.decay) * 2.5) }

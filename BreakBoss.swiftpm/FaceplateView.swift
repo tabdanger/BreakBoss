@@ -164,9 +164,12 @@ struct FaceplateView: View {
     /// The 14 knobs and the CLIPPER button.
     @ViewBuilder
     private func knobs(_ L: FaceplateLayout, sfx: String, s: CGFloat) -> some View {
+        // the bottom row is the mode's FX section: Vintage and Texture print their own knobs there
+        let mode = controller.mode
         ForEach(KnobControl.order, id: \.rawValue) { p in
             if let k = L.knobs[p.id] {
-                KnobControl(controller: controller, param: p, knob: k, scale: s)
+                KnobControl(controller: controller, param: TrackFX.face1(p, mode), knob: k, scale: s)
+                    .id("\(p.id).\(mode.rawValue)")
             }
         }
         if controller.value(.clipper) < 0.5 {

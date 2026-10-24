@@ -37,6 +37,7 @@ enum KnockSelfTest {
         phase("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence)
         phase("checkEveryPatternAudible", checkEveryPatternAudible)
         phase("checkTextureControls", checkTextureControls)
+        phase("checkFXSections", checkFXSections)
         phase("checkLevelPanGlide", checkLevelPanGlide)
         phase("checkPatternEditor", checkPatternEditor)
         phase("checkMIDIPadMap", checkMIDIPadMap)
@@ -500,7 +501,7 @@ enum KnockSelfTest {
         let lateDry = energy(render(plain, mode: .texture, hit: a, blocks: 700), from: 60_000)
         check(late > lateDry * 4 + 1e-6, "track FX TEXTURE: DELAY on a track echoes that track (\(late) vs \(lateDry))")
         // saved with the track and restored
-        var saved = PadSettings(); saved.setFX(.punch, .vintage, 0.6); saved.setFX(.warp, .texture, 0.3)
+        var saved = PadSettings(); saved.setFX(.punch, .vintage, 0.6); saved.setFX(.instability, .texture, 0.3)
         let decoded = (try? JSONEncoder().encode(saved)).flatMap { try? JSONDecoder().decode(PadSettings.self, from: $0) }
         check(decoded == saved && decoded?.fxValue(.punch, .vintage) == 0.6 && decoded?.fxValue(.punch, .modern) == 0,
               "track FX: a track's knobs save and come back per mode")
@@ -1950,6 +1951,7 @@ enum KnockSelfTest {
             let (l, r) = render(kit: kit, style: .trap, mode: mode, tempo: 140, seconds: 4) { e in
                 e.setParam(.clipDrive, 1)      // +18 dB into the clipper
                 e.setParam(.boost, 1); e.setParam(.punch, 1); e.setParam(.grit, 1); e.setParam(.shine, 1); e.setParam(.noise, 0.6)
+                e.setParam(.drive, 1)          // Vintage / Texture: DRIVE in BOOST's place
             }
             var peak: Float = 0
             var finite = true
@@ -3322,19 +3324,53 @@ enum KnockSelfTest {
             check(difference > 0.1, "\(parameter.name) changes texture output")
             check(b.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "\(parameter.name) stays finite and clipped")
         }
-        // Face 2's Texture knobs (Oct 17): WARP, GLITCH, reverb DECAY / PRE-DELAY and DELAY's tempo lock each change the sound.
-        for parameter in [KParam.warp, .glitch, .reverbDecay, .reverbPredelay, .delaySync] {
-            let (a, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 90, seconds: 3) { $0.setParam(.textureDelay, 0.8); $0.setParam(.gatedReverb, 0.8); $0.setParam(parameter, 0) }
-            let (b, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 90, seconds: 3) { $0.setParam(.textureDelay, 0.8); $0.setParam(.gatedReverb, 0.8); $0.setParam(parameter, 1) }
+        // DELAY's tempo lock (a double tap) still changes the sound.
+        do {
+            let (a, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 90, seconds: 3) { $0.setParam(.textureDelay, 0.8); $0.setParam(.gatedReverb, 0.8); $0.setParam(.delaySync, 0) }
+            let (b, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 90, seconds: 3) { $0.setParam(.textureDelay, 0.8); $0.setParam(.gatedReverb, 0.8); $0.setParam(.delaySync, 1) }
             var difference: Double = 0
             for i in a.indices { difference += Double(abs(a[i] - b[i])) }
-            check(difference > 0.1, "\(parameter.name) changes texture output")
-            check(b.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "\(parameter.name) stays finite and clipped")
+            check(difference > 0.1, "Delay Sync changes texture output")
         }
-        // WARP moves the sound bar to bar but stays in level.
-        let (warped, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 8) { $0.setParam(.warp, 1); $0.setParam(.glitch, 1) }
-        check(warped.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "WARP stays finite and clipped")
-        check(warped[(warped.count - 48_000)...].contains { abs($0) > 0.01 }, "WARP keeps sounding over many scenes")
+        // INSTABILITY warps and stutters too (Oct 24): moves the sound bar to bar but stays in level.
+        let (warped, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 8) { $0.setParam(.instability, 1) }
+        check(warped.allSatisfy { $0.isFinite && abs($0) <= MasterBus.ceiling + 0.001 }, "INSTABILITY's warp stays finite and clipped")
+        check(warped[(warped.count - 48_000)...].contains { abs($0) > 0.01 }, "INSTABILITY's warp keeps sounding over many scenes")
+    }
+
+    /// Each mode's FX section (Tyrone, Oct 24): Face 1's bottom row and Face 2's rail show the mode's
+    /// own seven knobs, in his order; every one of them changes the sound, and a knob outside the
+    /// mode's section (left turned in another mode) changes nothing, so the labels match the sound.
+    static func checkFXSections() {
+        check(TrackFX.params(.vintage) == [.drive, .punch, .analogEQ, .grit, .shine, .tighten, .noise]
+              && TrackFX.params(.texture) == [.drive, .resample, .instability, .textureDelay, .shine, .gatedReverb, .noise]
+              && TrackFX.params(.modern) == [.boost, .punch, .analogEQ, .tighten, .grit, .shine, .noise],
+              "FX sections: Vintage DRIVE PUNCH ANALOG EQ GRIT SHINE TIGHTEN NOISE; Texture DRIVE RESAMPLE INSTABILITY DELAY SHINE GATED REVERB NOISE; Modern unchanged")
+        check(SoundMode.allCases.allSatisfy { m in TrackFX.face1Places.map { TrackFX.face1($0, m) } == (m == .modern ? TrackFX.face1Places : TrackFX.params(m)) },
+              "FX sections: Face 1's bottom row turns the knobs its plate prints, in order")
+        let kit = kitBuffers(KitLibrary.modernTrap)
+        func moved(_ mode: SoundMode, _ p: KParam, from v0: Float = 0, to v1: Float = 1) -> Double {
+            let base: (KnockEngine) -> Void = { $0.setParam(.textureDelay, 0); $0.setParam(.gatedReverb, 0); $0.setParam(.clipper, 0) }
+            let (a, _) = render(kit: kit, style: .trap, mode: mode, tempo: 120, seconds: 1.5) { base($0); $0.setParam(p, v0) }
+            let (b, _) = render(kit: kit, style: .trap, mode: mode, tempo: 120, seconds: 1.5) { base($0); $0.setParam(p, v1) }
+            var difference: Double = 0
+            for i in a.indices { difference += Double(abs(a[i] - b[i])) }
+            return difference
+        }
+        for mode in SoundMode.allCases {
+            // two identical renders: how far apart "no change" can be
+            let same = moved(mode, .punch, from: 0, to: 0)
+            for p in TrackFX.params(mode) {
+                let d = moved(mode, p)
+                check(d > 0.1, "FX sections \(mode.title): \(p.name) changes the sound (\(String(format: "%.2f", d)))")
+            }
+            let outside = [KParam.boost, .punch, .analogEQ, .grit, .tighten, .drive, .warp, .glitch, .reverbDecay, .reverbPredelay]
+                .filter { !TrackFX.params(mode).contains($0) }
+            for p in outside {
+                let d = moved(mode, p)
+                check(d <= same * 1.000_1 + 1e-6, "FX sections \(mode.title): \(p.name), not in this mode's section, leaves the sound alone (\(d))")
+            }
+        }
     }
 
     /// Turning a channel's LEVEL or PAN while its sound rings: the note keeps playing and glides to

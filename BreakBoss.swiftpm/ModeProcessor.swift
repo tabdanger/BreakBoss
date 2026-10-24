@@ -14,7 +14,11 @@ import Foundation
 //          (they used to follow INSTABILITY), the reverb has DECAY and PRE-DELAY, and a double tap on
 //          DELAY frees it from the tempo (300 ms) or locks it back to a dotted 1/8.
 //
+// Oct 24 (Tyrone): each mode has its own seven-knob section (TrackFX.params); DRIVE replaces BOOST
+// in Vintage and Texture. Settings.keepSection keeps the other modes' knobs out of the sound.
+//
 // BOOST    low-end and level push into the chain.
+// DRIVE    BOOST's push plus tape saturation into the GRIT stage (Vintage, Texture).
 // PUNCH    transient shaper: louder attacks, a little less sustain.
 // ANALOG EQ  console-style curve: tight low shelf, scooped low-mids, airy top.
 // GRIT     saturation (2x oversampled so it doesn't alias).
@@ -217,6 +221,23 @@ final class BusProcessor {
         var insert = false
         /// The transport's beat at this block's first sample, while playing (stutters land on its 1/16s).
         var beat: Double?
+
+        /// Only the mode's own FX section reaches the sound (Tyrone, Oct 24; TrackFX.params), so a
+        /// knob left turned in another mode can't colour this one. DRIVE (Vintage, Texture) takes
+        /// BOOST's push (level and low shelf) on top of its tape saturation; Texture's INSTABILITY
+        /// also warps and stutters, its reverb at the middle DECAY and no PRE-DELAY.
+        mutating func keepSection() {
+            switch mode {
+            case .modern:
+                drive = 0
+            case .vintage:
+                boost = drive
+            case .texture:
+                boost = drive; punch = 0; analogEQ = 0; grit = 0
+                warp = instability; glitch = instability
+                reverbDecay = KParam.reverbDecay.defaultValue; reverbPredelay = KParam.reverbPredelay.defaultValue
+            }
+        }
     }
 
     /// Processes `count` stereo samples in place.
