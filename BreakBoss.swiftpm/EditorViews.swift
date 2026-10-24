@@ -8,31 +8,37 @@ import UniformTypeIdentifiers
 private let panel = Color(white: 0.11)
 private let accent = Color(red: 1, green: 0.30, blue: 0.20)
 
-// MARK: - Pad editor (ONE-SHOT: hold a pad)
+// MARK: - Pad sound menu (ONE-SHOT: hold a pad)
 
+/// The pad sound menu (Tyrone's mockup, Oct 24): one floating hardware panel with SOUND / SAMPLES /
+/// PAD tabs in the mode's colours (PadSoundPanel.swift). SOUND shows the loaded sound and the ways
+/// to put yours on the pad, SAMPLES is the Samples folder, PAD is level, pan, tune, decay, filter
+/// and reverse. Every action is the one the old pad editor ran.
 struct PadEditorView: View {
     @ObservedObject var controller: KnockController
     let pad: Int
     @Environment(\.dismiss) private var dismiss
     @State private var importing = false
     @State private var files: [URL] = []
+    @State private var tab: PadSoundTab = .sound
+    @State private var playedAt: Date?
     @StateObject private var recorder = PadRecorder()
 
     var body: some View {
+        let look = PadSoundPalette.of(controller.faceKey)
         let settings = controller.state.pads[pad]
-        NavigationView {
-            Form {
-                headerSection(settings)
-                soundSection(settings)
-                samplesSection(settings)
-                padSection(settings)
-                kitNoteSection
+        VStack(spacing: 0) {
+            header(look)
+            tabStrip(look)
+            ScrollView {
+                tabBody(settings, look)
+                    .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 16)
             }
-            .navigationTitle("Pad \(pad + 1)")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            footer(look)
         }
-        .navigationViewStyle(.stack)
+        .background(PadSoundBody(look: look))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padSoundSheetClear()
         .preferredColorScheme(.dark)
         .onAppear { files = KnockFolders.sampleFiles() }
         .onDisappear { if recorder.isRecording { recorder.cancel() } }
@@ -44,138 +50,222 @@ struct PadEditorView: View {
         }
     }
 
-    /// The pad, its name, PLAY and its waveform.
-    private func headerSection(_ settings: PadSettings) -> some View {
-        Section {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("PAD \(pad + 1) · \(Pad(rawValue: pad)?.label ?? "")")
-                        .font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
-                    Text(controller.padName(pad).uppercased())
-                        .font(.system(.title3, design: .monospaced))
-                }
-                Spacer()
-                Button { controller.padDown(pad, velocity: 1) } label: {
-                    Label("Play", systemImage: "play.fill")
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(accent)
+    // MARK: Header, tabs, footer
+
+    /// PAD 07, what the panel's for, and DONE.
+    private func header(_ look: PadSoundPalette) -> some View {
+        HStack(spacing: 12) {
+            PadSoundScrew(finish: look.finish)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(String(format: "PAD %02d", pad + 1)).font(.system(size: 19, weight: .bold, design: .monospaced))
+                    .foregroundColor(look.ink)
+                    .accessibilityIdentifier("padSound.title")
+                Text("SOUND / IMPORT / CONTROL").font(.system(size: 9, weight: .semibold, design: .monospaced)).kerning(0.6)
+                    .foregroundColor(look.dim)
             }
-            if pad < controller.kitSamples.count {
-                Waveform(points: controller.kitSamples[pad].overview, reverse: settings.reverse)
-                    .frame(height: 70)
+            Spacer(minLength: 8)
+            Button { dismiss() } label: { PadSoundKey(title: "DONE", look: look).frame(width: 76) }
+                .buttonStyle(SeqPress())
+                .keyboardShortcut(.cancelAction)
+                .accessibilityLabel("Done")
+                .accessibilityIdentifier("padSound.done")
+        }
+        .padding(.leading, 18).padding(.trailing, 16).padding(.top, 14).padding(.bottom, 12)
+    }
+
+    private func tabStrip(_ look: PadSoundPalette) -> some View {
+        HStack(spacing: 6) {
+            ForEach(PadSoundTab.allCases, id: \.self) { t in
+                Button { tab = t } label: { PadSoundKey(title: t.rawValue, look: look, lit: tab == t) }
+                    .buttonStyle(SeqPress())
+                    .accessibilityAddTraits(tab == t ? .isSelected : [])
+                    .accessibilityIdentifier("padSound.tab.\(t.rawValue.lowercased())")
             }
+        }
+        .padding(.horizontal, 16).padding(.bottom, 16)
+    }
+
+    /// How many sounds are in the Samples folder, and the mode the panel is wearing.
+    private func footer(_ look: PadSoundPalette) -> some View {
+        HStack(spacing: 12) {
+            PadSoundScrew(finish: look.finish, size: 11)
+            Text("\(files.count) SOUND\(files.count == 1 ? "" : "S")").font(.system(size: 10, weight: .semibold, design: .monospaced)).kerning(0.6)
+                .foregroundColor(look.dim)
+                .accessibilityIdentifier("padSound.count")
+            Spacer()
+            Text(look.modeName).font(.system(size: 10, weight: .semibold, design: .monospaced)).kerning(0.6)
+                .foregroundColor(look.dim)
+            PadSoundScrew(finish: look.finish, size: 11)
+        }
+        .padding(.horizontal, 16).frame(height: 36)
+        .overlay(Rectangle().fill(Color.black.opacity(0.25)).frame(height: 1), alignment: .top)
+    }
+
+    @ViewBuilder private func tabBody(_ settings: PadSettings, _ look: PadSoundPalette) -> some View {
+        switch tab {
+        case .sound: soundTab(settings, look)
+        case .samples: samplesTab(settings, look)
+        case .pad: padTab(settings, look)
         }
     }
 
-    /// Your sound: Files, the mic, back to the kit.
-    private func soundSection(_ settings: PadSettings) -> some View {
-        Section("Your sound") {
-            Button { importing = true } label: { Label("Files…", systemImage: "folder") }
-                .disabled(recorder.isRecording)
-            if !controller.isPlugin { recordRow }
+    // MARK: SOUND
+
+    /// The loaded sound, then Files, the mic and the Samples folder, and back to the kit.
+    private func soundTab(_ settings: PadSettings, _ look: PadSoundPalette) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            loadedCard(settings, look)
+            PadSoundCaption(text: "ADD YOUR SOUND", color: look.dim).padding(.top, 10).padding(.leading, 2)
+            PadSoundRow(icon: "folder", title: "IMPORT FROM FILES", detail: "Choose an audio file for this pad", look: look,
+                        enabled: !recorder.isRecording, id: "padSound.import") { importing = true }
+            if !controller.isPlugin { recordRow(look) }
             if let message = recorder.message {
-                Text(message).font(.footnote).foregroundColor(accent)
+                Text(message).font(.footnote).foregroundColor(look.accent)
             }
+            PadSoundRow(icon: "waveform", title: "BROWSE SAMPLES", detail: "Load a sound from your sample library", look: look,
+                        id: "padSound.browse") { tab = .samples }
             if settings.sampleFile != nil {
-                Button(role: .destructive) { controller.revertPad(pad) } label: {
-                    Label("Back to the kit's sound", systemImage: "arrow.uturn.backward")
-                }
+                PadSoundRow(icon: "arrow.uturn.backward", title: "BACK TO THE KIT'S SOUND", detail: "Put the kit's sound back on this pad",
+                            look: look, id: "padSound.revert") { controller.revertPad(pad) }
             }
-            Text("You can also drag an audio file from Files straight onto a pad. Imported sounds are copied to "
+            Text("Import replaces the sound on this pad.\nYour other pads keep their sounds. You can also drag an audio file "
+                 + "from Files straight onto a pad; imported sounds are copied to "
                  + (controller.isPlugin ? "the plug-in's Samples folder." : "Files › BreaKing › Samples on this device."))
-                .font(.footnote).foregroundColor(.secondary)
+                .font(.system(size: 12)).foregroundColor(look.dim).lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 6)
         }
     }
 
-    /// The Samples folder's sounds, one tap loads one.
-    @ViewBuilder private func samplesSection(_ settings: PadSettings) -> some View {
-        if !files.isEmpty {
-            Section("Samples folder") {
-                ForEach(files, id: \.self) { url in
-                    Button {
-                        controller.importSample(url, toPad: pad)
-                    } label: {
-                        HStack {
-                            Image(systemName: "waveform")
-                            Text(url.deletingPathExtension().lastPathComponent)
-                            Spacer()
-                            if settings.sampleFile == url.lastPathComponent { Image(systemName: "checkmark").foregroundColor(accent) }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /// Level, pan, tune, decay, filter, reverse.
-    private func padSection(_ settings: PadSettings) -> some View {
-        Section("Pad") {
-            slider("Level", settings.level, PadSettings.minLevel...PadSettings.maxLevel, text: PadSettings.levelText(settings.level)) { v in
-                var s = settings; s.level = v; controller.setPadSettings(pad, s)
-            }
-            slider("Pan", settings.pan, -1...1, text: settings.pan == 0 ? "C" : String(format: "%@%.0f", settings.pan < 0 ? "L" : "R", abs(settings.pan) * 100)) { v in
-                var s = settings; s.pan = abs(v) < 0.03 ? 0 : v; controller.setPadSettings(pad, s)
-            }
-            slider("Tune", settings.tune, -24...24, text: String(format: "%+.1f st", settings.tune)) { v in
-                var s = settings; s.tune = (v * 2).rounded() / 2; controller.setPadSettings(pad, s)
-            }
-            slider("Decay", settings.decay, 0.05...1, text: settings.decay >= 0.999 ? "FULL" : String(format: "%.0f%%", settings.decay * 100)) { v in
-                var s = settings; s.decay = v; controller.setPadSettings(pad, s)
-            }
-            slider("Filter", settings.filter, 0...1, text: settings.filter >= 0.999_999 ? "OPEN" : String(format: "%.0f Hz", 40 * powf(450, settings.filter))) { v in
-                var s = settings; s.filter = v; controller.setPadSettings(pad, s)
-            }
-            Toggle("Reverse", isOn: Binding(get: { settings.reverse }, set: { v in
-                var s = settings; s.reverse = v; controller.setPadSettings(pad, s)
-            }))
-            .tint(accent)
-        }
-    }
-
-    /// Where to save a kit.
-    private var kitNoteSection: some View {
-        Section {
-            Text("Save these pads as your own kit from the KITS window (Save Kit As…).")
-                .font(.footnote).foregroundColor(.secondary)
+    private func loadedCard(_ settings: PadSettings, _ look: PadSoundPalette) -> some View {
+        let sample = pad < controller.kitSamples.count ? controller.kitSamples[pad] : nil
+        let seconds = sample.map { Double($0.length) / max($0.sampleRate, 1) } ?? 0
+        return PadLoadedSoundCard(name: controller.padName(pad), points: sample?.overview ?? [], reverse: settings.reverse,
+                                  seconds: seconds, look: look, playedAt: playedAt) {
+            controller.padDown(pad, velocity: 1)
+            playedAt = Date()
         }
     }
 
     /// Record from the mic straight onto this pad (standalone app; a plug-in can't use the mic).
-    @ViewBuilder private var recordRow: some View {
+    @ViewBuilder private func recordRow(_ look: PadSoundPalette) -> some View {
         if recorder.isRecording {
+            let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
             HStack(spacing: 12) {
                 Button {
                     if let url = recorder.stop() {
                         controller.importSample(url, toPad: pad)
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { files = KnockFolders.sampleFiles() }
                     }
-                } label: { Label("Stop", systemImage: "stop.fill") }
-                    .buttonStyle(.borderedProminent).tint(accent)
+                } label: {
+                    Image(systemName: "stop.fill").font(.system(size: 16, weight: .bold)).foregroundColor(look.onAccent)
+                        .frame(width: 48, height: 40).background(RoundedRectangle(cornerRadius: 7).fill(look.accent))
+                }
+                .buttonStyle(SeqPress())
+                .accessibilityLabel("Stop recording")
                 GeometryReader { g in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color(white: 0.2))
-                        Capsule().fill(accent).frame(width: g.size.width * CGFloat(recorder.level))
+                        Capsule().fill(Color.black.opacity(0.35))
+                        Capsule().fill(look.accent).frame(width: g.size.width * CGFloat(recorder.level))
                     }
                 }
                 .frame(height: 8)
-                Text(String(format: "%.1f s", recorder.seconds)).font(.system(.body, design: .monospaced))
-                Button(role: .cancel) { recorder.cancel() } label: { Image(systemName: "xmark") }
-                    .buttonStyle(.borderless)
+                Text(String(format: "%.1f s", recorder.seconds)).font(.system(size: 14, weight: .medium, design: .monospaced))
+                    .foregroundColor(look.ink)
+                Button { recorder.cancel() } label: {
+                    Image(systemName: "xmark").font(.system(size: 14, weight: .semibold)).foregroundColor(look.ink).frame(width: 40, height: 40)
+                }
+                .buttonStyle(SeqPress())
+                .accessibilityLabel("Cancel recording")
             }
+            .padding(.horizontal, 12).frame(minHeight: 64)
+            .background(shape.fill(look.well))
+            .overlay(shape.strokeBorder(look.accent, lineWidth: 1.5))
         } else {
-            Button { recorder.start() } label: { Label("Record to this pad", systemImage: "record.circle") }
-                .foregroundColor(accent)
+            PadSoundRow(icon: "record.circle", title: "RECORD TO THIS PAD", detail: "Capture audio using the app recorder", look: look,
+                        id: "padSound.record") { recorder.start() }
         }
     }
 
-    private func slider(_ title: String, _ value: Float, _ range: ClosedRange<Float>, text: String,
-                        set: @escaping (Float) -> Void) -> some View {
-        HStack {
-            Text(title).frame(width: 70, alignment: .leading)
-            Slider(value: Binding(get: { value }, set: set), in: range).tint(accent)
-            Text(text).font(.system(.body, design: .monospaced)).frame(width: 80, alignment: .trailing)
+    // MARK: SAMPLES
+
+    /// The Samples folder's sounds, one tap loads one.
+    private func samplesTab(_ settings: PadSettings, _ look: PadSoundPalette) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            PadSoundCaption(text: "SAMPLES FOLDER", color: look.dim).padding(.leading, 2)
+            if files.isEmpty {
+                Text("No sounds in the Samples folder yet. Import or record one on the SOUND tab and it lands here.")
+                    .font(.system(size: 13)).foregroundColor(look.dim)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.vertical, 12)
+            } else {
+                ForEach(files, id: \.self) { url in
+                    PadSoundRow(icon: "waveform", title: url.deletingPathExtension().lastPathComponent, detail: "", look: look,
+                                checked: settings.sampleFile == url.lastPathComponent) {
+                        controller.importSample(url, toPad: pad)
+                    }
+                }
+            }
         }
+    }
+
+    // MARK: PAD
+
+    /// Level, pan, tune, decay, filter, reverse.
+    private func padTab(_ settings: PadSettings, _ look: PadSoundPalette) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            PadSoundCaption(text: "PAD", color: look.dim).padding(.leading, 2)
+            PadSoundSlider(title: "Level", value: settings.level, range: PadSettings.minLevel...PadSettings.maxLevel,
+                           text: PadSettings.levelText(settings.level), look: look) { v in
+                var s = settings; s.level = v; controller.setPadSettings(pad, s)
+            }
+            PadSoundSlider(title: "Pan", value: settings.pan, range: -1...1, text: panText(settings.pan), look: look) { v in
+                var s = settings; s.pan = abs(v) < 0.03 ? 0 : v; controller.setPadSettings(pad, s)
+            }
+            PadSoundSlider(title: "Tune", value: settings.tune, range: -24...24, text: String(format: "%+.1f st", settings.tune), look: look) { v in
+                var s = settings; s.tune = (v * 2).rounded() / 2; controller.setPadSettings(pad, s)
+            }
+            PadSoundSlider(title: "Decay", value: settings.decay, range: 0.05...1,
+                           text: settings.decay >= 0.999 ? "FULL" : String(format: "%.0f%%", settings.decay * 100), look: look) { v in
+                var s = settings; s.decay = v; controller.setPadSettings(pad, s)
+            }
+            PadSoundSlider(title: "Filter", value: settings.filter, range: 0...1, text: filterText(settings.filter), look: look) { v in
+                var s = settings; s.filter = v; controller.setPadSettings(pad, s)
+            }
+            reverseRow(settings, look)
+            Text("Save these pads as your own kit from the KITS window (Save Kit As…).")
+                .font(.system(size: 12)).foregroundColor(look.dim)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
+        }
+    }
+
+    private func reverseRow(_ settings: PadSettings, _ look: PadSoundPalette) -> some View {
+        Button {
+            var s = settings; s.reverse.toggle(); controller.setPadSettings(pad, s)
+        } label: {
+            HStack {
+                Text("REVERSE").font(.system(size: 12, weight: .semibold, design: .monospaced)).kerning(0.6).foregroundColor(look.ink)
+                Spacer()
+                BBSwitchPill(on: settings.reverse, accent: look.accent)
+            }
+            .padding(.horizontal, 14).frame(minHeight: 52)
+            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(look.well))
+            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(look.wellEdge, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlatePress())
+        .accessibilityLabel("Reverse")
+        .accessibilityValue(settings.reverse ? "On" : "Off")
+        .accessibilityIdentifier("padSound.reverse")
+    }
+
+    private func panText(_ pan: Float) -> String {
+        pan == 0 ? "C" : String(format: "%@%.0f", pan < 0 ? "L" : "R", abs(pan) * 100)
+    }
+
+    private func filterText(_ filter: Float) -> String {
+        filter >= 0.999_999 ? "OPEN" : String(format: "%.0f Hz", 40 * powf(450, filter))
     }
 }
 
