@@ -136,6 +136,14 @@ extension View {
                                    panel: { AnyView(content()) }, tap: tap))
     }
 
+    /// Face 1's MODERN button (Tyrone, Oct 24): a tap runs `tap`, holding it half a second opens the panel
+    /// (Modern's faces) while your finger is still down.
+    func bbHoldMenu<Content: View>(title: String, finish: String, id: String? = nil, tap: @escaping () -> Void,
+                                   @ViewBuilder content: @escaping () -> Content) -> some View {
+        modifier(BBHardwareTrigger(title: title, finish: finish, placement: .above, panel: { AnyView(content()) },
+                                   tap: tap, id: id, hold: true))
+    }
+
     /// Makes this view open a BreakBoss panel with custom content (e.g. a slider).
     func bbPanel<Content: View>(title: String? = nil, width: CGFloat = 320, @ViewBuilder content: @escaping () -> Content) -> some View {
         modifier(BBMenuTrigger(title: title, width: width, items: { [] }, custom: { AnyView(content()) }))
@@ -192,7 +200,12 @@ private struct BBHardwareTrigger: ViewModifier {
     var tap: (() -> Void)? = nil
     /// The button's id for the UI tests (KITS and PATTERNS chips).
     var id: String? = nil
+    /// A hold (not a right-click) opens the panel; a tap still runs `tap`.
+    var hold = false
     @State private var frame: CGRect = .zero
+    @State private var down = false
+    @State private var held = false
+    @State private var holdWork: DispatchWorkItem?
 
     /// UI tests: how often this trigger opened its panel, and whether it had a menu layer to open it in.
     @State private var opens = 0
@@ -213,7 +226,38 @@ private struct BBHardwareTrigger: ViewModifier {
                     .onChange(of: g.frame(in: .named(bbSpace))) { frame = $0 }
             })
             .contentShape(Rectangle())
-        if tap != nil {
+        if hold {
+            // one DragGesture does both jobs, like the faceplate's PressableArea (a LongPressGesture on a
+            // Button killed the menu routes in build 116)
+            measured
+                .overlay(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(down ? 0.28 : 0)).allowsHitTesting(false))
+                .scaleEffect(down ? 0.97 : 1)
+                .animation(.easeOut(duration: 0.08), value: down)
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { g in
+                            if abs(g.translation.width) > 40 || abs(g.translation.height) > 40 { holdWork?.cancel(); holdWork = nil }
+                            guard !down else { return }
+                            down = true
+                            held = false
+                            let work = DispatchWorkItem { held = true; open() }
+                            holdWork = work
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+                        }
+                        .onEnded { g in
+                            down = false
+                            holdWork?.cancel()
+                            holdWork = nil
+                            guard !held, abs(g.translation.width) < 40, abs(g.translation.height) < 40 else { return }
+                            tap?()
+                        }
+                )
+                .accessibilityElement()
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { tap?() }
+                .accessibilityAction(named: title) { open() }
+                .modifier(TriggerID(id: id))
+        } else if tap != nil {
             // a tap selects / auditions; only a right-click opens the menu (Tyrone, Oct 21). UI tests can't
             // right-click on the iPad simulator, so they get the one-second hold (BREAKBOSS_UI_PROBE only).
             Button(action: { tap?() }) { measured }
