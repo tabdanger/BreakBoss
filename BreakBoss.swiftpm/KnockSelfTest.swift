@@ -3056,8 +3056,12 @@ enum KnockSelfTest {
         let wanted = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock", "Trap", "Alt Trap",
                       "Drill", "UK Drill", "NY Drill", "Detroit 2026", "West Coast", "RnB", "90s RnB", "UK RnB"]
         let learnedStyles = ["BK Editions Vol 1", "BK Editions Vol 2", "BK Editions Vol 3", "BK Editions Vol 4"]
-        check(PatternBank.styles == wanted + learnedStyles && presets.filter { !learnedStyles.contains($0.style) }.count == 180,
-              "180 presets in the 17 research styles, in the genre guide's order, then BK Editions Vol 1 to 4")
+        // Oct 24: Tyrone's genre list, after the BK Editions so older presets keep their AUv3 preset numbers
+        let added = ["Trapsoul", "Dark Trap", "Phonk", "ATL Trap", "Memphis", "Toronto R&B", "Vintage R&B", "2000s R&B", "Live Soul",
+                     "East Coast", "Lo-fi", "Afrobeats", "Bouncy", "80s Pop", "Live Pop", "Dark Experimental", "World & Latin"]
+        check(PatternBank.styles == wanted + learnedStyles + added && presets.filter { !learnedStyles.contains($0.style) }.count == 350,
+              "350 presets: the 17 research styles in the genre guide's order, BK Editions Vol 1 to 4, then Tyrone's 17 Oct 24 genres")
+        for style in added { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
         for style in wanted where style != "West Coast" { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
         // West Coast (Oct 20): 20 grooves from Tyrone's West Coast loops in place of the 10 Bay Area 2026 presets;
         // a save made with a Bay Area preset keeps its notes and randomizes in West Coast.

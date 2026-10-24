@@ -13,6 +13,9 @@ import Foundation
 // Vol 1, grooves tools/learn_from_loops.py heard in Tyrone's own drum loops (4 or 8 bars, the loop's own tempo);
 // Vol 2, his R&B loops, split from the full mix by tools/learn_fills.py; Vol 3, his Drum Loops pack (tops loops,
 // split the same way, each with the kick of the Vol 1 groove nearest its tempo); Vol 4, his danger drum loops.
+// Oct 24, Tyrone's genre list (10 presets each, after the BK Editions so older presets keep their AUv3 numbers): Trapsoul, Dark Trap, Phonk,
+// ATL Trap, Memphis, Toronto R&B, Vintage R&B, 2000s R&B, Live Soul, East Coast, Lo-fi, Afrobeats, Bouncy, 80s Pop,
+// Live Pop, Dark Experimental and World & Latin.
 
 struct PatternPreset: Decodable, Equatable {
     let style: String
@@ -45,6 +48,21 @@ struct PatternPreset: Decodable, Equatable {
         case "West Coast": return .westBounce
         case "RnB": return .trapSoul
         case "90s RnB", "UK RnB": return .rnb
+        // Oct 24: Tyrone's genre list
+        case "Trapsoul": return .trapSoul
+        case "Dark Trap", "ATL Trap": return .trapAtlanta
+        case "Phonk", "Memphis": return .trapMemphis
+        case "Toronto R&B": return .trapToronto
+        case "Vintage R&B", "2000s R&B": return .rnb
+        case "Live Soul": return .funkBreak
+        case "East Coast": return .boomBap
+        case "Lo-fi": return .loFi
+        case "Afrobeats": return .afrobeats
+        case "Bouncy": return .westBounce
+        case "80s Pop": return .pop80s
+        case "Live Pop": return .pop
+        case "Dark Experimental": return .experimental
+        case "World & Latin": return .latin
         case "BK Editions Vol 1", "BK Editions Vol 3": return bpm >= 120 ? .trapAtlanta : .boomBap
         case "BK Editions Vol 2": return .rnb
         case "BK Editions Vol 4": return .westBounce
