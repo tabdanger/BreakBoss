@@ -25,6 +25,9 @@ public final class BreakBossAudioUnit: AUAudioUnit {
     private var chosenPreset: AUAudioUnitPreset?
     private let ownBuffers = KnockOwnBuffers()
     private static let stateKey = "breakboss.state"
+    /// True while the host hands back a saved project (fullState). The host reads every parameter
+    /// again on its own right after, so no "all values changed" notice goes out in the middle of it.
+    private var restoringFullState = false
 
     public override init(componentDescription: AudioComponentDescription,
                          options: AudioComponentInstantiationOptions = []) throws {
@@ -69,8 +72,12 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             self?.tree.parameter(withAddress: AUParameterAddress(p.rawValue))?.setValue(value, originator: nil)
         }
         controller.onStateReplaced = { [weak self] in
-            self?.willChangeValue(forKey: "allParameterValues")
-            self?.didChangeValue(forKey: "allParameterValues")
+            // Logic Pro for iPad crashed (SIGSEGV in AU3ParameterList::UpdateAllCachedLogicParameters,
+            // b124, Oct 25) when this fired inside its SetSettings: it rebuilt its parameter list
+            // while still walking the old one.
+            guard let self, !self.restoringFullState else { return }
+            self.willChangeValue(forKey: "allParameterValues")
+            self.didChangeValue(forKey: "allParameterValues")
         }
     }
 
@@ -130,7 +137,9 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             guard let newValue else { return }
             if let data = newValue[Self.stateKey] as? Data {
                 let controller = self.controller
+                restoringFullState = true
                 Self.onMain { controller.restore(data) }
+                restoringFullState = false
             } else {
                 super.fullState = newValue
             }
