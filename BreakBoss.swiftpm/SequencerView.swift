@@ -84,10 +84,13 @@ struct SequencerView: View {
 
     /// Face 2's parts live in the Sequencer*.swift files beside this one, as extensions that share
     /// this state.
-    init(controller: KnockController, loop: Int) {
+    init(controller: KnockController, loop: Int, selectPad: Int? = nil) {
         self.controller = controller
         _loop = State(initialValue: loop)
+        self.selectPad = selectPad
     }
+    /// The pad held on Face 1 in LOOP mode: its track opens selected.
+    let selectPad: Int?
 
     enum Tool { case draw, select, erase }
     /// The lane's header: what the graph under the open track edits. VELOCITY and CHANCE are bars up
@@ -570,6 +573,7 @@ struct SequencerView: View {
             followPlayhead()
         }
         .onAppear {
+            if let pad = selectPad, let ch = channel(pad: pad) { selectedID = ch.id }
             if selectedID == nil { selectedID = channels.first?.id }
             // A fresh project opens with a blank grid: steps only light up when you press them
             // (patterns come in from the PATTERN chip).
