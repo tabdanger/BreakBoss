@@ -200,7 +200,7 @@ struct PadEditorView: View {
                     .padding(.vertical, 12)
             } else {
                 ForEach(files, id: \.self) { url in
-                    PadSoundRow(icon: "waveform", title: url.deletingPathExtension().lastPathComponent, detail: "", look: look,
+                    PadSoundRow(icon: "waveform", title: KnockFolders.untagged(url.deletingPathExtension().lastPathComponent), detail: "", look: look,
                                 checked: settings.sampleFile == url.lastPathComponent) {
                         controller.importSample(url, toPad: pad)
                     }

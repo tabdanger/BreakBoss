@@ -259,7 +259,7 @@ BK_KITS = [
     # without --bk, the nearer one per pad), for BK Editions Vol 4
     ("BK DANGER KIT", "modern", "WEST COAST", "BK", "westBounce", 94, "westBounce", ["west", "rnb", "bounce"],
      {"punch": 0.3},
-     {0: "FUNK KICK", 1: "BK NO 12 SNARE", 2: "BK NO 5 CLAP", 3: "NEW LAND RIM", 4: "BK NO 20 HIHAT",
+     {0: "FUNK KICK", 1: "BK NO 12 SNARE", 2: "BK NO 5 CLAP", 3: "BK NO 27 RIM", 4: "BK NO 20 HIHAT",
       5: "DEMON 7 OPEN HAT", **EMPTY_REST}),
 ]
 

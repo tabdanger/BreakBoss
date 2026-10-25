@@ -88,7 +88,7 @@ enum SoundType: String, CaseIterable, Identifiable {
 }
 
 extension SoundType {
-    /// A stock sound's name ends in what it is ("ASTRONOMY KICK", "THRONE OPEN HIHAT", "SUKUNA E1 808").
+    /// A stock sound's name ends in what it is ("BK NO 9 KICK", "THRONE OPEN HIHAT", "BK NO 15 E1 808").
     static func forStockName(_ name: String) -> SoundType? {
         let words = name.split(separator: " ").map(String.init)
         guard let last = words.last else { return nil }
@@ -141,7 +141,7 @@ enum UserSoundLibrary {
             let rel = url.standardizedFileURL.path.replacingOccurrences(of: root + "/", with: "")
             let parts = rel.split(separator: "/")
             let pack = parts.count > 1 ? String(parts[0]).uppercased() : "MY SOUNDS"
-            return LibrarySound(id: "user:" + rel, url: url, name: url.deletingPathExtension().lastPathComponent.uppercased(),
+            return LibrarySound(id: "user:" + rel, url: url, name: KnockFolders.untagged(url.deletingPathExtension().lastPathComponent).uppercased(),
                                 type: SoundType.guess(rel), pack: pack, user: true)
         }
     }
