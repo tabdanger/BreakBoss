@@ -48,6 +48,7 @@ enum KnockSelfTest {
         phase("checkWorkspaceChannels", checkWorkspaceChannels)
         phase("checkSampler", checkSampler)
         phase("checkUntouchedEnvelopes", checkUntouchedEnvelopes)
+        phase("checkNoteLengthOneShots", checkNoteLengthOneShots)
         phase("checkSamplerPlayhead", checkSamplerPlayhead)
         phase("checkScope", checkScope)
         phase("checkTrackFX", checkTrackFX)
@@ -1602,6 +1603,55 @@ enum KnockSelfTest {
         let full = previewPeak(1), half = previewPeak(0.5), none = previewPeak(0)
         check(full > 0.01 && abs(half / full - 0.5) < 0.05 && none < 0.000_1,
               "Preview volume: a preview plays at the slider's level (100% \(full), 50% \(half), 0% \(none))")
+    }
+
+    /// Tyrone, Oct 25: every sound is a one-shot. A piano-roll note's length (the 808's too, slides
+    /// included) never cuts the sound: kit sounds and loaded samples ring out exactly as a note with
+    /// no length does, untouched or with the sampler opened. A Volume envelope with a release is a
+    /// change on top, so its note ends where the note does.
+    static func checkNoteLengthOneShots() {
+        let rate = 48_000.0
+        let tail = SampleBuffer(left: (0..<72_000).map { i in sinf(Float(i) * 2 * .pi * 110 / 48_000) * 0.4 * expf(-Float(i) / 30_000) },
+                                sampleRate: rate)
+        let step = Int32(PatternData.ppq / 4)
+        func pattern(_ length: Int32) -> PatternData {
+            PatternData(name: "ONE-SHOT", lengthTicks: PatternData.ppq * 4, events: [
+                GrooveEvent(tick: 0, pad: Int8(Pad.kick.rawValue), velocity: 1, length: length),
+                GrooveEvent(tick: step * 4, pad: Int8(Pad.snare.rawValue), velocity: 0.9, length: length),
+                GrooveEvent(tick: step * 6, pad: Int8(Pad.bass808.rawValue), velocity: 1, semis: 3, length: length),
+                GrooveEvent(tick: step * 10, pad: Int8(Pad.bass808.rawValue), velocity: 1, semis: 7, length: length, glide: true)
+            ])
+        }
+        var params = [Float](repeating: 0, count: KParam.count)
+        for p in KParam.allCases { params[p.rawValue] = p.defaultValue }
+        func export(_ length: Int32, sampler: SamplerSettings?, file: String?) -> [Float] {
+            let settings = (0..<Pad.count).map { _ in var p = PadSettings(); p.sampler = sampler; p.sampleFile = file; return p }
+            let kit = KitBuffers(name: "ONE-SHOT", samples: Array(repeating: tail, count: Pad.count), settings: settings, bassHz: 110)
+            let job = Exporter.Job(kit: kit, patterns: PatternSet(Array(repeating: pattern(length), count: Pad.count)), loop: 0, params: params,
+                                   tempo: 120, bars: 2, baseName: "oneshot")
+            return Exporter.render(job, mask: 0xFFFF).0
+        }
+        func difference(_ a: [Float], _ b: [Float]) -> Float {
+            guard a.count == b.count else { return .infinity }
+            var d: Float = 0
+            for i in a.indices { d = max(d, abs(a[i] - b[i])) }
+            return d
+        }
+        var released = SamplerSettings()
+        released.setEnvelope(.volume) { $0.on = true; $0.sustain = 0.6; $0.release = 0.05 }
+        for file in [nil, "oneshot.wav"] as [String?] {
+            let what = file == nil ? "kit sounds" : "loaded samples"
+            for sampler in [nil, SamplerSettings()] as [SamplerSettings?] {
+                let opened = sampler == nil ? "" : " (sampler opened)"
+                let whole = export(0, sampler: sampler, file: file)
+                let d = max(difference(whole, export(step / 2, sampler: sampler, file: file)),
+                            difference(whole, export(step, sampler: sampler, file: file)))
+                check(whole.contains { abs($0) > 0.01 } && d < 1e-5,
+                      "One-shots: short piano-roll notes and 808 slides play the \(what) whole\(opened) (max difference \(d))")
+            }
+            let shaped = difference(export(step / 2, sampler: released, file: file), export(step * 8, sampler: released, file: file))
+            check(shaped > 0.01, "One-shots: a Volume envelope release on \(what) follows the note length (difference \(shaped))")
+        }
     }
 
     /// Tyrone, Oct 19: the ENVELOPE page changes nothing until it's changed. A track whose sampler
