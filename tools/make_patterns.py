@@ -923,10 +923,63 @@ add_learned(LEARNED_DANGER, os.path.join(os.path.dirname(LEARNED_FILE), "learned
 # older preset keeps its place in the list (the AUv3's factory preset numbers that hosts save).
 STYLES += [TS, DK, PH, AL, MM, TO, VR, R2, LS, EC, LF, AF, BO, EP, LP, DX, WL]
 
+# ---------------- Bay Area (Oct 25; Tyrone: "make 50 drum loop patterns for west coast bay area presets").
+# Learned from his 35 Bay Area loops (82-102 BPM, full mixes) by tools/learn_west_coast.py --out
+# tools/learned_bayarea.json (the audio itself never ships, and the loops' titles are never shown). Each preset is
+# four bars of one loop: the first four bars of every loop, then the 15 later four-bar sections that differ most
+# from the ones already taken from the same loop. Cleaned up like the West Coast presets (the kick's soft hits
+# play medium, a snare, clap or rim on the kick's step that isn't a backbeat is the kick's own crack) and each
+# keeps the loop's own feel (swingLanes, shift). Numbered by tempo; the name says what the groove does. ----------------
+BA = "Bay Area"
+BAY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "learned_bayarea.json")
+BAY_COUNT = 50
+def bay_lanes(lp, first):
+    lanes = {k: v[first * 16:first * 16 + 64] for k, v in lp["lanes"].items()}
+    lanes["k"] = lanes["k"].replace("g", "o")
+    for lane in ("s", "c", "r"):
+        if lane in lanes:
+            lanes[lane] = "".join("." if lanes["k"][j] != "." and j % 16 not in (4, 12) else ch for j, ch in enumerate(lanes[lane]))
+    return {k: lanes[k] for k in LANES if k in lanes and lanes[k].strip(".")}
+def bay_apart(a, b):     # how many steps the two sections play differently, over every lane
+    return sum((a.get(l, "") or "." * 64)[j] != (b.get(l, "") or "." * 64)[j] for l in set(a) | set(b) for j in range(64))
+def bay_name(lanes):
+    hat, n = lanes.get("h", ""), lambda lane: sum(ch != "." for ch in lanes.get(lane, ""))
+    if hat.count("t") >= 3: return "TRIPLET HATS"
+    if hat.count("r") + hat.count("q") >= 4: return "HAT ROLLS"           # a roll every bar
+    if n("o") >= 8: return "OPEN HATS"
+    if not (lanes.get("s") or lanes.get("c")) or n("r") >= 8: return "RIM KNOCK"
+    if n("k") >= 20: return "KNOCK"
+    if "s" in lanes and "c" in lanes and sum(lanes["s"][j] != "." and lanes["c"][j] != "." for j in range(4, 64, 8)) >= 2: return "SNARE CLAP"
+    return "BOUNCE"
+def bay_area():
+    loops = sorted(json.load(open(BAY_FILE))["learned"], key=lambda lp: (lp["bpm"], lp["title"]))
+    picks = [(lp, 0) for lp in loops]
+    rest = []
+    for lp in loops:
+        taken = [bay_lanes(lp, 0)]
+        for first in range(4, lp["bars"], 4):
+            lanes = bay_lanes(lp, first)
+            apart = min(bay_apart(lanes, t) for t in taken)
+            if apart >= 12: rest.append((-apart, lp["title"], first, lp)); taken.append(lanes)
+    picks += [(lp, first) for _, _, first, lp in sorted(rest)[:BAY_COUNT - len(picks)]]
+    picks.sort(key=lambda pk: (pk[0]["bpm"], pk[0]["title"], pk[1]))
+    assert len(picks) == BAY_COUNT, len(picks)
+    for i, (lp, first) in enumerate(picks, 1):
+        lanes = bay_lanes(lp, first)
+        back = [lanes.get(l, "." * 64) for l in ("s", "c", "r")]
+        assert len(lanes["k"]) == 64 and sum(any(b[j] != "." for b in back) for j in range(4, 64, 8)) >= 4, (lp["title"], first)
+        P.append({"style": BA, "name": f"BAY AREA {i} {lp['bpm']:g} {bay_name(lanes)}", "bpm": lp["bpm"], "swing": 50, "glide": False, "lanes": lanes})
+        for key in ("swingLanes", "shift"):
+            used = {lane: v for lane, v in lp.get(key, {}).items() if lane in lanes}
+            if used: P[-1][key] = used
+bay_area()
+# Oct 25: after Tyrone's genre list, so every older preset keeps its AUv3 preset number
+STYLES.append(BA)
+
 # ---------------- checks and output ----------------
 cnt = Counter(p["style"] for p in P)
 assert list(cnt) and set(cnt) == set(STYLES), set(cnt) ^ set(STYLES)
-for style, n in cnt.items(): assert n == (20 if style == WC else 10) or style in LEARNED_STYLES, (style, n)
+for style, n in cnt.items(): assert n == {WC: 20, BA: BAY_COUNT}.get(style, 10) or style in LEARNED_STYLES, (style, n)
 P.sort(key=lambda p: STYLES.index(p["style"]))                      # stable: each style keeps its own order
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)

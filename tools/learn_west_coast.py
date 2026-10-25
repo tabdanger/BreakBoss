@@ -2,6 +2,7 @@
 """Learns the West Coast presets and kits from Tyrone's West Coast drum loops (Oct 20).
 
     python3 -I tools/learn_west_coast.py LOOPS_DIR [...]          # -> tools/learned_westcoast.json
+    python3 -I tools/learn_west_coast.py --out tools/learned_bayarea.json LOOPS_DIR [...]   # the Bay Area loops (Oct 25)
 
 The loops are full mixes (no stems, no one-shots) and reference only: nothing from them ships. Each loop is
 split like tools/learn_fills.py --loops (bands, nearest one-shot kind, 16th grid), the one-shots being the
@@ -77,6 +78,8 @@ def learn(path, lib):
 
 
 def main(argv):
+    global OUT
+    if argv[1:2] == ["--out"]: OUT, argv = argv[2], argv[:1] + argv[3:]
     lib = library()
     done, seen = [], set()
     for d in argv[1:]:
