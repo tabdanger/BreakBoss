@@ -35,6 +35,7 @@ struct FaceplateView: View {
 
     struct PatternTarget: Identifiable {
         let loop: Int
+        var pad: Int? = nil                     // a pad held in LOOP mode: its track opens selected
         var id: Int { loop }
     }
 
@@ -70,7 +71,7 @@ struct FaceplateView: View {
         }
         .sheet(isPresented: $showExport) { ExportView(controller: controller) }
         .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
-        .fullScreenCover(item: $patternEditor) { target in SequencerView(controller: controller, loop: target.loop) }
+        .fullScreenCover(item: $patternEditor) { target in SequencerView(controller: controller, loop: target.loop, selectPad: target.pad) }
         .onAppear {
             // Build-machine UI check only: open straight on the sequencer.
             if ProcessInfo.processInfo.environment["BREAKBOSS_OPEN_SEQUENCER"] == "1" && patternEditor == nil {
@@ -101,9 +102,9 @@ struct FaceplateView: View {
     }
 
     /// Face 2 opens on the loop that's playing, otherwise the one PLAY starts.
-    private func openFace2() {
+    private func openFace2(selecting pad: Int? = nil) {
         let current = Int(controller.meters.status[1])
-        patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : controller.screenPattern)
+        patternEditor = PatternTarget(loop: (0..<Pad.count).contains(current) ? current : controller.screenPattern, pad: pad)
     }
 
     /// Space bar (hardware keyboard) = PLAY / STOP in the standalone app. In a DAW the space
@@ -242,8 +243,10 @@ struct FaceplateView: View {
     /// The 12 pads.
     private func pads(_ L: FaceplateLayout, s: CGFloat) -> some View {
         ForEach(0..<L.pads.count, id: \.self) { i in
-            PadView(controller: controller, pad: L.padIndex(forLayoutPosition: i), rect: L.pads[i], scale: s) { loopEditor in
-                editor = EditorTarget(pad: L.padIndex(forLayoutPosition: i), loop: loopEditor)
+            PadView(controller: controller, pad: L.padIndex(forLayoutPosition: i), rect: L.pads[i], scale: s) { loopMode in
+                // LOOP mode: hold opens the Drum Sequencer on this pad's track; ONE-SHOT: the pad sound panel
+                if loopMode { openFace2(selecting: L.padIndex(forLayoutPosition: i)) }
+                else { editor = EditorTarget(pad: L.padIndex(forLayoutPosition: i), loop: false) }
             }
             // (a sound or MIDI file dropped on a pad loads there: PadView's own drop target)
         }
