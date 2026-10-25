@@ -90,6 +90,8 @@ extension SequencerView {
                         drag = .tapOnNote(key: NoteKey(hit))
                     }
                     lastVelocity = hit.velocity
+                } else if !selection.isEmpty {
+                    drag = .deselect(pad: pad, semis: sem, tick: placeTick(at: start.x, w, l))
                 } else if pad == Pad.bass808.rawValue {
                     drag = .long808(start: placeTick(at: start.x, w, l), semis: sem)
                 } else {
@@ -104,6 +106,7 @@ extension SequencerView {
                     if !selection.contains(NoteKey(hit)) { selection = [NoteKey(hit)] }
                     drag = .trim(keys: selection, origin: pattern, startTick: tickAt(start.x, w))
                 } else if let hit {
+                    pressedSelected = selection.contains(NoteKey(hit)) ? NoteKey(hit) : nil
                     if !selection.contains(NoteKey(hit)) { selection = [NoteKey(hit)] }
                     drag = .move(keys: selection, origin: pattern, startTick: tickAt(start.x, w), startSemis: Int(sem.rounded()), followSelection: true)
                 } else {
@@ -121,6 +124,18 @@ extension SequencerView {
             if let l = layout(at: g.startLocation.y, L), pullsDown(g, l), let hit = pattern.events.first(where: { NoteKey($0) == key }) {
                 startRepeat(pad: l.channel.pad, like: hit, fromPaint: false)
                 gridChanged(g, w: w, L: L)
+            } else if let l = layout(at: g.startLocation.y, L), l.pitch == nil {
+                // a step row: each step is its own square. Sliding sideways off it fills on from the step
+                // (a glissando, like an empty step); pushed any other way it stays put
+                guard hypot(g.translation.width, g.translation.height) > 10 else { return }
+                if abs(g.translation.width) > abs(g.translation.height) {
+                    undoStack.append(step(pattern)); redoStack = []
+                    work = pattern
+                    drag = .paint(pad: l.channel.pad, semis: key.semis, lastCell: Int(placeTick(at: g.startLocation.x, w, l) / placeTicks))
+                    gridChanged(g, w: w, L: L)
+                } else {
+                    drag = .spent
+                }
             } else if hypot(g.translation.width, g.translation.height) > 8 {
                 let inSelection = selection.contains(key)
                 let l = layout(at: g.startLocation.y, L)
@@ -223,7 +238,15 @@ extension SequencerView {
                 work = PatternEdit.remove(pattern, [NoteKey(hit)])
                 selection.remove(NoteKey(hit))
             }
-        case .none, .octave:
+        case .deselect(let pad, let sem, let t):
+            // sliding sideways off the step paints as usual, from the step pressed
+            guard hypot(g.translation.width, g.translation.height) > 10, abs(g.translation.width) > abs(g.translation.height),
+                  pad != Pad.bass808.rawValue else { return }
+            undoStack.append(step(pattern)); redoStack = []
+            work = PatternEdit.addNote(pattern, pad: pad, tick: t, velocity: lastVelocity, semis: sem)
+            drag = .paint(pad: pad, semis: sem, lastCell: Int(t / placeTicks))
+            gridChanged(g, w: w, L: L)
+        case .none, .octave, .spent:
             break
         }
     }
@@ -239,6 +262,8 @@ extension SequencerView {
     func startRepeat(pad: Int, like: GrooveEvent, fromPaint: Bool) {
         let c = max(1, cellTicks)
         let cellStart = like.tick / c * c
+        // the step's notes split, so whatever of them was selected isn't any more
+        selection = selection.filter { Int($0.pad) != pad || $0.tick < cellStart || $0.tick >= cellStart + c }
         drag = .noteRepeat(pad: pad, cellStart: cellStart, like: like, origin: pattern, count: 0, fromPaint: fromPaint)
         work = nil
         selectedID = channels.first { $0.pad == pad }?.id ?? selectedID
@@ -289,8 +314,11 @@ extension SequencerView {
         defer { drag = .none; trace = nil; heard = nil }
         switch drag {
         case .tapOnNote(let key):
-            commit(PatternEdit.remove(pattern, [key]))
-            selection.remove(key)
+            // a tap on a selected note deselects it; on any other note it takes the note off
+            if selection.contains(key) { selection.remove(key) }
+            else { commit(PatternEdit.remove(pattern, [key])) }
+        case .deselect:
+            selection = []
         case .long808(let start, let sem):
             let (len, s) = long808Note(start: start, semis: sem, from: g.startLocation, at: g.location, w: w, L: L)
             last808Length = len
@@ -305,7 +333,14 @@ extension SequencerView {
         case .graph:
             if let p = work { work = nil; controller.setLoop(loop, p) } else { _ = undoStack.popLast() }
             laneOrigin = nil
-        case .move, .resize, .trim:
+        case .move(let keys, _, _, _, _):
+            // SELECT: a tap on a note that was already selected (no move) deselects it
+            if let key = pressedSelected, hypot(g.translation.width, g.translation.height) < 4, keys.contains(key) {
+                work = nil
+                selection.remove(key)
+            } else if let p = work { commit(p) } else { work = nil }
+            pressedSelected = nil
+        case .resize, .trim:
             if let p = work { commit(p) } else { work = nil }
         case .marquee(let a, let b):
             let rect = CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(a.x - b.x), height: abs(a.y - b.y))
@@ -315,7 +350,7 @@ extension SequencerView {
             } else {
                 selection = Set(pattern.events.filter { visible($0) && (noteRect($0, w: w, L).map { rect.intersects($0) } ?? false) }.map(NoteKey.init))
             }
-        case .none, .octave:
+        case .none, .octave, .spent:
             break
         }
     }

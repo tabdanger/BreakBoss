@@ -41,7 +41,7 @@ extension SequencerView {
             h.combine(e.tick); h.combine(e.pad); h.combine(e.velocity); h.combine(e.semis)
             h.combine(e.length); h.combine(e.glide); h.combine(e.offset); h.combine(e.chance)
         }
-        h.combine(selection)
+        h.combine(selection); h.combine(hoverNote)
         for l in L {
             h.combine(l.channel.id); h.combine(l.channel.pad); h.combine(l.y); h.combine(l.height); h.combine(l.bandH)
             h.combine(l.graphH); h.combine(l.pitchTop); h.combine(l.pitchRowH); h.combine(l.pitch?.lowerBound); h.combine(l.pitch?.upperBound)
@@ -148,9 +148,13 @@ extension SequencerView {
                     g.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3), with: .color((selection.contains(NoteKey(e)) ? Color.white : glowColor).opacity(0.3 + 0.4 * Double(e.velocity))))
                 }
             }
-            for (_, r, hits) in lit {
+            for (_, r0, hits) in lit {
                 let sel = hits.contains { selection.contains(NoteKey($0)) }
                 let v = Double(hits.map(\.velocity).max() ?? 0.8)
+                // under the pointer the step lifts a little off the plate; a selected one sits back down
+                let lifted = !sel && hoverNote.map { h in hits.contains { NoteKey($0) == h } } == true
+                let r = lifted ? liftNote(ctx, r0) : r0
+                if lifted { drawMetalCells(ctx, [r]) }
                 drawLitStep(ctx, r, glow: sel ? Color.white : glowColor, level: 0.55 + 0.45 * v, hits: hits.count)
                 if sel { ctx.stroke(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.white), lineWidth: 1.5) }
                 if hits.contains(where: { $0.chance < 1 }) {
@@ -166,8 +170,9 @@ extension SequencerView {
                     ctx.fill(Path(CGRect(x: px - 0.75, y: r.minY + r.height * 0.35, width: 1.5, height: r.height * 0.5)), with: .color(Color.black.opacity(0.6)))
                 }
             }
-            for (e, r) in notes {
+            for (e, r0) in notes {
                 let sel = selection.contains(NoteKey(e))
+                let r = !sel && hoverNote == NoteKey(e) ? liftNote(ctx, r0) : r0
                 drawMetalNote(ctx, r, tint: sel ? Color.white : glowColor, level: 0.55 + 0.45 * Double(e.velocity))
                 if sel { ctx.stroke(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.white), lineWidth: 1.5) }
                 if sel && tool == .select {
@@ -215,6 +220,12 @@ extension SequencerView {
         .accessibilityIdentifier("grid")
         .accessibilityValue("\(pattern.events.count) notes, \(selection.count) selected" + (SamplerWindow.probing ? rowsProbe(L) : ""))
         .bbMenuOpener(gridMenuOpener)
+        .onContinuousHover { phase in
+            // a trackpad or mouse pointer over a note lifts it (Tyrone, Oct 25)
+            var over: NoteKey?
+            if case .active(let p) = phase, drag.isIdle, let e = noteAt(p, w: w, L: L) { over = NoteKey(e) }
+            if over != hoverNote { hoverNote = over }
+        }
         .highPriorityGesture(DragGesture(minimumDistance: 0)
             .onChanged { g in if !pinching && !twoFinger { gridChanged(g, w: w, L: L) } }
             .onEnded { g in
@@ -359,6 +370,15 @@ extension SequencerView {
             .init(color: Color.black.opacity(0), location: 0.65), .init(color: Color.black.opacity(0.55), location: 1)]), startPoint: top, endPoint: bottom), lineWidth: 1.1)
         ctx.stroke(body, with: .color(Color.black.opacity(0.6)), lineWidth: 0.7)
         ctx.fill(slots, with: .color(Color.black.opacity(0.7)))
+    }
+
+    /// A note lifted off the plate under the pointer: its shadow on the plate, and where it now sits.
+    func liftNote(_ ctx: GraphicsContext, _ r: CGRect) -> CGRect {
+        ctx.drawLayer { g in
+            g.addFilter(.shadow(color: Color.black.opacity(0.75), radius: 3, y: 2))
+            g.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.5)))
+        }
+        return r.offsetBy(dx: 0, dy: -1.5)
     }
 
     /// A lit step button: the same silver button, its slot lit as a bright bar of the mode's light

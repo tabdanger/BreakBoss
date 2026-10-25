@@ -199,6 +199,10 @@ struct SequencerView: View {
     @State var trace: Trace?
     /// The note the piano roll last played while placing or moving (it plays again only when this changes).
     @State var heard: HeardNote?
+    /// A SELECT press on a note that was already selected: lifting without moving deselects it.
+    @State var pressedSelected: NoteKey?
+    /// The note under the trackpad or mouse pointer: it lifts slightly (and sits back down when selected).
+    @State var hoverNote: NoteKey?
     struct HeardNote: Equatable { var pad: Int; var semis: Int; var tick: Int32 }
     struct Trace { var from: CGPoint; var at: CGPoint }
     /// The library's Search field has the keyboard (its Delete key edits the text, not the notes).
@@ -283,6 +287,13 @@ struct SequencerView: View {
         case graph(pad: Int, top: CGFloat, height: CGFloat)
         /// A tap on a note's ⊕ or ⊖ (done when the finger lands; the rest of the touch does nothing).
         case octave
+        /// A press on an empty step while notes are selected (Tyrone, Oct 25): lifting the finger only
+        /// deselects; sliding sideways fills the steps as usual.
+        case deselect(pad: Int, semis: Float, tick: Int32)
+        /// A touch that's done its work (or a step pressed and pushed off its square): the rest does nothing.
+        case spent
+
+        var isIdle: Bool { if case .none = self { return true } else { return false } }
     }
 
     typealias S = DrumRollStyle
