@@ -3018,8 +3018,8 @@ enum KnockSelfTest {
         let new = old.normalized()
         check(new.pads.count == 12 && new.pads[0].tune == 7, "16-pad saves migrate to 12 pads without losing pad settings")
         check(new.editedLoops.count == 12 && new.editedLoops[2]?.name == "KEEP", "16-loop saves keep edits on loops 1-12")
-        check(KitLibrary.factory.count == 388 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
-              "388 factory kits: the 42 A/B kits, the named ones, the live acoustic ones, BK DRUM KIT, BK EDITIONS KIT, BK DANGER KIT, 20 West Coast kits")
+        check(KitLibrary.factory.count == 438 && KitLibrary.factory.prefix(42).allSatisfy { $0.name.hasSuffix(" A") || $0.name.hasSuffix(" B") },
+              "438 factory kits: the 42 A/B kits, the named ones, the live acoustic ones, BK DRUM KIT, BK EDITIONS KIT, BK DANGER KIT, 20 West Coast kits, 50 Bay Area kits")
         check(Set(KitLibrary.factory.map(\.name)).count == KitLibrary.factory.count, "every factory kit has its own name")
         for mode in SoundMode.allCases {
             for family in KitLibrary.families {
@@ -3076,7 +3076,7 @@ enum KnockSelfTest {
         check(west.count == 20 && west.allSatisfy { $0.pattern.bars == 4 && $0.grooveStyle == .westBounce && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } } &&
               PatternRandomizer.style(for: "BAY AREA 1 SLAP") == "West Coast",
               "West Coast: 20 presets learned from Tyrone's West Coast loops, 4 bars, each with its kick; old Bay Area saves randomize as West Coast")
-        let westKits = KitLibrary.factory.suffix(20)
+        let westKits = KitLibrary.factory.dropLast(50).suffix(20)
         check(westKits.allSatisfy { $0.family == "WEST COAST" && $0.preferredMode == .modern }, "20 West Coast kits in the Modern bank's WEST COAST tab")
         // Tyrone, Oct 20: each holds only the sounds its loop plays (the pads its preset plays), the rest EMPTY
         let stock = StockSampleLibrary.bundled
@@ -3086,6 +3086,15 @@ enum KnockSelfTest {
                 played.contains(pad.rawValue) ? stock.sample(kitID: kit.id, pad: pad.rawValue) != nil : stock.isEmpty(kitID: kit.id, pad: pad.rawValue)
             }
         }, "West Coast kits: a sound on each pad its preset plays, every other pad EMPTY")
+        // Bay Area (Oct 25, Tyrone picked "Patterns + 50 matching kits"): kit n plays only Bay Area preset n's pads
+        let bayKits = KitLibrary.factory.suffix(50)
+        check(bayKits.allSatisfy { $0.family == "WEST COAST" && $0.genre == "BAY AREA" && $0.preferredMode == .modern } &&
+              zip(bayKits, bay).allSatisfy { kit, preset in
+            let played = Set(preset.pattern.events.map { Int($0.pad) })
+            return Pad.allCases.allSatisfy { pad in
+                played.contains(pad.rawValue) ? stock.sample(kitID: kit.id, pad: pad.rawValue) != nil : stock.isEmpty(kitID: kit.id, pad: pad.rawValue)
+            }
+        }, "50 Bay Area kits in the WEST COAST tab: a sound on each pad its preset plays, every other pad EMPTY")
         let learned = PatternBank.presets(in: "BK Editions Vol 1")
         check(learned.count >= 19 && learned.allSatisfy { [4, 8].contains($0.pattern.bars) && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } },
               "BK Editions Vol 1: the grooves learned from Tyrone's loops, 4 or 8 bars, each with its kick (\(learned.count))")

@@ -174,6 +174,30 @@ def west_coast_kits(named):
     return out
 
 
+def bay_area_kits(named):
+    """kit_catalog.BAY_AREA_KITS, made like west_coast_kits: the n-th kit holds only the sounds the n-th Bay Area preset
+    plays, the rest EMPTY. 50 kits outnumber the twenty sounds nearest each loop, so each pad takes the nearest of
+    them the fewest Bay Area kits before it already have."""
+    loops = {lp["title"]: lp for lp in json.load(open(os.path.join(ROOT, "tools", "learned_bayarea.json")))["learned"]}
+    bank = json.load(open(os.path.join(ROOT, "BreakBoss.swiftpm", "Resources", "PatternBank.json")))["patterns"]
+    presets = [p for p in bank if p["style"] == "Bay Area"]
+    assert len(presets) == len(kit_catalog.BAY_AREA_KITS)
+    pad_of = {"k": 0, "s": 1, "c": 2, "r": 3, "h": 4, "o": 5, "cr": 11}
+    had, out = collections.Counter(), []
+    for (name, title), preset in zip(kit_catalog.BAY_AREA_KITS, presets):
+        lp = loops[title]
+        picks = {pad: kit_catalog.EMPTY for pad in range(12)}
+        for lane in preset["lanes"]:
+            near = [n for n in lp["sounds"].get(lane) or (lp.get("backbeat") if lane == "c" else None) or []
+                    if named[n]["category"] == PADS[pad_of[lane]][0]]     # a rimshot can sit among a snare's nearest
+            assert near, (name, lane)
+            pick = min(near, key=lambda n: (had[n], near.index(n)))
+            picks[pad_of[lane]] = pick; had[pick] += 1
+        genre, style, voice = kit_catalog.BAY_AREA_LOOK
+        out.append((name, "modern", "WEST COAST", genre, style, int(round(preset["bpm"])), voice, ["west"], {}, picks))
+    return out
+
+
 def build():
     uses = collections.Counter()
     kits, assignments, empty = [], [], []
@@ -216,10 +240,11 @@ def build():
                     assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": by_file[f]["name"]})
                 kits.append((kid, name, voice, style, tempo, seed, root_hz(by_file[files[6]]), mode, family, genre))
                 seed += 1
-    # The live acoustic kits, then the BK kits, then the West Coast kits, last, so every kit above keeps its sounds.
+    # The live acoustic kits, then the BK kits, then the West Coast kits, then the Bay Area kits (Oct 25), last, so
+    # every kit above keeps its sounds.
     acoustic = {s["name"]: s for s in ACOUSTIC + BK}
     for s in SOUNDS: acoustic.setdefault(s["name"], s)      # a BK kit may also pick a library sound by name
-    for name, mode, family, genre, style, tempo, voice, tags, likes, picks in kit_catalog.ACOUSTIC_KITS + kit_catalog.BK_KITS + west_coast_kits(acoustic):
+    for name, mode, family, genre, style, tempo, voice, tags, likes, picks in kit_catalog.ACOUSTIC_KITS + kit_catalog.BK_KITS + west_coast_kits(acoustic) + bay_area_kits(acoustic):
         leans = dict(likes)
         for k, v in kit_catalog.MODE_LIKES[mode].items(): leans[k] = leans.get(k, 0) + v
         files, names = [], []
