@@ -201,8 +201,13 @@ struct SequencerView: View {
     @State var heard: HeardNote?
     /// A SELECT press on a note that was already selected: lifting without moving deselects it.
     @State var pressedSelected: NoteKey?
-    /// The note under the trackpad or mouse pointer: it lifts slightly (and sits back down when selected).
-    @State var hoverNote: NoteKey?
+    /// The step button or piano-roll note under the trackpad or mouse pointer (Tyrone, Oct 25): every
+    /// one floats up off the plate, lit or not, selected or not, and sits back down when pressed.
+    @State var hoverSpot: HoverSpot?
+    /// How far it has floated up (0 to 1, eased in over a few frames).
+    @State var hoverLift: CGFloat = 0
+    /// A step row's button (`cell` counted from the window's first step) or a piano-roll note.
+    struct HoverSpot: Hashable { var pad: Int; var cell: Int; var note: NoteKey? }
     struct HeardNote: Equatable { var pad: Int; var semis: Int; var tick: Int32 }
     struct Trace { var from: CGPoint; var at: CGPoint }
     /// The library's Search field has the keyboard (its Delete key edits the text, not the notes).

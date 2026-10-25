@@ -41,7 +41,7 @@ extension SequencerView {
             h.combine(e.tick); h.combine(e.pad); h.combine(e.velocity); h.combine(e.semis)
             h.combine(e.length); h.combine(e.glide); h.combine(e.offset); h.combine(e.chance)
         }
-        h.combine(selection); h.combine(hoverNote)
+        h.combine(selection); h.combine(hoverSpot); h.combine(hoverLift)
         for l in L {
             h.combine(l.channel.id); h.combine(l.channel.pad); h.combine(l.y); h.combine(l.height); h.combine(l.bandH)
             h.combine(l.graphH); h.combine(l.pitchTop); h.combine(l.pitchRowH); h.combine(l.pitch?.lowerBound); h.combine(l.pitch?.upperBound)
@@ -148,11 +148,15 @@ extension SequencerView {
                     g.fill(Path(roundedRect: r.insetBy(dx: 1, dy: 1), cornerRadius: 3), with: .color((selection.contains(NoteKey(e)) ? Color.white : glowColor).opacity(0.3 + 0.4 * Double(e.velocity))))
                 }
             }
-            for (_, r0, hits) in lit {
+            // an empty step under the pointer floats up too
+            if let h = hoverSpot, h.note == nil, !lit.contains(where: { $0.0.pad == h.pad && $0.0.cell == h.cell }), let l = layout(for: h.pad, L) {
+                drawMetalCells(ctx, [liftNote(ctx, cellRect(h.cell, cw, l, size.width))])
+            }
+            for (key, r0, hits) in lit {
                 let sel = hits.contains { selection.contains(NoteKey($0)) }
                 let v = Double(hits.map(\.velocity).max() ?? 0.8)
-                // under the pointer the step lifts a little off the plate; a selected one sits back down
-                let lifted = !sel && hoverNote.map { h in hits.contains { NoteKey($0) == h } } == true
+                // under the pointer the step floats a little off the plate
+                let lifted = hoverSpot.map { $0.note == nil && $0.pad == key.pad && $0.cell == key.cell } == true
                 let r = lifted ? liftNote(ctx, r0) : r0
                 if lifted { drawMetalCells(ctx, [r]) }
                 drawLitStep(ctx, r, glow: sel ? Color.white : glowColor, level: 0.55 + 0.45 * v, hits: hits.count)
@@ -172,7 +176,7 @@ extension SequencerView {
             }
             for (e, r0) in notes {
                 let sel = selection.contains(NoteKey(e))
-                let r = !sel && hoverNote == NoteKey(e) ? liftNote(ctx, r0) : r0
+                let r = hoverSpot?.note == NoteKey(e) ? liftNote(ctx, r0) : r0
                 drawMetalNote(ctx, r, tint: sel ? Color.white : glowColor, level: 0.55 + 0.45 * Double(e.velocity))
                 if sel { ctx.stroke(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.white), lineWidth: 1.5) }
                 if sel && tool == .select {
@@ -221,10 +225,16 @@ extension SequencerView {
         .accessibilityValue("\(pattern.events.count) notes, \(selection.count) selected" + (SamplerWindow.probing ? rowsProbe(L) : ""))
         .bbMenuOpener(gridMenuOpener)
         .onContinuousHover { phase in
-            // a trackpad or mouse pointer over a note lifts it (Tyrone, Oct 25)
-            var over: NoteKey?
-            if case .active(let p) = phase, drag.isIdle, let e = noteAt(p, w: w, L: L) { over = NoteKey(e) }
-            if over != hoverNote { hoverNote = over }
+            // a trackpad or mouse pointer over a step or a note floats it (Tyrone, Oct 25)
+            var over: HoverSpot?
+            if case .active(let p) = phase, drag.isIdle, let l = layout(at: p.y, L) {
+                if l.pitch == nil, p.y < l.y + l.bandH, stepStart(at: p.x, w) < pattern.lengthTicks {
+                    over = HoverSpot(pad: l.channel.pad, cell: Int((stepStart(at: p.x, w) - pageStart) / max(1, cellTicks)), note: nil)
+                } else if l.pitch != nil, let e = noteAt(p, w: w, L: L) {
+                    over = HoverSpot(pad: l.channel.pad, cell: -1, note: NoteKey(e))
+                }
+            }
+            setHover(over)
         }
         .highPriorityGesture(DragGesture(minimumDistance: 0)
             .onChanged { g in if !pinching && !twoFinger { gridChanged(g, w: w, L: L) } }
@@ -372,13 +382,30 @@ extension SequencerView {
         ctx.fill(slots, with: .color(Color.black.opacity(0.7)))
     }
 
-    /// A note lifted off the plate under the pointer: its shadow on the plate, and where it now sits.
+    /// A note floated off the plate under the pointer: its shadow on the plate, and where it now sits.
     func liftNote(_ ctx: GraphicsContext, _ r: CGRect) -> CGRect {
+        let k = Double(hoverLift)
         ctx.drawLayer { g in
-            g.addFilter(.shadow(color: Color.black.opacity(0.75), radius: 3, y: 2))
-            g.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.5)))
+            g.addFilter(.shadow(color: Color.black.opacity(0.75 * k), radius: 1 + 3 * k, y: 1 + 2 * k))
+            g.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color.black.opacity(0.5 * k)))
         }
-        return r.offsetBy(dx: 0, dy: -1.5)
+        return r.offsetBy(dx: 0, dy: -2 * hoverLift)
+    }
+
+    /// The pointer moved onto another step or note (or off them): the new one floats up over ~0.1 s.
+    func setHover(_ spot: HoverSpot?) {
+        guard spot != hoverSpot else { return }
+        hoverSpot = spot
+        hoverLift = 0
+        guard spot != nil else { return }
+        Task { @MainActor in
+            for i in 1...6 {
+                try? await Task.sleep(nanoseconds: 16_000_000)
+                guard hoverSpot == spot else { return }
+                let t = CGFloat(i) / 6
+                hoverLift = 1 - (1 - t) * (1 - t)
+            }
+        }
     }
 
     /// A lit step button: the same silver button, its slot lit as a bright bar of the mode's light
