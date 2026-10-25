@@ -125,13 +125,15 @@ extension SequencerView {
                 startRepeat(pad: l.channel.pad, like: hit, fromPaint: false)
                 gridChanged(g, w: w, L: L)
             } else if let l = layout(at: g.startLocation.y, L), l.pitch == nil {
-                // a step row: each step is its own square. Sliding sideways off it fills on from the step
-                // (a glissando, like an empty step); pushed any other way it stays put
+                // a step row: each step is its own square. Sliding sideways off a lit step clears the steps
+                // the finger crosses (from an empty step the swipe fills them, like FL); pushed any other
+                // way it stays put
                 guard hypot(g.translation.width, g.translation.height) > 10 else { return }
                 if abs(g.translation.width) > abs(g.translation.height) {
                     undoStack.append(step(pattern)); redoStack = []
-                    work = pattern
-                    drag = .paint(pad: l.channel.pad, semis: key.semis, lastCell: Int(placeTick(at: g.startLocation.x, w, l) / placeTicks))
+                    let cell = Int((stepStart(at: g.startLocation.x, w) - pageStart) / max(1, cellTicks))
+                    work = clearSteps(pattern, pad: l.channel.pad, cells: [cell])
+                    drag = .clear(pad: l.channel.pad, lastCell: cell)
                     gridChanged(g, w: w, L: L)
                 } else {
                     drag = .spent
@@ -246,9 +248,28 @@ extension SequencerView {
             work = PatternEdit.addNote(pattern, pad: pad, tick: t, velocity: lastVelocity, semis: sem)
             drag = .paint(pad: pad, semis: sem, lastCell: Int(t / placeTicks))
             gridChanged(g, w: w, L: L)
+        case .clear(let pad, let lastCell):
+            let cell = Int((stepStart(at: g.location.x, w) - pageStart) / max(1, cellTicks))
+            guard cell != lastCell else { return }
+            // a fast swipe skips steps between two touches: they clear too
+            let by = cell > lastCell ? 1 : -1
+            work = clearSteps(pattern, pad: pad, cells: Array(stride(from: lastCell + by, through: cell, by: by)))
+            drag = .clear(pad: pad, lastCell: cell)
         case .none, .octave, .spent:
             break
         }
+    }
+
+    /// The pattern without the row's notes on these step buttons (counted from the window's first step).
+    func clearSteps(_ p: PatternData, pad: Int, cells: [Int]) -> PatternData {
+        let c = max(1, cellTicks)
+        let keys = Set(p.events.filter { e in
+            guard Int(e.pad) == pad, e.tick >= pageStart else { return false }
+            return cells.contains(Int((e.tick - pageStart) / c))
+        }.map(NoteKey.init))
+        guard !keys.isEmpty else { return p }
+        selection.subtract(keys)
+        return PatternEdit.remove(p, keys)
     }
 
     /// A finger that went down on a step and is heading straight down (more down than sideways).
@@ -323,7 +344,7 @@ extension SequencerView {
             let (len, s) = long808Note(start: start, semis: sem, from: g.startLocation, at: g.location, w: w, L: L)
             last808Length = len
             commit(PatternEdit.addNote(pattern, pad: Pad.bass808.rawValue, tick: start, length: len, velocity: lastVelocity, semis: s))
-        case .paint, .erase:
+        case .paint, .erase, .clear:
             if let p = work { work = nil; controller.setLoop(loop, p) }
             else { _ = undoStack.popLast() }
         case .noteRepeat(_, _, _, _, _, let fromPaint):

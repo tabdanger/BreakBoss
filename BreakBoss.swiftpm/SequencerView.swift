@@ -290,6 +290,8 @@ struct SequencerView: View {
         /// A press on an empty step while notes are selected (Tyrone, Oct 25): lifting the finger only
         /// deselects; sliding sideways fills the steps as usual.
         case deselect(pad: Int, semis: Float, tick: Int32)
+        /// A sideways swipe that started on a lit step (Tyrone, Oct 25): it clears the row's steps it crosses.
+        case clear(pad: Int, lastCell: Int)
         /// A touch that's done its work (or a step pressed and pushed off its square): the rest does nothing.
         case spent
 
