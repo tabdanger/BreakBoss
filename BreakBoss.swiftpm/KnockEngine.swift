@@ -1175,13 +1175,14 @@ final class KnockEngine {
                 }
             }
         case .noteOff:
-            // A recorded part playing back: the 808 note ends where the DAW's note ends (its
-            // length as recorded); drums are one-shots and ring out.
+            // A recorded part playing back: every sound is a one-shot and rings out, the 808 too
+            // (Tyrone, Oct 25); only a sampler Volume envelope with a release takes the DAW's note end.
             if e.a >= 0, let r = outRoute(channel: Int(e.a) / 128, note: Int(e.a) % 128) {
                 if r.pad == Pad.bass808.rawValue {
                     let note = Int(e.a) % 128
-                    for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].heldNote == note {
-                        voices[v].release(samples: Int(sampleRate * 0.03))
+                    for v in 0..<KnockEngine.maxVoices where voices[v].active && voices[v].heldNote == note
+                        && voices[v].sm.on && voices[v].sm.volumeGates {
+                        voices[v].remaining = 1
                     }
                 }
                 break
@@ -1511,26 +1512,24 @@ final class KnockEngine {
         var rate = Double(sample.sampleRate / sampleRate) * Double(powf(2, totalSemis / 12))
         let beatSamples = samplesPerBeat
         if rt.active { rate *= rt.tapeRate(sourceSeconds: sample.seconds, bpm: sampleRate * 60 / beatSamples) }
-        // Loaded samples are one-shots (Tyrone, Oct 18): the whole sound plays whatever the note's
-        // length, unless the sampler's Volume envelope releases at the note's end or it loops. A track
-        // whose sampler doesn't do either keeps the note length it had without one (Tyrone, Oct 19);
-        // the notes its arpeggiator and echoes add (arp false) stay one-shots as they were.
+        // Every sound is a one-shot (Tyrone, Oct 18 loaded samples; Oct 25 every kit sound and the 808,
+        // piano-roll notes and slides included): the whole sound plays whatever the note's length,
+        // unless the sampler's Volume envelope releases at the note's end or it loops. The sampler's
+        // changes come on top of the one-shot; untouched, it plays as it is.
         // A note that would play whole without the Volume envelope (a pad tap, a drum step, a loaded
         // one-shot) lets go no sooner than the end of the envelope's run (delay, attack, hold, decay) when
         // the envelope ends by itself (SUS at 0), so the envelope as it comes (HOLD = the sound's length)
         // leaves the sound as it was (Tyrone, Oct 19). With a sustain level the note's end is its release.
         let wholeNote = lengthSamples == 0 || ps.sampleFile != nil
         var lengthSamples = lengthSamples
-        if ps.sampleFile != nil || (rt.active && (rt.volumeGates || rt.loop || !arp)) {
-            if !rt.volumeGates && !rt.loop {
-                if !glide { lengthSamples = 0 }
-            } else if rt.volumeGates && wholeNote && !glide && rt.volume.sustain < 0.001 && !rt.volume.usesPoints {
-                let run = Int(rt.volume.runUnits * (rt.volume.tempo ? beatSamples : sampleRate))
-                lengthSamples = max(lengthSamples, Int(beatSamples * 0.25), run)
-            } else if lengthSamples == 0 {
-                // a pad tap or a drum step: a 16th with the envelope, a beat for a loop
-                lengthSamples = Int(beatSamples * (rt.volumeGates ? 0.25 : 1))
-            }
+        if !rt.active || (!rt.volumeGates && !rt.loop) {
+            lengthSamples = 0
+        } else if rt.volumeGates && wholeNote && !glide && rt.volume.sustain < 0.001 && !rt.volume.usesPoints {
+            let run = Int(rt.volume.runUnits * (rt.volume.tempo ? beatSamples : sampleRate))
+            lengthSamples = max(lengthSamples, Int(beatSamples * 0.25), run)
+        } else if lengthSamples == 0 {
+            // a pad tap or a drum step: a 16th with the envelope, a beat for a loop
+            lengthSamples = Int(beatSamples * (rt.volumeGates ? 0.25 : 1))
         }
 
         // 808 glide: bend the note that's still sounding instead of starting a new one.
