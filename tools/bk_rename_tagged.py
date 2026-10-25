@@ -3,12 +3,14 @@
 
   python3 tools/bk_rename_tagged.py            # dry run: prints old name -> new name
   python3 tools/bk_rename_tagged.py --apply    # rewrites the names everywhere, then run tools/build_kits.py
+  python3 tools/bk_rename_tagged.py --all [--apply]   # every other stock sound too (Danger, Vintage, acoustic...)
 
 Tyrone, Oct 25: no sound in the app carries a producer's tag or its pack's names. The sounds whose
 source file carried "(@prod.by.iiinfinite)" (tools/stock_sources.json), and the rest of that same
 Archive (its "Kicks 2", "808 2"... folders), become "BK NO n KIND" like Tyrone's own BK sounds:
 numbering goes on from the highest BK number of that kind, the 808's key and V2, V3 stay before the
-kind word, and the kind word stays last (SoundType.forStockName reads it). Only names change: the
+kind word, and the kind word stays last (SoundType.forStockName reads it). Tyrone then wanted every other sound renamed the same way ("yes they should",
+Oct 25): --all renames every stock sound that isn't "BK NO n" yet. Only names change: the
 files, kits and pads stay the same. tools/bk_renamed.json keeps old -> new.
 """
 import collections, json, os, re, sys
@@ -23,10 +25,10 @@ ARCHIVE_POOLS = {"808 2", "Claps 2", "Cymbals & Crashes 2", "Hi Hats 2", "Kicks 
                  "Snaps 2", "Snares 2"}
 TWO_WORD_KINDS = ("OPEN HAT", "OPEN HIHAT", "DJ SCRATCH", "TRIANGLE RISER")
 # The word Tyrone's BK sounds use for the same kind ("BK NO 3 HIHAT"), so the numbers run on from them.
-BK_WORD = {"HAT": "HIHAT"}
+BK_WORD = {"HAT": "HIHAT", "OPEN HIHAT": "OPEN HAT"}
 # Every file whose JSON names a stock sound by its name.
 NAMED_IN = ["BreakBoss.swiftpm/Resources/StockSamples/manifest.json", "tools/stock_sounds.json",
-            "tools/learned_westcoast.json", "tools/learned_bayarea.json"]
+            "tools/learned_westcoast.json", "tools/learned_bayarea.json", "tools/acoustic_sounds.json"]
 
 
 def tagged_files():
@@ -46,13 +48,14 @@ def split(name):
     return " ".join(own), keep, kind
 
 
-def renames():
+def renames(every=False):
     sounds = json.load(open(MANIFEST))["sounds"]
     tagged = tagged_files()
+    if every: tagged = {s["file"] for s in sounds if not s["name"].startswith("BK NO ")}
     top = collections.defaultdict(int)
     for s in sounds:
         m = re.fullmatch(r"BK NO (\d+) (.+)", s["name"])
-        if m: top[m.group(2)] = max(top[m.group(2)], int(m.group(1)))
+        if m: kind = split(m.group(2))[2]; top[kind] = max(top[kind], int(m.group(1)))
     groups = collections.defaultdict(list)
     for s in sounds:
         if s["file"] in tagged:
@@ -77,8 +80,8 @@ def rewrite(value, names):
     return value
 
 
-def main(apply):
-    names = renames()
+def main(apply, every):
+    names = renames(every)
     for old, new in sorted(names.items(), key=lambda kv: kv[1]): print(f"{old:28} -> {new}")
     print(len(names), "sounds renamed")
     if not apply: return
@@ -96,4 +99,4 @@ def main(apply):
 
 
 if __name__ == "__main__":
-    main("--apply" in sys.argv)
+    main("--apply" in sys.argv, "--all" in sys.argv)

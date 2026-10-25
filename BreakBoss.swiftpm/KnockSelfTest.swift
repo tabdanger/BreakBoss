@@ -139,15 +139,15 @@ enum KnockSelfTest {
         let names = library.allSounds.map(\.displayName)
         check(library.allSounds.count == 729 && urls.count == 729 && Set(names).count == 729, "the sound library holds 729 sounds (589 + 140 BK), each with its own name")
         check(names.allSatisfy { SoundType.forStockName($0) != nil }, "every stock sound's name ends in what it is")
-        check(SoundType.forStockName("THRONE OPEN HIHAT") == .open && SoundType.forStockName("THRONE HIHAT") == .hat
-              && SoundType.forStockName("BK NO 15 E1 808") == .bass && SoundType.forStockName("ISSA BOUNCE CLAP SNARE") == .snare,
+        check(SoundType.forStockName("BK NO 60 OPEN HAT") == .open && SoundType.forStockName("BK NO 66 HIHAT") == .hat
+              && SoundType.forStockName("BK NO 15 E1 808") == .bass && SoundType.forStockName("BK NO 64 SNARE") == .snare,
               "a stock sound's last word sorts it")
         check(library.librarySounds().count == 729, "the sound menu lists every stock sound, in a kit or not")
         // Tyrone, Oct 19: every sound sits in the section of the folder it came from
         let sections = Dictionary(library.librarySounds().map { ($0.name, $0.type) }, uniquingKeysWith: { a, _ in a })
         check(library.allSounds.allSatisfy { $0.section.flatMap(SoundType.init(section:)) != nil }, "every stock sound has its folder's section")
-        check(sections["BK NO 2 TOM"] == .perc && sections["TRIPPY RIDE"] == .hat && sections["SORCERER CLAP"] == .snare
-              && sections["THRONE OPEN HIHAT"] == .open && sections["BK NO 9 KICK"] == .kick,
+        check(sections["BK NO 2 TOM"] == .perc && sections["BK NO 2 RIDE"] == .hat && sections["BK NO 40 CLAP"] == .snare
+              && sections["BK NO 60 OPEN HAT"] == .open && sections["BK NO 9 KICK"] == .kick,
               "a sound's library section is its original folder's (a tom from a percs folder is a PERC)")
         // Tyrone, Oct 25: no producer tags on any sound, stock or imported
         check(!names.contains { $0.contains("@") || $0.uppercased().contains("PROD") || $0.contains("IIINFINITE") }
@@ -211,7 +211,7 @@ enum KnockSelfTest {
         check(KnockController.stockPick(picked, pad: 0) == "detroit-2026-a" && KnockController.stockPick(picked, pad: 1) == nil, "dice: per-pad picks")
         check(picked.selectingKit(KitLibrary.factory[1]).stockPicks == nil, "dice: choosing a kit brings its own sounds back")
         // The acoustic drums: every sound multisampled, softest layer first, the loudest one the sound itself.
-        let acoustic = library.allSounds.filter { $0.displayName.hasPrefix("VIRTUOSITY ") }
+        let acoustic = library.allSounds.filter { $0.url.lastPathComponent.hasPrefix("ac_") }
         check(acoustic.count == 12 && acoustic.allSatisfy { (library.layers(for: $0)?.count ?? 0) >= 3 },
               "acoustic drums: 12 multisampled sounds, each with its velocity layers")
         for sound in acoustic {

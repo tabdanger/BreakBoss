@@ -227,16 +227,16 @@ KITS = {
 ACOUSTIC_KITS = [
     ("SOUL SESSION", "vintage", "SOUL & R&B", "LIVE SOUL", "neoSoul", 88, "neoSoul", ["soul", "jazz", "boombap"],
      {"dusty": 0.4, "perc": ["SHAKER", "TAMB", "WOOD"]},
-     {0: "VIRTUOSITY KICK", 1: "VIRTUOSITY SNARE", 3: "VIRTUOSITY CROSS STICK RIM", 4: "VIRTUOSITY HIHAT",
-      5: "VIRTUOSITY HALF OPEN HIHAT", 9: "VIRTUOSITY LOW TOM", 10: "VIRTUOSITY HIGH TOM", 11: "VIRTUOSITY RIDE"}),
+     {0: "BK NO 56 KICK", 1: "BK NO 89 SNARE", 3: "BK NO 39 RIM", 4: "BK NO 69 HIHAT",
+      5: "BK NO 64 OPEN HAT", 9: "BK NO 10 TOM", 10: "BK NO 9 TOM", 11: "BK NO 3 RIDE"}),
     ("BREAK ROOM", "vintage", "BREAKS", "LIVE BREAKS", "funkBreak", 96, "funkBreak", ["funk", "boombap", "soul"],
      {"room": 0.6, "perc": ["TAMB", "SHAKER", "CONGA"]},
-     {0: "VIRTUOSITY KICK", 1: "VIRTUOSITY RIMSHOT SNARE", 3: "VIRTUOSITY OFF CENTER SNARE", 4: "VIRTUOSITY HIHAT",
-      5: "VIRTUOSITY OPEN HIHAT", 9: "VIRTUOSITY LOW TOM", 10: "VIRTUOSITY HIGH TOM", 11: "VIRTUOSITY CRASH"}),
+     {0: "BK NO 56 KICK", 1: "BK NO 91 SNARE", 3: "BK NO 90 SNARE", 4: "BK NO 69 HIHAT",
+      5: "BK NO 63 OPEN HAT", 9: "BK NO 10 TOM", 10: "BK NO 9 TOM", 11: "BK NO 24 CRASH"}),
     ("STUDIO A", "modern", "POP", "LIVE ROCK", "heavyBreak", 118, "heavyBreak", ["funk", "pop80", "boombap"],
      {"bright": 0.4, "perc": ["TAMB", "SHAKER", "HIT"]},
-     {0: "VIRTUOSITY KICK", 1: "VIRTUOSITY SNARE", 3: "VIRTUOSITY RIMSHOT SNARE", 4: "VIRTUOSITY HIHAT",
-      5: "VIRTUOSITY OPEN HIHAT", 9: "VIRTUOSITY LOW TOM", 10: "VIRTUOSITY HIGH TOM", 11: "VIRTUOSITY CRASH"}),
+     {0: "BK NO 56 KICK", 1: "BK NO 89 SNARE", 3: "BK NO 91 SNARE", 4: "BK NO 69 HIHAT",
+      5: "BK NO 63 OPEN HAT", 9: "BK NO 10 TOM", 10: "BK NO 9 TOM", 11: "BK NO 24 CRASH"}),
 ]
 
 # Tyrone's own Drum Kit as BK sounds (Oct 20, tools/build_bk_sounds.py): the first of each kind on its pad;
@@ -259,8 +259,8 @@ BK_KITS = [
     # without --bk, the nearer one per pad), for BK Editions Vol 4
     ("BK DANGER KIT", "modern", "WEST COAST", "BK", "westBounce", 94, "westBounce", ["west", "rnb", "bounce"],
      {"punch": 0.3},
-     {0: "FUNK KICK", 1: "BK NO 12 SNARE", 2: "BK NO 5 CLAP", 3: "BK NO 27 RIM", 4: "BK NO 20 HIHAT",
-      5: "DEMON 7 OPEN HAT", **EMPTY_REST}),
+     {0: "BK NO 35 KICK", 1: "BK NO 12 SNARE", 2: "BK NO 5 CLAP", 3: "BK NO 27 RIM", 4: "BK NO 20 HIHAT",
+      5: "BK NO 47 OPEN HAT", **EMPTY_REST}),
 ]
 
 # West Coast (Oct 20): a kit for each of the 20 West Coast presets (the n-th kit goes with the n-th preset), from
