@@ -34,6 +34,17 @@ enum KnockFolders {
         return out.sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
     }
 
+    /// A sound's name as shown, without a producer's tag: "[Kick] Waves - (@prod.by.x).wav" -> "[Kick] Waves.wav"
+    /// (Tyrone, Oct 25: no tags on any sound). Only the name shown changes, the file keeps its own.
+    static func untagged(_ name: String) -> String {
+        var s = name.replacingOccurrences(of: #"\s*-?\s*[\(\[]?\s*@[^\s\)\]/]+?(?=\.[A-Za-z0-9]{2,4}$|[\s\)\]/]|$)\s*[\)\]]?"#, with: "", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"\s*-?\s*[\(\[]\s*prod(\.|uced)?\s+by\b[^\)\]/]*[\)\]]"#, with: "",
+                                   options: [.regularExpression, .caseInsensitive])
+        s = s.replacingOccurrences(of: #"[\s\-_]+(\.[A-Za-z0-9]+)$"#, with: "$1", options: .regularExpression)
+        s = s.trimmingCharacters(in: CharacterSet(charactersIn: " -_"))
+        return s.isEmpty ? name : s
+    }
+
     /// A name that's safe as a file name.
     static func safe(_ name: String) -> String {
         let bad = CharacterSet(charactersIn: "/\\?%*|\"<>:")

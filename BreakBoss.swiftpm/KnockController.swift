@@ -947,7 +947,7 @@ final class KnockController: ObservableObject {
                         if let loaded { self.afterKitLoad.append(loaded) }
                         self.rebuildKit()
                     }
-                    self.readout = Readout(title: "PAD \(pad + 1)", value: (name as NSString).deletingPathExtension.uppercased(), time: Date())
+                    self.readout = Readout(title: "PAD \(pad + 1)", value: KnockFolders.untagged((name as NSString).deletingPathExtension).uppercased(), time: Date())
                     self.scheduleSave()
                 }
             } catch {
@@ -988,7 +988,7 @@ final class KnockController: ObservableObject {
 
     func padName(_ pad: Int) -> String {
         guard (0..<Pad.count).contains(pad) else { return "" }
-        if let f = state.pads[pad].sampleFile { return (f as NSString).deletingPathExtension }
+        if let f = state.pads[pad].sampleFile { return KnockFolders.untagged((f as NSString).deletingPathExtension) }
         if let name = stockSampleNames[pad] { return name }
         if emptyPads.contains(pad) { return "EMPTY" }
         return kitDefinition.pads[pad].label

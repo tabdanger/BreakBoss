@@ -140,15 +140,25 @@ enum KnockSelfTest {
         check(library.allSounds.count == 729 && urls.count == 729 && Set(names).count == 729, "the sound library holds 729 sounds (589 + 140 BK), each with its own name")
         check(names.allSatisfy { SoundType.forStockName($0) != nil }, "every stock sound's name ends in what it is")
         check(SoundType.forStockName("THRONE OPEN HIHAT") == .open && SoundType.forStockName("THRONE HIHAT") == .hat
-              && SoundType.forStockName("SUKUNA E1 808") == .bass && SoundType.forStockName("ISSA BOUNCE CLAP SNARE") == .snare,
+              && SoundType.forStockName("BK NO 15 E1 808") == .bass && SoundType.forStockName("ISSA BOUNCE CLAP SNARE") == .snare,
               "a stock sound's last word sorts it")
         check(library.librarySounds().count == 729, "the sound menu lists every stock sound, in a kit or not")
         // Tyrone, Oct 19: every sound sits in the section of the folder it came from
         let sections = Dictionary(library.librarySounds().map { ($0.name, $0.type) }, uniquingKeysWith: { a, _ in a })
         check(library.allSounds.allSatisfy { $0.section.flatMap(SoundType.init(section:)) != nil }, "every stock sound has its folder's section")
-        check(sections["NO 1 TOM"] == .perc && sections["TRIPPY RIDE"] == .hat && sections["SORCERER CLAP"] == .snare
-              && sections["THRONE OPEN HIHAT"] == .open && sections["ASTRONOMY KICK"] == .kick,
+        check(sections["BK NO 2 TOM"] == .perc && sections["TRIPPY RIDE"] == .hat && sections["SORCERER CLAP"] == .snare
+              && sections["THRONE OPEN HIHAT"] == .open && sections["BK NO 9 KICK"] == .kick,
               "a sound's library section is its original folder's (a tom from a percs folder is a PERC)")
+        // Tyrone, Oct 25: no producer tags on any sound, stock or imported
+        check(!names.contains { $0.contains("@") || $0.uppercased().contains("PROD") || $0.contains("IIINFINITE") }
+              && library.librarySounds().allSatisfy { !$0.name.contains("@") },
+              "no stock sound carries a producer's tag")
+        check(KnockFolders.untagged("[Kick] Waves - (@prod.by.iiinfinite).wav") == "[Kick] Waves.wav"
+              && KnockFolders.untagged("[Lazer] 4 - @prod.by.iiinfinite") == "[Lazer] 4"
+              && KnockFolders.untagged("Big Snare (prod. by Someone)") == "Big Snare"
+              && KnockFolders.untagged("Pack/808 Hands @maker.wav") == "Pack/808 Hands.wav"
+              && KnockFolders.untagged("My Kick 2.wav") == "My Kick 2.wav",
+              "an imported sound's name is shown without its producer tag")
         check(SoundType.guess("Danger Demon/Kicks/808 Kick.wav") == .kick && SoundType.guess("Pack/808s/Big.wav") == .bass
               && SoundType.guess("Pack/OHH/Hat 3.wav") == .open && SoundType.guess("Pack/Hi-Hats/Open Thing.wav") == .hat
               && SoundType.guess("Pack/Snares/Clap Layer.wav") == .snare && SoundType.guess("Pack/[Kick] Astronomy.wav") == .kick

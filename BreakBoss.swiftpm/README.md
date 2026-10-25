@@ -48,7 +48,7 @@ Vintage is the primary browser home for Boom Bap, 70s Soul, Vintage R&B, dusty s
 
 PRESETS contains 170 patterns, 10 in each of 17 styles from the drum research, written with accents, ghost notes and fills. A preset loads a pattern, its tempo and swing (and the feel of the live styles); the kit and pad settings stay as they are. Choosing a kit alone keeps the current global and per-pad processing controls while replacing the raw sample identities. INIT resets processing and pad controls while retaining your loaded samples.
 
-The uploaded samples identify @prod.by.iiinfinite. Source archive entries, original/processed hashes, and exact processing settings are recorded in `Build_Notes/STOCK_SAMPLE_PROVENANCE.json`. The synthesis engine remains available only as a recovery path for unavailable audio. Imported pad audio takes priority over the bundled bank.
+Every stock sound shows a Break King name only, never a producer tag (tools/bk_rename_tagged.py, Oct 25). Source archive entries, original/processed hashes, and exact processing settings are recorded in `Build_Notes/STOCK_SAMPLE_PROVENANCE.json`. The synthesis engine remains available only as a recovery path for unavailable audio. Imported pad audio takes priority over the bundled bank.
 
 The faceplate processing remains available. MENU → Engine controls exposes:
 

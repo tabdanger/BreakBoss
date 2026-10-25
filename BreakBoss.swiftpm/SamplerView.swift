@@ -547,7 +547,7 @@ struct SamplerWindow: View {
     }
 
     private var fileName: String {
-        controller.state.pads[pad].sampleFile.map { ($0 as NSString).lastPathComponent } ?? controller.padName(pad)
+        controller.state.pads[pad].sampleFile.map { KnockFolders.untagged(($0 as NSString).lastPathComponent) } ?? controller.padName(pad)
     }
 
     private func filePanel(_ s: CGFloat) -> some View {
@@ -575,7 +575,7 @@ struct SamplerWindow: View {
         let files = KnockFolders.sampleFiles().prefix(60).map { $0.standardizedFileURL.path.replacingOccurrences(of: folder, with: "") }
         if !files.isEmpty {
             items.append(.submenu("Your samples", icon: "waveform", files.map { name in
-                BBMenuItem.item((name as NSString).deletingPathExtension, checked: controller.state.pads[pad].sampleFile == name) {
+                BBMenuItem.item(KnockFolders.untagged((name as NSString).deletingPathExtension), checked: controller.state.pads[pad].sampleFile == name) {
                     var ps = controller.state.pads[pad]; ps.sampleFile = name; setPad(ps)
                 }
             }))
