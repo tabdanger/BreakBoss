@@ -3061,8 +3061,13 @@ enum KnockSelfTest {
         // Oct 24: Tyrone's genre list, after the BK Editions so older presets keep their AUv3 preset numbers
         let added = ["Trapsoul", "Dark Trap", "Phonk", "ATL Trap", "Memphis", "Toronto R&B", "Vintage R&B", "2000s R&B", "Live Soul",
                      "East Coast", "Lo-fi", "Afrobeats", "Bouncy", "80s Pop", "Live Pop", "Dark Experimental", "World & Latin"]
-        check(PatternBank.styles == wanted + learnedStyles + added && presets.filter { !learnedStyles.contains($0.style) }.count == 350,
-              "350 presets: the 17 research styles in the genre guide's order, BK Editions Vol 1 to 4, then Tyrone's 17 Oct 24 genres")
+        check(PatternBank.styles == wanted + learnedStyles + added + ["Bay Area"] && presets.filter { !learnedStyles.contains($0.style) }.count == 400,
+              "400 presets: the 17 research styles in the genre guide's order, BK Editions Vol 1 to 4, Tyrone's 17 Oct 24 genres, then Bay Area")
+        // Bay Area (Oct 25): 50 grooves learned from Tyrone's Bay Area loops, last so older presets keep their AUv3 numbers
+        let bay = PatternBank.presets(in: "Bay Area")
+        check(bay.count == 50 && bay.allSatisfy { $0.pattern.bars == 4 && $0.grooveStyle == .westBounce && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } } &&
+              PatternBank.all.suffix(50).allSatisfy { $0.style == "Bay Area" },
+              "Bay Area: 50 presets learned from Tyrone's Bay Area loops, 4 bars, each with its kick, after every older preset")
         for style in added { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
         for style in wanted where style != "West Coast" { check(PatternBank.presets(in: style).count == 10, "\(style): 10 presets") }
         // West Coast (Oct 20): 20 grooves from Tyrone's West Coast loops in place of the 10 Bay Area 2026 presets;

@@ -15,7 +15,8 @@ import Foundation
 // split the same way, each with the kick of the Vol 1 groove nearest its tempo); Vol 4, his danger drum loops.
 // Oct 24, Tyrone's genre list (10 presets each, after the BK Editions so older presets keep their AUv3 numbers): Trapsoul, Dark Trap, Phonk,
 // ATL Trap, Memphis, Toronto R&B, Vintage R&B, 2000s R&B, Live Soul, East Coast, Lo-fi, Afrobeats, Bouncy, 80s Pop,
-// Live Pop, Dark Experimental and World & Latin.
+// Live Pop, Dark Experimental and World & Latin. Oct 25, after them: Bay Area, 50 grooves learned from Tyrone's Bay Area
+// loops (tools/learn_west_coast.py --out tools/learned_bayarea.json), four bars each.
 
 struct PatternPreset: Decodable, Equatable {
     let style: String
@@ -63,6 +64,7 @@ struct PatternPreset: Decodable, Equatable {
         case "Live Pop": return .pop
         case "Dark Experimental": return .experimental
         case "World & Latin": return .latin
+        case "Bay Area": return .westBounce
         case "BK Editions Vol 1", "BK Editions Vol 3": return bpm >= 120 ? .trapAtlanta : .boomBap
         case "BK Editions Vol 2": return .rnb
         case "BK Editions Vol 4": return .westBounce
