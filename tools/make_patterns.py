@@ -18,8 +18,10 @@ Feel (optional, by lane): swingLanes = a track's own swing (0..1 like the SWING 
 shift = pushed early (-) or pulled late (+) in ticks (96 a beat), ghostChance = how often its ghost
 notes (velocity g) play, 0..1.
 """
-import json, os
+import json, os, sys
 from collections import Counter
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import kit_catalog  # noqa: E402
 
 LANES = {"k": 0, "s": 1, "c": 2, "r": 3, "h": 4, "o": 5, "b": 6, "p1": 7, "p2": 8, "lt": 9, "ht": 10, "cr": 11}
 P = []
@@ -964,6 +966,7 @@ def bay_area():
     picks += [(lp, first) for _, _, first, lp in sorted(rest)[:BAY_COUNT - len(picks)]]
     picks.sort(key=lambda pk: (pk[0]["bpm"], pk[0]["title"], pk[1]))
     assert len(picks) == BAY_COUNT, len(picks)
+    assert [t for _, t in kit_catalog.BAY_AREA_KITS] == [lp["title"] for lp, _ in picks], "kit n is preset n's loop (tools/kit_catalog.py)"
     for i, (lp, first) in enumerate(picks, 1):
         lanes = bay_lanes(lp, first)
         back = [lanes.get(l, "." * 64) for l in ("s", "c", "r")]
