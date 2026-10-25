@@ -237,7 +237,7 @@ extension SequencerView {
                 panStart = origin
                 if trackpad { return }
                 switch drag {
-                case .paint, .erase, .graph: _ = undoStack.popLast()
+                case .paint, .erase, .clear, .graph: _ = undoStack.popLast()
                 default: break
                 }
                 drag = .none; work = nil; laneOrigin = nil
@@ -433,7 +433,7 @@ extension SequencerView {
                 if !pinching {
                     pinching = true
                     switch drag {
-                    case .paint, .erase: _ = undoStack.popLast()
+                    case .paint, .erase, .clear: _ = undoStack.popLast()
                     default: break
                     }
                     drag = .none; work = nil
