@@ -3,7 +3,7 @@
   "category": "KICK",
   "character": "ACOUSTIC",
   "file": "ac_kick_l4_r1.wav",
-  "name": "VIRTUOSITY KICK",
+  "name": "BK NO 56 KICK",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -20,7 +20,7 @@
   "category": "SNARE",
   "character": "ACOUSTIC",
   "file": "ac_snare_l8_r1.wav",
-  "name": "VIRTUOSITY SNARE",
+  "name": "BK NO 89 SNARE",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -37,7 +37,7 @@
   "category": "SNARE",
   "character": "ACOUSTIC",
   "file": "ac_rimshot_l6_r1.wav",
-  "name": "VIRTUOSITY RIMSHOT SNARE",
+  "name": "BK NO 91 SNARE",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -54,7 +54,7 @@
   "category": "SNARE",
   "character": "ACOUSTIC",
   "file": "ac_offctr_l6_r1.wav",
-  "name": "VIRTUOSITY OFF CENTER SNARE",
+  "name": "BK NO 90 SNARE",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -71,7 +71,7 @@
   "category": "RIM",
   "character": "ACOUSTIC",
   "file": "ac_xstick_l6_r1.wav",
-  "name": "VIRTUOSITY CROSS STICK RIM",
+  "name": "BK NO 39 RIM",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -88,7 +88,7 @@
   "category": "HAT",
   "character": "ACOUSTIC",
   "file": "ac_hat_l4_r1.wav",
-  "name": "VIRTUOSITY HIHAT",
+  "name": "BK NO 69 HIHAT",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -105,7 +105,7 @@
   "category": "OPEN HAT",
   "character": "ACOUSTIC",
   "file": "ac_halfhat_l4_r1.wav",
-  "name": "VIRTUOSITY HALF OPEN HIHAT",
+  "name": "BK NO 64 OPEN HAT",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -122,7 +122,7 @@
   "category": "OPEN HAT",
   "character": "ACOUSTIC",
   "file": "ac_openhat_l4_r1.wav",
-  "name": "VIRTUOSITY OPEN HIHAT",
+  "name": "BK NO 63 OPEN HAT",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -139,7 +139,7 @@
   "category": "TOM",
   "character": "LOW",
   "file": "ac_lotom_l4_r1.wav",
-  "name": "VIRTUOSITY LOW TOM",
+  "name": "BK NO 10 TOM",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -156,7 +156,7 @@
   "category": "TOM",
   "character": "HIGH",
   "file": "ac_hitom_l4_r1.wav",
-  "name": "VIRTUOSITY HIGH TOM",
+  "name": "BK NO 9 TOM",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -173,7 +173,7 @@
   "category": "CYMBAL",
   "character": "RIDE",
   "file": "ac_ride_l3_r1.wav",
-  "name": "VIRTUOSITY RIDE",
+  "name": "BK NO 3 RIDE",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",
@@ -190,7 +190,7 @@
   "category": "CYMBAL",
   "character": "CRASH",
   "file": "ac_crash_l3_r1.wav",
-  "name": "VIRTUOSITY CRASH",
+  "name": "BK NO 24 CRASH",
   "folder": "VIRTUOSITY DRUMS",
   "tags": [
    "acoustic",

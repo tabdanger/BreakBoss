@@ -32,18 +32,18 @@ RATE = 48_000
 
 # name, short file name, category, character, (drum, articulation), seconds, layers kept (None = all), round robins
 SOUNDS = [
-    ("VIRTUOSITY KICK", "kick", "KICK", "ACOUSTIC", ("kick", "normal"), 1.0, None, 2),
-    ("VIRTUOSITY SNARE", "snare", "SNARE", "ACOUSTIC", ("snare", "center"), 0.8, None, 2),
-    ("VIRTUOSITY RIMSHOT SNARE", "rimshot", "SNARE", "ACOUSTIC", ("snare", "rimshot"), 0.9, None, 2),
-    ("VIRTUOSITY OFF CENTER SNARE", "offctr", "SNARE", "ACOUSTIC", ("snare", "offcenter"), 0.8, [1, 2, 3, 4, 6, 8], 2),
-    ("VIRTUOSITY CROSS STICK RIM", "xstick", "RIM", "ACOUSTIC", ("snare", "crossstick"), 0.4, [1, 3, 5, 6, 7, 8], 2),
-    ("VIRTUOSITY HIHAT", "hat", "HAT", "ACOUSTIC", ("hihat", "closed"), 0.45, None, 3),
-    ("VIRTUOSITY HALF OPEN HIHAT", "halfhat", "OPEN HAT", "ACOUSTIC", ("hihat", "half_open"), 1.0, None, 2),
-    ("VIRTUOSITY OPEN HIHAT", "openhat", "OPEN HAT", "ACOUSTIC", ("hihat", "open"), 1.8, None, 2),
-    ("VIRTUOSITY LOW TOM", "lotom", "TOM", "LOW", ("tom_low", "center"), 1.2, [2, 4, 6, 8], 2),
-    ("VIRTUOSITY HIGH TOM", "hitom", "TOM", "HIGH", ("tom_high", "center"), 1.0, [2, 4, 6, 8], 2),
-    ("VIRTUOSITY RIDE", "ride", "CYMBAL", "RIDE", ("ride", "bow"), 2.5, None, 2),
-    ("VIRTUOSITY CRASH", "crash", "CYMBAL", "CRASH", ("crash", "normal"), 3.2, None, 2),
+    ("BK NO 56 KICK", "kick", "KICK", "ACOUSTIC", ("kick", "normal"), 1.0, None, 2),
+    ("BK NO 89 SNARE", "snare", "SNARE", "ACOUSTIC", ("snare", "center"), 0.8, None, 2),
+    ("BK NO 91 SNARE", "rimshot", "SNARE", "ACOUSTIC", ("snare", "rimshot"), 0.9, None, 2),
+    ("BK NO 90 SNARE", "offctr", "SNARE", "ACOUSTIC", ("snare", "offcenter"), 0.8, [1, 2, 3, 4, 6, 8], 2),
+    ("BK NO 39 RIM", "xstick", "RIM", "ACOUSTIC", ("snare", "crossstick"), 0.4, [1, 3, 5, 6, 7, 8], 2),
+    ("BK NO 69 HIHAT", "hat", "HAT", "ACOUSTIC", ("hihat", "closed"), 0.45, None, 3),
+    ("BK NO 64 OPEN HAT", "halfhat", "OPEN HAT", "ACOUSTIC", ("hihat", "half_open"), 1.0, None, 2),
+    ("BK NO 63 OPEN HAT", "openhat", "OPEN HAT", "ACOUSTIC", ("hihat", "open"), 1.8, None, 2),
+    ("BK NO 10 TOM", "lotom", "TOM", "LOW", ("tom_low", "center"), 1.2, [2, 4, 6, 8], 2),
+    ("BK NO 9 TOM", "hitom", "TOM", "HIGH", ("tom_high", "center"), 1.0, [2, 4, 6, 8], 2),
+    ("BK NO 3 RIDE", "ride", "CYMBAL", "RIDE", ("ride", "bow"), 2.5, None, 2),
+    ("BK NO 24 CRASH", "crash", "CYMBAL", "CRASH", ("crash", "normal"), 3.2, None, 2),
 ]
 
 
