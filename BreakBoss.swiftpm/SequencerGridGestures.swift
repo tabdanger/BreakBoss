@@ -127,8 +127,10 @@ extension SequencerView {
                 return
             }
             // a quick drag from an empty spot draws a selection box, as in SELECT (Tyrone, Oct 19); hold the
-            // finger still a moment first to paint a run of notes instead
-            if lastCell == startCell, hypot(g.translation.width, g.translation.height) > 8,
+            // finger still a moment first to paint a run of notes instead. On a step row a sideways swipe
+            // fills the steps it crosses at once (swipe-to-fill, Tyrone, Oct 25)
+            let swipe = layout(for: pad, L)?.pitch == nil && abs(g.translation.width) > abs(g.translation.height)
+            if lastCell == startCell, !swipe, hypot(g.translation.width, g.translation.height) > 8,
                g.time.timeIntervalSince(touchDown) < 0.35 {
                 work = nil
                 _ = undoStack.popLast()
@@ -144,7 +146,15 @@ extension SequencerView {
             let cell = Int(t / placeTicks)
             let s = l?.pitch != nil ? controller.scaleSnapped(semis(at: g.location.y, in: l!), pad: pad) : sem
             if (cell != lastCell || s != sem) && Double(t) >= origin && Double(t) < origin + Double(pageTicks) {
-                work = PatternEdit.addNote(pattern, pad: pad, tick: t, velocity: lastVelocity, semis: s)
+                var p = pattern
+                // a fast swipe along a step row skips steps between two touches: they fill too
+                if l?.pitch == nil, abs(cell - lastCell) > 1 {
+                    for c in stride(from: lastCell + (cell > lastCell ? 1 : -1), to: cell, by: cell > lastCell ? 1 : -1) {
+                        let ct = Int32(c) * placeTicks
+                        if ct < p.lengthTicks && Double(ct) >= origin { p = PatternEdit.addNote(p, pad: pad, tick: ct, velocity: lastVelocity, semis: s) }
+                    }
+                }
+                work = PatternEdit.addNote(p, pad: pad, tick: t, velocity: lastVelocity, semis: s)
                 drag = .paint(pad: pad, semis: s, lastCell: cell)
             }
         case .long808:
