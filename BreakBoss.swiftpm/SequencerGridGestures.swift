@@ -43,8 +43,20 @@ extension SequencerView {
             case .paint, .long808: trace = Trace(from: g.startLocation, at: g.location)
             default: if trace != nil { trace = nil }
             }
+            // the piano roll plays the note being drawn: each new note, and the 808 as its pitch changes
+            switch drag {
+            case .paint(let pad, let sem, let cell):
+                if layout(for: pad, L)?.pitch != nil { hearNote(pad: pad, semis: sem, tick: Int32(cell)) }
+            case .long808(let start, let sem):
+                let pad = Pad.bass808.rawValue
+                if layout(for: pad, L)?.pitch != nil {
+                    hearNote(pad: pad, semis: long808Note(start: start, semis: sem, from: g.startLocation, at: g.location, w: w, L: L).1, tick: 0)
+                }
+            default: break
+            }
         }
         if case .none = drag {
+            heard = nil
             // the note's ⊕ / ⊖ are drawn over the grid; the grid's own touch takes them
             if let key = octaveNote, let up = octaveGlyphHit(g.startLocation, key, w: w, L: L) {
                 drag = .octave
@@ -187,6 +199,8 @@ extension SequencerView {
                     }
                     moved = p; newKeys = k2
                 }
+                // the moved note plays at its new pitch (once per pitch, not per step)
+                if let e = moved.events.first(where: { newKeys.contains(NoteKey($0)) }) { hearNote(pad: Int(e.pad), semis: e.semis, tick: 0) }
             }
             work = moved
             if followSelection { selection = newKeys }
@@ -261,8 +275,18 @@ extension SequencerView {
         return noteRect(e, w: w, L)
     }
 
+    /// The piano roll plays the note being placed or moved, like FL Studio and Logic (Tyrone, Oct 25):
+    /// once per new note or pitch, never again while the finger holds it there. Not while RECORD
+    /// runs (the engine would write the preview into the pattern).
+    func hearNote(pad: Int, semis: Float, tick: Int32) {
+        let note = HeardNote(pad: pad, semis: Int(semis.rounded()), tick: tick)
+        guard note != heard, !controller.recording else { return }
+        heard = note
+        controller.auditionPitched(pad, semis: note.semis, velocity: lastVelocity)
+    }
+
     func gridEnded(_ g: DragGesture.Value, w: CGFloat, L: [RowLayout]) {
-        defer { drag = .none; trace = nil }
+        defer { drag = .none; trace = nil; heard = nil }
         switch drag {
         case .tapOnNote(let key):
             commit(PatternEdit.remove(pattern, [key]))

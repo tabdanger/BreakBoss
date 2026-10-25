@@ -197,6 +197,9 @@ struct SequencerView: View {
     /// Where the finger is while it draws a note in the piano roll (Tyrone, Oct 21): a shadow of the
     /// note follows it until the finger lifts.
     @State var trace: Trace?
+    /// The note the piano roll last played while placing or moving (it plays again only when this changes).
+    @State var heard: HeardNote?
+    struct HeardNote: Equatable { var pad: Int; var semis: Int; var tick: Int32 }
     struct Trace { var from: CGPoint; var at: CGPoint }
     /// The library's Search field has the keyboard (its Delete key edits the text, not the notes).
     @FocusState var searchFocused: Bool
