@@ -126,6 +126,9 @@ struct PatternPreset: Decodable, Equatable {
             guard let pad = PatternPreset.laneToPad[lane] else { continue }
             for i in p.events.indices where Int(p.events[i].pad) == pad.rawValue && p.events[i].velocity < 0.5 { p.events[i].chance = v.clamped(0.05, 1) }
         }
+        // its genre's drummer, at that genre's HUMANIZE (the grooves learned from Tyrone's loops: none)
+        p.genre = style
+        if let feel = GenreFeel.of(style), feel.amount > 0 { p.humanize = feel.amount }
         p.sort()
         return p
     }
@@ -206,6 +209,8 @@ enum PatternRandomizer {
             events += mutate(tile(src.events.filter { Int($0.pad) == pad }, from: src.lengthTicks, to: length), pad: pad, length: length, rng: &rng)
         }
         var p = PatternData(name: "\(style.uppercased()) RANDOM", lengthTicks: length, events: events)
+        p.genre = style
+        if let feel = GenreFeel.of(style), feel.amount > 0 { p.humanize = feel.amount }
         p.sort()
         return p
     }
