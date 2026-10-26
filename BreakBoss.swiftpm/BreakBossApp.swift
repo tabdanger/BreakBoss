@@ -28,6 +28,9 @@ struct ContentView: View {
             .ignoresSafeArea(.container, edges: .all)
             .statusBarHidden(true)
             .persistentSystemOverlays(.hidden)
+            // pads sit near the screen's edges: iPadOS holds back touches there to check for a
+            // system swipe first, which delayed those hits; the app's touches go first instead
+            .defersSystemGestures(on: .all)
             .preferredColorScheme(.dark)
             .onAppear {
                 // Build-machine simulator self-test only: Codemagic's Mac has no sound device, so starting the

@@ -86,9 +86,17 @@ final class AppAudioHost {
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
         try? session.setPreferredSampleRate(48_000)
-        try? session.setPreferredIOBufferDuration(128.0 / 48_000)
+        try? session.setPreferredIOBufferDuration(AppAudioHost.padBufferSeconds)
         try? session.setActive(true)
+        // Asked again once active: iPadOS can keep the old (512-frame, 10.7 ms) buffer when the ask only
+        // came before activation, and every frame of buffer is a frame between a pad tap and its sound.
+        try? session.setPreferredIOBufferDuration(AppAudioHost.padBufferSeconds)
+        BugLog.shared.note(String(format: "Audio %.0f Hz, buffer %.1f ms, output latency %.1f ms",
+                                  session.sampleRate, session.ioBufferDuration * 1000, session.outputLatency * 1000))
     }
+
+    /// The pads' buffer: 128 frames at 48 kHz (2.7 ms), the shortest the engine stays click-free at.
+    static let padBufferSeconds = 128.0 / 48_000
 
     private func buildGraph() {
         let output = audio.outputNode

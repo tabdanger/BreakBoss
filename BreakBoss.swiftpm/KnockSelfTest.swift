@@ -783,6 +783,28 @@ enum KnockSelfTest {
             check(difference < 0.000_01, "\(mode): isolated audio matches at 128/512 frames (\(difference))")
         }
 
+        // Finger drumming (Oct 26): a pad tap sounds at the top of the very next 128-frame buffer (no
+        // extra block of delay in any mode), and four fingers landing together all sound in that buffer.
+        let step = SampleBuffer(left: Array(repeating: Float(0.02), count: 12_000), sampleRate: rate)
+        let fingerKit = KitBuffers(name: "FINGER DRUMMING", samples: Array(repeating: step, count: Pad.count),
+                                   settings: settings, bassHz: 110)
+        for mode in SoundMode.allCases {
+            func firstBuffer(_ pads: [Pad]) -> [Float] {
+                let engine = makeEngine(fingerKit, mode: mode)
+                var left = [Float](repeating: 0, count: 128), right = left
+                engine.render(frames: 128, left: &left, right: &right, host: nil)   // idle buffer before the tap
+                for pad in pads { engine.send(KEvent(kind: .pad, a: Int32(pad.rawValue), value: 0.8)) }
+                engine.render(frames: 128, left: &left, right: &right, host: nil)
+                return left
+            }
+            let one = firstBuffer([.kick])
+            let onset = one.firstIndex { abs($0) > 0.000_01 } ?? 128
+            check(onset < 128, "\(mode): pad tap sounds inside the very next buffer (frame \(onset))")
+            let four = firstBuffer([.kick, .snare, .hat, .clap])
+            let e1 = one.reduce(0) { $0 + $1 * $1 }, e4 = four.reduce(0) { $0 + $1 * $1 }
+            check(e4 > e1 * 1.5, "\(mode): four fingers at once all sound in the same buffer (\(e1) vs \(e4))")
+        }
+
         // Constant signals make an abrupt stolen-voice cut visible. The replacement's
         // higher level also prevents a same-amplitude replacement from hiding that cut.
         let old = SampleBuffer(left: Array(repeating: Float(0.01), count: 12_000), sampleRate: rate)
