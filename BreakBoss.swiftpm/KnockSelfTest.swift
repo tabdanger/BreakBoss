@@ -2715,6 +2715,33 @@ enum KnockSelfTest {
         }
         renderBlock(e)
         check(onlyPad(hits(38, host: true), Pad.snare.rawValue), "One-channel MIDI OUT layout: GM note 38 on channel 10 plays back the snare")
+        // ONE TRACK (the plug-in's default): every pad on channel 1, notes 36-47, the 808 chromatic on 48-84.
+        // A Logic track holding the whole kit plays each row's own pad back; the MPK on channel 10 still plays its pads.
+        for p in 0..<Pad.count {
+            e.send(KEvent(kind: .midiOut, a: Int32(p), value: Double(KnockController.oneTrackMIDIOutChannels[p] * 128 + KnockController.defaultMIDIOutNotes[p])))
+        }
+        renderBlock(e)
+        func trackHits(_ note: UInt8) -> [UInt32] {
+            let before = (0..<Pad.count).map { e.padHits[$0] }
+            e.hostMIDI(offset: 0, status: 0x90, data1: note, data2: 100)
+            renderBlock(e)
+            e.hostMIDI(offset: 0, status: 0x80, data1: note, data2: 0)
+            for _ in 0..<12 { renderBlock(e) }
+            return (0..<Pad.count).map { e.padHits[$0] - before[$0] }
+        }
+        for pad in 0..<Pad.count {
+            check(onlyPad(trackHits(UInt8(36 + pad)), pad), "ONE TRACK MIDI OUT: note \(36 + pad) on channel 1 plays back BB pad \(pad + 1)")
+            check(onlyPad(hits(UInt8(36 + pad), host: true), pad), "ONE TRACK MIDI OUT: MPK note \(36 + pad) on channel 10 still plays BB pad \(pad + 1)")
+        }
+        check(onlyPad(trackHits(64), Pad.bass808.rawValue), "ONE TRACK MIDI OUT: note 64 on channel 1 plays the 808")
+        for _ in 0..<40 { renderBlock(e) }            // earlier hits' note offs are gone
+        let before808 = e.padHits[Pad.bass808.rawValue]
+        e.hostMIDI(offset: 0, status: 0x90, data1: UInt8(36 + Pad.bass808.rawValue), data2: 100)
+        renderBlock(e)
+        check(e.padHits[Pad.bass808.rawValue] > before808 && e.midiOutCount == 0,
+              "ONE TRACK MIDI OUT: the 808's pad note (42) plays the 808 and doesn't go back out (\(e.midiOutCount))")
+        e.hostMIDI(offset: 0, status: 0x80, data1: UInt8(36 + Pad.bass808.rawValue), data2: 0)
+        for _ in 0..<12 { renderBlock(e) }
         for p in 0..<Pad.count { e.send(KEvent(kind: .midiOut, a: Int32(p), value: Double(KnockController.defaultMIDIOutChannels[p] * 128 + KnockController.defaultMIDIOutNotes[p]))) }
         renderBlock(e)
         // Recorded into the sequencer like an on-screen tap.
@@ -3148,6 +3175,18 @@ enum KnockSelfTest {
         mo.forEachMIDIOut { _, _, _, _ in echoed += 1 }
         check(l3.contains { abs($0) > 0.01 }, "MIDI in: the recorded snare (channel 2, note 38) plays the snare in LOOP mode")
         check(echoed == 0, "MIDI in: notes from the DAW don't go back out")
+        // ONE TRACK: the pattern's kick and snare both go out on channel 1, on their pad notes 36 and 37.
+        for p in 0..<Pad.count {
+            mo.send(KEvent(kind: .midiOut, a: Int32(p), value: Double(KnockController.oneTrackMIDIOutChannels[p] * 128 + KnockController.defaultMIDIOutNotes[p])))
+        }
+        for _ in 0..<12 { renderBlock(mo) }
+        mo.send(KEvent(kind: .loopPad, a: 0))
+        let oneTrack = collect(800)
+        check(oneTrack.contains { $0.1 == 0x90 && $0.2 == 36 } && oneTrack.contains { $0.1 == 0x90 && $0.2 == 37 },
+              "MIDI out ONE TRACK: kick (36) and snare (37) on channel 1")
+        check(oneTrack.allSatisfy { $0.1 & 0x0F == 0 }, "MIDI out ONE TRACK: nothing leaves channel 1")
+        mo.send(KEvent(kind: .stop))
+        _ = collect(40)
         _ = rp
         checkCountInAndPitchedMIDI()
         checkFeel()

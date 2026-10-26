@@ -725,6 +725,10 @@ final class KnockEngine {
         if midiOutChannel[bass] == Int16(channel) && Pad.bassNoteRange.contains(note) {
             return (bass, note - Pad.bassRootNote)
         }
+        // ONE TRACK (every pad on one channel): the 808's own pad note plays it at the kit's tuning.
+        if midiOutChannel[bass] == Int16(channel) && Int(midiOutNote[bass]) == note && channelShared(channel) {
+            return (bass, 0)
+        }
         // A drum on a MIDI channel of its own (multi-out): any note on that channel plays it,
         // pitched around its own note, so a DAW piano roll has full control of pitch and velocity.
         if let p = ownerOfChannel(channel), p != bass {

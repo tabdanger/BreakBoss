@@ -311,6 +311,7 @@ extension SequencerView {
                 controller.setMIDIOut(!controller.midiOutOn)
             },
             .header("Routing"),
+            BBMenuItem.item("One track: every channel on MIDI channel 1, notes 36–47", icon: "1.circle") { controller.setMIDIOutOneTrack() },
             BBMenuItem.item("Multi-out: each channel on its own MIDI channel (1–12)", icon: "square.stack.3d.down.right") { controller.setMIDIOutLayout(multi: true) },
             BBMenuItem.item("All drums on MIDI channel 10 (GM), the 808 on 7", icon: "10.circle") { controller.setMIDIOutLayout(multi: false) },
             .header("Channels"),
