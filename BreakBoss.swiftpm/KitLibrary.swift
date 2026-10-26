@@ -57,14 +57,15 @@ enum Pad: Int, CaseIterable {
 enum MIDIPadMap: String, CaseIterable, Codable {
     case standard, mpcClassic, custom
 
-    /// Pads 1-12: C1 up (also an MPC's "Chromatic C1" setting).
+    /// Pads 1-12: C1 up (also an MPC's "Chromatic C1" setting, and an Akai MPK Mini / MPK Mini Plus
+    /// out of the box: bank A pads 1-8 send 36-43, bank B pads 1-4 send 44-47 on channel 10).
     static let standardNotes: [Int] = Array(36...47)
     /// An MPC's "Classic MPC" map, pads A01-A12. A01 sits bottom-left like pad 1.
     static let mpcClassicNotes: [Int] = [37, 36, 42, 82, 40, 38, 46, 44, 48, 47, 45, 43]
 
     var title: String {
         switch self {
-        case .standard: return "BreaKing / MPC Chromatic C1 (36–47)"
+        case .standard: return "BreaKing / Akai MPK Mini / MPC Chromatic C1 (36–47)"
         case .mpcClassic: return "MPC Classic (A01–A12)"
         case .custom: return "Custom (MIDI learn)"
         }
