@@ -220,6 +220,38 @@ KITS = {
     ],
 }
 
+# Vintage is acoustic only (Tyrone, Oct 26): every Vintage kit plays only live acoustic drums, and only the
+# pads its genre really uses (the genre guide in /mnt/project-files/research/realistic-drums-and-genres.md);
+# every other pad is EMPTY. No 808 pad: an 808 isn't an acoustic drum. The other banks keep their sounds.
+# Pads: K kick, S snare, C hand clap / snap, R cross-stick or rim, H closed hat, O open hat,
+# P perc pad 8, Q perc pad 9 (the kinds in the genre's "perc" likes), L low tom, T high tom, Y cymbal ("cym" likes, else crash).
+VINTAGE_PADS = {
+    # drum machine eras, played on a live kit: the parts the machine had
+    "MEMPHIS TAPE": "KSCHOP", "CRUNK": "KSCHOY", "SNAP": "KSCH", "EARLY TRAP": "KSCHOY",
+    "CHOPPED & SCREWED": "KSCHOY", "MIAMI BASS": "KSCHOP", "MIXTAPE TRAP": "KSCHO", "HOUSTON": "KSCHO",
+    "DIRTY SOUTH": "KSCHOY",
+    # West Coast: snare and clap together, 16th hats; the funk and slow jams on a full kit
+    "G-FUNK": "KSCHOPY", "LA ELECTRO": "KSCHOP", "MOB MUSIC": "KSCHOP", "WEST GANGSTA RAP": "KSCHO",
+    "WEST FUNK": "KSRHOPQLTY", "WEST SLOW JAM": "KSRHOPY", "WEST 2000S": "KSCHO",
+    # soul: the session drummers' kits, tambourine and claps where the records had them
+    "60S SOUL": "KSCRHOPLTY", "SOUTHERN SOUL": "KSRHOLTY", "PHILLY SOUL": "KSRHOPQLTY",
+    "NEW JACK SWING": "KSCHOP", "QUIET STORM": "KSRHOPY", "GOSPEL": "KSCRHOPLTY", "2000S R&B": "KSCRHOP",
+    # breaks: the records the breaks came from
+    "FUNK BREAKS": "KSRHOPQLTY", "GOLDEN ERA": "KSRHOP", "JAZZ BREAKS": "KSRHOLTY", "OLD SCHOOL": "KSCHOPQY",
+    "EARLY JUNGLE": "KSRHOY", "HEAVY BREAKS": "KSHOLTY",
+    # pop: full kits, gated toms in the 80s, claps where the records had them
+    "80S POP": "KSCHOLTY", "90S POP": "KSCHOPY", "DISCO": "KSCHOPQLTY", "60S POP": "KSCRHOPLTY",
+    "SOFT ROCK": "KSRHOPLTY", "ARENA ROCK": "KSHOLTY", "NEW WAVE": "KSCHOLTY", "2000S POP": "KSCHOPY",
+    # world: the hand percussion carries it
+    "AFROBEAT": "KSRHOPQLTY", "HIGHLIFE": "KSRHPQLT", "ROOTS REGGAE": "KSRHOLTY", "SALSA": "KRHPQLTY",
+    "BOSSA NOVA": "KRHPQY", "CUMBIA": "KSRHPQ", "DIGITAL DANCEHALL": "KSCHPQ", "RUMBA": "KSRHPQLTY",
+    "KWAITO": "KSCHOP", "CALYPSO": "KSRHOPQY", "ZOUK": "KSRHOPQ",
+    # the research genres' A/B kits that live in the Vintage bank
+    "NEO SOUL": "KSRHOLTY", "DILLA TIME": "KSRHOY", "BOOM BAP": "KSRHOP", "90S RAP": "KSCHOP",
+    "70S SOUL": "KSRHOPQLTY", "80S BREAKS": "KSHOPQLTY", "90S RNB": "KSCHOP", "ROCK": "KSHOLTY",
+}
+VINTAGE_PAD_OF = {"K": 0, "S": 1, "C": 2, "R": 3, "H": 4, "O": 5, "P": 7, "Q": 8, "L": 9, "T": 10, "Y": 11}
+
 # Live acoustic kits (Oct 18): Virtuosity Drums, multisampled with velocity layers and round robins
 # (tools/build_acoustic_sounds.py). The pads named here play the acoustic drums; the clap, 808 and
 # perc pads are picked from the stock sounds like every other kit.

@@ -138,12 +138,12 @@ enum KnockSelfTest {
         // crashes ring out: Tyrone's own (Oct 20) run up to 12.8 s of audible tail
         let cymbals = Set(library.allSounds.filter { SoundType.forStockName($0.displayName) == .cymbal }.map(\.url))
         let names = library.allSounds.map(\.displayName)
-        check(library.allSounds.count == 729 && urls.count == 729 && Set(names).count == 729, "the sound library holds 729 sounds (589 + 140 BK), each with its own name")
+        check(library.allSounds.count == 771 && urls.count == 771 && Set(names).count == 771, "the sound library holds 771 sounds (589 + 140 BK + 42 BK acoustic), each with its own name")
         check(names.allSatisfy { SoundType.forStockName($0) != nil }, "every stock sound's name ends in what it is")
         check(SoundType.forStockName("BK NO 60 OPEN HAT") == .open && SoundType.forStockName("BK NO 66 HIHAT") == .hat
               && SoundType.forStockName("BK NO 15 E1 808") == .bass && SoundType.forStockName("BK NO 64 SNARE") == .snare,
               "a stock sound's last word sorts it")
-        check(library.librarySounds().count == 729, "the sound menu lists every stock sound, in a kit or not")
+        check(library.librarySounds().count == 771, "the sound menu lists every stock sound, in a kit or not")
         // Tyrone, Oct 19: every sound sits in the section of the folder it came from
         let sections = Dictionary(library.librarySounds().map { ($0.name, $0.type) }, uniquingKeysWith: { a, _ in a })
         check(library.allSounds.allSatisfy { $0.section.flatMap(SoundType.init(section:)) != nil }, "every stock sound has its folder's section")
@@ -193,7 +193,8 @@ enum KnockSelfTest {
             check(Set(played).count == played.count, "\(kit.name) plays no sound on two pads")
             let pair = KitLibrary.factory.filter { $0.genre == kit.genre }
             let mine = Set(Pad.allCases.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url })
-            for other in pair where other.id != kit.id {
+            // Vintage kits (acoustic only, Oct 26) share drums once Tyrone's acoustic pack runs out of a kind
+            for other in pair where other.id != kit.id && kit.preferredMode != .vintage {
                 let theirs = Set(Pad.allCases.compactMap { library.sample(kitID: other.id, pad: $0.rawValue)?.url })
                 check(mine.isDisjoint(with: theirs), "\(kit.name) and \(other.name) share no sounds")
             }
@@ -215,7 +216,18 @@ enum KnockSelfTest {
         let acoustic = library.allSounds.filter { $0.url.lastPathComponent.hasPrefix("ac_") }
         check(acoustic.count == 12 && acoustic.allSatisfy { (library.layers(for: $0)?.count ?? 0) >= 3 },
               "acoustic drums: 12 multisampled sounds, each with its velocity layers")
-        for sound in acoustic {
+        // Tyrone's acoustic pack (tools/build_vintage_acoustic.py): 42 sounds, all but the 6 rolls and riffs multisampled
+        let vintage = library.allSounds.filter { $0.url.lastPathComponent.hasPrefix("va_") }
+        check(vintage.count == 42 && vintage.filter { (library.layers(for: $0)?.count ?? 0) >= 3 }.count == 36,
+              "Vintage acoustic drums: 42 sounds, 36 of them with velocity layers")
+        // Vintage is acoustic only (Oct 26): every Vintage kit plays only these and the 12 above, and never an 808
+        for kit in KitLibrary.factory where kit.preferredMode == .vintage {
+            let played = Pad.allCases.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url.lastPathComponent }
+            check(!played.isEmpty && played.allSatisfy { $0.hasPrefix("ac_") || $0.hasPrefix("va_") }
+                  && library.isEmpty(kitID: kit.id, pad: Pad.bass808.rawValue),
+                  "\(kit.name): a Vintage kit plays only acoustic drums")
+        }
+        for sound in acoustic + vintage where library.layers(for: sound) != nil {
             let layers = library.layers(for: sound) ?? []
             check(layers.last?.top == 1 && zip(layers, layers.dropFirst()).allSatisfy { $0.0.top < $0.1.top }
                   && layers.last?.urls.contains(sound.url) == true,
@@ -635,7 +647,7 @@ enum KnockSelfTest {
         // kick and 808 centered as they play, through a drum machine kit and an acoustic kit (round robins too)
         for kit in [kitA, acoustic] {
             guard loadKit(kit) else { check(false, "fresh sounds: \(kit.name) loads"); continue }
-            for pad in [Pad.kick.rawValue, Pad.bass808.rawValue] {
+            for pad in [Pad.kick.rawValue, Pad.bass808.rawValue] where !stock.isEmpty(kitID: kit.id, pad: pad) {   // Vintage: no 808
                 for k in 0..<3 {
                     let h = hit(pad)
                     let db = 10 * log10((h.l + 1e-12) / (h.r + 1e-12))

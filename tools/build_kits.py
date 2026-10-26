@@ -29,6 +29,9 @@ SOUNDS = json.load(open(os.path.join(ROOT, "tools", "stock_sounds.json")))
 ACOUSTIC = json.load(open(os.path.join(ROOT, "tools", "acoustic_sounds.json")))
 # Tyrone's own Drum Kit, renamed BK (tools/build_bk_sounds.py): in the library, and the BK kits play them.
 BK = json.load(open(os.path.join(ROOT, "tools", "bk_sounds.json")))
+# Tyrone's acoustic one-shots for the Vintage kits (Oct 26), when they're in: same fields as acoustic_sounds.json.
+_VA = os.path.join(ROOT, "tools", "vintage_acoustic_sounds.json")
+VINTAGE_ACOUSTIC = json.load(open(_VA)) if os.path.exists(_VA) else []
 
 # What each pad holds (KitLibrary.swift, Pad): category, and the character it leans to.
 PADS = [("KICK", None), ("SNARE", None), ("CLAP", None), ("RIM", None), ("HAT", None), ("OPEN HAT", None),
@@ -198,11 +201,38 @@ def bay_area_kits(named):
     return out
 
 
+def vintage_picks(genre, likes, taken, uses):
+    """A Vintage kit (Oct 26): live acoustic drums only, on the pads its genre uses; every other pad EMPTY,
+    and so is a pad no acoustic drum fits (claps and hand percussion, until there are acoustic ones)."""
+    sounds = ACOUSTIC + [s for s in VINTAGE_ACOUSTIC if s.get("kits")]
+    perc = likes.get("perc", [])
+    cym = likes.get("cym", "CRASH")
+    files = [None] * 12
+    for key in kit_catalog.VINTAGE_PADS[genre]:
+        pad = kit_catalog.VINTAGE_PAD_OF[key]
+        cat, want = PADS[pad]
+        if cat == "CYMBAL": want = cym
+        if cat == "PERC": want = perc[(pad - 7) % len(perc)] if perc else None
+        fits = [s for s in sounds if (s["category"] == cat or (cat == "RIM" and s["character"] == "CROSS STICK"))
+                and s["file"] not in files]
+        # A genre's kits share no drum while the pack has another one; past that they share (never two pads of one kit).
+        cands = [s for s in fits if s["file"] not in taken[genre]] or fits
+        if not cands: continue
+        best = max(cands, key=lambda s: ((want is not None and s["character"] == want) * 3
+                                         + (cat == "TOM" and s["character"] == "MID") * 1.5
+                                         - 2 * (s["file"] in taken[genre]) - 0.25 * uses[s["file"]], s["file"]))
+        files[pad] = best["file"]; taken[genre].add(best["file"]); uses[best["file"]] += 1
+    return files
+
+
 def build():
     uses = collections.Counter()
     kits, assignments, empty = [], [], []
     by_file = {s["file"]: s for s in SOUNDS}
     taken = collections.defaultdict(set)     # genre -> sounds its kits already play (kits of a genre share none)
+    seen_sets = set()
+    ac_by_file = {s["file"]: s for s in ACOUSTIC + VINTAGE_ACOUSTIC}
+    ac_taken, ac_uses = collections.defaultdict(set), collections.Counter()   # the Vintage kits' acoustic drums
     seed = 601
     for name, gid, style, tempo, voice, tags, likes in GENRES:
         for side in ("A", "B"):
@@ -212,13 +242,22 @@ def build():
                 best = max(cands, key=lambda s: (score(s, pad, tags, likes) - 1.2 * uses[s["file"]], s["file"]))
                 files.append(best["file"]); taken[name].add(best["file"]); uses[best["file"]] += 1
             kid = f"{gid}-{side.lower()}"
+            seen_sets.add(frozenset(files))
+            if old_mode(style) == "vintage":
+                # Vintage is acoustic only (Oct 26); the picks above still count, so every later kit keeps its sounds.
+                files = vintage_picks(name, dict(likes, tags=tags), ac_taken, ac_uses)
+                for pad, f in enumerate(files):
+                    if f: assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": ac_by_file[f]["name"]})
+                    else: empty.append({"kitID": kid, "pad": pad})
+                kits.append((kid, f"{name} {side}", voice, style, tempo, seed, 41.2, "vintage", kit_catalog.OLD_FAMILY[name], name))
+                seed += 1
+                continue
             for pad, f in enumerate(files):
                 assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": by_file[f]["name"]})
             kits.append((kid, f"{name} {side}", voice, style, tempo, seed, root_hz(by_file[files[6]]),
                          old_mode(style), kit_catalog.OLD_FAMILY[name], name))
             seed += 1
     # The named kits: each mode bank, each genre tab, each genre in it.
-    seen_sets = {frozenset(a["file"] for a in assignments if a["kitID"] == k[0]) for k in kits}
     seed = 1001
     for (mode, family), genres in kit_catalog.KITS.items():
         for genre, style, tempo, voice, tags, likes, names in genres:
@@ -236,6 +275,15 @@ def build():
                 assert frozenset(files) not in seen_sets, name
                 seen_sets.add(frozenset(files))
                 kid = slug(name)
+                if mode == "vintage":
+                    # The picks above still count, so every kit after this one keeps its sounds; the kit plays these.
+                    files = vintage_picks(genre, dict(leans, tags=tags), ac_taken, ac_uses)
+                    for pad, f in enumerate(files):
+                        if f: assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": ac_by_file[f]["name"]})
+                        else: empty.append({"kitID": kid, "pad": pad})
+                    kits.append((kid, name, voice, style, tempo, seed, 41.2, mode, family, genre))   # no 808: the lane's default E1
+                    seed += 1
+                    continue
                 for pad, f in enumerate(files):
                     assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": by_file[f]["name"]})
                 kits.append((kid, name, voice, style, tempo, seed, root_hz(by_file[files[6]]), mode, family, genre))
@@ -260,8 +308,11 @@ def build():
             cands = [s for s in pool(pad, leans) if s["file"] not in taken[genre] and s["file"] not in files]
             cands = cands or [s for s in pool(pad, leans) if s["file"] not in files]    # 20 West Coast kits outnumber the toms
             best = max(cands, key=lambda s: (score(s, pad, tags, leans) - 1.2 * uses[s["file"]], s["file"]))
-            files.append(best["file"]); names.append(best["name"]); uses[best["file"]] += 1
-            taken[genre].add(best["file"])
+            uses[best["file"]] += 1; taken[genre].add(best["file"])
+            if mode == "vintage":    # Vintage is acoustic only (Oct 26): the pick still counts, so later kits keep theirs
+                files.append(None); names.append(None)
+                continue
+            files.append(best["file"]); names.append(best["name"])
         kid = slug(name)
         assert len({f for f in files if f}) == sum(1 for f in files if f), (name, "a sound on two pads")
         for pad, f in enumerate(files):
@@ -278,7 +329,7 @@ def main():
     with open(os.path.join(STOCK, "manifest.json"), "w") as out:
         # "sounds": the whole library (the sound menu lists them all, even those in no kit)
         # "type": the library section, the sound's original folder (tools/library_folders.py)
-        sounds = [{"file": x["file"], "name": x["name"], "type": x.get("library", x["category"])} for x in SOUNDS + ACOUSTIC + BK]
+        sounds = [{"file": x["file"], "name": x["name"], "type": x.get("library", x["category"])} for x in SOUNDS + ACOUSTIC + BK + VINTAGE_ACOUSTIC]
         # "emptyPads": factory pads that play nothing (Tyrone, Oct 20: a kit from a loop holds only that loop's sounds)
         json.dump({"version": 1, "assignments": assignments, "emptyPads": empty, "sounds": sounds}, out, separators=(",", ":"))
     ids = [k[0] for k in kits]

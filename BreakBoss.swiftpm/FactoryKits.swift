@@ -28,20 +28,20 @@ rnb-a|RNB A|westBounce|rnb|76|615|38.89|modern|SOUL & R&B|RNB
 rnb-b|RNB B|westBounce|rnb|76|616|36.71|modern|SOUL & R&B|RNB
 uk-rnb-a|UK RNB A|westBounce|rnb|100|617|43.65|modern|SOUL & R&B|UK RNB
 uk-rnb-b|UK RNB B|westBounce|rnb|100|618|49.0|modern|SOUL & R&B|UK RNB
-neo-soul-a|NEO SOUL A|neoSoul|neoSoul|86|619|43.65|vintage|SOUL & R&B|NEO SOUL
+neo-soul-a|NEO SOUL A|neoSoul|neoSoul|86|619|41.2|vintage|SOUL & R&B|NEO SOUL
 neo-soul-b|NEO SOUL B|neoSoul|neoSoul|86|620|41.2|vintage|SOUL & R&B|NEO SOUL
-dilla-time-a|DILLA TIME A|neoSoul|neoSoul|90|621|43.65|vintage|SOUL & R&B|DILLA TIME
+dilla-time-a|DILLA TIME A|neoSoul|neoSoul|90|621|41.2|vintage|SOUL & R&B|DILLA TIME
 dilla-time-b|DILLA TIME B|neoSoul|neoSoul|90|622|41.2|vintage|SOUL & R&B|DILLA TIME
-boom-bap-a|BOOM BAP A|funkBreak|boomBap|92|623|49.0|vintage|BREAKS|BOOM BAP
+boom-bap-a|BOOM BAP A|funkBreak|boomBap|92|623|41.2|vintage|BREAKS|BOOM BAP
 boom-bap-b|BOOM BAP B|funkBreak|boomBap|92|624|41.2|vintage|BREAKS|BOOM BAP
-90s-rap-a|90S RAP A|funkBreak|boomBap|94|625|36.71|vintage|BREAKS|90S RAP
-90s-rap-b|90S RAP B|funkBreak|boomBap|94|626|36.71|vintage|BREAKS|90S RAP
+90s-rap-a|90S RAP A|funkBreak|boomBap|94|625|41.2|vintage|BREAKS|90S RAP
+90s-rap-b|90S RAP B|funkBreak|boomBap|94|626|41.2|vintage|BREAKS|90S RAP
 70s-soul-a|70S SOUL A|gospelChops|funkBreak|100|627|41.2|vintage|SOUL & R&B|70S SOUL
 70s-soul-b|70S SOUL B|gospelChops|funkBreak|100|628|41.2|vintage|SOUL & R&B|70S SOUL
-80s-breaks-a|80S BREAKS A|heavyBreak|heavyBreak|100|629|49.0|vintage|BREAKS|80S BREAKS
+80s-breaks-a|80S BREAKS A|heavyBreak|heavyBreak|100|629|41.2|vintage|BREAKS|80S BREAKS
 80s-breaks-b|80S BREAKS B|heavyBreak|heavyBreak|100|630|41.2|vintage|BREAKS|80S BREAKS
-90s-rnb-a|90S RNB A|west90s|pop90s|104|631|43.65|vintage|SOUL & R&B|90S RNB
-90s-rnb-b|90S RNB B|west90s|pop90s|104|632|43.65|vintage|SOUL & R&B|90S RNB
+90s-rnb-a|90S RNB A|west90s|pop90s|104|631|41.2|vintage|SOUL & R&B|90S RNB
+90s-rnb-b|90S RNB B|west90s|pop90s|104|632|41.2|vintage|SOUL & R&B|90S RNB
 rock-a|ROCK A|heavyBreak|heavyBreak|120|633|41.2|vintage|POP|ROCK
 rock-b|ROCK B|heavyBreak|heavyBreak|120|634|41.2|vintage|POP|ROCK
 afrobeats-a|AFROBEATS A|baySlap|afrobeats|106|635|46.25|texture|WORLD|AFROBEATS
@@ -154,110 +154,110 @@ rio-tambor|RIO TAMBOR|modernTrap|latin|130|1099|41.2|modern|WORLD|BAILE FUNK
 calle-trap|CALLE TRAP|modernTrap|trap|140|1100|43.65|modern|WORLD|LATIN TRAP
 afroswing-ldn|AFROSWING LDN|westBounce|afrobeats|102|1101|36.71|modern|WORLD|AFROSWING
 peckham|PECKHAM|westBounce|afrobeats|102|1102|36.71|modern|WORLD|AFROSWING
-orange-mound|ORANGE MOUND|drumMastery|trapMemphis|140|1103|43.65|vintage|TRAP|MEMPHIS TAPE
+orange-mound|ORANGE MOUND|drumMastery|trapMemphis|140|1103|41.2|vintage|TRAP|MEMPHIS TAPE
 north-memphis-tape|NORTH MEMPHIS TAPE|drumMastery|trapMemphis|140|1104|41.2|vintage|TRAP|MEMPHIS TAPE
-basement-cassette|BASEMENT CASSETTE|drumMastery|trapMemphis|140|1105|36.71|vintage|TRAP|MEMPHIS TAPE
-crunk-stomp|CRUNK STOMP|modernTrap|trapAtlanta|78|1106|43.65|vintage|TRAP|CRUNK
-bleacher-rattle|BLEACHER RATTLE|modernTrap|trapAtlanta|78|1107|36.71|vintage|TRAP|CRUNK
+basement-cassette|BASEMENT CASSETTE|drumMastery|trapMemphis|140|1105|41.2|vintage|TRAP|MEMPHIS TAPE
+crunk-stomp|CRUNK STOMP|modernTrap|trapAtlanta|78|1106|41.2|vintage|TRAP|CRUNK
+bleacher-rattle|BLEACHER RATTLE|modernTrap|trapAtlanta|78|1107|41.2|vintage|TRAP|CRUNK
 snap-music|SNAP MUSIC|westBounce|trapAtlanta|76|1108|41.2|vintage|TRAP|SNAP
 down-south-snap|DOWN SOUTH SNAP|westBounce|trapAtlanta|76|1109|41.2|vintage|TRAP|SNAP
-east-atlanta-05|EAST ATLANTA 05|modernTrap|trapAtlanta|140|1110|43.65|vintage|TRAP|EARLY TRAP
+east-atlanta-05|EAST ATLANTA 05|modernTrap|trapAtlanta|140|1110|41.2|vintage|TRAP|EARLY TRAP
 flip-phone-era|FLIP PHONE ERA|modernTrap|trapAtlanta|140|1111|41.2|vintage|TRAP|EARLY TRAP
-traphouse-tapes|TRAPHOUSE TAPES|modernTrap|trapAtlanta|140|1112|36.71|vintage|TRAP|EARLY TRAP
-screwed-tape|SCREWED TAPE|modernTrap|trapAtlanta|66|1113|43.65|vintage|TRAP|CHOPPED & SCREWED
-third-coast-crawl|THIRD COAST CRAWL|modernTrap|trapAtlanta|66|1114|43.65|vintage|TRAP|CHOPPED & SCREWED
+traphouse-tapes|TRAPHOUSE TAPES|modernTrap|trapAtlanta|140|1112|41.2|vintage|TRAP|EARLY TRAP
+screwed-tape|SCREWED TAPE|modernTrap|trapAtlanta|66|1113|41.2|vintage|TRAP|CHOPPED & SCREWED
+third-coast-crawl|THIRD COAST CRAWL|modernTrap|trapAtlanta|66|1114|41.2|vintage|TRAP|CHOPPED & SCREWED
 slab-crawl|SLAB CRAWL|modernTrap|trapAtlanta|66|1115|41.2|vintage|TRAP|CHOPPED & SCREWED
-opa-locka-boom|OPA-LOCKA BOOM|westBounce|westBounce|130|1116|49.0|vintage|TRAP|MIAMI BASS
-liberty-city-808|LIBERTY CITY 808|westBounce|westBounce|130|1117|43.65|vintage|TRAP|MIAMI BASS
-blog-era-808|BLOG ERA 808|modernTrap|trapAtlanta|145|1118|51.91|vintage|TRAP|MIXTAPE TRAP
+opa-locka-boom|OPA-LOCKA BOOM|westBounce|westBounce|130|1116|41.2|vintage|TRAP|MIAMI BASS
+liberty-city-808|LIBERTY CITY 808|westBounce|westBounce|130|1117|41.2|vintage|TRAP|MIAMI BASS
+blog-era-808|BLOG ERA 808|modernTrap|trapAtlanta|145|1118|41.2|vintage|TRAP|MIXTAPE TRAP
 mixtape-monday|MIXTAPE MONDAY|modernTrap|trapAtlanta|145|1119|41.2|vintage|TRAP|MIXTAPE TRAP
-h-town-tippin|H-TOWN TIPPIN|baySlap|trapAtlanta|72|1120|43.65|vintage|TRAP|HOUSTON
-fifth-ward|FIFTH WARD|baySlap|trapAtlanta|72|1121|51.91|vintage|TRAP|HOUSTON
-peach-state-99|PEACH STATE 99|modernTrap|trapAtlanta|90|1122|49.0|vintage|TRAP|DIRTY SOUTH
-g-funk-sunday|G-FUNK SUNDAY|west90s|west90s|95|1123|49.0|vintage|WEST COAST|G-FUNK
-six-four-impala|SIX FOUR IMPALA|west90s|west90s|95|1124|55.0|vintage|WEST COAST|G-FUNK
-talkbox-summer|TALKBOX SUMMER|west90s|west90s|95|1125|49.0|vintage|WEST COAST|G-FUNK
-long-beach-93|LONG BEACH 93|west90s|west90s|95|1126|46.25|vintage|WEST COAST|G-FUNK
-electro-wave-84|ELECTRO WAVE 84|westBounce|westBounce|120|1127|49.0|vintage|WEST COAST|LA ELECTRO
-venice-electro|VENICE ELECTRO|westBounce|westBounce|120|1128|36.71|vintage|WEST COAST|LA ELECTRO
-roller-jam-85|ROLLER JAM 85|westBounce|westBounce|120|1129|36.71|vintage|WEST COAST|LA ELECTRO
-mob-music|MOB MUSIC|baySlap|baySlap|92|1130|49.0|vintage|WEST COAST|MOB MUSIC
-east-oakland-95|EAST OAKLAND 95|baySlap|baySlap|92|1131|51.91|vintage|WEST COAST|MOB MUSIC
-richmond-mob|RICHMOND MOB|baySlap|baySlap|92|1132|49.0|vintage|WEST COAST|MOB MUSIC
-compton-88|COMPTON 88|west90s|west90s|90|1133|49.0|vintage|WEST COAST|WEST GANGSTA RAP
-south-central-92|SOUTH CENTRAL 92|west90s|west90s|90|1134|43.65|vintage|WEST COAST|WEST GANGSTA RAP
-watts-summer|WATTS SUMMER|west90s|west90s|90|1135|36.71|vintage|WEST COAST|WEST GANGSTA RAP
-lowrider-funk|LOWRIDER FUNK|funkBreak|funkBreak|105|1136|36.71|vintage|WEST COAST|WEST FUNK
-hydraulic-funk|HYDRAULIC FUNK|funkBreak|funkBreak|105|1137|49.0|vintage|WEST COAST|WEST FUNK
-sunset-slow-jam|SUNSET SLOW JAM|west90s|pop90s|84|1138|43.65|vintage|WEST COAST|WEST SLOW JAM
-cruise-night|CRUISE NIGHT|west90s|pop90s|84|1139|55.0|vintage|WEST COAST|WEST SLOW JAM
-piano-west-2000|PIANO WEST 2000|westBounce|westBounce|96|1140|49.0|vintage|WEST COAST|WEST 2000S
-club-west-03|CLUB WEST 03|westBounce|westBounce|96|1141|43.65|vintage|WEST COAST|WEST 2000S
-hyphy-06|HYPHY 06|westBounce|westBounce|96|1142|46.25|vintage|WEST COAST|WEST 2000S
-detroit-1965|DETROIT 1965|gospelChops|funkBreak|120|1143|43.65|vintage|SOUL & R&B|60S SOUL
-tambourine-soul|TAMBOURINE SOUL|gospelChops|funkBreak|120|1144|36.71|vintage|SOUL & R&B|60S SOUL
-mclemore-ave|MCLEMORE AVE|gospelChops|funkBreak|96|1145|36.71|vintage|SOUL & R&B|SOUTHERN SOUL
-muscle-shoals|MUSCLE SHOALS|gospelChops|funkBreak|96|1146|36.71|vintage|SOUL & R&B|SOUTHERN SOUL
+h-town-tippin|H-TOWN TIPPIN|baySlap|trapAtlanta|72|1120|41.2|vintage|TRAP|HOUSTON
+fifth-ward|FIFTH WARD|baySlap|trapAtlanta|72|1121|41.2|vintage|TRAP|HOUSTON
+peach-state-99|PEACH STATE 99|modernTrap|trapAtlanta|90|1122|41.2|vintage|TRAP|DIRTY SOUTH
+g-funk-sunday|G-FUNK SUNDAY|west90s|west90s|95|1123|41.2|vintage|WEST COAST|G-FUNK
+six-four-impala|SIX FOUR IMPALA|west90s|west90s|95|1124|41.2|vintage|WEST COAST|G-FUNK
+talkbox-summer|TALKBOX SUMMER|west90s|west90s|95|1125|41.2|vintage|WEST COAST|G-FUNK
+long-beach-93|LONG BEACH 93|west90s|west90s|95|1126|41.2|vintage|WEST COAST|G-FUNK
+electro-wave-84|ELECTRO WAVE 84|westBounce|westBounce|120|1127|41.2|vintage|WEST COAST|LA ELECTRO
+venice-electro|VENICE ELECTRO|westBounce|westBounce|120|1128|41.2|vintage|WEST COAST|LA ELECTRO
+roller-jam-85|ROLLER JAM 85|westBounce|westBounce|120|1129|41.2|vintage|WEST COAST|LA ELECTRO
+mob-music|MOB MUSIC|baySlap|baySlap|92|1130|41.2|vintage|WEST COAST|MOB MUSIC
+east-oakland-95|EAST OAKLAND 95|baySlap|baySlap|92|1131|41.2|vintage|WEST COAST|MOB MUSIC
+richmond-mob|RICHMOND MOB|baySlap|baySlap|92|1132|41.2|vintage|WEST COAST|MOB MUSIC
+compton-88|COMPTON 88|west90s|west90s|90|1133|41.2|vintage|WEST COAST|WEST GANGSTA RAP
+south-central-92|SOUTH CENTRAL 92|west90s|west90s|90|1134|41.2|vintage|WEST COAST|WEST GANGSTA RAP
+watts-summer|WATTS SUMMER|west90s|west90s|90|1135|41.2|vintage|WEST COAST|WEST GANGSTA RAP
+lowrider-funk|LOWRIDER FUNK|funkBreak|funkBreak|105|1136|41.2|vintage|WEST COAST|WEST FUNK
+hydraulic-funk|HYDRAULIC FUNK|funkBreak|funkBreak|105|1137|41.2|vintage|WEST COAST|WEST FUNK
+sunset-slow-jam|SUNSET SLOW JAM|west90s|pop90s|84|1138|41.2|vintage|WEST COAST|WEST SLOW JAM
+cruise-night|CRUISE NIGHT|west90s|pop90s|84|1139|41.2|vintage|WEST COAST|WEST SLOW JAM
+piano-west-2000|PIANO WEST 2000|westBounce|westBounce|96|1140|41.2|vintage|WEST COAST|WEST 2000S
+club-west-03|CLUB WEST 03|westBounce|westBounce|96|1141|41.2|vintage|WEST COAST|WEST 2000S
+hyphy-06|HYPHY 06|westBounce|westBounce|96|1142|41.2|vintage|WEST COAST|WEST 2000S
+detroit-1965|DETROIT 1965|gospelChops|funkBreak|120|1143|41.2|vintage|SOUL & R&B|60S SOUL
+tambourine-soul|TAMBOURINE SOUL|gospelChops|funkBreak|120|1144|41.2|vintage|SOUL & R&B|60S SOUL
+mclemore-ave|MCLEMORE AVE|gospelChops|funkBreak|96|1145|41.2|vintage|SOUL & R&B|SOUTHERN SOUL
+muscle-shoals|MUSCLE SHOALS|gospelChops|funkBreak|96|1146|41.2|vintage|SOUL & R&B|SOUTHERN SOUL
 broad-street-soul|BROAD STREET SOUL|gospelChops|pop|112|1147|41.2|vintage|SOUL & R&B|PHILLY SOUL
-new-jack-89|NEW JACK 89|west90s|pop90s|108|1148|55.0|vintage|SOUL & R&B|NEW JACK SWING
+new-jack-89|NEW JACK 89|west90s|pop90s|108|1148|41.2|vintage|SOUL & R&B|NEW JACK SWING
 swingbeat-91|SWINGBEAT 91|west90s|pop90s|108|1149|41.2|vintage|SOUL & R&B|NEW JACK SWING
-quiet-storm|QUIET STORM|neoSoul|rnb|72|1150|43.65|vintage|SOUL & R&B|QUIET STORM
-slow-dance-84|SLOW DANCE 84|neoSoul|rnb|72|1151|36.71|vintage|SOUL & R&B|QUIET STORM
-tent-revival|TENT REVIVAL|gospelChops|gospel|100|1152|43.65|vintage|SOUL & R&B|GOSPEL
-mass-choir-78|MASS CHOIR 78|gospelChops|gospel|100|1153|36.71|vintage|SOUL & R&B|GOSPEL
-y2k-rnb|Y2K RNB|westBounce|rnb|92|1154|43.65|vintage|SOUL & R&B|2000S R&B
-dusty-45|DUSTY 45|funkBreak|funkBreak|102|1155|49.0|vintage|BREAKS|FUNK BREAKS
+quiet-storm|QUIET STORM|neoSoul|rnb|72|1150|41.2|vintage|SOUL & R&B|QUIET STORM
+slow-dance-84|SLOW DANCE 84|neoSoul|rnb|72|1151|41.2|vintage|SOUL & R&B|QUIET STORM
+tent-revival|TENT REVIVAL|gospelChops|gospel|100|1152|41.2|vintage|SOUL & R&B|GOSPEL
+mass-choir-78|MASS CHOIR 78|gospelChops|gospel|100|1153|41.2|vintage|SOUL & R&B|GOSPEL
+y2k-rnb|Y2K RNB|westBounce|rnb|92|1154|41.2|vintage|SOUL & R&B|2000S R&B
+dusty-45|DUSTY 45|funkBreak|funkBreak|102|1155|41.2|vintage|BREAKS|FUNK BREAKS
 crate-digger|CRATE DIGGER|funkBreak|funkBreak|102|1156|41.2|vintage|BREAKS|FUNK BREAKS
-b-side-break|B-SIDE BREAK|funkBreak|funkBreak|102|1157|36.71|vintage|BREAKS|FUNK BREAKS
-queensbridge-94|QUEENSBRIDGE 94|funkBreak|boomBap|94|1158|43.65|vintage|BREAKS|GOLDEN ERA
+b-side-break|B-SIDE BREAK|funkBreak|funkBreak|102|1157|41.2|vintage|BREAKS|FUNK BREAKS
+queensbridge-94|QUEENSBRIDGE 94|funkBreak|boomBap|94|1158|41.2|vintage|BREAKS|GOLDEN ERA
 brooklyn-96|BROOKLYN 96|funkBreak|boomBap|94|1159|41.2|vintage|BREAKS|GOLDEN ERA
-boogie-down-88|BOOGIE DOWN 88|funkBreak|boomBap|94|1160|36.71|vintage|BREAKS|GOLDEN ERA
-jazz-cellar|JAZZ CELLAR|neoSoul|neoSoul|92|1161|49.0|vintage|BREAKS|JAZZ BREAKS
-bebop-break|BEBOP BREAK|neoSoul|neoSoul|92|1162|49.0|vintage|BREAKS|JAZZ BREAKS
-block-party-79|BLOCK PARTY 79|heavyBreak|heavyBreak|110|1163|49.0|vintage|BREAKS|OLD SCHOOL
-park-jam-81|PARK JAM 81|heavyBreak|heavyBreak|110|1164|43.65|vintage|BREAKS|OLD SCHOOL
-pirate-radio-93|PIRATE RADIO 93|looseBreak|looseBreak|160|1165|36.71|vintage|BREAKS|EARLY JUNGLE
-rave-tape-92|RAVE TAPE 92|looseBreak|looseBreak|160|1166|36.71|vintage|BREAKS|EARLY JUNGLE
+boogie-down-88|BOOGIE DOWN 88|funkBreak|boomBap|94|1160|41.2|vintage|BREAKS|GOLDEN ERA
+jazz-cellar|JAZZ CELLAR|neoSoul|neoSoul|92|1161|41.2|vintage|BREAKS|JAZZ BREAKS
+bebop-break|BEBOP BREAK|neoSoul|neoSoul|92|1162|41.2|vintage|BREAKS|JAZZ BREAKS
+block-party-79|BLOCK PARTY 79|heavyBreak|heavyBreak|110|1163|41.2|vintage|BREAKS|OLD SCHOOL
+park-jam-81|PARK JAM 81|heavyBreak|heavyBreak|110|1164|41.2|vintage|BREAKS|OLD SCHOOL
+pirate-radio-93|PIRATE RADIO 93|looseBreak|looseBreak|160|1165|41.2|vintage|BREAKS|EARLY JUNGLE
+rave-tape-92|RAVE TAPE 92|looseBreak|looseBreak|160|1166|41.2|vintage|BREAKS|EARLY JUNGLE
 stairwell-break|STAIRWELL BREAK|heavyBreak|heavyBreak|88|1167|41.2|vintage|BREAKS|HEAVY BREAKS
 warehouse-break|WAREHOUSE BREAK|heavyBreak|heavyBreak|88|1168|41.2|vintage|BREAKS|HEAVY BREAKS
-gated-85|GATED 85|west90s|pop80s|118|1169|43.65|vintage|POP|80S POP
-synth-anthem-84|SYNTH ANTHEM 84|west90s|pop80s|118|1170|43.65|vintage|POP|80S POP
-mall-music-86|MALL MUSIC 86|west90s|pop80s|118|1171|36.71|vintage|POP|80S POP
-boy-band-98|BOY BAND 98|west90s|pop90s|104|1172|55.0|vintage|POP|90S POP
+gated-85|GATED 85|west90s|pop80s|118|1169|41.2|vintage|POP|80S POP
+synth-anthem-84|SYNTH ANTHEM 84|west90s|pop80s|118|1170|41.2|vintage|POP|80S POP
+mall-music-86|MALL MUSIC 86|west90s|pop80s|118|1171|41.2|vintage|POP|80S POP
+boy-band-98|BOY BAND 98|west90s|pop90s|104|1172|41.2|vintage|POP|90S POP
 cassingle-96|CASSINGLE 96|west90s|pop90s|104|1173|41.2|vintage|POP|90S POP
 mirrorball-78|MIRRORBALL 78|gospelChops|pop|120|1174|41.2|vintage|POP|DISCO
 hustle-76|HUSTLE 76|gospelChops|pop|120|1175|41.2|vintage|POP|DISCO
-roller-disco-79|ROLLER DISCO 79|gospelChops|pop|120|1176|36.71|vintage|POP|DISCO
-girl-group-64|GIRL GROUP 64|gospelChops|funkBreak|128|1177|49.0|vintage|POP|60S POP
-jukebox-62|JUKEBOX 62|gospelChops|funkBreak|128|1178|36.71|vintage|POP|60S POP
-yacht-club|YACHT CLUB|heavyBreak|pop|96|1179|36.71|vintage|POP|SOFT ROCK
-soft-rock-78|SOFT ROCK 78|heavyBreak|pop|96|1180|36.71|vintage|POP|SOFT ROCK
+roller-disco-79|ROLLER DISCO 79|gospelChops|pop|120|1176|41.2|vintage|POP|DISCO
+girl-group-64|GIRL GROUP 64|gospelChops|funkBreak|128|1177|41.2|vintage|POP|60S POP
+jukebox-62|JUKEBOX 62|gospelChops|funkBreak|128|1178|41.2|vintage|POP|60S POP
+yacht-club|YACHT CLUB|heavyBreak|pop|96|1179|41.2|vintage|POP|SOFT ROCK
+soft-rock-78|SOFT ROCK 78|heavyBreak|pop|96|1180|41.2|vintage|POP|SOFT ROCK
 power-ballad-87|POWER BALLAD 87|heavyBreak|heavyBreak|124|1181|41.2|vintage|POP|ARENA ROCK
 arena-86|ARENA 86|heavyBreak|heavyBreak|124|1182|41.2|vintage|POP|ARENA ROCK
 new-wave-82|NEW WAVE 82|west90s|pop80s|128|1183|41.2|vintage|POP|NEW WAVE
 drum-machine-83|DRUM MACHINE 83|west90s|pop80s|128|1184|41.2|vintage|POP|NEW WAVE
-millennium-pop|MILLENNIUM POP|west90s|pop|100|1185|43.65|vintage|POP|2000S POP
-ringtone-2007|RINGTONE 2007|west90s|pop|100|1186|36.71|vintage|POP|2000S POP
+millennium-pop|MILLENNIUM POP|west90s|pop|100|1185|41.2|vintage|POP|2000S POP
+ringtone-2007|RINGTONE 2007|west90s|pop|100|1186|41.2|vintage|POP|2000S POP
 lagos-1975|LAGOS 1975|funkBreak|afrobeats|110|1187|41.2|vintage|WORLD|AFROBEAT
-shrine-nights|SHRINE NIGHTS|funkBreak|afrobeats|110|1188|46.25|vintage|WORLD|AFROBEAT
+shrine-nights|SHRINE NIGHTS|funkBreak|afrobeats|110|1188|41.2|vintage|WORLD|AFROBEAT
 highlife-band|HIGHLIFE BAND|funkBreak|afrobeats|110|1189|41.2|vintage|WORLD|AFROBEAT
-accra-highlife|ACCRA HIGHLIFE|neoSoul|afrobeats|120|1190|49.0|vintage|WORLD|HIGHLIFE
-palm-wine|PALM WINE|neoSoul|afrobeats|120|1191|49.0|vintage|WORLD|HIGHLIFE
+accra-highlife|ACCRA HIGHLIFE|neoSoul|afrobeats|120|1190|41.2|vintage|WORLD|HIGHLIFE
+palm-wine|PALM WINE|neoSoul|afrobeats|120|1191|41.2|vintage|WORLD|HIGHLIFE
 one-drop|ONE DROP|neoSoul|afrobeats|76|1192|41.2|vintage|WORLD|ROOTS REGGAE
-trenchtown-roots|TRENCHTOWN ROOTS|neoSoul|afrobeats|76|1193|36.71|vintage|WORLD|ROOTS REGGAE
-steppers-dub|STEPPERS DUB|neoSoul|afrobeats|76|1194|43.65|vintage|WORLD|ROOTS REGGAE
-nuyorican|NUYORICAN|neoSoul|latin|100|1195|49.0|vintage|WORLD|SALSA
-havana-58|HAVANA 58|neoSoul|latin|100|1196|36.71|vintage|WORLD|SALSA
-mambo-nights|MAMBO NIGHTS|neoSoul|latin|100|1197|43.65|vintage|WORLD|SALSA
-bossa-63|BOSSA 63|neoSoul|latin|132|1198|49.0|vintage|WORLD|BOSSA NOVA
-rio-samba-64|RIO SAMBA 64|neoSoul|latin|132|1199|49.0|vintage|WORLD|BOSSA NOVA
-cumbia-vieja|CUMBIA VIEJA|neoSoul|latin|92|1200|46.25|vintage|WORLD|CUMBIA
+trenchtown-roots|TRENCHTOWN ROOTS|neoSoul|afrobeats|76|1193|41.2|vintage|WORLD|ROOTS REGGAE
+steppers-dub|STEPPERS DUB|neoSoul|afrobeats|76|1194|41.2|vintage|WORLD|ROOTS REGGAE
+nuyorican|NUYORICAN|neoSoul|latin|100|1195|41.2|vintage|WORLD|SALSA
+havana-58|HAVANA 58|neoSoul|latin|100|1196|41.2|vintage|WORLD|SALSA
+mambo-nights|MAMBO NIGHTS|neoSoul|latin|100|1197|41.2|vintage|WORLD|SALSA
+bossa-63|BOSSA 63|neoSoul|latin|132|1198|41.2|vintage|WORLD|BOSSA NOVA
+rio-samba-64|RIO SAMBA 64|neoSoul|latin|132|1199|41.2|vintage|WORLD|BOSSA NOVA
+cumbia-vieja|CUMBIA VIEJA|neoSoul|latin|92|1200|41.2|vintage|WORLD|CUMBIA
 barranquilla|BARRANQUILLA|neoSoul|latin|92|1201|41.2|vintage|WORLD|CUMBIA
-digital-riddim-85|DIGITAL RIDDIM 85|baySlap|afrobeats|96|1202|36.71|vintage|WORLD|DIGITAL DANCEHALL
-kinshasa-rumba|KINSHASA RUMBA|neoSoul|afrobeats|130|1203|49.0|vintage|WORLD|RUMBA
-kwaito-99|KWAITO 99|modernTrap|amapiano|110|1204|46.25|vintage|WORLD|KWAITO
-calypso-62|CALYPSO 62|neoSoul|latin|110|1205|36.71|vintage|WORLD|CALYPSO
-zouk-86|ZOUK 86|baySlap|afrobeats|120|1206|36.71|vintage|WORLD|ZOUK
+digital-riddim-85|DIGITAL RIDDIM 85|baySlap|afrobeats|96|1202|41.2|vintage|WORLD|DIGITAL DANCEHALL
+kinshasa-rumba|KINSHASA RUMBA|neoSoul|afrobeats|130|1203|41.2|vintage|WORLD|RUMBA
+kwaito-99|KWAITO 99|modernTrap|amapiano|110|1204|41.2|vintage|WORLD|KWAITO
+calypso-62|CALYPSO 62|neoSoul|latin|110|1205|41.2|vintage|WORLD|CALYPSO
+zouk-86|ZOUK 86|baySlap|afrobeats|120|1206|41.2|vintage|WORLD|ZOUK
 cloud-nine|CLOUD NINE|modernTrap|trap|70|1207|43.65|texture|TRAP|CLOUD RAP
 haze-chamber|HAZE CHAMBER|modernTrap|trap|70|1208|36.71|texture|TRAP|CLOUD RAP
 vapor-trail|VAPOR TRAIL|modernTrap|trap|70|1209|43.65|texture|TRAP|CLOUD RAP
@@ -372,7 +372,7 @@ dark-gqom|DARK GQOM|drumMastery|amapiano|126|1317|46.25|texture|WORLD|DARK GQOM
 bossa-lo-fi|BOSSA LO-FI|neoSoul|latin|90|1318|49.0|texture|WORLD|LATIN LO-FI
 havana-tape|HAVANA TAPE|neoSoul|latin|90|1319|49.0|texture|WORLD|LATIN LO-FI
 desert-ritual|DESERT RITUAL|looseBreak|experimental|90|1320|43.65|texture|WORLD|ETHNO AMBIENT
-soul-session|SOUL SESSION|neoSoul|neoSoul|88|1321|43.65|vintage|SOUL & R&B|LIVE SOUL
+soul-session|SOUL SESSION|neoSoul|neoSoul|88|1321|41.2|vintage|SOUL & R&B|LIVE SOUL
 break-room|BREAK ROOM|funkBreak|funkBreak|96|1322|41.2|vintage|BREAKS|LIVE BREAKS
 studio-a|STUDIO A|heavyBreak|heavyBreak|118|1323|41.2|modern|POP|LIVE ROCK
 bk-drum-kit|BK DRUM KIT|modernTrap|trapAtlanta|140|1324|43.65|modern|TRAP|BK
