@@ -283,6 +283,9 @@ final class BusProcessor {
         verb.set(decay: s.reverbDecay, predelay: s.reverbPredelay)
         let dsStep = texture ? min(1, (sr * powf(18_900 / sr, s.resample * 2)) / sr) : 1   // hold-and-sample down to ~19 kHz
         let wowDepth: Float = sr * 0.0022 * s.instability, flutterDepth: Float = sr * 0.00024 * s.instability
+        // The wow's read head sits only as far back as its widest swing (plus 2 samples) instead of a
+        // fixed 4 ms: the same wobble, but a Texture pad hit reaches the output ~3 ms sooner (Oct 26).
+        let wowCenter = wowDepth + flutterDepth + 2
         let quantization = powf(2, 15 - s.resample * 8)
         // WARP: wider swings and more resonance; GLITCH: more stutters.
         let warp = texture ? s.warp.clamped(0, 1) : 0
@@ -361,7 +364,7 @@ final class BusProcessor {
                 wowIndex = (wowIndex + 1) & (wowSize - 1)
                 wow[wowIndex] = (l + r) * 0.5
                 let side = (l - r) * 0.5
-                let readPos = Float(wowIndex) - (sr * 0.004 + mod)
+                let readPos = Float(wowIndex) - (wowCenter + mod)
                 let mid = readInterpolated(wow, wowSize, readPos)
                 if s.instability > 0.001 { l = mid + side; r = mid - side }
                 // WARP

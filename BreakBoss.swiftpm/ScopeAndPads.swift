@@ -1,5 +1,6 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import SwiftUI
+import UIKit
 import UniformTypeIdentifiers
 
 // MARK: - The screen
@@ -250,6 +251,60 @@ final class ScopeTracer {
 
 // MARK: - Pads
 
+/// A pad's touch surface: a plain UIKit view, so each finger arrives in touchesBegan the moment it
+/// lands (no gesture recognizer waiting to decide, no SwiftUI arbitration) and every finger is
+/// tracked on its own. Called on the main thread straight from UIKit.
+struct PadTouchSurface: UIViewRepresentable {
+    /// A finger landed: where (in the pad), the pad's size, and whether it's the only finger on the pad.
+    let down: (CGPoint, CGSize, Bool) -> Void
+    /// A finger lifted or was cancelled: true when it was the last one on the pad.
+    let up: (Bool) -> Void
+
+    func makeUIView(context: Context) -> TouchView {
+        let view = TouchView()
+        view.backgroundColor = .clear
+        view.isMultipleTouchEnabled = true
+        view.down = down
+        view.up = up
+        return view
+    }
+
+    func updateUIView(_ view: TouchView, context: Context) {
+        view.down = down
+        view.up = up
+    }
+
+    static func dismantleUIView(_ view: TouchView, coordinator: ()) { view.letGoAll() }
+
+    final class TouchView: UIView {
+        var down: (CGPoint, CGSize, Bool) -> Void = { _, _, _ in }
+        var up: (Bool) -> Void = { _ in }
+        private var fingers = Set<ObjectIdentifier>()
+
+        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+            for touch in touches where fingers.insert(ObjectIdentifier(touch)).inserted {
+                down(touch.location(in: self), bounds.size, fingers.count == 1)
+            }
+        }
+
+        override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { lift(touches) }
+        override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { lift(touches) }
+
+        private func lift(_ touches: Set<UITouch>) {
+            for touch in touches where fingers.remove(ObjectIdentifier(touch)) != nil {
+                up(fingers.isEmpty)
+            }
+        }
+
+        /// The pad left the screen with fingers still on it: let them all go (no stuck pad).
+        func letGoAll() {
+            guard !fingers.isEmpty else { return }
+            fingers.removeAll()
+            up(true)
+        }
+    }
+}
+
 /// One pad. Touch plays it straight away (higher on the pad = softer, lower = harder).
 /// Hold it for a second to open its editor. Drop an audio file on it to load your own sound;
 /// in LOOP mode, drop a MIDI file to load your own groove.
@@ -299,31 +354,11 @@ struct PadView: View {
         }
         .frame(width: r.width * scale, height: r.height * scale)
         .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { g in
-                    guard !pressed else { return }
-                    pressed = true
-                    let y = Float(g.startLocation.y / max(1, r.height * scale))
-                    let velocity = 0.55 + 0.45 * y.clamped(0, 1)
-                    if holdToPlay { controller.gateDown(pad, velocity: velocity) }
-                    else { controller.padDown(pad, velocity: velocity) }
-                    let work = DispatchWorkItem {
-                        if pressed {
-                            if holdToPlay { controller.gateUp(pad) }
-                            openEditor(controller.playMode == .loop)
-                        }
-                    }
-                    hold = work
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: work)
-                }
-                .onEnded { _ in
-                    pressed = false
-                    if holdToPlay { controller.gateUp(pad) }
-                    hold?.cancel()
-                    hold = nil
-                }
-        )
+        // Finger drumming (Tyrone, Oct 26): UIKit hands each finger over the moment it lands, so the
+        // hit goes to the engine on touch-down with no SwiftUI gesture to recognise first. Every
+        // finger is its own hit (two fingers rolling on one pad play twice), on every pad at once.
+        .overlay(PadTouchSurface(down: { point, size, first in fingerDown(point, size, first: first) },
+                                 up: { last in fingerUp(last: last) }))
         .onDrop(of: [UTType.fileURL, UTType.audio, UTType.midi], isTargeted: $dropping) { providers in
             handleDrop(providers)
         }
@@ -334,6 +369,40 @@ struct PadView: View {
             if pressed && holdToPlay { controller.gateUp(pad) }
             pressed = false
         }
+    }
+
+    /// A finger landed on the pad: the hit first, then the pad's own looks. Higher on the pad is
+    /// softer, lower is harder. Holding one finger still opens the editor; a second finger on the pad
+    /// (a roll) is drumming, so it never opens.
+    private func fingerDown(_ point: CGPoint, _ size: CGSize, first: Bool) {
+        let velocity = 0.55 + 0.45 * Float(point.y / max(1, size.height)).clamped(0, 1)
+        if holdToPlay {
+            // LOOP mode gates the loop once for the whole press; one-shot hits every finger
+            if first || controller.playMode != .loop { controller.gateDown(pad, velocity: velocity) }
+        } else {
+            controller.padDown(pad, velocity: velocity)
+        }
+        pressed = true
+        hold?.cancel()
+        hold = nil
+        guard first else { return }
+        let work = DispatchWorkItem {
+            if pressed {
+                if holdToPlay { controller.gateUp(pad) }
+                openEditor(controller.playMode == .loop)
+            }
+        }
+        hold = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: work)
+    }
+
+    /// A finger lifted (or the touch was cancelled); `last` = no finger left on the pad.
+    private func fingerUp(last: Bool) {
+        hold?.cancel()
+        hold = nil
+        guard last, pressed else { return }
+        pressed = false
+        if holdToPlay { controller.gateUp(pad) }
     }
 
     /// Modern red, Vintage light yellow, Texture blue.

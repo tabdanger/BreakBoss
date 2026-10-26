@@ -122,6 +122,8 @@ final class PadRecorder: ObservableObject {
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
         try? session.setActive(true)
+        // the app's short pad buffer again (in the plug-in the host keeps its own)
+        if Bundle.main.bundleURL.pathExtension != "appex" { try? session.setPreferredIOBufferDuration(128.0 / 48_000) }
     }
 
     private static func stamp() -> String {

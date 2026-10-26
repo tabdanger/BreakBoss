@@ -45,6 +45,7 @@ struct PerformanceView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .navigationViewStyle(.stack).preferredColorScheme(.dark)
+        .defersSystemGestures(on: .all)   // pad hits near the screen's edges aren't held back
         .bbMenuHost()
         .sheet(item: $editor) { target in
             if target.loop { LoopEditorView(controller: controller, loop: target.pad) }
