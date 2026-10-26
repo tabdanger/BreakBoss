@@ -978,6 +978,7 @@ final class KnockEngine {
         bs.reverbDecay = params[KParam.reverbDecay.rawValue]
         bs.reverbPredelay = params[KParam.reverbPredelay.rawValue]
         bs.delaySync = params[KParam.delaySync.rawValue] > 0.5
+        bs.addModeSound()
         bs.keepSection()
         bs.beat = playing ? blockBeat0 : nil
         bus.process(mixL, mixR, count: frames, bs)

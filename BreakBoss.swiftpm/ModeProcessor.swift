@@ -207,13 +207,13 @@ final class BusProcessor {
         var shine: Float = 0
         var noise: Float = 0
         var tempo: Double = 120
-        var resample: Float = 0.5
-        var instability: Float = 0.5
-        var delay: Float = 0.32
-        var reverb: Float = 0.5
+        var resample: Float = 0
+        var instability: Float = 0
+        var delay: Float = 0
+        var reverb: Float = 0
         var drive: Float = 0
-        var warp: Float = 0.5
-        var glitch: Float = 0.5
+        var warp: Float = 0
+        var glitch: Float = 0
         var reverbDecay: Float = 0.5
         var reverbPredelay: Float = 0
         var delaySync = true
@@ -221,6 +221,22 @@ final class BusProcessor {
         var insert = false
         /// The transport's beat at this block's first sample, while playing (stutters land on its 1/16s).
         var beat: Double?
+
+        /// Texture's own lo-fi sound under its knobs: RESAMPLE and INSTABILITY at zero sound like
+        /// they used to at their old 50% start, and turn up from there to the same top.
+        static let textureBase: Float = 0.5
+        static func textureAmount(_ knob: Float) -> Float { textureBase + knob.clamped(0, 1) * (1 - textureBase) }
+
+        /// The mode's own sound with every FX knob at 0% (Tyrone, Oct 26: the knobs are the extra
+        /// sauce, they only touch the sound once turned up). The main chain only, before
+        /// keepSection: Vintage's tape and bump are already fixed in process(); Texture's
+        /// downsampling and wow (and the warp and stutters that follow INSTABILITY) sit under its
+        /// knobs. DELAY and GATED REVERB stay off until they're turned up.
+        mutating func addModeSound() {
+            guard mode == .texture else { return }
+            resample = Settings.textureAmount(resample)
+            instability = Settings.textureAmount(instability)
+        }
 
         /// Only the mode's own FX section reaches the sound (Tyrone, Oct 24; TrackFX.params), so a
         /// knob left turned in another mode can't colour this one. DRIVE (Vintage, Texture) takes
@@ -686,7 +702,7 @@ final class MasterBus {
 
     struct Settings {
         var filter: Float = 1
-        var clipDrive: Float = 0.25
+        var clipDrive: Float = 0
         var output: Float = 0.75
         var clipperOn = true
     }
