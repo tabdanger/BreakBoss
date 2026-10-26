@@ -2813,6 +2813,31 @@ enum KnockSelfTest {
         check(Set(hatPitches).count > 8 && hatPitches.allSatisfy { abs($0) < 0.2 }, "humanize: repeated hits a few cents apart")
         h.humanize = nil
         check(PatternSet.humanized(h) == h, "humanize: off plays the pattern as written")
+        // Each genre's drummer (Tyrone, Oct 26): presets load at their genre's HUMANIZE and play its pocket;
+        // the grooves learned from his own loops (BK Editions, West Coast, Bay Area) stay exactly as they were.
+        h.humanize = 0.8
+        h.genre = "Dilla Time"
+        let dilla = PatternSet.humanized(h)
+        func mean(_ p: PatternData, _ pick: (GrooveEvent) -> Bool) -> Float {
+            let x = p.events.filter(pick).map(\.feel)
+            return x.isEmpty ? 0 : x.reduce(0, +) / Float(x.count)
+        }
+        check(mean(dilla) { $0.pad == snare && $0.velocity > 0.6 } < mean(dilla) { $0.pad == Int8(Pad.kick.rawValue) } - 1,
+              "genre feel: Dilla's snare rushes ahead of a dragging kick")
+        h.genre = "Trap"
+        check(PatternSet.humanized(h).events.allSatisfy { abs($0.feel) < 1 }, "genre feel: trap stays on the grid")
+        h.genre = "RnB"
+        let rnbFeel = PatternSet.humanized(h)
+        check(mean(rnbFeel) { $0.pad == snare && $0.velocity > 0.6 } > mean(rnbFeel) { $0.pad == hat } + 0.8,
+              "genre feel: the R&B snare lays back")
+        check(["BK Editions Vol 1", "BK Editions Vol 4", "West Coast", "Bay Area"].allSatisfy { group in
+                  GenreFeel.of(group) == nil && PatternBank.presets(in: group).allSatisfy { $0.pattern.humanize == nil && $0.pattern.genre == group } },
+              "genre feel: the grooves learned from Tyrone's loops load as they were")
+        check(PatternBank.presets(in: "Neo Soul").allSatisfy { $0.pattern.humanize == GenreFeel.neoSoul.amount }
+              && PatternBank.presets(in: "Trap").allSatisfy { $0.pattern.humanize == GenreFeel.machine.amount },
+              "genre feel: a preset loads with its genre's HUMANIZE on the knob")
+        check(PatternBank.styles.allSatisfy { GenreFeel.of($0) != nil || $0.hasPrefix("BK Editions") || $0 == "West Coast" || $0 == "Bay Area" },
+              "genre feel: every PATTERNS genre has its drummer")
         // Engine: per-hit pitch, mute mask, record ring, playhead.
         let e = KnockEngine()
         e.prepare(sampleRate: 48_000, maxFrames: 256)

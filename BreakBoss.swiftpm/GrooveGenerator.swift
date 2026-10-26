@@ -92,6 +92,8 @@ struct PatternData: Codable, Equatable {
     var trackSwing: [Float]? = nil
     /// Each track pushed early (-) or pulled late (+), in ticks, on top of its notes' own offsets.
     var trackShift: [Float]? = nil
+    /// The PATTERNS group it came from: HUMANIZE plays it with that genre's feel (GenreFeel, Oct 26).
+    var genre: String? = nil
 
     static let ppq: Int32 = 96
     static let stepTicks: Int32 = 24  // one 16th
@@ -216,7 +218,7 @@ final class PatternSet {
     /// HUMANIZE: the pattern as a live drummer plays it (LiveDrummer). Same pattern, same feel.
     static func humanized(_ data: PatternData) -> PatternData {
         guard let amount = data.humanize, amount > 0.001 else { return data }
-        return LiveDrummer.play(data, amount: amount)
+        return LiveDrummer.play(data, amount: amount, feel: GenreFeel.of(data.genre) ?? .general)
     }
 
     init(_ data: [PatternData]) {
