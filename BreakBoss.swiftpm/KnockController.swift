@@ -963,7 +963,7 @@ final class KnockController: ObservableObject {
                         if let loaded { self.afterKitLoad.append(loaded) }
                         self.rebuildKit()
                     }
-                    self.readout = Readout(title: "PAD \(pad + 1)", value: KnockFolders.untagged((name as NSString).deletingPathExtension).uppercased(), time: Date())
+                    self.readout = Readout(title: "PAD \(pad + 1)", value: KnockFolders.soundName(name), time: Date())
                     self.scheduleSave()
                 }
             } catch {
@@ -1004,7 +1004,7 @@ final class KnockController: ObservableObject {
 
     func padName(_ pad: Int) -> String {
         guard (0..<Pad.count).contains(pad) else { return "" }
-        if let f = state.pads[pad].sampleFile { return KnockFolders.untagged((f as NSString).deletingPathExtension) }
+        if let f = state.pads[pad].sampleFile { return KnockFolders.soundName(f) }
         if let name = stockSampleNames[pad] { return name }
         if emptyPads.contains(pad) { return "EMPTY" }
         return kitDefinition.pads[pad].label
@@ -1016,7 +1016,7 @@ final class KnockController: ObservableObject {
     /// screen (Tyrone, Oct 17). A pad you haven't given a library sound shows the kit's sound.
     var rackChannels: [WorkspaceChannel] {
         let custom = state.workspaceChannels ?? []
-        return rackOrder.map { pad in custom.first { $0.pad == pad } ?? kitChannel(pad) }
+        return rackOrder.map { pad in custom.first { $0.pad == pad }.map(Self.currentName) ?? kitChannel(pad) }
     }
 
     /// The rack's top-to-bottom order of pads: pad order until a track is dragged somewhere else.
@@ -1040,6 +1040,14 @@ final class KnockController: ObservableObject {
         order.insert(pad, at: max(0, min(order.count, index)))
         state.rackOrder = order == Array(0..<Pad.count) ? nil : order
         scheduleSave()
+    }
+
+    /// A saved track shows its sound's name now, not the one it was saved with ("!GO2SPINZ" -> "BK NO 5 808").
+    private static func currentName(_ row: WorkspaceChannel) -> WorkspaceChannel {
+        var row = row
+        if row.soundID.hasPrefix("user:") { row.name = KnockFolders.soundName(String(row.soundID.dropFirst(5))) }
+        else if row.soundID.hasPrefix("stock:"), let now = KnockFolders.stockSoundName(String(row.soundID.dropFirst(6))) { row.name = now }
+        return row
     }
 
     private func kitChannel(_ pad: Int) -> WorkspaceChannel {

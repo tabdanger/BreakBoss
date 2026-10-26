@@ -22,20 +22,20 @@ enum SampleLoader {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
         let file: AVAudioFile
-        do { file = try AVAudioFile(forReading: url) } catch { throw LoadError.unreadable(url.lastPathComponent) }
+        do { file = try AVAudioFile(forReading: url) } catch { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
         let format = file.processingFormat
         guard file.length > 0, file.length <= Int64(UInt32.max), format.sampleRate.isFinite,
               format.sampleRate > 0, format.channelCount > 0,
-              file.length <= 16_000_000 / Int64(format.channelCount) else { throw LoadError.unreadable(url.lastPathComponent) }
+              file.length <= 16_000_000 / Int64(format.channelCount) else { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
         guard Double(file.length) / format.sampleRate <= 30 else { throw LoadError.tooLong }
         let frames = AVAudioFrameCount(file.length)
-        guard frames > 0 else { throw LoadError.unreadable(url.lastPathComponent) }
+        guard frames > 0 else { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
         guard Double(frames) / format.sampleRate <= 30 else { throw LoadError.tooLong }
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames) else {
-            throw LoadError.unreadable(url.lastPathComponent)
+            throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent))
         }
-        do { try file.read(into: buffer) } catch { throw LoadError.unreadable(url.lastPathComponent) }
-        guard let data = buffer.floatChannelData else { throw LoadError.unreadable(url.lastPathComponent) }
+        do { try file.read(into: buffer) } catch { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
+        guard let data = buffer.floatChannelData else { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
         let n = Int(buffer.frameLength)
         let channels = Int(format.channelCount)
         let left = Array(UnsafeBufferPointer(start: data[0], count: n))
@@ -90,9 +90,7 @@ enum SampleLoader {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
         let folder = KnockFolders.samples
-        if url.deletingLastPathComponent().standardizedFileURL.path.hasPrefix(folder.standardizedFileURL.path + "/") || url.deletingLastPathComponent().standardizedFileURL == folder.standardizedFileURL {
-            return url.path.replacingOccurrences(of: folder.standardizedFileURL.path + "/", with: "")
-        }
+        if let inside = KnockFolders.relative(url, in: folder) { return inside }
         var dest = folder.appendingPathComponent(url.lastPathComponent)
         // The same sound again (a library pick, say): reuse the copy that's already there, if it is the
         // same audio (a copy of a levelled stock sound has the same size but not the same sound).
