@@ -34,6 +34,17 @@ enum KnockFolders {
         return out.sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
     }
 
+    /// A file's path inside a folder ("Pack/808s/x.wav"), nil when it isn't in there. Both sides have their
+    /// links resolved first: on the iPad the folder walker hands back "/private/var/…" for a folder that
+    /// reads "/var/…", and cutting one off the other left "private!Go2Spinz….wav", a file that isn't
+    /// there ("isn't an audio file BreaKing can read", Tyrone, Oct 26).
+    static func relative(_ url: URL, in folder: URL) -> String? {
+        let inside = url.resolvingSymlinksInPath().standardizedFileURL.pathComponents
+        let root = folder.resolvingSymlinksInPath().standardizedFileURL.pathComponents
+        guard inside.count > root.count, Array(inside.prefix(root.count)) == root else { return nil }
+        return inside.dropFirst(root.count).joined(separator: "/")
+    }
+
     /// A sound's name as shown, without a producer's tag: "[Kick] Waves - (@prod.by.x).wav" -> "[Kick] Waves.wav"
     /// (Tyrone, Oct 25: no tags on any sound). Only the name shown changes, the file keeps its own.
     static func untagged(_ name: String) -> String {

@@ -161,6 +161,29 @@ enum KnockSelfTest {
               && KnockFolders.untagged("Pack/808 Hands @maker.wav") == "Pack/808 Hands.wav"
               && KnockFolders.untagged("My Kick 2.wav") == "My Kick 2.wav",
               "an imported sound's name is shown without its producer tag")
+        // Tyrone, Oct 26: every sound in Samples shows a Break King name, never its old file name
+        let picks = SampleNames.shared
+        check(KnockFolders.soundName("bb_2000s-rnb_p00.wav") == "BK NO 9 V2 KICK"
+              && KnockFolders.soundName("Edits/bb_2000s-rnb_p00 edit 2.wav") == "BK NO 9 V2 KICK EDIT 2"
+              && library.allSounds.allSatisfy { KnockFolders.soundName($0.url.lastPathComponent) == $0.displayName }
+              && picks.fresh("!Go2Spinz - (@prod.byiiinfinite)", "!Go2Spinz - (@prod.byiiinfinite)", taken: [:]) == "BK NO 5 808"
+              && picks.fresh("x", "!Go2Spinz - (@prod.byiiinfinite)", taken: ["a": "BK NO 5 808"]) == "BK NO 5 V2 808"
+              && picks.fresh("(clap) aspen", "(clap) aspen", taken: [:]) == "BK MY 1 CLAP"
+              && picks.fresh("(clap) aspen", "(clap) aspen", taken: ["a": "BK MY 1 CLAP", "b": "BK MY 4 KICK"]) == "BK MY 2 CLAP"
+              && picks.fresh("Pack/808s/Big", "Big", taken: [:]) == "BK MY 1 808",
+              "a Samples sound's name: an old stock copy is that sound now, a pack sound its family, yours BK MY n KIND")
+        let tempSamples = FileManager.default.temporaryDirectory.appendingPathComponent("bb-names-test/Samples", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempSamples, withIntermediateDirectories: true)
+        let odd = tempSamples.appendingPathComponent("!Go2Spinz - (@prod.byiiinfinite).wav")
+        FileManager.default.createFile(atPath: odd.path, contents: Data([0]))
+        let walked = (FileManager.default.enumerator(at: tempSamples, includingPropertiesForKeys: nil)?.allObjects as? [URL]) ?? []
+        let viaPrivate = odd.path.hasPrefix("/var/") ? URL(fileURLWithPath: "/private" + odd.path) : odd
+        check(walked.count == 1 && walked.allSatisfy { KnockFolders.relative($0, in: tempSamples) == odd.lastPathComponent }
+              && KnockFolders.relative(viaPrivate, in: tempSamples) == odd.lastPathComponent
+              && KnockFolders.relative(odd, in: tempSamples.deletingLastPathComponent()) == "Samples/" + odd.lastPathComponent
+              && KnockFolders.relative(tempSamples, in: tempSamples) == nil,
+              "a Samples file's own name comes back whole, however the iPad spells the folder (no \"private!Go2Spinz\")")
+        try? FileManager.default.removeItem(at: tempSamples.deletingLastPathComponent())
         check(SoundType.guess("Danger Demon/Kicks/808 Kick.wav") == .kick && SoundType.guess("Pack/808s/Big.wav") == .bass
               && SoundType.guess("Pack/OHH/Hat 3.wav") == .open && SoundType.guess("Pack/Hi-Hats/Open Thing.wav") == .hat
               && SoundType.guess("Pack/Snares/Clap Layer.wav") == .snare && SoundType.guess("Pack/[Kick] Astronomy.wav") == .kick

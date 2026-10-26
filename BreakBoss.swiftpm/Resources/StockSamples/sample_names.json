@@ -1,0 +1,3201 @@
+{
+"version": 1,
+"stock": {
+"accrashl3r1": "ac_crash_l3_r1.wav",
+"achalfhatl4r1": "ac_halfhat_l4_r1.wav",
+"achatl4r1": "ac_hat_l4_r1.wav",
+"achitoml4r1": "ac_hitom_l4_r1.wav",
+"ackickl4r1": "ac_kick_l4_r1.wav",
+"aclotoml4r1": "ac_lotom_l4_r1.wav",
+"acoffctrl6r1": "ac_offctr_l6_r1.wav",
+"acopenhatl4r1": "ac_openhat_l4_r1.wav",
+"acridel3r1": "ac_ride_l3_r1.wav",
+"acrimshotl6r1": "ac_rimshot_l6_r1.wav",
+"acsnarel8r1": "ac_snare_l8_r1.wav",
+"acxstickl6r1": "ac_xstick_l6_r1.wav",
+"bb2000srnbp00": "bb_kick_knock_15.wav",
+"bb2000srnbp01": "bb_snare_room_09.wav",
+"bb2000srnbp02": "bb_clap_tight_05.wav",
+"bb2000srnbp03": "bb_rim_20.wav",
+"bb2000srnbp04": "bb_hat_crisp_32.wav",
+"bb2000srnbp05": "bb_open_hat_short_06.wav",
+"bb2000srnbp06": "bb_808_g1_05.wav",
+"bb2000srnbp07": "bb_perc_hit_13.wav",
+"bb2000srnbp08": "bb_perc_hit_15.wav",
+"bb2000srnbp09": "bb_tom_low_09.wav",
+"bb2000srnbp10": "bb_tom_high_09.wav",
+"bb2000srnbp11": "bb_shaker_13.wav",
+"bb808a101": "bb_808_a1_01.wav",
+"bb808a1long01": "bb_808_a1_long_01.wav",
+"bb808a1short01": "bb_808_a1_short_01.wav",
+"bb808d101": "bb_808_d1_01.wav",
+"bb808d102": "bb_808_d1_02.wav",
+"bb808d103": "bb_808_d1_03.wav",
+"bb808d104": "bb_808_d1_04.wav",
+"bb808d105": "bb_808_d1_05.wav",
+"bb808d106": "bb_808_d1_06.wav",
+"bb808d107": "bb_808_d1_07.wav",
+"bb808d108": "bb_808_d1_08.wav",
+"bb808d109": "bb_808_d1_09.wav",
+"bb808d1long01": "bb_808_d1_long_01.wav",
+"bb808d1long02": "bb_808_d1_long_02.wav",
+"bb808d1long03": "bb_808_d1_long_03.wav",
+"bb808d1long04": "bb_808_d1_long_04.wav",
+"bb808d1long05": "bb_808_d1_long_05.wav",
+"bb808d1short01": "bb_808_d1_short_01.wav",
+"bb808d1short02": "bb_808_d1_short_02.wav",
+"bb808d1short03": "bb_808_d1_short_03.wav",
+"bb808ds1long01": "bb_808_ds1_long_01.wav",
+"bb808e101": "bb_808_e1_01.wav",
+"bb808e102": "bb_808_e1_02.wav",
+"bb808e103": "bb_808_e1_03.wav",
+"bb808e104": "bb_808_e1_04.wav",
+"bb808e105": "bb_808_e1_05.wav",
+"bb808e106": "bb_808_e1_06.wav",
+"bb808e107": "bb_808_e1_07.wav",
+"bb808e108": "bb_808_e1_08.wav",
+"bb808e109": "bb_808_e1_09.wav",
+"bb808e110": "bb_808_e1_10.wav",
+"bb808e1long01": "bb_808_e1_long_01.wav",
+"bb808e1long02": "bb_808_e1_long_02.wav",
+"bb808e1long03": "bb_808_e1_long_03.wav",
+"bb808e1long04": "bb_808_e1_long_04.wav",
+"bb808e1long05": "bb_808_e1_long_05.wav",
+"bb808e1short01": "bb_808_e1_short_01.wav",
+"bb808e1short02": "bb_808_e1_short_02.wav",
+"bb808e1short03": "bb_808_e1_short_03.wav",
+"bb808e1short04": "bb_808_e1_short_04.wav",
+"bb808e1short05": "bb_808_e1_short_05.wav",
+"bb808f101": "bb_808_f1_01.wav",
+"bb808f102": "bb_808_f1_02.wav",
+"bb808f103": "bb_808_f1_03.wav",
+"bb808f104": "bb_808_f1_04.wav",
+"bb808f105": "bb_808_f1_05.wav",
+"bb808f106": "bb_808_f1_06.wav",
+"bb808f107": "bb_808_f1_07.wav",
+"bb808f108": "bb_808_f1_08.wav",
+"bb808f109": "bb_808_f1_09.wav",
+"bb808f110": "bb_808_f1_10.wav",
+"bb808f1long01": "bb_808_f1_long_01.wav",
+"bb808f1long02": "bb_808_f1_long_02.wav",
+"bb808f1long03": "bb_808_f1_long_03.wav",
+"bb808f1long04": "bb_808_f1_long_04.wav",
+"bb808f1long05": "bb_808_f1_long_05.wav",
+"bb808f1short01": "bb_808_f1_short_01.wav",
+"bb808fs101": "bb_808_fs1_01.wav",
+"bb808fs102": "bb_808_fs1_02.wav",
+"bb808fs1short01": "bb_808_fs1_short_01.wav",
+"bb808fs1short02": "bb_808_fs1_short_02.wav",
+"bb808g101": "bb_808_g1_01.wav",
+"bb808g102": "bb_808_g1_02.wav",
+"bb808g103": "bb_808_g1_03.wav",
+"bb808g104": "bb_808_g1_04.wav",
+"bb808g105": "bb_808_g1_05.wav",
+"bb808g106": "bb_808_g1_06.wav",
+"bb808g1long01": "bb_808_g1_long_01.wav",
+"bb808g1short01": "bb_808_g1_short_01.wav",
+"bb808g1short02": "bb_808_g1_short_02.wav",
+"bb808g1short03": "bb_808_g1_short_03.wav",
+"bb808g1short04": "bb_808_g1_short_04.wav",
+"bb808g1short05": "bb_808_g1_short_05.wav",
+"bb808gs101": "bb_808_gs1_01.wav",
+"bb808gs102": "bb_808_gs1_02.wav",
+"bb80spopp00": "bb_kick_knock_12.wav",
+"bb80spopp06": "bb_808_d1_03.wav",
+"bb80spopp09": "bb_tom_low_20.wav",
+"bb80spopp10": "bb_tom_high_01.wav",
+"bb90spopp06": "bb_808_e1_07.wav",
+"bbafrobeatsp01": "bb_snare_crack_24.wav",
+"bbafrobeatsp02": "bb_clap_tight_11.wav",
+"bbafrobeatsp03": "bb_rim_03.wav",
+"bbafrobeatsp04": "bb_hat_crisp_03.wav",
+"bbafrobeatsp05": "bb_open_hat_short_23.wav",
+"bbafrobeatsp06": "bb_808_fs1_01.wav",
+"bbafrobeatsp07": "bb_perc_wood_21.wav",
+"bbafrobeatsp08": "bb_perc_wood_12.wav",
+"bbamapianop00": "bb_kick_knock_10.wav",
+"bbamapianop01": "bb_snare_crack_03.wav",
+"bbamapianop02": "bb_clap_wide_12.wav",
+"bbamapianop03": "bb_rim_26.wav",
+"bbamapianop04": "bb_hat_crisp_13.wav",
+"bbamapianop05": "bb_open_hat_short_10.wav",
+"bbamapianop06": "bb_808_e1_short_01.wav",
+"bbamapianop07": "bb_perc_wood_19.wav",
+"bbamapianop08": "bb_perc_wood_09.wav",
+"bbamapianop09": "bb_tom_low_11.wav",
+"bbamapianop11": "bb_cymbal_short_03.wav",
+"bbatltrapp00": "bb_kick_knock_13.wav",
+"bbatltrapp01": "bb_snare_crack_28.wav",
+"bbatltrapp02": "bb_clap_tight_13.wav",
+"bbatltrapp03": "bb_rim_04.wav",
+"bbatltrapp04": "bb_hat_crisp_04.wav",
+"bbatltrapp05": "bb_open_hat_short_24.wav",
+"bbatltrapp06": "bb_808_e1_05.wav",
+"bbatltrapp07": "bb_perc_hit_05.wav",
+"bbatltrapp08": "bb_perc_wood_13.wav",
+"bbatltrapp09": "bb_tom_low_18.wav",
+"bbatltrapp10": "bb_tom_high_04.wav",
+"bbatltrapp11": "bb_cymbal_short_04.wav",
+"bbbayslapp06": "bb_808_fs1_02.wav",
+"bbbeads01": "bb_beads_01.wav",
+"bbbeads02": "bb_beads_02.wav",
+"bbboombapp06": "bb_808_e1_06.wav",
+"bbboombapp09": "bb_tom_low_19.wav",
+"bbboombapp10": "bb_tom_high_05.wav",
+"bbclapdusty01": "bb_clap_dusty_01.wav",
+"bbclaproom01": "bb_clap_room_01.wav",
+"bbclaproom02": "bb_clap_room_02.wav",
+"bbclaproom03": "bb_clap_room_03.wav",
+"bbclaproom04": "bb_clap_room_04.wav",
+"bbclaproom05": "bb_clap_room_05.wav",
+"bbclaproom06": "bb_clap_room_06.wav",
+"bbclaptight01": "bb_clap_tight_01.wav",
+"bbclaptight02": "bb_clap_tight_02.wav",
+"bbclaptight03": "bb_clap_tight_03.wav",
+"bbclaptight04": "bb_clap_tight_04.wav",
+"bbclaptight05": "bb_clap_tight_05.wav",
+"bbclaptight06": "bb_clap_tight_06.wav",
+"bbclaptight07": "bb_clap_tight_07.wav",
+"bbclaptight08": "bb_clap_tight_08.wav",
+"bbclaptight09": "bb_clap_tight_09.wav",
+"bbclaptight10": "bb_clap_tight_10.wav",
+"bbclaptight11": "bb_clap_tight_11.wav",
+"bbclaptight12": "bb_clap_tight_12.wav",
+"bbclaptight13": "bb_clap_tight_13.wav",
+"bbclaptight14": "bb_clap_tight_14.wav",
+"bbclaptight15": "bb_clap_tight_15.wav",
+"bbclaptight16": "bb_clap_tight_16.wav",
+"bbclaptight17": "bb_clap_tight_17.wav",
+"bbclaptight18": "bb_clap_tight_18.wav",
+"bbclaptight19": "bb_clap_tight_19.wav",
+"bbclaptight20": "bb_clap_tight_20.wav",
+"bbclaptight21": "bb_clap_tight_21.wav",
+"bbclaptight22": "bb_clap_tight_22.wav",
+"bbclaptight23": "bb_clap_tight_23.wav",
+"bbclaptight24": "bb_clap_tight_24.wav",
+"bbclaptight25": "bb_clap_tight_25.wav",
+"bbclaptight26": "bb_clap_tight_26.wav",
+"bbclaptight27": "bb_clap_tight_27.wav",
+"bbclaptight28": "bb_clap_tight_28.wav",
+"bbclaptight29": "bb_clap_tight_29.wav",
+"bbclaptight30": "bb_clap_tight_30.wav",
+"bbclaptight31": "bb_clap_tight_31.wav",
+"bbclaptight32": "bb_clap_tight_32.wav",
+"bbclaptight33": "bb_clap_tight_33.wav",
+"bbclapwide01": "bb_clap_wide_01.wav",
+"bbclapwide02": "bb_clap_wide_02.wav",
+"bbclapwide03": "bb_clap_wide_03.wav",
+"bbclapwide04": "bb_clap_wide_04.wav",
+"bbclapwide05": "bb_clap_wide_05.wav",
+"bbclapwide06": "bb_clap_wide_06.wav",
+"bbclapwide07": "bb_clap_wide_07.wav",
+"bbclapwide08": "bb_clap_wide_08.wav",
+"bbclapwide09": "bb_clap_wide_09.wav",
+"bbclapwide10": "bb_clap_wide_10.wav",
+"bbclapwide11": "bb_clap_wide_11.wav",
+"bbclapwide12": "bb_clap_wide_12.wav",
+"bbclapwide13": "bb_clap_wide_13.wav",
+"bbclapwide14": "bb_clap_wide_14.wav",
+"bbclapwide15": "bb_clap_wide_15.wav",
+"bbclapwide16": "bb_clap_wide_16.wav",
+"bbclave01": "bb_clave_01.wav",
+"bbcoleworldp00": "bb_shaker_01.wav",
+"bbcoleworldp06": "bb_808_d1_long_03.wav",
+"bbcoleworldp09": "bb_shaker_03.wav",
+"bbcoleworldp10": "bb_shaker_02.wav",
+"bbcymbalcrash01": "bb_cymbal_crash_01.wav",
+"bbcymbalcrash02": "bb_cymbal_crash_02.wav",
+"bbcymbalcrash03": "bb_cymbal_crash_03.wav",
+"bbcymbalcrash04": "bb_cymbal_crash_04.wav",
+"bbcymbalcrash05": "bb_cymbal_crash_05.wav",
+"bbcymbalcrash06": "bb_cymbal_crash_06.wav",
+"bbcymbalcrash07": "bb_cymbal_crash_07.wav",
+"bbcymbalcrash08": "bb_cymbal_crash_08.wav",
+"bbcymbalcrash09": "bb_cymbal_crash_09.wav",
+"bbcymbalride01": "bb_cymbal_ride_01.wav",
+"bbcymbalride02": "bb_cymbal_ride_02.wav",
+"bbcymbalride03": "bb_cymbal_ride_03.wav",
+"bbcymbalride04": "bb_cymbal_ride_04.wav",
+"bbcymbalride05": "bb_cymbal_ride_05.wav",
+"bbcymbalride06": "bb_cymbal_ride_06.wav",
+"bbcymbalride07": "bb_cymbal_ride_07.wav",
+"bbcymbalride08": "bb_cymbal_ride_08.wav",
+"bbcymbalshort01": "bb_cymbal_short_01.wav",
+"bbcymbalshort02": "bb_cymbal_short_02.wav",
+"bbcymbalshort03": "bb_cymbal_short_03.wav",
+"bbcymbalshort04": "bb_cymbal_short_04.wav",
+"bbcymbalshort05": "bb_cymbal_short_05.wav",
+"bbdarkexperimentalp00": "bb_kick_knock_14.wav",
+"bbdarkexperimentalp01": "bb_snare_fat_19.wav",
+"bbdarkexperimentalp02": "bb_clap_wide_11.wav",
+"bbdarkexperimentalp03": "bb_rim_25.wav",
+"bbdarkexperimentalp04": "bb_hat_crisp_11.wav",
+"bbdarkexperimentalp05": "bb_open_hat_short_09.wav",
+"bbdarkexperimentalp06": "bb_808_d1_01.wav",
+"bbdarkexperimentalp07": "bb_perc_wood_23.wav",
+"bbdarkexperimentalp08": "bb_perc_wood_08.wav",
+"bbdarkexperimentalp09": "bb_tom_low_13.wav",
+"bbdarkexperimentalp10": "bb_tom_high_02.wav",
+"bbdarkexperimentalp11": "bb_cymbal_short_01.wav",
+"bbdirtysoulp06": "bb_808_g1_04.wav",
+"bbdirtysoulp09": "bb_tom_low_15.wav",
+"bbdirtysoulp10": "bb_tom_high_03.wav",
+"bbdrummasteryp00": "bb_kick_knock_11.wav",
+"bbdrummasteryp01": "bb_snare_room_08.wav",
+"bbdrummasteryp02": "bb_clap_tight_06.wav",
+"bbdrummasteryp03": "bb_rim_14.wav",
+"bbdrummasteryp04": "bb_hat_crisp_33.wav",
+"bbdrummasteryp05": "bb_open_hat_short_07.wav",
+"bbdrummasteryp06": "bb_808_f1_02.wav",
+"bbdrummasteryp07": "bb_perc_hit_14.wav",
+"bbdrummasteryp08": "bb_perc_wood_07.wav",
+"bbdrummasteryp09": "bb_tom_low_08.wav",
+"bbdrummasteryp10": "bb_tom_high_07.wav",
+"bbfxatmos01": "bb_fx_atmos_01.wav",
+"bbfxatmos02": "bb_fx_atmos_02.wav",
+"bbfxatmos03": "bb_fx_atmos_03.wav",
+"bbfxatmos04": "bb_fx_atmos_04.wav",
+"bbfxatmos05": "bb_fx_atmos_05.wav",
+"bbfxhit01": "bb_fx_hit_01.wav",
+"bbfxhit02": "bb_fx_hit_02.wav",
+"bbfxhit03": "bb_fx_hit_03.wav",
+"bbfxhit04": "bb_fx_hit_04.wav",
+"bbfxhit05": "bb_fx_hit_05.wav",
+"bbfxhit06": "bb_fx_hit_06.wav",
+"bbfxhit07": "bb_fx_hit_07.wav",
+"bbfxreverse01": "bb_fx_reverse_01.wav",
+"bbfxreverse02": "bb_fx_reverse_02.wav",
+"bbfxreverse03": "bb_fx_reverse_03.wav",
+"bbfxreverse04": "bb_fx_reverse_04.wav",
+"bbfxreverse05": "bb_fx_reverse_05.wav",
+"bbfxreverse06": "bb_fx_reverse_06.wav",
+"bbgactionb1bf10p00": "bb_perc_hit_09.wav",
+"bbganigma040811p00": "bb_open_hat_long_14.wav",
+"bbganigma983be2p00": "bb_kick_knock_19.wav",
+"bbgbackyard3de3eap00": "bb_cymbal_crash_08.wav",
+"bbgbasedc848f9p00": "bb_hat_crisp_35.wav",
+"bbgbeadshit040811p00": "bb_beads_02.wav",
+"bbgbeadshitb1bf10p00": "bb_beads_02.wav",
+"bbgbellrimshotb1bf10p00": "bb_rim_18.wav",
+"bbgbluelockc848f9p00": "bb_hat_dark_31.wav",
+"bbgbones698758p00": "bb_hat_crisp_26.wav",
+"bbgbounce040811p00": "bb_open_hat_long_07.wav",
+"bbgbrickb1bf10p00": "bb_kick_knock_08.wav",
+"bbgbritishsnareb1bf10p00": "bb_snare_room_02.wav",
+"bbgcascade698758p00": "bb_hat_crisp_29.wav",
+"bbgcascadec848f9p00": "bb_hat_crisp_34.wav",
+"bbgcharmc848f9p00": "bb_hat_dark_30.wav",
+"bbgchosen00aebfp00": "bb_808_e1_short_05.wav",
+"bbgchosenbe89dbp00": "bb_808_d1_long_04.wav",
+"bbgclapaloneb1bf10p00": "bb_clap_wide_13.wav",
+"bbgclapclockb1bf10p00": "bb_clap_tight_10.wav",
+"bbgclapibizab1bf10p00": "bb_clap_tight_24.wav",
+"bbgclapmindfulecb346p00": "bb_clap_tight_26.wav",
+"bbgclapmotiveb1bf10p00": "bb_clap_dusty_01.wav",
+"bbgclaprivalb1bf10p00": "bb_clap_tight_08.wav",
+"bbgclassics3de3eap00": "bb_cymbal_crash_02.wav",
+"bbgclickedhihatc848f9p00": "bb_hat_dark_14.wav",
+"bbgclickedrevhihatb1bf10p00": "bb_fx_reverse_05.wav",
+"bbgclicketyengine040811p00": "bb_fx_hit_07.wav",
+"bbgclicketyengineb1bf10p00": "bb_fx_hit_07.wav",
+"bbgcompressedride3de3eap00": "bb_cymbal_ride_07.wav",
+"bbgcompressedride9177fdp00": "bb_cymbal_ride_05.wav",
+"bbgcoolcatsnare18fed2dp00": "bb_snare_fat_16.wav",
+"bbgcoolcatsnare1b1bf10p00": "bb_snare_fat_14.wav",
+"bbgcoolcatsnare2b1bf10p00": "bb_snare_fat_13.wav",
+"bbgcrackedb1bf10p00": "bb_snare_crack_26.wav",
+"bbgdistort040811p00": "bb_open_hat_long_26.wav",
+"bbgdramaticclapsnareb1bf10p00": "bb_clap_tight_01.wav",
+"bbgdriftersb1bf10p00": "bb_snare_crack_15.wav",
+"bbgearthquake040811p00": "bb_fx_hit_01.wav",
+"bbgearthquakeb1bf10p00": "bb_fx_atmos_01.wav",
+"bbgenigmac848f9p00": "bb_hat_dark_13.wav",
+"bbgentranceb1bf10p00": "bb_snare_crack_25.wav",
+"bbgessentialb1bf10p00": "bb_perc_hit_02.wav",
+"bbgexcuses040811p00": "bb_open_hat_long_22.wav",
+"bbgexpansionkickb1bf10p00": "bb_kick_punch_05.wav",
+"bbgexpress3de3eap00": "bb_cymbal_crash_09.wav",
+"bbgfantasyb1bf10p00": "bb_perc_hit_16.wav",
+"bbgfinesseshaker2b1bf10p00": "bb_shaker_16.wav",
+"bbgfinesseshakerb1bf10p00": "bb_shaker_10.wav",
+"bbgflicker698758p00": "bb_hat_crisp_16.wav",
+"bbgflintb1bf10p00": "bb_rim_22.wav",
+"bbgfujib1bf10p00": "bb_perc_wood_26.wav",
+"bbgfunctionb1bf10p00": "bb_kick_thump_11.wav",
+"bbgfunksnarecb8e03p00": "bb_snare_fat_05.wav",
+"bbggametimekickecb346p00": "bb_kick_boom_19.wav",
+"bbggeodee487p00": "bb_808_fs1_short_01.wav",
+"bbgghoul8ff503p00": "bb_snare_room_14.wav",
+"bbggo2spinz5eddbap00": "bb_808_g1_short_02.wav",
+"bbggo2spinz619311p00": "bb_808_f1_09.wav",
+"bbggo2spinzbe89dbp00": "bb_808_d1_08.wav",
+"bbggo2spinze84ef9p00": "bb_808_g1_short_04.wav",
+"bbggo2zay2a1dd0p00": "bb_808_f1_short_01.wav",
+"bbggo2zay3dbc48p00": "bb_808_a1_short_01.wav",
+"bbggo2zay5edbd7p00": "bb_808_e1_short_04.wav",
+"bbggoldenhihat1a0b91p00": "bb_hat_dark_08.wav",
+"bbggoldenhihatc848f9p00": "bb_hat_dark_10.wav",
+"bbggotob1bf10p00": "bb_clap_room_03.wav",
+"bbggripsnare9f2621p00": "bb_snare_fat_10.wav",
+"bbggroaningwildanimalb1bf10p00": "bb_fx_hit_06.wav",
+"bbggroove040811p00": "bb_open_hat_long_15.wav",
+"bbggrounded00aebfp00": "bb_808_e1_short_02.wav",
+"bbggrounded2a1dd0p00": "bb_808_f1_long_03.wav",
+"bbggroundedb97c63p00": "bb_808_d1_short_01.wav",
+"bbggundamb1bf10p00": "bb_perc_click_02.wav",
+"bbghallsb1bf10p00": "bb_rim_23.wav",
+"bbghands5edbd7p00": "bb_808_e1_03.wav",
+"bbghands619311p00": "bb_808_f1_05.wav",
+"bbghandsbe89dbp00": "bb_808_d1_04.wav",
+"bbghealingb1bf10p00": "bb_perc_hit_06.wav",
+"bbghellsingb1bf10p00": "bb_perc_hit_10.wav",
+"bbghihatcasesc848f9p00": "bb_hat_crisp_07.wav",
+"bbghihatintro0ebe9fp00": "bb_hat_dark_17.wav",
+"bbghihatintro92e7c5p00": "bb_hat_dark_16.wav",
+"bbghihatintroc848f9p00": "bb_hat_dark_18.wav",
+"bbghihatknightc848f9p00": "bb_hat_dark_19.wav",
+"bbghihatlamp92e7c5p00": "bb_hat_crisp_22.wav",
+"bbghihatlampc848f9p00": "bb_hat_crisp_24.wav",
+"bbghihatname1a0b91p00": "bb_hat_dark_27.wav",
+"bbghihatrightthrough698758p00": "bb_hat_crisp_21.wav",
+"bbghihatsonicc848f9p00": "bb_hat_crisp_27.wav",
+"bbghihatwhathappenedc848f9p00": "bb_hat_dark_02.wav",
+"bbghomeb1bf10p00": "bb_clap_tight_30.wav",
+"bbghomeecb346p00": "bb_clap_tight_27.wav",
+"bbghungerb1bf10p00": "bb_rim_06.wav",
+"bbghushclapb1bf10p00": "bb_clap_room_01.wav",
+"bbgindustrial8ff503p00": "bb_snare_room_15.wav",
+"bbgintegrab1bf10p00": "bb_snare_crack_17.wav",
+"bbgissabounceclapsnareb1bf10p00": "bb_clap_wide_07.wav",
+"bbgitadori5edbd7p00": "bb_808_e1_02.wav",
+"bbgitadoribe89dbp00": "bb_808_d1_long_02.wav",
+"bbgjiro2a1dd0p00": "bb_808_f1_long_04.wav",
+"bbgjiro3dbc48p00": "bb_808_a1_long_01.wav",
+"bbgjiro5edbd7p00": "bb_808_e1_long_03.wav",
+"bbgjogo5eddbap00": "bb_808_g1_short_03.wav",
+"bbgjogodee487p00": "bb_808_fs1_short_02.wav",
+"bbgjogoe84ef9p00": "bb_808_g1_03.wav",
+"bbgk9b1bf10p00": "bb_snare_room_13.wav",
+"bbgkenzob1bf10p00": "bb_clap_tight_18.wav",
+"bbgkiab1bf10p00": "bb_clap_tight_17.wav",
+"bbgkickcallme11753cp00": "bb_kick_boom_18.wav",
+"bbgkickcallmede9893p00": "bb_kick_boom_17.wav",
+"bbgkickface031ab0p00": "bb_kick_knock_20.wav",
+"bbgkickhonestb1bf10p00": "bb_kick_boom_11.wav",
+"bbgkickwhateverb1bf10p00": "bb_kick_boom_02.wav",
+"bbgkindarolls040811p00": "bb_open_hat_long_23.wav",
+"bbgknockgangkick11753cp00": "bb_kick_knock_04.wav",
+"bbgknockgangkickb1bf10p00": "bb_kick_knock_03.wav",
+"bbgkunai040811p00": "bb_open_hat_short_08.wav",
+"bbglevelsb1bf10p00": "bb_clap_wide_16.wav",
+"bbglocks3de3eap00": "bb_cymbal_crash_03.wav",
+"bbglofi1kick1c3f15p00": "bb_kick_boom_10.wav",
+"bbglofiwarmsnareb1bf10p00": "bb_snare_fat_04.wav",
+"bbgmade2a1dd0p00": "bb_808_f1_07.wav",
+"bbgmade5edbd7p00": "bb_808_e1_01.wav",
+"bbgmarching3de3eap00": "bb_cymbal_crash_01.wav",
+"bbgmassiveclapsnareb1bf10p00": "bb_clap_tight_09.wav",
+"bbgmetalsb1bf10p00": "bb_rim_19.wav",
+"bbgmiragec848f9p00": "bb_hat_crisp_25.wav",
+"bbgmyherob1bf10p00": "bb_rim_11.wav",
+"bbgnewestleafsnareecb346p00": "bb_snare_fat_01.wav",
+"bbgnews3de3eap00": "bb_cymbal_short_05.wav",
+"bbgniceasskick290255p00": "bb_kick_punch_06.wav",
+"bbgniceasskickb1bf10p00": "bb_kick_punch_07.wav",
+"bbgniceasskickde9893p00": "bb_kick_punch_09.wav",
+"bbgninjab1bf10p00": "bb_rim_10.wav",
+"bbgopenhatanti040811p00": "bb_open_hat_short_01.wav",
+"bbgopenhatbetweenus040811p00": "bb_open_hat_short_04.wav",
+"bbgopenhatex040811p00": "bb_open_hat_short_11.wav",
+"bbgopenhatlastcall040811p00": "bb_open_hat_short_02.wav",
+"bbgopenhatopinion040811p00": "bb_open_hat_short_03.wav",
+"bbgopenhatshawty040811p00": "bb_open_hat_short_14.wav",
+"bbgopenhatversion040811p00": "bb_open_hat_short_16.wav",
+"bbgopinionsc848f9p00": "bb_hat_crisp_01.wav",
+"bbgorganic3de3eap00": "bb_cymbal_crash_07.wav",
+"bbgospelchopsp06": "bb_808_f1_06.wav",
+"bbgoysterlayerb1bf10p00": "bb_perc_metal_01.wav",
+"bbgpercussionactuallyb1bf10p00": "bb_perc_wood_22.wav",
+"bbgpercussionblocked040811p00": "bb_perc_wood_01.wav",
+"bbgpercussionblockedb1bf10p00": "bb_perc_wood_01.wav",
+"bbgpercussiondialb1bf10p00": "bb_perc_hit_12.wav",
+"bbgpercussionlight040811p00": "bb_perc_hit_21.wav",
+"bbgpercussionlightb1bf10p00": "bb_perc_hit_21.wav",
+"bbgpercussionpaint1ab1bf10p00": "bb_fx_hit_02.wav",
+"bbgpercussionpaint2ab1bf10p00": "bb_fx_atmos_02.wav",
+"bbgpercussiontom1040811p00": "bb_tom_low_06.wav",
+"bbgpercussiontom1b1bf10p00": "bb_tom_low_06.wav",
+"bbgplanes3de3eap00": "bb_cymbal_crash_06.wav",
+"bbgpocketsnareb1bf10p00": "bb_snare_fat_24.wav",
+"bbgpoprevhihatb1bf10p00": "bb_fx_reverse_03.wav",
+"bbgpressingb1bf10p00": "bb_rim_09.wav",
+"bbgprimarysnarewverbb1bf10p00": "bb_snare_crack_12.wav",
+"bbgprismhihat1a0b91p00": "bb_hat_dark_23.wav",
+"bbgprismhihatc848f9p00": "bb_hat_dark_25.wav",
+"bbgpunch031ab0p00": "bb_kick_knock_05.wav",
+"bbgpunch8fed2dp00": "bb_kick_knock_07.wav",
+"bbgpunchb1bf10p00": "bb_kick_knock_05.wav",
+"bbgpureknocksnare92203cp00": "bb_snare_crack_01.wav",
+"bbgpureknocksnareecb346p00": "bb_snare_crack_06.wav",
+"bbgquickknocksnare92203cp00": "bb_snare_fat_11.wav",
+"bbgquickknocksnareb1bf10p00": "bb_snare_fat_18.wav",
+"bbgradiantc848f9p00": "bb_hat_crisp_19.wav",
+"bbgrageb1bf10p00": "bb_snare_room_10.wav",
+"bbgreasonanalogkickb1bf10p00": "bb_kick_punch_04.wav",
+"bbgreversekickmadness040811p00": "bb_fx_reverse_01.wav",
+"bbgreversekickmadnessb1bf10p00": "bb_fx_reverse_01.wav",
+"bbgriftclapsnareb1bf10p00": "bb_clap_tight_03.wav",
+"bbgriftsnareb1bf10p00": "bb_snare_fat_09.wav",
+"bbgrimbangerb1bf10p00": "bb_rim_17.wav",
+"bbgrimmachineb1bf10p00": "bb_rim_01.wav",
+"bbgrimpayb1bf10p00": "bb_rim_21.wav",
+"bbgrimriddleb1bf10p00": "bb_rim_29.wav",
+"bbgrimspecialb1bf10p00": "bb_rim_16.wav",
+"bbgrimwholeb1bf10p00": "bb_rim_05.wav",
+"bbgrulersb1bf10p00": "bb_clap_tight_19.wav",
+"bbgsealed2a1dd0p00": "bb_808_f1_03.wav",
+"bbgsealede84ef9p00": "bb_808_g1_01.wav",
+"bbgshapedkick759dcfp00": "bb_kick_knock_25.wav",
+"bbgshiftedhihatc848f9p00": "bb_hat_crisp_10.wav",
+"bbgshoutsnare8fed2dp00": "bb_snare_room_11.wav",
+"bbgshoutsnareb1bf10p00": "bb_snare_room_12.wav",
+"bbgsmalltambourinedoublehit2b1bf10p00": "bb_tamb_01.wav",
+"bbgsmitherhihat2c848f9p00": "bb_hat_dark_05.wav",
+"bbgsmitheropenhihat040811p00": "bb_open_hat_long_03.wav",
+"bbgsnarecookedb1bf10p00": "bb_snare_crack_23.wav",
+"bbgsnareemotionb1bf10p00": "bb_snare_fat_22.wav",
+"bbgsnarezoneb1bf10p00": "bb_snare_crack_19.wav",
+"bbgsofter8fed2dp00": "bb_kick_knock_17.wav",
+"bbgsofter983be2p00": "bb_kick_knock_16.wav",
+"bbgsorcererclapb1bf10p00": "bb_clap_wide_06.wav",
+"bbgspiriclapsnare9f2621p00": "bb_clap_wide_01.wav",
+"bbgsplashecb346p00": "bb_kick_knock_06.wav",
+"bbgstr8upanalogkick290255p00": "bb_kick_punch_02.wav",
+"bbgstr8upanalogkickb1bf10p00": "bb_kick_punch_01.wav",
+"bbgstream3de3eap00": "bb_cymbal_short_02.wav",
+"bbgsubs040811p00": "bb_open_hat_long_24.wav",
+"bbgsukuna2a1dd0p00": "bb_808_f1_long_05.wav",
+"bbgsukunae84ef9p00": "bb_808_g1_long_01.wav",
+"bbgsungjinwoob1bf10p00": "bb_clap_tight_16.wav",
+"bbgsuperfreakkickb1bf10p00": "bb_kick_boom_23.wav",
+"bbgsuperpowerkick759dcfp00": "bb_kick_boom_09.wav",
+"bbgsuperpowerkickb1bf10p00": "bb_kick_boom_05.wav",
+"bbgtambchachingb1bf10p00": "bb_tamb_04.wav",
+"bbgtambourinedoublehitb1bf10p00": "bb_tamb_02.wav",
+"bbgtambroll1b1bf10p00": "bb_tamb_05.wav",
+"bbgtankb1bf10p00": "bb_clap_room_02.wav",
+"bbgtechb1bf10p00": "bb_rim_07.wav",
+"bbgtfb1bf10p00": "bb_kick_knock_24.wav",
+"bbgthiccnesssnarecb8e03p00": "bb_snare_crack_21.wav",
+"bbgthoughtsc848f9p00": "bb_hat_crisp_30.wav",
+"bbgthronehihatc848f9p00": "bb_hat_dark_15.wav",
+"bbgthroneopenhihat040811p00": "bb_open_hat_long_06.wav",
+"bbgties040811p00": "bb_open_hat_short_17.wav",
+"bbgtight040811p00": "bb_open_hat_long_16.wav",
+"bbgtoji5edbd7p00": "bb_808_e1_04.wav",
+"bbgtojib97c63p00": "bb_808_d1_short_02.wav",
+"bbgtojibe89dbp00": "bb_808_d1_long_01.wav",
+"bbgtrapknocksnare2b1bf10p00": "bb_snare_fat_12.wav",
+"bbgtrippedopenhihat040811p00": "bb_open_hat_long_10.wav",
+"bbgtrippedrevhihatb1bf10p00": "bb_fx_reverse_06.wav",
+"bbgtrippyride3de3eap00": "bb_cymbal_ride_03.wav",
+"bbgtrippyride9177fdp00": "bb_cymbal_ride_02.wav",
+"bbgtrueindeedanalogkick1c3f15p00": "bb_kick_knock_01.wav",
+"bbgtwilight0ebe9fp00": "bb_hat_dark_20.wav",
+"bbgtwilightc848f9p00": "bb_hat_dark_24.wav",
+"bbgultimateb1bf10p00": "bb_perc_hit_07.wav",
+"bbgvampiresb1bf10p00": "bb_snare_fat_17.wav",
+"bbgvelvetc848f9p00": "bb_hat_crisp_12.wav",
+"bbgwayymorethumpierkickb1bf10p00": "bb_kick_knock_26.wav",
+"bbgwhitenoise040811p00": "bb_open_hat_long_25.wav",
+"bbgwhoopishlayerb1bf10p00": "bb_perc_hit_20.wav",
+"bbgwrittingsc848f9p00": "bb_hat_crisp_06.wav",
+"bbgyoto3de3eap00": "bb_cymbal_crash_04.wav",
+"bbhatcrisp01": "bb_hat_crisp_01.wav",
+"bbhatcrisp02": "bb_hat_crisp_02.wav",
+"bbhatcrisp03": "bb_hat_crisp_03.wav",
+"bbhatcrisp04": "bb_hat_crisp_04.wav",
+"bbhatcrisp05": "bb_hat_crisp_05.wav",
+"bbhatcrisp06": "bb_hat_crisp_06.wav",
+"bbhatcrisp07": "bb_hat_crisp_07.wav",
+"bbhatcrisp08": "bb_hat_crisp_08.wav",
+"bbhatcrisp09": "bb_hat_crisp_09.wav",
+"bbhatcrisp10": "bb_hat_crisp_10.wav",
+"bbhatcrisp11": "bb_hat_crisp_11.wav",
+"bbhatcrisp12": "bb_hat_crisp_12.wav",
+"bbhatcrisp13": "bb_hat_crisp_13.wav",
+"bbhatcrisp14": "bb_hat_crisp_14.wav",
+"bbhatcrisp15": "bb_hat_crisp_15.wav",
+"bbhatcrisp16": "bb_hat_crisp_16.wav",
+"bbhatcrisp17": "bb_hat_crisp_17.wav",
+"bbhatcrisp18": "bb_hat_crisp_18.wav",
+"bbhatcrisp19": "bb_hat_crisp_19.wav",
+"bbhatcrisp20": "bb_hat_crisp_20.wav",
+"bbhatcrisp21": "bb_hat_crisp_21.wav",
+"bbhatcrisp22": "bb_hat_crisp_22.wav",
+"bbhatcrisp23": "bb_hat_crisp_23.wav",
+"bbhatcrisp24": "bb_hat_crisp_24.wav",
+"bbhatcrisp25": "bb_hat_crisp_25.wav",
+"bbhatcrisp26": "bb_hat_crisp_26.wav",
+"bbhatcrisp27": "bb_hat_crisp_27.wav",
+"bbhatcrisp28": "bb_hat_crisp_28.wav",
+"bbhatcrisp29": "bb_hat_crisp_29.wav",
+"bbhatcrisp30": "bb_hat_crisp_30.wav",
+"bbhatcrisp31": "bb_hat_crisp_31.wav",
+"bbhatcrisp32": "bb_hat_crisp_32.wav",
+"bbhatcrisp33": "bb_hat_crisp_33.wav",
+"bbhatcrisp34": "bb_hat_crisp_34.wav",
+"bbhatcrisp35": "bb_hat_crisp_35.wav",
+"bbhatdark01": "bb_hat_dark_01.wav",
+"bbhatdark02": "bb_hat_dark_02.wav",
+"bbhatdark03": "bb_hat_dark_03.wav",
+"bbhatdark04": "bb_hat_dark_04.wav",
+"bbhatdark05": "bb_hat_dark_05.wav",
+"bbhatdark06": "bb_hat_dark_06.wav",
+"bbhatdark07": "bb_hat_dark_07.wav",
+"bbhatdark08": "bb_hat_dark_08.wav",
+"bbhatdark09": "bb_hat_dark_09.wav",
+"bbhatdark10": "bb_hat_dark_10.wav",
+"bbhatdark11": "bb_hat_dark_11.wav",
+"bbhatdark12": "bb_hat_dark_12.wav",
+"bbhatdark13": "bb_hat_dark_13.wav",
+"bbhatdark14": "bb_hat_dark_14.wav",
+"bbhatdark15": "bb_hat_dark_15.wav",
+"bbhatdark16": "bb_hat_dark_16.wav",
+"bbhatdark17": "bb_hat_dark_17.wav",
+"bbhatdark18": "bb_hat_dark_18.wav",
+"bbhatdark19": "bb_hat_dark_19.wav",
+"bbhatdark20": "bb_hat_dark_20.wav",
+"bbhatdark21": "bb_hat_dark_21.wav",
+"bbhatdark22": "bb_hat_dark_22.wav",
+"bbhatdark23": "bb_hat_dark_23.wav",
+"bbhatdark24": "bb_hat_dark_24.wav",
+"bbhatdark25": "bb_hat_dark_25.wav",
+"bbhatdark26": "bb_hat_dark_26.wav",
+"bbhatdark27": "bb_hat_dark_27.wav",
+"bbhatdark28": "bb_hat_dark_28.wav",
+"bbhatdark29": "bb_hat_dark_29.wav",
+"bbhatdark30": "bb_hat_dark_30.wav",
+"bbhatdark31": "bb_hat_dark_31.wav",
+"bbhatdark32": "bb_hat_dark_32.wav",
+"bbhatdusty01": "bb_hat_dusty_01.wav",
+"bbhatdusty02": "bb_hat_dusty_02.wav",
+"bbheavybreakp06": "bb_808_d1_06.wav",
+"bbheavybreakp09": "bb_tom_low_14.wav",
+"bbkickboom01": "bb_kick_boom_01.wav",
+"bbkickboom02": "bb_kick_boom_02.wav",
+"bbkickboom03": "bb_kick_boom_03.wav",
+"bbkickboom04": "bb_kick_boom_04.wav",
+"bbkickboom05": "bb_kick_boom_05.wav",
+"bbkickboom06": "bb_kick_boom_06.wav",
+"bbkickboom07": "bb_kick_boom_07.wav",
+"bbkickboom08": "bb_kick_boom_08.wav",
+"bbkickboom09": "bb_kick_boom_09.wav",
+"bbkickboom10": "bb_kick_boom_10.wav",
+"bbkickboom11": "bb_kick_boom_11.wav",
+"bbkickboom12": "bb_kick_boom_12.wav",
+"bbkickboom13": "bb_kick_boom_13.wav",
+"bbkickboom14": "bb_kick_boom_14.wav",
+"bbkickboom15": "bb_kick_boom_15.wav",
+"bbkickboom16": "bb_kick_boom_16.wav",
+"bbkickboom17": "bb_kick_boom_17.wav",
+"bbkickboom18": "bb_kick_boom_18.wav",
+"bbkickboom19": "bb_kick_boom_19.wav",
+"bbkickboom20": "bb_kick_boom_20.wav",
+"bbkickboom21": "bb_kick_boom_21.wav",
+"bbkickboom22": "bb_kick_boom_22.wav",
+"bbkickboom23": "bb_kick_boom_23.wav",
+"bbkickboom24": "bb_kick_boom_24.wav",
+"bbkickboom25": "bb_kick_boom_25.wav",
+"bbkickknock01": "bb_kick_knock_01.wav",
+"bbkickknock02": "bb_kick_knock_02.wav",
+"bbkickknock03": "bb_kick_knock_03.wav",
+"bbkickknock04": "bb_kick_knock_04.wav",
+"bbkickknock05": "bb_kick_knock_05.wav",
+"bbkickknock06": "bb_kick_knock_06.wav",
+"bbkickknock07": "bb_kick_knock_07.wav",
+"bbkickknock08": "bb_kick_knock_08.wav",
+"bbkickknock09": "bb_kick_knock_09.wav",
+"bbkickknock10": "bb_kick_knock_10.wav",
+"bbkickknock11": "bb_kick_knock_11.wav",
+"bbkickknock12": "bb_kick_knock_12.wav",
+"bbkickknock13": "bb_kick_knock_13.wav",
+"bbkickknock14": "bb_kick_knock_14.wav",
+"bbkickknock15": "bb_kick_knock_15.wav",
+"bbkickknock16": "bb_kick_knock_16.wav",
+"bbkickknock17": "bb_kick_knock_17.wav",
+"bbkickknock18": "bb_kick_knock_18.wav",
+"bbkickknock19": "bb_kick_knock_19.wav",
+"bbkickknock20": "bb_kick_knock_20.wav",
+"bbkickknock21": "bb_kick_knock_21.wav",
+"bbkickknock22": "bb_kick_knock_22.wav",
+"bbkickknock23": "bb_kick_knock_23.wav",
+"bbkickknock24": "bb_kick_knock_24.wav",
+"bbkickknock25": "bb_kick_knock_25.wav",
+"bbkickknock26": "bb_kick_knock_26.wav",
+"bbkickpunch01": "bb_kick_punch_01.wav",
+"bbkickpunch02": "bb_kick_punch_02.wav",
+"bbkickpunch03": "bb_kick_punch_03.wav",
+"bbkickpunch04": "bb_kick_punch_04.wav",
+"bbkickpunch05": "bb_kick_punch_05.wav",
+"bbkickpunch06": "bb_kick_punch_06.wav",
+"bbkickpunch07": "bb_kick_punch_07.wav",
+"bbkickpunch08": "bb_kick_punch_08.wav",
+"bbkickpunch09": "bb_kick_punch_09.wav",
+"bbkickthump01": "bb_kick_thump_01.wav",
+"bbkickthump02": "bb_kick_thump_02.wav",
+"bbkickthump03": "bb_kick_thump_03.wav",
+"bbkickthump04": "bb_kick_thump_04.wav",
+"bbkickthump05": "bb_kick_thump_05.wav",
+"bbkickthump06": "bb_kick_thump_06.wav",
+"bbkickthump07": "bb_kick_thump_07.wav",
+"bbkickthump08": "bb_kick_thump_08.wav",
+"bbkickthump09": "bb_kick_thump_09.wav",
+"bbkickthump10": "bb_kick_thump_10.wav",
+"bbkickthump11": "bb_kick_thump_11.wav",
+"bbkickthump12": "bb_kick_thump_12.wav",
+"bbkp2actionb1bf10p07": "bb_perc_hit_09.wav",
+"bbkp2basedc848f9p04": "bb_hat_crisp_35.wav",
+"bbkp2beadshitb1bf10p10": "bb_beads_02.wav",
+"bbkp2birdambience43a62ap11": "bb_fx_atmos_04.wav",
+"bbkp2body040811p05": "bb_open_hat_long_19.wav",
+"bbkp2bounce040811p05": "bb_open_hat_long_07.wav",
+"bbkp2brickb1bf10p00": "bb_kick_knock_08.wav",
+"bbkp2casperb1bf10p03": "bb_rim_15.wav",
+"bbkp2chosen2a1dd0p06": "bb_808_f1_long_02.wav",
+"bbkp2clapmindfulb1bf10p02": "bb_clap_tight_29.wav",
+"bbkp2claprivalb1bf10p02": "bb_clap_tight_08.wav",
+"bbkp2classics3de3eap11": "bb_cymbal_crash_02.wav",
+"bbkp2clicketyengineb1bf10p10": "bb_fx_hit_07.wav",
+"bbkp2clippedb1bf10p00": "bb_kick_knock_21.wav",
+"bbkp2coldwinter43a62ap09": "bb_fx_atmos_03.wav",
+"bbkp2dealsb1bf10p08": "bb_perc_hit_04.wav",
+"bbkp2distort040811p05": "bb_open_hat_long_26.wav",
+"bbkp2dramaticclapsnareb1bf10p02": "bb_clap_tight_01.wav",
+"bbkp2earthquakeb1bf10p09": "bb_fx_atmos_01.wav",
+"bbkp2encoreb1bf10p07": "bb_perc_hit_01.wav",
+"bbkp2flickerc848f9p04": "bb_hat_crisp_17.wav",
+"bbkp2flintb1bf10p01": "bb_snare_crack_31.wav",
+"bbkp2flintb1bf10p03": "bb_rim_22.wav",
+"bbkp2funksnareb1bf10p01": "bb_snare_fat_07.wav",
+"bbkp2gametimekickb1bf10p00": "bb_kick_boom_21.wav",
+"bbkp2geo5edbd7p06": "bb_808_e1_long_02.wav",
+"bbkp2ghosts43a62ap10": "bb_fx_reverse_04.wav",
+"bbkp2gotob1bf10p02": "bb_clap_room_03.wav",
+"bbkp2groaningwildanimalb1bf10p08": "bb_fx_hit_06.wav",
+"bbkp2groove040811p05": "bb_open_hat_long_15.wav",
+"bbkp2grounded5edbd7p06": "bb_808_e1_long_04.wav",
+"bbkp2hands369faap06": "bb_808_e1_03.wav",
+"bbkp2hellsingb1bf10p07": "bb_perc_hit_10.wav",
+"bbkp2hihatintroc848f9p04": "bb_hat_dark_18.wav",
+"bbkp2hihatsonicc848f9p04": "bb_hat_crisp_27.wav",
+"bbkp2hungerb1bf10p03": "bb_rim_06.wav",
+"bbkp2issabounceclapsnareb1bf10p02": "bb_clap_wide_07.wav",
+"bbkp2jogoe84ef9p06": "bb_808_g1_03.wav",
+"bbkp2k9b1bf10p01": "bb_snare_room_13.wav",
+"bbkp2kenzob1bf10p02": "bb_clap_tight_18.wav",
+"bbkp2kickbookedb1bf10p00": "bb_kick_thump_10.wav",
+"bbkp2kickfaceb1bf10p09": "bb_kick_knock_20.wav",
+"bbkp2kickprimeb1bf10p00": "bb_kick_thump_02.wav",
+"bbkp2knockgangkickb1bf10p00": "bb_kick_knock_03.wav",
+"bbkp2kunai040811p05": "bb_open_hat_short_08.wav",
+"bbkp2lofi1kickb1bf10p10": "bb_kick_boom_12.wav",
+"bbkp2lofiwarmsnareb1bf10p01": "bb_snare_fat_04.wav",
+"bbkp2made2a1dd0p06": "bb_808_f1_07.wav",
+"bbkp2marching3de3eap11": "bb_cymbal_crash_01.wav",
+"bbkp2metalsb1bf10p03": "bb_rim_19.wav",
+"bbkp2miragec848f9p04": "bb_hat_crisp_25.wav",
+"bbkp2netherb1bf10p09": "bb_tom_low_05.wav",
+"bbkp2news3de3eap11": "bb_cymbal_short_05.wav",
+"bbkp2ninjab1bf10p08": "bb_rim_10.wav",
+"bbkp2openhatlastcall040811p05": "bb_open_hat_short_02.wav",
+"bbkp2openhatshawty040811p05": "bb_open_hat_short_14.wav",
+"bbkp2organic3de3eap11": "bb_cymbal_crash_07.wav",
+"bbkp2oysterlayerb1bf10p07": "bb_perc_metal_01.wav",
+"bbkp2percussionactuallyb1bf10p08": "bb_perc_wood_22.wav",
+"bbkp2percussionblockedb1bf10p10": "bb_perc_wood_01.wav",
+"bbkp2percussionclaveb1bf10p07": "bb_clave_01.wav",
+"bbkp2percussiondialb1bf10p07": "bb_perc_hit_12.wav",
+"bbkp2percussionlightb1bf10p08": "bb_perc_hit_21.wav",
+"bbkp2percussionpaint1ab1bf10p10": "bb_fx_hit_02.wav",
+"bbkp2percussiontom1b1bf10p09": "bb_tom_low_06.wav",
+"bbkp2planes3de3eap11": "bb_cymbal_crash_06.wav",
+"bbkp2pressingb1bf10p03": "bb_rim_09.wav",
+"bbkp2pureknocksnareb1bf10p01": "bb_snare_crack_09.wav",
+"bbkp2quickknocksnareb1bf10p03": "bb_snare_fat_18.wav",
+"bbkp2radiantc848f9p04": "bb_hat_crisp_19.wav",
+"bbkp2rageb1bf10p01": "bb_snare_room_10.wav",
+"bbkp2reasonanalogkickb1bf10p00": "bb_kick_punch_04.wav",
+"bbkp2reversekickmadnessb1bf10p09": "bb_fx_reverse_01.wav",
+"bbkp2riftclapsnareb1bf10p02": "bb_clap_tight_03.wav",
+"bbkp2rimbangerb1bf10p03": "bb_rim_17.wav",
+"bbkp2rimspecialb1bf10p03": "bb_rim_16.wav",
+"bbkp2roomsb1bf10p08": "bb_perc_wood_14.wav",
+"bbkp2smalltambourinedoublehit2b1bf10p08": "bb_tamb_01.wav",
+"bbkp2snarecookedb1bf10p01": "bb_snare_crack_23.wav",
+"bbkp2snarefreshb1bf10p01": "bb_snare_dusty_01.wav",
+"bbkp2softerb1bf10p09": "bb_tom_low_04.wav",
+"bbkp2str8upanalogkickb1bf10p00": "bb_kick_punch_01.wav",
+"bbkp2stream3de3eap11": "bb_cymbal_short_02.wav",
+"bbkp2sukuna5edbd7p06": "bb_808_e1_long_05.wav",
+"bbkp2tambchachingb1bf10p10": "bb_tamb_04.wav",
+"bbkp2tambourinedoublehitb1bf10p07": "bb_tamb_02.wav",
+"bbkp2tankb1bf10p02": "bb_clap_room_02.wav",
+"bbkp2techb1bf10p08": "bb_rim_07.wav",
+"bbkp2toji2a1dd0p06": "bb_808_f1_08.wav",
+"bbkp2tubekickb1bf10p09": "bb_kick_boom_03.wav",
+"bbkp2twilightc848f9p04": "bb_hat_dark_24.wav",
+"bbkp2ultimateb1bf10p07": "bb_perc_hit_07.wav",
+"bbkp2velvetc848f9p04": "bb_hat_crisp_12.wav",
+"bbkp2whitenoise040811p05": "bb_open_hat_long_25.wav",
+"bbkp2whoopishlayerb1bf10p10": "bb_perc_hit_20.wav",
+"bbkp2yoto3de3eap11": "bb_cymbal_crash_04.wav",
+"bblivepopp06": "bb_808_f1_01.wav",
+"bblofip06": "bb_808_d1_02.wav",
+"bblofip09": "bb_tom_low_17.wav",
+"bblofip10": "bb_tom_high_11.wav",
+"bbloosebreakp06": "bb_808_g1_02.wav",
+"bbloosebreakp09": "bb_tom_low_07.wav",
+"bbloosebreakp10": "bb_tom_high_06.wav",
+"bbmemphistrapp00": "bb_kick_thump_12.wav",
+"bbmemphistrapp01": "bb_snare_crack_37.wav",
+"bbmemphistrapp02": "bb_clap_tight_14.wav",
+"bbmemphistrapp03": "bb_rim_08.wav",
+"bbmemphistrapp04": "bb_hat_dark_32.wav",
+"bbmemphistrapp05": "bb_open_hat_short_21.wav",
+"bbmemphistrapp07": "bb_perc_wood_17.wav",
+"bbmemphistrapp08": "bb_perc_wood_11.wav",
+"bbmemphistrapp09": "bb_tom_low_16.wav",
+"bbmemphistrapp10": "bb_tom_high_10.wav",
+"bbmodernrnbp01": "bb_snare_crack_36.wav",
+"bbmodernrnbp02": "bb_clap_tight_12.wav",
+"bbmodernrnbp03": "bb_rim_28.wav",
+"bbmodernrnbp04": "bb_hat_dark_28.wav",
+"bbmodernrnbp05": "bb_open_hat_short_19.wav",
+"bbmodernrnbp07": "bb_perc_wood_16.wav",
+"bbmodernrnbp08": "bb_perc_hit_18.wav",
+"bbmoderntrapp00": "bb_kick_knock_09.wav",
+"bbmoderntrapp01": "bb_snare_crack_05.wav",
+"bbmoderntrapp02": "bb_clap_wide_15.wav",
+"bbmoderntrapp03": "bb_rim_27.wav",
+"bbmoderntrapp04": "bb_hat_crisp_15.wav",
+"bbmoderntrapp05": "bb_open_hat_short_15.wav",
+"bbmoderntrapp07": "bb_perc_wood_25.wav",
+"bbmoderntrapp08": "bb_perc_wood_10.wav",
+"bbmoderntrapp09": "bb_tom_low_12.wav",
+"bbopenhatlong01": "bb_open_hat_long_01.wav",
+"bbopenhatlong02": "bb_open_hat_long_02.wav",
+"bbopenhatlong03": "bb_open_hat_long_03.wav",
+"bbopenhatlong04": "bb_open_hat_long_04.wav",
+"bbopenhatlong05": "bb_open_hat_long_05.wav",
+"bbopenhatlong06": "bb_open_hat_long_06.wav",
+"bbopenhatlong07": "bb_open_hat_long_07.wav",
+"bbopenhatlong08": "bb_open_hat_long_08.wav",
+"bbopenhatlong09": "bb_open_hat_long_09.wav",
+"bbopenhatlong10": "bb_open_hat_long_10.wav",
+"bbopenhatlong11": "bb_open_hat_long_11.wav",
+"bbopenhatlong12": "bb_open_hat_long_12.wav",
+"bbopenhatlong13": "bb_open_hat_long_13.wav",
+"bbopenhatlong14": "bb_open_hat_long_14.wav",
+"bbopenhatlong15": "bb_open_hat_long_15.wav",
+"bbopenhatlong16": "bb_open_hat_long_16.wav",
+"bbopenhatlong17": "bb_open_hat_long_17.wav",
+"bbopenhatlong18": "bb_open_hat_long_18.wav",
+"bbopenhatlong19": "bb_open_hat_long_19.wav",
+"bbopenhatlong20": "bb_open_hat_long_20.wav",
+"bbopenhatlong21": "bb_open_hat_long_21.wav",
+"bbopenhatlong22": "bb_open_hat_long_22.wav",
+"bbopenhatlong23": "bb_open_hat_long_23.wav",
+"bbopenhatlong24": "bb_open_hat_long_24.wav",
+"bbopenhatlong25": "bb_open_hat_long_25.wav",
+"bbopenhatlong26": "bb_open_hat_long_26.wav",
+"bbopenhatshort01": "bb_open_hat_short_01.wav",
+"bbopenhatshort02": "bb_open_hat_short_02.wav",
+"bbopenhatshort03": "bb_open_hat_short_03.wav",
+"bbopenhatshort04": "bb_open_hat_short_04.wav",
+"bbopenhatshort05": "bb_open_hat_short_05.wav",
+"bbopenhatshort06": "bb_open_hat_short_06.wav",
+"bbopenhatshort07": "bb_open_hat_short_07.wav",
+"bbopenhatshort08": "bb_open_hat_short_08.wav",
+"bbopenhatshort09": "bb_open_hat_short_09.wav",
+"bbopenhatshort10": "bb_open_hat_short_10.wav",
+"bbopenhatshort11": "bb_open_hat_short_11.wav",
+"bbopenhatshort12": "bb_open_hat_short_12.wav",
+"bbopenhatshort13": "bb_open_hat_short_13.wav",
+"bbopenhatshort14": "bb_open_hat_short_14.wav",
+"bbopenhatshort15": "bb_open_hat_short_15.wav",
+"bbopenhatshort16": "bb_open_hat_short_16.wav",
+"bbopenhatshort17": "bb_open_hat_short_17.wav",
+"bbopenhatshort18": "bb_open_hat_short_18.wav",
+"bbopenhatshort19": "bb_open_hat_short_19.wav",
+"bbopenhatshort20": "bb_open_hat_short_20.wav",
+"bbopenhatshort21": "bb_open_hat_short_21.wav",
+"bbopenhatshort22": "bb_open_hat_short_22.wav",
+"bbopenhatshort23": "bb_open_hat_short_23.wav",
+"bbopenhatshort24": "bb_open_hat_short_24.wav",
+"bbopenhatshort25": "bb_open_hat_short_25.wav",
+"bbpercclick01": "bb_perc_click_01.wav",
+"bbpercclick02": "bb_perc_click_02.wav",
+"bbperchit01": "bb_perc_hit_01.wav",
+"bbperchit02": "bb_perc_hit_02.wav",
+"bbperchit03": "bb_perc_hit_03.wav",
+"bbperchit04": "bb_perc_hit_04.wav",
+"bbperchit05": "bb_perc_hit_05.wav",
+"bbperchit06": "bb_perc_hit_06.wav",
+"bbperchit07": "bb_perc_hit_07.wav",
+"bbperchit08": "bb_perc_hit_08.wav",
+"bbperchit09": "bb_perc_hit_09.wav",
+"bbperchit10": "bb_perc_hit_10.wav",
+"bbperchit11": "bb_perc_hit_11.wav",
+"bbperchit12": "bb_perc_hit_12.wav",
+"bbperchit13": "bb_perc_hit_13.wav",
+"bbperchit14": "bb_perc_hit_14.wav",
+"bbperchit15": "bb_perc_hit_15.wav",
+"bbperchit16": "bb_perc_hit_16.wav",
+"bbperchit17": "bb_perc_hit_17.wav",
+"bbperchit18": "bb_perc_hit_18.wav",
+"bbperchit19": "bb_perc_hit_19.wav",
+"bbperchit20": "bb_perc_hit_20.wav",
+"bbperchit21": "bb_perc_hit_21.wav",
+"bbpercmetal01": "bb_perc_metal_01.wav",
+"bbpercmetal02": "bb_perc_metal_02.wav",
+"bbpercmetal03": "bb_perc_metal_03.wav",
+"bbpercwood01": "bb_perc_wood_01.wav",
+"bbpercwood02": "bb_perc_wood_02.wav",
+"bbpercwood03": "bb_perc_wood_03.wav",
+"bbpercwood04": "bb_perc_wood_04.wav",
+"bbpercwood05": "bb_perc_wood_05.wav",
+"bbpercwood06": "bb_perc_wood_06.wav",
+"bbpercwood07": "bb_perc_wood_07.wav",
+"bbpercwood08": "bb_perc_wood_08.wav",
+"bbpercwood09": "bb_perc_wood_09.wav",
+"bbpercwood10": "bb_perc_wood_10.wav",
+"bbpercwood11": "bb_perc_wood_11.wav",
+"bbpercwood12": "bb_perc_wood_12.wav",
+"bbpercwood13": "bb_perc_wood_13.wav",
+"bbpercwood14": "bb_perc_wood_14.wav",
+"bbpercwood15": "bb_perc_wood_15.wav",
+"bbpercwood16": "bb_perc_wood_16.wav",
+"bbpercwood17": "bb_perc_wood_17.wav",
+"bbpercwood18": "bb_perc_wood_18.wav",
+"bbpercwood19": "bb_perc_wood_19.wav",
+"bbpercwood20": "bb_perc_wood_20.wav",
+"bbpercwood21": "bb_perc_wood_21.wav",
+"bbpercwood22": "bb_perc_wood_22.wav",
+"bbpercwood23": "bb_perc_wood_23.wav",
+"bbpercwood24": "bb_perc_wood_24.wav",
+"bbpercwood25": "bb_perc_wood_25.wav",
+"bbpercwood26": "bb_perc_wood_26.wav",
+"bbresampledtexturesp00": "bb_kick_knock_18.wav",
+"bbresampledtexturesp01": "bb_snare_room_06.wav",
+"bbresampledtexturesp02": "bb_clap_tight_02.wav",
+"bbresampledtexturesp03": "bb_rim_12.wav",
+"bbresampledtexturesp04": "bb_hat_crisp_28.wav",
+"bbresampledtexturesp05": "bb_open_hat_long_11.wav",
+"bbresampledtexturesp06": "bb_808_g1_06.wav",
+"bbresampledtexturesp07": "bb_perc_hit_11.wav",
+"bbresampledtexturesp08": "bb_perc_wood_05.wav",
+"bbresampledtexturesp09": "bb_tom_low_10.wav",
+"bbresampledtexturesp10": "bb_tom_high_08.wav",
+"bbrim01": "bb_rim_01.wav",
+"bbrim02": "bb_rim_02.wav",
+"bbrim03": "bb_rim_03.wav",
+"bbrim04": "bb_rim_04.wav",
+"bbrim05": "bb_rim_05.wav",
+"bbrim06": "bb_rim_06.wav",
+"bbrim07": "bb_rim_07.wav",
+"bbrim08": "bb_rim_08.wav",
+"bbrim09": "bb_rim_09.wav",
+"bbrim10": "bb_rim_10.wav",
+"bbrim11": "bb_rim_11.wav",
+"bbrim12": "bb_rim_12.wav",
+"bbrim13": "bb_rim_13.wav",
+"bbrim14": "bb_rim_14.wav",
+"bbrim15": "bb_rim_15.wav",
+"bbrim16": "bb_rim_16.wav",
+"bbrim17": "bb_rim_17.wav",
+"bbrim18": "bb_rim_18.wav",
+"bbrim19": "bb_rim_19.wav",
+"bbrim20": "bb_rim_20.wav",
+"bbrim21": "bb_rim_21.wav",
+"bbrim22": "bb_rim_22.wav",
+"bbrim23": "bb_rim_23.wav",
+"bbrim24": "bb_rim_24.wav",
+"bbrim25": "bb_rim_25.wav",
+"bbrim26": "bb_rim_26.wav",
+"bbrim27": "bb_rim_27.wav",
+"bbrim28": "bb_rim_28.wav",
+"bbrim29": "bb_rim_29.wav",
+"bbsbeadshit040811p00": "bb_beads_02.wav",
+"bbsbellrimshotb1bf10p00": "bb_rim_18.wav",
+"bbsbritishsnare342846p00": "bb_snare_room_01.wav",
+"bbsclaprivalb1bf10p00": "bb_clap_tight_08.wav",
+"bbsclickedhihat0ebe9fp00": "bb_hat_dark_12.wav",
+"bbsclickedopenhihat040811p00": "bb_open_hat_long_05.wav",
+"bbsclickedrevhihatb1bf10p00": "bb_fx_reverse_05.wav",
+"bbsclicketyengine040811p00": "bb_fx_hit_07.wav",
+"bbscompressedride3de3eap00": "bb_cymbal_ride_07.wav",
+"bbsdemon80813b37b45p00": "bb_808_d1_05.wav",
+"bbsdemon80813dc0d88p00": "bb_808_f1_04.wav",
+"bbsdemon808143525fep00": "bb_808_gs1_01.wav",
+"bbsdemon80815b37b45p00": "bb_808_d1_09.wav",
+"bbsdemon80815e24837p00": "bb_808_e1_10.wav",
+"bbsdemon80816e84ef9p00": "bb_808_gs1_02.wav",
+"bbsdemon80817e8bc4ep00": "bb_808_e1_short_03.wav",
+"bbsdemon8082e8bc4ep00": "bb_808_e1_08.wav",
+"bbsdemon80835edbd7p00": "bb_808_e1_long_01.wav",
+"bbsdemon80838d4a11p00": "bb_808_d1_long_05.wav",
+"bbsdemon8084e24837p00": "bb_808_e1_09.wav",
+"bbsdemon8085dc0d88p00": "bb_808_f1_10.wav",
+"bbsdemon80863525fep00": "bb_808_g1_short_01.wav",
+"bbsdemon80898d4a11p00": "bb_808_d1_07.wav",
+"bbsdemonclap158ff503p00": "bb_clap_tight_23.wav",
+"bbsdemonclap15b1bf10p00": "bb_clap_tight_20.wav",
+"bbsdemonclap17b1bf10p00": "bb_clap_room_06.wav",
+"bbsdemonclap17ecb346p00": "bb_clap_room_04.wav",
+"bbsdemonclap19b1bf10p00": "bb_clap_tight_22.wav",
+"bbsdemonclap2b1bf10p00": "bb_clap_room_05.wav",
+"bbsdemonclap3b1bf10p00": "bb_clap_tight_21.wav",
+"bbsdemonhh10ebe9fp00": "bb_hat_dark_03.wav",
+"bbsdemonhh11a0b91p00": "bb_hat_dark_04.wav",
+"bbsdemonhh1c848f9p00": "bb_hat_dark_09.wav",
+"bbsdemonhh2c848f9p00": "bb_hat_dark_29.wav",
+"bbsdemonhh3698758p00": "bb_hat_crisp_02.wav",
+"bbsdemonhh50ebe9fp00": "bb_hat_crisp_18.wav",
+"bbsdemonhh5c848f9p00": "bb_hat_crisp_23.wav",
+"bbsdemonhh61a0b91p00": "bb_hat_crisp_05.wav",
+"bbsdemonhh7c848f9p00": "bb_hat_crisp_08.wav",
+"bbsdemonkick10b1bf10p00": "bb_kick_thump_03.wav",
+"bbsdemonkick11c3f15p00": "bb_kick_thump_05.wav",
+"bbsdemonkick3a34c02p00": "bb_kick_thump_07.wav",
+"bbsdemonkick3b1bf10p00": "bb_kick_thump_08.wav",
+"bbsdemonkick51c3f15p00": "bb_kick_boom_24.wav",
+"bbsdemonkick5a34c02p00": "bb_kick_boom_25.wav",
+"bbsdemonkick7b1bf10p00": "bb_kick_boom_20.wav",
+"bbsdemonkick8b1bf10p00": "bb_kick_boom_13.wav",
+"bbsdemonohh1040811p00": "bb_open_hat_short_25.wav",
+"bbsdemonohh6040811p00": "bb_open_hat_long_21.wav",
+"bbsdemonohh7040811p00": "bb_open_hat_long_13.wav",
+"bbsdemonohh8040811p00": "bb_open_hat_short_22.wav",
+"bbsdemonpercs10b1bf10p00": "bb_perc_wood_04.wav",
+"bbsdemonpercs11b1bf10p00": "bb_perc_metal_02.wav",
+"bbsdemonpercs12b1bf10p00": "bb_perc_click_01.wav",
+"bbsdemonpercs15b1bf10p00": "bb_perc_hit_19.wav",
+"bbsdemonpercs17b1bf10p00": "bb_perc_wood_02.wav",
+"bbsdemonpercs19b1bf10p00": "bb_perc_metal_03.wav",
+"bbsdemonpercs2b1bf10p00": "bb_perc_wood_15.wav",
+"bbsdemonpercs3b1bf10p00": "bb_perc_wood_20.wav",
+"bbsdemonpercs6b1bf10p00": "bb_perc_hit_08.wav",
+"bbsdemonpercs7b1bf10p00": "bb_perc_hit_03.wav",
+"bbsdemonpercs9b1bf10p00": "bb_perc_wood_03.wav",
+"bbsdemonsnare23ecb346p00": "bb_snare_crack_22.wav",
+"bbsdemonsnare28ff503p00": "bb_snare_crack_33.wav",
+"bbsdemonsnare6b1bf10p00": "bb_snare_fat_08.wav",
+"bbsearthquake040811p00": "bb_fx_hit_01.wav",
+"bbsfinesseshaker2b1bf10p00": "bb_shaker_16.wav",
+"bbsfunkkickb1bf10p00": "bb_kick_boom_06.wav",
+"bbsgoldenhihat0ebe9fp00": "bb_hat_dark_07.wav",
+"bbsgroaningwildanimalb1bf10p00": "bb_fx_hit_06.wav",
+"bbshaker01": "bb_shaker_01.wav",
+"bbshaker02": "bb_shaker_02.wav",
+"bbshaker03": "bb_shaker_03.wav",
+"bbshaker04": "bb_shaker_04.wav",
+"bbshaker05": "bb_shaker_05.wav",
+"bbshaker06": "bb_shaker_06.wav",
+"bbshaker07": "bb_shaker_07.wav",
+"bbshaker08": "bb_shaker_08.wav",
+"bbshaker09": "bb_shaker_09.wav",
+"bbshaker10": "bb_shaker_10.wav",
+"bbshaker11": "bb_shaker_11.wav",
+"bbshaker12": "bb_shaker_12.wav",
+"bbshaker13": "bb_shaker_13.wav",
+"bbshaker14": "bb_shaker_14.wav",
+"bbshaker15": "bb_shaker_15.wav",
+"bbshaker16": "bb_shaker_16.wav",
+"bbshakersp01": "bb_shaker_11.wav",
+"bbshakersp02": "bb_shaker_07.wav",
+"bbshakersp03": "bb_shaker_06.wav",
+"bbshakersp04": "bb_shaker_14.wav",
+"bbshakersp05": "bb_open_hat_short_20.wav",
+"bbshakersp07": "bb_shaker_05.wav",
+"bbshakersp08": "bb_shaker_04.wav",
+"bbshihatknightc848f9p00": "bb_hat_dark_19.wav",
+"bbshihatsonic219f41p00": "bb_hat_crisp_20.wav",
+"bbshihatwhathappened698758p00": "bb_hat_dark_01.wav",
+"bbskickhonestfc4e1fp00": "bb_kick_boom_14.wav",
+"bbskicknevermind8fed2dp00": "bb_kick_boom_15.wav",
+"bbsknockgangkickb1bf10p00": "bb_kick_knock_03.wav",
+"bbslofi1kick8fed2dp00": "bb_kick_boom_08.wav",
+"bbslofiwarmsnareb1bf10p00": "bb_snare_fat_04.wav",
+"bbsnarecrack01": "bb_snare_crack_01.wav",
+"bbsnarecrack02": "bb_snare_crack_02.wav",
+"bbsnarecrack03": "bb_snare_crack_03.wav",
+"bbsnarecrack04": "bb_snare_crack_04.wav",
+"bbsnarecrack05": "bb_snare_crack_05.wav",
+"bbsnarecrack06": "bb_snare_crack_06.wav",
+"bbsnarecrack07": "bb_snare_crack_07.wav",
+"bbsnarecrack08": "bb_snare_crack_08.wav",
+"bbsnarecrack09": "bb_snare_crack_09.wav",
+"bbsnarecrack10": "bb_snare_crack_10.wav",
+"bbsnarecrack11": "bb_snare_crack_11.wav",
+"bbsnarecrack12": "bb_snare_crack_12.wav",
+"bbsnarecrack13": "bb_snare_crack_13.wav",
+"bbsnarecrack14": "bb_snare_crack_14.wav",
+"bbsnarecrack15": "bb_snare_crack_15.wav",
+"bbsnarecrack16": "bb_snare_crack_16.wav",
+"bbsnarecrack17": "bb_snare_crack_17.wav",
+"bbsnarecrack18": "bb_snare_crack_18.wav",
+"bbsnarecrack19": "bb_snare_crack_19.wav",
+"bbsnarecrack20": "bb_snare_crack_20.wav",
+"bbsnarecrack21": "bb_snare_crack_21.wav",
+"bbsnarecrack22": "bb_snare_crack_22.wav",
+"bbsnarecrack23": "bb_snare_crack_23.wav",
+"bbsnarecrack24": "bb_snare_crack_24.wav",
+"bbsnarecrack25": "bb_snare_crack_25.wav",
+"bbsnarecrack26": "bb_snare_crack_26.wav",
+"bbsnarecrack27": "bb_snare_crack_27.wav",
+"bbsnarecrack28": "bb_snare_crack_28.wav",
+"bbsnarecrack29": "bb_snare_crack_29.wav",
+"bbsnarecrack30": "bb_snare_crack_30.wav",
+"bbsnarecrack31": "bb_snare_crack_31.wav",
+"bbsnarecrack32": "bb_snare_crack_32.wav",
+"bbsnarecrack33": "bb_snare_crack_33.wav",
+"bbsnarecrack34": "bb_snare_crack_34.wav",
+"bbsnarecrack35": "bb_snare_crack_35.wav",
+"bbsnarecrack36": "bb_snare_crack_36.wav",
+"bbsnarecrack37": "bb_snare_crack_37.wav",
+"bbsnaredusty01": "bb_snare_dusty_01.wav",
+"bbsnarefat01": "bb_snare_fat_01.wav",
+"bbsnarefat02": "bb_snare_fat_02.wav",
+"bbsnarefat03": "bb_snare_fat_03.wav",
+"bbsnarefat04": "bb_snare_fat_04.wav",
+"bbsnarefat05": "bb_snare_fat_05.wav",
+"bbsnarefat06": "bb_snare_fat_06.wav",
+"bbsnarefat07": "bb_snare_fat_07.wav",
+"bbsnarefat08": "bb_snare_fat_08.wav",
+"bbsnarefat09": "bb_snare_fat_09.wav",
+"bbsnarefat10": "bb_snare_fat_10.wav",
+"bbsnarefat11": "bb_snare_fat_11.wav",
+"bbsnarefat12": "bb_snare_fat_12.wav",
+"bbsnarefat13": "bb_snare_fat_13.wav",
+"bbsnarefat14": "bb_snare_fat_14.wav",
+"bbsnarefat15": "bb_snare_fat_15.wav",
+"bbsnarefat16": "bb_snare_fat_16.wav",
+"bbsnarefat17": "bb_snare_fat_17.wav",
+"bbsnarefat18": "bb_snare_fat_18.wav",
+"bbsnarefat19": "bb_snare_fat_19.wav",
+"bbsnarefat20": "bb_snare_fat_20.wav",
+"bbsnarefat21": "bb_snare_fat_21.wav",
+"bbsnarefat22": "bb_snare_fat_22.wav",
+"bbsnarefat23": "bb_snare_fat_23.wav",
+"bbsnarefat24": "bb_snare_fat_24.wav",
+"bbsnareroom01": "bb_snare_room_01.wav",
+"bbsnareroom02": "bb_snare_room_02.wav",
+"bbsnareroom03": "bb_snare_room_03.wav",
+"bbsnareroom04": "bb_snare_room_04.wav",
+"bbsnareroom05": "bb_snare_room_05.wav",
+"bbsnareroom06": "bb_snare_room_06.wav",
+"bbsnareroom07": "bb_snare_room_07.wav",
+"bbsnareroom08": "bb_snare_room_08.wav",
+"bbsnareroom09": "bb_snare_room_09.wav",
+"bbsnareroom10": "bb_snare_room_10.wav",
+"bbsnareroom11": "bb_snare_room_11.wav",
+"bbsnareroom12": "bb_snare_room_12.wav",
+"bbsnareroom13": "bb_snare_room_13.wav",
+"bbsnareroom14": "bb_snare_room_14.wav",
+"bbsnareroom15": "bb_snare_room_15.wav",
+"bbsnewestleafsnare342846p00": "bb_snare_fat_02.wav",
+"bbsog808rim2b1bf10p00": "bb_rim_02.wav",
+"bbsogclap11b1bf10p00": "bb_clap_tight_32.wav",
+"bbsogclap12b1bf10p00": "bb_clap_tight_15.wav",
+"bbsogclap3ecb346p00": "bb_clap_tight_28.wav",
+"bbsogclap5b1bf10p00": "bb_clap_tight_31.wav",
+"bbsogclap7b1bf10p00": "bb_clap_tight_25.wav",
+"bbsogclap8b1bf10p00": "bb_clap_tight_33.wav",
+"bbsogdemonsfavorite80835edbd7p00": "bb_808_f1_long_01.wav",
+"bbsogdemonsfavorite8083b37b45p00": "bb_808_ds1_long_01.wav",
+"bbsogdistressed909toms012040811p00": "bb_tom_low_03.wav",
+"bbsogdistressed909toms102040811p00": "bb_tom_low_01.wav",
+"bbsogdistressed909toms112040811p00": "bb_tom_low_02.wav",
+"bbsogdopeboyv1e84ef9p00": "bb_808_g1_short_05.wav",
+"bbsogdopeboyv3b37b45p00": "bb_808_d1_short_03.wav",
+"bbsogharddddb1bf10p00": "bb_fx_atmos_05.wav",
+"bbsogkick1b1bf10p00": "bb_kick_thump_01.wav",
+"bbsogohh2040811p00": "bb_open_hat_long_12.wav",
+"bbsogohh4574ffap00": "bb_open_hat_long_20.wav",
+"bbsogohh4e841dfp00": "bb_open_hat_long_18.wav",
+"bbsogohh5040811p00": "bb_open_hat_long_17.wav",
+"bbsogohh6040811p00": "bb_open_hat_long_09.wav",
+"bbsogohh6574ffap00": "bb_open_hat_long_08.wav",
+"bbsogohh7040811p00": "bb_open_hat_short_18.wav",
+"bbsogohh7e841dfp00": "bb_open_hat_short_13.wav",
+"bbsogrealcymbal3de3eap00": "bb_cymbal_crash_05.wav",
+"bbsogsnare1141818dp00": "bb_snare_fat_23.wav",
+"bbsogsnare1211753cp00": "bb_snare_crack_29.wav",
+"bbsogsnare132fbfb6p00": "bb_snare_crack_27.wav",
+"bbsogsnare14current41818dp00": "bb_snare_fat_15.wav",
+"bbsogsnare14master8ff503p00": "bb_snare_crack_14.wav",
+"bbsogsnare152fbfb6p00": "bb_snare_crack_20.wav",
+"bbsogsnare5ecb346p00": "bb_snare_crack_10.wav",
+"bbsogsnare611753cp00": "bb_snare_crack_11.wav",
+"bbsogsnare8b1bf10p00": "bb_snare_crack_07.wav",
+"bbsogspshak052b1bf10p00": "bb_shaker_12.wav",
+"bbsogsrfx2b1bf10p00": "bb_fx_hit_05.wav",
+"bbsogsrfx2dirtyb1bf10p00": "bb_fx_hit_04.wav",
+"bbsogsrfx4b1bf10p00": "bb_fx_hit_03.wav",
+"bbsogweirdtriangleb1bf10p00": "bb_triangle_01.wav",
+"bbsopenhatbetweenus040811p00": "bb_open_hat_short_04.wav",
+"bbsopenhatlastcall040811p00": "bb_open_hat_short_02.wav",
+"bbsopenhatshawty040811p00": "bb_open_hat_short_14.wav",
+"bbsoysterlayerb1bf10p00": "bb_perc_metal_01.wav",
+"bbspercussionblocked040811p00": "bb_perc_wood_01.wav",
+"bbspercussionclaveb1bf10p00": "bb_clave_01.wav",
+"bbspercussionlight040811p00": "bb_perc_hit_21.wav",
+"bbspercussiontom1040811p00": "bb_tom_low_06.wav",
+"bbspercussiontom1b1bf10p00": "bb_tom_low_06.wav",
+"bbspouncesnare1c3f15p00": "bb_snare_fat_06.wav",
+"bbsprismhihat219f41p00": "bb_hat_dark_22.wav",
+"bbsquickknocksnare1c3f15p00": "bb_snare_fat_21.wav",
+"bbsreasonanalogkickb1bf10p00": "bb_kick_punch_04.wav",
+"bbsriftclapsnare8ff503p00": "bb_clap_tight_07.wav",
+"bbsriftclapsnareb1bf10p00": "bb_clap_tight_03.wav",
+"bbsrimbangerb1bf10p00": "bb_rim_17.wav",
+"bbsrimmachineb1bf10p00": "bb_rim_01.wav",
+"bbsrimpayb1bf10p00": "bb_rim_21.wav",
+"bbsrimriddleb1bf10p00": "bb_rim_29.wav",
+"bbsrimspecialb1bf10p00": "bb_rim_16.wav",
+"bbsrimwholeb1bf10p00": "bb_rim_05.wav",
+"bbsshoutsnareb1bf10p00": "bb_snare_room_12.wav",
+"bbssmalltambourinedoublehit2b1bf10p00": "bb_tamb_01.wav",
+"bbssoftmetalclapb1bf10p00": "bb_clap_wide_08.wav",
+"bbssuperpowerkickfc4e1fp00": "bb_kick_boom_04.wav",
+"bbstambchachingb1bf10p00": "bb_tamb_04.wav",
+"bbstambminirollb1bf10p00": "bb_tamb_03.wav",
+"bbsthroneopenhihat040811p00": "bb_open_hat_long_06.wav",
+"bbstrippyride3de3eap00": "bb_cymbal_ride_03.wav",
+"bbstubekickb1bf10p00": "bb_kick_boom_03.wav",
+"bbtamb01": "bb_tamb_01.wav",
+"bbtamb02": "bb_tamb_02.wav",
+"bbtamb03": "bb_tamb_03.wav",
+"bbtamb04": "bb_tamb_04.wav",
+"bbtamb05": "bb_tamb_05.wav",
+"bbtomhigh01": "bb_tom_high_01.wav",
+"bbtomhigh02": "bb_tom_high_02.wav",
+"bbtomhigh03": "bb_tom_high_03.wav",
+"bbtomhigh04": "bb_tom_high_04.wav",
+"bbtomhigh05": "bb_tom_high_05.wav",
+"bbtomhigh06": "bb_tom_high_06.wav",
+"bbtomhigh07": "bb_tom_high_07.wav",
+"bbtomhigh08": "bb_tom_high_08.wav",
+"bbtomhigh09": "bb_tom_high_09.wav",
+"bbtomhigh10": "bb_tom_high_10.wav",
+"bbtomhigh11": "bb_tom_high_11.wav",
+"bbtomlow01": "bb_tom_low_01.wav",
+"bbtomlow02": "bb_tom_low_02.wav",
+"bbtomlow03": "bb_tom_low_03.wav",
+"bbtomlow04": "bb_tom_low_04.wav",
+"bbtomlow05": "bb_tom_low_05.wav",
+"bbtomlow06": "bb_tom_low_06.wav",
+"bbtomlow07": "bb_tom_low_07.wav",
+"bbtomlow08": "bb_tom_low_08.wav",
+"bbtomlow09": "bb_tom_low_09.wav",
+"bbtomlow10": "bb_tom_low_10.wav",
+"bbtomlow11": "bb_tom_low_11.wav",
+"bbtomlow12": "bb_tom_low_12.wav",
+"bbtomlow13": "bb_tom_low_13.wav",
+"bbtomlow14": "bb_tom_low_14.wav",
+"bbtomlow15": "bb_tom_low_15.wav",
+"bbtomlow16": "bb_tom_low_16.wav",
+"bbtomlow17": "bb_tom_low_17.wav",
+"bbtomlow18": "bb_tom_low_18.wav",
+"bbtomlow19": "bb_tom_low_19.wav",
+"bbtomlow20": "bb_tom_low_20.wav",
+"bbtrapsoulp01": "bb_snare_crack_04.wav",
+"bbtrapsoulp02": "bb_clap_wide_14.wav",
+"bbtrapsoulp03": "bb_rim_24.wav",
+"bbtrapsoulp04": "bb_hat_crisp_14.wav",
+"bbtrapsoulp05": "bb_open_hat_short_12.wav",
+"bbtrapsoulp07": "bb_perc_wood_24.wav",
+"bbtrapsoulp08": "bb_perc_hit_17.wav",
+"bbtriangle01": "bb_triangle_01.wav",
+"bbvtgalchemykick0bfdcdp00": "bb_kick_thump_09.wav",
+"bbvtgalchemysnare0bfdcdp01": "bb_snare_crack_32.wav",
+"bbvtgarribasnare0bfdcdp01": "bb_snare_crack_13.wav",
+"bbvtgbeadskick0bfdcdp00": "bb_beads_01.wav",
+"bbvtgbellrimshot0bfdcdp03": "bb_rim_18.wav",
+"bbvtgbritishsnare0bfdcdp01": "bb_snare_room_02.wav",
+"bbvtgbritishsnare20bfdcdp01": "bb_snare_crack_16.wav",
+"bbvtgcahonessnare37c3fdcp01": "bb_snare_crack_35.wav",
+"bbvtgcheatcodekick0bfdcdp00": "bb_kick_boom_22.wav",
+"bbvtgclickedhihat0bfdcdp04": "bb_hat_dark_14.wav",
+"bbvtgclickedopenhihat0bfdcdp05": "bb_open_hat_long_05.wav",
+"bbvtgclickedrevhihat0bfdcdp08": "bb_fx_reverse_05.wav",
+"bbvtgclickedrevhihat68627ep08": "bb_fx_reverse_02.wav",
+"bbvtgcompressedride43a62ap11": "bb_cymbal_ride_08.wav",
+"bbvtgcompressedridea7b03dp11": "bb_cymbal_ride_06.wav",
+"bbvtgdepthsnare0bfdcdp01": "bb_snare_room_05.wav",
+"bbvtgdepthsnare4dc1e3p01": "bb_snare_room_04.wav",
+"bbvtgdepthsnareaf56cap01": "bb_snare_room_03.wav",
+"bbvtgengulfedclap0bfdcdp02": "bb_clap_wide_10.wav",
+"bbvtgfinesseshaker2a7b203p07": "bb_shaker_15.wav",
+"bbvtgfinesseshakera7b203p07": "bb_shaker_09.wav",
+"bbvtgfinesseshakerff9d59p07": "bb_shaker_08.wav",
+"bbvtgfisttofacekick0bfdcdp00": "bb_kick_boom_16.wav",
+"bbvtgforshitsandgigglessnare0bfdcdp03": "bb_snare_crack_08.wav",
+"bbvtgforshitsandgigglessnareaf56cap03": "bb_snare_crack_02.wav",
+"bbvtgfunsnarewverb0bfdcdp01": "bb_snare_fat_20.wav",
+"bbvtggoldenhihat0bfdcdp04": "bb_hat_dark_11.wav",
+"bbvtgheavyweightkick0c6096p00": "bb_kick_thump_06.wav",
+"bbvtgheavyweightkickc57dcap00": "bb_kick_thump_04.wav",
+"bbvtghushclap0bfdcdp02": "bb_clap_room_01.wav",
+"bbvtgidksnare40bfdcdp01": "bb_snare_crack_18.wav",
+"bbvtglowpitchhihat819ba1p04": "bb_hat_dusty_02.wav",
+"bbvtglowpitchhihatc7503cp04": "bb_hat_dusty_01.wav",
+"bbvtgmegakick20bfdcdp00": "bb_kick_punch_08.wav",
+"bbvtgpiercesnare0bfdcdp03": "bb_snare_crack_34.wav",
+"bbvtgpopkick0bfdcdp00": "bb_kick_boom_01.wav",
+"bbvtgpopopenhihat0bfdcdp05": "bb_open_hat_long_04.wav",
+"bbvtgpoprevhihat0bfdcdp07": "bb_fx_reverse_03.wav",
+"bbvtgpoprevhihat0bfdcdp08": "bb_fx_reverse_03.wav",
+"bbvtgprimarysnarewverb0bfdcdp01": "bb_snare_crack_12.wav",
+"bbvtgprismhihat819ba1p04": "bb_hat_dark_26.wav",
+"bbvtgquietpowerkick0bfdcdp00": "bb_kick_punch_03.wav",
+"bbvtgshapedkick0bfdcdp00": "bb_kick_knock_23.wav",
+"bbvtgshapedkickb0bfdcdp00": "bb_kick_knock_22.wav",
+"bbvtgshiftedhihat819ba1p04": "bb_hat_crisp_09.wav",
+"bbvtgsmitherhihat20bfdcdp04": "bb_hat_dark_06.wav",
+"bbvtgsmitheropenhihat9b737cp05": "bb_open_hat_long_01.wav",
+"bbvtgsmitheropenhihatb27828p05": "bb_open_hat_long_02.wav",
+"bbvtgsoftmetalclap1939b8p02": "bb_clap_wide_09.wav",
+"bbvtgsorcererclap0bfdcdp02": "bb_clap_wide_06.wav",
+"bbvtgsorcererclap3b27828p02": "bb_clap_wide_04.wav",
+"bbvtgsorcererclapaf56cap02": "bb_clap_wide_05.wav",
+"bbvtgspiriclapsnare0bfdcdp02": "bb_clap_wide_02.wav",
+"bbvtgthronehihat0bfdcdp04": "bb_hat_dark_15.wav",
+"bbvtgthroneopenhihat0bfdcdp05": "bb_open_hat_long_06.wav",
+"bbvtgtimelesskick0bfdcdp00": "bb_kick_knock_02.wav",
+"bbvtgtrapclapsnare0bfdcdp02": "bb_clap_wide_03.wav",
+"bbvtgtrapknocksnare0bfdcdp01": "bb_snare_fat_03.wav",
+"bbvtgtrapknocksnare20bfdcdp01": "bb_snare_fat_12.wav",
+"bbvtgtrippedhihat0bfdcdp04": "bb_hat_dark_21.wav",
+"bbvtgtrippedopenhihat0bfdcdp05": "bb_open_hat_long_10.wav",
+"bbvtgtrippedrevhihat0bfdcdp08": "bb_fx_reverse_06.wav",
+"bbvtgtrippyride090c57p11": "bb_cymbal_ride_01.wav",
+"bbvtgtrippyride43a62ap11": "bb_cymbal_ride_04.wav",
+"bbvtgwavessnare0bfdcdp01": "bb_snare_crack_30.wav",
+"bbvtgwayymorethumpierkick0bfdcdp00": "bb_kick_knock_26.wav",
+"bbvtgwholeclubthumpkick0bfdcdp00": "bb_kick_boom_07.wav",
+"bbwest90sp06": "bb_808_a1_01.wav",
+"bbworldlatinp01": "bb_snare_room_07.wav",
+"bbworldlatinp02": "bb_clap_tight_04.wav",
+"bbworldlatinp03": "bb_rim_13.wav",
+"bbworldlatinp04": "bb_hat_crisp_31.wav",
+"bbworldlatinp05": "bb_open_hat_short_05.wav",
+"bbworldlatinp07": "bb_perc_wood_18.wav",
+"bbworldlatinp08": "bb_perc_wood_06.wav",
+"bkclap01": "bk_clap_01.wav",
+"bkclap02": "bk_clap_02.wav",
+"bkclap03": "bk_clap_03.wav",
+"bkclap04": "bk_clap_04.wav",
+"bkclap05": "bk_clap_05.wav",
+"bkclap06": "bk_clap_06.wav",
+"bkclap07": "bk_clap_07.wav",
+"bkcrash01": "bk_crash_01.wav",
+"bkcrash02": "bk_crash_02.wav",
+"bkcrash03": "bk_crash_03.wav",
+"bkcrash04": "bk_crash_04.wav",
+"bkcrash05": "bk_crash_05.wav",
+"bkcrash06": "bk_crash_06.wav",
+"bkcrash07": "bk_crash_07.wav",
+"bkcrash08": "bk_crash_08.wav",
+"bkcrash09": "bk_crash_09.wav",
+"bkcrash10": "bk_crash_10.wav",
+"bkcrash11": "bk_crash_11.wav",
+"bkcrash12": "bk_crash_12.wav",
+"bkcrash13": "bk_crash_13.wav",
+"bkcrash14": "bk_crash_14.wav",
+"bkcrash15": "bk_crash_15.wav",
+"bkcrash16": "bk_crash_16.wav",
+"bkcrash17": "bk_crash_17.wav",
+"bkcrash18": "bk_crash_18.wav",
+"bkcrash19": "bk_crash_19.wav",
+"bkcrash20": "bk_crash_20.wav",
+"bkcymbal01": "bk_cymbal_01.wav",
+"bkcymbal02": "bk_cymbal_02.wav",
+"bkcymbal03": "bk_cymbal_03.wav",
+"bkcymbal04": "bk_cymbal_04.wav",
+"bkhihat01": "bk_hihat_01.wav",
+"bkhihat02": "bk_hihat_02.wav",
+"bkhihat03": "bk_hihat_03.wav",
+"bkhihat04": "bk_hihat_04.wav",
+"bkhihat05": "bk_hihat_05.wav",
+"bkhihat06": "bk_hihat_06.wav",
+"bkhihat07": "bk_hihat_07.wav",
+"bkhihat08": "bk_hihat_08.wav",
+"bkhihat09": "bk_hihat_09.wav",
+"bkhihat10": "bk_hihat_10.wav",
+"bkhihat11": "bk_hihat_11.wav",
+"bkhihat12": "bk_hihat_12.wav",
+"bkhihat13": "bk_hihat_13.wav",
+"bkhihat14": "bk_hihat_14.wav",
+"bkhihat15": "bk_hihat_15.wav",
+"bkhihat16": "bk_hihat_16.wav",
+"bkhihat17": "bk_hihat_17.wav",
+"bkhihat18": "bk_hihat_18.wav",
+"bkhihat19": "bk_hihat_19.wav",
+"bkhihat20": "bk_hihat_20.wav",
+"bkhihat21": "bk_hihat_21.wav",
+"bkhihat22": "bk_hihat_22.wav",
+"bkhihat23": "bk_hihat_23.wav",
+"bkhihat24": "bk_hihat_24.wav",
+"bkhihat25": "bk_hihat_25.wav",
+"bkhihat26": "bk_hihat_26.wav",
+"bkkick01": "bk_kick_01.wav",
+"bkkick02": "bk_kick_02.wav",
+"bkkick03": "bk_kick_03.wav",
+"bkkick04": "bk_kick_04.wav",
+"bkkick05": "bk_kick_05.wav",
+"bkkick06": "bk_kick_06.wav",
+"bkkick07": "bk_kick_07.wav",
+"bkopenhat01": "bk_openhat_01.wav",
+"bkopenhat02": "bk_openhat_02.wav",
+"bkopenhat03": "bk_openhat_03.wav",
+"bkopenhat04": "bk_openhat_04.wav",
+"bkopenhat05": "bk_openhat_05.wav",
+"bkopenhat06": "bk_openhat_06.wav",
+"bkopenhat07": "bk_openhat_07.wav",
+"bkopenhat08": "bk_openhat_08.wav",
+"bkopenhat09": "bk_openhat_09.wav",
+"bkopenhat10": "bk_openhat_10.wav",
+"bkopenhat11": "bk_openhat_11.wav",
+"bkopenhat12": "bk_openhat_12.wav",
+"bkopenhat13": "bk_openhat_13.wav",
+"bkopenhat14": "bk_openhat_14.wav",
+"bkopenhat15": "bk_openhat_15.wav",
+"bkopenhat16": "bk_openhat_16.wav",
+"bkopenhat17": "bk_openhat_17.wav",
+"bkopenhat18": "bk_openhat_18.wav",
+"bkopenhat19": "bk_openhat_19.wav",
+"bkopenhat20": "bk_openhat_20.wav",
+"bkopenhat21": "bk_openhat_21.wav",
+"bkopenhat22": "bk_openhat_22.wav",
+"bkopenhat23": "bk_openhat_23.wav",
+"bkopenhat24": "bk_openhat_24.wav",
+"bkopenhat25": "bk_openhat_25.wav",
+"bkperc01": "bk_perc_01.wav",
+"bkperc02": "bk_perc_02.wav",
+"bkperc03": "bk_perc_03.wav",
+"bkperc04": "bk_perc_04.wav",
+"bkperc05": "bk_perc_05.wav",
+"bkperc06": "bk_perc_06.wav",
+"bkrim01": "bk_rim_01.wav",
+"bkrim02": "bk_rim_02.wav",
+"bkrim03": "bk_rim_03.wav",
+"bkrim04": "bk_rim_04.wav",
+"bkrim05": "bk_rim_05.wav",
+"bkrim06": "bk_rim_06.wav",
+"bkrim07": "bk_rim_07.wav",
+"bkrim08": "bk_rim_08.wav",
+"bkrim09": "bk_rim_09.wav",
+"bkrim10": "bk_rim_10.wav",
+"bkrim11": "bk_rim_11.wav",
+"bkrim12": "bk_rim_12.wav",
+"bkrim13": "bk_rim_13.wav",
+"bkrim14": "bk_rim_14.wav",
+"bkrim15": "bk_rim_15.wav",
+"bkrim16": "bk_rim_16.wav",
+"bkrim17": "bk_rim_17.wav",
+"bksnare01": "bk_snare_01.wav",
+"bksnare02": "bk_snare_02.wav",
+"bksnare03": "bk_snare_03.wav",
+"bksnare04": "bk_snare_04.wav",
+"bksnare05": "bk_snare_05.wav",
+"bksnare06": "bk_snare_06.wav",
+"bksnare07": "bk_snare_07.wav",
+"bksnare08": "bk_snare_08.wav",
+"bksnare09": "bk_snare_09.wav",
+"bksnare10": "bk_snare_10.wav",
+"bksnare11": "bk_snare_11.wav",
+"bksnare12": "bk_snare_12.wav",
+"bksnare13": "bk_snare_13.wav",
+"bksnare14": "bk_snare_14.wav",
+"bksnare15": "bk_snare_15.wav",
+"bksnare16": "bk_snare_16.wav",
+"bksnare17": "bk_snare_17.wav",
+"bksnare18": "bk_snare_18.wav",
+"bksnare19": "bk_snare_19.wav",
+"bksnare20": "bk_snare_20.wav",
+"bksnare21": "bk_snare_21.wav",
+"bksnare22": "bk_snare_22.wav",
+"bksnare23": "bk_snare_23.wav",
+"bksnare24": "bk_snare_24.wav",
+"bksnare25": "bk_snare_25.wav",
+"bksnare26": "bk_snare_26.wav",
+"bksnare27": "bk_snare_27.wav",
+"bktom01": "bk_tom_01.wav",
+"vachoke18l5r1": "va_choke18_l5_r1.wav",
+"vacrash14l5r1": "va_crash14_l5_r1.wav",
+"vacrash18l5r1": "va_crash18_l5_r1.wav",
+"vacrashbell14l3r1": "va_crashbell14_l3_r1.wav",
+"vacrashbell18l3r1": "va_crashbell18_l3_r1.wav",
+"vadragl3r1": "va_drag_l3_r1.wav",
+"vaflameql3r1": "va_flameq_l3_r1.wav",
+"vaflaml3r1": "va_flam_l3_r1.wav",
+"vahatbelll3r1": "va_hatbell_l3_r1.wav",
+"vahatcldl5r1": "va_hatcld_l5_r1.wav",
+"vahatcrashl3r1": "va_hatcrash_l3_r1.wav",
+"vahatl5r1": "va_hat_l5_r1.wav",
+"vahatpedal2l3r1": "va_hatpedal2_l3_r1.wav",
+"vahatpedall3r1": "va_hatpedal_l3_r1.wav",
+"vahatshakel5r1": "va_hatshake_l5_r1.wav",
+"vakick16l5r1": "va_kick16_l5_r1.wav",
+"vakickeql5r1": "va_kickeq_l5_r1.wav",
+"vaopenhat2l5r1": "va_openhat2_l5_r1.wav",
+"vaopenhatl5r1": "va_openhat_l5_r1.wav",
+"varidebelll5r1": "va_ridebell_l5_r1.wav",
+"varidel5r1": "va_ride_l5_r1.wav",
+"variff1l1r1": "va_riff1_l1_r1.wav",
+"variff2l1r1": "va_riff2_l1_r1.wav",
+"variff3l1r1": "va_riff3_l1_r1.wav",
+"varimshoteql5r1": "va_rimshoteq_l5_r1.wav",
+"varimshotl5r1": "va_rimshot_l5_r1.wav",
+"varoll1l1r1": "va_roll1_l1_r1.wav",
+"varoll2l1r1": "va_roll2_l1_r1.wav",
+"varoll3l1r1": "va_roll3_l1_r1.wav",
+"vasnareeql5r1": "va_snareeq_l5_r1.wav",
+"vasnarel5r1": "va_snare_l5_r1.wav",
+"vasnareoffl5r1": "va_snareoff_l5_r1.wav",
+"vasplashchokel3r1": "va_splashchoke_l3_r1.wav",
+"vasplashl5r1": "va_splash_l5_r1.wav",
+"vasstickeql5r1": "va_sstickeq_l5_r1.wav",
+"vasstickl5r1": "va_sstick_l5_r1.wav",
+"vatom10l5r1": "va_tom10_l5_r1.wav",
+"vatom12l5r1": "va_tom12_l5_r1.wav",
+"vatom13l5r1": "va_tom13_l5_r1.wav",
+"vatomflam10l3r1": "va_tomflam10_l3_r1.wav",
+"vatomflam12l3r1": "va_tomflam12_l3_r1.wav",
+"vatomflam13l3r1": "va_tomflam13_l3_r1.wav"
+},
+"sources": {
+"808neptune": "bb_808_d1_01.wav",
+"alchemykick": "bb_kick_thump_09.wav",
+"alchemysnare": "bb_snare_crack_32.wav",
+"arribasnare": "bb_snare_crack_13.wav",
+"beadshit": "bb_beads_02.wav",
+"beadskick": "bb_beads_01.wav",
+"bellrimshot": "bb_rim_18.wav",
+"britishsnare2": "bb_snare_crack_16.wav",
+"cahonessnare3": "bb_snare_crack_35.wav",
+"cheatcodekick": "bb_kick_boom_22.wav",
+"clapgoto": "bb_clap_room_03.wav",
+"clapkenzo": "bb_clap_tight_18.wav",
+"claprival": "bb_clap_tight_08.wav",
+"claptank": "bb_clap_room_02.wav",
+"clickedopenhihat": "bb_open_hat_long_05.wav",
+"clicketyengine": "bb_fx_hit_07.wav",
+"crashmarching": "bb_cymbal_crash_01.wav",
+"crashplanes": "bb_cymbal_crash_06.wav",
+"crashyoto": "bb_cymbal_crash_04.wav",
+"cymbalclassics": "bb_cymbal_crash_02.wav",
+"cymbalnews": "bb_cymbal_short_05.wav",
+"cymbalorganic": "bb_cymbal_crash_07.wav",
+"cymbalstream": "bb_cymbal_short_02.wav",
+"dramaticclapsnare": "bb_clap_tight_01.wav",
+"engulfedclap": "bb_clap_wide_10.wav",
+"fisttofacekick": "bb_kick_boom_16.wav",
+"funsnarewverb": "bb_snare_fat_20.wav",
+"groaningwildanimal1": "bb_fx_hit_06.wav",
+"hihatbased": "bb_hat_crisp_35.wav",
+"hihatmirage": "bb_hat_crisp_25.wav",
+"hihatradiant": "bb_hat_crisp_19.wav",
+"hihatvelvet": "bb_hat_crisp_12.wav",
+"hushclap": "bb_clap_room_01.wav",
+"idksnare4": "bb_snare_crack_18.wav",
+"issabounceclapsnare": "bb_clap_wide_07.wav",
+"kickbooked": "bb_kick_thump_10.wav",
+"kickbrick": "bb_kick_knock_08.wav",
+"kickclipped": "bb_kick_knock_21.wav",
+"kickface": "bb_kick_knock_20.wav",
+"kicknether": "bb_tom_low_05.wav",
+"kickprime": "bb_kick_thump_02.wav",
+"lofiwarmsnare1": "bb_snare_fat_04.wav",
+"megakick2": "bb_kick_punch_08.wav",
+"openhatbody": "bb_open_hat_long_19.wav",
+"openhatbounce": "bb_open_hat_long_07.wav",
+"openhatdistort": "bb_open_hat_long_26.wav",
+"openhatgroove": "bb_open_hat_long_15.wav",
+"openhatkunai": "bb_open_hat_short_08.wav",
+"openhatlastcall": "bb_open_hat_short_02.wav",
+"openhatshawty": "bb_open_hat_short_14.wav",
+"openhatwhitenoise": "bb_open_hat_long_25.wav",
+"oysterlayer": "bb_perc_metal_01.wav",
+"percussionactually": "bb_perc_wood_22.wav",
+"percussionblocked": "bb_perc_wood_01.wav",
+"percussionclave": "bb_clave_01.wav",
+"percussiondial": "bb_perc_hit_12.wav",
+"percussionlight": "bb_perc_hit_21.wav",
+"percussionpaint1a": "bb_fx_hit_02.wav",
+"percussiontom1": "bb_tom_low_06.wav",
+"piercesnare": "bb_snare_crack_34.wav",
+"popkick": "bb_kick_boom_01.wav",
+"popopenhihat": "bb_open_hat_long_04.wav",
+"poprevhihat": "bb_fx_reverse_03.wav",
+"primarysnarewverb": "bb_snare_crack_12.wav",
+"quietpowerkick": "bb_kick_punch_03.wav",
+"reasonanalogkick1": "bb_kick_punch_04.wav",
+"reversekickmadness1": "bb_fx_reverse_01.wav",
+"rimbanger": "bb_rim_17.wav",
+"rimcasper": "bb_rim_15.wav",
+"rimdeals": "bb_perc_hit_04.wav",
+"rimflint": "bb_rim_22.wav",
+"rimhunger": "bb_rim_06.wav",
+"rimmetals": "bb_rim_19.wav",
+"rimninja": "bb_rim_10.wav",
+"rimpressing": "bb_rim_09.wav",
+"rimrooms": "bb_perc_wood_14.wav",
+"rimspecial": "bb_rim_16.wav",
+"rimtech": "bb_rim_07.wav",
+"shapedkick": "bb_kick_knock_23.wav",
+"smalltambourinedoublehit21": "bb_tamb_01.wav",
+"snapaction": "bb_perc_hit_09.wav",
+"snapcraft": "bb_rim_20.wav",
+"snapelevate": "bb_rim_24.wav",
+"snapencore": "bb_perc_hit_01.wav",
+"snapgalactic": "bb_rim_28.wav",
+"snaphellsing": "bb_perc_hit_10.wav",
+"snapultimate": "bb_perc_hit_07.wav",
+"snarecooked": "bb_snare_crack_23.wav",
+"snareflint": "bb_snare_crack_31.wav",
+"snarefresh": "bb_snare_dusty_01.wav",
+"snarek9": "bb_snare_room_13.wav",
+"snarerage": "bb_snare_room_10.wav",
+"sorcererclap3": "bb_clap_wide_04.wav",
+"tambchaching1": "bb_tamb_04.wav",
+"tambourinedoublehit": "bb_tamb_02.wav",
+"texturebirdambience": "bb_fx_atmos_04.wav",
+"texturecoldwinter": "bb_fx_atmos_03.wav",
+"thronehihat": "bb_hat_dark_15.wav",
+"throneopenhihat": "bb_open_hat_long_06.wav",
+"timelesskick": "bb_kick_knock_02.wav",
+"trapclapsnare": "bb_clap_wide_03.wav",
+"trapknocksnare": "bb_snare_fat_03.wav",
+"trapknocksnare2": "bb_snare_fat_12.wav",
+"triangleriserghosts": "bb_fx_reverse_04.wav",
+"trippedhihat": "bb_hat_dark_21.wav",
+"trippedopenhihat": "bb_open_hat_long_10.wav",
+"trippedrevhihat": "bb_fx_reverse_06.wav",
+"tubekick": "bb_kick_boom_03.wav",
+"wavessnare": "bb_snare_crack_30.wav",
+"wayymorethumpierkick": "bb_kick_knock_26.wav",
+"wholeclubthumpkick": "bb_kick_boom_07.wav",
+"whoopishlayer": "bb_perc_hit_20.wav"
+},
+"families": {
+"14current": {
+"SNARE": "BK NO 42"
+},
+"14master": {
+"SNARE": "BK NO 43"
+},
+"action": {
+"SNAP": "BK NO 1"
+},
+"actually": {
+"PERC": "BK NO 7"
+},
+"agency": {
+"SNARE": "BK NO 28"
+},
+"alchemy": {
+"KICK": "BK NO 21",
+"SNARE": "BK NO 44"
+},
+"alone": {
+"CLAP": "BK NO 20"
+},
+"anigma": {
+"KICK": "BK NO 8",
+"OPEN HAT": "BK NO 26"
+},
+"anti": {
+"OPEN HAT": "BK NO 42"
+},
+"architecture": {
+"OPEN HAT": "BK NO 27"
+},
+"arriba": {
+"SNARE": "BK NO 45"
+},
+"asteroids": {
+"CLAP": "BK NO 8"
+},
+"astronomy": {
+"KICK": "BK NO 9"
+},
+"backyard": {
+"CYMBAL": "BK NO 5"
+},
+"banger": {
+"RIM": "BK NO 33"
+},
+"based": {
+"HIHAT": "BK NO 27"
+},
+"beads": {
+"KICK": "BK NO 22"
+},
+"beadshit": {
+"PERC": "BK NO 8"
+},
+"bell": {
+"RIMSHOT": "BK NO 1"
+},
+"betweenus": {
+"OPEN HAT": "BK NO 43"
+},
+"birdambience": {
+"TEXTURE": "BK NO 1"
+},
+"blocked": {
+"PERC": "BK NO 9"
+},
+"bluelock": {
+"HIHAT": "BK NO 28"
+},
+"body": {
+"OPEN HAT": "BK NO 28"
+},
+"bones": {
+"HIHAT": "BK NO 29"
+},
+"booked": {
+"KICK": "BK NO 23"
+},
+"bounce": {
+"OPEN HAT": "BK NO 29"
+},
+"brick": {
+"KICK": "BK NO 10"
+},
+"british": {
+"SNARE": "BK NO 46"
+},
+"british2": {
+"SNARE": "BK NO 47"
+},
+"britishsnare": {
+"SNARE": "BK NO 46"
+},
+"cahones3": {
+"SNARE": "BK NO 48"
+},
+"callme": {
+"KICK": "BK NO 24"
+},
+"cascade": {
+"HIHAT": "BK NO 30"
+},
+"cases": {
+"HIHAT": "BK NO 45"
+},
+"casper": {
+"RIM": "BK NO 18"
+},
+"chaching": {
+"TAMB": "BK NO 1"
+},
+"charm": {
+"HIHAT": "BK NO 31"
+},
+"cheatcode": {
+"KICK": "BK NO 25"
+},
+"chosen": {
+"808": "BK NO 1"
+},
+"clapalone": {
+"CLAP": "BK NO 20"
+},
+"clapclock": {
+"CLAP": "BK NO 21"
+},
+"clapibiza": {
+"CLAP": "BK NO 29"
+},
+"clapmindful": {
+"CLAP": "BK NO 30"
+},
+"clapmotive": {
+"CLAP": "BK NO 31"
+},
+"classics": {
+"CYMBAL": "BK NO 6"
+},
+"clicked": {
+"HIHAT": "BK NO 46",
+"OPEN HAT": "BK NO 44"
+},
+"clickedhihat": {
+"HIHAT": "BK NO 46"
+},
+"clickedrev": {
+"HIHAT": "BK NO 47"
+},
+"clicketyengine": {
+"PERC": "BK NO 10"
+},
+"clipped": {
+"KICK": "BK NO 11"
+},
+"clock": {
+"CLAP": "BK NO 21"
+},
+"coldwinter": {
+"TEXTURE": "BK NO 2"
+},
+"compressed": {
+"RIDE": "BK NO 1"
+},
+"compressedride": {
+"RIDE": "BK NO 1"
+},
+"control": {
+"HIHAT": "BK NO 32"
+},
+"cooked": {
+"SNARE": "BK NO 49"
+},
+"coolcat1": {
+"SNARE": "BK NO 50"
+},
+"coolcat2": {
+"SNARE": "BK NO 51"
+},
+"coolcatsnare1": {
+"SNARE": "BK NO 50"
+},
+"coolcatsnare2": {
+"SNARE": "BK NO 51"
+},
+"cosmic": {
+"808": "BK NO 2"
+},
+"cracked": {
+"SNARE": "BK NO 29"
+},
+"craft": {
+"SNAP": "BK NO 2"
+},
+"crown": {
+"808": "BK NO 3"
+},
+"cryo": {
+"SNARE": "BK NO 30"
+},
+"danger": {
+"CLAVE": "BK NO 1"
+},
+"danger1": {
+"TOM": "BK NO 5"
+},
+"deals": {
+"RIM": "BK NO 19"
+},
+"demon1": {
+"HIHAT": "BK NO 48",
+"KICK": "BK NO 26",
+"OPEN HAT": "BK NO 45"
+},
+"demon10": {
+"KICK": "BK NO 27",
+"PERC": "BK NO 11"
+},
+"demon11": {
+"PERC": "BK NO 12"
+},
+"demon12": {
+"PERC": "BK NO 13"
+},
+"demon13": {
+"808": "BK NO 18"
+},
+"demon14": {
+"808": "BK NO 19"
+},
+"demon15": {
+"808": "BK NO 20",
+"CLAP": "BK NO 22",
+"PERC": "BK NO 14"
+},
+"demon16": {
+"808": "BK NO 21"
+},
+"demon17": {
+"808": "BK NO 22",
+"CLAP": "BK NO 23",
+"PERC": "BK NO 15"
+},
+"demon19": {
+"CLAP": "BK NO 24",
+"PERC": "BK NO 16"
+},
+"demon2": {
+"808": "BK NO 23",
+"CLAP": "BK NO 25",
+"HIHAT": "BK NO 49",
+"PERC": "BK NO 17",
+"SNARE": "BK NO 52"
+},
+"demon23": {
+"SNARE": "BK NO 53"
+},
+"demon3": {
+"808": "BK NO 24",
+"CLAP": "BK NO 26",
+"HIHAT": "BK NO 50",
+"KICK": "BK NO 28",
+"PERC": "BK NO 18"
+},
+"demon4": {
+"808": "BK NO 25"
+},
+"demon5": {
+"808": "BK NO 26",
+"HIHAT": "BK NO 51",
+"KICK": "BK NO 29"
+},
+"demon6": {
+"808": "BK NO 27",
+"HIHAT": "BK NO 52",
+"OPEN HAT": "BK NO 46",
+"PERC": "BK NO 19",
+"SNARE": "BK NO 54"
+},
+"demon7": {
+"HIHAT": "BK NO 53",
+"KICK": "BK NO 30",
+"OPEN HAT": "BK NO 47",
+"PERC": "BK NO 20"
+},
+"demon8": {
+"KICK": "BK NO 31",
+"OPEN HAT": "BK NO 48"
+},
+"demon80813": {
+"808": "BK NO 18"
+},
+"demon80814": {
+"808": "BK NO 19"
+},
+"demon80815": {
+"808": "BK NO 20"
+},
+"demon80816": {
+"808": "BK NO 21"
+},
+"demon80817": {
+"808": "BK NO 22"
+},
+"demon8082": {
+"808": "BK NO 23"
+},
+"demon8083": {
+"808": "BK NO 24"
+},
+"demon8084": {
+"808": "BK NO 25"
+},
+"demon8085": {
+"808": "BK NO 26"
+},
+"demon8086": {
+"808": "BK NO 27"
+},
+"demon8089": {
+"808": "BK NO 28"
+},
+"demon9": {
+"808": "BK NO 28",
+"PERC": "BK NO 21"
+},
+"demonclap15": {
+"CLAP": "BK NO 22"
+},
+"demonclap17": {
+"CLAP": "BK NO 23"
+},
+"demonclap19": {
+"CLAP": "BK NO 24"
+},
+"demonclap2": {
+"CLAP": "BK NO 25"
+},
+"demonclap3": {
+"CLAP": "BK NO 26"
+},
+"demonhh1": {
+"HIHAT": "BK NO 48"
+},
+"demonhh2": {
+"HIHAT": "BK NO 49"
+},
+"demonhh3": {
+"HIHAT": "BK NO 50"
+},
+"demonhh5": {
+"HIHAT": "BK NO 51"
+},
+"demonhh6": {
+"HIHAT": "BK NO 52"
+},
+"demonhh7": {
+"HIHAT": "BK NO 53"
+},
+"demonkick1": {
+"KICK": "BK NO 26"
+},
+"demonkick10": {
+"KICK": "BK NO 27"
+},
+"demonkick3": {
+"KICK": "BK NO 28"
+},
+"demonkick5": {
+"KICK": "BK NO 29"
+},
+"demonkick7": {
+"KICK": "BK NO 30"
+},
+"demonkick8": {
+"KICK": "BK NO 31"
+},
+"demonohh1": {
+"OPEN HAT": "BK NO 45"
+},
+"demonohh6": {
+"OPEN HAT": "BK NO 46"
+},
+"demonohh7": {
+"OPEN HAT": "BK NO 47"
+},
+"demonohh8": {
+"OPEN HAT": "BK NO 48"
+},
+"demonpercs10": {
+"PERC": "BK NO 11"
+},
+"demonpercs11": {
+"PERC": "BK NO 12"
+},
+"demonpercs12": {
+"PERC": "BK NO 13"
+},
+"demonpercs15": {
+"PERC": "BK NO 14"
+},
+"demonpercs17": {
+"PERC": "BK NO 15"
+},
+"demonpercs19": {
+"PERC": "BK NO 16"
+},
+"demonpercs2": {
+"PERC": "BK NO 17"
+},
+"demonpercs3": {
+"PERC": "BK NO 18"
+},
+"demonpercs6": {
+"PERC": "BK NO 19"
+},
+"demonpercs7": {
+"PERC": "BK NO 20"
+},
+"demonpercs9": {
+"PERC": "BK NO 21"
+},
+"demonsfavorite3": {
+"808": "BK NO 29"
+},
+"demonsnare2": {
+"SNARE": "BK NO 52"
+},
+"demonsnare23": {
+"SNARE": "BK NO 53"
+},
+"demonsnare6": {
+"SNARE": "BK NO 54"
+},
+"depth": {
+"SNARE": "BK NO 55"
+},
+"dial": {
+"PERC": "BK NO 22"
+},
+"distort": {
+"OPEN HAT": "BK NO 30"
+},
+"distressed909012": {
+"TOM": "BK NO 6"
+},
+"distressed909102": {
+"TOM": "BK NO 7"
+},
+"distressed909112": {
+"TOM": "BK NO 8"
+},
+"dopeboy": {
+"808": "BK NO 30"
+},
+"doublehit": {
+"TAMB": "BK NO 2"
+},
+"dramaticclap": {
+"SNARE": "BK NO 56"
+},
+"drifters": {
+"SNARE": "BK NO 31"
+},
+"earthquake": {
+"PERC": "BK NO 23"
+},
+"elevate": {
+"SNAP": "BK NO 3"
+},
+"emotion": {
+"SNARE": "BK NO 57"
+},
+"encore": {
+"SNAP": "BK NO 4"
+},
+"engulfed": {
+"CLAP": "BK NO 27"
+},
+"enigma": {
+"HIHAT": "BK NO 33"
+},
+"entrance": {
+"SNARE": "BK NO 32"
+},
+"essential": {
+"SNAP": "BK NO 5"
+},
+"ex": {
+"OPEN HAT": "BK NO 49"
+},
+"excuses": {
+"OPEN HAT": "BK NO 31"
+},
+"expansion": {
+"KICK": "BK NO 32"
+},
+"expansionkick": {
+"KICK": "BK NO 32"
+},
+"explorer": {
+"HIHAT": "BK NO 34"
+},
+"express": {
+"CYMBAL": "BK NO 7"
+},
+"face": {
+"KICK": "BK NO 33"
+},
+"fantasy": {
+"SNAP": "BK NO 6"
+},
+"finesse": {
+"SHAKER": "BK NO 2"
+},
+"finesse2": {
+"SHAKER": "BK NO 3"
+},
+"finesseshaker": {
+"SHAKER": "BK NO 2"
+},
+"finesseshaker2": {
+"SHAKER": "BK NO 3"
+},
+"fisttoface": {
+"KICK": "BK NO 34"
+},
+"flicker": {
+"HIHAT": "BK NO 35"
+},
+"flights": {
+"RIM": "BK NO 20"
+},
+"flint": {
+"RIM": "BK NO 21",
+"SNARE": "BK NO 33"
+},
+"forshitsandgiggles": {
+"SNARE": "BK NO 58"
+},
+"fresh": {
+"SNARE": "BK NO 59"
+},
+"fuji": {
+"SNAP": "BK NO 7"
+},
+"function": {
+"KICK": "BK NO 12"
+},
+"funk": {
+"KICK": "BK NO 35",
+"SNARE": "BK NO 61"
+},
+"funkkick": {
+"KICK": "BK NO 35"
+},
+"funksnare": {
+"SNARE": "BK NO 61"
+},
+"funwverb": {
+"SNARE": "BK NO 60"
+},
+"galactic": {
+"CLAP": "BK NO 9",
+"SNAP": "BK NO 8"
+},
+"gametime": {
+"KICK": "BK NO 36"
+},
+"gametimekick": {
+"KICK": "BK NO 36"
+},
+"geo": {
+"808": "BK NO 4"
+},
+"ghosts": {
+"TRIANGLE RISER": "BK NO 1"
+},
+"ghoul": {
+"SNARE": "BK NO 34"
+},
+"go2spinz": {
+"808": "BK NO 5"
+},
+"go2zay": {
+"808": "BK NO 6"
+},
+"golden": {
+"HIHAT": "BK NO 54"
+},
+"goldenhihat": {
+"HIHAT": "BK NO 54"
+},
+"goto": {
+"CLAP": "BK NO 10"
+},
+"gravity": {
+"SNARE": "BK NO 35"
+},
+"grip": {
+"SNARE": "BK NO 62"
+},
+"gripsnare": {
+"SNARE": "BK NO 62"
+},
+"groaningwildanimal": {
+"PERC": "BK NO 24"
+},
+"groove": {
+"OPEN HAT": "BK NO 32"
+},
+"grounded": {
+"808": "BK NO 7"
+},
+"gundam": {
+"SNAP": "BK NO 9"
+},
+"halls": {
+"RIM": "BK NO 22"
+},
+"hands": {
+"808": "BK NO 8"
+},
+"hardddd": {
+"PERC": "BK NO 25"
+},
+"healing": {
+"SNAP": "BK NO 10"
+},
+"heavyweight": {
+"KICK": "BK NO 37"
+},
+"heliosphere": {
+"OPEN HAT": "BK NO 33"
+},
+"hellsing": {
+"SNAP": "BK NO 11"
+},
+"hihatcases": {
+"HIHAT": "BK NO 45"
+},
+"hihatintro": {
+"HIHAT": "BK NO 55"
+},
+"hihatknight": {
+"HIHAT": "BK NO 56"
+},
+"hihatlamp": {
+"HIHAT": "BK NO 57"
+},
+"hihatname": {
+"HIHAT": "BK NO 59"
+},
+"hihatrightthrough": {
+"HIHAT": "BK NO 62"
+},
+"hihatsonic": {
+"HIHAT": "BK NO 65"
+},
+"hihatwhathappened": {
+"HIHAT": "BK NO 70"
+},
+"home": {
+"CLAP": "BK NO 11"
+},
+"honest": {
+"KICK": "BK NO 38"
+},
+"hunger": {
+"RIM": "BK NO 23"
+},
+"hush": {
+"CLAP": "BK NO 28"
+},
+"ibiza": {
+"CLAP": "BK NO 29"
+},
+"idk4": {
+"SNARE": "BK NO 63"
+},
+"industrial": {
+"SNARE": "BK NO 36"
+},
+"integra": {
+"SNARE": "BK NO 37"
+},
+"interstellar": {
+"CLAP": "BK NO 12"
+},
+"intro": {
+"HIHAT": "BK NO 55"
+},
+"issabounceclap": {
+"SNARE": "BK NO 64"
+},
+"itadori": {
+"808": "BK NO 9"
+},
+"jiro": {
+"808": "BK NO 10"
+},
+"jogo": {
+"808": "BK NO 11"
+},
+"k9": {
+"SNARE": "BK NO 38"
+},
+"kenzo": {
+"CLAP": "BK NO 13"
+},
+"kia": {
+"CLAP": "BK NO 14"
+},
+"kickcallme": {
+"KICK": "BK NO 24"
+},
+"kickhonest": {
+"KICK": "BK NO 38"
+},
+"kicknevermind": {
+"KICK": "BK NO 42"
+},
+"kickwhatever": {
+"KICK": "BK NO 58"
+},
+"kindarolls": {
+"OPEN HAT": "BK NO 34"
+},
+"knight": {
+"HIHAT": "BK NO 56"
+},
+"knockgang": {
+"KICK": "BK NO 39"
+},
+"knockgangkick": {
+"KICK": "BK NO 39"
+},
+"kunai": {
+"OPEN HAT": "BK NO 35"
+},
+"lamp": {
+"HIHAT": "BK NO 57"
+},
+"lastcall": {
+"OPEN HAT": "BK NO 50"
+},
+"laws": {
+"RIM": "BK NO 24"
+},
+"levels": {
+"CLAP": "BK NO 15"
+},
+"light": {
+"PERC": "BK NO 26"
+},
+"locks": {
+"CYMBAL": "BK NO 8"
+},
+"lofi1": {
+"KICK": "BK NO 40"
+},
+"lofi1kick": {
+"KICK": "BK NO 40"
+},
+"lofiwarm": {
+"SNARE": "BK NO 65"
+},
+"lowpitch": {
+"HIHAT": "BK NO 58"
+},
+"lunar": {
+"SNARE": "BK NO 39"
+},
+"machine": {
+"RIM": "BK NO 34"
+},
+"made": {
+"808": "BK NO 12"
+},
+"marching": {
+"CRASH": "BK NO 21"
+},
+"massiveclap": {
+"SNARE": "BK NO 66"
+},
+"massiveclapsnare": {
+"SNARE": "BK NO 66"
+},
+"mechanics": {
+"KICK": "BK NO 13"
+},
+"mega2": {
+"KICK": "BK NO 41"
+},
+"metals": {
+"RIM": "BK NO 25"
+},
+"mindful": {
+"CLAP": "BK NO 30"
+},
+"miniroll": {
+"TAMB": "BK NO 3"
+},
+"mirage": {
+"HIHAT": "BK NO 36"
+},
+"motive": {
+"CLAP": "BK NO 31"
+},
+"myhero": {
+"RIM": "BK NO 26"
+},
+"name": {
+"HIHAT": "BK NO 59"
+},
+"neptune": {
+"808": "BK NO 13"
+},
+"nether": {
+"KICK": "BK NO 14"
+},
+"nevermind": {
+"KICK": "BK NO 42"
+},
+"newestleaf": {
+"SNARE": "BK NO 67"
+},
+"newestleafsnare": {
+"SNARE": "BK NO 67"
+},
+"newland": {
+"RIM": "BK NO 27"
+},
+"news": {
+"CYMBAL": "BK NO 9"
+},
+"niceass": {
+"KICK": "BK NO 43"
+},
+"niceasskick": {
+"KICK": "BK NO 43"
+},
+"ninja": {
+"RIM": "BK NO 28"
+},
+"no1": {
+"COWBELL": "BK NO 1",
+"SHAKER": "BK NO 1",
+"TOM": "BK NO 2"
+},
+"no3": {
+"TOM": "BK NO 3",
+"TRIANGLE": "BK NO 1"
+},
+"no4": {
+"TOM": "BK NO 4"
+},
+"og1": {
+"KICK": "BK NO 44"
+},
+"og11": {
+"CLAP": "BK NO 32",
+"SNARE": "BK NO 68"
+},
+"og12": {
+"CLAP": "BK NO 33",
+"SNARE": "BK NO 69"
+},
+"og13": {
+"SNARE": "BK NO 70"
+},
+"og15": {
+"SNARE": "BK NO 71"
+},
+"og2": {
+"OPEN HAT": "BK NO 51"
+},
+"og3": {
+"CLAP": "BK NO 34"
+},
+"og4": {
+"OPEN HAT": "BK NO 52"
+},
+"og5": {
+"CLAP": "BK NO 35",
+"OPEN HAT": "BK NO 53",
+"SNARE": "BK NO 72"
+},
+"og6": {
+"OPEN HAT": "BK NO 54",
+"SNARE": "BK NO 73"
+},
+"og7": {
+"CLAP": "BK NO 36",
+"OPEN HAT": "BK NO 55"
+},
+"og8": {
+"CLAP": "BK NO 37",
+"SNARE": "BK NO 74"
+},
+"og8082": {
+"RIM": "BK NO 35"
+},
+"og808rim2": {
+"RIM": "BK NO 35"
+},
+"ogclap11": {
+"CLAP": "BK NO 32"
+},
+"ogclap12": {
+"CLAP": "BK NO 33"
+},
+"ogclap3": {
+"CLAP": "BK NO 34"
+},
+"ogclap5": {
+"CLAP": "BK NO 35"
+},
+"ogclap7": {
+"CLAP": "BK NO 36"
+},
+"ogclap8": {
+"CLAP": "BK NO 37"
+},
+"ogdemonsfavorite8083": {
+"808": "BK NO 29"
+},
+"ogdistressed909toms012": {
+"TOM": "BK NO 6"
+},
+"ogdistressed909toms102": {
+"TOM": "BK NO 7"
+},
+"ogdistressed909toms112": {
+"TOM": "BK NO 8"
+},
+"ogdopeboyv1": {
+"808": "BK NO 30"
+},
+"ogdopeboyv3": {
+"808": "BK NO 30"
+},
+"oghardddd": {
+"PERC": "BK NO 25"
+},
+"ogkick1": {
+"KICK": "BK NO 44"
+},
+"ogohh2": {
+"OPEN HAT": "BK NO 51"
+},
+"ogohh4": {
+"OPEN HAT": "BK NO 52"
+},
+"ogohh5": {
+"OPEN HAT": "BK NO 53"
+},
+"ogohh6": {
+"OPEN HAT": "BK NO 54"
+},
+"ogohh7": {
+"OPEN HAT": "BK NO 55"
+},
+"ogrealcymbal": {
+"CYMBAL": "BK NO 12"
+},
+"ogsnare11": {
+"SNARE": "BK NO 68"
+},
+"ogsnare12": {
+"SNARE": "BK NO 69"
+},
+"ogsnare13": {
+"SNARE": "BK NO 70"
+},
+"ogsnare14current": {
+"SNARE": "BK NO 42"
+},
+"ogsnare14master": {
+"SNARE": "BK NO 43"
+},
+"ogsnare15": {
+"SNARE": "BK NO 71"
+},
+"ogsnare5": {
+"SNARE": "BK NO 72"
+},
+"ogsnare6": {
+"SNARE": "BK NO 73"
+},
+"ogsnare8": {
+"SNARE": "BK NO 74"
+},
+"ogspshak052": {
+"SHAKER": "BK NO 4"
+},
+"ogsrfx2": {
+"FX": "BK NO 1"
+},
+"ogsrfx2dirty": {
+"FX": "BK NO 2"
+},
+"ogsrfx4": {
+"FX": "BK NO 3"
+},
+"ogweirdtriangle": {
+"TRIANGLE": "BK NO 2"
+},
+"openhatanti": {
+"OPEN HAT": "BK NO 42"
+},
+"openhatbetweenus": {
+"OPEN HAT": "BK NO 43"
+},
+"openhatex": {
+"OPEN HAT": "BK NO 49"
+},
+"openhatopinion": {
+"OPEN HAT": "BK NO 56"
+},
+"openhatversion": {
+"OPEN HAT": "BK NO 62"
+},
+"opinion": {
+"OPEN HAT": "BK NO 56"
+},
+"opinions": {
+"HIHAT": "BK NO 37"
+},
+"organic": {
+"CYMBAL": "BK NO 10"
+},
+"oysterlayer": {
+"PERC": "BK NO 27"
+},
+"paint1a": {
+"PERC": "BK NO 28"
+},
+"paint2a": {
+"PERC": "BK NO 29"
+},
+"parallax": {
+"OPEN HAT": "BK NO 36"
+},
+"patterns": {
+"OPEN HAT": "BK NO 37"
+},
+"pay": {
+"RIM": "BK NO 36"
+},
+"percussionpaint2a": {
+"PERC": "BK NO 29"
+},
+"pierce": {
+"SNARE": "BK NO 75"
+},
+"planes": {
+"CRASH": "BK NO 22"
+},
+"planets": {
+"CLAP": "BK NO 16"
+},
+"pocket": {
+"SNARE": "BK NO 76"
+},
+"pocketsnare": {
+"SNARE": "BK NO 76"
+},
+"pop": {
+"KICK": "BK NO 45",
+"OPEN HAT": "BK NO 57"
+},
+"poprev": {
+"HIHAT": "BK NO 60"
+},
+"pounce": {
+"SNARE": "BK NO 77"
+},
+"pouncesnare": {
+"SNARE": "BK NO 77"
+},
+"pressing": {
+"RIM": "BK NO 29"
+},
+"primarywverb": {
+"SNARE": "BK NO 78"
+},
+"prime": {
+"KICK": "BK NO 46"
+},
+"prism": {
+"HIHAT": "BK NO 61"
+},
+"prismhihat": {
+"HIHAT": "BK NO 61"
+},
+"punch": {
+"KICK": "BK NO 15"
+},
+"pureknock": {
+"SNARE": "BK NO 79"
+},
+"pureknocksnare": {
+"SNARE": "BK NO 79"
+},
+"quickknock": {
+"SNARE": "BK NO 80"
+},
+"quickknocksnare": {
+"SNARE": "BK NO 80"
+},
+"quietpower": {
+"KICK": "BK NO 47"
+},
+"radiant": {
+"HIHAT": "BK NO 38"
+},
+"rage": {
+"SNARE": "BK NO 40"
+},
+"real": {
+"CYMBAL": "BK NO 12"
+},
+"reasonanalog": {
+"KICK": "BK NO 48"
+},
+"research": {
+"RIM": "BK NO 30"
+},
+"reversekickmadness": {
+"PERC": "BK NO 30"
+},
+"riddle": {
+"RIM": "BK NO 37"
+},
+"rift": {
+"SNARE": "BK NO 81"
+},
+"riftclap": {
+"SNARE": "BK NO 82"
+},
+"riftclapsnare": {
+"SNARE": "BK NO 82"
+},
+"riftsnare": {
+"SNARE": "BK NO 81"
+},
+"rightthrough": {
+"HIHAT": "BK NO 62"
+},
+"rimmachine": {
+"RIM": "BK NO 34"
+},
+"rimpay": {
+"RIM": "BK NO 36"
+},
+"rimriddle": {
+"RIM": "BK NO 37"
+},
+"rimwhole": {
+"RIM": "BK NO 40"
+},
+"rival": {
+"CLAP": "BK NO 38"
+},
+"rocket": {
+"HIHAT": "BK NO 39"
+},
+"roll1": {
+"TAMB": "BK NO 4"
+},
+"rooms": {
+"RIM": "BK NO 31"
+},
+"rulers": {
+"CLAP": "BK NO 17"
+},
+"sealed": {
+"808": "BK NO 14"
+},
+"shaped": {
+"KICK": "BK NO 49"
+},
+"shapedkick": {
+"KICK": "BK NO 49"
+},
+"shawty": {
+"OPEN HAT": "BK NO 58"
+},
+"shifted": {
+"HIHAT": "BK NO 63"
+},
+"shiftedhihat": {
+"HIHAT": "BK NO 63"
+},
+"shout": {
+"SNARE": "BK NO 83"
+},
+"shoutsnare": {
+"SNARE": "BK NO 83"
+},
+"smalldoublehit2": {
+"TAMB": "BK NO 5"
+},
+"smither": {
+"OPEN HAT": "BK NO 59"
+},
+"smither2": {
+"HIHAT": "BK NO 64"
+},
+"smitherhihat2": {
+"HIHAT": "BK NO 64"
+},
+"smitheropenhihat": {
+"OPEN HAT": "BK NO 59"
+},
+"snareemotion": {
+"SNARE": "BK NO 57"
+},
+"snarezone": {
+"SNARE": "BK NO 93"
+},
+"softer": {
+"KICK": "BK NO 16"
+},
+"softmetal": {
+"CLAP": "BK NO 39"
+},
+"softmetalclap": {
+"CLAP": "BK NO 39"
+},
+"sonic": {
+"HIHAT": "BK NO 65"
+},
+"sorcerer": {
+"CLAP": "BK NO 40"
+},
+"sorcerer3": {
+"CLAP": "BK NO 41"
+},
+"sp052": {
+"SHAKER": "BK NO 4"
+},
+"special": {
+"RIM": "BK NO 38"
+},
+"spheres": {
+"KICK": "BK NO 17"
+},
+"spiriclap": {
+"SNARE": "BK NO 84"
+},
+"spiriclapsnare": {
+"SNARE": "BK NO 84"
+},
+"splash": {
+"KICK": "BK NO 18"
+},
+"sr2": {
+"FX": "BK NO 1"
+},
+"sr2dirty": {
+"FX": "BK NO 2"
+},
+"sr4": {
+"FX": "BK NO 3"
+},
+"str8upanalog": {
+"KICK": "BK NO 50"
+},
+"str8upanalogkick": {
+"KICK": "BK NO 50"
+},
+"stream": {
+"CYMBAL": "BK NO 11"
+},
+"subs": {
+"OPEN HAT": "BK NO 38"
+},
+"sukuna": {
+"808": "BK NO 15"
+},
+"sungjinwoo": {
+"CLAP": "BK NO 18"
+},
+"superfreak": {
+"KICK": "BK NO 51"
+},
+"superfreakkick": {
+"KICK": "BK NO 51"
+},
+"superpower": {
+"KICK": "BK NO 52"
+},
+"superpowerkick": {
+"KICK": "BK NO 52"
+},
+"tambminiroll": {
+"TAMB": "BK NO 3"
+},
+"tambroll1": {
+"TAMB": "BK NO 4"
+},
+"tank": {
+"CLAP": "BK NO 19"
+},
+"tech": {
+"HIHAT": "BK NO 40",
+"RIM": "BK NO 32"
+},
+"tf": {
+"KICK": "BK NO 19"
+},
+"thiccness": {
+"SNARE": "BK NO 85"
+},
+"thiccnesssnare": {
+"SNARE": "BK NO 85"
+},
+"thoughts": {
+"HIHAT": "BK NO 41"
+},
+"throne": {
+"HIHAT": "BK NO 66",
+"OPEN HAT": "BK NO 60"
+},
+"ties": {
+"OPEN HAT": "BK NO 39"
+},
+"tight": {
+"OPEN HAT": "BK NO 40"
+},
+"timeless": {
+"KICK": "BK NO 53"
+},
+"toji": {
+"808": "BK NO 16"
+},
+"trapclap": {
+"SNARE": "BK NO 86"
+},
+"trapknock": {
+"SNARE": "BK NO 87"
+},
+"trapknock2": {
+"SNARE": "BK NO 88"
+},
+"tripped": {
+"HIHAT": "BK NO 67",
+"OPEN HAT": "BK NO 61"
+},
+"trippedrev": {
+"HIHAT": "BK NO 68"
+},
+"trippy": {
+"RIDE": "BK NO 2"
+},
+"trippyride": {
+"RIDE": "BK NO 2"
+},
+"trueindeedanalog": {
+"KICK": "BK NO 54"
+},
+"trueindeedanalogkick": {
+"KICK": "BK NO 54"
+},
+"tube": {
+"KICK": "BK NO 55"
+},
+"twilight": {
+"HIHAT": "BK NO 42"
+},
+"ultimate": {
+"SNAP": "BK NO 12"
+},
+"vacuum": {
+"808": "BK NO 17"
+},
+"vampires": {
+"SNARE": "BK NO 41"
+},
+"velvet": {
+"HIHAT": "BK NO 43"
+},
+"version": {
+"OPEN HAT": "BK NO 62"
+},
+"virtuosity": {
+"CRASH": "BK NO 24",
+"HIHAT": "BK NO 69",
+"KICK": "BK NO 56",
+"OPEN HAT": "BK NO 63",
+"RIDE": "BK NO 3",
+"SNARE": "BK NO 89"
+},
+"virtuositycrossstick": {
+"RIM": "BK NO 39"
+},
+"virtuosityhalf": {
+"OPEN HAT": "BK NO 64"
+},
+"virtuosityhigh": {
+"TOM": "BK NO 9"
+},
+"virtuositylow": {
+"TOM": "BK NO 10"
+},
+"virtuosityoffcenter": {
+"SNARE": "BK NO 90"
+},
+"virtuosityrimshot": {
+"SNARE": "BK NO 91"
+},
+"waves": {
+"KICK": "BK NO 20",
+"SNARE": "BK NO 92"
+},
+"wayymorethumpier": {
+"KICK": "BK NO 57"
+},
+"weird": {
+"TRIANGLE": "BK NO 2"
+},
+"whatever": {
+"KICK": "BK NO 58"
+},
+"whathappened": {
+"HIHAT": "BK NO 70"
+},
+"whitenoise": {
+"OPEN HAT": "BK NO 41"
+},
+"whole": {
+"RIM": "BK NO 40"
+},
+"wholeclubthump": {
+"KICK": "BK NO 59"
+},
+"whoopishlayer": {
+"PERC": "BK NO 31"
+},
+"writtings": {
+"HIHAT": "BK NO 44"
+},
+"yoto": {
+"CRASH": "BK NO 23"
+},
+"zone": {
+"SNARE": "BK NO 93"
+}
+},
+"kinds": {
+"bb2000srnbp12": "SHAKER",
+"bb2000srnbp13": "TAMB",
+"bb2000srnbp14": "TOM",
+"bb2000srnbp15": "FX",
+"bb80spopp01": "SNARE",
+"bb80spopp02": "CLAP",
+"bb80spopp03": "RIM",
+"bb80spopp04": "HIHAT",
+"bb80spopp05": "OPEN HAT",
+"bb80spopp11": "CYMBAL",
+"bb80spopp12": "SHAKER",
+"bb80spopp13": "TAMB",
+"bb80spopp15": "FX",
+"bb90spopp01": "SNARE",
+"bb90spopp02": "CLAP",
+"bb90spopp03": "RIM",
+"bb90spopp04": "HIHAT",
+"bb90spopp05": "OPEN HAT",
+"bb90spopp12": "SHAKER",
+"bb90spopp13": "TAMB",
+"bb90spopp15": "FX",
+"bbafrobeatsp12": "SHAKER",
+"bbafrobeatsp13": "TAMB",
+"bbafrobeatsp15": "FX",
+"bbamapianop12": "SHAKER",
+"bbamapianop13": "TAMB",
+"bbamapianop15": "FX",
+"bbatltrapp12": "SHAKER",
+"bbatltrapp13": "TAMB",
+"bbatltrapp14": "TOM",
+"bbatltrapp15": "FX",
+"bbboombapp00": "KICK",
+"bbboombapp01": "SNARE",
+"bbboombapp02": "CLAP",
+"bbboombapp03": "RIM",
+"bbboombapp04": "HIHAT",
+"bbboombapp05": "OPEN HAT",
+"bbboombapp11": "CYMBAL",
+"bbboombapp12": "SHAKER",
+"bbboombapp13": "TAMB",
+"bbboombapp14": "TOM",
+"bbboombapp15": "FX",
+"bbcoleworldp01": "SNARE",
+"bbcoleworldp02": "CLAP",
+"bbcoleworldp03": "RIM",
+"bbcoleworldp04": "HIHAT",
+"bbcoleworldp05": "OPEN HAT",
+"bbcoleworldp11": "CYMBAL",
+"bbcoleworldp12": "SHAKER",
+"bbcoleworldp13": "TAMB",
+"bbcoleworldp15": "FX",
+"bbdarkexperimentalp12": "SHAKER",
+"bbdarkexperimentalp13": "TAMB",
+"bbdarkexperimentalp14": "TOM",
+"bbdarkexperimentalp15": "FX",
+"bbdirtysoulp00": "KICK",
+"bbdirtysoulp01": "SNARE",
+"bbdirtysoulp02": "CLAP",
+"bbdirtysoulp03": "RIM",
+"bbdirtysoulp04": "HIHAT",
+"bbdirtysoulp05": "OPEN HAT",
+"bbdirtysoulp11": "CYMBAL",
+"bbdirtysoulp12": "SHAKER",
+"bbdirtysoulp13": "TAMB",
+"bbdirtysoulp14": "TOM",
+"bbdirtysoulp15": "FX",
+"bbdrummasteryp12": "SHAKER",
+"bbdrummasteryp13": "TAMB",
+"bbdrummasteryp15": "FX",
+"bbheavybreakp00": "KICK",
+"bbheavybreakp01": "SNARE",
+"bbheavybreakp02": "CLAP",
+"bbheavybreakp03": "RIM",
+"bbheavybreakp04": "HIHAT",
+"bbheavybreakp05": "OPEN HAT",
+"bbheavybreakp12": "SHAKER",
+"bbheavybreakp13": "TAMB",
+"bbheavybreakp15": "FX",
+"bblivepopp01": "SNARE",
+"bblivepopp02": "CLAP",
+"bblivepopp03": "RIM",
+"bblivepopp04": "HIHAT",
+"bblivepopp05": "OPEN HAT",
+"bblivepopp12": "SHAKER",
+"bblivepopp13": "TAMB",
+"bblivepopp15": "FX",
+"bblofip00": "KICK",
+"bblofip01": "SNARE",
+"bblofip02": "CLAP",
+"bblofip03": "RIM",
+"bblofip04": "HIHAT",
+"bblofip05": "OPEN HAT",
+"bblofip12": "SHAKER",
+"bblofip13": "TAMB",
+"bblofip15": "FX",
+"bbloosebreakp00": "KICK",
+"bbloosebreakp01": "SNARE",
+"bbloosebreakp02": "CLAP",
+"bbloosebreakp03": "RIM",
+"bbloosebreakp04": "HIHAT",
+"bbloosebreakp05": "OPEN HAT",
+"bbloosebreakp12": "SHAKER",
+"bbloosebreakp13": "TAMB",
+"bbloosebreakp15": "FX",
+"bbmemphistrapp12": "SHAKER",
+"bbmemphistrapp13": "TAMB",
+"bbmemphistrapp15": "FX",
+"bbmodernrnbp12": "SHAKER",
+"bbmodernrnbp13": "TAMB",
+"bbmodernrnbp15": "FX",
+"bbmoderntrapp12": "SHAKER",
+"bbmoderntrapp13": "TAMB",
+"bbmoderntrapp15": "FX",
+"bbneosoulp01": "SNARE",
+"bbneosoulp02": "CLAP",
+"bbneosoulp03": "RIM",
+"bbneosoulp04": "HIHAT",
+"bbneosoulp05": "OPEN HAT",
+"bbneosoulp12": "SHAKER",
+"bbneosoulp13": "TAMB",
+"bbneosoulp15": "FX",
+"bbresampledtexturesp12": "SHAKER",
+"bbresampledtexturesp13": "TAMB",
+"bbresampledtexturesp15": "FX",
+"bbtrapsoulp12": "SHAKER",
+"bbtrapsoulp13": "TAMB",
+"bbtrapsoulp15": "FX",
+"bbvintage32boombapp00": "KICK",
+"bbvintage32boombapp01": "SNARE",
+"bbvintage32boombapp03": "RIM",
+"bbvintage32dirtysoulp00": "KICK",
+"bbvintage32dirtysoulp01": "SNARE",
+"bbvintage32dirtysoulp03": "RIM",
+"bbvintage32funkbreakp00": "KICK",
+"bbvintage32funkbreakp01": "SNARE",
+"bbvintage32funkbreakp03": "RIM",
+"bbvintage32livesoulp00": "KICK",
+"bbvintage32livesoulp01": "SNARE",
+"bbvintage32livesoulp03": "RIM",
+"bbvintage32loosebreakp00": "KICK",
+"bbvintage32loosebreakp01": "SNARE",
+"bbvintage32loosebreakp03": "RIM",
+"bbvintage32vintagernbp00": "KICK",
+"bbvintage32vintagernbp01": "SNARE",
+"bbvintage32vintagernbp03": "RIM",
+"bbvintagernbp01": "SNARE",
+"bbvintagernbp02": "CLAP",
+"bbvintagernbp03": "RIM",
+"bbvintagernbp04": "HIHAT",
+"bbvintagernbp05": "OPEN HAT",
+"bbvintagernbp12": "SHAKER",
+"bbvintagernbp13": "TAMB",
+"bbvintagernbp15": "FX"
+}
+}

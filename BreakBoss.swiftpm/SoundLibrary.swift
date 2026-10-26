@@ -136,13 +136,12 @@ extension StockSampleLibrary {
 enum UserSoundLibrary {
     /// Your imported sounds: Samples/<pack>/… (a pack is a folder), loose files are "MY SOUNDS".
     static func sounds() -> [LibrarySound] {
-        let root = KnockFolders.samples.standardizedFileURL.path
         return KnockFolders.sampleFiles().map { url in
-            let rel = url.standardizedFileURL.path.replacingOccurrences(of: root + "/", with: "")
+            let rel = KnockFolders.relative(url, in: KnockFolders.samples) ?? url.lastPathComponent
             let parts = rel.split(separator: "/")
             let pack = parts.count > 1 ? String(parts[0]).uppercased() : "MY SOUNDS"
-            return LibrarySound(id: "user:" + rel, url: url, name: KnockFolders.untagged(url.deletingPathExtension().lastPathComponent).uppercased(),
-                                type: SoundType.guess(rel), pack: pack, user: true)
+            return LibrarySound(id: "user:" + rel, url: url, name: KnockFolders.soundName(rel),
+                                type: KnockFolders.soundType(rel) ?? SoundType.guess(rel), pack: pack, user: true)
         }
     }
 
@@ -161,7 +160,7 @@ enum UserSoundLibrary {
         guard let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil) else { return 0 }
         for case let url as URL in walker where exts.contains(url.pathExtension.lowercased()) && !url.path.contains("__MACOSX") {
             // the sound's path inside the pack decides its section
-            let inside = url.standardizedFileURL.path.replacingOccurrences(of: folder.standardizedFileURL.path + "/", with: "")
+            let inside = KnockFolders.relative(url, in: folder) ?? url.lastPathComponent
             let sub = dest.appendingPathComponent(KnockFolders.safe(SoundType.guess(inside).rawValue), isDirectory: true)
             try? FileManager.default.createDirectory(at: sub, withIntermediateDirectories: true)
             let target = sub.appendingPathComponent(url.lastPathComponent)

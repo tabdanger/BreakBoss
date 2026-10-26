@@ -205,8 +205,9 @@ struct PadEditorView: View {
                     .background(BKRecessedPanel(palette: palette))
             } else {
                 ForEach(files, id: \.self) { url in
-                    PadSoundRow(icon: "waveform", title: KnockFolders.untagged(url.deletingPathExtension().lastPathComponent), detail: "", palette: palette,
-                                checked: settings.sampleFile == url.lastPathComponent) {
+                    PadSoundRow(icon: "waveform", title: KnockFolders.soundName(KnockFolders.relative(url, in: KnockFolders.samples) ?? url.lastPathComponent),
+                                detail: "", palette: palette,
+                                checked: settings.sampleFile == (KnockFolders.relative(url, in: KnockFolders.samples) ?? url.lastPathComponent)) {
                         controller.importSample(url, toPad: pad)
                     }
                 }
