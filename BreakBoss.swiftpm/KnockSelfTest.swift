@@ -3445,6 +3445,23 @@ enum KnockSelfTest {
                 check(d <= same * 1.000_1 + 1e-6, "FX sections \(mode.title): \(p.name), not in this mode's section, leaves the sound alone (\(d))")
             }
         }
+        // Tyrone, Oct 26: every FX knob (CLIP DRIVE too) loads at 0% and each mode keeps its own sound there.
+        let fxKnobs = Set(SoundMode.allCases.flatMap { TrackFX.params($0) } + [.clipDrive, .warp, .glitch])
+        check(fxKnobs.allSatisfy { $0.defaultValue == 0 }, "FX knobs: every mode's FX knobs and CLIP DRIVE start at 0%")
+        func difference(_ a: [Float], _ b: [Float]) -> Double { zip(a, b).reduce(0) { $0 + Double(abs($1.0 - $1.1)) } }
+        let (modernZero, _) = render(kit: kit, style: .trap, mode: .modern, tempo: 120, seconds: 1.5)
+        for mode in [SoundMode.vintage, .texture] {
+            let (zero, _) = render(kit: kit, style: .trap, mode: mode, tempo: 120, seconds: 1.5)
+            let d = difference(zero, modernZero)
+            check(d > 0.1, "FX knobs at 0%: \(mode.title) still has its own sound (\(String(format: "%.2f", d)))")
+        }
+        var old = KnockState(); old.version = 3
+        old.values = [KParam.boost.id: 0.42, KParam.clipDrive.id: 0.25, KParam.textureDelay.id: 0.32, KParam.resample.id: 0.75,
+                      KParam.instability.id: 0.5, KParam.grit.id: 0.3]
+        let migrated = old.normalized().values
+        check(migrated[KParam.boost.id] == 0 && migrated[KParam.clipDrive.id] == 0 && migrated[KParam.textureDelay.id] == 0
+              && migrated[KParam.instability.id] == 0 && abs((migrated[KParam.resample.id] ?? 0) - 0.5) < 0.001 && migrated[KParam.grit.id] == 0.3,
+              "FX knobs: an old project's untouched knobs come back at 0%, turned ones keep their sound")
     }
 
     /// Turning a channel's LEVEL or PAN while its sound rings: the note keeps playing and glides to

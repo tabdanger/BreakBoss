@@ -132,8 +132,10 @@ enum KParam: Int, CaseIterable {
         }
     }
 
-    /// INIT values. Knob pointers start where the faceplate artwork shows them, except Pitch and
-    /// Tune (centred, so nothing is detuned) and Clip Drive (lower, so INIT isn't clipped hard).
+    /// INIT values. Pitch and Tune start centred (nothing detuned). Every FX knob, CLIP DRIVE
+    /// included, starts at 0% (Tyrone, Oct 26): they're the extra sauce and only touch the sound
+    /// once they're turned up; each mode's own sound is there with them at zero
+    /// (BusProcessor.Settings.addModeSound).
     var defaultValue: Float {
         switch self {
         case .pitch: return 0.5
@@ -141,10 +143,10 @@ enum KParam: Int, CaseIterable {
         case .bounce: return 0.0
         case .velocity: return 0.75
         case .filter: return 1.0
-        case .clipDrive: return 0.25
+        case .clipDrive: return 0
         case .output: return 1
         case .clipper: return 1
-        case .boost: return 0.42
+        case .boost: return 0
         case .punch: return 0.0
         case .analogEQ: return 0.0
         case .grit: return 0.0
@@ -155,13 +157,13 @@ enum KParam: Int, CaseIterable {
         case .playMode: return 1
         case .tempoSync: return 1
         case .followDAW: return 1
-        case .resample: return 0.5
-        case .instability: return 0.5
-        case .textureDelay: return 0.32
-        case .gatedReverb: return 0.5
+        case .resample: return 0
+        case .instability: return 0
+        case .textureDelay: return 0
+        case .gatedReverb: return 0
         case .drive: return 0
-        case .warp: return 0.5
-        case .glitch: return 0.5
+        case .warp: return 0
+        case .glitch: return 0
         case .reverbDecay: return 0.5
         case .reverbPredelay: return 0
         case .delaySync: return 1

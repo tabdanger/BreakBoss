@@ -66,8 +66,8 @@ struct WorkspaceChannel: Codable, Equatable, Identifiable {
 // MARK: - Everything on the faceplate, saved
 
 struct KnockState: Codable, Equatable {
-    /// 3 (Oct 19): OUTPUT's top is 0 dB.
-    var version = 3
+    /// 3 (Oct 19): OUTPUT's top is 0 dB. 4 (Oct 26): every FX knob starts at 0%.
+    var version = 4
     var mode: SoundMode = .modern
     var playMode: PlayMode = .loop
     var values: [String: Float] = [:]
@@ -149,11 +149,32 @@ struct KnockState: Codable, Equatable {
         return s
     }
 
+    /// Where the FX knobs started before Oct 26.
+    static let oldFXStarts: [(KParam, Float)] = [(.clipDrive, 0.25), (.boost, 0.42), (.resample, 0.5), (.instability, 0.5),
+                                                 (.textureDelay, 0.32), (.gatedReverb, 0.5), (.warp, 0.5), (.glitch, 0.5)]
+
+    static func fxFromOld(_ values: [String: Float]) -> [String: Float] {
+        var v = values
+        for (p, start) in oldFXStarts {
+            guard let old = v[p.id], old.isFinite else { continue }
+            if abs(old - start) < 0.000_5 {
+                v[p.id] = 0
+            } else if p == .resample || p == .instability {
+                let base = BusProcessor.Settings.textureBase
+                v[p.id] = ((old - base) / (1 - base)).clamped(0, 1)
+            }
+        }
+        return v
+    }
+
     func normalized() -> KnockState {
         var s = self
         // Oct 19: OUTPUT used to go to +12 dB with 0 dB at 0.75; now its top is 0 dB
         if s.version < 3, let old = s.values[KParam.output.id], old.isFinite { s.values[KParam.output.id] = KnockMath.outputFromOld(old) }
-        s.version = 3
+        // Oct 26 (Tyrone): every FX knob starts at 0%. A knob still at its old start goes to zero (where
+        // it loads now); Texture's RESAMPLE and INSTABILITY keep their sound on the new scale.
+        if s.version < 4 { s.values = KnockState.fxFromOld(s.values) }
+        s.version = 4
         s.bpm = s.bpm.isFinite ? s.bpm.clamped(40, 240) : 140
         s.pads = Self.normalizedPads(s.pads)
         if let rows = s.workspaceChannels {
