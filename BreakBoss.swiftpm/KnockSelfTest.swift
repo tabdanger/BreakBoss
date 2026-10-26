@@ -3673,7 +3673,10 @@ enum KnockSelfTest {
                 let d = moved(mode, p)
                 check(d > 0.1, "FX sections \(mode.title): \(p.name) changes the sound (\(String(format: "%.2f", d)))")
             }
-            let outside = [KParam.boost, .punch, .analogEQ, .grit, .tighten, .drive, .warp, .glitch, .reverbDecay, .reverbPredelay]
+            // Oct 26 (Tyrone): only Texture carries reverb and delay; in Modern and Vintage those knobs (and
+            // Texture's lo-fi) do nothing even if left turned up.
+            let outside = [KParam.boost, .punch, .analogEQ, .grit, .tighten, .drive, .warp, .glitch, .reverbDecay, .reverbPredelay,
+                           .textureDelay, .gatedReverb, .resample, .instability]
                 .filter { !TrackFX.params(mode).contains($0) }
             for p in outside {
                 let d = moved(mode, p)
@@ -3684,12 +3687,18 @@ enum KnockSelfTest {
         let fxKnobs = Set(SoundMode.allCases.flatMap { TrackFX.params($0) } + [.clipDrive, .warp, .glitch])
         check(fxKnobs.allSatisfy { $0.defaultValue == 0 }, "FX knobs: every mode's FX knobs and CLIP DRIVE start at 0%")
         func difference(_ a: [Float], _ b: [Float]) -> Double { zip(a, b).reduce(0) { $0 + Double(abs($1.0 - $1.1)) } }
+        // Oct 26 (Tyrone): Modern and Vintage are dry at 0% (Vintage's tape rides on DRIVE, it used to lift
+        // every room tail like a reverb); Texture keeps its lo-fi under the knobs.
         let (modernZero, _) = render(kit: kit, style: .trap, mode: .modern, tempo: 120, seconds: 1.5)
-        for mode in [SoundMode.vintage, .texture] {
-            let (zero, _) = render(kit: kit, style: .trap, mode: mode, tempo: 120, seconds: 1.5)
-            let d = difference(zero, modernZero)
-            check(d > 0.1, "FX knobs at 0%: \(mode.title) still has its own sound (\(String(format: "%.2f", d)))")
-        }
+        let (vintageZero, _) = render(kit: kit, style: .trap, mode: .vintage, tempo: 120, seconds: 1.5)
+        let (textureZero, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 1.5)
+        let (modernAgain, _) = render(kit: kit, style: .trap, mode: .modern, tempo: 120, seconds: 1.5)
+        let vd = difference(vintageZero, modernZero), td = difference(textureZero, modernZero)
+        let same = difference(modernAgain, modernZero)
+        check(vd <= same * 1.000_1 + 1e-3, "FX knobs at 0%: Vintage is dry like Modern, no built-in tape or room lift (\(String(format: "%.4f", vd)))")
+        check(td > 0.1, "FX knobs at 0%: Texture still has its own sound (\(String(format: "%.2f", td)))")
+        let (vintageDrive, _) = render(kit: kit, style: .trap, mode: .vintage, tempo: 120, seconds: 1.5) { $0.setParam(.drive, 1) }
+        check(difference(vintageDrive, vintageZero) > 0.1, "Vintage DRIVE brings the tape in")
         var old = KnockState(); old.version = 3
         old.values = [KParam.boost.id: 0.42, KParam.clipDrive.id: 0.25, KParam.textureDelay.id: 0.32, KParam.resample.id: 0.75,
                       KParam.instability.id: 0.5, KParam.grit.id: 0.3]

@@ -4,8 +4,8 @@ import Foundation
 // MARK: - The sound of each faceplate, and the seven knobs on the bottom row
 //
 // MODERN   clean, hard-hitting, forward.
-// VINTAGE  the same knobs, plus built-in drive and boost: tape saturation, a low-end bump and a
-//          rolled-off top like an old sampler.
+// VINTAGE  live drums, dry at 0%: its tape (saturation, a low-end bump and a rolled-off top like an
+//          old sampler) comes in with DRIVE. No reverb or delay (Oct 26).
 // TEXTURE  the same knobs, plus a downsampled (lower sample rate, 12-bit) sound, instability
 //          (tape wow and flutter, and the warp below), a tempo-synced delay and a gated reverb.
 //          WARP: every bar or two it rolls a new scene (how far the pitch swings up and down, how
@@ -16,6 +16,10 @@ import Foundation
 //
 // Oct 24 (Tyrone): each mode has its own seven-knob section (TrackFX.params); DRIVE replaces BOOST
 // in Vintage and Texture. Settings.keepSection keeps the other modes' knobs out of the sound.
+//
+// Oct 26 (Tyrone): Texture is the only mode with reverb and delay. Modern and Vintage are dry with
+// every knob at 0%: Vintage's always-on tape lifted every drum's room tail about 5 dB (it sounded like
+// reverb), so it now rides on DRIVE (none at 0%, the old full tape at 100%).
 //
 // BOOST    low-end and level push into the chain.
 // DRIVE    BOOST's push plus tape saturation into the GRIT stage (Vintage, Texture).
@@ -30,7 +34,7 @@ import Foundation
 //
 // Oct 19 (Tyrone): each track on Face 2 has its own copy of these knobs. A track's copy is an
 // insert on that track (`Settings.insert`): only what its own knobs add, none of the mode's fixed
-// colour (Vintage's tape and bump, Texture's grit), which the main chain already gives every drum.
+// colour (Vintage's tape bump and top on DRIVE, Texture's grit), which the main chain already gives every drum.
 // So a track with its knobs at zero sounds exactly as it did.
 
 final class BusProcessor {
@@ -229,9 +233,9 @@ final class BusProcessor {
 
         /// The mode's own sound with every FX knob at 0% (Tyrone, Oct 26: the knobs are the extra
         /// sauce, they only touch the sound once turned up). The main chain only, before
-        /// keepSection: Vintage's tape and bump are already fixed in process(); Texture's
-        /// downsampling and wow (and the warp and stutters that follow INSTABILITY) sit under its
-        /// knobs. DELAY and GATED REVERB stay off until they're turned up.
+        /// keepSection: Modern and Vintage are dry (Vintage's tape follows DRIVE in process());
+        /// Texture's downsampling and wow (and the warp and stutters that follow INSTABILITY) sit
+        /// under its knobs. DELAY and GATED REVERB stay off until they're turned up.
         mutating func addModeSound() {
             guard mode == .texture else { return }
             resample = Settings.textureAmount(resample)
@@ -263,14 +267,15 @@ final class BusProcessor {
         let vintage = mode == .vintage
         // the mode's fixed colour (the main chain's, not a track's insert)
         let colour = !s.insert
-        let tape = vintage && colour
+        // Vintage's tape (main chain only): as much as DRIVE is turned up, none at 0% (Oct 26)
+        let tape: Float = vintage && colour ? s.drive.clamped(0, 1) : 0
         // a track's insert skips the Texture section while all its Texture knobs are at zero
         let texture = mode == .texture && (colour || max(s.resample, s.instability, s.delay, s.reverb, s.warp, s.glitch) > 0.001)
 
         // Gains
-        let boostGain = 1 + s.boost * 0.6 + (tape ? 0.35 : 0)
+        let boostGain = 1 + s.boost * 0.6 + tape * 0.35
         let punchAmount = s.punch * 1.6
-        let gritAmount = s.grit + ((vintage || mode == .texture) ? s.drive * 0.8 : 0) + (tape ? 0.38 : 0) + (texture && colour ? 0.12 : 0)
+        let gritAmount = s.grit + ((vintage || mode == .texture) ? s.drive * 0.8 : 0) + tape * 0.38 + (texture && colour ? 0.12 : 0)
         let drive = 1 + gritAmount * 6
         let gritMakeup = 1 / Saturate.soft(drive) * 0.95
         let gritMix = min(1, gritAmount * 2.2)
@@ -301,8 +306,10 @@ final class BusProcessor {
             var l = left[i] * boostGain, r = right[i] * boostGain
             l = boostShelf[0].process(l); r = boostShelf[1].process(r)
 
-            if tape {
-                l = headBump[0].process(l); r = headBump[1].process(r)
+            if vintage && colour {
+                // run always in Vintage so DRIVE fades the bump in and out without a step
+                let bl = headBump[0].process(l), br = headBump[1].process(r)
+                l += (bl - l) * tape; r += (br - r) * tape
             }
 
             // PUNCH: attack = fast envelope above slow envelope
@@ -332,8 +339,9 @@ final class BusProcessor {
                 r = r * (1 - gritMix) + wr * gritMix
             }
 
-            if tape {
-                l = tapeLP[0].process(l); r = tapeLP[1].process(r)
+            if vintage && colour {
+                let tl = tapeLP[0].process(l), tr = tapeLP[1].process(r)
+                l += (tl - l) * tape; r += (tr - r) * tape
             }
 
             // SHINE
@@ -513,7 +521,7 @@ final class BusProcessor {
     private func updateCoefficients(_ s: Settings) {
         let modeKey = s.mode.rawValue + (s.insert ? 8 : 0)
         if abs(s.boost - lastBoost) > 0.001 || modeKey != lastMode {
-            let db = s.boost * 6 + (s.mode == .vintage && !s.insert ? 1.5 : 0)
+            let db = s.boost * 6 + (s.mode == .vintage && !s.insert ? s.drive.clamped(0, 1) * 1.5 : 0)
             for c in 0..<2 { boostShelf[c].lowShelf(80, db: db, sr: sr) }
             lastBoost = s.boost
         }
