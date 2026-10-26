@@ -29,9 +29,14 @@ struct PadSettings: Codable, Equatable {
     /// The track's own FX knobs on Face 2 (Tyrone, Oct 19), each mode's separately, keyed
     /// "<mode>.<param>" (TrackFX.key). Nil until a knob is turned: a track starts untouched.
     var fx: [String: Float]?
+    /// NOTE REPEAT (Tyrone, Oct 26): while the pad is held it plays again every `repeatDivision`
+    /// (NoteRepeat), on the engine's beat. Off until it's turned on.
+    var noteRepeat = false
+    /// NoteRepeat.names index: 1/4, 1/8, 1/8T, 1/16, 1/16T, 1/32, 1/32T, 1/64.
+    var repeatDivision = NoteRepeat.defaultDivision
 
     private enum CodingKeys: String, CodingKey {
-        case level, pan, tune, decay, filter, reverse, sampleFile, sampler, fx
+        case level, pan, tune, decay, filter, reverse, sampleFile, sampler, fx, noteRepeat, repeatDivision
     }
 
     var gain: Float { level <= 0.001 ? 0 : KnockMath.dbToGain(40 * log10f(level / 0.8)) }
@@ -60,6 +65,17 @@ extension PadSettings {
         sampleFile = try values.decodeIfPresent(String.self, forKey: .sampleFile)
         sampler = try? values.decodeIfPresent(SamplerSettings.self, forKey: .sampler)
         fx = try? values.decodeIfPresent([String: Float].self, forKey: .fx)
+        // saved before NOTE REPEAT: off, 1/16
+        noteRepeat = (try? values.decodeIfPresent(Bool.self, forKey: .noteRepeat)) ?? false
+        repeatDivision = NoteRepeat.clamped((try? values.decodeIfPresent(Int.self, forKey: .repeatDivision)) ?? NoteRepeat.defaultDivision)
+    }
+
+    /// A new sound on the pad comes in as itself, but how the pad is played (NOTE REPEAT) stays.
+    func freshSound() -> PadSettings {
+        var s = PadSettings()
+        s.noteRepeat = noteRepeat
+        s.repeatDivision = repeatDivision
+        return s
     }
 
     /// This track's own value of an FX knob in a mode (its neutral value until it's turned).
@@ -70,6 +86,33 @@ extension PadSettings {
         var table = fx ?? [:]
         table[TrackFX.key(p, mode)] = abs(v - TrackFX.neutral(p)) < 0.000_1 ? nil : v
         fx = table.isEmpty ? nil : table
+    }
+}
+
+/// NOTE REPEAT's divisions (the PAD tab's REPEAT DIVISION knob). T = triplet.
+enum NoteRepeat {
+    static let names = ["1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32", "1/32T", "1/64"]
+    static let count = 8
+    /// 1/16.
+    static let defaultDivision = 3
+
+    static func clamped(_ index: Int) -> Int { min(max(index, 0), count - 1) }
+    static func name(_ index: Int) -> String { names[clamped(index)] }
+
+    /// How many beats (quarter notes) apart the repeats are. A switch, not a table, so the audio
+    /// thread never touches a lazily made array.
+    @inline(__always)
+    static func beats(_ index: Int) -> Double {
+        switch index {
+        case 0: return 1
+        case 1: return 0.5
+        case 2: return 1.0 / 3
+        case 4: return 1.0 / 6
+        case 5: return 0.125
+        case 6: return 1.0 / 12
+        case 7: return 0.0625
+        default: return 0.25
+        }
     }
 }
 
@@ -314,6 +357,14 @@ final class KnockEngine {
     private let arpHeldCount: UnsafeMutablePointer<Int>
     private let arpRunLeft: UnsafeMutablePointer<Int>
     private var arpRunning = false
+    /// NOTE REPEAT: who holds each pad (bit 1 a finger, bit 2 MIDI; 0 = not repeating), the beat its
+    /// next repeat falls on, and the hit it repeats (the press's velocity and pitch). Fixed storage.
+    private let repeatHold: UnsafeMutablePointer<UInt8>
+    private let repeatNext: UnsafeMutablePointer<Double>
+    private let repeatHit: UnsafeMutablePointer<KEvent>
+    private var repeating = false
+    /// False at the top of a block, until the loops have worked out where this block's beat is.
+    private var blockClockReady = false
 
     let bus = BusProcessor()
     let master = MasterBus()
@@ -474,11 +525,18 @@ final class KnockEngine {
         arpHeldCount.initialize(repeating: 0, count: Pad.count)
         arpRunLeft = .allocate(capacity: Pad.count)
         arpRunLeft.initialize(repeating: 0, count: Pad.count)
+        repeatHold = .allocate(capacity: Pad.count)
+        repeatHold.initialize(repeating: 0, count: Pad.count)
+        repeatNext = .allocate(capacity: Pad.count)
+        repeatNext.initialize(repeating: 0, count: Pad.count)
+        repeatHit = .allocate(capacity: Pad.count)
+        repeatHit.initialize(repeating: KEvent(kind: .pad), count: Pad.count)
     }
 
     deinit {
         pending.deallocate(); dueHits.deallocate(); lastRate.deallocate()
         arpHeld.deallocate(); arpHeldLeft.deallocate(); arpHeldCount.deallocate(); arpRunLeft.deallocate()
+        repeatHold.deallocate(); repeatNext.deallocate(); repeatHit.deallocate()
         midiOut.deallocate(); midiOutChannel.deallocate(); midiOutNote.deallocate()
         midiOffDue.deallocate(); midiOffChannel.deallocate(); midiOffNote.deallocate(); midiSentAt.deallocate()
         heldLoops.deallocate()
@@ -516,6 +574,7 @@ final class KnockEngine {
         master.prepare(sampleRate: sampleRate)
         for i in 0..<KnockEngine.maxVoices { voices[i].active = false }
         for i in 0..<KnockEngine.maxStealTails { stealTails[i].active = false }
+        clearRepeats()
     }
 
     func param(_ p: KParam) -> Float { controls.get(p) }
@@ -898,12 +957,13 @@ final class KnockEngine {
             previewPos = 0
         }
         let playMode = params[KParam.playMode.rawValue]
-        if lastPlayMode >= 0 && playMode != lastPlayMode { clearGates(); playing = false; queuedLoop = -2; releaseAll() }
+        if lastPlayMode >= 0 && playMode != lastPlayMode { clearGates(); playing = false; queuedLoop = -2; releaseAll(); clearRepeats() }
         lastPlayMode = playMode
 
         // Events from the faceplate and MIDI ports happen at the start of the block.
         // Transport events (start, stop, loop picks, MIDI clock) are handled before the loop is
         // scheduled, so a loop starts on this block's first sample, not one block late.
+        blockClockReady = false
         queue.drain { e in
             if KnockEngine.isTransport(e.kind) {
                 self.apply(e, offset: 0)
@@ -913,6 +973,8 @@ final class KnockEngine {
         }
         applyHostTransportAtBlockStart()
         scheduleLoops(frames: frames, host: host)
+        blockClockReady = true
+        if repeating { scheduleRepeats(frames: frames) }
         sortBlockEvents()
         if arpRunning { countDownHeld(frames: frames) }
         if pendingCount > 0 { playPending(frames: frames) }
@@ -1120,6 +1182,9 @@ final class KnockEngine {
             } else {
                 let event = noteEvent(note: note, velocity: UInt8(clamping: Int(e.value * 127)))
                 apply(event, offset: offset)
+                // a controller pad (or 808 key) held with NOTE REPEAT on keeps playing until its note off
+                if event.kind == .pad { holdRepeat(pad: Int(event.a), by: KnockEngine.repeatByMIDI, hit: event, offset: offset) }
+                if event.kind == .bass { holdRepeat(pad: Pad.bass808.rawValue, by: KnockEngine.repeatByMIDI, hit: event, offset: offset) }
             }
         case .loopGateOn:
             beginGate(Int(e.a))
@@ -1129,6 +1194,12 @@ final class KnockEngine {
             trigger(pad: Int(e.a), velocity: Float(e.value), semis: 0, lengthSamples: 0, glide: false, gain: e.gain)
             midiOutHit(pad: Int(e.a), velocity: Float(e.value), semis: 0, length: 0, offset: offset)   // pad taps reach the DAW
             record(pad: Int(e.a), velocity: Float(e.value), semis: 0, offset: offset)
+        case .padHold:
+            let hit = KEvent(kind: .pad, a: e.a, value: e.value)
+            apply(hit, offset: offset)
+            holdRepeat(pad: Int(e.a), by: KnockEngine.repeatByTouch, hit: hit, offset: offset)
+        case .padLift:
+            liftRepeat(pad: Int(e.a), by: KnockEngine.repeatByTouch)
         case .padPitched:
             let pad = Int(e.a) % 128, semis = Float(Int(e.a) / 128 - 64)
             guard pad >= 0 && pad < Pad.count else { break }
@@ -1187,6 +1258,15 @@ final class KnockEngine {
                     }
                 }
                 break
+            }
+            // NOTE REPEAT: letting go of a controller pad (or the 808 key that's repeating) stops its repeats.
+            if e.a >= 0 {
+                let note = Int(e.a) % 128
+                if let pad = livePad(note) { liftRepeat(pad: pad, by: KnockEngine.repeatByMIDI) }
+                let bass = Pad.bass808.rawValue
+                if Pad.bassNoteRange.contains(note), repeatHit[bass].kind == .bass, Int(repeatHit[bass].a) == note - Pad.bassRootNote {
+                    liftRepeat(pad: bass, by: KnockEngine.repeatByMIDI)
+                }
             }
             // One-shot duration belongs to the sample and DECAY control, even for a
             // chromatic 808. Only Loop mode treats MIDI note length as a gate.
@@ -1264,6 +1344,7 @@ final class KnockEngine {
         case .allOff:
             midiOutAllOff(offset: offset)
             clearGates()
+            clearRepeats()
             localRun = false
             playing = false
             currentLoop = -1
@@ -1334,6 +1415,87 @@ final class KnockEngine {
         pendingCount = 0
         for pad in 0..<Pad.count { arpHeldCount[pad] = 0; arpRunLeft[pad] = 0 }
         arpRunning = false
+    }
+
+    // MARK: NOTE REPEAT
+
+    static let repeatByTouch: UInt8 = 1
+    static let repeatByMIDI: UInt8 = 2
+
+    /// The pad's repeat in beats, or nil while its NOTE REPEAT is off.
+    @inline(__always)
+    private func repeatBeats(_ pad: Int) -> Double? {
+        guard let kit, pad >= 0, pad < kit.settings.count, kit.settings[pad].noteRepeat else { return nil }
+        return NoteRepeat.beats(kit.settings[pad].repeatDivision)
+    }
+
+    /// The first grid line of `step` at or after `beat` (counted from the playing pattern's start).
+    @inline(__always)
+    private func repeatGrid(_ beat: Double, _ step: Double) -> Double {
+        let origin = playing ? loopStartBeat : 0
+        return origin + ((beat - origin) / step - 1e-9).rounded(.up) * step
+    }
+
+    /// A press that just played `hit` at `offset`: with the pad's NOTE REPEAT on, it plays again every
+    /// division while it's held. With the pattern running the repeats land on its grid (one closer
+    /// than half a division to the press is skipped, so there's no double hit); stopped, they count
+    /// from the press. A second hand on a pad already repeating only takes over velocity and pitch.
+    private func holdRepeat(pad: Int, by source: UInt8, hit: KEvent, offset: Int) {
+        guard pad >= 0 && pad < Pad.count, let step = repeatBeats(pad) else { return }
+        let first = repeatHold[pad] == 0
+        repeatHold[pad] |= source
+        repeatHit[pad] = hit
+        repeating = true
+        guard first else { return }
+        // pressed before this block's beat is known (a MIDI port's note at the top of the block):
+        // placed once it is, from the block's first sample
+        guard blockClockReady else { repeatNext[pad] = .nan; return }
+        let at = blockBeat0 + Double(max(0, offset)) * lastBeatsPerSample
+        repeatNext[pad] = playing ? repeatGrid(at + step * 0.5, step) : at + step
+    }
+
+    private func liftRepeat(pad: Int, by source: UInt8) {
+        guard pad >= 0 && pad < Pad.count else { return }
+        repeatHold[pad] &= ~source
+    }
+
+    /// Panic, a mode change, or the engine starting over: no pad repeats any more.
+    private func clearRepeats() {
+        repeatHold.update(repeating: 0, count: Pad.count)
+        repeating = false
+    }
+
+    /// Puts this block's repeats in, each at its own sample, on the same beat clock the patterns
+    /// play on (the DAW's tempo and beat when it leads, the BPM display's otherwise). A repeat plays
+    /// exactly like the press (choke, voice limit, MIDI out and RECORD included).
+    private func scheduleRepeats(frames: Int) {
+        let bps = lastBeatsPerSample
+        guard bps > 0 else { return }
+        let b0 = blockBeat0
+        var any = false
+        for pad in 0..<Pad.count where repeatHold[pad] != 0 {
+            // NOTE REPEAT turned off while held: the pad stops repeating at once
+            guard let step = repeatBeats(pad) else { repeatHold[pad] = 0; continue }
+            any = true
+            var next = repeatNext[pad]
+            if next.isNaN { next = playing ? repeatGrid(b0 + step * 0.5, step) : b0 + step }
+            // the division changed, or the DAW jumped (a cycle, a relocate): pick the grid up from here
+            // (the first repeat after a press can be up to a division and a half away)
+            if next > b0 + step * 1.5 + 1e-9 || next < b0 - step {
+                next = playing ? repeatGrid(b0, step) : b0 + step
+            }
+            var added = 0
+            while added < 64 {
+                // the sample it falls on (a hair of slack, so a beat summed block by block never lands one early)
+                let at = ((next - b0) / bps + 1e-6).rounded(.down)
+                if at >= Double(frames) { break }
+                addBlockEvent(BlockEvent(offset: max(0, Int(at)), event: repeatHit[pad]))
+                next += step
+                added += 1
+            }
+            repeatNext[pad] = next
+        }
+        repeating = any
     }
 
     /// Drum roll RECORD: note a live hit at its place in the playing pattern.

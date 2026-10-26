@@ -17,8 +17,13 @@ struct BKMenuPalette {
     let text: Color
     let secondary: Color
     let accent: Color
+    /// The face it was made for (modern, platinum, vintage, texture).
+    var finish = "modern"
     /// Printing on the black keys and inside the wells (every finish).
     static let wellText = Color(bkHex: 0xEEEDE7)
+
+    /// The footer's readout: MODERN MODE, PLATINUM MODE, VINTAGE MODE, TEXTURE MODE.
+    var modeName: String { finish.uppercased() + " MODE" }
 
     /// `finish`: the face showing (KnockController.faceKey: modern, platinum, vintage, texture).
     static func of(_ finish: String) -> BKMenuPalette {
@@ -26,16 +31,16 @@ struct BKMenuPalette {
         switch finish {
         case "platinum":
             return BKMenuPalette(top: Color(bkHex: 0xC9CDD0), bottom: Color(bkHex: 0x949A9E), inset: Color(bkHex: 0xA6ACAF),
-                                 edge: Color(bkHex: 0x73797C), text: Color(bkHex: 0x171B1E), secondary: Color(bkHex: 0x262C30), accent: accent)
+                                 edge: Color(bkHex: 0x73797C), text: Color(bkHex: 0x171B1E), secondary: Color(bkHex: 0x262C30), accent: accent, finish: finish)
         case "vintage":
             return BKMenuPalette(top: Color(bkHex: 0xE1D6BB), bottom: Color(bkHex: 0xB9AA8B), inset: Color(bkHex: 0xCDC0A1),
-                                 edge: Color(bkHex: 0x85775D), text: Color(bkHex: 0x242016), secondary: Color(bkHex: 0x453B29), accent: accent)
+                                 edge: Color(bkHex: 0x85775D), text: Color(bkHex: 0x242016), secondary: Color(bkHex: 0x453B29), accent: accent, finish: finish)
         case "texture":
             return BKMenuPalette(top: Color(bkHex: 0x263F50), bottom: Color(bkHex: 0x0E1C27), inset: Color(bkHex: 0x142A39),
-                                 edge: Color(bkHex: 0x496577), text: Color(bkHex: 0xE2EDF2), secondary: Color(bkHex: 0xB0C9D6), accent: accent)
+                                 edge: Color(bkHex: 0x496577), text: Color(bkHex: 0xE2EDF2), secondary: Color(bkHex: 0xB0C9D6), accent: accent, finish: finish)
         default:
             return BKMenuPalette(top: Color(bkHex: 0x2B2D2E), bottom: Color(bkHex: 0x101112), inset: Color(bkHex: 0x17191A),
-                                 edge: Color(bkHex: 0x424546), text: wellText, secondary: Color(bkHex: 0xB8BAB6), accent: accent)
+                                 edge: Color(bkHex: 0x424546), text: wellText, secondary: Color(bkHex: 0xB8BAB6), accent: accent, finish: "modern")
         }
     }
 }
@@ -97,13 +102,18 @@ private struct BKHardwareKey<Content: View>: View {
 struct BKMenuLED: View {
     let isOn: Bool
     let accent: Color
+    /// The menu's lens is a tall slot; the pad window also uses a flat bar under a tab and a round lamp.
+    var width: CGFloat = 6
+    var height: CGFloat = 14
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 1.5)
+        let corner = min(width, height) >= 8 ? min(width, height) / 2 : 1.5
+        RoundedRectangle(cornerRadius: corner)
             .fill(isOn ? accent : Color(bkHex: 0x171717))
-            .frame(width: 6, height: 14)
-            .overlay(RoundedRectangle(cornerRadius: 1.5).strokeBorder(Color.black.opacity(0.95), lineWidth: 1))
-            .overlay(Rectangle().fill(Color.black.opacity(0.65)).frame(height: 2), alignment: .top)
+            .frame(width: width, height: height)
+            .overlay(RoundedRectangle(cornerRadius: corner).strokeBorder(Color.black.opacity(0.95), lineWidth: 1))
+            .overlay(Rectangle().fill(Color.black.opacity(0.65)).frame(height: min(2, height * 0.3)), alignment: .top)
+            .clipShape(RoundedRectangle(cornerRadius: corner))
             .shadow(color: isOn ? accent.opacity(0.35) : .clear, radius: 3)
             .accessibilityHidden(true)
     }
@@ -220,7 +230,6 @@ struct BKMenuFader: View {
     let accent: Color
     var reset: Float? = nil
     let change: (Float) -> Void
-    @State private var start: Float?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -231,33 +240,7 @@ struct BKMenuFader: View {
                     .padding(.horizontal, 8).frame(minWidth: 64, minHeight: 26)
                     .background(BKMenuWell())
             }
-            GeometryReader { g in
-                let w = max(1, g.size.width)
-                let f = CGFloat(min(1, max(0, value)))
-                ZStack(alignment: .leading) {
-                    BKMenuWell().frame(height: 12)
-                    RoundedRectangle(cornerRadius: 2).fill(accent.opacity(0.85))
-                        .frame(width: max(4, (w - 8) * f), height: 4).padding(.leading, 4)
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(LinearGradient(colors: [Color(bkHex: 0x58595A), Color(bkHex: 0x1A1B1C)], startPoint: .top, endPoint: .bottom))
-                        .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.black, lineWidth: 1))
-                        .overlay(Rectangle().fill(accent).frame(width: 2, height: 16))
-                        .frame(width: 22, height: 30)
-                        .shadow(color: .black.opacity(0.7), radius: 2, y: 2)
-                        .offset(x: (w - 22) * f)
-                }
-                .frame(height: 34)
-                .contentShape(Rectangle())
-                .gesture(DragGesture(minimumDistance: 0)
-                    .onChanged { d in
-                        if start == nil { start = value }
-                        let moved = Float(d.translation.width / w)
-                        change(min(1, max(0, (start ?? value) + moved)))
-                    }
-                    .onEnded { _ in start = nil })
-                .simultaneousGesture(TapGesture(count: 2).onEnded { if let reset { change(reset) } })
-            }
-            .frame(height: 34)
+            BKFaderTrack(value: value, accent: accent, reset: reset, change: change)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title).accessibilityValue(text)
@@ -268,5 +251,110 @@ struct BKMenuFader: View {
             @unknown default: break
             }
         }
+    }
+}
+
+/// The fader itself: a lit bar in a recessed slot and a cap you drag from where your finger went
+/// down (the value never jumps), double tap to reset. `value` 0…1. `cap`: the cap's metal (nil = the
+/// menu's black cap).
+struct BKFaderTrack: View {
+    let value: Float
+    let accent: Color
+    var cap: MetalTone? = nil
+    var reset: Float? = nil
+    let change: (Float) -> Void
+    @State private var start: Float?
+
+    var body: some View {
+        GeometryReader { g in
+            let w = max(1, g.size.width)
+            let f = CGFloat(min(1, max(0, value)))
+            let capColors = cap.map { [$0.bright, $0.light, $0.dark] } ?? [Color(bkHex: 0x58595A), Color(bkHex: 0x1A1B1C)]
+            ZStack(alignment: .leading) {
+                BKMenuWell().frame(height: 12)
+                RoundedRectangle(cornerRadius: 2).fill(accent.opacity(0.85))
+                    .frame(width: max(4, (w - 8) * f), height: 4).padding(.leading, 4)
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(LinearGradient(colors: capColors, startPoint: .top, endPoint: .bottom))
+                    .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.black, lineWidth: 1))
+                    .overlay(Rectangle().fill(cap == nil ? accent : Color.black.opacity(0.7)).frame(width: 2, height: 16))
+                    .frame(width: 22, height: 30)
+                    .shadow(color: .black.opacity(0.7), radius: 2, y: 2)
+                    .offset(x: (w - 22) * f)
+            }
+            .frame(height: 34)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { d in
+                    if start == nil { start = value }
+                    let moved = Float(d.translation.width / w)
+                    change(min(1, max(0, (start ?? value) + moved)))
+                }
+                .onEnded { _ in start = nil })
+            .simultaneousGesture(TapGesture(count: 2).onEnded { if let reset { change(reset) } })
+        }
+        .frame(height: 34)
+    }
+}
+
+/// A raised key cut from the window's own metal (the pad window's tabs, rows and DONE): a bevelled
+/// lip lit on top, a shadow under it, pressed in (and down a point) while your finger is on it.
+struct BKPanelKeyStyle: ButtonStyle {
+    let palette: BKMenuPalette
+    var corner: CGFloat = 6
+
+    func makeBody(configuration: Configuration) -> some View {
+        BKPanelKey(label: configuration.label, pressed: configuration.isPressed, palette: palette, corner: corner)
+    }
+}
+
+private struct BKPanelKey<Content: View>: View {
+    let label: Content
+    let pressed: Bool
+    let palette: BKMenuPalette
+    let corner: CGFloat
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        let face: [Color] = pressed ? [palette.inset, palette.top] : [palette.top, palette.inset]
+        let lip: [Color] = [Color.white.opacity(pressed ? 0.08 : 0.4), Color.black.opacity(0.55)]
+        return label
+            .foregroundColor(palette.text)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: corner)
+                        .fill(LinearGradient(colors: face, startPoint: .top, endPoint: .bottom))
+                    BrushedFinish(corner: corner).opacity(0.6)
+                    RoundedRectangle(cornerRadius: corner).strokeBorder(Color.black.opacity(0.85), lineWidth: 1.5)
+                    RoundedRectangle(cornerRadius: max(1, corner - 1.5))
+                        .strokeBorder(LinearGradient(colors: lip, startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                        .padding(1.5)
+                }
+                .environment(\.seqFinish, palette.finish)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: corner))
+            .offset(y: pressed ? 1 : 0)
+            .shadow(color: .black.opacity(0.45), radius: pressed ? 0.5 : 2, x: 0, y: pressed ? 0.5 : 2)
+            .opacity(isEnabled ? 1 : 0.5)
+            .animation(.easeOut(duration: 0.08), value: pressed)
+    }
+}
+
+/// A panel sunk into the window (the pad window's LOADED SOUND card and its control rows): darker
+/// metal, shadowed along the top and lit along the bottom edge.
+struct BKRecessedPanel: View {
+    let palette: BKMenuPalette
+    var corner: CGFloat = 8
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: corner)
+        ZStack {
+            shape.fill(LinearGradient(colors: [palette.inset, palette.bottom.opacity(0.92)], startPoint: .top, endPoint: .bottom))
+            BrushedFinish(corner: corner).opacity(0.35)
+            shape.strokeBorder(LinearGradient(colors: [Color.black.opacity(0.75), Color.white.opacity(0.28)], startPoint: .top, endPoint: .bottom), lineWidth: 1.5)
+            shape.inset(by: 1.5).strokeBorder(Color.black.opacity(0.18), lineWidth: 1)
+        }
+        .environment(\.seqFinish, palette.finish)
+        .allowsHitTesting(false)
     }
 }

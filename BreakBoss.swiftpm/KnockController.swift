@@ -265,7 +265,9 @@ final class KnockController: ObservableObject {
 
     // MARK: Pads and transport
 
-    func padDown(_ pad: Int, velocity: Float) {
+    /// `held`: a finger that stays on the pad until padRelease (Face 1's pads), so the pad's NOTE
+    /// REPEAT can run while it's down. Buttons that just play the pad leave it false.
+    func padDown(_ pad: Int, velocity: Float, held: Bool = false) {
         guard pad >= 0 && pad < Pad.count else { return }
         guard powerOn else { readout = Readout(title: "POWER", value: "OFF", time: Date()); return }
         if playMode == .loop {
@@ -274,7 +276,7 @@ final class KnockController: ObservableObject {
             let title = pad < loops.count ? loops[pad].name : LoopSlot(rawValue: pad)?.title ?? ""
             readout = Readout(title: "LOOP \(pad + 1)", value: title, time: Date())
         } else {
-            engine.send(KEvent(kind: .pad, a: Int32(pad), value: Double(velocity)))
+            engine.send(KEvent(kind: held ? .padHold : .pad, a: Int32(pad), value: Double(velocity)))
             readout = Readout(title: "PAD \(pad + 1)", value: padName(pad).uppercased(), time: Date())
         }
     }
@@ -537,11 +539,25 @@ final class KnockController: ObservableObject {
         guard (0..<Pad.count).contains(pad) else { return }
         if playMode == .loop {
             engine.send(KEvent(kind: .loopGateOn, a: Int32(2048 + pad), value: Double(velocity)))
-        } else { padDown(pad, velocity: velocity) }
+        } else { padDown(pad, velocity: velocity, held: true) }
     }
 
     func gateUp(_ pad: Int) {
         engine.send(KEvent(kind: .loopGateOff, a: Int32(2048 + pad)))
+        padRelease(pad)
+    }
+
+    /// The finger came off a pad (or the touch was cancelled): its NOTE REPEAT stops. Safe to send
+    /// for a pad that isn't repeating.
+    func padRelease(_ pad: Int) {
+        guard (0..<Pad.count).contains(pad) else { return }
+        engine.send(KEvent(kind: .padLift, a: Int32(pad)))
+    }
+
+    /// True when holding this pad repeats it (ONE-SHOT with the pad's NOTE REPEAT on), so the hold
+    /// doesn't open the pad's window.
+    func padRepeats(_ pad: Int) -> Bool {
+        playMode != .loop && state.pads.indices.contains(pad) && state.pads[pad].noteRepeat
     }
 
     func previewLoop(_ index: Int) {
@@ -580,7 +596,7 @@ final class KnockController: ObservableObject {
             pool.removeAll { $0 == (picks[pad] ?? state.kitID) }          // always a change
             if let pick = pool.randomElement() {
                 picks[pad] = pick
-                state.pads[pad] = PadSettings()                            // a new sound comes in as itself
+                state.pads[pad] = state.pads[pad].freshSound()             // a new sound comes in as itself
             }
         }
         state.stockPicks = picks
@@ -930,7 +946,7 @@ final class KnockController: ObservableObject {
                     // A new sound comes in as itself: its own pitch and volume, centered, the SAMPLER at
                     // its defaults. The last sound's settings (SMP START, LENGTH, root note, tune, level...)
                     // used to stay on the track and change the new one (Tyrone, Oct 19).
-                    var fresh = PadSettings()
+                    var fresh = self.state.pads[pad].freshSound()
                     fresh.sampleFile = name
                     self.state.pads[pad] = fresh
                     self.stockSampleNames[pad] = nil
@@ -958,7 +974,7 @@ final class KnockController: ObservableObject {
 
     func revertPad(_ pad: Int) {
         guard pad >= 0 && pad < Pad.count else { return }
-        state.pads[pad] = PadSettings()
+        state.pads[pad] = state.pads[pad].freshSound()
         rebuildKit()
         scheduleSave()
     }
@@ -1091,7 +1107,7 @@ final class KnockController: ObservableObject {
     /// Back to the kit's own 12 channels.
     func resetRack() {
         state.workspaceChannels = nil
-        for pad in 0..<Pad.count where state.pads[pad].sampleFile != nil { state.pads[pad] = PadSettings() }
+        for pad in 0..<Pad.count where state.pads[pad].sampleFile != nil { state.pads[pad] = state.pads[pad].freshSound() }
         rebuildKit()
         scheduleSave()
     }

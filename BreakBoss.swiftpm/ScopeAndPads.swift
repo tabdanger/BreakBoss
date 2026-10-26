@@ -366,7 +366,7 @@ struct PadView: View {
         .accessibilityLabel("Pad \(pad + 1)")
         .onDisappear {
             hold?.cancel()
-            if pressed && holdToPlay { controller.gateUp(pad) }
+            if pressed { if holdToPlay { controller.gateUp(pad) } else { controller.padRelease(pad) } }
             pressed = false
         }
     }
@@ -380,14 +380,16 @@ struct PadView: View {
             // LOOP mode gates the loop once for the whole press; one-shot hits every finger
             if first || controller.playMode != .loop { controller.gateDown(pad, velocity: velocity) }
         } else {
-            controller.padDown(pad, velocity: velocity)
+            // held: with the pad's NOTE REPEAT on it repeats until the last finger lifts
+            controller.padDown(pad, velocity: velocity, held: true)
         }
         pressed = true
         hold?.cancel()
         hold = nil
         guard first else { return }
         let work = DispatchWorkItem {
-            if pressed {
+            // NOTE REPEAT on: holding the pad plays its repeats instead of opening its window
+            if pressed && !controller.padRepeats(pad) {
                 if holdToPlay { controller.gateUp(pad) }
                 openEditor(controller.playMode == .loop)
             }
@@ -402,7 +404,7 @@ struct PadView: View {
         hold = nil
         guard last, pressed else { return }
         pressed = false
-        if holdToPlay { controller.gateUp(pad) }
+        if holdToPlay { controller.gateUp(pad) } else { controller.padRelease(pad) }
     }
 
     /// Modern red, Vintage light yellow, Texture blue.

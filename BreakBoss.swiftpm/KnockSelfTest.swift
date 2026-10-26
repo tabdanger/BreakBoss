@@ -55,6 +55,7 @@ enum KnockSelfTest {
         phase("checkPrecomputedEffects", checkPrecomputedEffects)
         phase("checkAudioCPU", checkAudioCPU)
         phase("checkSampleEdits", checkSampleEdits)
+        phase("checkNoteRepeat", checkNoteRepeat)
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
@@ -1643,6 +1644,181 @@ enum KnockSelfTest {
     /// included) never cuts the sound: kit sounds and loaded samples ring out exactly as a note with
     /// no length does, untouched or with the sampler opened. A Volume envelope with a release is a
     /// change on top, so its note ends where the note does.
+    /// NOTE REPEAT (Tyrone, Oct 26): a held pad repeats every division on the engine's beat, sample
+    /// for sample, at the press's velocity; lifting, turning it off, panic and a mode change stop it;
+    /// two hands on one pad never double it; it follows the DAW's tempo and locks to the running
+    /// pattern's grid; a controller pad repeats until its note off; saved pads keep it, old saves
+    /// load it off at 1/16.
+    static func checkNoteRepeat() {
+        let rate = 48_000.0
+        let kick = Pad.kick.rawValue
+        let def = KitLibrary.drumMastery
+        let samples = def.pads.enumerated().map { DrumSynth.render($0.element, sampleRate: rate, seed: UInt32($0.offset + 1)) }
+        func kit(repeatOn: Bool, division: Int = NoteRepeat.defaultDivision) -> KitBuffers {
+            var settings = Array(repeating: PadSettings(), count: Pad.count)
+            settings[kick].noteRepeat = repeatOn
+            settings[kick].repeatDivision = division
+            return KitBuffers(name: def.name, samples: samples, settings: settings, bassHz: def.bassHz, renderSampleRate: rate)
+        }
+        func engine(division: Int = NoteRepeat.defaultDivision, standalone: Bool = true) -> KnockEngine {
+            let e = KnockEngine()
+            e.standalone = standalone
+            e.prepare(sampleRate: rate, maxFrames: 4_096)
+            e.setTempo(120)
+            e.setParam(.playMode, 0)                                     // ONE-SHOT
+            e.kitHandoff.publish(kit(repeatOn: true, division: division))
+            e.patternHandoff.publish(PatternSet(Array(repeating: PatternData(name: "EMPTY", lengthTicks: PatternData.ppq * 4, events: []),
+                                                      count: Pad.count)))
+            // the kick's hits come back out as MIDI on channel 16, each at its own sample
+            e.send(KEvent(kind: .midiOut, a: Int32(kick), value: 15 * 128 + 36))
+            e.send(KEvent(kind: .midiOut, a: -1, value: 1))
+            return e
+        }
+        var l = [Float](repeating: 0, count: 4_096), r = [Float](repeating: 0, count: 4_096)
+        var clock = 0
+        var onsets: [(at: Int, velocity: UInt8)] = []
+        func render(_ e: KnockEngine, samples total: Int, block: Int = 128, host: ((Int) -> HostTiming)? = nil) {
+            var done = 0
+            while done < total {
+                let n = min(block, total - done)
+                l.withUnsafeMutableBufferPointer { lp in
+                    r.withUnsafeMutableBufferPointer { rp in
+                        e.render(frames: n, left: lp.baseAddress!, right: rp.baseAddress!, host: host?(clock))
+                    }
+                }
+                e.forEachMIDIOut { frame, status, _, velocity in
+                    if status == 0x9F && velocity > 0 { onsets.append((clock + frame, velocity)) }
+                }
+                clock += n
+                done += n
+            }
+        }
+        func gaps() -> [Int] { onsets.count > 1 ? (1..<onsets.count).map { onsets[$0].at - onsets[$0 - 1].at } : [] }
+
+        // Every division at 120 BPM, transport stopped: the press, then a repeat every division.
+        for division in 0..<NoteRepeat.count {
+            let e = engine(division: division)
+            clock = 0; onsets = []
+            render(e, samples: 256)
+            onsets = []
+            e.send(KEvent(kind: .padHold, a: Int32(kick), value: 0.8))
+            let step = NoteRepeat.beats(division) * 0.5 * rate          // 120 BPM: half a second a beat
+            render(e, samples: Int(step * 4.5))
+            let g = gaps()
+            let exact = !g.isEmpty && g.allSatisfy { abs(Double($0) - step) <= 1.01 }
+            check(onsets.count == 5 && exact && onsets.first?.at == 256 && onsets.allSatisfy { $0.velocity == 102 },
+                  "NOTE REPEAT \(NoteRepeat.name(division)): press + 4 repeats, \(Int(step)) samples apart, same velocity (got \(onsets.count) hits, gaps \(Set(g)))")
+            e.send(KEvent(kind: .padLift, a: Int32(kick)))
+            let held = onsets.count
+            render(e, samples: Int(step * 4) + 2_048)
+            check(onsets.count == held, "NOTE REPEAT \(NoteRepeat.name(division)): letting go stops the repeats (\(onsets.count - held) after release)")
+        }
+
+        // Off on the pad: a hold is one hit, and nothing more.
+        do {
+            let e = engine()
+            e.kitHandoff.publish(kit(repeatOn: false))
+            clock = 0; onsets = []
+            render(e, samples: 256)
+            e.send(KEvent(kind: .padHold, a: Int32(kick), value: 0.8))
+            render(e, samples: 48_000)
+            e.send(KEvent(kind: .padLift, a: Int32(kick)))
+            check(onsets.count == 1, "NOTE REPEAT off: holding the pad plays it once (\(onsets.count) hits)")
+        }
+
+        // Turned off while held, panic, and a ONE-SHOT / LOOP change each stop it.
+        let stops: [(String, (KnockEngine) -> Void)] = [
+            ("turning NOTE REPEAT off", { e in e.kitHandoff.publish(kit(repeatOn: false)) }),
+            ("panic", { e in e.send(KEvent(kind: .allOff)) }),
+            ("switching to LOOP", { e in e.setParam(.playMode, 1) })
+        ]
+        for (what, stop) in stops {
+            let e = engine()
+            clock = 0; onsets = []
+            e.send(KEvent(kind: .padHold, a: Int32(kick), value: 0.8))
+            render(e, samples: 13_000)                                   // press + 2 repeats
+            let before = onsets.count
+            stop(e)
+            render(e, samples: 48_000)
+            check(before == 3 && onsets.count == before, "NOTE REPEAT: \(what) while the pad is held stops its repeats (\(before) then \(onsets.count))")
+            // and nothing is left behind: a fresh press with repeat on runs normally again
+            e.setParam(.playMode, 0)
+            e.kitHandoff.publish(kit(repeatOn: true))
+            render(e, samples: 1_024)
+            onsets = []
+            e.send(KEvent(kind: .padHold, a: Int32(kick), value: 0.8))
+            render(e, samples: 12_500)
+            e.send(KEvent(kind: .padLift, a: Int32(kick)))
+            render(e, samples: 12_000)
+            check(onsets.count == 3, "NOTE REPEAT: after \(what) a new hold repeats again and stops on release (\(onsets.count) hits)")
+        }
+
+        // A finger and a controller pad on the same pad: their own presses, but one stream of repeats,
+        // and it runs until both have let go.
+        do {
+            let e = engine()
+            clock = 0; onsets = []
+            e.send(KEvent(kind: .padHold, a: Int32(kick), value: 0.8))
+            render(e, samples: 3_000)
+            e.receiveMIDI(status: 0x99, data1: 36, data2: 100, time: 0)
+            render(e, samples: 21_000)
+            let hits = onsets.map { $0.at }
+            let repeats = hits.filter { $0 % 6_000 == 0 }
+            check(hits.count == 5 && repeats.count == 4, "NOTE REPEAT: two hands on one pad repeat once, not twice (hits at \(hits))")
+            e.send(KEvent(kind: .padLift, a: Int32(kick)))
+            let afterFinger = onsets.count
+            render(e, samples: 12_000)
+            check(onsets.count == afterFinger + 2, "NOTE REPEAT: still held on the controller after the finger lifts (\(onsets.count - afterFinger))")
+            e.receiveMIDI(status: 0x89, data1: 36, data2: 0, time: 0)
+            let afterAll = onsets.count
+            render(e, samples: 24_000)
+            check(onsets.count == afterAll, "NOTE REPEAT: the controller's note off stops it (\(onsets.count - afterAll) more)")
+        }
+
+        // The DAW's tempo (TEMPO SYNC): 90 BPM makes a 1/16 8,000 samples.
+        do {
+            let e = engine(standalone: false)
+            e.setParam(.tempoSync, 1)
+            clock = 0; onsets = []
+            let host = { (at: Int) in HostTiming(tempo: 90, beat: Double(at) / rate * 1.5, playing: false) }
+            render(e, samples: 512, host: host)
+            onsets = []
+            e.send(KEvent(kind: .padHold, a: Int32(kick), value: 0.8))
+            render(e, samples: 33_000, host: host)
+            let g = gaps()
+            check(onsets.count == 5 && g.allSatisfy { abs($0 - 8_000) <= 1 }, "NOTE REPEAT follows the DAW's tempo (gaps \(Set(g)))")
+        }
+
+        // The pattern running: the repeats land on its 1/16 grid, not counted from the press.
+        do {
+            let e = engine()
+            clock = 0; onsets = []
+            e.send(KEvent(kind: .play))
+            render(e, samples: 1_000, block: 1_000)
+            e.send(KEvent(kind: .padHold, a: Int32(kick), value: 0.8))
+            render(e, samples: 25_000)
+            let hits = onsets.map { $0.at }
+            check(hits == [1_000, 6_000, 12_000, 18_000, 24_000], "NOTE REPEAT locks to the playing pattern's grid (hits at \(hits))")
+        }
+
+        // Saved: kept as set; a save from before NOTE REPEAT loads it off at 1/16; a new sound keeps it.
+        var set = PadSettings()
+        set.noteRepeat = true
+        set.repeatDivision = 6
+        let decoded = (try? JSONEncoder().encode(set)).flatMap { try? JSONDecoder().decode(PadSettings.self, from: $0) }
+        check(decoded == set, "NOTE REPEAT: saved and loaded as set (1/32T on)")
+        let old = try? JSONDecoder().decode(PadSettings.self, from: Data(#"{"level":0.7,"reverse":true}"#.utf8))
+        check(old?.noteRepeat == false && old?.repeatDivision == NoteRepeat.defaultDivision && old?.reverse == true && old?.level == 0.7,
+              "NOTE REPEAT: an older save loads with it off at 1/16 and keeps its other settings")
+        let bad = try? JSONDecoder().decode(PadSettings.self, from: Data(#"{"noteRepeat":true,"repeatDivision":42}"#.utf8))
+        check(bad?.repeatDivision == NoteRepeat.count - 1, "NOTE REPEAT: a division out of range loads as the nearest one")
+        let fresh = set.freshSound()
+        check(fresh.noteRepeat && fresh.repeatDivision == 6 && fresh.sampleFile == nil, "NOTE REPEAT: a new sound on the pad keeps how the pad repeats")
+        check(NoteRepeat.names == ["1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32", "1/32T", "1/64"]
+              && (0..<NoteRepeat.count).map(NoteRepeat.beats) == [1, 0.5, 1.0 / 3, 0.25, 1.0 / 6, 0.125, 1.0 / 12, 0.0625],
+              "NOTE REPEAT: the knob's eight divisions in order, T = triplet")
+    }
+
     static func checkNoteLengthOneShots() {
         let rate = 48_000.0
         let tail = SampleBuffer(left: (0..<72_000).map { i in sinf(Float(i) * 2 * .pi * 110 / 48_000) * 0.4 * expf(-Float(i) / 30_000) },

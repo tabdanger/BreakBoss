@@ -90,6 +90,9 @@ struct KEvent {
         case countIn      // a: beats of metronome count-in, then the pattern (value: loop 0...11, or -1 = the current one)
         case padPitched   // a: pad + 128 * (semitones + 64), value: velocity (a drum played at a pitch)
         case cue          // a: the pattern on the sequencer (0...11); while stopped it's what PLAY or the DAW starts
+        case padHold      // a: pad 0...11, value: velocity. A finger went down on a pad (ONE-SHOT): it plays like .pad,
+                          // and with the pad's NOTE REPEAT on it plays again every division until .padLift
+        case padLift      // a: pad 0...11. The finger came off (or the touch was cancelled): no more repeats
     }
     var kind: Kind
     var a: Int32 = 0
