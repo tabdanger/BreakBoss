@@ -1,0 +1,758 @@
+[
+ {
+  "category": "KICK",
+  "character": "ROUND",
+  "file": "va_kick16_l5_r1.wav",
+  "name": "BK NO 60 KICK",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "KICK",
+  "character": "PUNCH",
+  "file": "va_kickeq_l5_r1.wav",
+  "name": "BK NO 61 KICK",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "CRACK",
+  "file": "va_snareeq_l5_r1.wav",
+  "name": "BK NO 94 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 0.9
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "ROOM",
+  "file": "va_snare_l5_r1.wav",
+  "name": "BK NO 95 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 0.9
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "OFF CENTER",
+  "file": "va_snareoff_l5_r1.wav",
+  "name": "BK NO 96 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 0.9
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "RIMSHOT",
+  "file": "va_rimshot_l5_r1.wav",
+  "name": "BK NO 97 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "RIMSHOT",
+  "file": "va_rimshoteq_l5_r1.wav",
+  "name": "BK NO 98 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "RIM",
+  "character": "CROSS STICK",
+  "file": "va_sstickeq_l5_r1.wav",
+  "name": "BK NO 41 RIM",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 0.5
+  }
+ },
+ {
+  "category": "RIM",
+  "character": "CROSS STICK",
+  "file": "va_sstick_l5_r1.wav",
+  "name": "BK NO 42 RIM",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 0.5
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "FLAM",
+  "file": "va_flam_l3_r1.wav",
+  "name": "BK NO 99 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "FLAM",
+  "file": "va_flameq_l3_r1.wav",
+  "name": "BK NO 100 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "DRAG",
+  "file": "va_drag_l3_r1.wav",
+  "name": "BK NO 101 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.0
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "RIFF",
+  "file": "va_riff1_l1_r1.wav",
+  "name": "BK NO 102 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.558
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "RIFF",
+  "file": "va_riff2_l1_r1.wav",
+  "name": "BK NO 103 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.689
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "RIFF",
+  "file": "va_riff3_l1_r1.wav",
+  "name": "BK NO 104 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.448
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "ROLL",
+  "file": "va_roll1_l1_r1.wav",
+  "name": "BK NO 105 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 3.9
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "ROLL",
+  "file": "va_roll2_l1_r1.wav",
+  "name": "BK NO 106 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 3.6
+  }
+ },
+ {
+  "category": "SNARE",
+  "character": "ROLL",
+  "file": "va_roll3_l1_r1.wav",
+  "name": "BK NO 107 SNARE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 3.87
+  }
+ },
+ {
+  "category": "HAT",
+  "character": "TIGHT",
+  "file": "va_hat_l5_r1.wav",
+  "name": "BK NO 71 HIHAT",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 0.45
+  }
+ },
+ {
+  "category": "HAT",
+  "character": "CRISP",
+  "file": "va_hatcld_l5_r1.wav",
+  "name": "BK NO 72 HIHAT",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 0.45
+  }
+ },
+ {
+  "category": "HAT",
+  "character": "LOOSE",
+  "file": "va_hatshake_l5_r1.wav",
+  "name": "BK NO 73 HIHAT",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 0.5
+  }
+ },
+ {
+  "category": "HAT",
+  "character": "BELL",
+  "file": "va_hatbell_l3_r1.wav",
+  "name": "BK NO 74 HIHAT",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 0.8
+  }
+ },
+ {
+  "category": "HAT",
+  "character": "PEDAL",
+  "file": "va_hatpedal_l3_r1.wav",
+  "name": "BK NO 75 HIHAT",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 0.4
+  }
+ },
+ {
+  "category": "HAT",
+  "character": "PEDAL",
+  "file": "va_hatpedal2_l3_r1.wav",
+  "name": "BK NO 76 HIHAT",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 0.4
+  }
+ },
+ {
+  "category": "OPEN HAT",
+  "character": "OPEN",
+  "file": "va_openhat_l5_r1.wav",
+  "name": "BK NO 65 OPEN HAT",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.8
+  }
+ },
+ {
+  "category": "OPEN HAT",
+  "character": "OPEN",
+  "file": "va_openhat2_l5_r1.wav",
+  "name": "BK NO 66 OPEN HAT",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.8
+  }
+ },
+ {
+  "category": "OPEN HAT",
+  "character": "WASH",
+  "file": "va_hatcrash_l3_r1.wav",
+  "name": "BK NO 67 OPEN HAT",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 2.5
+  }
+ },
+ {
+  "category": "TOM",
+  "character": "HIGH",
+  "file": "va_tom10_l5_r1.wav",
+  "name": "BK NO 11 TOM",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.4
+  }
+ },
+ {
+  "category": "TOM",
+  "character": "MID",
+  "file": "va_tom12_l5_r1.wav",
+  "name": "BK NO 12 TOM",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.4
+  }
+ },
+ {
+  "category": "TOM",
+  "character": "LOW",
+  "file": "va_tom13_l5_r1.wav",
+  "name": "BK NO 13 TOM",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.6
+  }
+ },
+ {
+  "category": "TOM",
+  "character": "FLAM",
+  "file": "va_tomflam10_l3_r1.wav",
+  "name": "BK NO 14 TOM",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.4
+  }
+ },
+ {
+  "category": "TOM",
+  "character": "FLAM",
+  "file": "va_tomflam12_l3_r1.wav",
+  "name": "BK NO 15 TOM",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.4
+  }
+ },
+ {
+  "category": "TOM",
+  "character": "FLAM",
+  "file": "va_tomflam13_l3_r1.wav",
+  "name": "BK NO 16 TOM",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.6
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "CRASH",
+  "file": "va_crash14_l5_r1.wav",
+  "name": "BK NO 25 CRASH",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 3.2
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "CRASH",
+  "file": "va_crash18_l5_r1.wav",
+  "name": "BK NO 26 CRASH",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 3.6
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "CHOKE",
+  "file": "va_choke18_l5_r1.wav",
+  "name": "BK NO 27 CRASH",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 1.8
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "BELL",
+  "file": "va_crashbell14_l3_r1.wav",
+  "name": "BK NO 28 CRASH",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 2.5
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "BELL",
+  "file": "va_crashbell18_l3_r1.wav",
+  "name": "BK NO 29 CRASH",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 2.5
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "RIDE",
+  "file": "va_ride_l5_r1.wav",
+  "name": "BK NO 4 RIDE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 2.8
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "BELL",
+  "file": "va_ridebell_l5_r1.wav",
+  "name": "BK NO 5 RIDE",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 2.8
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "SPLASH",
+  "file": "va_splash_l5_r1.wav",
+  "name": "BK NO 13 CYMBAL",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": true,
+  "feat": {
+   "dur": 2.5
+  }
+ },
+ {
+  "category": "CYMBAL",
+  "character": "CHOKE",
+  "file": "va_splashchoke_l3_r1.wav",
+  "name": "BK NO 14 CYMBAL",
+  "folder": "BK ACOUSTIC",
+  "tags": [
+   "acoustic",
+   "soul",
+   "jazz",
+   "funk",
+   "boombap"
+  ],
+  "kits": false,
+  "feat": {
+   "dur": 1.0
+  }
+ }
+]

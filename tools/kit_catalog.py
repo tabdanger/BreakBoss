@@ -246,6 +246,9 @@ VINTAGE_PADS = {
     "AFROBEAT": "KSRHOPQLTY", "HIGHLIFE": "KSRHPQLT", "ROOTS REGGAE": "KSRHOLTY", "SALSA": "KRHPQLTY",
     "BOSSA NOVA": "KRHPQY", "CUMBIA": "KSRHPQ", "DIGITAL DANCEHALL": "KSCHPQ", "RUMBA": "KSRHPQLTY",
     "KWAITO": "KSCHOP", "CALYPSO": "KSRHOPQY", "ZOUK": "KSRHOPQ",
+    # the research genres' A/B kits that live in the Vintage bank
+    "NEO SOUL": "KSRHOLTY", "DILLA TIME": "KSRHOY", "BOOM BAP": "KSRHOP", "90S RAP": "KSCHOP",
+    "70S SOUL": "KSRHOPQLTY", "80S BREAKS": "KSHOPQLTY", "90S RNB": "KSCHOP", "ROCK": "KSHOLTY",
 }
 VINTAGE_PAD_OF = {"K": 0, "S": 1, "C": 2, "R": 3, "H": 4, "O": 5, "P": 7, "Q": 8, "L": 9, "T": 10, "Y": 11}
 
