@@ -43,6 +43,8 @@ struct BBMenuSpec: Identifiable {
     var accent: Color? = nil
     /// KITS, PATTERNS and the track menu: a hardware panel (HardwareMenu.swift) instead of the list.
     var hardware: BBHardwareSpec? = nil
+    /// The SAMPLER's drop-downs: the list in the popups' hardware (BKHardware.swift) for this face.
+    var finish: String? = nil
 }
 
 final class BBMenuCenter: ObservableObject {
@@ -80,6 +82,14 @@ extension EnvironmentValues {
     }
 }
 private struct BBMenuAccentKey: EnvironmentKey { static let defaultValue: Color? = nil }
+private struct BBMenuFinishKey: EnvironmentKey { static let defaultValue: String? = nil }
+extension EnvironmentValues {
+    /// Menus opened from inside this view draw in the popups' hardware for this face (nil = the plain list).
+    var bbMenuFinish: String? {
+        get { self[BBMenuFinishKey.self] }
+        set { self[BBMenuFinishKey.self] = newValue }
+    }
+}
 
 extension View {
     /// Adds the layer the BreakBoss menus draw in. Put it on the outermost view of a screen.
@@ -153,6 +163,7 @@ extension View {
 private struct BBMenuTrigger: ViewModifier {
     @Environment(\.bbMenuCenter) private var center
     @Environment(\.bbMenuAccent) private var accent
+    @Environment(\.bbMenuFinish) private var finish
     let title: String?
     let width: CGFloat
     let items: () -> [BBMenuItem]
@@ -162,7 +173,7 @@ private struct BBMenuTrigger: ViewModifier {
     @State private var frame: CGRect = .zero
 
     private func open() {
-        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?(), accent: accent))
+        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: items(), custom: custom?(), accent: accent, finish: finish))
     }
 
     func body(content: Content) -> some View {
@@ -286,26 +297,28 @@ private struct TriggerID: ViewModifier {
 final class BBMenuOpener {
     fileprivate var center: BBMenuCenter?
     fileprivate var accent: Color?
+    fileprivate var finish: String?
     fileprivate var frame: CGRect = .zero
 
     /// `point` is in the attached view's own space.
     func show(at point: CGPoint, title: String? = nil, width: CGFloat = 260, items: [BBMenuItem]) {
         guard let center, !items.isEmpty else { return }
         let anchor = CGRect(x: frame.minX + point.x, y: frame.minY + point.y, width: 1, height: 1)
-        center.show(BBMenuSpec(anchor: anchor, width: width, title: title, items: items, accent: accent))
+        center.show(BBMenuSpec(anchor: anchor, width: width, title: title, items: items, accent: accent, finish: finish))
     }
 }
 
 private struct BBMenuOpenerHook: ViewModifier {
     @Environment(\.bbMenuCenter) private var center
     @Environment(\.bbMenuAccent) private var accent
+    @Environment(\.bbMenuFinish) private var finish
     let opener: BBMenuOpener
 
     func body(content: Content) -> some View {
         content.background(GeometryReader { g in
             Color.clear
-                .onAppear { opener.center = center; opener.accent = accent; opener.frame = g.frame(in: .named(bbSpace)) }
-                .onChange(of: g.frame(in: .named(bbSpace))) { opener.frame = $0; opener.center = center; opener.accent = accent }
+                .onAppear { opener.center = center; opener.accent = accent; opener.finish = finish; opener.frame = g.frame(in: .named(bbSpace)) }
+                .onChange(of: g.frame(in: .named(bbSpace))) { opener.frame = $0; opener.center = center; opener.accent = accent; opener.finish = finish }
         })
     }
 }
@@ -317,6 +330,7 @@ extension View {
 private struct BBContextTrigger: ViewModifier {
     @Environment(\.bbMenuCenter) private var center
     @Environment(\.bbMenuAccent) private var accent
+    @Environment(\.bbMenuFinish) private var finish
     let title: String?
     let width: CGFloat
     let items: () -> [BBMenuItem]
@@ -336,7 +350,7 @@ private struct BBContextTrigger: ViewModifier {
     private func show() {
         let list = items()
         guard !list.isEmpty else { return }
-        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: list, accent: accent))
+        center?.show(BBMenuSpec(anchor: frame, width: width, title: title, items: list, accent: accent, finish: finish))
     }
 }
 
@@ -444,7 +458,13 @@ private struct BBMenuHost: ViewModifier {
                             Color.black.opacity(0.25)
                                 .contentShape(Rectangle())
                                 .onTapGesture { center.close() }
-                            BBMenuPanel(spec: spec)
+                            Group {
+                                if let finish = spec.finish {
+                                    BBHardwareListPanel(spec: spec, finish: finish)
+                                } else {
+                                    BBMenuPanel(spec: spec)
+                                }
+                            }
                                 .environmentObject(center)
                                 .transition(.scale(scale: 0.92, anchor: .top).combined(with: .opacity))
                                 .frame(width: min(spec.width, geo.size.width - 16))
@@ -550,6 +570,92 @@ private struct BBMenuPanel: View {
             .disabled(!item.enabled)
             .background(item.checked ? M.row : Color.clear)
             Rectangle().fill(M.line.opacity(0.5)).frame(height: 0.5).padding(.leading, 14)
+        }
+    }
+}
+
+/// The SAMPLER's drop-downs (Tyrone's popup kit, Oct 26): the same list as BBMenuPanel in the popups'
+/// hardware, satin metal with corner screws, each row a black key, a lit lens on the checked one.
+private struct BBHardwareListPanel: View {
+    @EnvironmentObject var center: BBMenuCenter
+    let spec: BBMenuSpec
+    let finish: String
+
+    private var palette: BKMenuPalette { BKMenuPalette.of(finish) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let parent = center.path.last {
+                Button { center.path.removeLast() } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "chevron.left")
+                        Text(parent.title.uppercased()).lineLimit(1)
+                        Spacer(minLength: 0)
+                    }
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .padding(.horizontal, 12).frame(minHeight: 42)
+                }
+                .buttonStyle(BKHardwareButtonStyle(accent: palette.accent))
+            } else if let title = spec.title {
+                Text(title.uppercased())
+                    .font(.system(size: 11, weight: .bold, design: .monospaced)).tracking(1).foregroundColor(palette.secondary)
+                    .padding(.horizontal, 4).padding(.top, 4)
+            }
+            if let custom = spec.custom, center.path.isEmpty {
+                custom.padding(10).background(BKMenuWell()).environment(\.bbMenuAccent, palette.accent)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 5) {
+                        ForEach(center.path.last?.children ?? spec.items) { item in row(item) }
+                    }
+                    .padding(6)
+                }
+                .frame(maxHeight: 460)
+                .background(BKMenuWell())
+            }
+        }
+        .padding(12)
+        .background(BKMenuMetal(palette: palette, corner: 10).environment(\.seqFinish, finish))
+        .overlay(BKCornerScrews(size: 6, inset: 4))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .shadow(color: .black.opacity(0.65), radius: 14, y: 6)
+    }
+
+    @ViewBuilder private func row(_ item: BBMenuItem) -> some View {
+        if item.isHeader {
+            Text(item.title.uppercased())
+                .font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundColor(BKMenuPalette.wellText.opacity(0.6))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 6).padding(.top, 8).padding(.bottom, 2)
+        } else {
+            Button {
+                if let children = item.children {
+                    center.path.append(BBMenuItem(title: item.title, children: children))
+                } else {
+                    center.close()
+                    item.action?()
+                }
+            } label: {
+                HStack(spacing: 10) {
+                    BKMenuLED(isOn: item.checked, accent: palette.accent)
+                    if let icon = item.icon {
+                        Image(systemName: icon).frame(width: 20)
+                    }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(item.title).font(.system(size: 14, weight: .semibold, design: .monospaced)).lineLimit(1)
+                        if let d = item.detail {
+                            Text(d).font(.system(size: 11, design: .monospaced)).opacity(0.65).lineLimit(1)
+                        }
+                    }
+                    Spacer(minLength: 6)
+                    if item.children != nil { Image(systemName: "chevron.right").opacity(0.7) }
+                }
+                .foregroundColor(item.destructive ? BBMenuStyle.danger : BKMenuPalette.wellText)
+                .padding(.horizontal, 10)
+                .frame(minHeight: 44)
+            }
+            .buttonStyle(BKHardwareButtonStyle(accent: palette.accent, selected: item.checked))
+            .disabled(!item.enabled)
         }
     }
 }

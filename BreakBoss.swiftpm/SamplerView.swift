@@ -28,6 +28,21 @@ struct SamplerSkin {
     /// A knob's cap: platinum silver, black, cream or blue.
     var cap: MetalTone { finish == "modern" ? MetalTone(bright: Color(white: 0.34), light: Color(white: 0.2), mid: Color(white: 0.12), dark: Color(white: 0.04), ink: .white, pebbled: false) : surface }
 
+    /// Modern Black's satin black anodized metal (Tyrone's popup kit, Oct 26): the shell and its bezel
+    /// match the BreaKing menu instead of the old charcoal panels in a silver bezel.
+    static let satinBlack = MetalTone(bright: Color(bkHex: 0x5C5F61), light: Color(bkHex: 0x2B2D2E), mid: Color(bkHex: 0x1B1D1E),
+                                      dark: Color(bkHex: 0x0E0F10), ink: BKMenuPalette.wellText, pebbled: false)
+    static let satinBlackLip = MetalTone(bright: Color(bkHex: 0x6A6D6F), light: Color(bkHex: 0x323435), mid: Color(bkHex: 0x1E2021),
+                                         dark: Color(bkHex: 0x08090A), ink: BKMenuPalette.wellText, pebbled: false)
+
+    /// The SAMPLER window's own skin: Modern Black in satin black, every other face as `of`. (KITS,
+    /// PATTERNS and the track menu keep `of`, Modern's silver edge.)
+    static func window(_ finish: String) -> SamplerSkin {
+        let skin = of(finish)
+        guard finish == "modern" else { return skin }
+        return SamplerSkin(finish: finish, bezel: satinBlackLip, surface: satinBlack, ink: satinBlack.ink, glow: skin.glow)
+    }
+
     static func of(_ finish: String) -> SamplerSkin {
         let tone = MetalTone.of(finish)
         let glow: Color
@@ -247,7 +262,7 @@ struct SamplerWindow: View {
     static let probing = ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil
     @State private var probe = ""
 
-    private var skin: SamplerSkin { SamplerSkin.of(finish) }
+    private var skin: SamplerSkin { SamplerSkin.window(finish) }
     private var sm: SamplerSettings { pending ?? controller.sampler(pad) }
     private var trackNumber: Int { (controller.rackOrder.firstIndex(of: pad) ?? pad) + 1 }
 
@@ -317,6 +332,7 @@ struct SamplerWindow: View {
                     .accessibilityIdentifier("samplerProbe").accessibilityValue(probe)
                     .spot(560, 974, 560, 22, s)
                 }
+                if savingKind != nil { savePrompt(s).erased() }
             }
             .frame(width: Self.artW * s, height: Self.artH * s, alignment: .topLeading)
             // every touch inside the window stays in the window (Tyrone, Oct 20): the metal draws with
@@ -331,13 +347,8 @@ struct SamplerWindow: View {
         .aspectRatio(Self.artW / Self.artH, contentMode: .fit)
         // the window's menus check their items in the mode's own colour, not lime
         .environment(\.bbMenuAccent, skin.glow)
-        .alert("Save the envelope", isPresented: Binding(get: { savingKind != nil }, set: { if !$0 { savingKind = nil } })) {
-            TextField("Name", text: $presetName)
-            Button("Save") { savePreset() }
-            Button("Cancel", role: .cancel) { savingKind = nil }
-        } message: {
-            Text("Saved with your \(savingKind ?? "") presets on this device.")
-        }
+        // ... and its hardware: satin metal, black keys, lit lenses (Tyrone's popup kit, Oct 26)
+        .environment(\.bbMenuFinish, finish)
     }
 
     // MARK: Frame, title, tabs
@@ -346,11 +357,18 @@ struct SamplerWindow: View {
         ZStack(alignment: .topLeading) {
             SamplerMetal(tone: skin.bezel, corner: 14 * s)
                 .shadow(color: .black.opacity(0.7), radius: 18 * s, y: 8 * s)
+            // the stepped lip: a black edge, a lit bevel and a dark step down to the body (the BreaKing menu's)
+            RoundedRectangle(cornerRadius: 14 * s).strokeBorder(Color.black, lineWidth: max(1, 2 * s))
+            RoundedRectangle(cornerRadius: 12 * s)
+                .strokeBorder(LinearGradient(colors: [Color.white.opacity(0.3), Color.black.opacity(0.9)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                              lineWidth: max(1, 1 * s))
+                .padding(2 * s)
             // the body inside the bezel
             SamplerMetal(tone: skin.surface, corner: 8 * s, sunk: true).spot(22, 6, 1364, 982, s)
-            ForEach([CGPoint(x: 10, y: 500), CGPoint(x: 1398, y: 500)], id: \.x) { p in
-                Circle().fill(skin.bezel.spun).overlay(Circle().stroke(Color.black.opacity(0.5), lineWidth: 1))
-                    .frame(width: 9 * s, height: 9 * s).position(x: p.x * s, y: p.y * s)
+            RoundedRectangle(cornerRadius: 9 * s).strokeBorder(Color.black.opacity(0.7), lineWidth: max(1, 1.5 * s)).spot(21, 5, 1366, 984, s)
+            // small screws in the bezel's corners
+            ForEach(0..<4, id: \.self) { i in
+                BKMenuScrew(size: 10 * s).position(x: (i % 2 == 0 ? 11 : 1397) * s, y: (i < 2 ? 11 : 989) * s)
             }
         }
         .frame(width: Self.artW * s, height: Self.artH * s, alignment: .topLeading)
@@ -1602,6 +1620,47 @@ struct SamplerWindow: View {
         }
         items.append(.item("Reset the envelopes", icon: "arrow.counterclockwise") { edit { $0.envelopes = SamplerSettings.defaultEnvelopes } })
         return items
+    }
+
+    /// Naming the envelope preset being saved: a panel inside the window (it used to be an Apple alert).
+    private func savePrompt(_ s: CGFloat) -> some View {
+        let palette = BKMenuPalette.of(finish)
+        return ZStack(alignment: .topLeading) {
+            Color.black.opacity(0.4).contentShape(Rectangle()).onTapGesture { savingKind = nil }
+                .clipShape(RoundedRectangle(cornerRadius: 14 * s))
+                .spot(0, 0, Self.artW, Self.artH, s)
+            VStack(alignment: .leading, spacing: 14 * s) {
+                Text("SAVE THE ENVELOPE").font(.system(size: 22 * s, weight: .bold, design: .monospaced)).foregroundColor(palette.text)
+                Text("Saved with your \(savingKind ?? "") presets on this device.").font(.system(size: 18 * s)).foregroundColor(palette.secondary)
+                TextField("Name", text: $presetName)
+                    .font(.system(size: 22 * s, design: .monospaced)).foregroundColor(BKMenuPalette.wellText)
+                    .padding(.horizontal, 14 * s).frame(height: 56 * s)
+                    .background(BKMenuWell())
+                    .accessibilityIdentifier("samplerPresetName")
+                HStack(spacing: 12 * s) {
+                    Spacer()
+                    Button { savingKind = nil } label: {
+                        Text("CANCEL").font(.system(size: 18 * s, weight: .bold, design: .monospaced))
+                            .padding(.horizontal, 18 * s).frame(height: 52 * s)
+                    }
+                    .buttonStyle(BKHardwareButtonStyle(accent: palette.accent))
+                    Button { savePreset() } label: {
+                        HStack(spacing: 9 * s) {
+                            BKMenuLED(isOn: true, accent: palette.accent)
+                            Text("SAVE").font(.system(size: 18 * s, weight: .bold, design: .monospaced))
+                        }
+                        .padding(.horizontal, 18 * s).frame(height: 52 * s)
+                    }
+                    .buttonStyle(BKHardwareButtonStyle(accent: palette.accent, selected: true))
+                    .accessibilityIdentifier("samplerPresetSave")
+                }
+            }
+            .padding(24 * s)
+            .background(BKMenuMetal(palette: palette, corner: 10 * s))
+            .overlay(BKCornerScrews(size: 8 * s, inset: 6 * s))
+            .shadow(color: .black.opacity(0.7), radius: 18 * s, y: 10 * s)
+            .spot(404, 330, 600, 300, s)
+        }
     }
 
     private func savePreset() {

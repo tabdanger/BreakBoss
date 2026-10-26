@@ -59,7 +59,11 @@ struct FaceplateView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        // the instrument stays underneath the menu, out of VoiceOver while it's open
+        .accessibilityHidden(showMenu)
         .bbMenuHost()
+        // the BreaKing menu: a window over the faceplate, not a sheet (Tyrone's popup kit, Oct 26)
+        .overlay { if showMenu { MenuView(controller: controller, close: { showMenu = false }) } }
         .background(Color.black.ignoresSafeArea())
         .background(spaceBar)
         .sheet(item: $editor) { target in
@@ -70,7 +74,6 @@ struct FaceplateView: View {
             }
         }
         .sheet(isPresented: $showExport) { ExportView(controller: controller) }
-        .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
         .fullScreenCover(item: $patternEditor) { target in SequencerView(controller: controller, loop: target.loop, selectPad: target.pad) }
         .onAppear {
             // Build-machine UI check only: open straight on the sequencer.
@@ -110,7 +113,7 @@ struct FaceplateView: View {
     /// Space bar (hardware keyboard) = PLAY / STOP in the standalone app. In a DAW the space
     /// bar belongs to the DAW, so the plug-in leaves it alone.
     @ViewBuilder private var spaceBar: some View {
-        if !controller.isPlugin && patternEditor == nil {
+        if !controller.isPlugin && patternEditor == nil && !showMenu {
             Button("") { controller.playPressed() }
                 .keyboardShortcut(.space, modifiers: [])
                 .opacity(0).frame(width: 0, height: 0).accessibilityHidden(true)

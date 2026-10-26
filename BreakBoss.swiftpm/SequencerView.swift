@@ -554,7 +554,11 @@ struct SequencerView: View {
             .environment(\.bbMenuAccent, accent)
         }
         .overlay { samplerOverlay.erased() }
+        // the drum roll stays underneath the menu, out of VoiceOver while it's open
+        .accessibilityHidden(showMenu)
         .bbMenuHost()
+        // the BreaKing menu: a window over the sequencer, not a sheet (Tyrone's popup kit, Oct 26)
+        .overlay { if showMenu { MenuView(controller: controller, close: { showMenu = false }).erased() } }
         .background(Color.black.ignoresSafeArea())
         .preferredColorScheme(.dark)
         .background(spaceBar)
@@ -582,7 +586,7 @@ struct SequencerView: View {
                 controller.setLoop(loop, PatternData(name: "LOOP \(loop + 1)", lengthTicks: controller.loops[loop].lengthTicks, events: []))
             }
         }
-        .modifier(SpaceBarKey { controller.togglePlayback(pattern: loop) })
+        .modifier(SpaceBarKey { if !showMenu { controller.togglePlayback(pattern: loop) } })
         .onChange(of: loop) { _ in viewStart = 0; selection = []; undoStack = []; redoStack = []; controller.showPattern(loop); rollBottoms = [:]; octaveNote = nil; pinRoll() }
         .onChange(of: expandedID) { _ in octaveNote = nil; pinRoll() }
         // a new pattern or kit: the open piano roll finds its notes again
@@ -590,7 +594,6 @@ struct SequencerView: View {
         .onChange(of: controller.state.kitName) { _ in rollBottoms = [:]; octaveNote = nil; pinRoll() }
         .onDisappear { if controller.recording { controller.setRecording(false) } }
         .task(id: stored) { exportURL = writeMIDI() }
-        .sheet(isPresented: $showMenu) { MenuView(controller: controller) }
         .sheet(isPresented: $shareMIDI) { if let url = exportURL { ShareSheet(items: [url]) } }
         .sheet(item: Binding(get: { trackSettingsID.flatMap { id in channels.first { $0.id == id } } }, set: { trackSettingsID = $0?.id })) { ch in
             VStack(spacing: 0) {
@@ -636,7 +639,7 @@ struct SequencerView: View {
     }
 
     @ViewBuilder var spaceBar: some View {
-        if !controller.isPlugin {
+        if !controller.isPlugin && !showMenu {
             Button("") { controller.togglePlayback(pattern: loop) }
                 .keyboardShortcut(.space, modifiers: [])
                 .opacity(0).frame(width: 0, height: 0).accessibilityHidden(true)
@@ -645,7 +648,7 @@ struct SequencerView: View {
 
     /// Delete / Backspace on a hardware keyboard deletes the selected notes (Tyrone, Oct 21).
     @ViewBuilder var deleteKey: some View {
-        let off = selection.isEmpty || searchFocused
+        let off = selection.isEmpty || searchFocused || showMenu
         ZStack {
             Button("") { deleteSelection() }.keyboardShortcut(.delete, modifiers: [])
             Button("") { deleteSelection() }.keyboardShortcut(.deleteForward, modifiers: [])
