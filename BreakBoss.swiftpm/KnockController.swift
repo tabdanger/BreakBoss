@@ -369,9 +369,15 @@ final class KnockController: ObservableObject {
 
     static let defaultMIDIOutChannels = Array(0..<Pad.count)          // pad n on MIDI channel n + 1
     static let defaultMIDIOutNotes = Array(36..<(36 + Pad.count))      // C1 up, like the input map
+    /// ONE TRACK: every pad on MIDI channel 1, pads 1-12 on notes 36-47 (the 808 chromatic on 48-84),
+    /// so the whole kit records onto one DAW track and a note drawn on a row plays that row's pad.
+    static let oneTrackMIDIOutChannels = Array(repeating: 0, count: Pad.count)
     /// On by default in the plug-in, so a DAW's armed MIDI track records the pads and pattern.
     var midiOutOn: Bool { state.midiOut ?? isPlugin }
-    var midiOutChannels: [Int] { (state.midiOutChannels ?? KnockController.defaultMIDIOutChannels).count == Pad.count ? state.midiOutChannels ?? KnockController.defaultMIDIOutChannels : KnockController.defaultMIDIOutChannels }
+    /// The plug-in starts on ONE TRACK (Tyrone, Oct 26: record everything onto the one Logic track);
+    /// the app keeps multi-out on its MIDI port.
+    private var midiOutDefaultChannels: [Int] { isPlugin ? KnockController.oneTrackMIDIOutChannels : KnockController.defaultMIDIOutChannels }
+    var midiOutChannels: [Int] { (state.midiOutChannels ?? midiOutDefaultChannels).count == Pad.count ? state.midiOutChannels ?? midiOutDefaultChannels : midiOutDefaultChannels }
     var midiOutNotes: [Int] { (state.midiOutNotes ?? KnockController.defaultMIDIOutNotes).count == Pad.count ? state.midiOutNotes ?? KnockController.defaultMIDIOutNotes : KnockController.defaultMIDIOutNotes }
 
     func setMIDIOut(_ on: Bool) { state.midiOut = on; pushMIDIOut(); scheduleSave() }
@@ -390,6 +396,11 @@ final class KnockController: ObservableObject {
         var one = Array(repeating: 9, count: Pad.count); one[Pad.bass808.rawValue] = Pad.bass808.rawValue
         state.midiOutChannels = multi ? KnockController.defaultMIDIOutChannels : one
         state.midiOutNotes = multi ? KnockController.defaultMIDIOutNotes : [36, 38, 39, 37, 42, 46, 35, 56, 54, 45, 50, 49]
+        pushMIDIOut(); scheduleSave()
+    }
+    func setMIDIOutOneTrack() {
+        state.midiOutChannels = KnockController.oneTrackMIDIOutChannels
+        state.midiOutNotes = KnockController.defaultMIDIOutNotes
         pushMIDIOut(); scheduleSave()
     }
 

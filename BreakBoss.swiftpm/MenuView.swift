@@ -364,20 +364,24 @@ struct MenuView: View {
                 BKMenuSwitch(title: "MIDI OUT TO YOUR DAW",
                              subtitle: controller.isPlugin ? "Sent from the plug-in's MIDI output" : "Sent on the \"BreaKing Out\" MIDI port",
                              isOn: controller.midiOutOn, accent: palette.accent) { controller.setMIDIOut(!controller.midiOutOn) }
+                option("ONE TRACK · EVERY PAD ON MIDI CHANNEL 1, PADS 1–12 ON NOTES 36–47", selected: outLayout == 3) {
+                    controller.setMIDIOutOneTrack()
+                }
                 option("MULTI-OUT · EACH PAD ON ITS OWN MIDI CHANNEL (1–12), NOTES C1 UP", selected: outLayout == 1) {
                     controller.setMIDIOutLayout(multi: true)
                 }
                 option("ONE CHANNEL · EVERY PAD ON MIDI CHANNEL 10 (GENERAL MIDI DRUMS)", selected: outLayout == 2) {
                     controller.setMIDIOutLayout(multi: false)
                 }
-                caption("Everything you play on the pads and every note the patterns and drum roll play goes out as MIDI. In your DAW, record BreaKing's MIDI output onto a track and the notes land in its piano roll, ready to edit. The 808 sends the note it plays. Pick each channel's MIDI channel and note in the drum roll (tap a channel name).")
+                caption("Everything you play on the pads and every note the patterns and drum roll play goes out as MIDI. In your DAW, record BreaKing's MIDI output onto a track and the notes land in its piano roll, ready to edit. The 808 sends the note it plays. Pick each channel's MIDI channel and note in the drum roll (tap a channel name). ONE TRACK puts the whole kit on one track: a note drawn on row 36–47 plays that pad. When the DAW track plays the notes back, turn FOLLOW DAW off so the pattern doesn't play on top of them.")
             }
         }
     }
 
-    /// Which quick MIDI-out setup is in use: 1 multi-out, 2 one channel, 0 your own per-channel picks.
+    /// Which quick MIDI-out setup is in use: 1 multi-out, 2 one channel, 3 one track, 0 your own per-channel picks.
     private var outLayout: Int {
         let ch = controller.midiOutChannels
+        if ch == KnockController.oneTrackMIDIOutChannels && controller.midiOutNotes == KnockController.defaultMIDIOutNotes { return 3 }
         if ch == KnockController.defaultMIDIOutChannels && controller.midiOutNotes == KnockController.defaultMIDIOutNotes { return 1 }
         let drums = ch.enumerated().allSatisfy { i, c in i == Pad.bass808.rawValue || c == 9 }
         return drums ? 2 : 0
