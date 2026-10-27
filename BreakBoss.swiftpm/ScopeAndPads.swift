@@ -314,6 +314,10 @@ struct PadView: View {
     let rect: [Double]
     let scale: CGFloat
     var holdToPlay = false
+    /// The lights' corners (0 on the faceplate; a material pad's rounded rubber, MATERIAL TEST).
+    var cornerRadius: CGFloat = 0
+    /// Told when the pad goes down and comes back up, for a material pad's press (MaterialParts).
+    var pressedChanged: ((Bool) -> Void)? = nil
     let openEditor: (Bool) -> Void
 
     @State private var pressed = false
@@ -338,17 +342,18 @@ struct PadView: View {
             let blink = queued && Int(now.timeIntervalSinceReferenceDate * 4) % 2 == 0
             let light = PadView.lightColor(controller.mode)
             let lit = loopMode && current
+            let shape = RoundedRectangle(cornerRadius: cornerRadius)
             ZStack {
-                Rectangle().fill(Color.black.opacity(pressed ? 0.12 : 0))
+                shape.fill(Color.black.opacity(pressed ? 0.12 : 0))
                 // Each mode lights its pads in its own colour: hits flash, the playing loop's pad glows.
-                Rectangle().fill(light.opacity(max(Double(flash) * 0.5, lit ? 0.2 : 0)))
+                shape.fill(light.opacity(max(Double(flash) * 0.5, lit ? 0.2 : 0)))
                 if lit || blink || flash > 0.01 {
-                    Rectangle()
+                    shape
                         .strokeBorder(light.opacity(lit ? 0.9 : blink ? 0.6 : Double(flash) * 0.8), lineWidth: 3 * scale)
                         .shadow(color: light.opacity(0.7), radius: 6 * scale)
                 }
                 if dropping {
-                    Rectangle().strokeBorder(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 3 * scale, dash: [8 * scale, 5 * scale]))
+                    shape.strokeBorder(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 3 * scale, dash: [8 * scale, 5 * scale]))
                 }
             }
         }
@@ -368,6 +373,7 @@ struct PadView: View {
             hold?.cancel()
             if pressed { if holdToPlay { controller.gateUp(pad) } else { controller.padRelease(pad) } }
             pressed = false
+            pressedChanged?(false)
         }
     }
 
@@ -384,6 +390,7 @@ struct PadView: View {
             controller.padDown(pad, velocity: velocity, held: true)
         }
         pressed = true
+        pressedChanged?(true)
         hold?.cancel()
         hold = nil
         guard first else { return }
@@ -404,6 +411,7 @@ struct PadView: View {
         hold = nil
         guard last, pressed else { return }
         pressed = false
+        pressedChanged?(false)
         if holdToPlay { controller.gateUp(pad) } else { controller.padRelease(pad) }
     }
 
