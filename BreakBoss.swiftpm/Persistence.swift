@@ -27,10 +27,9 @@ enum KnockFolders {
 
     /// Audio files in Samples (subfolders included), sorted by name.
     static func sampleFiles() -> [URL] {
-        let exts: Set<String> = ["wav", "aif", "aiff", "caf", "mp3", "m4a", "flac", "aac"]
         guard let walker = FileManager.default.enumerator(at: samples, includingPropertiesForKeys: nil) else { return [] }
         var out: [URL] = []
-        for case let url as URL in walker where exts.contains(url.pathExtension.lowercased()) { out.append(url) }
+        for case let url as URL in walker where AudioFormats.isAudio(url) { out.append(url) }
         return out.sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
     }
 

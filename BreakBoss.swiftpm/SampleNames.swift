@@ -59,12 +59,10 @@ final class SampleNames {
         }
     }
 
-    private static let audio: Set<String> = ["wav", "wave", "aif", "aiff", "caf", "mp3", "m4a", "flac", "aac"]
-
     func name(_ file: String) -> String {
         // Samples-relative path, no extension: "Pack/808s/!Go2Spinz - (@prod.byiiinfinite)"
         var rel = file
-        if Self.audio.contains((rel as NSString).pathExtension.lowercased()) { rel = (rel as NSString).deletingPathExtension }
+        if AudioFormats.isAudio(ext: (rel as NSString).pathExtension) { rel = (rel as NSString).deletingPathExtension }
         let stem = (rel as NSString).lastPathComponent
         // A sampler edit ("Edits/<sound> edit 2") is its sound's name and EDIT 2.
         if let m = stem.range(of: #" edit (\d+)$"#, options: .regularExpression) {

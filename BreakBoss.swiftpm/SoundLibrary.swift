@@ -152,13 +152,12 @@ enum UserSoundLibrary {
     static func importPack(_ folder: URL) -> Int {
         let access = folder.startAccessingSecurityScopedResource()
         defer { if access { folder.stopAccessingSecurityScopedResource() } }
-        let exts: Set<String> = ["wav", "aif", "aiff", "caf", "mp3", "m4a", "flac", "aac"]
         let name = KnockFolders.safe(folder.deletingPathExtension().lastPathComponent)
         let dest = KnockFolders.samples.appendingPathComponent(name, isDirectory: true)
         try? FileManager.default.createDirectory(at: dest, withIntermediateDirectories: true)
         var count = 0
         guard let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil) else { return 0 }
-        for case let url as URL in walker where exts.contains(url.pathExtension.lowercased()) && !url.path.contains("__MACOSX") {
+        for case let url as URL in walker where AudioFormats.isAudio(url) && !url.path.contains("__MACOSX") {
             // the sound's path inside the pack decides its section
             let inside = KnockFolders.relative(url, in: folder) ?? url.lastPathComponent
             let sub = dest.appendingPathComponent(KnockFolders.safe(SoundType.guess(inside).rawValue), isDirectory: true)

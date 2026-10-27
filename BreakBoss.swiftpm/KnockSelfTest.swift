@@ -42,6 +42,7 @@ enum KnockSelfTest {
         phase("checkPatternEditor", checkPatternEditor)
         phase("checkMIDIPadMap", checkMIDIPadMap)
         phase("checkRecordingTrim", checkRecordingTrim)
+        phase("checkAudioFormats", checkAudioFormats)
         phase("checkDrumRoll", checkDrumRoll)
         phase("checkPlayheadGlide", checkPlayheadGlide)
         phase("checkPianoRollOctaves", checkPianoRollOctaves)
@@ -2804,6 +2805,93 @@ enum KnockSelfTest {
         } catch {
             check(false, "record: trim test ran (\(error.localizedDescription))")
         }
+        #endif
+    }
+
+    /// Every kind of audio file loads (Tyrone, Oct 27: "BK needs to be able to accept ALL audio file type"),
+    /// and a file that really isn't audio is named as it is on the iPad.
+    static func checkAudioFormats() {
+        #if canImport(AVFoundation)
+        check(["wav", "AIFF", "aif", "caf", "mp3", "m4a", "aac", "flac", "ogg", "opus", "w64"].allSatisfy { AudioFormats.isAudio(ext: $0) }
+              && !AudioFormats.isAudio(ext: "txt") && !AudioFormats.isAudio(ext: ""), "audio files: every audio extension is taken in")
+        let tmp = FileManager.default.temporaryDirectory
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2)!
+        let tone = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4_410)!
+        tone.frameLength = 4_410
+        for c in 0..<2 { for i in 0..<4_410 { tone.floatChannelData![c][i] = 0.5 * sinf(Float(i) * 0.06) } }
+        // name, settings, must it load (the encoders for compressed kinds may be missing on a simulator)
+        func lpcm(_ bits: Int, float: Bool = false, big: Bool = false) -> [String: Any] {
+            var d: [String: Any] = [:]
+            d[AVFormatIDKey] = kAudioFormatLinearPCM
+            d[AVLinearPCMBitDepthKey] = bits
+            d[AVLinearPCMIsFloatKey] = float
+            d[AVLinearPCMIsBigEndianKey] = big
+            return d
+        }
+        func coded(_ id: AudioFormatID) -> [String: Any] {
+            var d: [String: Any] = [:]
+            d[AVFormatIDKey] = id
+            if id == kAudioFormatAppleLossless { d[AVEncoderBitDepthHintKey] = 16 }
+            return d
+        }
+        var pcm: [(String, [String: Any], Bool)] = []
+        pcm.append(("8bit.wav", lpcm(8), false))
+        pcm.append(("16bit.wav", lpcm(16), true))
+        pcm.append(("24bit.wav", lpcm(24), true))
+        pcm.append(("float.wav", lpcm(32, float: true), true))
+        pcm.append(("bigendian.aiff", lpcm(16, big: true), true))
+        pcm.append(("24bit.caf", lpcm(24), true))
+        pcm.append(("aac.m4a", coded(kAudioFormatMPEG4AAC), false))
+        pcm.append(("alac.m4a", coded(kAudioFormatAppleLossless), false))
+        pcm.append(("lossless.flac", coded(kAudioFormatFLAC), false))
+        for (name, extra, required) in pcm {
+            let url = tmp.appendingPathComponent("selftest format " + name)
+            try? FileManager.default.removeItem(at: url)
+            var settings = extra
+            settings[AVSampleRateKey] = 44_100
+            settings[AVNumberOfChannelsKey] = 2
+            let written: Bool = {
+                guard let w = try? AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false) else { return false }
+                return (try? w.write(from: tone)) != nil
+            }()
+            if !written { check(!required, "audio files: \(name) could be written for the test"); continue }
+            let loaded = try? SampleLoader.load(url)
+            check(loaded.map { $0.length > 1_000 && $0.sampleRate > 0 } ?? false, "audio files: \(name) loads")
+            try? FileManager.default.removeItem(at: url)
+        }
+        // WAVs the iPad's reader may turn down: data size 0 (a recorder that stopped early), µ-law
+        func wav(_ tag: UInt16, bits: UInt16, dataSize: UInt32, body: [UInt8]) -> Data {
+            func le32(_ v: UInt32) -> [UInt8] { [UInt8(v & 0xFF), UInt8(v >> 8 & 0xFF), UInt8(v >> 16 & 0xFF), UInt8(v >> 24)] }
+            func le16(_ v: UInt16) -> [UInt8] { [UInt8(v & 0xFF), UInt8(v >> 8)] }
+            let align = bits / 8
+            var d: [UInt8] = Array("RIFF".utf8) + le32(0) + Array("WAVE".utf8)
+            d += Array("fmt ".utf8) + le32(16) + le16(tag) + le16(1) + le32(48_000) + le32(48_000 * UInt32(align)) + le16(align) + le16(bits)
+            d += Array("data".utf8) + le32(dataSize) + body
+            return Data(d)
+        }
+        var pcm24: [UInt8] = []
+        for i in 0..<4_800 {
+            let v = Int32(4_000_000 * sinf(Float(i) * 0.06))
+            pcm24 += [UInt8(truncatingIfNeeded: v), UInt8(truncatingIfNeeded: v >> 8), UInt8(truncatingIfNeeded: v >> 16)]
+        }
+        let ulaw = (0..<4_800).map { UInt8(truncatingIfNeeded: $0 & 0x7F) }
+        for (name, data) in [("no data size.wav", wav(1, bits: 24, dataSize: 0, body: pcm24)),
+                             ("mulaw.wav", wav(7, bits: 8, dataSize: UInt32(ulaw.count), body: ulaw))] {
+            let url = tmp.appendingPathComponent("selftest format " + name)
+            try? data.write(to: url)
+            let loaded = try? SampleLoader.load(url)
+            check(loaded?.length == 4_800, "audio files: \(name) loads (\(loaded?.length ?? 0) frames)")
+            try? FileManager.default.removeItem(at: url)
+        }
+        let junk = tmp.appendingPathComponent("selftest not audio.wav")
+        try? Data("this is not a sound".utf8).write(to: junk)
+        do {
+            _ = try SampleLoader.load(junk)
+            check(false, "audio files: a file that isn't audio is turned down")
+        } catch {
+            check(error.localizedDescription.hasPrefix("selftest not audio.wav "), "audio files: the notice names the file as it is (\(error.localizedDescription))")
+        }
+        try? FileManager.default.removeItem(at: junk)
         #endif
     }
 

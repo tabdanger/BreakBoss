@@ -653,7 +653,7 @@ struct MenuView: View {
 
     private var importTypes: [UTType] {
         if case .some(.preset) = importKind { return [.data] }
-        return [.audio]
+        return AudioFormats.pickerTypes
     }
 
     private func imported(_ result: Result<[URL], Error>) {

@@ -1,6 +1,38 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import AVFoundation
+import CoreMedia
 import Foundation
+import UniformTypeIdentifiers
+
+// MARK: - Audio file types
+
+/// Every kind of audio file BreaKing takes in (Tyrone, Oct 27: "BK needs to be able to accept ALL audio
+/// file type"). The Samples folder, pack imports, the sound names and the Files pickers all use this one list.
+enum AudioFormats {
+    static let extensions: Set<String> = ["wav", "wave", "bwf", "rf64", "w64", "aif", "aiff", "aifc", "caf",
+                                          "mp3", "mp2", "mpga", "m4a", "m4b", "m4r", "aac", "adts", "ac3", "ec3",
+                                          "flac", "alac", "ogg", "oga", "opus", "amr", "au", "snd", "sd2"]
+
+    /// Its extension is on the list, or the iPad calls that kind of file audio.
+    static func isAudio(_ url: URL) -> Bool { isAudio(ext: url.pathExtension) }
+
+    static func isAudio(ext: String) -> Bool {
+        let e = ext.lowercased()
+        if extensions.contains(e) { return true }
+        guard !e.isEmpty, let type = UTType(filenameExtension: e) else { return false }
+        return type.conforms(to: .audio)
+    }
+
+    /// What the Files pickers let you choose: everything the iPad calls audio, and the kinds it may not
+    /// (FLAC, OGG, Opus, Wave64…) by their extensions.
+    static let pickerTypes: [UTType] = {
+        var types: [UTType] = [.audio]
+        for ext in extensions.sorted() {
+            if let type = UTType(filenameExtension: ext), !type.conforms(to: .audio), !types.contains(type) { types.append(type) }
+        }
+        return types
+    }()
+}
 
 // MARK: - Reading your samples
 
@@ -16,40 +48,193 @@ enum SampleLoader {
         }
     }
 
-    /// Decodes any audio file iPadOS can read (WAV, AIFF, CAF, MP3, M4A, FLAC) into a stereo
-    /// SampleBuffer at the file's own sample rate. Pads play it back at the right speed.
+    static let maxSeconds = 30.0
+
+    /// Sound decoded to 32-bit float, one array per side (a mono file has the same sound on both).
+    private struct Decoded {
+        var left: [Float]
+        var right: [Float]
+        var sampleRate: Double
+        var bitDepth: Int
+        var stereo: Bool
+    }
+
+    /// Decodes any audio file the iPad can read (WAV, AIFF, CAF, MP3, M4A/AAC, ALAC, FLAC, Opus…, at any
+    /// bit depth, sample rate or channel count, little or big endian) into a stereo SampleBuffer at the
+    /// file's own sample rate. Pads play it back at the right speed. A file the iPad's reader turns down
+    /// gets two more tries: BreaKing's own WAV reader (WAVs with broken or odd headers) and the iPad's
+    /// media reader (audio inside MP4 / 3GP, a file whose extension says the wrong kind), decoded at 48 kHz.
     static func load(_ url: URL) throws -> SampleBuffer {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
-        let file: AVAudioFile
-        do { file = try AVAudioFile(forReading: url) } catch { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
+        var decoded = try decodeFile(url)
+        if decoded == nil { decoded = try decodeWAV(url) }
+        if decoded == nil { decoded = try decodeMedia(url) }
+        guard let d = decoded, !d.left.isEmpty else {
+            // The file's own name, as it is on the iPad.
+            throw LoadError.unreadable(url.lastPathComponent)
+        }
+        let n = d.left.count
+        let sample = SampleBuffer(left: d.left, right: d.right, sampleRate: d.sampleRate)
+        sample.bitDepth = d.bitDepth
+        sample.stereo = d.stereo
+        let marks = markers(url, rate: d.sampleRate)
+        sample.cues = marks.cues.filter { $0 > 0 && $0 < n }
+        if let r = marks.region, r.lowerBound >= 0, r.upperBound < n, r.count > 32 { sample.region = r }
+        return sample
+    }
+
+    /// The iPad's audio file reader (AVAudioFile). nil when it can't open or read the file.
+    private static func decodeFile(_ url: URL) throws -> Decoded? {
+        guard let file = try? AVAudioFile(forReading: url) else { return nil }
         let format = file.processingFormat
         guard file.length > 0, file.length <= Int64(UInt32.max), format.sampleRate.isFinite,
-              format.sampleRate > 0, format.channelCount > 0,
-              file.length <= 16_000_000 / Int64(format.channelCount) else { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
-        guard Double(file.length) / format.sampleRate <= 30 else { throw LoadError.tooLong }
+              format.sampleRate > 0, format.channelCount > 0 else { return nil }
+        guard Double(file.length) / format.sampleRate <= maxSeconds else { throw LoadError.tooLong }
+        // Very high rates with many channels: the media reader brings them in at 48 kHz stereo instead.
+        guard file.length <= 16_000_000 / Int64(format.channelCount) else { return nil }
         let frames = AVAudioFrameCount(file.length)
-        guard frames > 0 else { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
-        guard Double(frames) / format.sampleRate <= 30 else { throw LoadError.tooLong }
-        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames) else {
-            throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent))
-        }
-        do { try file.read(into: buffer) } catch { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
-        guard let data = buffer.floatChannelData else { throw LoadError.unreadable(KnockFolders.soundName(url.lastPathComponent)) }
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames),
+              (try? file.read(into: buffer)) != nil, buffer.frameLength > 0,
+              let data = buffer.floatChannelData else { return nil }
         let n = Int(buffer.frameLength)
         let channels = Int(format.channelCount)
         let left = Array(UnsafeBufferPointer(start: data[0], count: n))
         let right = channels > 1 ? Array(UnsafeBufferPointer(start: data[1], count: n)) : left
-        let sample = SampleBuffer(left: left, right: right, sampleRate: format.sampleRate)
         // MP3, AAC and 24-bit sources are converted to 32 bit on loading (as in FL's sampler readout)
         let bits = file.fileFormat.settings[AVLinearPCMBitDepthKey] as? Int ?? 0
         let isFloat = file.fileFormat.commonFormat == .pcmFormatFloat32 || file.fileFormat.commonFormat == .pcmFormatFloat64
-        sample.bitDepth = bits == 16 && !isFloat ? 16 : 32
-        sample.stereo = channels > 1
-        let marks = markers(url, rate: format.sampleRate)
-        sample.cues = marks.cues.filter { $0 > 0 && $0 < n }
-        if let r = marks.region, r.lowerBound >= 0, r.upperBound < n, r.count > 32 { sample.region = r }
-        return sample
+        return Decoded(left: left, right: right, sampleRate: format.sampleRate,
+                       bitDepth: bits == 16 && !isFloat ? 16 : 32, stereo: channels > 1)
+    }
+
+    /// BreaKing's own WAV reader, for WAVs the iPad turns down: a data size of 0 or past the end of the
+    /// file (recorders that stopped early, streamed files), odd chunk padding, RF64, 8/16/24/32-bit
+    /// integer, 32/64-bit float, A-law and µ-law, any number of channels.
+    private static func decodeWAV(_ url: URL) throws -> Decoded? {
+        guard let data = try? Data(contentsOf: url, options: .mappedIfSafe), data.count > 44 else { return nil }
+        return try data.withUnsafeBytes { (raw: UnsafeRawBufferPointer) throws -> Decoded? in
+            let count = raw.count
+            func u16(_ o: Int) -> Int { o + 2 <= count ? Int(raw[o]) | Int(raw[o + 1]) << 8 : 0 }
+            func u32(_ o: Int) -> Int { o + 4 <= count ? u16(o) | u16(o + 2) << 16 : 0 }
+            func tag(_ o: Int) -> String {
+                guard o + 4 <= count else { return "" }
+                return String(bytes: [raw[o], raw[o + 1], raw[o + 2], raw[o + 3]], encoding: .ascii) ?? ""
+            }
+            guard tag(0) == "RIFF" || tag(0) == "RF64", tag(8) == "WAVE" else { return nil }
+            var formatTag = 0, channels = 0, rate = 0, align = 0, bits = 0
+            var body = -1, size = 0
+            var o = 12
+            while o + 8 <= count {
+                let id = tag(o), len = u32(o + 4), start = o + 8
+                if id == "fmt " {
+                    formatTag = u16(start); channels = u16(start + 2); rate = u32(start + 4)
+                    align = u16(start + 12); bits = u16(start + 14)
+                    if formatTag == 0xFFFE && len >= 26 { formatTag = u16(start + 24) }   // WAVE_FORMAT_EXTENSIBLE
+                } else if id == "data" {
+                    body = start
+                    // 0, 0xFFFFFFFF (RF64) or past the end: the sound runs to the end of the file.
+                    size = len == 0 || start + len > count ? count - start : len
+                    break
+                }
+                guard len >= 0, start + len <= count else { break }
+                o = start + len + (len & 1)
+            }
+            guard body > 0, channels > 0, channels <= 64, rate >= 1000, rate <= 1_536_000 else { return nil }
+            let bytes = max(1, bits / 8)
+            guard [1, 3, 6, 7].contains(formatTag), [1, 2, 3, 4, 8].contains(bytes) else { return nil }
+            let frameBytes = max(align, bytes * channels)
+            let frames = size / frameBytes
+            guard frames > 0 else { return nil }
+            guard Double(frames) / Double(rate) <= maxSeconds else { throw LoadError.tooLong }
+            func value(_ p: Int) -> Float {
+                switch (formatTag, bytes) {
+                case (1, 1): return (Float(raw[p]) - 128) / 128
+                case (1, 2): return Float(Int16(bitPattern: UInt16(u16(p)))) / 32_768
+                case (1, 3):
+                    let b0 = UInt32(raw[p]) << 8, b1 = UInt32(raw[p + 1]) << 16, b2 = UInt32(raw[p + 2]) << 24
+                    let v: Int32 = Int32(bitPattern: b0 | b1 | b2) >> 8
+                    return Float(v) / 8_388_608
+                case (1, 4): return Float(Int32(bitPattern: UInt32(u32(p)))) / 2_147_483_648
+                case (3, 4): return Float(bitPattern: UInt32(u32(p)))
+                case (3, 8):
+                    let lo = UInt64(u32(p)), hi = UInt64(u32(p + 4)) << 32
+                    return Float(Double(bitPattern: lo | hi))
+                case (6, 1): return alaw(raw[p])
+                case (7, 1): return mulaw(raw[p])
+                default: return 0
+                }
+            }
+            var left = [Float](repeating: 0, count: frames)
+            var right = left
+            let second = channels > 1 ? bytes : 0
+            for i in 0..<frames {
+                let p = body + i * frameBytes
+                let l = value(p), r = value(p + second)
+                left[i] = l.isFinite ? l : 0
+                right[i] = r.isFinite ? r : 0
+            }
+            return Decoded(left: left, right: right, sampleRate: Double(rate),
+                           bitDepth: formatTag == 1 && bytes == 2 ? 16 : 32, stereo: channels > 1)
+        }
+    }
+
+    private static func alaw(_ byte: UInt8) -> Float {
+        let a = Int(byte ^ 0x55)
+        let exponent = (a >> 4) & 7, mantissa = a & 0x0F
+        var v = exponent == 0 ? (mantissa << 4) + 8 : ((mantissa << 4) + 0x108) << (exponent - 1)
+        if a & 0x80 == 0 { v = -v }
+        return Float(v) / 32_768
+    }
+
+    private static func mulaw(_ byte: UInt8) -> Float {
+        let u = Int(~byte)
+        let exponent = (u >> 4) & 7, mantissa = u & 0x0F
+        let v = (((mantissa << 3) + 0x84) << exponent) - 0x84
+        return Float(u & 0x80 != 0 ? -v : v) / 32_768
+    }
+
+    private final class TrackBox { var tracks: [AVAssetTrack] = [] }
+
+    /// The iPad's media reader (AVAssetReader): audio in any container it plays, decoded to 48 kHz stereo.
+    /// Runs on the loading queue, never the audio thread, so waiting for the file's tracks is fine.
+    private static func decodeMedia(_ url: URL) throws -> Decoded? {
+        let asset = AVURLAsset(url: url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+        let done = DispatchSemaphore(value: 0)
+        let found = TrackBox()
+        asset.loadTracks(withMediaType: .audio) { tracks, _ in found.tracks = tracks ?? []; done.signal() }
+        guard done.wait(timeout: .now() + 10) == .success, let track = found.tracks.first,
+              let reader = try? AVAssetReader(asset: asset) else { return nil }
+        let rate = 48_000.0
+        let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
+            AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: rate, AVNumberOfChannelsKey: 2,
+            AVLinearPCMBitDepthKey: 32, AVLinearPCMIsFloatKey: true, AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsNonInterleaved: false
+        ])
+        guard reader.canAdd(output) else { return nil }
+        reader.add(output)
+        guard reader.startReading() else { return nil }
+        let limit = Int(maxSeconds * rate)
+        var left: [Float] = [], right: [Float] = []
+        while let buffer = output.copyNextSampleBuffer() {
+            guard let block = CMSampleBufferGetDataBuffer(buffer) else { continue }
+            let length = CMBlockBufferGetDataLength(block)
+            let floats = length / 4
+            guard floats > 1 else { continue }
+            var chunk = [Float](repeating: 0, count: floats)
+            let status = chunk.withUnsafeMutableBytes { bytes -> OSStatus in
+                guard let base = bytes.baseAddress else { return -1 }
+                return CMBlockBufferCopyDataBytes(block, atOffset: 0, dataLength: floats * 4, destination: base)
+            }
+            guard status == kCMBlockBufferNoErr else { continue }
+            for i in stride(from: 0, to: chunk.count - 1, by: 2) {
+                left.append(chunk[i].isFinite ? chunk[i] : 0)
+                right.append(chunk[i + 1].isFinite ? chunk[i + 1] : 0)
+            }
+            if left.count > limit { reader.cancelReading(); throw LoadError.tooLong }
+        }
+        guard reader.status == .completed, !left.isEmpty else { return nil }
+        return Decoded(left: left, right: right, sampleRate: rate, bitDepth: 32, stereo: true)
     }
 
     /// A WAV file's cue points (slice markers) and first 'smpl' loop (its region), in frames.
@@ -91,20 +276,32 @@ enum SampleLoader {
         defer { if access { url.stopAccessingSecurityScopedResource() } }
         let folder = KnockFolders.samples
         if let inside = KnockFolders.relative(url, in: folder) { return inside }
-        var dest = folder.appendingPathComponent(url.lastPathComponent)
-        // The same sound again (a library pick, say): reuse the copy that's already there, if it is the
-        // same audio (a copy of a levelled stock sound has the same size but not the same sound).
-        let size = { (u: URL) in (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? -1 }
-        if FileManager.default.fileExists(atPath: dest.path) && size(dest) == size(url),
-           let a = try? Data(contentsOf: dest), let b = try? Data(contentsOf: url), a == b { return dest.lastPathComponent }
-        var n = 2
-        while FileManager.default.fileExists(atPath: dest.path) {
-            let base = url.deletingPathExtension().lastPathComponent
-            dest = folder.appendingPathComponent("\(base) \(n)").appendingPathExtension(url.pathExtension)
-            n += 1
+        let name = url.lastPathComponent
+        func copy(_ source: URL) throws -> String {
+            var dest = folder.appendingPathComponent(name)
+            // The same sound again (a library pick, say): reuse the copy that's already there, if it is the
+            // same audio (a copy of a levelled stock sound has the same size but not the same sound).
+            let size = { (u: URL) in (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? -1 }
+            if FileManager.default.fileExists(atPath: dest.path) && size(dest) == size(source),
+               let a = try? Data(contentsOf: dest), let b = try? Data(contentsOf: source), a == b { return dest.lastPathComponent }
+            var n = 2
+            while FileManager.default.fileExists(atPath: dest.path) {
+                let base = url.deletingPathExtension().lastPathComponent
+                dest = folder.appendingPathComponent("\(base) \(n)").appendingPathExtension(url.pathExtension)
+                n += 1
+            }
+            try FileManager.default.copyItem(at: source, to: dest)
+            return dest.lastPathComponent
         }
-        try FileManager.default.copyItem(at: url, to: dest)
-        return dest.lastPathComponent
+        // A coordinated read: a sound that's still only in iCloud (or another Files place) is brought down
+        // to the iPad first, instead of copying a file that isn't there yet.
+        var copied: Result<String, Error>?
+        var coordination: NSError?
+        NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordination) { readable in
+            copied = Result { try copy(readable) }
+        }
+        if let copied { return try copied.get() }
+        return try copy(url)
     }
 
     static func urlInSamples(_ name: String) -> URL { KnockFolders.samples.appendingPathComponent(name) }
