@@ -20,6 +20,12 @@ enum Pad: Int, CaseIterable {
     static let bassRootNote = 60
     static let bassNoteRange = 48...84
 
+    /// The channel rack's top-to-bottom order for every kit (Tyrone, Oct 27): 808, kick, clap, snare,
+    /// hat, open hat, rim, tom 1 (low), tom 2 (high), then perc 1, perc 2, cymbal. Only the rack rows
+    /// move: pad N, its MIDI note and its pattern lane stay the same, so kits and presets still line up.
+    static let rackOrder: [Int] = [Pad.bass808, .kick, .clap, .snare, .hat, .openHat, .rim,
+                                   .tomLow, .tomHigh, .perc1, .perc2, .cymbal].map(\.rawValue)
+
     var midiNote: Int { Self.firstNote + rawValue }
     static func index(forMIDINote note: Int) -> Int? {
         (36...47).contains(note) ? note - 36 : nil
