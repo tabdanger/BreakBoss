@@ -88,7 +88,7 @@ enum SoundType: String, CaseIterable, Identifiable {
 }
 
 extension SoundType {
-    /// A stock sound's name ends in what it is ("BK NO 9 KICK", "BK NO 60 OPEN HAT", "BK NO 15 E1 808").
+    /// A stock sound's name ends in what it is ("BK NO 9 KICK", "BK NO 60 OPEN HAT", "BK NO 15 C1 808").
     static func forStockName(_ name: String) -> SoundType? {
         let words = name.split(separator: " ").map(String.init)
         guard let last = words.last else { return nil }

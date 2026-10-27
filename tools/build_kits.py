@@ -129,11 +129,16 @@ def pool(pad, likes):
     return out
 
 
+# The 808 lane's tuning when a kit has no 808 of its own: C1 (Tyrone, Oct 27: nothing in a key other than C).
+C1_HZ = 32.7
+
+
 def root_hz(s):
-    """The kit's 808 tuning from its 808 sound, on the nearest note between D1 and A#1 (the 808 lane plays from it)."""
-    hz = s["feat"]["pitch"] or 43.65
-    while hz > 60: hz /= 2
-    while hz < 36: hz *= 2
+    """The kit's 808 tuning from its 808 sound, on its nearest note (the 808 lane plays from it). Every stock 808
+    is a C1 or C2 since Oct 27 (tools/tune_808s_to_c.py)."""
+    hz = s["feat"]["pitch"] or C1_HZ
+    while hz > 70: hz /= 2
+    while hz < 30: hz *= 2
     m = round(69 + 12 * math.log2(hz / 440))
     return round(440 * 2 ** ((m - 69) / 12), 2)
 
@@ -177,8 +182,8 @@ def west_coast_kits(named):
     return out
 
 
-# The Go2Spinz 808 (bb_808_d1_08.wav), the 808 pad of all 50 Bay Area kits.
-BAY_AREA_808 = "BK NO 5 D1 808"
+# The Go2Spinz 808 (bb_808_d1_08.wav, tuned to C1 on Oct 27), the 808 pad of all 50 Bay Area kits.
+BAY_AREA_808 = "BK NO 5 C1 808"
 
 
 def bay_area_kits(named):
@@ -254,7 +259,7 @@ def build():
                 for pad, f in enumerate(files):
                     if f: assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": ac_by_file[f]["name"]})
                     else: empty.append({"kitID": kid, "pad": pad})
-                kits.append((kid, f"{name} {side}", voice, style, tempo, seed, 41.2, "vintage", kit_catalog.OLD_FAMILY[name], name))
+                kits.append((kid, f"{name} {side}", voice, style, tempo, seed, C1_HZ, "vintage", kit_catalog.OLD_FAMILY[name], name))
                 seed += 1
                 continue
             for pad, f in enumerate(files):
@@ -286,7 +291,7 @@ def build():
                     for pad, f in enumerate(files):
                         if f: assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": ac_by_file[f]["name"]})
                         else: empty.append({"kitID": kid, "pad": pad})
-                    kits.append((kid, name, voice, style, tempo, seed, 41.2, mode, family, genre))   # no 808: the lane's default E1
+                    kits.append((kid, name, voice, style, tempo, seed, C1_HZ, mode, family, genre))   # no 808: the lane's default C1
                     seed += 1
                     continue
                 for pad, f in enumerate(files):
@@ -323,7 +328,7 @@ def build():
         for pad, f in enumerate(files):
             if f: assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": names[pad]})
             else: empty.append({"kitID": kid, "pad": pad})
-        root = root_hz(by_file[files[6]]) if files[6] in by_file else 41.2   # no 808 of its own: the 808 lane's default E1
+        root = root_hz(by_file[files[6]]) if files[6] in by_file else C1_HZ   # no 808 of its own: the 808 lane's default C1
         kits.append((kid, name, voice, style, tempo, seed, root, mode, family, genre))
         seed += 1
     return kits, assignments, uses, empty

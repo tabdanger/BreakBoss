@@ -143,7 +143,7 @@ enum KnockSelfTest {
         check(library.allSounds.count == 771 && urls.count == 771 && Set(names).count == 771, "the sound library holds 771 sounds (589 + 140 BK + 42 BK acoustic), each with its own name")
         check(names.allSatisfy { SoundType.forStockName($0) != nil }, "every stock sound's name ends in what it is")
         check(SoundType.forStockName("BK NO 60 OPEN HAT") == .open && SoundType.forStockName("BK NO 66 HIHAT") == .hat
-              && SoundType.forStockName("BK NO 15 E1 808") == .bass && SoundType.forStockName("BK NO 64 SNARE") == .snare,
+              && SoundType.forStockName("BK NO 15 C1 808") == .bass && SoundType.forStockName("BK NO 64 SNARE") == .snare,
               "a stock sound's last word sorts it")
         check(library.librarySounds().count == 771, "the sound menu lists every stock sound, in a kit or not")
         // Tyrone, Oct 19: every sound sits in the section of the folder it came from
