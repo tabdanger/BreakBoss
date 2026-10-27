@@ -277,6 +277,37 @@ struct BBSectionHeading: View {
     }
 }
 
+/// A KITS / PATTERNS folder: its name, how many it holds and a chevron. Tapping it opens or closes it.
+struct BBFolderHeading: View {
+    let title: String
+    let count: Int
+    let open: Bool
+    let accent: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold))
+                    .foregroundColor(open ? accent : Color(white: 0.62))
+                    .rotationEffect(.degrees(open ? 90 : 0))
+                    .frame(width: 14)
+                Text(title.uppercased()).font(.system(size: 12, weight: .semibold)).kerning(0.8)
+                    .foregroundColor(Color(white: open ? 0.85 : 0.62)).lineLimit(1).minimumScaleFactor(0.7)
+                Rectangle().fill(Color.white.opacity(0.09)).frame(height: 1)
+                Text("\(count)").font(.system(size: 11, weight: .medium, design: .monospaced)).foregroundColor(Color(white: 0.5))
+            }
+            .padding(.horizontal, 6)
+            .frame(minHeight: 40)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlatePress())
+        .accessibilityLabel("\(title), \(count)")
+        .accessibilityValue(open ? "Open" : "Closed")
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
 /// The small lamp on a browser row: a dark ring, lit in the face's light on the selected row.
 struct BBRowLamp: View {
     let on: Bool
@@ -363,6 +394,8 @@ struct BBBrowserEntry: Identifiable {
     var detail: String? = nil
     /// Words the search looks through besides the title (the heading, the tempo).
     var keywords = ""
+    /// The id of the folder (heading) a row sits in; "" for a row outside any folder (INIT).
+    var folder = ""
 }
 
 enum BBBrowserFilter {
@@ -380,6 +413,22 @@ enum BBBrowserFilter {
         }
         return out
     }
+
+    /// The headings plus the rows of open folders. While searching every match shows, folders open.
+    static func folded(_ entries: [BBBrowserEntry], open: Set<String>, searching: Bool) -> [BBBrowserEntry] {
+        searching ? entries : entries.filter { $0.kind == .heading || $0.folder.isEmpty || open.contains($0.folder) }
+    }
+
+    /// How many rows each folder holds.
+    static func counts(_ entries: [BBBrowserEntry]) -> [String: Int] {
+        entries.reduce(into: [:]) { if $1.kind == .row, !$1.folder.isEmpty { $0[$1.folder, default: 0] += 1 } }
+    }
+}
+
+/// Folders open this run of the app, per browser, so KITS / PATTERNS reopen the way you left them.
+enum BBFolderMemory {
+    static var kits: Set<String> = []
+    static var patterns: Set<String> = []
 }
 
 // MARK: KITS
@@ -395,6 +444,7 @@ struct KitBrowserPanel: View {
     /// Face 1 deletes your own kits from here.
     var allowDelete = false
     @State private var query = ""
+    @State private var openFolders = BBFolderMemory.kits
     @Environment(\.bbPanelBody) private var bodyH
     @Environment(\.seqFinish) private var finish
 
@@ -407,7 +457,7 @@ struct KitBrowserPanel: View {
                 out.append(BBBrowserEntry(id: "h:" + heading, kind: .heading, title: heading))
                 for def in g.kits {
                     out.append(BBBrowserEntry(id: def.id, kind: .row, title: def.name, detail: "\(Int(def.tempo)) BPM",
-                                              keywords: "\(heading) \(def.genre) \(Int(def.tempo)) BPM"))
+                                              keywords: "\(heading) \(def.genre) \(Int(def.tempo)) BPM", folder: "h:" + heading))
                 }
             }
         }
@@ -418,10 +468,14 @@ struct KitBrowserPanel: View {
         var all = Self.factoryEntries
         if !controller.userKits.isEmpty {
             all.append(BBBrowserEntry(id: "h:my", kind: .heading, title: "My kits"))
-            all += controller.userKits.map { BBBrowserEntry(id: "user:" + $0, kind: .row, title: $0.uppercased(), detail: "YOUR KIT", keywords: "MY KITS") }
+            all += controller.userKits.map { BBBrowserEntry(id: "user:" + $0, kind: .row, title: $0.uppercased(), detail: "YOUR KIT", keywords: "MY KITS", folder: "h:my") }
         }
         return BBBrowserFilter.apply(all, query)
     }
+
+    /// What the list shows: closed folders keep only their heading.
+    private var visible: [BBBrowserEntry] { BBBrowserFilter.folded(entries, open: openFolders, searching: !query.isEmpty) }
+    private var counts: [String: Int] { BBBrowserFilter.counts(entries) }
 
     private var currentID: String { controller.state.userKit.map { "user:" + $0 } ?? controller.state.kitID }
 
@@ -432,9 +486,11 @@ struct KitBrowserPanel: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 4) {
-                        ForEach(entries) { e in
+                        ForEach(visible) { e in
                             if e.kind == .heading {
-                                BBSectionHeading(title: e.title)
+                                BBFolderHeading(title: e.title, count: counts[e.id] ?? 0, open: !query.isEmpty || openFolders.contains(e.id),
+                                                accent: accent) { toggle(e.id) }
+                                    .id(e.id)
                             } else {
                                 HStack(spacing: 4) {
                                     BBBrowserRow(title: e.title, detail: e.detail, selected: e.id == currentID, accent: accent) { pick(e.id) }
@@ -461,7 +517,16 @@ struct KitBrowserPanel: View {
 
     private func scrollToCurrent(_ proxy: ScrollViewProxy) {
         let id = currentID
+        if let folder = entries.first(where: { $0.id == id })?.folder, !folder.isEmpty { openFolders.insert(folder) }
         DispatchQueue.main.async { proxy.scrollTo(id, anchor: .center) }
+    }
+
+    private func toggle(_ folder: String) {
+        guard query.isEmpty else { return }
+        withAnimation(.easeInOut(duration: 0.18)) {
+            if openFolders.contains(folder) { openFolders.remove(folder) } else { openFolders.insert(folder) }
+        }
+        BBFolderMemory.kits = openFolders
     }
 
     private func pick(_ id: String) {
@@ -485,6 +550,7 @@ struct PatternBrowserPanel: View {
     /// After a preset loads (Face 2 goes back to its first pattern and drops its selection).
     var loaded: () -> Void = {}
     @State private var query = ""
+    @State private var openFolders = BBFolderMemory.patterns
     @Environment(\.bbPanelBody) private var bodyH
     @Environment(\.seqFinish) private var finish
 
@@ -494,7 +560,7 @@ struct PatternBrowserPanel: View {
             out.append(BBBrowserEntry(id: "h:" + style, kind: .heading, title: style))
             for p in PatternBank.presets(in: style) {
                 let detail = "\(Int(p.bpm)) BPM" + (p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")
-                out.append(BBBrowserEntry(id: p.name, kind: .row, title: p.name, detail: detail, keywords: "\(style) \(detail)"))
+                out.append(BBBrowserEntry(id: p.name, kind: .row, title: p.name, detail: detail, keywords: "\(style) \(detail)", folder: "h:" + style))
             }
         }
         return out
@@ -506,10 +572,14 @@ struct PatternBrowserPanel: View {
         all += Self.factoryEntries
         if !controller.userPresets.isEmpty {
             all.append(BBBrowserEntry(id: "h:my", kind: .heading, title: "My presets"))
-            all += controller.userPresets.map { BBBrowserEntry(id: "user:" + $0, kind: .row, title: $0.uppercased(), detail: "YOUR PRESET", keywords: "MY PRESETS") }
+            all += controller.userPresets.map { BBBrowserEntry(id: "user:" + $0, kind: .row, title: $0.uppercased(), detail: "YOUR PRESET", keywords: "MY PRESETS", folder: "h:my") }
         }
         return BBBrowserFilter.apply(all, query)
     }
+
+    /// What the list shows: closed folders keep only their heading.
+    private var visible: [BBBrowserEntry] { BBBrowserFilter.folded(entries, open: openFolders, searching: !query.isEmpty) }
+    private var counts: [String: Int] { BBBrowserFilter.counts(entries) }
 
     private var currentID: String {
         let name = controller.state.presetName
@@ -527,9 +597,11 @@ struct PatternBrowserPanel: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 4) {
-                        ForEach(entries) { e in
+                        ForEach(visible) { e in
                             if e.kind == .heading {
-                                BBSectionHeading(title: e.title)
+                                BBFolderHeading(title: e.title, count: counts[e.id] ?? 0, open: !query.isEmpty || openFolders.contains(e.id),
+                                                accent: accent) { toggle(e.id) }
+                                    .id(e.id)
                             } else {
                                 HStack(spacing: 4) {
                                     BBBrowserRow(title: e.title, detail: e.detail, selected: e.id == currentID, accent: accent) { pick(e.id) }
@@ -547,10 +619,19 @@ struct PatternBrowserPanel: View {
                 .frame(maxHeight: max(BBPanelMetrics.rowH * 2, bodyH - BBPanelMetrics.searchH))
                 .onAppear {
                     let id = currentID
+                    if let folder = entries.first(where: { $0.id == id })?.folder, !folder.isEmpty { openFolders.insert(folder) }
                     DispatchQueue.main.async { proxy.scrollTo(id, anchor: .center) }
                 }
             }
         }
+    }
+
+    private func toggle(_ folder: String) {
+        guard query.isEmpty else { return }
+        withAnimation(.easeInOut(duration: 0.18)) {
+            if openFolders.contains(folder) { openFolders.remove(folder) } else { openFolders.insert(folder) }
+        }
+        BBFolderMemory.patterns = openFolders
     }
 
     private func pick(_ id: String) {
