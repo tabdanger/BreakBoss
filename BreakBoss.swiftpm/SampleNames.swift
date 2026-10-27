@@ -77,7 +77,7 @@ final class SampleNames {
 
     func stock(_ file: String) -> String? {
         var stem = (file as NSString).lastPathComponent
-        if Self.audio.contains((stem as NSString).pathExtension.lowercased()) { stem = (stem as NSString).deletingPathExtension }
+        if AudioFormats.isAudio(ext: (stem as NSString).pathExtension) { stem = (stem as NSString).deletingPathExtension }
         return stockName(stem)
     }
 
