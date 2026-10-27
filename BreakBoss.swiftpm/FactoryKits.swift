@@ -398,56 +398,56 @@ florence-ave|FLORENCE AVE|westBounce|westBounce|90|1343|41.2|modern|WEST COAST|W
 huntington-park|HUNTINGTON PARK|westBounce|westBounce|92|1344|41.2|modern|WEST COAST|WEST COAST
 norwalk|NORWALK|westBounce|westBounce|90|1345|41.2|modern|WEST COAST|WEST COAST
 rialto|RIALTO|westBounce|westBounce|90|1346|41.2|modern|WEST COAST|WEST COAST
-fruitvale|FRUITVALE|westBounce|westBounce|82|1347|41.2|modern|WEST COAST|BAY AREA
-deep-east|DEEP EAST|westBounce|westBounce|82|1348|41.2|modern|WEST COAST|BAY AREA
-west-oakland|WEST OAKLAND|westBounce|westBounce|82|1349|41.2|modern|WEST COAST|BAY AREA
-temescal|TEMESCAL|westBounce|westBounce|83|1350|41.2|modern|WEST COAST|BAY AREA
-lake-merritt|LAKE MERRITT|westBounce|westBounce|83|1351|41.2|modern|WEST COAST|BAY AREA
-acorn|ACORN|westBounce|westBounce|83|1352|41.2|modern|WEST COAST|BAY AREA
-brookfield|BROOKFIELD|westBounce|westBounce|86|1353|41.2|modern|WEST COAST|BAY AREA
-sobrante-park|SOBRANTE PARK|westBounce|westBounce|87|1354|41.2|modern|WEST COAST|BAY AREA
-elmhurst|ELMHURST|westBounce|westBounce|87|1355|41.2|modern|WEST COAST|BAY AREA
-seminary|SEMINARY|westBounce|westBounce|88|1356|41.2|modern|WEST COAST|BAY AREA
-bayview|BAYVIEW|westBounce|westBounce|90|1357|41.2|modern|WEST COAST|BAY AREA
-fillmore|FILLMORE|westBounce|westBounce|90|1358|41.2|modern|WEST COAST|BAY AREA
-the-mission|THE MISSION|westBounce|westBounce|90|1359|41.2|modern|WEST COAST|BAY AREA
-visitacion-valley|VISITACION VALLEY|westBounce|westBounce|90|1360|41.2|modern|WEST COAST|BAY AREA
-excelsior|EXCELSIOR|westBounce|westBounce|90|1361|41.2|modern|WEST COAST|BAY AREA
-lakeview|LAKEVIEW|westBounce|westBounce|90|1362|41.2|modern|WEST COAST|BAY AREA
-haight|HAIGHT|westBounce|westBounce|90|1363|41.2|modern|WEST COAST|BAY AREA
-dogpatch|DOGPATCH|westBounce|westBounce|90|1364|41.2|modern|WEST COAST|BAY AREA
-vallejo|VALLEJO|westBounce|westBounce|90|1365|41.2|modern|WEST COAST|BAY AREA
-country-club-crest|COUNTRY CLUB CREST|westBounce|westBounce|90|1366|41.2|modern|WEST COAST|BAY AREA
-crestside|CRESTSIDE|westBounce|westBounce|91|1367|41.2|modern|WEST COAST|BAY AREA
-richmond|RICHMOND|westBounce|westBounce|91|1368|41.2|modern|WEST COAST|BAY AREA
-north-richmond|NORTH RICHMOND|westBounce|westBounce|91|1369|41.2|modern|WEST COAST|BAY AREA
-san-pablo|SAN PABLO|westBounce|westBounce|92|1370|41.2|modern|WEST COAST|BAY AREA
-pittsburg|PITTSBURG|westBounce|westBounce|92|1371|41.2|modern|WEST COAST|BAY AREA
-bay-point|BAY POINT|westBounce|westBounce|92|1372|41.2|modern|WEST COAST|BAY AREA
-concord|CONCORD|westBounce|westBounce|92|1373|41.2|modern|WEST COAST|BAY AREA
-hayward|HAYWARD|westBounce|westBounce|93|1374|41.2|modern|WEST COAST|BAY AREA
-san-leandro|SAN LEANDRO|westBounce|westBounce|94|1375|41.2|modern|WEST COAST|BAY AREA
-union-city|UNION CITY|westBounce|westBounce|95|1376|41.2|modern|WEST COAST|BAY AREA
-fremont|FREMONT|westBounce|westBounce|96|1377|41.2|modern|WEST COAST|BAY AREA
-newark|NEWARK|westBounce|westBounce|96|1378|41.2|modern|WEST COAST|BAY AREA
-san-jose|SAN JOSE|westBounce|westBounce|98|1379|41.2|modern|WEST COAST|BAY AREA
-milpitas|MILPITAS|westBounce|westBounce|98|1380|41.2|modern|WEST COAST|BAY AREA
-menlo-park|MENLO PARK|westBounce|westBounce|100|1381|41.2|modern|WEST COAST|BAY AREA
-redwood-city|REDWOOD CITY|westBounce|westBounce|100|1382|41.2|modern|WEST COAST|BAY AREA
-daly-city|DALY CITY|westBounce|westBounce|100|1383|41.2|modern|WEST COAST|BAY AREA
-south-city|SOUTH CITY|westBounce|westBounce|100|1384|41.2|modern|WEST COAST|BAY AREA
-berkeley|BERKELEY|westBounce|westBounce|100|1385|41.2|modern|WEST COAST|BAY AREA
-emeryville|EMERYVILLE|westBounce|westBounce|100|1386|41.2|modern|WEST COAST|BAY AREA
-alameda|ALAMEDA|westBounce|westBounce|101|1387|41.2|modern|WEST COAST|BAY AREA
-marin-city|MARIN CITY|westBounce|westBounce|102|1388|41.2|modern|WEST COAST|BAY AREA
-sausalito|SAUSALITO|westBounce|westBounce|102|1389|41.2|modern|WEST COAST|BAY AREA
-vacaville|VACAVILLE|westBounce|westBounce|102|1390|41.2|modern|WEST COAST|BAY AREA
-fairfield|FAIRFIELD|westBounce|westBounce|102|1391|41.2|modern|WEST COAST|BAY AREA
-suisun|SUISUN|westBounce|westBounce|102|1392|41.2|modern|WEST COAST|BAY AREA
-benicia|BENICIA|westBounce|westBounce|102|1393|41.2|modern|WEST COAST|BAY AREA
-martinez|MARTINEZ|westBounce|westBounce|102|1394|41.2|modern|WEST COAST|BAY AREA
-castro-valley|CASTRO VALLEY|westBounce|westBounce|102|1395|41.2|modern|WEST COAST|BAY AREA
-san-mateo|SAN MATEO|westBounce|westBounce|102|1396|41.2|modern|WEST COAST|BAY AREA
+fruitvale|FRUITVALE|westBounce|westBounce|82|1347|36.71|modern|WEST COAST|BAY AREA
+deep-east|DEEP EAST|westBounce|westBounce|82|1348|36.71|modern|WEST COAST|BAY AREA
+west-oakland|WEST OAKLAND|westBounce|westBounce|82|1349|36.71|modern|WEST COAST|BAY AREA
+temescal|TEMESCAL|westBounce|westBounce|83|1350|36.71|modern|WEST COAST|BAY AREA
+lake-merritt|LAKE MERRITT|westBounce|westBounce|83|1351|36.71|modern|WEST COAST|BAY AREA
+acorn|ACORN|westBounce|westBounce|83|1352|36.71|modern|WEST COAST|BAY AREA
+brookfield|BROOKFIELD|westBounce|westBounce|86|1353|36.71|modern|WEST COAST|BAY AREA
+sobrante-park|SOBRANTE PARK|westBounce|westBounce|87|1354|36.71|modern|WEST COAST|BAY AREA
+elmhurst|ELMHURST|westBounce|westBounce|87|1355|36.71|modern|WEST COAST|BAY AREA
+seminary|SEMINARY|westBounce|westBounce|88|1356|36.71|modern|WEST COAST|BAY AREA
+bayview|BAYVIEW|westBounce|westBounce|90|1357|36.71|modern|WEST COAST|BAY AREA
+fillmore|FILLMORE|westBounce|westBounce|90|1358|36.71|modern|WEST COAST|BAY AREA
+the-mission|THE MISSION|westBounce|westBounce|90|1359|36.71|modern|WEST COAST|BAY AREA
+visitacion-valley|VISITACION VALLEY|westBounce|westBounce|90|1360|36.71|modern|WEST COAST|BAY AREA
+excelsior|EXCELSIOR|westBounce|westBounce|90|1361|36.71|modern|WEST COAST|BAY AREA
+lakeview|LAKEVIEW|westBounce|westBounce|90|1362|36.71|modern|WEST COAST|BAY AREA
+haight|HAIGHT|westBounce|westBounce|90|1363|36.71|modern|WEST COAST|BAY AREA
+dogpatch|DOGPATCH|westBounce|westBounce|90|1364|36.71|modern|WEST COAST|BAY AREA
+vallejo|VALLEJO|westBounce|westBounce|90|1365|36.71|modern|WEST COAST|BAY AREA
+country-club-crest|COUNTRY CLUB CREST|westBounce|westBounce|90|1366|36.71|modern|WEST COAST|BAY AREA
+crestside|CRESTSIDE|westBounce|westBounce|91|1367|36.71|modern|WEST COAST|BAY AREA
+richmond|RICHMOND|westBounce|westBounce|91|1368|36.71|modern|WEST COAST|BAY AREA
+north-richmond|NORTH RICHMOND|westBounce|westBounce|91|1369|36.71|modern|WEST COAST|BAY AREA
+san-pablo|SAN PABLO|westBounce|westBounce|92|1370|36.71|modern|WEST COAST|BAY AREA
+pittsburg|PITTSBURG|westBounce|westBounce|92|1371|36.71|modern|WEST COAST|BAY AREA
+bay-point|BAY POINT|westBounce|westBounce|92|1372|36.71|modern|WEST COAST|BAY AREA
+concord|CONCORD|westBounce|westBounce|92|1373|36.71|modern|WEST COAST|BAY AREA
+hayward|HAYWARD|westBounce|westBounce|93|1374|36.71|modern|WEST COAST|BAY AREA
+san-leandro|SAN LEANDRO|westBounce|westBounce|94|1375|36.71|modern|WEST COAST|BAY AREA
+union-city|UNION CITY|westBounce|westBounce|95|1376|36.71|modern|WEST COAST|BAY AREA
+fremont|FREMONT|westBounce|westBounce|96|1377|36.71|modern|WEST COAST|BAY AREA
+newark|NEWARK|westBounce|westBounce|96|1378|36.71|modern|WEST COAST|BAY AREA
+san-jose|SAN JOSE|westBounce|westBounce|98|1379|36.71|modern|WEST COAST|BAY AREA
+milpitas|MILPITAS|westBounce|westBounce|98|1380|36.71|modern|WEST COAST|BAY AREA
+menlo-park|MENLO PARK|westBounce|westBounce|100|1381|36.71|modern|WEST COAST|BAY AREA
+redwood-city|REDWOOD CITY|westBounce|westBounce|100|1382|36.71|modern|WEST COAST|BAY AREA
+daly-city|DALY CITY|westBounce|westBounce|100|1383|36.71|modern|WEST COAST|BAY AREA
+south-city|SOUTH CITY|westBounce|westBounce|100|1384|36.71|modern|WEST COAST|BAY AREA
+berkeley|BERKELEY|westBounce|westBounce|100|1385|36.71|modern|WEST COAST|BAY AREA
+emeryville|EMERYVILLE|westBounce|westBounce|100|1386|36.71|modern|WEST COAST|BAY AREA
+alameda|ALAMEDA|westBounce|westBounce|101|1387|36.71|modern|WEST COAST|BAY AREA
+marin-city|MARIN CITY|westBounce|westBounce|102|1388|36.71|modern|WEST COAST|BAY AREA
+sausalito|SAUSALITO|westBounce|westBounce|102|1389|36.71|modern|WEST COAST|BAY AREA
+vacaville|VACAVILLE|westBounce|westBounce|102|1390|36.71|modern|WEST COAST|BAY AREA
+fairfield|FAIRFIELD|westBounce|westBounce|102|1391|36.71|modern|WEST COAST|BAY AREA
+suisun|SUISUN|westBounce|westBounce|102|1392|36.71|modern|WEST COAST|BAY AREA
+benicia|BENICIA|westBounce|westBounce|102|1393|36.71|modern|WEST COAST|BAY AREA
+martinez|MARTINEZ|westBounce|westBounce|102|1394|36.71|modern|WEST COAST|BAY AREA
+castro-valley|CASTRO VALLEY|westBounce|westBounce|102|1395|36.71|modern|WEST COAST|BAY AREA
+san-mateo|SAN MATEO|westBounce|westBounce|102|1396|36.71|modern|WEST COAST|BAY AREA
 """
 
     /// The kits before Oct 17: saved projects and your kits that used one open the nearest new kit.
