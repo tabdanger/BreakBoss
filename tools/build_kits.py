@@ -243,6 +243,8 @@ def build():
     seen_sets = set()
     ac_by_file = {s["file"]: s for s in ACOUSTIC + VINTAGE_ACOUSTIC}
     ac_taken, ac_uses = collections.defaultdict(set), collections.Counter()   # the Vintage kits' acoustic drums
+    # the other banks' acoustic-only kits (Oct 27) keep their own count, so no Vintage kit's drums move
+    ac_taken2, ac_uses2 = collections.defaultdict(set), collections.Counter()
     seed = 601
     for name, gid, style, tempo, voice, tags, likes in GENRES:
         for side in ("A", "B"):
@@ -285,9 +287,10 @@ def build():
                 assert frozenset(files) not in seen_sets, name
                 seen_sets.add(frozenset(files))
                 kid = slug(name)
-                if mode == "vintage":
+                if mode == "vintage" or genre in kit_catalog.ACOUSTIC_GENRES:
                     # The picks above still count, so every kit after this one keeps its sounds; the kit plays these.
-                    files = vintage_picks(genre, dict(leans, tags=tags), ac_taken, ac_uses)
+                    files = (vintage_picks(genre, dict(leans, tags=tags), ac_taken, ac_uses) if mode == "vintage"
+                             else vintage_picks(genre, dict(leans, tags=tags), ac_taken2, ac_uses2))
                     for pad, f in enumerate(files):
                         if f: assignments.append({"kitID": kid, "pad": pad, "file": f, "displayName": ac_by_file[f]["name"]})
                         else: empty.append({"kitID": kid, "pad": pad})
@@ -319,7 +322,7 @@ def build():
             cands = cands or [s for s in pool(pad, leans) if s["file"] not in files]    # 20 West Coast kits outnumber the toms
             best = max(cands, key=lambda s: (score(s, pad, tags, leans) - 1.2 * uses[s["file"]], s["file"]))
             uses[best["file"]] += 1; taken[genre].add(best["file"])
-            if mode == "vintage":    # Vintage is acoustic only (Oct 26): the pick still counts, so later kits keep theirs
+            if mode == "vintage" or genre in kit_catalog.ACOUSTIC_GENRES:    # acoustic only (Oct 26, 27): the pick still counts, so later kits keep theirs
                 files.append(None); names.append(None)
                 continue
             files.append(best["file"]); names.append(best["name"])

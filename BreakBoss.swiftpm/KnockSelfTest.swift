@@ -191,6 +191,8 @@ enum KnockSelfTest {
               && SoundType.guess("My Sounds/random.wav") == .fx && SoundType.guess("Pack/Open Hats/a.wav") == .open
               && SoundType.guess("Pack/HI HATS/a.wav") == .hat && SoundType.guess("Pack/FX & OTHER/a.wav") == .fx,
               "an imported sound's folder decides its section, then its name")
+        // Tyrone, Oct 27: "ALL Rock and Live soul kits need to use ALL acoustic sounds" (tools/kit_catalog.py ACOUSTIC_GENRES)
+        let acousticGenres: Set<String> = ["ROCK", "POP ROCK", "LIVE ROCK", "SOFT ROCK", "ARENA ROCK", "LIVE SOUL"]
         var assignments = 0, empties = 0
         for kit in KitLibrary.factory {
             for pad in Pad.allCases {
@@ -220,8 +222,8 @@ enum KnockSelfTest {
             // Bay Area kits all play the Go2Spinz 808 (Tyrone, Oct 27), so their 808 pad sits out
             let compared = Pad.allCases.filter { !(kit.genre == "BAY AREA" && $0 == .bass808) }
             let mine = Set(compared.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url })
-            // Vintage kits (acoustic only, Oct 26) share drums once Tyrone's acoustic pack runs out of a kind
-            for other in pair where other.id != kit.id && kit.preferredMode != .vintage {
+            // Vintage kits and the acoustic-only genres (Oct 26, 27) share drums once Tyrone's acoustic pack runs out of a kind
+            for other in pair where other.id != kit.id && kit.preferredMode != .vintage && !acousticGenres.contains(kit.genre) {
                 let theirs = Set(compared.compactMap { library.sample(kitID: other.id, pad: $0.rawValue)?.url })
                 check(mine.isDisjoint(with: theirs), "\(kit.name) and \(other.name) share no sounds")
             }
@@ -247,13 +249,19 @@ enum KnockSelfTest {
         let vintage = library.allSounds.filter { $0.url.lastPathComponent.hasPrefix("va_") }
         check(vintage.count == 42 && vintage.filter { (library.layers(for: $0)?.count ?? 0) >= 3 }.count == 36,
               "Vintage acoustic drums: 42 sounds, 36 of them with velocity layers")
-        // Vintage is acoustic only (Oct 26): every Vintage kit plays only these and the 12 above, and never an 808
-        for kit in KitLibrary.factory where kit.preferredMode == .vintage {
+        // Vintage is acoustic only (Oct 26), and so is every Rock and Live Soul kit in any bank (Oct 27): only these
+        // and the 12 above, never an 808, and a rock or soul kit always has its kick and snare (salsa and bossa have no snare)
+        for kit in KitLibrary.factory where kit.preferredMode == .vintage || acousticGenres.contains(kit.genre) {
             let played = Pad.allCases.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url.lastPathComponent }
-            check(!played.isEmpty && played.allSatisfy { $0.hasPrefix("ac_") || $0.hasPrefix("va_") }
-                  && library.isEmpty(kitID: kit.id, pad: Pad.bass808.rawValue),
-                  "\(kit.name): a Vintage kit plays only acoustic drums")
+            let onlyAcoustic: Bool = !played.isEmpty && played.allSatisfy { $0.hasPrefix("ac_") || $0.hasPrefix("va_") }
+            let kickSnare: Bool = library.sample(kitID: kit.id, pad: Pad.kick.rawValue) != nil
+                && library.sample(kitID: kit.id, pad: Pad.snare.rawValue) != nil
+            let no808: Bool = library.isEmpty(kitID: kit.id, pad: Pad.bass808.rawValue)
+            let bank: String = kit.preferredMode == .vintage ? "Vintage" : kit.genre
+            check(onlyAcoustic && no808 && (kickSnare || !acousticGenres.contains(kit.genre)),
+                  "\(kit.name): a \(bank) kit plays only acoustic drums")
         }
+        check(KitLibrary.factory.filter { acousticGenres.contains($0.genre) }.count == 10, "10 Rock and Live Soul kits, all acoustic")
         for sound in acoustic + vintage where library.layers(for: sound) != nil {
             let layers = library.layers(for: sound) ?? []
             check(layers.last?.top == 1 && zip(layers, layers.dropFirst()).allSatisfy { $0.0.top < $0.1.top }

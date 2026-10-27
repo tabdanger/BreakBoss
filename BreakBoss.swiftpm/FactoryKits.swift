@@ -128,7 +128,7 @@ laser-glow|LASER GLOW|west90s|pop80s|118|1073|32.7|modern|POP|ELECTROPOP
 diamond-hook|DIAMOND HOOK|modernTrap|trap|140|1074|32.7|modern|POP|POP TRAP
 viral-bounce|VIRAL BOUNCE|modernTrap|trap|140|1075|32.7|modern|POP|POP TRAP
 arena-anthem|ARENA ANTHEM|heavyBreak|heavyBreak|120|1076|32.7|modern|POP|POP ROCK
-tailgate|TAILGATE|heavyBreak|heavyBreak|120|1077|65.41|modern|POP|POP ROCK
+tailgate|TAILGATE|heavyBreak|heavyBreak|120|1077|32.7|modern|POP|POP ROCK
 idol-stage|IDOL STAGE|modernTrap|pop|120|1078|65.41|modern|POP|K-POP
 comeback-show|COMEBACK SHOW|modernTrap|pop|120|1079|65.41|modern|POP|K-POP
 mirror-disco|MIRROR DISCO|west90s|pop|116|1080|32.7|modern|POP|DISCO POP
