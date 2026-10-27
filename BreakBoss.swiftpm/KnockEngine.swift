@@ -226,6 +226,9 @@ final class KitBuffers {
     let sampler: [SamplerRT]
     /// Each track's own FX insert (Face 2), per mode: index pad * 3 + mode.
     let inserts: [TrackFX.Insert]
+    /// Pads with no sound (an EMPTY kit pad is one silent frame): a hit there starts no voice and
+    /// chokes nothing (Tyrone, Oct 26: an EMPTY pad or track plays nothing at all).
+    let silent: [Bool]
 
     init(name: String, samples: [SampleBuffer], settings: [PadSettings], bassHz: Float,
          renderSampleRate: Double = 48_000, layers: [VelocityLayers?] = []) {
@@ -245,6 +248,7 @@ final class KitBuffers {
         mixR = settings.map { $0.gain * sinf(($0.pan.clamped(-1, 1) + 1) * .pi / 4) * 1.414 }
         sampler = settings.map { SamplerRT($0.sampler) }
         inserts = settings.flatMap { pad in SoundMode.allCases.map { TrackFX.insert(pad, $0) } }
+        silent = samples.indices.map { pad in samples[pad].length <= 1 && (pad >= layers.count || layers[pad] == nil) }
     }
 
     @inline(__always)
@@ -1630,6 +1634,8 @@ final class KnockEngine {
                          arp: Bool = true, echo: Bool = true, offsets: (Float, Float, Float) = (0, 0, 0), slide: Bool = false,
                          level: Float = 1, gain: Float = 1) {
         guard pad >= 0 && pad < Pad.count, padMask & (1 << UInt16(pad)) != 0, let kit else { return }
+        // an EMPTY pad: the hit is counted (the pad still lights) but nothing sounds or gets cut
+        if pad < kit.silent.count && kit.silent[pad] { padHits[pad] &+= 1; return }
         var sample = kit.samples[pad]
         let ps = kit.settings[pad]
         let rt = pad < kit.sampler.count ? kit.sampler[pad] : SamplerRT()
