@@ -1024,23 +1024,23 @@ final class KnockController: ObservableObject {
 
     // MARK: Channel rack (the sequencer screen's channels; the faceplate's 12 pads underneath)
 
-    /// The rack's channels: always all 12 pads, in pad order, so every sound that can play is on
+    /// The rack's channels: always all 12 pads, in rack order (808 first), so every sound that can play is on
     /// screen (Tyrone, Oct 17). A pad you haven't given a library sound shows the kit's sound.
     var rackChannels: [WorkspaceChannel] {
         let custom = state.workspaceChannels ?? []
         return rackOrder.map { pad in custom.first { $0.pad == pad }.map(Self.currentName) ?? kitChannel(pad) }
     }
 
-    /// The rack's top-to-bottom order of pads: pad order until a track is dragged somewhere else.
+    /// The rack's top-to-bottom order of pads: Pad.rackOrder (808 first) until a track is dragged somewhere else.
     var rackOrder: [Int] {
-        guard let order = state.rackOrder, order.count == Pad.count, Set(order) == Set(0..<Pad.count) else { return Array(0..<Pad.count) }
+        guard let order = state.rackOrder, order.count == Pad.count, Set(order) == Set(0..<Pad.count) else { return Pad.rackOrder }
         return order
     }
 
     /// The rack in this order (UNDO / REDO of a track move).
     func setRackOrder(_ order: [Int]) {
         guard order.count == Pad.count, Set(order) == Set(0..<Pad.count) else { return }
-        state.rackOrder = order == Array(0..<Pad.count) ? nil : order
+        state.rackOrder = order == Pad.rackOrder ? nil : order
         scheduleSave()
     }
 
@@ -1050,7 +1050,7 @@ final class KnockController: ObservableObject {
         guard let from = order.firstIndex(of: pad) else { return }
         order.remove(at: from)
         order.insert(pad, at: max(0, min(order.count, index)))
-        state.rackOrder = order == Array(0..<Pad.count) ? nil : order
+        state.rackOrder = order == Pad.rackOrder ? nil : order
         scheduleSave()
     }
 

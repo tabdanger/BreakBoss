@@ -415,7 +415,7 @@ enum KnockSelfTest {
         }
         log("sound swap: kick \(kick.name), clap \(clap.name), hat \(hat.name)")
         check(audition() == "the kit's kick", "sound swap: the kick track starts on the kit's kick")
-        let kickTrack = onMain({ rc.rackChannels[0] })
+        let kickTrack = onMain({ rc.rackChannels.first { $0.pad == 0 }! })
         // From the SOUNDS panel: tap a sound with the track selected (the screen auditions it once it's loaded).
         for sound in [hat, clap, kick, hat] {
             var ready = false
@@ -427,7 +427,7 @@ enum KnockSelfTest {
             check(loaded && early == sound.name, "sound swap: the audition when \(sound.name) is picked plays \(sound.name) (heard \(early))")
             let now = audition()
             check(now == sound.name, "sound swap: the track plays \(sound.name) once it's picked (heard \(now))")
-            check(onMain({ rc.rackChannels[0].name }) == sound.name, "sound swap: the rack names \(sound.name)")
+            check(onMain({ rc.rackChannels.first { $0.pad == 0 }!.name }) == sound.name, "sound swap: the rack names \(sound.name)")
         }
         // Playing, kick track soloed, sounds picked while the pattern runs (Tyrone's video).
         if let preset = PatternBank.all.first(where: { $0.name.uppercased().contains("HYPHY") }) ?? PatternBank.all.first {
@@ -453,7 +453,7 @@ enum KnockSelfTest {
             _ = settle(3) { ready }
             for (p, v) in quiet { engine.setParam(p, v) }
             let afterPattern = audition()
-            check(afterPattern == clap.name && onMain({ rc.rackChannels[0].name }) == clap.name,
+            check(afterPattern == clap.name && onMain({ rc.rackChannels.first { $0.pad == 0 }!.name }) == clap.name,
                   "sound swap: a pattern change keeps the picked sound and its name (heard \(afterPattern))")
         }
         // A kit change brings the kit's own sounds back, rack and pads together.
@@ -469,7 +469,7 @@ enum KnockSelfTest {
             let k = bands(source(kitFile.url))
             return distance(b, k) < distance(b, bands(source(hat.url))) && distance(b, k) < distance(b, bands(source(clap.url)))
         }()
-        check(heardKit && onMain({ rc.rackChannels[0].soundID }) == "kit", "sound swap: a kit change puts the kit's kick back on the track and in the rack")
+        check(heardKit && onMain({ rc.rackChannels.first { $0.pad == 0 }!.soundID }) == "kit", "sound swap: a kit change puts the kit's kick back on the track and in the rack")
         #endif
     }
 
@@ -689,7 +689,7 @@ enum KnockSelfTest {
         if let kick = all.first(where: { $0.type == .kick }) {
             onMain { rc.setPadSettings(0, tweaked) }
             var ready = false
-            onMain { rc.replaceRackSound(rc.rackChannels[0].id, with: kick) { ready = true } }
+            onMain { rc.replaceRackSound(rc.rackChannels.first { $0.pad == 0 }!.id, with: kick) { ready = true } }
             let loaded = settle { ready }
             let ps = onMain({ rc.state.pads[0] })
             var expected = PadSettings(); expected.sampleFile = ps.sampleFile
@@ -2974,8 +2974,10 @@ enum KnockSelfTest {
         // The rack mirrors the kit until it's changed: one channel per pad, kit names.
         let rcEngine = KnockEngine(); rcEngine.prepare(sampleRate: 48_000, maxFrames: 512)
         let rc = KnockController(engine: rcEngine, isPlugin: true)
-        check(rc.rackChannels.count == Pad.count && rc.rackChannels.map(\.pad) == Array(0..<Pad.count) && rc.rackChannels[0].name == "KICK",
-              "rack: starts as the kit's 12 channels")
+        let rackNames: [String] = rc.rackChannels.map(\.name)
+        let loadOrder: [String] = ["808", "KICK", "CLAP", "SNARE", "HI HATS", "OPEN HAT", "RIM", "LOW TOM", "HIGH TOM"]
+        check(rc.rackChannels.map(\.pad) == Pad.rackOrder && Array(rackNames.prefix(loadOrder.count)) == loadOrder,
+              "rack: starts as the kit's 12 channels, 808 first then kick, clap, snare, hats, rim, toms (\(rackNames))")
         if let last = rc.rackChannels.last {
             rc.removeRackChannel(last.id)
             check(rc.rackChannels.count == Pad.count && rc.rackChannels.last?.soundID == "kit",
@@ -2993,22 +2995,22 @@ enum KnockSelfTest {
                 rc.toggleMute(Pad.kick.rawValue)
                 let loopsBefore = rc.loops, mutes = rc.mutedPads, midi = rc.midiOutChannels
                 rc.moveRackChannel(pad: Pad.kick.rawValue, to: 3)
-                check(rc.rackOrder == [1, 2, 3, 0] + Array(4..<Pad.count) && rc.rackChannels[3].name == "KICK",
-                      "rack: the kick dragged from row 1 to row 4 sits on row 4 (\(rc.rackOrder))")
+                check(rc.rackOrder == [6, 2, 1, 0] + Array(Pad.rackOrder.dropFirst(4)) && rc.rackChannels[3].name == "KICK",
+                      "rack: the kick dragged from row 2 to row 4 sits on row 4 (\(rc.rackOrder))")
                 check(rc.loops == loopsBefore && rc.mutedPads == mutes && rc.midiOutChannels == midi,
                       "rack: a moved track keeps its steps, its mute and its MIDI channel")
-                rc.setRackOrder(Array(0..<Pad.count))
-                check(rc.rackOrder == Array(0..<Pad.count) && rc.state.rackOrder == nil, "rack: UNDO puts the rack order back")
+                rc.setRackOrder(Pad.rackOrder)
+                check(rc.rackOrder == Pad.rackOrder && rc.state.rackOrder == nil, "rack: UNDO puts the rack order back")
                 rc.toggleMute(Pad.kick.rawValue)
             }
             // Face 1 and Face 2 stay in step: every pad is in the rack, a kit fills rack and pads.
             if let preset = PatternBank.all.first(where: { $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } }) {
-                rc.removeRackChannel(rc.rackChannels[Pad.kick.rawValue].id)
+                rc.removeRackChannel(rc.rackChannels.first { $0.pad == Pad.kick.rawValue }!.id)
                 check(!rc.loops.contains { $0.events.contains { Int($0.pad) == Pad.kick.rawValue } },
                       "rack: a deleted channel's notes go from every pattern")
                 rc.loadPatternPreset(preset)
                 _ = rc.addRackChannel(sound, load: false)
-                check(rc.rackChannels.map(\.pad) == Array(0..<Pad.count), "rack: always all 12 pads, in pad order")
+                check(rc.rackChannels.map(\.pad) == Pad.rackOrder, "rack: always all 12 pads, 808 first")
                 rc.selectKit(KitLibrary.factory[2])
                 check(rc.rackChannels.allSatisfy { $0.soundID == "kit" }, "rack: a kit loads into the rack as well as the pads")
             }
