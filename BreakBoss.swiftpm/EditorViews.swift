@@ -43,7 +43,7 @@ struct PadEditorView: View {
         .preferredColorScheme(.dark)
         .onAppear { files = KnockFolders.sampleFiles() }
         .onDisappear { if recorder.isRecording { recorder.cancel() } }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.audio], allowsMultipleSelection: false) { result in
+        .fileImporter(isPresented: $importing, allowedContentTypes: AudioFormats.pickerTypes, allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first {
                 controller.importSample(url, toPad: pad)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { files = KnockFolders.sampleFiles() }

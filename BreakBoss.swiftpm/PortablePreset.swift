@@ -107,7 +107,7 @@ enum PortablePreset {
             guard total <= maxBytes else { throw PackageError.tooLarge }
             guard mapping[sample.path] == nil else { throw PackageError.invalid }
             let ext = (sample.path as NSString).pathExtension.lowercased()
-            guard ["wav", "aif", "aiff", "caf", "mp3", "m4a", "flac", "aac"].contains(ext) else { throw PackageError.invalid }
+            guard AudioFormats.extensions.contains(ext) else { throw PackageError.invalid }
             let name = UUID().uuidString + "." + ext
             let destination = SampleLoader.urlInSamples(name)
             try sample.bytes.write(to: destination, options: .atomic)

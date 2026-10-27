@@ -612,7 +612,7 @@ struct SequencerView: View {
             ChannelRecordSheet(controller: controller, pad: target.pad)
         }
         .fileImporter(isPresented: Binding(get: { importPad != nil || importKind != nil }, set: { if !$0 { importPad = nil; importKind = nil } }),
-                      allowedContentTypes: importKind == .pack ? [.folder] : [.audio],
+                      allowedContentTypes: importKind == .pack ? [.folder] : AudioFormats.pickerTypes,
                       allowsMultipleSelection: importKind == .sounds) { result in
             defer { importPad = nil; importKind = nil }
             guard case .success(let urls) = result else { return }
