@@ -40,7 +40,7 @@ struct MenuView: View {
         }
     }
 
-    private enum Subpage { case engine, transfer, report }
+    private enum Subpage { case engine, transfer, report, materials }
     private enum ImportKind { case sample(Int), preset }
     private struct PadID: Identifiable { let id: Int }
     private struct SharedFile: Identifiable { let id = UUID(); let url: URL }
@@ -203,31 +203,41 @@ struct MenuView: View {
         case .some(.engine): return "ENGINE CONTROLS"
         case .some(.transfer): return "COMPLETE PRESET"
         case .some(.report): return "BUG REPORT"
+        case .some(.materials): return "MATERIAL TEST"
         case .none: return section.title
         }
     }
 
+    @ViewBuilder
     private func detail(compact: Bool) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if subpage != nil {
-                    Button { subpage = nil } label: {
-                        Label("BACK TO \(section.title)", systemImage: "chevron.left")
-                            .font(.system(.caption, design: .monospaced).weight(.bold))
-                            .padding(.horizontal, 12).frame(minHeight: 44)
-                    }
-                    .buttonStyle(BKHardwareButtonStyle(accent: palette.accent))
-                }
-                Text(pageTitle)
-                    .font(.system(.title3, design: .monospaced).weight(.bold))
-                    .tracking(1.1)
-                    .foregroundColor(palette.text)
-                    .accessibilityAddTraits(.isHeader)
-                page
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(compact ? 14 : 20)
+        // MATERIAL TEST sits outside the scroll view: a scroll view holds touches back to see if they
+        // scroll, and the pad there has to play the instant a finger lands, like Face 1's
+        if subpage == .materials {
+            detailContent(compact: compact).frame(maxHeight: .infinity, alignment: .top)
+        } else {
+            ScrollView { detailContent(compact: compact) }
         }
+    }
+
+    private func detailContent(compact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if subpage != nil {
+                Button { subpage = nil } label: {
+                    Label("BACK TO \(section.title)", systemImage: "chevron.left")
+                        .font(.system(.caption, design: .monospaced).weight(.bold))
+                        .padding(.horizontal, 12).frame(minHeight: 44)
+                }
+                .buttonStyle(BKHardwareButtonStyle(accent: palette.accent))
+            }
+            Text(pageTitle)
+                .font(.system(.title3, design: .monospaced).weight(.bold))
+                .tracking(1.1)
+                .foregroundColor(palette.text)
+                .accessibilityAddTraits(.isHeader)
+            page
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(compact ? 14 : 20)
         .id(section.rawValue + ":" + pageTitle)
     }
 
@@ -237,6 +247,7 @@ struct MenuView: View {
             case .engine: return enginePage.erased()
             case .transfer: return transferPage.erased()
             case .report: return reportPage.erased()
+            case .materials: return MaterialTestView(controller: controller, palette: palette).erased()
             }
         }
         switch section {
@@ -697,6 +708,9 @@ struct MenuView: View {
             group("TESTING") {
                 action("BUG REPORT", subtitle: "BreakBoss keeps a log while you play. If something goes wrong, open this, write what happened, and Copy or Share the report.",
                        symbol: "ladybug") { subpage = .report }
+                // realistic materials, stage 1 (Tyrone, Oct 27): one knob and one pad to try before Face 1 gets them
+                action("MATERIAL TEST", subtitle: "The new realistic knob and pad: turn, drum, tilt the iPad, and read how smoothly the screen runs.",
+                       symbol: "cube.transparent") { subpage = .materials }
             }
             group("VERSION") {
                 HStack {

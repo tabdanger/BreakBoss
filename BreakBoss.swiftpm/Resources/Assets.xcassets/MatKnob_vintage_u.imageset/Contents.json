@@ -1,0 +1,13 @@
+{
+  "images": [
+    {
+      "filename": "MatKnob_vintage_u.png",
+      "idiom": "universal",
+      "scale": "1x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}
