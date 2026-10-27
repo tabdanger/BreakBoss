@@ -249,8 +249,14 @@ VINTAGE_PADS = {
     # the research genres' A/B kits that live in the Vintage bank
     "NEO SOUL": "KSRHOLTY", "DILLA TIME": "KSRHOY", "BOOM BAP": "KSRHOP", "90S RAP": "KSCHOP",
     "70S SOUL": "KSRHOPQLTY", "80S BREAKS": "KSHOPQLTY", "90S RNB": "KSCHOP", "ROCK": "KSHOLTY",
+    # the Modern bank's rock kits (Oct 27, below)
+    "POP ROCK": "KSHOLTY",
 }
 VINTAGE_PAD_OF = {"K": 0, "S": 1, "C": 2, "R": 3, "H": 4, "O": 5, "P": 7, "Q": 8, "L": 9, "T": 10, "Y": 11}
+
+# Tyrone, Oct 27: "ALL Rock and Live soul kits need to use ALL acoustic sounds". These genres play only the
+# acoustic drums in every mode bank, like Vintage: the clap, 808 and perc pads EMPTY (no acoustic ones yet).
+ACOUSTIC_GENRES = {"ROCK", "POP ROCK", "LIVE ROCK", "SOFT ROCK", "ARENA ROCK", "LIVE SOUL"}
 
 # Live acoustic kits (Oct 18): Virtuosity Drums, multisampled with velocity layers and round robins
 # (tools/build_acoustic_sounds.py). The pads named here play the acoustic drums; the clap, 808 and
