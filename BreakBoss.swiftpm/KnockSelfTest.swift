@@ -2572,6 +2572,50 @@ enum KnockSelfTest {
             e.kitHandoff.collect()
         }
         check(e.status[7] > 0, "rapid kit switches keep rendering")
+        checkEmptyPadsSilent()
+    }
+
+    /// Tyrone, Oct 26: a pad or track that says EMPTY plays nothing, and cuts nothing that's playing.
+    static func checkEmptyPadsSilent() {
+        let rate = 48_000.0
+        let e = KnockEngine()
+        e.prepare(sampleRate: rate, maxFrames: 256)
+        let quiet: [KParam] = [.playMode, .velocity, .boost, .clipper, .clipDrive, .gatedReverb, .textureDelay, .tighten]
+        for p in quiet { e.setParam(p, 0) }
+        var samples = kitBuffers(KitLibrary.modernTrap).samples
+        let empty = [Pad.clap.rawValue, Pad.hat.rawValue, Pad.bass808.rawValue]
+        for pad in empty { samples[pad] = SampleBuffer(left: [0], sampleRate: rate) }
+        let kit = KitBuffers(name: "EMPTY TEST", samples: samples, settings: Array(repeating: PadSettings(), count: Pad.count),
+                             bassHz: KitLibrary.modernTrap.bassHz, renderSampleRate: rate)
+        check(empty.allSatisfy { kit.silent[$0] } && !kit.silent[Pad.kick.rawValue], "EMPTY pads are marked silent, sounding pads aren't")
+        e.kitHandoff.publish(kit)
+        var l = [Float](repeating: 0, count: 256), r = l
+        func energy(blocks: Int) -> Double {
+            var sum = 0.0
+            for _ in 0..<blocks {
+                for i in 0..<256 { l[i] = 0; r[i] = 0 }
+                l.withUnsafeMutableBufferPointer { lp in r.withUnsafeMutableBufferPointer { rp in
+                    e.render(frames: 256, left: lp.baseAddress!, right: rp.baseAddress!, host: nil) } }
+                for i in 0..<256 { sum += Double(l[i] * l[i] + r[i] * r[i]) }
+            }
+            return sum
+        }
+        _ = energy(blocks: 2)
+        let floor = energy(blocks: 40)           // whatever the chain makes with nothing playing
+        e.send(KEvent(kind: .pad, a: Int32(Pad.clap.rawValue), value: 1))
+        e.send(KEvent(kind: .bass, a: 0, value: 1))
+        e.send(KEvent(kind: .padPitched, a: Int32(Pad.hat.rawValue + 128 * 64), value: 1))
+        let hits = energy(blocks: 40)
+        e.send(KEvent(kind: .pad, a: Int32(Pad.kick.rawValue), value: 1))
+        let kick = energy(blocks: 40)
+        check(hits <= floor * 1.01 + 1e-12 && kick > floor + 1e-6,
+              "an EMPTY pad, the EMPTY 808 and an EMPTY pitched hit play nothing (the kick still plays)")
+        _ = energy(blocks: 300)                  // the kick rings out
+        e.send(KEvent(kind: .pad, a: Int32(Pad.openHat.rawValue), value: 1))
+        _ = energy(blocks: 2)
+        e.send(KEvent(kind: .pad, a: Int32(Pad.hat.rawValue), value: 1))
+        _ = energy(blocks: 2)                    // past a choke's 6 ms fade
+        check(energy(blocks: 4) > floor + 1e-6, "an EMPTY closed hat doesn't choke the open hat")
     }
 
     static func checkPatternEditor() {

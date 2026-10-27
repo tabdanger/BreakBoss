@@ -712,7 +712,8 @@ final class KnockController: ObservableObject {
                     failed.append(sample.displayName)
                 }
                 // an EMPTY factory pad plays nothing: one silent frame, not a synthesized stand-in
-                if s.pads[pad].sampleFile == nil, KnockController.stockPick(s, pad: pad) == nil, stock.isEmpty(kitID: def.id, pad: pad) {
+                // (also when an old dice pick names a kit with no sound there: it stays EMPTY, Tyrone, Oct 26)
+                if s.pads[pad].sampleFile == nil, stock.isEmpty(kitID: def.id, pad: pad) {
                     samples.append(SampleBuffer(left: [0], sampleRate: rate))
                     empties.insert(pad)
                     continue
