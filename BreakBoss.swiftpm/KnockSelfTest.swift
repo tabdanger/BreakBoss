@@ -217,10 +217,12 @@ enum KnockSelfTest {
             let played = Pad.allCases.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url }
             check(Set(played).count == played.count, "\(kit.name) plays no sound on two pads")
             let pair = KitLibrary.factory.filter { $0.genre == kit.genre }
-            let mine = Set(Pad.allCases.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url })
+            // Bay Area kits all play the Go2Spinz 808 (Tyrone, Oct 27), so their 808 pad sits out
+            let compared = Pad.allCases.filter { !(kit.genre == "BAY AREA" && $0 == .bass808) }
+            let mine = Set(compared.compactMap { library.sample(kitID: kit.id, pad: $0.rawValue)?.url })
             // Vintage kits (acoustic only, Oct 26) share drums once Tyrone's acoustic pack runs out of a kind
             for other in pair where other.id != kit.id && kit.preferredMode != .vintage {
-                let theirs = Set(Pad.allCases.compactMap { library.sample(kitID: other.id, pad: $0.rawValue)?.url })
+                let theirs = Set(compared.compactMap { library.sample(kitID: other.id, pad: $0.rawValue)?.url })
                 check(mine.isDisjoint(with: theirs), "\(kit.name) and \(other.name) share no sounds")
             }
         }
@@ -3575,15 +3577,16 @@ enum KnockSelfTest {
                 played.contains(pad.rawValue) ? stock.sample(kitID: kit.id, pad: pad.rawValue) != nil : stock.isEmpty(kitID: kit.id, pad: pad.rawValue)
             }
         }, "West Coast kits: a sound on each pad its preset plays, every other pad EMPTY")
-        // Bay Area (Oct 25, Tyrone picked "Patterns + 50 matching kits"): kit n plays only Bay Area preset n's pads
+        // Bay Area (Oct 25, Tyrone picked "Patterns + 50 matching kits"): kit n plays only Bay Area preset n's pads,
+        // plus (Oct 27, Tyrone) the Go2Spinz 808 on every kit's 808 pad
         let bayKits = KitLibrary.factory.suffix(50)
         check(bayKits.allSatisfy { $0.family == "WEST COAST" && $0.genre == "BAY AREA" && $0.preferredMode == .modern } &&
               zip(bayKits, bay).allSatisfy { kit, preset in
-            let played = Set(preset.pattern.events.map { Int($0.pad) })
+            let played = Set(preset.pattern.events.map { Int($0.pad) }).union([Pad.bass808.rawValue])
             return Pad.allCases.allSatisfy { pad in
                 played.contains(pad.rawValue) ? stock.sample(kitID: kit.id, pad: pad.rawValue) != nil : stock.isEmpty(kitID: kit.id, pad: pad.rawValue)
-            }
-        }, "50 Bay Area kits in the WEST COAST tab: a sound on each pad its preset plays, every other pad EMPTY")
+            } && stock.sample(kitID: kit.id, pad: Pad.bass808.rawValue)?.url.lastPathComponent == "bb_808_d1_08.wav"
+        }, "50 Bay Area kits in the WEST COAST tab: a sound on each pad its preset plays and the Go2Spinz 808 on the 808 pad, every other pad EMPTY")
         let learned = PatternBank.presets(in: "BK Editions Vol 1")
         check(learned.count >= 19 && learned.allSatisfy { [4, 8].contains($0.pattern.bars) && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } },
               "BK Editions Vol 1: the grooves learned from Tyrone's loops, 4 or 8 bars, each with its kick (\(learned.count))")

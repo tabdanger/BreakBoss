@@ -177,6 +177,10 @@ def west_coast_kits(named):
     return out
 
 
+# The Go2Spinz 808 (bb_808_d1_08.wav), the 808 pad of all 50 Bay Area kits.
+BAY_AREA_808 = "BK NO 5 D1 808"
+
+
 def bay_area_kits(named):
     """kit_catalog.BAY_AREA_KITS, made like west_coast_kits: the n-th kit holds only the sounds the n-th Bay Area preset
     plays, the rest EMPTY. 50 kits outnumber the twenty sounds nearest each loop, so each pad takes the nearest of
@@ -196,6 +200,7 @@ def bay_area_kits(named):
             assert near, (name, lane)
             pick = min(near, key=lambda n: (had[n], near.index(n)))
             picks[pad_of[lane]] = pick; had[pick] += 1
+        picks[6] = BAY_AREA_808     # Tyrone, Oct 27: the Go2Spinz 808 on every Bay Area kit's 808 pad (the presets play no 808)
         genre, style, voice = kit_catalog.BAY_AREA_LOOK
         out.append((name, "modern", "WEST COAST", genre, style, int(round(preset["bpm"])), voice, ["west"], {}, picks))
     return out
