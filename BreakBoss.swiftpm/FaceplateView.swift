@@ -482,7 +482,8 @@ struct KnobPointer: Shape {
         let r = min(rect.width, rect.height) / 2
         let c = CGPoint(x: rect.midX, y: rect.midY)
         let notch = CGRect(x: -r * width / 2, y: -r * outer, width: r * width, height: r * (outer - inner))
-        var p = Path(roundedRect: notch, cornerRadius: r * width * 0.2)
+        // fully rounded: the new caps print a round dot (a line's ends come out round too)
+        var p = Path(roundedRect: notch, cornerRadius: r * min(width, outer - inner) / 2)
         let t = CGAffineTransform(translationX: c.x, y: c.y).rotated(by: angle * .pi / 180)
         p = p.applying(t)
         return p

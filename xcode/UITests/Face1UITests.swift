@@ -74,8 +74,8 @@ final class Face1UITests: XCTestCase {
         tap(1248, 286)          // CLIPPER
         tap(345, 397)           // TEMPO SYNC
         tap(345, 427)           // FOLLOW DAW
-        at(1084, 272).press(forDuration: 0.1, thenDragTo: at(1084, 130))   // OUTPUT up
-        at(207, 518).press(forDuration: 0.1, thenDragTo: at(207, 376))     // BOOST up
+        at(1089, 277).press(forDuration: 0.1, thenDragTo: at(1089, 135))   // OUTPUT up
+        at(204, 518).press(forDuration: 0.1, thenDragTo: at(204, 376))     // BOOST up
         tap(127, 412)           // PLAY
         sleep(1)
     }
@@ -86,8 +86,8 @@ final class Face1UITests: XCTestCase {
         tap(1248, 286)
         tap(345, 397)
         tap(345, 427)
-        at(1084, 272).doubleTap()                                          // knobs back to their defaults
-        at(207, 518).doubleTap()
+        at(1089, 277).doubleTap()                                          // knobs back to their defaults
+        at(204, 518).doubleTap()
         usleep(400_000)
     }
 

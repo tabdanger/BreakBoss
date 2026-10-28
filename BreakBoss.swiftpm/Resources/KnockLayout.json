@@ -7,365 +7,365 @@
   "device": "tablet",
   "knobs": {
    "pitch": {
-    "x": 769.5,
-    "y": 131.5,
-    "r": 31.5,
+    "x": 772.5,
+    "y": 136.5,
+    "r": 33.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "tune": {
-    "x": 927.0,
-    "y": 131.0,
-    "r": 31.5,
+    "x": 930.5,
+    "y": 136.5,
+    "r": 33.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "bounce": {
-    "x": 1088.5,
-    "y": 131.5,
-    "r": 31.5,
+    "x": 1090.0,
+    "y": 136.5,
+    "r": 33.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "velocity": {
-    "x": 1248.0,
-    "y": 131.5,
-    "r": 31.5,
+    "x": 1248.5,
+    "y": 136.0,
+    "r": 33.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "filter": {
-    "x": 769.0,
-    "y": 269.0,
-    "r": 31.5,
+    "x": 773.0,
+    "y": 277.0,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "clipDrive": {
-    "x": 927.0,
-    "y": 269.5,
-    "r": 31.5,
+    "x": 931.0,
+    "y": 277.0,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "output": {
-    "x": 1089.0,
-    "y": 270.0,
-    "r": 32.0,
+    "x": 1089.5,
+    "y": 277.0,
+    "r": 33.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "boost": {
-    "x": 205.0,
-    "y": 519.0,
-    "r": 34.0,
+    "x": 203.5,
+    "y": 517.5,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "punch": {
-    "x": 374.5,
-    "y": 520.0,
-    "r": 34.5,
+    "x": 375.5,
+    "y": 518.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "analogEQ": {
-    "x": 552.5,
-    "y": 519.5,
-    "r": 34.5,
+    "x": 551.5,
+    "y": 518.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "grit": {
     "x": 725.0,
-    "y": 519.0,
+    "y": 518.0,
     "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "shine": {
     "x": 899.0,
-    "y": 519.0,
-    "r": 34.5,
+    "y": 518.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "tighten": {
     "x": 1072.5,
-    "y": 519.5,
+    "y": 518.0,
     "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "noise": {
-    "x": 1245.0,
-    "y": 519.0,
+    "x": 1248.0,
+    "y": 517.5,
     "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    }
   },
   "scope": [
-   106,
-   163,
-   466,
-   339
+   112,
+   166,
+   474,
+   338
   ],
   "bpmDigits": [
-   206,
+   205,
    402,
-   230,
-   421
+   233,
+   423
   ],
-  "bpmLabelX": 247,
+  "bpmLabelX": 250,
   "bpmBox": [
-   168,
+   173,
    383,
-   318,
-   440
+   325,
+   441
   ],
   "textColor": [
-   238,
-   135,
-   128
+   255,
+   2,
+   13
   ],
   "kitBox": [
-   631,
-   384,
-   902,
+   636,
+   382,
+   908,
    440
   ],
   "kitText": [
-   647,
+   652,
    407,
-   886,
+   892,
    422
   ],
   "presetBox": [
-   1010,
-   384,
-   1288,
+   1018,
+   382,
+   1291,
    440
   ],
   "presetText": [
-   1026,
+   1034,
    407,
-   1272,
-   423
+   1275,
+   422
   ],
   "leds": {
    "tempoSyncRect": [
-    327,
-    385,
-    351,
-    409
+    331,
+    384,
+    355,
+    408
    ],
    "followDAWRect": [
-    327,
-    415,
-    351,
-    439
+    331,
+    413,
+    355,
+    437
    ]
   },
   "oneShotButton": [
-   103,
-   70,
-   279,
-   147
+   107,
+   73,
+   285,
+   150
   ],
   "loopButton": [
-   287,
-   70,
-   470,
-   147
+   295,
+   73,
+   478,
+   150
   ],
   "clipperRect": [
-   1206,
-   241,
-   1290,
+   1208,
+   242,
+   1292,
    332
   ],
   "playRect": [
-   95,
-   380,
-   160,
-   445
+   99,
+   382,
+   166,
+   447
   ],
   "diceRect": [
-   477,
-   380,
-   543,
-   445
+   485,
+   381,
+   551,
+   447
   ],
   "saveRect": [
-   1295,
-   380,
-   1357,
-   445
+   1298,
+   381,
+   1360,
+   447
   ],
   "recordRect": [
-   1121,
-   21,
-   1173,
-   68
+   1122,
+   24,
+   1177,
+   75
   ],
   "exportRect": [
-   1243,
-   21,
-   1294,
-   68
+   1245,
+   24,
+   1299,
+   75
   ],
   "menuRect": [
-   1303,
-   21,
-   1354,
-   68
+   1307,
+   24,
+   1360,
+   75
   ],
   "editorRect": [
-   1181,
-   21,
-   1234,
-   68
+   1184,
+   24,
+   1238,
+   75
   ],
   "modeButtons": {
    "modern": [
-    494,
-    68,
-    647,
-    156
+    501,
+    73,
+    657,
+    158
    ],
    "vintage": [
-    494,
-    160,
-    647,
+    501,
+    165,
+    657,
     243
    ],
    "texture": [
-    494,
-    248,
-    647,
-    342
+    501,
+    250,
+    657,
+    345
    ]
   },
   "pads": [
    [
-    101,
-    634,
-    297,
-    794
+    107,
+    626,
+    302,
+    780
    ],
    [
-    312,
-    634,
-    506,
-    794
+    317,
+    626,
+    508,
+    780
    ],
    [
-    522,
-    634,
-    716,
-    794
-   ],
-   [
-    732,
-    634,
-    927,
-    794
-   ],
-   [
-    943,
-    634,
-    1137,
-    794
-   ],
-   [
-    1153,
-    634,
-    1348,
-    794
-   ],
-   [
-    101,
-    800,
-    297,
-    957
-   ],
-   [
-    312,
-    800,
-    506,
-    957
-   ],
-   [
-    522,
-    800,
-    716,
-    957
+    524,
+    626,
+    715,
+    780
    ],
    [
     732,
-    800,
-    927,
-    957
+    626,
+    924,
+    780
    ],
    [
-    943,
-    800,
-    1137,
-    957
+    940,
+    626,
+    1132,
+    780
    ],
    [
-    1153,
-    800,
-    1348,
-    957
+    1148,
+    626,
+    1341,
+    780
+   ],
+   [
+    107,
+    786,
+    302,
+    940
+   ],
+   [
+    317,
+    786,
+    508,
+    940
+   ],
+   [
+    524,
+    786,
+    715,
+    940
+   ],
+   [
+    732,
+    786,
+    924,
+    940
+   ],
+   [
+    940,
+    786,
+    1132,
+    940
+   ],
+   [
+    1148,
+    786,
+    1341,
+    940
    ]
   ],
   "powerRect": [
-   107,
-   968,
-   167,
-   1028
+   112,
+   952,
+   174,
+   1014
   ],
   "sliderRect": [
-   185,
-   972,
-   329,
-   1022
+   186,
+   954,
+   358,
+   1013
   ],
   "logoRect": [
-   608,
-   975,
-   842,
-   1027
+   600,
+   955,
+   850,
+   1010
   ],
   "padOrder": [
    6,
@@ -390,365 +390,365 @@
   "device": "tablet",
   "knobs": {
    "pitch": {
-    "x": 768.5,
-    "y": 131.0,
-    "r": 31.5,
+    "x": 772.5,
+    "y": 137.0,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "tune": {
-    "x": 926.5,
-    "y": 131.0,
-    "r": 31.5,
+    "x": 930.5,
+    "y": 137.0,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "bounce": {
-    "x": 1087.5,
-    "y": 131.0,
-    "r": 31.5,
+    "x": 1090.0,
+    "y": 137.5,
+    "r": 33.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "velocity": {
-    "x": 1247.5,
-    "y": 130.0,
-    "r": 31.5,
+    "x": 1249.5,
+    "y": 137.5,
+    "r": 33.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "filter": {
-    "x": 768.5,
-    "y": 269.0,
-    "r": 32.0,
+    "x": 773.0,
+    "y": 278.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "clipDrive": {
-    "x": 926.0,
-    "y": 269.0,
-    "r": 32.0,
+    "x": 930.5,
+    "y": 277.5,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "output": {
-    "x": 1087.5,
-    "y": 269.5,
-    "r": 32.0,
+    "x": 1089.5,
+    "y": 277.5,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "boost": {
-    "x": 204.0,
-    "y": 519.0,
-    "r": 34.5,
+    "x": 203.5,
+    "y": 518.5,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "punch": {
-    "x": 374.5,
-    "y": 519.0,
-    "r": 34.5,
+    "x": 376.0,
+    "y": 518.5,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "analogEQ": {
-    "x": 551.5,
-    "y": 519.0,
-    "r": 34.5,
+    "x": 552.0,
+    "y": 518.5,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "grit": {
-    "x": 724.5,
-    "y": 519.0,
-    "r": 34.5,
+    "x": 725.0,
+    "y": 518.5,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "shine": {
-    "x": 898.0,
-    "y": 519.0,
-    "r": 35.0,
-    "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
-   },
-   "tighten": {
-    "x": 1071.0,
-    "y": 519.0,
+    "x": 899.0,
+    "y": 518.5,
     "r": 34.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
+   },
+   "tighten": {
+    "x": 1072.5,
+    "y": 518.5,
+    "r": 34.0,
+    "bakedAngle": 0,
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "noise": {
-    "x": 1243.5,
-    "y": 519.0,
-    "r": 35.0,
+    "x": 1249.0,
+    "y": 518.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    }
   },
   "scope": [
-   106,
-   163,
-   466,
-   339
+   112,
+   166,
+   474,
+   338
   ],
   "bpmDigits": [
-   204,
-   404,
-   229,
-   423
+   205,
+   402,
+   234,
+   424
   ],
-  "bpmLabelX": 241,
+  "bpmLabelX": 249,
   "bpmBox": [
-   168,
+   173,
    383,
-   318,
-   440
+   325,
+   441
   ],
   "textColor": [
-   175,
-   187,
-   240
+   57,
+   185,
+   252
   ],
   "kitBox": [
-   631,
-   384,
-   902,
+   636,
+   382,
+   908,
    440
   ],
   "kitText": [
-   647,
-   406,
-   886,
+   652,
+   408,
+   892,
    423
   ],
   "presetBox": [
-   1010,
-   384,
-   1288,
+   1018,
+   382,
+   1291,
    440
   ],
   "presetText": [
-   1026,
-   406,
-   1272,
+   1034,
+   408,
+   1275,
    423
   ],
   "leds": {
    "tempoSyncRect": [
-    327,
-    385,
-    351,
-    409
+    331,
+    384,
+    355,
+    408
    ],
    "followDAWRect": [
-    327,
-    415,
-    351,
-    439
+    331,
+    413,
+    355,
+    437
    ]
   },
   "oneShotButton": [
-   103,
-   70,
-   279,
-   147
+   107,
+   73,
+   285,
+   150
   ],
   "loopButton": [
-   287,
-   70,
-   470,
-   147
+   295,
+   73,
+   478,
+   150
   ],
   "clipperRect": [
-   1206,
-   241,
-   1290,
+   1208,
+   242,
+   1292,
    332
   ],
   "playRect": [
-   95,
-   380,
-   160,
-   445
+   99,
+   382,
+   166,
+   447
   ],
   "diceRect": [
-   477,
-   380,
-   543,
-   445
+   485,
+   381,
+   551,
+   447
   ],
   "saveRect": [
-   1295,
-   380,
-   1357,
-   445
+   1298,
+   381,
+   1360,
+   447
   ],
   "recordRect": [
-   1121,
-   21,
-   1173,
-   68
+   1122,
+   24,
+   1177,
+   75
   ],
   "exportRect": [
-   1243,
-   21,
-   1294,
-   68
+   1245,
+   24,
+   1299,
+   75
   ],
   "menuRect": [
-   1303,
-   21,
-   1354,
-   68
+   1307,
+   24,
+   1360,
+   75
   ],
   "editorRect": [
-   1181,
-   21,
-   1234,
-   68
+   1184,
+   24,
+   1238,
+   75
   ],
   "modeButtons": {
    "modern": [
-    494,
-    68,
-    647,
-    156
+    501,
+    73,
+    657,
+    158
    ],
    "vintage": [
-    494,
-    160,
-    647,
+    501,
+    165,
+    657,
     243
    ],
    "texture": [
-    494,
-    248,
-    647,
-    342
+    501,
+    250,
+    657,
+    345
    ]
   },
   "pads": [
    [
-    101,
-    634,
-    297,
-    794
+    107,
+    626,
+    302,
+    780
    ],
    [
-    312,
-    634,
-    506,
-    794
+    317,
+    626,
+    508,
+    780
    ],
    [
-    522,
-    634,
-    716,
-    794
-   ],
-   [
-    732,
-    634,
-    927,
-    794
-   ],
-   [
-    943,
-    634,
-    1137,
-    794
-   ],
-   [
-    1153,
-    634,
-    1348,
-    794
-   ],
-   [
-    101,
-    800,
-    297,
-    957
-   ],
-   [
-    312,
-    800,
-    506,
-    957
-   ],
-   [
-    522,
-    800,
-    716,
-    957
+    524,
+    626,
+    715,
+    780
    ],
    [
     732,
-    800,
-    927,
-    957
+    626,
+    924,
+    780
    ],
    [
-    943,
-    800,
-    1137,
-    957
+    940,
+    626,
+    1132,
+    780
    ],
    [
-    1153,
-    800,
-    1348,
-    957
+    1148,
+    626,
+    1341,
+    780
+   ],
+   [
+    107,
+    786,
+    302,
+    940
+   ],
+   [
+    317,
+    786,
+    508,
+    940
+   ],
+   [
+    524,
+    786,
+    715,
+    940
+   ],
+   [
+    732,
+    786,
+    924,
+    940
+   ],
+   [
+    940,
+    786,
+    1132,
+    940
+   ],
+   [
+    1148,
+    786,
+    1341,
+    940
    ]
   ],
   "powerRect": [
-   107,
-   968,
-   167,
-   1028
+   112,
+   952,
+   174,
+   1014
   ],
   "sliderRect": [
-   185,
-   972,
-   329,
-   1022
+   186,
+   954,
+   358,
+   1013
   ],
   "logoRect": [
-   608,
-   975,
-   842,
-   1027
+   600,
+   955,
+   850,
+   1010
   ],
   "padOrder": [
    6,
@@ -773,365 +773,365 @@
   "device": "tablet",
   "knobs": {
    "pitch": {
-    "x": 768.0,
-    "y": 132.0,
-    "r": 33.0,
+    "x": 774.0,
+    "y": 137.0,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "tune": {
-    "x": 926.0,
-    "y": 132.0,
-    "r": 33.0,
+    "x": 931.0,
+    "y": 136.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "bounce": {
-    "x": 1086.5,
-    "y": 132.0,
-    "r": 32.5,
+    "x": 1090.0,
+    "y": 136.5,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "velocity": {
-    "x": 1247.5,
-    "y": 132.0,
-    "r": 32.5,
+    "x": 1250.0,
+    "y": 136.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "filter": {
-    "x": 767.5,
-    "y": 271.0,
+    "x": 774.0,
+    "y": 277.5,
     "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "clipDrive": {
-    "x": 925.0,
-    "y": 271.0,
-    "r": 32.5,
+    "x": 931.0,
+    "y": 277.5,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "output": {
-    "x": 1087.0,
-    "y": 271.5,
-    "r": 33.0,
+    "x": 1090.0,
+    "y": 277.5,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "boost": {
-    "x": 201.5,
-    "y": 520.5,
+    "x": 203.5,
+    "y": 517.5,
     "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "punch": {
-    "x": 373.0,
-    "y": 520.5,
+    "x": 376.0,
+    "y": 517.5,
     "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "analogEQ": {
-    "x": 549.0,
-    "y": 520.5,
-    "r": 33.5,
-    "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
-   },
-   "grit": {
-    "x": 722.5,
-    "y": 520.5,
-    "r": 33.5,
-    "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
-   },
-   "shine": {
-    "x": 895.0,
-    "y": 520.5,
+    "x": 552.5,
+    "y": 517.0,
     "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
-   "tighten": {
-    "x": 1069.5,
-    "y": 519.5,
+   "grit": {
+    "x": 725.5,
+    "y": 517.0,
     "r": 34.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
+   },
+   "shine": {
+    "x": 899.0,
+    "y": 517.0,
+    "r": 34.5,
+    "bakedAngle": 0,
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
+   },
+   "tighten": {
+    "x": 1072.0,
+    "y": 517.5,
+    "r": 34.5,
+    "bakedAngle": 0,
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "noise": {
-    "x": 1244.0,
-    "y": 519.0,
-    "r": 35.0,
+    "x": 1249.0,
+    "y": 517.5,
+    "r": 34.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    }
   },
   "scope": [
-   106,
-   163,
-   466,
-   339
+   112,
+   166,
+   474,
+   338
   ],
   "bpmDigits": [
-   205,
-   402,
-   230,
-   420
+   206,
+   400,
+   233,
+   422
   ],
-  "bpmLabelX": 247,
+  "bpmLabelX": 250,
   "bpmBox": [
-   168,
+   173,
    383,
-   318,
-   440
+   325,
+   441
   ],
   "textColor": [
-   252,
-   223,
-   3
+   254,
+   198,
+   5
   ],
   "kitBox": [
-   631,
-   384,
-   902,
+   636,
+   382,
+   908,
    440
   ],
   "kitText": [
-   647,
-   404,
-   886,
+   652,
+   405,
+   892,
    421
   ],
   "presetBox": [
-   1010,
-   384,
-   1288,
+   1018,
+   382,
+   1291,
    440
   ],
   "presetText": [
-   1026,
-   404,
-   1272,
-   421
+   1034,
+   405,
+   1275,
+   422
   ],
   "leds": {
    "tempoSyncRect": [
-    327,
-    385,
-    351,
-    409
+    331,
+    384,
+    355,
+    408
    ],
    "followDAWRect": [
-    327,
-    415,
-    351,
-    439
+    331,
+    413,
+    355,
+    437
    ]
   },
   "oneShotButton": [
-   103,
-   70,
-   279,
-   147
+   107,
+   73,
+   285,
+   150
   ],
   "loopButton": [
-   287,
-   70,
-   470,
-   147
+   295,
+   73,
+   478,
+   150
   ],
   "clipperRect": [
-   1206,
-   241,
-   1290,
+   1208,
+   242,
+   1292,
    332
   ],
   "playRect": [
-   95,
-   380,
-   160,
-   445
+   99,
+   382,
+   166,
+   447
   ],
   "diceRect": [
-   477,
-   380,
-   543,
-   445
+   485,
+   381,
+   551,
+   447
   ],
   "saveRect": [
-   1295,
-   380,
-   1357,
-   445
+   1298,
+   381,
+   1360,
+   447
   ],
   "recordRect": [
-   1121,
-   21,
-   1173,
-   68
+   1122,
+   24,
+   1177,
+   75
   ],
   "exportRect": [
-   1243,
-   21,
-   1294,
-   68
+   1245,
+   24,
+   1299,
+   75
   ],
   "menuRect": [
-   1303,
-   21,
-   1354,
-   68
+   1307,
+   24,
+   1360,
+   75
   ],
   "editorRect": [
-   1181,
-   21,
-   1234,
-   68
+   1184,
+   24,
+   1238,
+   75
   ],
   "modeButtons": {
    "modern": [
-    494,
-    68,
-    647,
-    156
+    501,
+    73,
+    657,
+    158
    ],
    "vintage": [
-    494,
-    160,
-    647,
+    501,
+    165,
+    657,
     243
    ],
    "texture": [
-    494,
-    248,
-    647,
-    342
+    501,
+    250,
+    657,
+    345
    ]
   },
   "pads": [
    [
-    101,
-    634,
-    297,
-    794
+    107,
+    626,
+    302,
+    780
    ],
    [
-    312,
-    634,
-    506,
-    794
+    317,
+    626,
+    508,
+    780
    ],
    [
-    522,
-    634,
-    716,
-    794
-   ],
-   [
-    732,
-    634,
-    927,
-    794
-   ],
-   [
-    943,
-    634,
-    1137,
-    794
-   ],
-   [
-    1153,
-    634,
-    1348,
-    794
-   ],
-   [
-    101,
-    800,
-    297,
-    957
-   ],
-   [
-    312,
-    800,
-    506,
-    957
-   ],
-   [
-    522,
-    800,
-    716,
-    957
+    524,
+    626,
+    715,
+    780
    ],
    [
     732,
-    800,
-    927,
-    957
+    626,
+    924,
+    780
    ],
    [
-    943,
-    800,
-    1137,
-    957
+    940,
+    626,
+    1132,
+    780
    ],
    [
-    1153,
-    800,
-    1348,
-    957
+    1148,
+    626,
+    1341,
+    780
+   ],
+   [
+    107,
+    786,
+    302,
+    940
+   ],
+   [
+    317,
+    786,
+    508,
+    940
+   ],
+   [
+    524,
+    786,
+    715,
+    940
+   ],
+   [
+    732,
+    786,
+    924,
+    940
+   ],
+   [
+    940,
+    786,
+    1132,
+    940
+   ],
+   [
+    1148,
+    786,
+    1341,
+    940
    ]
   ],
   "powerRect": [
-   107,
-   968,
-   167,
-   1028
+   112,
+   952,
+   174,
+   1014
   ],
   "sliderRect": [
-   185,
-   972,
-   329,
-   1022
+   186,
+   954,
+   358,
+   1013
   ],
   "logoRect": [
-   608,
-   975,
-   842,
-   1027
+   600,
+   955,
+   850,
+   1010
   ],
   "padOrder": [
    6,
@@ -1156,365 +1156,365 @@
   "device": "tablet",
   "knobs": {
    "pitch": {
-    "x": 769.0,
-    "y": 130.0,
-    "r": 33.0,
-    "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
-   },
-   "tune": {
-    "x": 927.0,
-    "y": 130.5,
-    "r": 33.0,
-    "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
-   },
-   "bounce": {
-    "x": 1087.5,
-    "y": 131.0,
-    "r": 33.0,
-    "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
-   },
-   "velocity": {
-    "x": 1249.0,
-    "y": 130.5,
-    "r": 32.5,
-    "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
-   },
-   "filter": {
-    "x": 768.5,
-    "y": 269.0,
+    "x": 773.5,
+    "y": 136.5,
     "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
+   },
+   "tune": {
+    "x": 930.5,
+    "y": 136.0,
+    "r": 33.5,
+    "bakedAngle": 0,
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
+   },
+   "bounce": {
+    "x": 1089.0,
+    "y": 136.5,
+    "r": 33.0,
+    "bakedAngle": 0,
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
+   },
+   "velocity": {
+    "x": 1249.5,
+    "y": 136.0,
+    "r": 33.5,
+    "bakedAngle": 0,
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
+   },
+   "filter": {
+    "x": 772.0,
+    "y": 278.0,
+    "r": 33.0,
+    "bakedAngle": 0,
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "clipDrive": {
-    "x": 926.5,
-    "y": 269.5,
-    "r": 33.0,
+    "x": 930.5,
+    "y": 276.5,
+    "r": 34.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "output": {
-    "x": 1087.0,
-    "y": 269.5,
-    "r": 33.0,
+    "x": 1089.0,
+    "y": 277.5,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "boost": {
-    "x": 203.0,
-    "y": 518.0,
-    "r": 35.5,
+    "x": 203.5,
+    "y": 517.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "punch": {
-    "x": 374.5,
-    "y": 518.5,
-    "r": 35.5,
+    "x": 376.5,
+    "y": 517.5,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "analogEQ": {
-    "x": 551.0,
-    "y": 518.5,
-    "r": 35.0,
+    "x": 552.0,
+    "y": 517.5,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "grit": {
     "x": 724.0,
-    "y": 519.0,
-    "r": 34.5,
+    "y": 517.5,
+    "r": 33.5,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "shine": {
-    "x": 897.5,
-    "y": 518.0,
-    "r": 35.5,
+    "x": 898.0,
+    "y": 517.5,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "tighten": {
     "x": 1071.0,
-    "y": 519.0,
-    "r": 35.0,
+    "y": 517.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    },
    "noise": {
-    "x": 1245.0,
-    "y": 519.5,
-    "r": 35.0,
+    "x": 1248.0,
+    "y": 517.0,
+    "r": 34.0,
     "bakedAngle": 0,
-    "pointerInner": 0.19,
-    "pointerOuter": 0.9,
-    "pointerWidth": 0.117
+    "pointerInner": 0.75,
+    "pointerOuter": 0.87,
+    "pointerWidth": 0.113
    }
   },
   "scope": [
-   106,
-   163,
-   466,
-   339
+   112,
+   166,
+   474,
+   338
   ],
   "bpmDigits": [
    206,
    401,
-   229,
-   420
+   233,
+   423
   ],
-  "bpmLabelX": 245,
+  "bpmLabelX": 250,
   "bpmBox": [
-   168,
+   173,
    383,
-   318,
-   440
+   325,
+   441
   ],
   "textColor": [
-   232,
-   157,
-   144
+   255,
+   26,
+   28
   ],
   "kitBox": [
-   631,
-   384,
-   902,
+   636,
+   382,
+   908,
    440
   ],
   "kitText": [
-   647,
-   404,
-   886,
+   652,
+   406,
+   892,
    421
   ],
   "presetBox": [
-   1010,
-   384,
-   1288,
+   1018,
+   382,
+   1291,
    440
   ],
   "presetText": [
-   1026,
-   403,
-   1272,
+   1034,
+   406,
+   1275,
    421
   ],
   "leds": {
    "tempoSyncRect": [
-    327,
-    385,
-    351,
-    409
+    331,
+    384,
+    355,
+    408
    ],
    "followDAWRect": [
-    327,
-    415,
-    351,
-    439
+    331,
+    413,
+    355,
+    437
    ]
   },
   "oneShotButton": [
-   103,
-   70,
-   279,
-   147
+   107,
+   73,
+   285,
+   150
   ],
   "loopButton": [
-   287,
-   70,
-   470,
-   147
+   295,
+   73,
+   478,
+   150
   ],
   "clipperRect": [
-   1206,
-   241,
-   1290,
+   1208,
+   242,
+   1292,
    332
   ],
   "playRect": [
-   95,
-   380,
-   160,
-   445
+   99,
+   382,
+   166,
+   447
   ],
   "diceRect": [
-   477,
-   380,
-   543,
-   445
+   485,
+   381,
+   551,
+   447
   ],
   "saveRect": [
-   1295,
-   380,
-   1357,
-   445
+   1298,
+   381,
+   1360,
+   447
   ],
   "recordRect": [
-   1121,
-   21,
-   1173,
-   68
+   1122,
+   24,
+   1177,
+   75
   ],
   "exportRect": [
-   1243,
-   21,
-   1294,
-   68
+   1245,
+   24,
+   1299,
+   75
   ],
   "menuRect": [
-   1303,
-   21,
-   1354,
-   68
+   1307,
+   24,
+   1360,
+   75
   ],
   "editorRect": [
-   1181,
-   21,
-   1234,
-   68
+   1184,
+   24,
+   1238,
+   75
   ],
   "modeButtons": {
    "modern": [
-    494,
-    68,
-    647,
-    156
+    501,
+    73,
+    657,
+    158
    ],
    "vintage": [
-    494,
-    160,
-    647,
+    501,
+    165,
+    657,
     243
    ],
    "texture": [
-    494,
-    248,
-    647,
-    342
+    501,
+    250,
+    657,
+    345
    ]
   },
   "pads": [
    [
-    101,
-    634,
-    297,
-    794
+    107,
+    626,
+    302,
+    780
    ],
    [
-    312,
-    634,
-    506,
-    794
+    317,
+    626,
+    508,
+    780
    ],
    [
-    522,
-    634,
-    716,
-    794
-   ],
-   [
-    732,
-    634,
-    927,
-    794
-   ],
-   [
-    943,
-    634,
-    1137,
-    794
-   ],
-   [
-    1153,
-    634,
-    1348,
-    794
-   ],
-   [
-    101,
-    800,
-    297,
-    957
-   ],
-   [
-    312,
-    800,
-    506,
-    957
-   ],
-   [
-    522,
-    800,
-    716,
-    957
+    524,
+    626,
+    715,
+    780
    ],
    [
     732,
-    800,
-    927,
-    957
+    626,
+    924,
+    780
    ],
    [
-    943,
-    800,
-    1137,
-    957
+    940,
+    626,
+    1132,
+    780
    ],
    [
-    1153,
-    800,
-    1348,
-    957
+    1148,
+    626,
+    1341,
+    780
+   ],
+   [
+    107,
+    786,
+    302,
+    940
+   ],
+   [
+    317,
+    786,
+    508,
+    940
+   ],
+   [
+    524,
+    786,
+    715,
+    940
+   ],
+   [
+    732,
+    786,
+    924,
+    940
+   ],
+   [
+    940,
+    786,
+    1132,
+    940
+   ],
+   [
+    1148,
+    786,
+    1341,
+    940
    ]
   ],
   "powerRect": [
-   107,
-   968,
-   167,
-   1028
+   112,
+   952,
+   174,
+   1014
   ],
   "sliderRect": [
-   185,
-   972,
-   329,
-   1022
+   186,
+   954,
+   358,
+   1013
   ],
   "logoRect": [
-   608,
-   975,
-   842,
-   1027
+   600,
+   955,
+   850,
+   1010
   ],
   "padOrder": [
    6,
