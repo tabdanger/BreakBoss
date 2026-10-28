@@ -151,12 +151,12 @@ struct SamplerKnob: View {
         .highPriorityGesture(DragGesture(minimumDistance: 2)
             .onChanged { g in
                 if start == nil { start = value }
-                let n = ((start ?? value) + Float((-g.translation.height + g.translation.width * 0.6) / 180)).clamped(0, 1)
+                let n = ((start ?? value) + KnobFeel.delta(g.translation, travel: KnobFeel.small)).clamped(0, 1)
                 live = n
                 change(n, false)
             }
             .onEnded { g in
-                let n = ((start ?? value) + Float((-g.translation.height + g.translation.width * 0.6) / 180)).clamped(0, 1)
+                let n = ((start ?? value) + KnobFeel.delta(g.translation, travel: KnobFeel.small)).clamped(0, 1)
                 change(n, true)
                 start = nil; live = nil
             })

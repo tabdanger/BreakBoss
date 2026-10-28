@@ -98,7 +98,7 @@ final class Face2PanelUITests: XCTestCase {
     private func panel(_ name: String, modeY: CGFloat) {
         at(562, modeY).tap()
         sleep(1)
-        at(1288, 29).tap()                         // the piano-roll button: Face 2
+        at(1207, 44).tap()                         // the piano-roll button: Face 2
         let sounds = app.buttons["soundsHeader"], generate = app.buttons["generateHeader"]
         XCTAssertTrue(sounds.waitForExistence(timeout: 10), "Face 2 opens (\(name))")
         sleep(1)

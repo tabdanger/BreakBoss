@@ -64,7 +64,7 @@ struct ArtKnob: View {
                     if start == nil { start = value }
                     if hud != nil && !showHUD { showHUD = true }
                     hudRelease += 1
-                    let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
+                    let d = KnobFeel.delta(g.translation, travel: KnobFeel.small)
                     change(((start ?? value) + d).clamped(0, 1), false)
                 }
                 .onEnded { g in
@@ -73,7 +73,7 @@ struct ArtKnob: View {
                         if let doubleTap { doubleTap(); change(start ?? value, true) } else if let reset { change(reset, true) }
                         lastTap = nil
                     } else {
-                        let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
+                        let d = KnobFeel.delta(g.translation, travel: KnobFeel.small)
                         change(((start ?? value) + d).clamped(0, 1), true)
                         lastTap = isTap ? Date() : nil
                     }
@@ -107,11 +107,11 @@ struct DrumRollKnob: View {
         .gesture(DragGesture(minimumDistance: 1)
             .onChanged { g in
                 if start == nil { start = value }
-                let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
+                let d = KnobFeel.delta(g.translation, travel: KnobFeel.small)
                 change(((start ?? value) + d).clamped(0, 1), false)
             }
             .onEnded { g in
-                let d = Float((-g.translation.height + g.translation.width * 0.6) / 180)
+                let d = KnobFeel.delta(g.translation, travel: KnobFeel.small)
                 change(((start ?? value) + d).clamped(0, 1), true)
                 start = nil
             })
