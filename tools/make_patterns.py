@@ -4,7 +4,8 @@
 Started fresh on Oct 17 from the drum research (/mnt/project-files/research/realistic-drums-and-genres.md):
 17 styles, 10 presets each, in the order of the genre guide (West Coast, which replaced Bay Area 2026
 on Oct 20, has 20). Oct 24: 17 more from Tyrone's genre list, 10 each, after the BK Editions. Oct 28: ten more in every genre
-(11 to 20), after Bay Area so no older preset number moves. Every pattern is written the way the genre's producers and drummers play it (tempo,
+(11 to 20), after Bay Area so no older preset number moves; then 21 to 50 in every genre (West Coast too), built from
+each genre's own parts (see "presets 21 to 50" below). Every pattern is written the way the genre's producers and drummers play it (tempo,
 swing, where the kick and snare sit, what the hats do, ghost notes, fills), "in the style of", never a
 transcription.
 
@@ -988,7 +989,7 @@ STYLES.append(BA)
 ADDED = []
 def more(style, name, bpm, swing=50, glide=False, **lanes):
     pat(style, name, bpm, swing, glide, **lanes)
-    P[-1]["added"] = True
+    P[-1]["added"] = 1
     ADDED.append(P[-1])
 KIT_ONLY = {"Rock", "Live Soul", "Live Pop"}          # acoustic kits: clap, 808 and perc pads are EMPTY
 KIT_LANES = {"k", "s", "r", "h", "o", "lt", "ht", "cr"}
@@ -1634,12 +1635,194 @@ for p in ADDED:
     twin = min((q for q in P if q["style"] == p["style"] and q is not p), key=lambda q: apart(p["lanes"], q["lanes"]))
     assert apart(p["lanes"], twin["lanes"]) >= 8, (p["name"], twin["name"])
 
+# ================= Oct 28, later (Tyrone: "lets total each pattern category to 50 patterns per category"): presets 21 to 50
+# of every genre, West Coast included (Bay Area already has 50 and stays as it is). Each one is put together the way a
+# producer builds a beat out of a genre's own parts: the kick and its 808 from one groove of the genre, the backbeat from
+# another, the hats from a third and the colour (percussion, toms, cymbal) from a fourth, all four played at a tempo
+# within 12% of each other so the feel holds, then one or two of the moves the genre's producers use (hat rolls and
+# triplets, drop-outs, kick pickups, ghost notes, an open hat on the last 8th, a fill bar into the crash, the ride in
+# place of the hats). The live drummer genres keep two hands, the acoustic genres keep to the kit's own pads, and every
+# one must differ from every other pattern of its genre by at least 12 steps. They go after every older preset, so no
+# AUv3 factory preset number moves. Seeded, so the same file comes out every time. =================
+import random, re
+WAVE2 = []
+HANDS = ("s", "r", "h", "o", "cr", "lt", "ht")      # the same hands the checks below count
+TARGET = 50
+TRAPLIKE = {T, AT, DR, UK, NY, DN, R, TS, DK, PH, AL, MM, TO, UR, DX}
+LIVE = DRUMMER | {"80s Pop", "Live Pop", "Rock"}
+FLAVOR = {
+    "trap": ["MIDNIGHT", "CHROME", "SMOKE", "STREET", "NEON", "ICE", "CONCRETE", "VAULT", "SIREN", "BLOCK", "RED LIGHT", "NIGHT SHIFT",
+             "COLD", "SMOKE SCREEN", "HIGH RISE", "BACK ROAD", "AFTER DARK", "PENTHOUSE", "BASEMENT", "STATIC", "DIAMOND", "STORM",
+             "GHOST TOWN", "FAST LANE", "TINTED", "UNDERPASS", "HEAT", "PARKING LOT", "SKYLINE", "SHADOW", "GOLD", "THUNDER", "RAIN"],
+    "live": ["SUNDAY", "PORCH", "VELVET", "HONEY", "STAGE", "CHAPEL", "ROOM", "WARM", "SWEAT", "LATE SET", "SOUNDCHECK", "ENCORE",
+             "BALLROOM", "FRONT ROW", "BACKSTAGE", "STUDIO A", "TAPE ROLL", "FIRST TAKE", "LAST TAKE", "SOUL FOOD", "GOLDEN",
+             "MOONLIGHT", "HOMETOWN", "OPEN MIC", "DANCE HALL", "SIDE STAGE", "GREEN ROOM", "LOUNGE", "SUNRISE", "SUNSET", "TOUR BUS",
+             "COUNT IN", "DOWNBEAT"],
+    "sample": ["DUSTY", "CRATE", "VINYL", "BOOMBOX", "CORNER", "ROOFTOP", "SUBWAY", "CYPHER", "TAPE DECK", "BLOCK PARTY", "BACKPACK",
+               "MIXTAPE", "RECORD STORE", "SP DUST", "BASEMENT", "STOOP", "BODEGA", "PROJECTS", "LATE NIGHT", "SOUL CHOP", "DIG",
+               "FADED", "SMOKY", "GRIT", "BRICK", "PAVEMENT", "SIDEWALK", "TRAIN YARD", "LOFT", "WAX", "NEEDLE DROP", "B SIDE", "LOOP"],
+}
+MOVE_WORD = {"roll": "ROLLS", "trip": "TRIPLETS", "drop": "DROP", "pickup": "PICKUP", "ghost": "GHOSTS", "open": "OPEN HAT",
+             "fill": "FILL", "ride": "RIDE", "sparse": "SPACE", "double": "DOUBLE KICK", "octave": "OCTAVES", "crash": "CRASH"}
+def tile(s, n): return (s * (n // len(s)))[:n]
+def bar_starts(n): return range(0, n, 16)
+def hands_fix(lanes, n):
+    """Two hands for one drummer: past two hand sounds on a step, drop the hat, then the open hat, the toms, the rim."""
+    ride = sum(ch != "." for ch in lanes.get("cr", "")) >= n // 4
+    for i in range(n):
+        for drop in ("h", "o", "ht", "lt", "r", "cr"):
+            on = [l for l in HANDS if l in lanes and lanes[l][i] != "." and not (ride and l == "h")]
+            if len(on) <= 2: break
+            if drop in on: lanes[drop] = put(lanes[drop], (i, "."))
+def clean(lanes, n, style):
+    ride = sum(ch != "." for ch in lanes.get("cr", "")) >= n // 4
+    if ride and sum(ch != "." for ch in lanes.get("h", "")) > n // 8:      # a ride and busy hats: one of them goes
+        if style in LIVE: lanes["h"] = tile("....x.......x...", n)                # the drummer's foot keeps the hat on 2 and 4
+        else: lanes["cr"] = put("." * n, (0, lanes["cr"][0] if lanes["cr"][0] != "." else "x"))   # the hats lead, the cymbal marks the one
+    if "h" in lanes and "o" in lanes:           # one hat at a time: the open hat wins its step
+        lanes["h"] = "".join("." if lanes["o"][i] != "." else ch for i, ch in enumerate(lanes["h"]))
+    if style in DRUMMER: hands_fix(lanes, n)
+    return {l: v for l, v in lanes.items() if v.strip(".")}
+
+def mv_roll(L, n, rng):
+    if "h" not in L: return False
+    for b in bar_starts(n):
+        if (b // 16) % 2 == 1 or n == 16:
+            kind = rng.choice(["rr", "qq", "rrqq", "rq"])
+            start = b + 16 - len(kind)
+            L["h"] = put(L["h"], *[(start + j, c) for j, c in enumerate(kind.replace("r", "r").replace("q", "q"))])
+    return True
+def mv_trip(L, n, rng):
+    if "h" not in L: return False
+    steps = rng.sample([2, 6, 10, 12, 14], 2)
+    L["h"] = put(L["h"], *[(b + s, "t") for b in bar_starts(n) for s in steps if (b // 16) % 2 == 0])
+    L["h"] = "".join("." if L["h"][i - 1] == "t" and ch != "t" else ch for i, ch in enumerate(L["h"]))   # a triplet spans its next step
+    return True
+def mv_drop(L, n, rng):
+    if n < 32: return False
+    a = n - 8
+    for l in ("k", "h", "o", "p1", "p2"):
+        if l in L: L[l] = L[l][:a] + "." * 8
+    return True
+def mv_pickup(L, n, rng):
+    if "k" not in L: return False
+    s = rng.choice([13, 14, 15])
+    for b in bar_starts(n):
+        if (b // 16) % 2 == 1 and L["k"][b + s] == "." and all(L.get(x, "." * n)[b + s] == "." for x in ("s", "c")):
+            L["k"] = put(L["k"], (b + s, "o"))
+    return True
+def mv_ghost(L, n, rng):
+    lane = "s" if "s" in L else None
+    if not lane: return False
+    spots = rng.sample([2, 7, 9, 10, 15], 2)
+    L[lane] = put(L[lane], *[(b + s, "g") for b in bar_starts(n) for s in spots if L[lane][b + s] == "."])
+    return True
+def mv_open(L, n, rng):
+    if "h" not in L: return False
+    o = list(L.get("o", "." * n))
+    for b in bar_starts(n):
+        if (b // 16) % 2 == 1: o[b + 14] = "o"
+    L["o"] = "".join(o)
+    return True
+def mv_fill(L, n, rng):
+    if n != 64: return False
+    last = 48
+    kind = rng.choice(["toms", "snare", "split"])
+    for l in ("h", "o", "p1", "p2"):
+        if l in L: L[l] = L[l][:last + 8] + "." * 8
+    s = list(L.get("s", "." * 64))
+    if kind == "snare":
+        for j, c in zip(range(56, 64), "g.x.XxXX"): s[j] = c
+    elif kind == "split":
+        for j, c in zip(range(56, 64), "X.X.X.XX"): s[j] = c
+    else:
+        for j in range(56, 64): s[j] = "."
+        s[60] = s[62] = "X"
+        L["ht"] = put(L.get("ht", "." * 64), (56, "X"), (57, "x"))
+        L["lt"] = put(L.get("lt", "." * 64), (58, "X"), (59, "x"), (61, "X"), (63, "X"))
+    L["s"] = "".join(s)
+    L["cr"] = put(L.get("cr", "." * 64), (0, "X"))
+    return True
+def mv_ride(L, n, rng):
+    if "h" not in L or "cr" in L: return False
+    L["cr"] = L.pop("h").replace("g", "o")
+    L["h"] = tile("....x.......x...", n)
+    return True
+def mv_sparse(L, n, rng):
+    if "h" not in L: return False
+    L["h"] = "".join(ch if i % 4 == 0 or ch in "rqt" else "." for i, ch in enumerate(L["h"]))
+    return True
+def mv_double(L, n, rng):
+    if "k" not in L: return False
+    k = list(L["k"]); back = [L.get(x, "." * n) for x in ("s", "c")]
+    hits = [i for i in range(n - 1) if k[i] != "." and k[i + 1] == "." and i % 16 not in (0,) and all(b[i + 1] == "." for b in back)]
+    if not hits: return False
+    for i in rng.sample(hits, min(2, len(hits))): k[i + 1] = "o"
+    L["k"] = "".join(k)
+    return True
+def mv_octave(L, n, rng):
+    if "b" not in L: return False
+    b = list(L["b"])
+    for s in bar_starts(n):
+        if (s // 16) % 2 == 1 and b[s + 14] in "-0": b[s + 14] = "c"; b[s + 15] = "0" if b[s + 15] in "-." else b[s + 15]
+    L["b"] = "".join(b)
+    return True
+def mv_crash(L, n, rng):
+    L["cr"] = put(L.get("cr", "." * n), (0, "X"))
+    return True
+MOVES = {"roll": mv_roll, "trip": mv_trip, "drop": mv_drop, "pickup": mv_pickup, "ghost": mv_ghost, "open": mv_open, "fill": mv_fill,
+         "ride": mv_ride, "sparse": mv_sparse, "double": mv_double, "octave": mv_octave, "crash": mv_crash}
+def moves_for(style):
+    if style in TRAPLIKE: return ["roll", "trip", "drop", "pickup", "octave", "open", "sparse", "double"]
+    if style in LIVE: return ["fill", "ghost", "ride", "open", "pickup", "fill", "ghost", "crash"]
+    return ["ghost", "open", "pickup", "double", "sparse", "fill", "roll", "ghost"]
+
+def grow(style):
+    own = [p for p in P if p["style"] == style]
+    flavor = FLAVOR["trap" if style in TRAPLIKE else "live" if style in LIVE else "sample"][:]
+    rng = random.Random("BreaKing " + style)
+    rng.shuffle(flavor)
+    prefix = re.match(r"(.*?) 1 ", own[0]["name"]).group(1)
+    taken_names = {p["name"] for p in P}
+    made, tries = [], 0
+    while len(own) + len(made) < TARGET:
+        tries += 1
+        assert tries < 4000, (style, len(made))
+        a = rng.choice([p for p in own if "k" in p["lanes"]] or own)
+        near = [p for p in own if abs(p["bpm"] - a["bpm"]) <= a["bpm"] * 0.12]
+        b, c, d = (rng.choice(near) for _ in range(3))
+        src = {"k": a, "b": a, "s": b, "c": b, "r": b, "h": c, "o": c, "p1": d, "p2": d, "lt": d, "ht": d, "cr": d}
+        lanes = {l: src[l]["lanes"][l] for l in LANES if l in src[l]["lanes"]}
+        if not (lanes.get("s") or lanes.get("c") or lanes.get("r")): continue
+        n = max(len(v) for v in lanes.values())
+        if style in LIVE or rng.random() < 0.35: n = 64
+        lanes = {l: tile(v, n) for l, v in lanes.items()}
+        picks = rng.sample(moves_for(style), 2 if rng.random() < 0.5 else 1)
+        used = [m for m in dict.fromkeys(picks) if MOVES[m](lanes, n, rng)]
+        lanes = clean(lanes, n, style)
+        if style in KIT_ONLY and not set(lanes) <= KIT_LANES: continue
+        if style == WC and ("k" not in lanes or n != 64): continue
+        if min(apart(lanes, q["lanes"]) for q in own + made) < 12: continue
+        word = " ".join(MOVE_WORD[m] for m in used[:1]) or "GROOVE"
+        num = len(own) + len(made) + 1
+        f = next((f for f in flavor if f"{prefix} {num} {f} {word}" not in taken_names), None)
+        if not f: continue
+        name = f"{prefix} {num} {f} {word}"
+        if len(flavor) > 8: flavor.remove(f)             # each flavour word comes back only once the list runs low
+        bpm = round(min(180, max(60, a["bpm"] + rng.choice([-3, -2, -1, 0, 1, 2, 3]))))
+        swing = min(66, max(50, c["swing"]))
+        p = {"style": style, "name": name, "bpm": bpm, "swing": swing, "glide": a["glide"], "lanes": lanes, "added": 2}
+        made.append(p); taken_names.add(name)
+    P.extend(made); WAVE2.extend(made)
+for style in STYLES:
+    if style != BA and style not in LEARNED_STYLES: grow(style)
+
 # ---------------- checks and output ----------------
 cnt = Counter(p["style"] for p in P)
 assert list(cnt) and set(cnt) == set(STYLES), set(cnt) ^ set(STYLES)
-for style, n in cnt.items(): assert n == {BA: BAY_COUNT}.get(style, 20) or style in LEARNED_STYLES, (style, n)
-# stable: each style keeps its own order, and the Oct 28 ones come after every older preset (AUv3 preset numbers)
-P.sort(key=lambda p: (p.pop("added", False), STYLES.index(p["style"])))
+for style, n in cnt.items(): assert n == TARGET or style in LEARNED_STYLES, (style, n)
+# stable: each style keeps its own order; the Oct 28 presets 11-20, then 21-50, come after every older preset (AUv3 preset numbers)
+P.sort(key=lambda p: (p.pop("added", 0), STYLES.index(p["style"])))
 names = [p["name"] for p in P]
 assert len(set(names)) == len(names)
 for p in P:

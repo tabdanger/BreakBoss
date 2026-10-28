@@ -162,7 +162,7 @@ def west_coast_kits(named):
     The pads its preset doesn't play are EMPTY."""
     loops = {lp["title"]: lp for lp in json.load(open(os.path.join(ROOT, "tools", "learned_westcoast.json")))["learned"]}
     bank = json.load(open(os.path.join(ROOT, "BreakBoss.swiftpm", "Resources", "PatternBank.json")))["patterns"]
-    presets = [p for p in bank if p["style"] == "West Coast"]
+    presets = [p for p in bank if p["style"] == "West Coast"][:len(kit_catalog.WEST_COAST_KITS)]   # the 20 learned ones (21-50 came later)
     assert len(presets) == len(kit_catalog.WEST_COAST_KITS)
     pad_of = {"k": 0, "s": 1, "c": 2, "r": 3, "h": 4, "o": 5, "cr": 11}
     had, out = set(), []
