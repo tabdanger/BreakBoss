@@ -103,7 +103,7 @@ struct TutorialStep {
                      face1: { L in [TutorialStep.union([L.exportRect, L.menuRect])] }),
         TutorialStep(surface: .face1, title: "OPEN THE SEQUENCER",
                      text: "The piano-keys button, or sliding the round key at the bottom left, opens the Drum Sequencer. Press NEXT and it opens for you.",
-                     face1: { L in (L.editorRect.map { [$0] } ?? []) + [[125, 1004, 235, 1040]] }),
+                     face1: { L in (L.editorRect.map { [$0] } ?? []) + [L.sliderRect ?? [125, 1004, 235, 1040]] }),
         // Face 2
         TutorialStep(surface: .face2, title: "THE DRUM SEQUENCER",
                      text: "Each row is a track, one for each pad. DRAW: tap a step to add a note, tap a note to delete it, drag along a row to paint. SELECT boxes notes to move, DUPLICATE or CLEAR them; ERASE wipes over them. UNDO and REDO sit next to the tools.",

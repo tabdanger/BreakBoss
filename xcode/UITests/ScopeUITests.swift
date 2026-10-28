@@ -97,7 +97,7 @@ final class ScopeUITests: XCTestCase {
     private func checkFace(_ face: String) {
         let scope = app.descendants(matching: .any)["scope"].firstMatch
         XCTAssertTrue(scope.waitForExistence(timeout: 5), "\(face): the scope is on Face 1")
-        tap(210, 83)            // ONE-SHOT
+        tap(191, 108)           // ONE-SHOT
         sleep(2)
         picture(face + "-idle", of: scope)
         // pad 7, 808 (top row, MPC order); a mode switch reloads the kit, which can take a few
@@ -113,7 +113,7 @@ final class ScopeUITests: XCTestCase {
         XCTAssertGreaterThan(hat.level, 0.01, "\(face): the hat moves the scope")
         XCTAssertGreaterThan(bass.bass, hat.bass, "\(face): the 808 reads more bass than the hat")
         XCTAssertGreaterThan(hat.top, bass.top, "\(face): the hat reads more top than the 808")
-        tap(377, 83)            // LOOP
+        tap(378, 108)           // LOOP
     }
 
     func testScopeFollowsEverySound() {

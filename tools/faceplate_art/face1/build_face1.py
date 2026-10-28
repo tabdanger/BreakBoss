@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Face 1 from Tyrone's approved renders (Oct 19 2026, locked design).
+"""Face 1 from Tyrone's approved renders (NEW faces Oct 28 2026; first set Oct 19).
 
 Tyrone's four Face 1 pictures (Face1_ModernBlack / Texture / Vintage / ModernPlatinum, 1450 x 1085) are
 the faceplates from here on, one per face, each with its own buttons, knobs, lamps and pads: nothing is
@@ -36,38 +36,36 @@ FACES = {"modern": "Face1_ModernBlack.png", "texture": "Face1_Texture.png",
          "vintage": "Face1_Vintage.png", "platinum": "Face1_ModernPlatinum.png"}
 W, H = 1450, 1085
 
-# Where things are in the pictures (the four line up within a pixel or two; pads and knobs are
-# measured per face below).
-KNOBS = {"pitch": (765, 94), "tune": (929, 94), "bounce": (1096, 92), "velocity": (1266, 93),
-         "filter": (764, 235), "clipDrive": (929, 236), "output": (1095, 234),
-         "boost": (239, 510), "punch": (402, 510), "analogEQ": (566, 510), "grit": (729, 510),
-         "shine": (895, 510), "tighten": (1061, 510), "noise": (1227, 510)}
-ONESHOT, LOOP = [131, 50, 288, 116], [301, 50, 449, 116]
-ONESHOT_LAMP, LOOP_LAMP = [188, 92, 232, 116], [356, 92, 400, 116]       # lamp and its glow
-MODES = {"modern": [494, 43, 630, 129], "vintage": [494, 141, 630, 231], "texture": [494, 242, 630, 332]}
-SCOPE = [121, 159, 461, 320]
-CLIPPER = [1215, 200, 1302, 289]
-PLAY = [104, 362, 188, 435]
-LEDS = {"tempoSync": [350, 364, 380, 394], "followDAW": [350, 398, 380, 428]}
-BPM_BOX, BPM_LABEL_SEARCH = [199, 362, 326, 431], [236, 380, 270, 412]
-KIT_BOX, KIT_TEXT_SEARCH = [632, 368, 918, 432], [645, 384, 875, 414]
-PRESET_BOX, PRESET_TEXT_SEARCH = [1024, 367, 1288, 432], [1038, 384, 1243, 414]
-DICE, SAVE = [510, 368, 576, 436], [1300, 368, 1366, 436]
-RECORD, EDITOR, EXPORT, MENU = [1232, 12, 1268, 46], [1270, 12, 1306, 46], [1308, 12, 1344, 46], [1346, 12, 1382, 46]
-REC_DOT = [1240, 19, 1260, 39]
-PADS = {   # columns and rows of the pad tops, as drawn on each face
-    "modern": ([(125, 309), (333, 513), (538, 719), (741, 924), (947, 1130), (1152, 1335)], [(647, 804), (822, 983)]),
-    "texture": ([(125, 309), (333, 514), (538, 719), (741, 925), (947, 1131), (1153, 1336)], [(646, 804), (822, 983)]),
-    "vintage": ([(122, 312), (330, 516), (534, 721), (738, 927), (944, 1132), (1150, 1339)], [(643, 807), (819, 986)]),
-    "platinum": ([(121, 310), (329, 514), (533, 719), (737, 925), (943, 1130), (1148, 1337)], [(642, 806), (818, 985)]),
-}
+# Where things are in the pictures: Tyrone's NEW Face 1 renders (Oct 27-28 2026, tools/faceplate_art/
+# face1/v2, scaled from 1448 x 1086 to 1450 x 1085). ONE shared layout, measured on PLATINUM (the
+# master): every button, window, lamp and pad has the same rectangle on every face. Only the knob
+# centres are fitted per face, so each live pointer sits on that face's own cap.
+KNOBS = {"pitch": (768, 130), "tune": (925, 130), "bounce": (1084, 132), "velocity": (1243, 130),
+         "filter": (767, 272), "clipDrive": (925, 272), "output": (1084, 272),
+         "boost": (207, 518), "punch": (377, 518), "analogEQ": (551, 518), "grit": (724, 518),
+         "shine": (896, 518), "tighten": (1068, 518), "noise": (1240, 518)}
+ONESHOT, LOOP = [103, 70, 279, 147], [287, 70, 470, 147]
+ONESHOT_LAMP, LOOP_LAMP = [156, 79, 218, 104], [344, 79, 406, 104]       # lamp and its glow
+MODES = {"modern": [494, 68, 647, 156], "vintage": [494, 160, 647, 243], "texture": [494, 248, 647, 342]}
+SCOPE = [106, 163, 466, 339]
+CLIPPER = [1206, 241, 1290, 332]
+PLAY = [95, 380, 160, 445]
+LEDS = {"tempoSync": [327, 385, 351, 409], "followDAW": [327, 415, 351, 439]}
+BPM_BOX, BPM_LABEL_SEARCH = [168, 383, 318, 440], [196, 394, 238, 424]
+KIT_BOX, KIT_TEXT_SEARCH = [631, 384, 902, 440], [645, 392, 885, 432]
+PRESET_BOX, PRESET_TEXT_SEARCH = [1010, 384, 1288, 440], [1024, 392, 1278, 432]
+DICE, SAVE = [477, 380, 543, 445], [1295, 380, 1357, 445]
+RECORD, EDITOR, EXPORT, MENU = [1121, 21, 1173, 68], [1181, 21, 1234, 68], [1243, 21, 1294, 68], [1303, 21, 1354, 68]
+REC_DOT = [1135, 29, 1160, 54]
+POWER, SLIDER, LOGO = [107, 968, 167, 1028], [185, 972, 329, 1022], [608, 975, 842, 1027]
+# the pads, as drawn on PLATINUM (the other faces line up within a few pixels)
+PAD_COLS = [(101, 297), (312, 506), (522, 716), (732, 927), (943, 1137), (1153, 1348)]
+PAD_ROWS = [(634, 794), (800, 957)]
 # Each face's light, from its own scope trace / lamps (lit core, glow).
 ACCENT = {"modern": ((255, 198, 142), (232, 52, 24)), "texture": ((189, 236, 254), (24, 100, 220)),
           "vintage": ((255, 250, 185), (236, 186, 72)), "platinum": ((253, 159, 90), (214, 50, 22))}
-# CLIPPER's glass with its light out.
-UNLIT = {"modern": (150, 26, 16), "texture": (22, 58, 140), "vintage": (160, 112, 34), "platinum": (150, 26, 16)}
-# The picture shows the TEMPO SYNC / FOLLOW DAW lamps lit on these faces, dark on the others.
-LEDS_LIT_IN_PICTURE = {"texture", "vintage"}
+# CLIPPER's glass with its light out (red glass on every new face).
+UNLIT = {"modern": (150, 26, 16), "texture": (150, 26, 16), "vintage": (150, 26, 16), "platinum": (150, 26, 16)}
 
 rng = np.random.default_rng(2026_10_19)
 
@@ -113,6 +111,15 @@ def fill_cols(a, r):
     a[y0:y1, x0:x1, :3] = T[None] * (1 - t) + B[None] * t
 
 
+def lit_ink(c):
+    """The lit pixels of a window's printing, without the white cores the glow burns into them."""
+    px = c.reshape(-1, 3)
+    l = lum(px)
+    sat = px.max(axis=1) - px.min(axis=1)
+    keep = (l > 70) & (sat > np.percentile(sat[l > 70], 50))
+    return px[keep]
+
+
 def text_box(a, r, thresh=90):
     """The bright printing inside a dark window."""
     x0, y0, x1, y1 = r
@@ -128,8 +135,8 @@ def fit_cap(L, x0, y0):
     th = np.linspace(0, 2 * np.pi, 180, endpoint=False)
     best = (-1, x0, y0, 33)
     for r in np.arange(29, 36, 0.5):
-        for cy in np.arange(y0 - 4, y0 + 4.01, 0.5):
-            for cx in np.arange(x0 - 4, x0 + 4.01, 0.5):
+        for cy in np.arange(y0 - 7, y0 + 7.01, 0.5):
+            for cx in np.arange(x0 - 7, x0 + 7.01, 0.5):
                 v = ndimage.map_coordinates(g, [cy + r * np.sin(th), cx + r * np.cos(th)], order=1).mean()
                 if v > best[0]:
                     best = (v, cx, cy, r)
@@ -153,7 +160,7 @@ def pointer_mask(a, cx, cy, r):
 def remove_pointer(a, cx, cy, r, m):
     """Fill the notch from the cap on either side of it at the same distance from the centre (the
     brushed cone's light runs round the cap, so each ring carries on across the gap)."""
-    grow = ndimage.binary_dilation(m, iterations=2)
+    grow = ndimage.binary_dilation(m, iterations=4)
     ys, xs = np.nonzero(grow)
     ang = np.arctan2(ys - cy, xs - cx)
     rad = np.hypot(xs - cx, ys - cy)
@@ -214,9 +221,25 @@ def disc(shape, cx, cy, rad, soft=1.0):
 layout = {}
 pointer_stats = []
 
+def vintage_drive(a):
+    """Vintage's FX section starts with DRIVE, not the render's BOOST (Tyrone, Oct 24): BOOST comes
+    off (rows stretched from the clean plate either side, with grain) and the render's own DRIVE,
+    lifted from CLIP DRIVE as ink against its plate, goes on centred under the knob."""
+    fill_rows(a, [175, 585, 241, 605], grain=1.5)
+    word = a[338:357, 916:972, :3].copy()
+    l = lum(word)
+    bg, ink = np.percentile(l, 90), np.percentile(l, 2)
+    alpha = np.clip((bg - l) / max(1, bg - ink), 0, 1)[..., None]
+    x0, y0 = 207 - word.shape[1] // 2, 588 - (341 - 338)
+    dst = a[y0:y0 + word.shape[0], x0:x0 + word.shape[1], :3]
+    a[y0:y0 + word.shape[0], x0:x0 + word.shape[1], :3] = dst * (1 - alpha) + word * alpha
+
+
 for face, fname in FACES.items():
     src = np.asarray(Image.open(HERE / fname).convert("RGB")).astype(np.float32)
     assert src.shape == (H, W, 3), (fname, src.shape)
+    if face == "vintage":
+        vintage_drive(src)
     plate = src.copy()
     core, glow = (np.array(c, np.float32) for c in ACCENT[face])
     L = lum(src)
@@ -228,7 +251,11 @@ for face, fname in FACES.items():
         m = pointer_mask(src, cx, cy, r)
         inner, outer, width = pointer_geometry(m, cx, cy, r)
         pointer_stats.append((inner, outer, width))
-        remove_pointer(plate, cx, cy, r, m)
+        # the new renders' pointer carries light streaks either side of its ink: take off a band
+        # straight up from the centre to the rim, as wide as the ink plus its glints
+        yy, xx = np.mgrid[0:H, 0:W]
+        band = (np.abs(xx - cx) < max(6.5, width * r * 0.5 + 4)) & (yy < cy - r * 0.08) & (np.hypot(xx - cx, yy - cy) < r * 1.02)
+        remove_pointer(plate, cx, cy, r, m | band)
         knobs[k] = {"x": round(float(cx), 1), "y": round(float(cy), 1), "r": round(float(r), 1)}
 
     # ---- the scope trace (the app draws the live one) ----
@@ -276,42 +303,20 @@ for face, fname in FACES.items():
     c2 = c * (1 - capm) + dark * capm
     write(f"clipper_off_{face}", c2)
 
-    # ---- TEMPO SYNC / FOLLOW DAW lamps: lit and dark ----
-    lr = LEDS["tempoSync"]
-    lamp = crop(src, lr)
-    lh, lw = lamp.shape[:2]
-    lc = lum(lamp)
-    # the lamp glass: the round middle of the lamp
-    gx, gy = lw / 2 - 0.5, lh / 2 - 0.5
-    glass = disc(lamp.shape[:2], gx, gy, 7.2, 1.2)[..., None]
-    ring = disc(lamp.shape[:2], gx, gy, 12.5, 2.0)[..., None]
-    if face in LEDS_LIT_IN_PICTURE:
-        lamp_on = lamp
-        # dark: the glass dimmed to a deep tint of its own colour, its spill on the bezel taken back
-        l = lum(lamp)[..., None]
-        tint = lamp / np.maximum(1, lamp.max(axis=2, keepdims=True)) * 60
-        lamp_off = lamp * (1 - glass) + (tint * 0.6 + l * 0.12) * glass
-        spill = (ring - glass) * 0.35
-        lamp_off = lamp_off * (1 - spill) + (lamp_off * 0.75) * spill
-    else:
-        lamp_off = lamp
-        # lit: the dark glass brought up in the face's light, with the glass's own highlight kept
-        l = lum(lamp)[..., None] / 255
-        lit_glass = glow * (0.55 + 1.6 * l) + core * np.clip(l * 2.2 - 0.2, 0, 1)
-        lamp_on = lamp * (1 - glass) + np.clip(lit_glass, 0, 255) * glass
-        spill = np.clip(ring - glass, 0, 1) * 0.35
-        lamp_on = lamp_on * (1 - spill) + np.clip(lamp_on + glow * 0.5, 0, 255) * spill
-    write(f"led_off_{face}", lamp_off)
+    # ---- TEMPO SYNC / FOLLOW DAW lamps: every new render shows TEMPO SYNC lit and FOLLOW DAW
+    # dark, so each face gives its own lit and dark lamp ----
+    lamp_on = crop(src, LEDS["tempoSync"])
+    write(f"led_off_{face}", crop(src, LEDS["followDAW"]))
     # the plate wears the lit lamps (the app lays the dark one over a lamp that's off)
     for r in LEDS.values():
-        plate[r[1]:r[3], r[0]:r[2], :3] = lamp_on if face not in LEDS_LIT_IN_PICTURE else src[r[1]:r[3], r[0]:r[2], :3]
+        plate[r[1]:r[3], r[0]:r[2], :3] = lamp_on
 
     # ---- PLAY lit: the triangle in the face's light ----
     pl = crop(plate, PLAY)
     ph, pw = pl.shape[:2]
     pc = lum(pl)
     inner = np.zeros((ph, pw), bool)
-    inner[18:ph - 18, 22:pw - 22] = True
+    inner[14:ph - 14, 16:pw - 16] = True
     bg = np.median(pc[inner])
     tri = inner & (np.abs(pc - bg) > 45)
     tri = ndimage.binary_closing(tri, iterations=1)
@@ -325,20 +330,22 @@ for face, fname in FACES.items():
 
     write(f"Plate_{face}", plate)
 
-    cols, rows = PADS[face]
-    pads = [[c0, r0, c1, r1] for (r0, r1) in rows for (c0, c1) in cols]
+    pads = [[c0, r0, c1, r1] for (r0, r1) in PAD_ROWS for (c0, c1) in PAD_COLS]
     layout[face] = {
         "size": [W, H], "device": "tablet", "knobs": knobs,
         "scope": SCOPE,
         "bpmDigits": [int(digits[0]), int(digits[1]), int(digits[2]), int(digits[3])],
         "bpmLabelX": int(bpm_label[0]), "bpmBox": BPM_BOX,
-        "textColor": [int(v) for v in np.percentile(crop(src, kit_t).reshape(-1, 3), 99.5, axis=0)],
-        "kitBox": KIT_BOX, "kitText": [int(v) for v in kit_t],
-        "presetBox": PRESET_BOX, "presetText": [int(v) for v in pre_t],
+        # the printing's colour: the lit strokes' own (their white-hot cores left out)
+        "textColor": [int(v) for v in np.percentile(lit_ink(crop(src, kit_t)), 88, axis=0)],
+        # the names sit centred across their whole window, as the renders print them
+        "kitBox": KIT_BOX, "kitText": [KIT_BOX[0] + 16, int(kit_t[1]), KIT_BOX[2] - 16, int(kit_t[3])],
+        "presetBox": PRESET_BOX, "presetText": [PRESET_BOX[0] + 16, int(pre_t[1]), PRESET_BOX[2] - 16, int(pre_t[3])],
         "leds": {"tempoSyncRect": LEDS["tempoSync"], "followDAWRect": LEDS["followDAW"]},
         "oneShotButton": ONESHOT, "loopButton": LOOP, "clipperRect": CLIPPER, "playRect": PLAY,
         "diceRect": DICE, "saveRect": SAVE, "recordRect": RECORD, "exportRect": EXPORT, "menuRect": MENU,
         "editorRect": EDITOR, "modeButtons": MODES, "pads": pads,
+        "powerRect": POWER, "sliderRect": SLIDER, "logoRect": LOGO,
         "padOrder": [6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5],
     }
     print(face, "kit", kit_t, "preset", pre_t, "digits", digits, "BPM at", bpm_label[0])

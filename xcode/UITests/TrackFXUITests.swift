@@ -75,7 +75,7 @@ final class TrackFXUITests: XCTestCase {
     private func face(_ name: String, modeY: CGFloat, first: String) {
         at(562, modeY).tap()
         sleep(1)
-        at(1288, 29).tap()                         // the piano-roll button: Face 2
+        at(1207, 44).tap()                         // the piano-roll button: Face 2
         let kick = app.descendants(matching: .any)["trackHeader0"].firstMatch
         let snare = app.descendants(matching: .any)["trackHeader1"].firstMatch
         XCTAssertTrue(kick.waitForExistence(timeout: 10), "Face 2 opens (\(name))")

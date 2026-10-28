@@ -136,7 +136,7 @@ struct FaceplateView: View {
                 .accessibilityElement()
                 .accessibilityLabel(BrandLogo.name)
                 .accessibilityIdentifier("brandLogo")
-                .place([600, 1004, 850, 1042], s)
+                .place(L.logoRect ?? [600, 1004, 850, 1042], s)
             // each part erased to a plain view so Face 1's type can't nest deep enough to overflow the
             // stack in the TestFlight app (the SAMPLER window's b120 crash)
             ZStack(alignment: .topLeading) { topLeft(L, sfx: sfx, s: s) }.erased()
@@ -201,13 +201,13 @@ struct FaceplateView: View {
         if !FaceplateView.snapshotMode {
             FaceSlider(scale: s, color: FaceLight.of(sfx).glow, id: "faceSlider1", label: "Slide right to open Face 2") { openFace2() }
             .environment(\.seqFinish, sfx)
-            .place([125, 1004, 235, 1040], s)
+            .place(L.sliderRect ?? [125, 1004, 235, 1040], s)
             // Face 2's power button on Face 1 too (Tyrone, Oct 21): right beside the slider, set flush
             // into the plate, the same job (the sequencer and pads all the way on or off), in this
             // face's metal and light
             PowerButton(on: controller.powerOn, scale: s, color: FaceLight.of(sfx).glow, id: "powerButton1", flush: true) { controller.togglePower() }
                 .environment(\.seqFinish, sfx)
-                .place([245, 1004, 281, 1040], s)
+                .place(L.powerRect ?? [245, 1004, 281, 1040], s)
         }
         // RECORD (left of the piano-roll button): a 1- or 2-bar count-in, then the pads record
         if let r = L.recordRect {
@@ -411,6 +411,21 @@ struct PressableArea: View {
 
 // MARK: - Knobs
 
+/// How heavy the knobs turn (Tyrone, Oct 28: "they feel AI"): a long throw like a real pot, and
+/// the first few points of a drag only take up the slack, so a touch never nudges the value.
+enum KnobFeel {
+    /// Points of drag for the whole travel: Face 1's big knobs, and the smaller ones elsewhere.
+    static let face1: CGFloat = 560
+    static let small: CGFloat = 400
+    static let slack: CGFloat = 5
+
+    static func delta(_ t: CGSize, travel: CGFloat) -> Float {
+        let raw = -t.height + t.width * 0.6
+        let moved = raw > 0 ? max(0, raw - slack) : min(0, raw + slack)
+        return Float(moved / travel)
+    }
+}
+
 struct KnobControl: View {
     @ObservedObject var controller: KnockController
     let param: KParam
@@ -443,8 +458,8 @@ struct KnobControl: View {
             DragGesture(minimumDistance: 1)
                 .onChanged { g in
                     if start == nil { start = v }
-                    // Full travel in about 260 points of drag, up or right turns it up.
-                    let delta = Float((-g.translation.height + g.translation.width * 0.6) / 260)
+                    // Up or right turns it up, with a real pot's weight (KnobFeel)
+                    let delta = KnobFeel.delta(g.translation, travel: KnobFeel.face1)
                     controller.set(param, (start ?? v) + delta)
                 }
                 .onEnded { _ in start = nil }
@@ -490,7 +505,7 @@ struct NameWindow: View {
             .foregroundColor(Color(red: color[0] / 255, green: color[1] / 255, blue: color[2] / 255))
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .frame(width: (textRect[2] - textRect[0]) * scale, height: h * 1.8 * scale, alignment: .leading)
+            .frame(width: (textRect[2] - textRect[0]) * scale, height: h * 1.8 * scale, alignment: .center)
             .position(x: (textRect[0] + textRect[2]) / 2 * scale, y: (textRect[1] + textRect[3]) / 2 * scale)
             .allowsHitTesting(false)
     }
