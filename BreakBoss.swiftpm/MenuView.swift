@@ -688,7 +688,7 @@ struct MenuView: View {
     private var guides: [Guide] {
         [
             Guide(title: "ONE-SHOT / LOOP", text: "ONE-SHOT: the pads play drums. LOOP: the pads play grooves made from the kit; a new pick starts on the next bar, tap the same pad again to stop at the end of the bar."),
-            Guide(title: "MODERN / VINTAGE / TEXTURE", text: "Modern is clean and punchy. Vintage is home to soul, boom bap and break grooves, with tape drive, low-end warmth and a rolled-off top. Texture adds resampling, instability, synced delay and gated reverb. You can play any kit or imported acoustic sample in every mode."),
+            Guide(title: "MODERN / VINTAGE / TEXTURE", text: "Modern is clean and punchy. Vintage is home to soul, boom bap and break grooves, with tape drive, low-end warmth and a rolled-off top. Texture adds resampling, instability, synced delay and a plate reverb, each only as you turn its knob up. You can play any kit or imported acoustic sample in every mode."),
             Guide(title: "KITS / PRESETS", text: "KITS change the drum sounds only; the pattern keeps playing. PRESETS change the pattern only (groove, variation and tempo); the sounds and knobs stay. Mix any pattern with any kit. SAVE stores everything as your own preset."),
             Guide(title: "DICE", text: "The dice randomizes. LOOP: a new pattern in the preset's style. ONE-SHOT: new variations of the kit's sounds. In the drum roll, each channel has its own dice that changes only that channel."),
             Guide(title: "KNOBS", text: "Drag up or right to turn up. Double-tap to reset."),

@@ -72,7 +72,7 @@ struct TutorialStep {
         TutorialStep(surface: .face1, title: "THE TOUR",
                      text: "BreaKing is a drum machine you play with your fingers, a 12-track drum sequencer and a plug-in for your DAW. This tour lights up each part, one step at a time. SKIP ends it at any step; MENU › Tutorial plays it again."),
         TutorialStep(surface: .face1, title: "THE MODES",
-                     text: "Each mode is its own faceplate and its own sound. MODERN is clean and punchy. VINTAGE has tape drive, warm lows and a rolled-off top. TEXTURE adds resampling, instability, synced delay and gated reverb. PLATINUM is Modern's brushed-silver face (MENU › Modern faceplate). Every kit plays in every mode.",
+                     text: "Each mode is its own faceplate and its own sound. MODERN is clean and punchy. VINTAGE has tape drive, warm lows and a rolled-off top. TEXTURE adds resampling, instability, synced delay and a plate reverb, each only as you turn its knob up. PLATINUM is Modern's brushed-silver face (MENU › Modern faceplate). Every kit plays in every mode.",
                      face1: { L in [TutorialStep.union(Array(L.modeButtons.values))] }),
         TutorialStep(surface: .face1, title: "ONE-SHOT / LOOP",
                      text: "ONE-SHOT: each pad plays one drum. LOOP: each pad starts a groove made from the kit, locked to the tempo. A new pick starts on the next bar; tap the same pad again to stop it at the end of the bar.",
