@@ -36,31 +36,31 @@ FACES = {"modern": "Face1_ModernBlack.png", "texture": "Face1_Texture.png",
          "vintage": "Face1_Vintage.png", "platinum": "Face1_ModernPlatinum.png"}
 W, H = 1450, 1085
 
-# Where things are in the pictures: Tyrone's NEW Face 1 renders (Oct 27-28 2026, tools/faceplate_art/
+# Where things are in the pictures: Tyrone's NEW Face 1 renders (the matte set of Oct 28 2026, tools/faceplate_art/
 # face1/v2, scaled from 1448 x 1086 to 1450 x 1085). ONE shared layout, measured on PLATINUM (the
 # master): every button, window, lamp and pad has the same rectangle on every face. Only the knob
 # centres are fitted per face, so each live pointer sits on that face's own cap.
-KNOBS = {"pitch": (768, 130), "tune": (925, 130), "bounce": (1084, 132), "velocity": (1243, 130),
-         "filter": (767, 272), "clipDrive": (925, 272), "output": (1084, 272),
-         "boost": (207, 518), "punch": (377, 518), "analogEQ": (551, 518), "grit": (724, 518),
-         "shine": (896, 518), "tighten": (1068, 518), "noise": (1240, 518)}
-ONESHOT, LOOP = [103, 70, 279, 147], [287, 70, 470, 147]
-ONESHOT_LAMP, LOOP_LAMP = [156, 79, 218, 104], [344, 79, 406, 104]       # lamp and its glow
-MODES = {"modern": [494, 68, 647, 156], "vintage": [494, 160, 647, 243], "texture": [494, 248, 647, 342]}
-SCOPE = [106, 163, 466, 339]
-CLIPPER = [1206, 241, 1290, 332]
-PLAY = [95, 380, 160, 445]
-LEDS = {"tempoSync": [327, 385, 351, 409], "followDAW": [327, 415, 351, 439]}
-BPM_BOX, BPM_LABEL_SEARCH = [168, 383, 318, 440], [196, 394, 238, 424]
-KIT_BOX, KIT_TEXT_SEARCH = [631, 384, 902, 440], [645, 392, 885, 432]
-PRESET_BOX, PRESET_TEXT_SEARCH = [1010, 384, 1288, 440], [1024, 392, 1278, 432]
-DICE, SAVE = [477, 380, 543, 445], [1295, 380, 1357, 445]
-RECORD, EDITOR, EXPORT, MENU = [1121, 21, 1173, 68], [1181, 21, 1234, 68], [1243, 21, 1294, 68], [1303, 21, 1354, 68]
-REC_DOT = [1135, 29, 1160, 54]
-POWER, SLIDER, LOGO = [107, 968, 167, 1028], [185, 972, 329, 1022], [608, 975, 842, 1027]
+KNOBS = {"pitch": (774, 135), "tune": (931, 135), "bounce": (1089, 135), "velocity": (1248, 135),
+         "filter": (774, 278), "clipDrive": (931, 278), "output": (1089, 278),
+         "boost": (205, 524), "punch": (376, 524), "analogEQ": (552, 524), "grit": (724, 524),
+         "shine": (896, 524), "tighten": (1068, 524), "noise": (1242, 524)}
+ONESHOT, LOOP = [107, 73, 285, 150], [295, 73, 478, 150]
+ONESHOT_LAMP, LOOP_LAMP = [166, 73, 226, 103], [354, 73, 414, 103]       # lamp and its glow (ONE-SHOT draws none)
+MODES = {"modern": [501, 73, 657, 158], "vintage": [501, 165, 657, 243], "texture": [501, 250, 657, 345]}
+SCOPE = [112, 166, 474, 338]
+CLIPPER = [1208, 242, 1292, 332]
+PLAY = [99, 382, 166, 447]
+LEDS = {"tempoSync": [331, 384, 355, 408], "followDAW": [331, 413, 355, 437]}
+BPM_BOX, BPM_LABEL_SEARCH = [173, 383, 325, 441], [198, 395, 240, 428]
+KIT_BOX, KIT_TEXT_SEARCH = [636, 382, 908, 440], [650, 392, 892, 432]
+PRESET_BOX, PRESET_TEXT_SEARCH = [1018, 382, 1291, 440], [1030, 392, 1280, 432]
+DICE, SAVE = [485, 381, 551, 447], [1298, 381, 1360, 447]
+RECORD, EDITOR, EXPORT, MENU = [1122, 24, 1177, 75], [1184, 24, 1238, 75], [1245, 24, 1299, 75], [1307, 24, 1360, 75]
+REC_DOT = [1137, 33, 1161, 58]
+POWER, SLIDER, LOGO = [112, 952, 174, 1014], [186, 954, 358, 1013], [600, 955, 850, 1010]
 # the pads, as drawn on PLATINUM (the other faces line up within a few pixels)
-PAD_COLS = [(101, 297), (312, 506), (522, 716), (732, 927), (943, 1137), (1153, 1348)]
-PAD_ROWS = [(634, 794), (800, 957)]
+PAD_COLS = [(107, 302), (317, 508), (524, 715), (732, 924), (940, 1132), (1148, 1341)]
+PAD_ROWS = [(626, 780), (786, 940)]
 # Each face's light, from its own scope trace / lamps (lit core, glow).
 ACCENT = {"modern": ((255, 198, 142), (232, 52, 24)), "texture": ((189, 236, 254), (24, 100, 220)),
           "vintage": ((255, 250, 185), (236, 186, 72)), "platinum": ((253, 159, 90), (214, 50, 22))}
@@ -123,7 +123,7 @@ def lit_ink(c):
 def text_box(a, r, thresh=90):
     """The bright printing inside a dark window."""
     x0, y0, x1, y1 = r
-    m = lum(a[y0:y1, x0:x1]) > thresh
+    m = a[y0:y1, x0:x1, :3].max(axis=2) > thresh * 1.4    # its brightest channel (red ink is dim in lum)
     m = ndimage.binary_opening(m, np.ones((1, 2)))
     ys, xs = np.nonzero(m)
     return [x0 + xs.min(), y0 + ys.min(), x0 + xs.max() + 1, y0 + ys.max() + 1]
@@ -144,11 +144,12 @@ def fit_cap(L, x0, y0):
 
 
 def pointer_mask(a, cx, cy, r):
-    """The black notch printed on a cap."""
+    """The black dot printed at the top of a cap (every new render has it at 12 o'clock)."""
     yy, xx = np.mgrid[0:H, 0:W]
     d = np.hypot(xx - cx, yy - cy)
-    inside = d < r * 0.95
-    m = inside & (lum(a) < 80)
+    inside = (d < r * 0.95) & (yy < cy - r * 0.45) & (np.abs(xx - cx) < r * 0.35)
+    l = lum(a)
+    m = inside & (l < min(80, 0.5 * np.median(l[inside])))
     lab, n = ndimage.label(m)
     if n == 0:
         return None
@@ -223,16 +224,19 @@ pointer_stats = []
 
 def vintage_drive(a):
     """Vintage's FX section starts with DRIVE, not the render's BOOST (Tyrone, Oct 24): BOOST comes
-    off (rows stretched from the clean plate either side, with grain) and the render's own DRIVE,
-    lifted from CLIP DRIVE as ink against its plate, goes on centred under the knob."""
-    fill_rows(a, [175, 585, 241, 605], grain=1.5)
-    word = a[338:357, 916:972, :3].copy()
-    l = lum(word)
-    bg, ink = np.percentile(l, 90), np.percentile(l, 2)
-    alpha = np.clip((bg - l) / max(1, bg - ink), 0, 1)[..., None]
-    x0, y0 = 207 - word.shape[1] // 2, 588 - (341 - 338)
-    dst = a[y0:y0 + word.shape[0], x0:x0 + word.shape[1], :3]
-    a[y0:y0 + word.shape[0], x0:x0 + word.shape[1], :3] = dst * (1 - alpha) + word * alpha
+    off (rows stretched from the clean plate either side, with grain) and DRIVE goes on in its
+    place: the very DRIVE Texture prints under the same knob (same size, same spot), its light
+    lettering used as the shape and inked in Vintage's own print colour (PUNCH's)."""
+    fill_rows(a, [170, 579, 243, 607], grain=1.5)
+    tex = np.asarray(Image.open(HERE / FACES["texture"]).convert("RGB")).astype(np.float32)
+    r = [168, 579, 242, 606]
+    l = lum(tex[r[1]:r[3], r[0]:r[2]])
+    bg, hi = np.median(l), np.percentile(l, 99.5)
+    alpha = np.clip((l - bg - 15) / max(1, hi - bg - 15), 0, 1)[..., None]
+    punch = lum(a[580:606, 340:412])
+    ink = a[580:606, 340:412, :3][punch <= np.percentile(punch, 3)].mean(axis=0)
+    dst = a[r[1]:r[3], r[0]:r[2], :3]
+    a[r[1]:r[3], r[0]:r[2], :3] = dst * (1 - alpha) + ink * alpha
 
 
 for face, fname in FACES.items():
@@ -249,19 +253,16 @@ for face, fname in FACES.items():
     for k, (x0, y0) in KNOBS.items():
         cx, cy, r = fit_cap(L, x0, y0)
         m = pointer_mask(src, cx, cy, r)
-        inner, outer, width = pointer_geometry(m, cx, cy, r)
-        pointer_stats.append((inner, outer, width))
-        # the new renders' pointer carries light streaks either side of its ink: take off a band
-        # straight up from the centre to the rim, as wide as the ink plus its glints
-        yy, xx = np.mgrid[0:H, 0:W]
-        band = (np.abs(xx - cx) < max(6.5, width * r * 0.5 + 4)) & (yy < cy - r * 0.08) & (np.hypot(xx - cx, yy - cy) < r * 1.02)
-        remove_pointer(plate, cx, cy, r, m | band)
+        if m is not None:              # (two of Vintage's caps are drawn without their dot)
+            pointer_stats.append(pointer_geometry(m, cx, cy, r))
+            remove_pointer(plate, cx, cy, r, m)
         knobs[k] = {"x": round(float(cx), 1), "y": round(float(cy), 1), "r": round(float(r), 1)}
 
     # ---- the scope trace (the app draws the live one) ----
     band = L[SCOPE[1] + 40:SCOPE[3] - 40, SCOPE[0] + 60:SCOPE[2] - 60].mean(axis=1)
-    peak = SCOPE[1] + 40 + int(np.argmax(band))
-    fill_cols(plate, [SCOPE[0] - 2, peak - 8, SCOPE[2] + 3, peak + 9])
+    if band.max() > np.median(band) + 40:      # (the Oct 28 renders show the glass empty)
+        peak = SCOPE[1] + 40 + int(np.argmax(band))
+        fill_cols(plate, [SCOPE[0] - 2, peak - 8, SCOPE[2] + 3, peak + 9])
 
     # ---- BPM digits, KITS and PRESETS names (live text) ----
     digits = text_box(src, BPM_LABEL_SEARCH)
@@ -283,6 +284,12 @@ for face, fname in FACES.items():
     write(f"oneshot_on_{face}", crop(one, ONESHOT))
     lp = plate.copy()
     move_lamp(lp, src, ONESHOT_LAMP, LOOP_LAMP)
+    # the lamp's coloured spill just under it, back to the button face's own colour
+    sx0, sy0, sx1, sy1 = LOOP_LAMP[0] - 12, LOOP_LAMP[3], LOOP_LAMP[2] + 12, LOOP_LAMP[3] + 9
+    ref = np.median(lp[118:140, LOOP[0] + 12:LOOP[0] + 50, :3].reshape(-1, 3), axis=0)
+    spill = lp[sy0:sy1, sx0:sx1, :3]
+    w = np.clip(1 - np.abs(lum(spill) - lum(ref)) / 40, 0, 1)[..., None]      # the face, not the lettering
+    lp[sy0:sy1, sx0:sx1, :3] = spill * (1 - w) + lum(spill)[..., None] * (ref / max(1, lum(ref))) * w
     write(f"loop_off_{face}", crop(lp, LOOP))
 
     # ---- CLIPPER off: the same cap with its light out ----
