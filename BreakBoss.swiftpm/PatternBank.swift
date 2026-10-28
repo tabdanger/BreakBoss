@@ -184,6 +184,10 @@ enum PatternBank {
         return seen
     }()
 
+    /// Every preset in the PATTERNS menu's order: each genre's folder in turn. The file keeps the Oct 28 presets
+    /// (11 to 20 of each genre) after every older one, so the AUv3 factory preset numbers never move.
+    static let browserOrder: [PatternPreset] = styles.flatMap { presets(in: $0) }
+
     static func presets(in style: String) -> [PatternPreset] { all.filter { $0.style == style } }
     static func preset(named name: String) -> PatternPreset? { all.first { $0.name == name } }
 }
