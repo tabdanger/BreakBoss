@@ -680,10 +680,14 @@ struct PlateReverb {
         d4.write(t2)
         fromHalf2 = d4.read(len4)
         // taps around the tank
-        let yl = d3.read(taps[0]) + d3.read(taps[1]) - ap2.line.read(taps[2]) + d4.read(taps[3])
-            - d1.read(taps[4]) - ap1.line.read(taps[5]) - d2.read(taps[6])
-        let yr = d1.read(taps[7]) + d1.read(taps[8]) - ap1.line.read(taps[9]) + d2.read(taps[10])
-            - d3.read(taps[11]) - ap2.line.read(taps[12]) - d4.read(taps[13])
+        var yl: Float = d3.read(taps[0]) + d3.read(taps[1])
+        yl -= ap2.line.read(taps[2])
+        yl += d4.read(taps[3]) - d1.read(taps[4])
+        yl -= ap1.line.read(taps[5]) + d2.read(taps[6])
+        var yr: Float = d1.read(taps[7]) + d1.read(taps[8])
+        yr -= ap1.line.read(taps[9])
+        yr += d2.read(taps[10]) - d3.read(taps[11])
+        yr -= ap2.line.read(taps[12]) + d4.read(taps[13])
         return (yl * 0.6, yr * 0.6)
     }
 }
