@@ -37,6 +37,7 @@ enum KnockSelfTest {
         phase("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence)
         phase("checkEveryPatternAudible", checkEveryPatternAudible)
         phase("checkTextureControls", checkTextureControls)
+        phase("checkTexturePlate", checkTexturePlate)
         phase("checkFXSections", checkFXSections)
         phase("checkLevelPanGlide", checkLevelPanGlide)
         phase("checkPatternEditor", checkPatternEditor)
@@ -3855,6 +3856,77 @@ enum KnockSelfTest {
         check(warped[(warped.count - 48_000)...].contains { abs($0) > 0.01 }, "INSTABILITY's warp keeps sounding over many scenes")
     }
 
+    /// Texture's reverb is a drum plate (Tyrone, Oct 28): bright, dense, smooth tails that don't
+    /// muddy the lows, and nothing at all while REVERB is at 0%. Rendered through the main chain.
+    static func checkTexturePlate() {
+        let rate: Float = 48_000
+        // a snare-like hit: a 180 Hz body under a noise burst, plus a 60 Hz thump for the low end
+        var rng = KRandom(seed: 0x51A7E)
+        let length = Int(rate * 2.5)
+        var hit = [Float](repeating: 0, count: length)
+        for i in 0..<Int(rate * 0.25) {
+            let t = Float(i) / rate
+            let body: Float = 0.5 * sinf(2 * Float.pi * 180 * t) * expf(-t * 30)
+            let crack: Float = 0.35 * rng.bipolar() * expf(-t * 22)
+            let thump: Float = 0.4 * sinf(2 * Float.pi * 60 * t) * expf(-t * 18)
+            hit[i] = body + crack + thump
+        }
+        func run(reverb: Float, decay: Float = 0.5) -> ([Float], [Float]) {
+            let bus = BusProcessor()
+            bus.prepare(sampleRate: Double(rate))
+            var s = BusProcessor.Settings()
+            s.mode = .texture; s.reverb = reverb; s.reverbDecay = decay
+            var l = hit, r = hit
+            var at = 0
+            while at < length {
+                let n = min(128, length - at)
+                l.withUnsafeMutableBufferPointer { lp in r.withUnsafeMutableBufferPointer { rp in
+                    bus.process(lp.baseAddress! + at, rp.baseAddress! + at, count: n, s)
+                } }
+                at += n
+            }
+            return (l, r)
+        }
+        func energy(_ x: [Float], _ from: Float, _ to: Float) -> Double {
+            var e: Double = 0
+            for i in Int(from * rate)..<min(x.count, Int(to * rate)) { e += Double(x[i] * x[i]) }
+            return e
+        }
+        /// share of a signal's energy under about 100 Hz (two one-poles at 100 Hz)
+        func lowShare(_ x: [Float]) -> Double {
+            var lp1 = OnePole(), lp2 = OnePole(); lp1.setCutoff(100, sr: rate); lp2.setCutoff(100, sr: rate)
+            var low: Double = 0, all: Double = 0
+            for v in x { let y = lp2.lowPass(lp1.lowPass(v)); low += Double(y * y); all += Double(v * v) }
+            return low / max(all, 1e-12)
+        }
+        let (dryL, _) = run(reverb: 0)
+        let (wetL, wetR) = run(reverb: 1)
+        let tail = zip(wetL, dryL).map { $0 - $1 }
+        // at 0% REVERB the plate adds nothing
+        let (zeroL, _) = run(reverb: 0)
+        check(zip(dryL, zeroL).allSatisfy { $0 == $1 } && energy(dryL, 0.6, 2.5) < 1e-9,
+              "Texture plate: REVERB at 0% adds nothing, the hit ends dry")
+        // a smooth plate tail, not a gate: still ringing a second after the hit and dying away evenly
+        let early = energy(tail, 0.25, 0.5), mid = energy(tail, 0.75, 1.0), late = energy(tail, 1.5, 1.75)
+        check(mid > early * 0.02 && mid < early && late < mid && late > 0,
+              "Texture plate: a smooth tail that rings past a second and fades evenly (\(String(format: "%.3g %.3g %.3g", early, mid, late)))")
+        // never mud: the reverb's share of lows well under the dry hit's
+        let wetLow = lowShare(tail), dryLow = lowShare(dryL)
+        check(wetLow < dryLow * 0.25, "Texture plate: high-passed, no low-end mud (lows \(String(format: "%.3f", wetLow)) vs dry \(String(format: "%.3f", dryLow)))")
+        // dense and wide: left and right tails are different
+        var lr: Double = 0, ll: Double = 0, rr: Double = 0
+        for i in Int(0.3 * rate)..<Int(1.2 * rate) {
+            let a = Double(wetL[i] - dryL[i]), b = Double(wetR[i] - dryL[i])
+            lr += a * b; ll += a * a; rr += b * b
+        }
+        let correlation = lr / max(sqrt(ll * rr), 1e-12)
+        check(abs(correlation) < 0.6, "Texture plate: a wide stereo tail (L/R correlation \(String(format: "%.2f", correlation)))")
+        // DECAY lengthens it; everything stays finite and in level
+        let (longL, _) = run(reverb: 1, decay: 1)
+        check(energy(longL, 1.5, 2.5) > energy(wetL, 1.5, 2.5), "Texture plate: a longer DECAY rings longer")
+        check((wetL + wetR + longL).allSatisfy { $0.isFinite && abs($0) < 4 }, "Texture plate: stays finite")
+    }
+
     /// Each mode's FX section (Tyrone, Oct 24): Face 1's bottom row and Face 2's rail show the mode's
     /// own seven knobs, in his order; every one of them changes the sound, and a knob outside the
     /// mode's section (left turned in another mode) changes nothing, so the labels match the sound.
@@ -3896,7 +3968,7 @@ enum KnockSelfTest {
         check(fxKnobs.allSatisfy { $0.defaultValue == 0 }, "FX knobs: every mode's FX knobs and CLIP DRIVE start at 0%")
         func difference(_ a: [Float], _ b: [Float]) -> Double { zip(a, b).reduce(0) { $0 + Double(abs($1.0 - $1.1)) } }
         // Oct 26 (Tyrone): Modern and Vintage are dry at 0% (Vintage's tape rides on DRIVE, it used to lift
-        // every room tail like a reverb); Texture keeps its lo-fi under the knobs.
+        // every room tail like a reverb). Oct 28 (Tyrone): Texture too, its effects come only from its knobs.
         let (modernZero, _) = render(kit: kit, style: .trap, mode: .modern, tempo: 120, seconds: 1.5)
         let (vintageZero, _) = render(kit: kit, style: .trap, mode: .vintage, tempo: 120, seconds: 1.5)
         let (textureZero, _) = render(kit: kit, style: .trap, mode: .texture, tempo: 120, seconds: 1.5)
@@ -3904,7 +3976,7 @@ enum KnockSelfTest {
         let vd = difference(vintageZero, modernZero), td = difference(textureZero, modernZero)
         let same = difference(modernAgain, modernZero)
         check(vd <= same * 1.000_1 + 1e-3, "FX knobs at 0%: Vintage is dry like Modern, no built-in tape or room lift (\(String(format: "%.4f", vd)))")
-        check(td > 0.1, "FX knobs at 0%: Texture still has its own sound (\(String(format: "%.2f", td)))")
+        check(td <= same * 1.000_1 + 1e-3, "FX knobs at 0%: Texture is dry like Modern, nothing built in plays on its own (\(String(format: "%.4f", td)))")
         let (vintageDrive, _) = render(kit: kit, style: .trap, mode: .vintage, tempo: 120, seconds: 1.5) { $0.setParam(.drive, 1) }
         check(difference(vintageDrive, vintageZero) > 0.1, "Vintage DRIVE brings the tape in")
         var old = KnockState(); old.version = 3

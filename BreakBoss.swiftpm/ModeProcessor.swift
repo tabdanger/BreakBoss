@@ -7,7 +7,7 @@ import Foundation
 // VINTAGE  live drums, dry at 0%: its tape (saturation, a low-end bump and a rolled-off top like an
 //          old sampler) comes in with DRIVE. No reverb or delay (Oct 26).
 // TEXTURE  the same knobs, plus a downsampled (lower sample rate, 12-bit) sound, instability
-//          (tape wow and flutter, and the warp below), a tempo-synced delay and a gated reverb.
+//          (tape wow and flutter, and the warp below), a tempo-synced delay and a plate reverb.
 //          WARP: every bar or two it rolls a new scene (how far the pitch swings up and down, how
 //          fast it wobbles, its shape, how hard the resonant filter sweeps against it). GLITCH: some
 //          1/16s stutter. Oct 17 (Face 2's Texture knobs): WARP and GLITCH have their own knobs
@@ -20,6 +20,10 @@ import Foundation
 // Oct 26 (Tyrone): Texture is the only mode with reverb and delay. Modern and Vintage are dry with
 // every knob at 0%: Vintage's always-on tape lifted every drum's room tail about 5 dB (it sounded like
 // reverb), so it now rides on DRIVE (none at 0%, the old full tape at 100%).
+//
+// Oct 28 (Tyrone): Texture is dry at 0% too. Nothing inside its algorithm plays on its own any more
+// (no built-in downsampling, wow, warp, stutters or grit): each effect comes in only as its knob is
+// turned up. Its reverb is a bright drum plate (PlateReverb), high-passed so it never muddies the lows.
 //
 // BOOST    low-end and level push into the chain.
 // DRIVE    BOOST's push plus tape saturation into the GRIT stage (Vintage, Texture).
@@ -76,8 +80,8 @@ final class BusProcessor {
     private var delayIndex = 0
     private var delayLP = [OnePole(), OnePole()]
     private var delaySamples = Smoothed(12_000)
-    // Texture: gated reverb
-    private var verb: GatedReverb
+    // Texture: plate reverb
+    private var verb: PlateReverb
     // Texture: WARP. A two-head pitch shifter whose pitch swings up and down, a resonant filter
     // sweeping against it, and stutters that repeat the start of a 1/16. Its settings are a
     // random "scene" that changes every bar or two.
@@ -121,7 +125,7 @@ final class BusProcessor {
     private var dcBlock = [OnePole(), OnePole()]
 
     // Last settings (coefficients are only recomputed when something moves)
-    private var lastBoost: Float = -1, lastEQ: Float = -1, lastShine: Float = -1, lastMode = -1
+    private var lastBoost: Float = -1, lastEQ: Float = -1, lastShine: Float = -1, lastResample: Float = -1, lastMode = -1
 
     /// `compact`: a track's insert (Face 2). Shorter delay and stutter memory (still more than the
     /// longest dotted 1/8 and stutter at 40 BPM, 48 kHz), so twelve tracks stay light.
@@ -143,7 +147,7 @@ final class BusProcessor {
         stutterR = .allocate(capacity: stutterSize)
         stutterL.initialize(repeating: 0, count: stutterSize)
         stutterR.initialize(repeating: 0, count: stutterSize)
-        verb = GatedReverb()
+        verb = PlateReverb()
         prepare(sampleRate: 48_000)
     }
 
@@ -178,7 +182,7 @@ final class BusProcessor {
         warpMix.configure(ms: 40, sr: sr)
         stutterMix.configure(ms: 3, sr: sr)
         for c in 0..<2 { warpFilter[c].set(1_200, q: 0.8, sr: sr) }
-        lastBoost = -1; lastEQ = -1; lastShine = -1; lastMode = -1
+        lastBoost = -1; lastEQ = -1; lastShine = -1; lastResample = -1; lastMode = -1
         reset()
     }
 
@@ -226,21 +230,9 @@ final class BusProcessor {
         /// The transport's beat at this block's first sample, while playing (stutters land on its 1/16s).
         var beat: Double?
 
-        /// Texture's own lo-fi sound under its knobs: RESAMPLE and INSTABILITY at zero sound like
-        /// they used to at their old 50% start, and turn up from there to the same top.
+        /// Oct 26 to 28, Texture's RESAMPLE and INSTABILITY sat on a built-in lo-fi floor: at zero
+        /// they played like their old 50%. Only KnockState's migration of older saves still uses it.
         static let textureBase: Float = 0.5
-        static func textureAmount(_ knob: Float) -> Float { textureBase + knob.clamped(0, 1) * (1 - textureBase) }
-
-        /// The mode's own sound with every FX knob at 0% (Tyrone, Oct 26: the knobs are the extra
-        /// sauce, they only touch the sound once turned up). The main chain only, before
-        /// keepSection: Modern and Vintage are dry (Vintage's tape follows DRIVE in process());
-        /// Texture's downsampling and wow (and the warp and stutters that follow INSTABILITY) sit
-        /// under its knobs. DELAY and GATED REVERB stay off until they're turned up.
-        mutating func addModeSound() {
-            guard mode == .texture else { return }
-            resample = Settings.textureAmount(resample)
-            instability = Settings.textureAmount(instability)
-        }
 
         /// Only the mode's own FX section reaches the sound (Tyrone, Oct 24; TrackFX.params), so a
         /// knob left turned in another mode can't colour this one. DRIVE (Vintage, Texture) takes
@@ -269,13 +261,15 @@ final class BusProcessor {
         let colour = !s.insert
         // Vintage's tape (main chain only): as much as DRIVE is turned up, none at 0% (Oct 26)
         let tape: Float = vintage && colour ? s.drive.clamped(0, 1) : 0
-        // a track's insert skips the Texture section while all its Texture knobs are at zero
+        // The Texture section runs on the main chain (so the delay and plate tails ring out as their
+        // knobs come down); a track's insert skips it while all its Texture knobs are at zero. With
+        // every knob at 0% it adds nothing (Oct 28): no built-in lo-fi, grit or room.
         let texture = mode == .texture && (colour || max(s.resample, s.instability, s.delay, s.reverb, s.warp, s.glitch) > 0.001)
 
         // Gains
         let boostGain = 1 + s.boost * 0.6 + tape * 0.35
         let punchAmount = s.punch * 1.6
-        let gritAmount = s.grit + ((vintage || mode == .texture) ? s.drive * 0.8 : 0) + tape * 0.38 + (texture && colour ? 0.12 : 0)
+        let gritAmount = s.grit + ((vintage || mode == .texture) ? s.drive * 0.8 : 0) + tape * 0.38
         let drive = 1 + gritAmount * 6
         let gritMakeup = 1 / Saturate.soft(drive) * 0.95
         let gritMix = min(1, gritAmount * 2.2)
@@ -418,7 +412,7 @@ final class BusProcessor {
                 }
                 stutterIndex = (stutterIndex + 1) & (stutterSize - 1)
                 glitchBeat += beatsPerSample
-                // Gated reverb (send, then gate on the drums' envelope).
+                // Plate reverb (a send).
                 let (vl, vr) = verb.process(l, r)
                 // Delay: dotted 1/8, filtered feedback.
                 let d = delaySamples.next()
@@ -428,8 +422,8 @@ final class BusProcessor {
                 delayL[delayIndex] = l + delayLP[0].lowPass(er) * 0.34   // ping-pong
                 delayR[delayIndex] = r + delayLP[1].lowPass(el) * 0.34
                 delayIndex += 1; if delayIndex == delaySize { delayIndex = 0 }
-                l += el * s.delay * 0.5 + vl * s.reverb * 0.6
-                r += er * s.delay * 0.5 + vr * s.reverb * 0.6
+                l += el * s.delay * 0.5 + vl * s.reverb * 0.45
+                r += er * s.delay * 0.5 + vr * s.reverb * 0.45
             }
 
             // NOISE, following the drums
@@ -537,100 +531,160 @@ final class BusProcessor {
             for c in 0..<2 { shineShelf[c].highShelf(12_000, db: s.shine * 4, sr: sr) }
             lastShine = s.shine
         }
+        if abs(s.resample - lastResample) > 0.001 {
+            // RESAMPLE's low-pass opens all the way at 0% and reaches its 8.2 kHz at 50% and above,
+            // so the knob fades the lo-fi in from nothing instead of stepping to a dull top (Oct 28).
+            let t = min(1, s.resample.clamped(0, 1) * 2), top = sr * 0.45
+            for c in 0..<2 { preDS[c].lowPass(top * powf(8_200 / top, t), q: 0.7, sr: sr) }
+            lastResample = s.resample
+        }
         lastMode = modeKey
     }
 }
 
-/// A small reverb (four combs, two all-passes per side) whose output is gated: it opens on each
-/// hit, holds (DECAY: about 60 to 600 ms, 170 ms in the middle), then shuts quickly. The 80s
-/// "gated" sound, used by TEXTURE. PRE-DELAY (0 to 120 ms) holds the hit back before it reaches the room.
-struct GatedReverb {
-    private var combs: [[Float]] = []
-    private var combIndex = [Int](repeating: 0, count: 8)
-    private var combLP = [Float](repeating: 0, count: 8)
-    private var aps: [[Float]] = []
-    private var apIndex = [Int](repeating: 0, count: 4)
-    private var env = EnvelopeFollower()
-    private var hold = 0
-    private var gate: Float = 0
-    private var holdSamples = 8_000
-    private var closeCoef: Float = 0.999
-    private var feedback: Float = 0.82
-    private var sr: Float = 48_000
-    private var pre: [Float] = []
-    private var preIndex = 0
-    private var preSamples = 0
+/// TEXTURE's reverb (Tyrone, Oct 28): a plate, the drum favourite. Bright, dense, smooth tails
+/// that don't muddy the low end: the send is high-passed at 200 Hz and only its very top is
+/// softened before it reaches the plate. A figure-of-eight tank (Dattorro's plate topology, four
+/// input diffusers, two slowly modulated all-passes so the tail never rings metallic), tapped
+/// in several places per side for a wide stereo tail. DECAY (0...1) sets the tail, about 1.7 s
+/// in the middle; PRE-DELAY (0 to 120 ms) holds the hit back before it reaches the plate.
+/// Buffers are made in prepare(); process() never allocates.
+struct PlateReverb {
+    /// A delay line read `d` samples back from the next write (fractional for the modulated all-passes).
+    struct Line {
+        var buf: [Float] = [0, 0]
+        var index = 0
 
-    mutating func prepare(sampleRate sr: Float) {
-        let combMs: [Float] = [25.3, 26.9, 28.9, 30.7, 25.9, 27.7, 29.5, 31.9]
-        let apMs: [Float] = [5.0, 1.7, 5.3, 1.9]
-        combs = combMs.map { [Float](repeating: 0, count: max(1, Int($0 * 0.001 * sr))) }
-        aps = apMs.map { [Float](repeating: 0, count: max(1, Int($0 * 0.001 * sr))) }
-        combIndex = [Int](repeating: 0, count: 8)
-        apIndex = [Int](repeating: 0, count: 4)
-        env.set(attackMs: 1, releaseMs: 40, sr: sr)
-        self.sr = sr
-        holdSamples = Int(0.17 * sr)
-        closeCoef = expf(-1 / (0.025 * sr))
-        pre = [Float](repeating: 0, count: max(2, Int(0.125 * sr)))
-        preIndex = 0
+        init(_ n: Int = 1) { buf = [Float](repeating: 0, count: max(1, n) + 2) }
+
+        @inline(__always) mutating func write(_ x: Float) {
+            buf[index] = x
+            index += 1
+            if index == buf.count { index = 0 }
+        }
+
+        @inline(__always) func read(_ d: Int) -> Float {
+            var p = index - d
+            if p < 0 { p += buf.count }
+            return buf[p]
+        }
+
+        @inline(__always) func read(_ d: Float) -> Float {
+            var p = Float(index) - d
+            if p < 0 { p += Float(buf.count) }
+            let i0 = Int(p), frac = p - Float(i0)
+            let i1 = i0 + 1 == buf.count ? 0 : i0 + 1
+            return buf[i0] + (buf[i1] - buf[i0]) * frac
+        }
+
+        mutating func reset() { for i in buf.indices { buf[i] = 0 } }
     }
 
-    /// DECAY and PRE-DELAY knobs, 0...1. Decay 0.5 is the original sound (170 ms hold, 0.82 feedback).
-    mutating func set(decay: Float, predelay: Float) {
-        let d = decay.clamped(0, 1)
-        holdSamples = Int(sr * 0.06 * powf(10, d * 1.0))                 // 60 ms ... 600 ms (190 at 0.5)
-        if abs(d - 0.5) < 0.01 { holdSamples = Int(0.17 * sr) }
-        feedback = 0.7 + 0.24 * d                                          // 0.70 ... 0.94 (0.82 at 0.5)
-        closeCoef = expf(-1 / ((0.015 + 0.06 * d) * sr))                   // shuts in 15 ... 75 ms
-        if abs(d - 0.5) < 0.01 { closeCoef = expf(-1 / (0.025 * sr)) }
-        preSamples = min(pre.count - 1, Int(predelay.clamped(0, 1) * 0.12 * sr))
+    struct AllPass {
+        var line = Line()
+        var length = 1
+        var g: Float = 0.5
+
+        init(_ n: Int = 1, extra: Int = 0, g: Float = 0.5) { line = Line(n + extra); length = n; self.g = g }
+
+        @inline(__always) mutating func process(_ x: Float) -> Float {
+            let v = line.read(length)
+            let w = x + g * v
+            line.write(w)
+            return v - g * w
+        }
+
+        @inline(__always) mutating func process(_ x: Float, at d: Float) -> Float {
+            let v = line.read(d)
+            let w = x + g * v
+            line.write(w)
+            return v - g * w
+        }
+    }
+
+    private var sr: Float = 48_000
+    private var inputHP = Biquad()
+    private var inputLP = OnePole()
+    private var pre = Line()
+    private var preSamples = 0
+    private var diffusers: [AllPass] = []
+    private var mod1 = AllPass(), mod2 = AllPass()
+    private var d1 = Line(), d2 = Line(), d3 = Line(), d4 = Line()
+    private var len1 = 1, len2 = 1, len3 = 1, len4 = 1
+    private var ap1 = AllPass(), ap2 = AllPass()
+    private var damp1 = OnePole(), damp2 = OnePole()
+    private var excursion: Float = 0
+    private var lfoPhase: Float = 0
+    private var lfoStep: Float = 0
+    private var fromHalf2: Float = 0
+    private var decay: Float = 0.6
+    private var taps = [Int](repeating: 1, count: 14)
+
+    mutating func prepare(sampleRate sr: Float) {
+        self.sr = sr
+        let scale = sr / 29_761                 // the plate's lengths are tuned at 29.761 kHz
+        func n(_ samples: Float) -> Int { max(1, Int((samples * scale).rounded())) }
+        inputHP.highPass(200, q: 0.707, sr: sr)
+        inputLP.setCutoff(10_000, sr: sr)
+        pre = Line(Int(0.125 * sr))
+        diffusers = [AllPass(n(142), g: 0.75), AllPass(n(107), g: 0.75), AllPass(n(379), g: 0.625), AllPass(n(277), g: 0.625)]
+        excursion = 12 * scale
+        let room = Int(excursion) + 4
+        mod1 = AllPass(n(672), extra: room, g: -0.7)
+        mod2 = AllPass(n(908), extra: room, g: -0.7)
+        len1 = n(4_453); len2 = n(3_720); len3 = n(4_217); len4 = n(3_163)
+        d1 = Line(len1); d2 = Line(len2); d3 = Line(len3); d4 = Line(len4)
+        ap1 = AllPass(n(1_800), g: 0.5)
+        ap2 = AllPass(n(2_656), g: 0.5)
+        damp1.setCutoff(9_000, sr: sr); damp2.setCutoff(9_000, sr: sr)
+        lfoStep = 1 / sr                        // 1 Hz
+        taps = [266, 2_974, 1_913, 1_996, 1_990, 187, 1_066, 353, 3_627, 1_228, 2_673, 2_111, 335, 121].map { n(Float($0)) }
+        reset()
+    }
+
+    /// DECAY and PRE-DELAY knobs, 0...1. DECAY 0.5 (where Texture holds it) is about a 1.7 s tail.
+    mutating func set(decay d: Float, predelay: Float) {
+        decay = 0.4 + 0.4 * d.clamped(0, 1)                                // 0.40 ... 0.80
+        let g = (decay + 0.15).clamped(0.25, 0.5)
+        ap1.g = g; ap2.g = g
+        preSamples = min(pre.buf.count - 3, Int(predelay.clamped(0, 1) * 0.12 * sr))
     }
 
     mutating func reset() {
-        for i in combs.indices { for j in combs[i].indices { combs[i][j] = 0 } }
-        for i in aps.indices { for j in aps[i].indices { aps[i][j] = 0 } }
-        for i in pre.indices { pre[i] = 0 }
-        combLP = [Float](repeating: 0, count: 8)
-        gate = 0
-        hold = 0
+        inputHP.reset(); inputLP.z = 0; pre.reset()
+        for i in diffusers.indices { diffusers[i].line.reset() }
+        mod1.line.reset(); mod2.line.reset(); ap1.line.reset(); ap2.line.reset()
+        d1.reset(); d2.reset(); d3.reset(); d4.reset()
+        damp1.z = 0; damp2.z = 0
+        fromHalf2 = 0; lfoPhase = 0
     }
 
     mutating func process(_ l: Float, _ r: Float) -> (Float, Float) {
-        guard combs.count == 8 else { return (0, 0) }
-        var input = (l + r) * 0.5
-        if preSamples > 0, !pre.isEmpty {
-            pre[preIndex] = input
-            var at = preIndex - preSamples
-            if at < 0 { at += pre.count }
-            input = pre[at]
-            preIndex += 1
-            if preIndex == pre.count { preIndex = 0 }
+        guard diffusers.count == 4 else { return (0, 0) }
+        var x = inputLP.lowPass(inputHP.process((l + r) * 0.5))
+        if preSamples > 0 {
+            pre.write(x)
+            x = pre.read(preSamples + 1)
         }
-        let e = env.process(input)
-        if e > 0.12 { hold = holdSamples; gate = 1 }
-        if hold > 0 { hold -= 1 } else { gate *= closeCoef }
-        var outs: (Float, Float) = (0, 0)
-        for c in 0..<8 {
-            let n = combs[c].count
-            let y = combs[c][combIndex[c]]
-            combLP[c] = y + 0.3 * (combLP[c] - y)
-            combs[c][combIndex[c]] = input + combLP[c] * feedback
-            combIndex[c] += 1
-            if combIndex[c] == n { combIndex[c] = 0 }
-            if c < 4 { outs.0 += y * 0.25 } else { outs.1 += y * 0.25 }
-        }
-        for a in 0..<4 {
-            let n = aps[a].count
-            let x = a < 2 ? outs.0 : outs.1
-            let b = aps[a][apIndex[a]]
-            let y = -0.6 * x + b
-            aps[a][apIndex[a]] = x + 0.6 * y
-            apIndex[a] += 1
-            if apIndex[a] == n { apIndex[a] = 0 }
-            if a < 2 { outs.0 = y } else { outs.1 = y }
-        }
-        return (outs.0 * gate, outs.1 * gate)
+        for i in 0..<4 { x = diffusers[i].process(x) }
+        lfoPhase += lfoStep; if lfoPhase >= 1 { lfoPhase -= 1 }
+        let m = sinf(2 * .pi * lfoPhase) * excursion
+        // half 1
+        d1.write(mod1.process(x + fromHalf2 * decay, at: Float(mod1.length) + m))
+        let t1 = ap1.process(damp1.lowPass(d1.read(len1)) * decay)
+        d2.write(t1)
+        let end1 = d2.read(len2)
+        // half 2
+        d3.write(mod2.process(x + end1 * decay, at: Float(mod2.length) - m))
+        let t2 = ap2.process(damp2.lowPass(d3.read(len3)) * decay)
+        d4.write(t2)
+        fromHalf2 = d4.read(len4)
+        // taps around the tank
+        let yl = d3.read(taps[0]) + d3.read(taps[1]) - ap2.line.read(taps[2]) + d4.read(taps[3])
+            - d1.read(taps[4]) - ap1.line.read(taps[5]) - d2.read(taps[6])
+        let yr = d1.read(taps[7]) + d1.read(taps[8]) - ap1.line.read(taps[9]) + d2.read(taps[10])
+            - d3.read(taps[11]) - ap2.line.read(taps[12]) - d4.read(taps[13])
+        return (yl * 0.6, yr * 0.6)
     }
 }
 

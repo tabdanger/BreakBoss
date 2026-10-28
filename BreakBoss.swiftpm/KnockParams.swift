@@ -5,7 +5,7 @@ import Foundation
 
 /// The three faceplates. Each one is its own sound: Modern is clean and forward, Vintage adds
 /// drive and boost (tape and old-sampler warmth), Texture adds a downsampled, unstable sound
-/// with a tempo-synced delay and a gated reverb.
+/// with a tempo-synced delay and a plate reverb, each only as its knob is turned up.
 enum SoundMode: Int, CaseIterable, Codable {
     case modern = 0, vintage = 1, texture = 2
 
@@ -134,8 +134,7 @@ enum KParam: Int, CaseIterable {
 
     /// INIT values. Pitch and Tune start centred (nothing detuned). Every FX knob, CLIP DRIVE
     /// included, starts at 0% (Tyrone, Oct 26): they're the extra sauce and only touch the sound
-    /// once they're turned up; each mode's own sound is there with them at zero
-    /// (BusProcessor.Settings.addModeSound).
+    /// once they're turned up. Every mode is dry with them at zero (Texture too, Oct 28).
     var defaultValue: Float {
         switch self {
         case .pitch: return 0.5
