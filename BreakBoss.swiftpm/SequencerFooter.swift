@@ -97,7 +97,7 @@ extension SequencerView {
     }
 
     func cycleLoop(_ step: Int) {
-        let all = PatternBank.all
+        let all = PatternBank.browserOrder      // the arrows walk the PATTERNS menu, genre by genre
         guard !all.isEmpty else { return }
         let i = all.firstIndex { $0.name == controller.state.presetName } ?? -1
         controller.loadPatternPreset(all[(i + step + all.count) % all.count]); loop = 0; selection = []
