@@ -42,6 +42,8 @@ struct ScopeView: View {
                         }
                         path.addLine(to: CGPoint(x: x(count - 1), y: y(values[count - 1])))
                     }
+                    // silence leaves the glass black, as the plate draws it (Tyrone, Oct 28): no flat line
+                    guard frame.spread > 0.004 || frame.line.contains(where: { abs($0) > 0.004 }) else { return }
                     let top = Double(frame.top), bass = Double(frame.bass)
                     // The fizz band: everything the points' highs and lows reach, glowing faintly,
                     // brighter the more top end there is (a hat fills it, an 808 leaves only the line).
