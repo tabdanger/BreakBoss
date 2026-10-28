@@ -52,6 +52,10 @@ struct FaceplateLayout: Decodable {
     /// Artwork positions in reading order. Pad IDs are independent of the device layout.
     let pads: [[Double]]
     let padOrder: [Int]?
+    /// The power button, Face 2's slider and the BreaKing logo, as the new faces print them (Oct 28).
+    let powerRect: [Double]?
+    let sliderRect: [Double]?
+    let logoRect: [Double]?
 
     var width: Double { size[0] }
     var height: Double { size[1] }

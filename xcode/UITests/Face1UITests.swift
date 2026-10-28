@@ -21,7 +21,7 @@ final class Face1UITests: XCTestCase {
         sleep(3)
     }
 
-    /// A point on the faceplate, in the picture's own pixels (1450 x 1085, centred and fitted).
+    /// A point on the faceplate, in the picture's own pixels (1450 x 1085, centred and fitted; the new faces, Oct 28).
     private func at(_ x: CGFloat, _ y: CGFloat) -> XCUICoordinate {
         let f = app.windows.firstMatch.frame
         let s = min(f.width / 1450, f.height / 1085)
@@ -70,42 +70,42 @@ final class Face1UITests: XCTestCase {
 
     /// Everything a face lights, switched over: ONE-SHOT, CLIPPER, the two lamps, PLAY, a knob turned.
     private func switchAll() {
-        tap(210, 83)            // ONE-SHOT
-        tap(1259, 244)          // CLIPPER
-        tap(365, 379)           // TEMPO SYNC
-        tap(365, 413)           // FOLLOW DAW
-        at(1095, 234).press(forDuration: 0.1, thenDragTo: at(1095, 150))   // OUTPUT up
-        at(240, 510).press(forDuration: 0.1, thenDragTo: at(240, 430))     // BOOST up
-        tap(146, 398)           // PLAY
+        tap(191, 108)            // ONE-SHOT
+        tap(1248, 286)          // CLIPPER
+        tap(345, 397)           // TEMPO SYNC
+        tap(345, 427)           // FOLLOW DAW
+        at(1084, 272).press(forDuration: 0.1, thenDragTo: at(1084, 130))   // OUTPUT up
+        at(207, 518).press(forDuration: 0.1, thenDragTo: at(207, 376))     // BOOST up
+        tap(127, 412)           // PLAY
         sleep(1)
     }
 
     private func switchBack() {
-        tap(146, 398)           // STOP
-        tap(377, 83)            // LOOP
-        tap(1259, 244)
-        tap(365, 379)
-        tap(365, 413)
-        at(1095, 234).doubleTap()                                          // knobs back to their defaults
-        at(240, 510).doubleTap()
+        tap(127, 412)           // STOP
+        tap(378, 108)            // LOOP
+        tap(1248, 286)
+        tap(345, 397)
+        tap(345, 427)
+        at(1084, 272).doubleTap()                                          // knobs back to their defaults
+        at(207, 518).doubleTap()
         usleep(400_000)
     }
 
     func testFourFaces() {
         launch(platinum: false)
-        for (name, y) in [("modern", 86.0), ("texture", 287.0), ("vintage", 186.0)] {
-            tap(562, y)
+        for (name, y) in [("modern", 112.0), ("texture", 295.0), ("vintage", 201.0)] {
+            tap(570, y)
             sleep(1)
             picture(name)
             switchAll()
             picture(name + "-switched")
             switchBack()
         }
-        tap(562, 86)
+        tap(570, 112)
         app.terminate()
 
         launch(platinum: true)
-        tap(562, 86)
+        tap(570, 112)
         sleep(1)
         picture("platinum")
         switchAll()
