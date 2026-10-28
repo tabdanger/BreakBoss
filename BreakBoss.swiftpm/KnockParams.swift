@@ -110,7 +110,7 @@ enum KParam: Int, CaseIterable {
         case .resample: return "Resample"
         case .instability: return "Instability"
         case .textureDelay: return "Delay"
-        case .gatedReverb: return "Gated Reverb"
+        case .gatedReverb: return "Reverb"
         case .drive: return "Drive"
         case .warp: return "Warp"
         case .glitch: return "Glitch"

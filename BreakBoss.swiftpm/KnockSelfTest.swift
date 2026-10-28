@@ -3934,7 +3934,7 @@ enum KnockSelfTest {
         check(TrackFX.params(.vintage) == [.drive, .punch, .analogEQ, .grit, .shine, .tighten, .noise]
               && TrackFX.params(.texture) == [.drive, .resample, .instability, .textureDelay, .shine, .gatedReverb, .noise]
               && TrackFX.params(.modern) == [.boost, .punch, .analogEQ, .tighten, .grit, .shine, .noise],
-              "FX sections: Vintage DRIVE PUNCH ANALOG EQ GRIT SHINE TIGHTEN NOISE; Texture DRIVE RESAMPLE INSTABILITY DELAY SHINE GATED REVERB NOISE; Modern unchanged")
+              "FX sections: Vintage DRIVE PUNCH ANALOG EQ GRIT SHINE TIGHTEN NOISE; Texture DRIVE RESAMPLE INSTABILITY DELAY SHINE REVERB NOISE; Modern unchanged")
         check(SoundMode.allCases.allSatisfy { m in TrackFX.face1Places.map { TrackFX.face1($0, m) } == (m == .modern ? TrackFX.face1Places : TrackFX.params(m)) },
               "FX sections: Face 1's bottom row turns the knobs its plate prints, in order")
         let kit = kitBuffers(KitLibrary.modernTrap)

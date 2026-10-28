@@ -2,9 +2,12 @@
 """Each mode's FX section on Face 1 (Tyrone, Oct 24 2026): the bottom row's printed knob names.
 
     VINTAGE  DRIVE · PUNCH · ANALOG EQ · GRIT · SHINE · TIGHTEN · NOISE
-    TEXTURE  DRIVE · RESAMPLE · INSTABILITY · DELAY · SHINE · GATED REVERB · NOISE
+    TEXTURE  DRIVE · RESAMPLE · INSTABILITY · DELAY · SHINE · REVERB · NOISE
 
 Modern and Platinum keep BOOST · PUNCH · ANALOG EQ · GRIT · SHINE · TIGHTEN · NOISE.
+
+Oct 28 2026 (Tyrone): Texture's GATED REVERB became a plate and is printed just REVERB. RENAMES
+takes a word printed by an earlier run off and sets the new one in its place, the same way.
 
 The new words are set in the plate's own lettering: every letter (with its shadow or highlight) is
 lifted off that plate's other knob labels as a coverage map against the plate behind it, and laid
@@ -40,7 +43,12 @@ BOTTOM = ["BOOST", "PUNCH", "ANALOG EQ", "GRIT", "SHINE", "TIGHTEN", "NOISE"]
 KNOB_X = [239, 402, 566, 729, 895, 1061, 1227]
 NEW = {
     "vintage": ["DRIVE", "PUNCH", "ANALOG EQ", "GRIT", "SHINE", "TIGHTEN", "NOISE"],
-    "texture": ["DRIVE", "RESAMPLE", "INSTABILITY", "DELAY", "SHINE", "GATED REVERB", "NOISE"],
+    "texture": ["DRIVE", "RESAMPLE", "INSTABILITY", "DELAY", "SHINE", "REVERB", "NOISE"],
+}
+RELABELLED = {"vintage", "texture"}       # Oct 24: NEW is on these plates
+# words an earlier run printed, now changed: face -> [(old word, (left, right, top) of its capitals, new word, knob x)]
+RENAMES = {
+    "texture": [("GATED REVERB", (988, 1134, 578), "REVERB", KNOB_X[5])],
 }
 FILES = {"vintage": "Face1_Vintage.png", "texture": "Face1_Texture.png"}
 PAD_T, PAD_B, PAD_X = 3, 4, 4       # around the capitals: shadow below / highlight, and to the right
@@ -202,6 +210,25 @@ def relabel(img, face):
     return np.clip(np.round(out), 0, 255).astype(np.uint8)
 
 
+def rename(img, face):
+    """RENAMES on a plate already relabelled: each old word off, its new word on."""
+    glyphs, gap, space, ink, far = harvest(img)
+    out = img.astype(np.float32)
+    for old, (x0, x1, top), new, cx in RENAMES.get(face, []):
+        _, _, top = lettering(img, old, x0, x1, top)
+        ys, ye = top - PAD_T, top + CAP + PAD_B
+        xs, xe = x0 - 3, x1 + PAD_X + 2
+        out[ys:ye, xs:xe] = plate_behind(img, xs, xe, ys, ye)
+        word, width = set_word(glyphs, gap, space, new)
+        wx = int(round(cx + 1 - width / 2))
+        bx0, bx1 = wx - 1, wx - 1 + word.shape[1]
+        base = out[ys:ye, bx0:bx1]
+        a = np.clip(word, 0, 1)[..., None]
+        sh = np.clip(-word, 0, 1)[..., None]
+        out[ys:ye, bx0:bx1] = (base * (1 - sh) + far * sh) * (1 - a) + ink * a
+    return np.clip(np.round(out), 0, 255).astype(np.uint8)
+
+
 def main():
     for face, src in FILES.items():
         for path in (HERE / src, assets / f"Plate_{face}.imageset" / f"Plate_{face}.png"):
@@ -209,9 +236,13 @@ def main():
             mode = im.mode
             rgb = np.asarray(im.convert("RGB"))
             try:
-                new = relabel(rgb, face)
+                # the Oct 24 relabel is in the plates (its old-word check can't tell DRIVE from BOOST,
+                # both five letters, so it isn't run again); only the renames still to do
+                new = rename(rgb, face) if face in RELABELLED else relabel(rgb, face)
             except ValueError as e:      # the old words are gone: done before (it runs once)
                 print("skipped", path, "-", e)
+                continue
+            if face in RELABELLED and not RENAMES.get(face):
                 continue
             if mode == "RGBA":
                 a = np.asarray(im)[..., 3:]

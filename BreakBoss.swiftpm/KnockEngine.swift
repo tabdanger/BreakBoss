@@ -121,9 +121,10 @@ enum NoteRepeat {
 /// MODERN   clean analog punch: BOOST, PUNCH, ANALOG EQ, TIGHTEN, GRIT, SHINE, NOISE
 /// VINTAGE  (Tyrone, Oct 24) DRIVE, PUNCH, ANALOG EQ, GRIT, SHINE, TIGHTEN, NOISE: DRIVE takes BOOST's
 ///          place, so every hit runs hotter and rounder (BOOST's push plus tape saturation)
-/// TEXTURE  (Tyrone, Oct 24) DRIVE, RESAMPLE, INSTABILITY, DELAY, SHINE, GATED REVERB, NOISE:
-///          INSTABILITY also drives the warp and the stutters (as before Oct 17); the reverb (a
-///          bright drum plate since Oct 28) has its DECAY and PRE-DELAY at their middle / zero.
+/// TEXTURE  (Tyrone, Oct 24) DRIVE, RESAMPLE, INSTABILITY, DELAY, SHINE, REVERB, NOISE:
+///          INSTABILITY also drives the warp and the stutters (as before Oct 17); REVERB (GATED
+///          REVERB until Oct 28, now a bright drum plate; KParam.gatedReverb keeps its id for saved
+///          states and hosts) has its DECAY and PRE-DELAY at their middle / zero.
 ///          Dry at 0%: nothing in Texture plays until its knob is turned up (Oct 28)
 /// Only a mode's own knobs reach its sound (BusProcessor.Settings.keepSection), so every label
 /// matches what you hear. With a track selected they turn that track's own insert (BusProcessor,
