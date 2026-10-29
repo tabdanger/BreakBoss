@@ -50,7 +50,9 @@ struct ArtKnob: View {
     var body: some View {
         MetalKnob().aspectRatio(1, contentMode: .fit)
             .rotationEffect(.degrees(KnobControl.angle(value)))
-            .animation(.easeOut(duration: 0.15), value: value)
+            // follows the finger exactly while it turns (an ease on every move made it lag and step);
+            // a double tap's reset still swings there
+            .animation(start == nil ? .easeOut(duration: 0.15) : nil, value: value)
             .anchorPreference(key: KnobHUDKey.self, value: .bounds) { a in
                 guard showHUD, let hud else { return [] }
                 return [KnobHUDEntry(hud: hud, anchor: a)]

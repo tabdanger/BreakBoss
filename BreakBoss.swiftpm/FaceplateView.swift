@@ -147,6 +147,19 @@ struct FaceplateView: View {
             // the tutorial's lit part and card, over the face's own art (Tyrone, Oct 20)
             TutorialOverlay(surface: .face1, art: CGSize(width: L.width, height: L.height), scale: s, finish: sfx) { $0.face1(L) }
         }
+        // the value of the knob being turned, lit over it (Tyrone, Oct 29); nothing shows at rest,
+        // so the plate looks exactly like its picture
+        .overlayPreferenceValue(KnobHUDKey.self) { entries in
+            GeometryReader { g in
+                ForEach(entries.indices, id: \.self) { i in
+                    let r = g[entries[i].anchor]
+                    KnobHUDView(hud: entries[i].hud, accent: FaceLight.of(sfx).glow, scale: s * 1.25)
+                        .position(x: min(max(r.midX, 90 * s), g.size.width - 90 * s), y: max(r.minY - 18 * s, 30 * s))
+                }
+            }
+            .environment(\.seqFinish, sfx)
+            .allowsHitTesting(false)
+        }
     }
 
     /// Screen, ONE-SHOT / LOOP and the three mode buttons (each mode is its own faceplate).
@@ -236,8 +249,8 @@ struct FaceplateView: View {
         BPMDisplay(controller: controller, layout: L, scale: s)
         if controller.value(.tempoSync) < 0.5 { Image(L.overlayName("led_off", sfx)).resizable().place(L.leds.tempoSyncRect, s) }
         if controller.value(.followDAW) < 0.5 { Image(L.overlayName("led_off", sfx)).resizable().place(L.leds.followDAWRect, s) }
-        hit(ledHitRect(L, L.leds.tempoSyncRect), s) { controller.toggle(.tempoSync) }
-        hit(ledHitRect(L, L.leds.followDAWRect), s) { controller.toggle(.followDAW) }
+        hit(ledHitRect(L, L.leds.tempoSyncRect), s, grow: 0) { controller.toggle(.tempoSync) }
+        hit(ledHitRect(L, L.leds.followDAWRect), s, grow: 0) { controller.toggle(.followDAW) }
         hit(L.diceRect, s) { controller.dice() }
     }
 
@@ -275,8 +288,10 @@ struct FaceplateView: View {
         return [r[0], r[1], r[0] + w * 5, r[3]]
     }
 
-    private func hit(_ r: [Double], _ s: CGFloat, action: @escaping () -> Void) -> some View {
-        PressableArea(action: action).place(r, s)
+    /// `grow`: art pixels past the printed button on every side, so a fingertip landing on its edge
+    /// still presses it (the plate's buttons sit at least 7 px apart; the two lamps only 5, so they don't grow).
+    private func hit(_ r: [Double], _ s: CGFloat, grow: Double = 3, action: @escaping () -> Void) -> some View {
+        PressableArea(action: action).place([r[0] - grow, r[1] - grow, r[2] + grow, r[3] + grow], s)
     }
 
     // MARK: Menus
@@ -446,6 +461,9 @@ struct KnobControl: View {
     let knob: FaceplateLayout.Knob
     let scale: CGFloat
     @State private var start: Float?
+    @State private var showHUD = false
+    @State private var hudRelease = 0
+    @State private var lastTap: Date?
 
     static let order: [KParam] = [.pitch, .tune, .bounce, .velocity, .filter, .clipDrive, .output,
                                   .boost, .punch, .analogEQ, .grit, .shine, .tighten, .noise]
@@ -466,19 +484,43 @@ struct KnobControl: View {
                 .stroke(Color.white.opacity(0.18), lineWidth: max(0.5, 0.7 * scale))
                 .frame(width: r * 2, height: r * 2)
         }
-        .frame(width: r * 2.7, height: r * 2.7)
+        // the knob's name and value in a lit readout over it while it turns (Tyrone, Oct 29), the
+        // same as Face 2's; it goes a moment after the finger lifts, leaving the plate as drawn
+        .anchorPreference(key: KnobHUDKey.self, value: .bounds) { a in
+            guard showHUD else { return [] }
+            return [KnobHUDEntry(hud: KnobHUD(title: SequencerView.fxLabel(param), value: param.text(v)), anchor: a)]
+        }
+        // a fingertip-sized grip round the cap (it reaches most of the way to the next knob)
+        .frame(width: r * 3.2, height: r * 3.2)
         .contentShape(Circle())
-        .gesture(
-            DragGesture(minimumDistance: 1)
+        // takes the touch the moment a finger lands (no dead zone before it grabs), and counts the
+        // double tap itself: a separate tap gesture made SwiftUI wait to tell a drag from a tap
+        .highPriorityGesture(
+            DragGesture(minimumDistance: 0)
                 .onChanged { g in
                     if start == nil { start = v }
+                    if !showHUD { showHUD = true }
+                    hudRelease += 1
                     // Up or right turns it up, with a real pot's weight (KnobFeel)
                     let delta = KnobFeel.delta(g.translation, travel: KnobFeel.face1)
                     controller.set(param, (start ?? v) + delta)
                 }
-                .onEnded { _ in start = nil }
+                .onEnded { g in
+                    let isTap = abs(g.translation.width) < 6 && abs(g.translation.height) < 6
+                    if isTap, let t = lastTap, Date().timeIntervalSince(t) < 0.35 {
+                        controller.resetKnob(param)
+                        lastTap = nil
+                    } else {
+                        lastTap = isTap ? Date() : nil
+                    }
+                    start = nil
+                    hudRelease += 1
+                    let token = hudRelease
+                    DispatchQueue.main.asyncAfter(deadline: .now() + KnobHUD.linger) {
+                        if hudRelease == token { withAnimation(.easeOut(duration: 0.2)) { showHUD = false } }
+                    }
+                }
         )
-        .onTapGesture(count: 2) { controller.resetKnob(param) }
         .position(x: knob.x * scale, y: knob.y * scale)
         .accessibilityLabel(param.name)
         .accessibilityValue(param.text(v))

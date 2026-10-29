@@ -202,7 +202,8 @@ enum KParam: Int, CaseIterable {
         case .playMode:
             return value > 0.5 ? "LOOP" : "ONE-SHOT"
         default:
-            return "\(Int((value * 10).rounded()))"
+            // in percent, 0% to 100%, like the FX knobs load (a 0 to 10 scale jumped in 11 steps)
+            return "\(Int((value * 100).rounded()))%"
         }
     }
 }
