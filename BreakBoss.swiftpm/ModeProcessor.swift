@@ -183,10 +183,13 @@ final class BusProcessor {
         stutterMix.configure(ms: 3, sr: sr)
         for c in 0..<2 { warpFilter[c].set(1_200, q: 0.8, sr: sr) }
         lastBoost = -1; lastEQ = -1; lastShine = -1; lastResample = -1; lastMode = -1
+        // an 8 ms time constant: 95% of a turn is heard within ~25 ms, with no steps on the way
+        glideCoef = 1 - expf(-Float(BusProcessor.glideChunk) / (0.008 * sr))
         reset()
     }
 
     func reset() {
+        glideStarted = false
         for c in 0..<2 {
             boostShelf[c].reset(); headBump[c].reset(); tapeLP[c].reset()
             eqLow[c].reset(); eqMid[c].reset(); eqHigh[c].reset()
@@ -252,8 +255,68 @@ final class BusProcessor {
         }
     }
 
-    /// Processes `count` stereo samples in place.
+    // The knobs as the sound hears them: glided towards where they're set, so a turn sweeps
+    // smoothly instead of stepping once per audio block (Tyrone, Oct 29: "stepped, not smooth").
+    private var glided = Settings()
+    private var glideStarted = false
+    /// Samples per glide step, and how far each step closes the gap (most of the way in ~25 ms).
+    private static let glideChunk = 32
+    private var glideCoef: Float = 0.05
+
+    /// Processes `count` stereo samples in place, in short pieces while a knob is still gliding.
     func process(_ left: UnsafeMutablePointer<Float>, _ right: UnsafeMutablePointer<Float>, count: Int, _ s: Settings) {
+        if !glideStarted || s.mode != glided.mode || s.insert != glided.insert {
+            // first block, or another mode / chain: its knobs come in where they are
+            glided = s
+            glideStarted = true
+            processChunk(left, right, count: count, s)
+            return
+        }
+        var done = 0
+        var first = true
+        while done < count {
+            let n = glide(towards: s) ? min(BusProcessor.glideChunk, count - done) : count - done
+            var piece = glided
+            // the transport's beat belongs to the block's first sample only (stutters count on from it)
+            piece.beat = first ? s.beat : nil
+            processChunk(left + done, right + done, count: n, piece)
+            done += n
+            first = false
+        }
+    }
+
+    /// One step of every knob towards its setting. True while any of them is still moving.
+    private func glide(towards s: Settings) -> Bool {
+        let c = glideCoef
+        var moving = false
+        moving = BusProcessor.step(&glided.boost, s.boost, c) || moving
+        moving = BusProcessor.step(&glided.punch, s.punch, c) || moving
+        moving = BusProcessor.step(&glided.analogEQ, s.analogEQ, c) || moving
+        moving = BusProcessor.step(&glided.grit, s.grit, c) || moving
+        moving = BusProcessor.step(&glided.shine, s.shine, c) || moving
+        moving = BusProcessor.step(&glided.noise, s.noise, c) || moving
+        moving = BusProcessor.step(&glided.resample, s.resample, c) || moving
+        moving = BusProcessor.step(&glided.instability, s.instability, c) || moving
+        moving = BusProcessor.step(&glided.delay, s.delay, c) || moving
+        moving = BusProcessor.step(&glided.reverb, s.reverb, c) || moving
+        moving = BusProcessor.step(&glided.drive, s.drive, c) || moving
+        moving = BusProcessor.step(&glided.warp, s.warp, c) || moving
+        moving = BusProcessor.step(&glided.glitch, s.glitch, c) || moving
+        moving = BusProcessor.step(&glided.reverbDecay, s.reverbDecay, c) || moving
+        moving = BusProcessor.step(&glided.reverbPredelay, s.reverbPredelay, c) || moving
+        glided.tempo = s.tempo; glided.delaySync = s.delaySync
+        return moving
+    }
+
+    @inline(__always)
+    private static func step(_ v: inout Float, _ target: Float, _ c: Float) -> Bool {
+        let d = target - v
+        if abs(d) < 0.000_5 { v = target; return false }
+        v += d * c
+        return true
+    }
+
+    private func processChunk(_ left: UnsafeMutablePointer<Float>, _ right: UnsafeMutablePointer<Float>, count: Int, _ s: Settings) {
         let mode = s.mode
         updateCoefficients(s)
         let vintage = mode == .vintage
