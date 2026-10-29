@@ -153,21 +153,35 @@ enum KitLibrary {
         kit.preferredMode == .vintage && vintageHiddenFamilies.contains(kit.family)
     }
 
+    /// Vintage keeps live-drummer styles only (Tyrone, Oct 29): its drum-machine-era genres move out of the
+    /// Vintage bank into their own DRUM MACHINE ERA folder, shown in Modern, Platinum and Texture.
+    static let machineEraSection = "DRUM MACHINE ERA"
+    static let machineEraGenres: Set<String> = ["NEW JACK SWING", "DIGITAL DANCEHALL", "KWAITO", "2000S R&B", "80S POP"]
+
+    static func machineEra(_ kit: KitDefinition) -> Bool {
+        kit.preferredMode == .vintage && machineEraGenres.contains(kit.genre)
+    }
+
+    /// The DRUM MACHINE ERA kits, in table order.
+    static let machineEraKits: [KitDefinition] = factory.filter { machineEra($0) }
+
     /// Every factory kit that opens in this mode, in browser order: tab by tab.
     static func kits(for mode: SoundMode) -> [KitDefinition] {
-        let mine = factory.filter { $0.preferredMode == mode && !hidden($0) }
+        let mine = factory.filter { $0.preferredMode == mode && !hidden($0) && !machineEra($0) }
         let rank = { (k: KitDefinition) in families.firstIndex(of: k.family) ?? families.count }
         return mine.enumerated().sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }.map(\.element)
     }
 
     /// Mode lists first, the way the browsers show them (the ◀ ▶ kit arrows step through this).
-    static var browserOrder: [KitDefinition] { SoundMode.allCases.flatMap { kits(for: $0) } }
+    static var browserOrder: [KitDefinition] { SoundMode.allCases.flatMap { kits(for: $0) } + machineEraKits }
 
     /// The modes whose kits the KITS menu and kit arrows show while playing in `mode`: Vintage shows only its
     /// own acoustic kits (Tyrone, Oct 29), the other modes every bank as before.
     static func browsedModes(_ mode: SoundMode) -> [SoundMode] { mode == .vintage ? [.vintage] : SoundMode.allCases }
 
-    static func browserOrder(for mode: SoundMode) -> [KitDefinition] { browsedModes(mode).flatMap { kits(for: $0) } }
+    static func browserOrder(for mode: SoundMode) -> [KitDefinition] {
+        browsedModes(mode).flatMap { kits(for: $0) } + (mode == .vintage ? [] : machineEraKits)
+    }
 
     private static func groups(_ kits: [KitDefinition], by key: KeyPath<KitDefinition, String>) -> [(genre: String, kits: [KitDefinition])] {
         var order: [String] = []; var map: [String: [KitDefinition]] = [:]

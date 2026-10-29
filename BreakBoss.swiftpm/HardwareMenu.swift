@@ -464,6 +464,15 @@ struct KitBrowserPanel: View {
                 }
             }
         }
+        // the drum-machine-era kits that left Vintage: their own folder, outside Vintage
+        if modes != [.vintage] {
+            let heading = KitLibrary.machineEraSection
+            out.append(BBBrowserEntry(id: "h:" + heading, kind: .heading, title: heading))
+            for def in KitLibrary.machineEraKits {
+                out.append(BBBrowserEntry(id: def.id, kind: .row, title: def.name, detail: "\(Int(def.tempo)) BPM",
+                                          keywords: "\(heading) \(def.genre) \(Int(def.tempo)) BPM", folder: "h:" + heading))
+            }
+        }
         return out
     }
 
