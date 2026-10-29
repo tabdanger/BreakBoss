@@ -448,10 +448,13 @@ struct KitBrowserPanel: View {
     @Environment(\.bbPanelBody) private var bodyH
     @Environment(\.seqFinish) private var finish
 
-    /// Every factory kit, in browser order, under "GENRE · MODE" (built once: the catalog is fixed).
-    static let factoryEntries: [BBBrowserEntry] = {
+    /// Every factory kit, in browser order, under "GENRE · MODE" (built once a mode: the catalog is fixed).
+    /// Vintage lists only its own acoustic kits (KitLibrary.browsedModes).
+    static let factoryEntries: [SoundMode: [BBBrowserEntry]] = Dictionary(uniqueKeysWithValues: SoundMode.allCases.map { ($0, KitBrowserPanel.build(KitLibrary.browsedModes($0))) })
+
+    private static func build(_ modes: [SoundMode]) -> [BBBrowserEntry] {
         var out: [BBBrowserEntry] = []
-        for mode in SoundMode.allCases {
+        for mode in modes {
             for g in KitLibrary.genreGroups(for: mode) {
                 let heading = "\(g.genre) · \(mode.title)"
                 out.append(BBBrowserEntry(id: "h:" + heading, kind: .heading, title: heading))
@@ -462,10 +465,10 @@ struct KitBrowserPanel: View {
             }
         }
         return out
-    }()
+    }
 
     private var entries: [BBBrowserEntry] {
-        var all = Self.factoryEntries
+        var all = Self.factoryEntries[controller.mode] ?? []
         if !controller.userKits.isEmpty {
             all.append(BBBrowserEntry(id: "h:my", kind: .heading, title: "My kits"))
             all += controller.userKits.map { BBBrowserEntry(id: "user:" + $0, kind: .row, title: $0.uppercased(), detail: "YOUR KIT", keywords: "MY KITS", folder: "h:my") }
@@ -554,9 +557,12 @@ struct PatternBrowserPanel: View {
     @Environment(\.bbPanelBody) private var bodyH
     @Environment(\.seqFinish) private var finish
 
-    static let factoryEntries: [BBBrowserEntry] = {
+    /// Built once a mode: Vintage lists only the acoustic styles (PatternBank.vintageStyles).
+    static let factoryEntries: [SoundMode: [BBBrowserEntry]] = Dictionary(uniqueKeysWithValues: SoundMode.allCases.map { ($0, PatternBrowserPanel.build(PatternBank.styles(for: $0))) })
+
+    private static func build(_ styles: [String]) -> [BBBrowserEntry] {
         var out: [BBBrowserEntry] = []
-        for style in PatternBank.styles {
+        for style in styles {
             out.append(BBBrowserEntry(id: "h:" + style, kind: .heading, title: style))
             for p in PatternBank.presets(in: style) {
                 let detail = "\(Int(p.bpm)) BPM" + (p.swing > 50.5 ? " · \(Int(p.swing))% SWING" : "")
@@ -564,12 +570,12 @@ struct PatternBrowserPanel: View {
             }
         }
         return out
-    }()
+    }
 
     private var entries: [BBBrowserEntry] {
         var all: [BBBrowserEntry] = []
         if showInit { all.append(BBBrowserEntry(id: "init:", kind: .row, title: "INIT", detail: "EMPTY PATTERN", keywords: "INIT")) }
-        all += Self.factoryEntries
+        all += Self.factoryEntries[controller.mode] ?? []
         if !controller.userPresets.isEmpty {
             all.append(BBBrowserEntry(id: "h:my", kind: .heading, title: "My presets"))
             all += controller.userPresets.map { BBBrowserEntry(id: "user:" + $0, kind: .row, title: $0.uppercased(), detail: "YOUR PRESET", keywords: "MY PRESETS", folder: "h:my") }

@@ -94,7 +94,7 @@ extension SequencerView {
             .padding(.horizontal, 16 * s).frame(maxWidth: .infinity, minHeight: 70 * s, alignment: .leading)
             .bbMenu(title: "Genre", width: 280) {
                 [BBMenuItem.item("This preset's style", checked: generateStyle == nil) { generateStyle = nil }]
-                + PatternBank.styles.map { st in BBMenuItem.item(st, checked: generateStyle == st) { generateStyle = st } }
+                + PatternBank.styles(for: controller.mode).map { st in BBMenuItem.item(st, checked: generateStyle == st) { generateStyle = st } }
             }
             line
             HStack(spacing: 0) {

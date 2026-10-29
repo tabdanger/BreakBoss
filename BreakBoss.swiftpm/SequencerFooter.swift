@@ -7,7 +7,7 @@ import UIKit
 extension SequencerView {
     // MARK: Footer (pattern, kit)
 
-    var orderedKits: [KitDefinition] { KitLibrary.browserOrder }
+    var orderedKits: [KitDefinition] { KitLibrary.browserOrder(for: controller.mode) }
 
     @ViewBuilder func footer(_ s: CGFloat) -> some View {
         // the way back to Face 1: slide the knob (the pads' squares) to the right
@@ -97,7 +97,7 @@ extension SequencerView {
     }
 
     func cycleLoop(_ step: Int) {
-        let all = PatternBank.browserOrder      // the arrows walk the PATTERNS menu, genre by genre
+        let all = PatternBank.browserOrder(for: controller.mode)      // the arrows walk the PATTERNS menu, genre by genre
         guard !all.isEmpty else { return }
         let i = all.firstIndex { $0.name == controller.state.presetName } ?? -1
         controller.loadPatternPreset(all[(i + step + all.count) % all.count]); loop = 0; selection = []
