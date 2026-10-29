@@ -145,15 +145,29 @@ enum KitLibrary {
         groups(kits(for: mode), by: \.family)
     }
 
+    /// Vintage plays acoustic drums only (Tyrone, Oct 29): trap and West Coast were never played on a live kit,
+    /// so the Vintage bank's TRAP and WEST COAST tabs are hidden. The kits stay in the table so old saves still open.
+    static let vintageHiddenFamilies: Set<String> = ["TRAP", "WEST COAST"]
+
+    static func hidden(_ kit: KitDefinition) -> Bool {
+        kit.preferredMode == .vintage && vintageHiddenFamilies.contains(kit.family)
+    }
+
     /// Every factory kit that opens in this mode, in browser order: tab by tab.
     static func kits(for mode: SoundMode) -> [KitDefinition] {
-        let mine = factory.filter { $0.preferredMode == mode }
+        let mine = factory.filter { $0.preferredMode == mode && !hidden($0) }
         let rank = { (k: KitDefinition) in families.firstIndex(of: k.family) ?? families.count }
         return mine.enumerated().sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }.map(\.element)
     }
 
     /// Mode lists first, the way the browsers show them (the ◀ ▶ kit arrows step through this).
     static var browserOrder: [KitDefinition] { SoundMode.allCases.flatMap { kits(for: $0) } }
+
+    /// The modes whose kits the KITS menu and kit arrows show while playing in `mode`: Vintage shows only its
+    /// own acoustic kits (Tyrone, Oct 29), the other modes every bank as before.
+    static func browsedModes(_ mode: SoundMode) -> [SoundMode] { mode == .vintage ? [.vintage] : SoundMode.allCases }
+
+    static func browserOrder(for mode: SoundMode) -> [KitDefinition] { browsedModes(mode).flatMap { kits(for: $0) } }
 
     private static func groups(_ kits: [KitDefinition], by key: KeyPath<KitDefinition, String>) -> [(genre: String, kits: [KitDefinition])] {
         var order: [String] = []; var map: [String: [KitDefinition]] = [:]

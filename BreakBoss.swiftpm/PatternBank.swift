@@ -188,6 +188,18 @@ enum PatternBank {
     /// (11 to 20 of each genre) after every older one, so the AUv3 factory preset numbers never move.
     static let browserOrder: [PatternPreset] = styles.flatMap { presets(in: $0) }
 
+    /// Vintage plays acoustic drums only (Tyrone, Oct 29): its PATTERNS menu, arrows and GENRE list keep the
+    /// styles a live drummer plays (or the dusty acoustic breaks boom bap is built on). Trap, drill, West Coast,
+    /// Bay Area and the 808 R&B styles stay in the other modes; nothing is removed, so preset numbers never move.
+    static let vintageStyles: Set<String> = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock",
+                                             "Vintage R&B", "Live Soul", "East Coast", "Lo-fi", "80s Pop", "Live Pop", "World & Latin"]
+
+    static func styles(for mode: SoundMode) -> [String] { mode == .vintage ? styles.filter { vintageStyles.contains($0) } : styles }
+
+    static func browserOrder(for mode: SoundMode) -> [PatternPreset] {
+        mode == .vintage ? browserOrder.filter { vintageStyles.contains($0.style) } : browserOrder
+    }
+
     static func presets(in style: String) -> [PatternPreset] { all.filter { $0.style == style } }
     static func preset(named name: String) -> PatternPreset? { all.first { $0.name == name } }
 }

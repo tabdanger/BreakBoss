@@ -3525,15 +3525,33 @@ enum KnockSelfTest {
               "438 factory kits: the 42 A/B kits, the named ones, the live acoustic ones, BK DRUM KIT, BK EDITIONS KIT, BK DANGER KIT, 20 West Coast kits, 50 Bay Area kits")
         check(Set(KitLibrary.factory.map(\.name)).count == KitLibrary.factory.count, "every factory kit has its own name")
         for mode in SoundMode.allCases {
-            for family in KitLibrary.families {
+            for family in KitLibrary.families where !(mode == .vintage && KitLibrary.vintageHiddenFamilies.contains(family)) {
                 let n = KitLibrary.kits(for: mode).filter { $0.family == family }.count
                 check(n >= 20, "\(mode.title) kits: \(n) under \(family) (at least 20)")
             }
         }
+        // Vintage is acoustic only (Tyrone, Oct 29): no Vintage trap or West Coast kits in any menu or arrow,
+        // and in Vintage mode the KITS menu and arrows hold only the Vintage bank.
+        let vintageKits: [KitDefinition] = KitLibrary.browserOrder(for: .vintage)
+        let noVintageTrapOrWest: Bool = KitLibrary.browserOrder.allSatisfy { !($0.preferredMode == .vintage && ["TRAP", "WEST COAST"].contains($0.family)) }
+        let vintageOwnBank: Bool = vintageKits.allSatisfy { $0.preferredMode == .vintage } && vintageKits.count == KitLibrary.kits(for: .vintage).count
+        let othersEveryBank: Bool = KitLibrary.browserOrder(for: .modern).count == KitLibrary.browserOrder.count &&
+            KitLibrary.browserOrder(for: .texture).count == KitLibrary.browserOrder.count
+        check(noVintageTrapOrWest && vintageOwnBank && othersEveryBank,
+              "Vintage hides its trap and West Coast kits and browses only its acoustic bank; Modern and Texture browse every bank")
+        let vintageStyles: [String] = PatternBank.styles(for: .vintage)
+        let vintageWalk: [PatternPreset] = PatternBank.browserOrder(for: .vintage)
+        let onlyLive: Bool = Set(vintageStyles) == PatternBank.vintageStyles && vintageWalk.allSatisfy { PatternBank.vintageStyles.contains($0.style) } &&
+            vintageWalk.count == 50 * PatternBank.vintageStyles.count
+        let noElectronic: Bool = !vintageStyles.contains { $0.contains("Trap") || $0.contains("Drill") || $0 == "West Coast" || $0 == "Bay Area" || $0 == "Phonk" }
+        let othersEveryStyle: Bool = PatternBank.browserOrder(for: .modern).count == PatternBank.browserOrder.count && PatternBank.styles(for: .texture) == PatternBank.styles
+        check(onlyLive && noElectronic && othersEveryStyle,
+              "Vintage PATTERNS: only the 14 live-drummer styles (no trap, drill, West Coast or Bay Area); Modern and Texture keep every style")
         check(KitLibrary.kit(id: "trap-a").preferredMode == .modern && KitLibrary.kit(id: "neo-soul-a").preferredMode == .vintage &&
               KitLibrary.kit(id: "amapiano-a").preferredMode == .texture, "the A/B kits stay in their mode banks")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")
-        check(KitLibrary.browserOrder.count == KitLibrary.factory.count, "the kit arrows step through every kit once")
+        check(KitLibrary.browserOrder.count == KitLibrary.factory.filter { !KitLibrary.hidden($0) }.count && Set(KitLibrary.browserOrder.map(\.id)).count == KitLibrary.browserOrder.count,
+              "the kit arrows step through every shown kit once")
         // The kits before Oct 17 are gone: saves, kits and dice picks that named one open the nearest new kit.
         let ids = Set(KitLibrary.factory.map(\.id))
         check(KitLibrary.retired.count == 98 && KitLibrary.retired.values.allSatisfy { ids.contains($0) } &&
