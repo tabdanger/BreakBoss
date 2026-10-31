@@ -81,12 +81,28 @@ struct ArtKnob: View {
                     }
                     start = nil
                     // the readout stays a moment after the finger lifts, then goes
-                    hudRelease += 1
-                    let token = hudRelease
-                    DispatchQueue.main.asyncAfter(deadline: .now() + KnobHUD.linger) {
-                        if hudRelease == token { withAnimation(.easeOut(duration: 0.2)) { showHUD = false } }
-                    }
+                    releaseHUD()
                 })
+            // mouse wheel / trackpad scroll turns it too (over the rack it turns the knob, not the rack)
+            .scrollTurn { t, ended in
+                if start == nil { start = value }
+                if hud != nil && !showHUD { showHUD = true }
+                hudRelease += 1
+                let d = KnobFeel.delta(t, travel: KnobFeel.small)
+                change(((start ?? value) + d).clamped(0, 1), ended)
+                if ended {
+                    start = nil
+                    releaseHUD()
+                }
+            }
+    }
+
+    private func releaseHUD() {
+        hudRelease += 1
+        let token = hudRelease
+        DispatchQueue.main.asyncAfter(deadline: .now() + KnobHUD.linger) {
+            if hudRelease == token { withAnimation(.easeOut(duration: 0.2)) { showHUD = false } }
+        }
     }
 }
 

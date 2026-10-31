@@ -11,7 +11,15 @@ import UniformTypeIdentifiers
 /// deep, wide glow; hats and cymbals fill a dense band of fizz and burn brighter and thinner.
 struct ScopeView: View {
     @ObservedObject var controller: KnockController
+    /// The readout lives apart from the controller, so a pad hit redraws only this screen.
+    @ObservedObject private var screen: ScreenReadout
     let scale: CGFloat
+
+    init(controller: KnockController, scale: CGFloat) {
+        _controller = ObservedObject(wrappedValue: controller)
+        _screen = ObservedObject(wrappedValue: controller.screen)
+        self.scale = scale
+    }
 
     static let red = Color(red: 1, green: 0.30, blue: 0.20)
     static let probing = ProcessInfo.processInfo.environment["BREAKBOSS_UI_PROBE"] != nil
@@ -74,7 +82,7 @@ struct ScopeView: View {
                                style: StrokeStyle(lineWidth: 1.6 * scale * CGFloat(1 + 0.3 * bass - 0.2 * top), lineCap: .round, lineJoin: .round))
                 }
                 VStack(alignment: .leading, spacing: 2 * scale) {
-                    if let r = controller.readout, now.timeIntervalSince(r.time) < 1.8 {
+                    if let r = screen.readout, now.timeIntervalSince(r.time) < 1.8 {
                         Text(r.title).font(.system(size: 13 * scale, weight: .medium, design: .monospaced))
                             .foregroundColor(light.glow.opacity(0.85))
                         Text(r.value).font(.system(size: 22 * scale, weight: .regular, design: .monospaced))
@@ -420,11 +428,15 @@ struct PadView: View {
     final class FlashMemory {
         var count: UInt32 = 0
         var time = Date.distantPast
+        /// When a finger last lit the pad itself (the engine's hit count catches up a moment later).
+        var touch = Date.distantPast
     }
 
     var body: some View {
         let r = FaceplateLayout.rect(rect)
-        TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
+        // One light clock per pad that sleeps while nothing on the pads can change (controller.padsLit)
+        // and runs at 60 Hz while a pad flashes or LOOP mode plays, so the flash fades smoothly.
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !controller.padsLit)) { context in
             let hits = controller.meters.padHits[pad]
             let now = context.date
             let flash = flashAmount(hits: hits, now: now)
@@ -484,6 +496,12 @@ struct PadView: View {
             // held: with the pad's NOTE REPEAT on it repeats until the last finger lifts
             controller.padDown(pad, velocity: velocity, held: true)
         }
+        // the flash starts with the finger, every finger, not at the next meter tick
+        if !holdToPlay, controller.lightPadOnTouch(pad) {
+            let now = Date()
+            memory.time = now
+            memory.touch = now
+        }
         pressed = true
         pressedChanged?(true)
         hold?.cancel()
@@ -523,9 +541,13 @@ struct PadView: View {
     private func flashAmount(hits: UInt32, now: Date) -> Float {
         if hits != memory.count {
             memory.count = hits
-            memory.time = now
+            // a finger's own hit already lit the pad when it landed: the count catching up isn't a second hit
+            // (the wall clock, not the frame's: a paused clock's first frame carries an old time)
+            let seen = Date()
+            if seen.timeIntervalSince(memory.touch) > 0.08 { memory.time = seen }
         }
-        let dt = Float(now.timeIntervalSince(memory.time))
+        // a paused light clock can hand over a time from before the touch: that's full brightness
+        let dt = max(0, Float(now.timeIntervalSince(memory.time)))
         return max(0, 1 - dt / 0.22)
     }
 
