@@ -4038,6 +4038,25 @@ enum KnockSelfTest {
               && abs(KnockMath.outputFromOld(0.75) - 1) < 0.001 && abs(KnockMath.outputFromOld(1) - 1) < 0.001
               && abs(KnockMath.outputDB(KnockMath.outputFromOld(0.375)) + 6) < 0.01,
               "OUTPUT goes from −12 dB to 0 dB; an old project's OUTPUT keeps its level, anything over 0 dB stops at 0 dB")
+        // Tyrone, Oct 31: "output volume should always be max at 10 for every preset"
+        let outEngine = KnockEngine(); outEngine.prepare(sampleRate: 48_000, maxFrames: 512)
+        var atMax = false
+        let outputCheck = {
+            let outRC = KnockController(engine: outEngine, isPlugin: true)
+            atMax = outRC.value(.output) == 1
+            outRC.set(.output, 0.3); if let preset = PatternBank.all.first { outRC.loadPatternPreset(preset) }
+            atMax = atMax && outRC.value(.output) == 1
+            outRC.set(.output, 0.3); if let kit = KitLibrary.factory.dropFirst().first { outRC.selectKit(kit) }
+            atMax = atMax && outRC.value(.output) == 1
+            outRC.set(.output, 0.3); outRC.selectMode(.texture)
+            atMax = atMax && outRC.value(.output) == 1
+            var lowState = outRC.state; lowState.values[KParam.output.id] = 0.2
+            outRC.restore(lowState)
+            atMax = atMax && outRC.value(.output) == 1 && abs(KnockMath.outputDB(outRC.value(.output))) < 0.01
+            outRC.selectMode(.modern)
+        }
+        if Thread.isMainThread { outputCheck() } else { DispatchQueue.main.sync(execute: outputCheck) }
+        check(atMax, "OUTPUT is at max (0 dB, knob at the top) at launch and after every preset, kit, mode and saved song")
         var old = KnockState(); old.version = 2; old.values[KParam.output.id] = 0.375
         let migrated = old.normalized()
         check(abs(KnockMath.outputDB(migrated.values[KParam.output.id] ?? 0) + 6) < 0.01 && migrated.normalized() == migrated,

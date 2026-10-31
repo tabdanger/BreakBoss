@@ -68,6 +68,7 @@ final class KnockController: ObservableObject {
         if !isPlugin, let data = UserDefaults.standard.data(forKey: KnockController.sessionKey),
            let saved = try? JSONDecoder().decode(KnockState.self, from: data) {
             s = saved.normalized()
+            s.values[KParam.output.id] = KParam.output.defaultValue   // Tyrone, Oct 31: OUTPUT is always at max (0 dB)
             // Tyrone, Oct 19: every volume back to 100% once, now that only the SAMPLER's VOL goes past it
             let reset = "breakboss.volumesAtUnity"
             if !UserDefaults.standard.bool(forKey: reset) {
@@ -158,6 +159,7 @@ final class KnockController: ObservableObject {
 
     func selectMode(_ m: SoundMode) {
         set(.soundMode, Float(m.rawValue), show: false)
+        outputToMax()
         readout = Readout(title: "MODE", value: m.title, time: Date())
     }
 
@@ -172,6 +174,10 @@ final class KnockController: ObservableObject {
     }
 
     func resetKnob(_ p: KParam) { set(p, p.defaultValue) }
+
+    /// Tyrone, Oct 31: "output volume should always be max at 10 for every preset". Every preset,
+    /// kit, mode change and launch puts OUTPUT back at the top (0 dB), knob and sound together.
+    func outputToMax() { set(.output, KParam.output.defaultValue, show: false) }
 
     /// A track's own FX knob on Face 2 (in the current mode): its insert, not the main chain.
     func trackFX(_ pad: Int, _ p: KParam) -> Float {
@@ -622,6 +628,7 @@ final class KnockController: ObservableObject {
 
     func selectKit(_ def: KitDefinition) {
         state = state.selectingKit(def)
+        outputToMax()
         engine.setTempo(state.bpm)
         rebuildKit()
         rebuildLoops()
@@ -640,6 +647,7 @@ final class KnockController: ObservableObject {
         state.pads = KnockState.normalizedPads(kit.pads)
         state.stockPicks = nil                 // a saved kit plays its own sounds, not the last dice roll's (an 808 in another key)
         state.workspaceChannels = nil          // the rack shows the kit's sounds, the same as the pads
+        outputToMax()
         rebuildKit()
         rebuildLoops()
         readout = Readout(title: "KIT", value: state.kitName, time: Date())
@@ -1314,7 +1322,8 @@ final class KnockController: ObservableObject {
 
     /// keepPlaying: switching presets swaps the pattern under the running transport instead of stopping it.
     func restore(_ s: KnockState, keepPlaying: Bool = false) {
-        let s = s.normalized()
+        var s = s.normalized()
+        s.values[KParam.output.id] = KParam.output.defaultValue   // every preset loads with OUTPUT at max
         if !keepPlaying { engine.send(KEvent(kind: .allOff)) }
         state = s
         pushAllToEngine()
