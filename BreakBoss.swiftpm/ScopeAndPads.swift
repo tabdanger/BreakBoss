@@ -256,16 +256,26 @@ final class ScopeTracer {
 /// A pad's touch surface: a plain UIKit view, so each finger arrives in touchesBegan the moment it
 /// lands (no gesture recognizer waiting to decide, no SwiftUI arbitration) and every finger is
 /// tracked on its own. Called on the main thread straight from UIKit.
+///
+/// Pad indent (Tyrone, Oct 31): every finger (or mouse click) pushes a soft dent into the rubber
+/// right where it lands, deeper the harder the hit, and the rubber springs back when it lifts.
+/// The hit goes to the engine FIRST; the dent is drawn after, by Core Animation on the GPU
+/// (a few pre-made radial-gradient layers reused per finger, no SwiftUI redraw, nothing per frame).
 struct PadTouchSurface: UIViewRepresentable {
     /// A finger landed: where (in the pad), the pad's size, and whether it's the only finger on the pad.
-    let down: (CGPoint, CGSize, Bool) -> Void
+    /// Returns the hit's velocity (0...1), which sets how deep the dent goes.
+    let down: (CGPoint, CGSize, Bool) -> Float
     /// A finger lifted or was cancelled: true when it was the last one on the pad.
     let up: (Bool) -> Void
+    /// The pad's corner radius, so a dent near a corner stays inside the rubber.
+    var cornerRadius: CGFloat = 0
 
     func makeUIView(context: Context) -> TouchView {
         let view = TouchView()
         view.backgroundColor = .clear
         view.isMultipleTouchEnabled = true
+        view.clipsToBounds = true
+        view.layer.cornerRadius = cornerRadius
         view.down = down
         view.up = up
         return view
@@ -274,18 +284,59 @@ struct PadTouchSurface: UIViewRepresentable {
     func updateUIView(_ view: TouchView, context: Context) {
         view.down = down
         view.up = up
+        if view.layer.cornerRadius != cornerRadius { view.layer.cornerRadius = cornerRadius }
     }
 
     static func dismantleUIView(_ view: TouchView, coordinator: ()) { view.letGoAll() }
 
     final class TouchView: UIView {
-        var down: (CGPoint, CGSize, Bool) -> Void = { _, _, _ in }
+        var down: (CGPoint, CGSize, Bool) -> Float = { _, _, _ in 1 }
         var up: (Bool) -> Void = { _ in }
         private var fingers = Set<ObjectIdentifier>()
+        /// Dents made once and reused: up to four fingers on one pad at a time.
+        private let dents: [CAGradientLayer] = (0..<4).map { _ in TouchView.makeDent() }
+        private var dentOwner: [ObjectIdentifier?] = [nil, nil, nil, nil]
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            dents.forEach { layer.addSublayer($0) }
+        }
+        required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
+
+        /// A dent: dark in the middle where the rubber gives, a faint lit lip around it.
+        private static func makeDent() -> CAGradientLayer {
+            let dent = CAGradientLayer()
+            dent.type = .radial
+            dent.startPoint = CGPoint(x: 0.5, y: 0.5)
+            dent.endPoint = CGPoint(x: 1, y: 1)
+            dent.colors = [UIColor(white: 0, alpha: 0.46).cgColor,
+                           UIColor(white: 0, alpha: 0.30).cgColor,
+                           UIColor(white: 0, alpha: 0.10).cgColor,
+                           UIColor(white: 1, alpha: 0.11).cgColor,
+                           UIColor(white: 1, alpha: 0).cgColor]
+            dent.locations = [0, 0.38, 0.68, 0.84, 1]
+            dent.opacity = 0
+            dent.isHidden = true
+            dent.actions = ["position": NSNull(), "bounds": NSNull(), "hidden": NSNull()]
+            return dent
+        }
 
         override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
             for touch in touches where fingers.insert(ObjectIdentifier(touch)).inserted {
-                down(touch.location(in: self), bounds.size, fingers.count == 1)
+                let point = touch.location(in: self)
+                let velocity = down(point, bounds.size, fingers.count == 1)   // the sound first
+                press(ObjectIdentifier(touch), at: point, depth: CGFloat(velocity))
+            }
+        }
+
+        override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+            // the dent rides along under a sliding finger
+            for touch in touches {
+                guard let slot = dentOwner.firstIndex(of: ObjectIdentifier(touch)) else { continue }
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                dents[slot].position = touch.location(in: self)
+                CATransaction.commit()
             }
         }
 
@@ -295,6 +346,7 @@ struct PadTouchSurface: UIViewRepresentable {
         private func lift(_ touches: Set<UITouch>) {
             for touch in touches where fingers.remove(ObjectIdentifier(touch)) != nil {
                 up(fingers.isEmpty)
+                release(ObjectIdentifier(touch))
             }
         }
 
@@ -303,6 +355,44 @@ struct PadTouchSurface: UIViewRepresentable {
             guard !fingers.isEmpty else { return }
             fingers.removeAll()
             up(true)
+            for i in dentOwner.indices where dentOwner[i] != nil { release(dentOwner[i]!) }
+        }
+
+        /// Push the rubber in: snaps in fast (about one frame at 120 Hz), harder hits go deeper and wider.
+        private func press(_ finger: ObjectIdentifier, at point: CGPoint, depth: CGFloat) {
+            let slot = dentOwner.firstIndex(where: { $0 == nil }) ?? 0
+            dentOwner[slot] = finger
+            let dent = dents[slot]
+            let d = depth.clamped(0, 1)
+            let size = min(bounds.width, bounds.height) * (0.42 + 0.22 * d)
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            dent.removeAllAnimations()
+            dent.bounds = CGRect(x: 0, y: 0, width: size, height: size)
+            dent.position = point
+            dent.isHidden = false
+            dent.transform = CATransform3DMakeScale(0.55, 0.55, 1)
+            dent.opacity = 0
+            CATransaction.commit()
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(0.035)
+            CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
+            dent.transform = CATransform3DIdentity
+            dent.opacity = Float(0.55 + 0.45 * d)
+            CATransaction.commit()
+        }
+
+        /// Let the rubber spring back.
+        private func release(_ finger: ObjectIdentifier) {
+            guard let slot = dentOwner.firstIndex(of: finger) else { return }
+            dentOwner[slot] = nil
+            let dent = dents[slot]
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(0.16)
+            CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(controlPoints: 0.2, 0.8, 0.3, 1))
+            dent.transform = CATransform3DMakeScale(0.8, 0.8, 1)
+            dent.opacity = 0
+            CATransaction.commit()
         }
     }
 }
@@ -365,7 +455,8 @@ struct PadView: View {
         // hit goes to the engine on touch-down with no SwiftUI gesture to recognise first. Every
         // finger is its own hit (two fingers rolling on one pad play twice), on every pad at once.
         .overlay(PadTouchSurface(down: { point, size, first in fingerDown(point, size, first: first) },
-                                 up: { last in fingerUp(last: last) }))
+                                 up: { last in fingerUp(last: last) },
+                                 cornerRadius: cornerRadius))
         .onDrop(of: [UTType.fileURL, UTType.audio, UTType.midi], isTargeted: $dropping) { providers in
             handleDrop(providers)
         }
@@ -382,7 +473,9 @@ struct PadView: View {
     /// A finger landed on the pad: the hit first, then the pad's own looks. Higher on the pad is
     /// softer, lower is harder. Holding one finger still opens the editor; a second finger on the pad
     /// (a roll) is drumming, so it never opens.
-    private func fingerDown(_ point: CGPoint, _ size: CGSize, first: Bool) {
+    /// Returns the hit's velocity so the pad's dent can match it.
+    @discardableResult
+    private func fingerDown(_ point: CGPoint, _ size: CGSize, first: Bool) -> Float {
         let velocity = 0.55 + 0.45 * Float(point.y / max(1, size.height)).clamped(0, 1)
         if holdToPlay {
             // LOOP mode gates the loop once for the whole press; one-shot hits every finger
@@ -395,7 +488,7 @@ struct PadView: View {
         pressedChanged?(true)
         hold?.cancel()
         hold = nil
-        guard first else { return }
+        guard first else { return velocity }
         let work = DispatchWorkItem {
             // NOTE REPEAT on: holding the pad plays its repeats instead of opening its window
             if pressed && !controller.padRepeats(pad) {
@@ -405,6 +498,7 @@ struct PadView: View {
         }
         hold = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: work)
+        return velocity
     }
 
     /// A finger lifted (or the touch was cancelled); `last` = no finger left on the pad.
