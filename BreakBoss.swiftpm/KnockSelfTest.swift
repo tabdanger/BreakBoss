@@ -2715,6 +2715,42 @@ enum KnockSelfTest {
         check(old != nil && old?.midiMap == nil, "sessions without a MIDI map still load (standard map)")
         check(e.lastNoteOn.pointee & 0x7F == 60 && e.lastNoteOn.pointee >> 8 > 0, "MIDI learn sees the last note played")
         checkMPKMiniPads()
+        checkLowLatencyPaths()
+    }
+
+    /// The touch-to-sound path (Tyrone, Oct 31): the event queue hands every hit over in order with
+    /// its lock let go first, an overflow still clears to ALL OFF, and the screen's meter copy tells
+    /// a new hit from none without making new arrays.
+    static func checkLowLatencyPaths() {
+        let q = EventQueue(capacity: 8)
+        for p in 0..<3 { q.push(KEvent(kind: .pad, a: Int32(p), value: 0.9)) }
+        var seen: [Int32] = []
+        q.drain { seen.append($0.a) }
+        check(seen == [0, 1, 2], "event queue: hits come out in the order they went in")
+        // pushing from inside the drain would have deadlocked before; now the lock is already free
+        var again = 0
+        q.push(KEvent(kind: .pad, a: 5))
+        q.drain { _ in q.push(KEvent(kind: .pad, a: 6)) }
+        q.drain { e in if e.a == 6 { again += 1 } }
+        check(again == 1, "event queue: the lock is free while events are handled")
+        for p in 0..<20 { q.push(KEvent(kind: .pad, a: Int32(p))) }
+        var kinds: [KEvent.Kind] = []
+        q.drain { kinds.append($0.kind) }
+        check(kinds.count == 1 && kinds.first == .allOff, "event queue: an overflow still clears to ALL OFF")
+
+        let e = KnockEngine()
+        e.prepare(sampleRate: 48_000, maxFrames: 256)
+        e.setParam(.playMode, 0)
+        e.kitHandoff.publish(kitBuffers(KitLibrary.drumMastery))
+        for _ in 0..<20 { renderBlock(e) }
+        var m = MeterSnapshot()
+        _ = e.meters.copy(into: &m)
+        check(!e.meters.copy(into: &m), "meters: no pad hit, no pad light")
+        for p in 0..<4 { e.send(KEvent(kind: .pad, a: Int32(p), value: 0.9)) }
+        for _ in 0..<20 { renderBlock(e) }
+        check(e.meters.copy(into: &m) && m.padHits.prefix(4).contains(where: { $0 > 0 }), "meters: a pad hit reaches the pad lights")
+        check(m.scopePeak > 0.0003, "meters: the screen sees the hit sounding")
+        check(m.status.count == SharedMeters.statusCount && m.padHits.count == Pad.count, "meters: the copy keeps its sizes")
     }
 
     /// An Akai MPK Mini (Plus) out of the box: pads send notes 36-43 (bank A) and 44-51 (bank B)

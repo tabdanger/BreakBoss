@@ -8,6 +8,9 @@ LOOK AND FEEL
 
 PADS AND SEQUENCER
 - Pads fire the moment a finger lands; every finger is its own hit.
+- Pads dent where your finger lands, deeper on harder hits.
+- Lighter touch path: a pad hit redraws only the screen, pad flashes start on the finger and fade at 60 fps, idle pads use no CPU.
+- Mouse / trackpad: scroll over any knob to turn it.
 - Hold a pad for its SOUND / SAMPLES / PAD window, with per-pad NOTE REPEAT.
 - Every sound plays as a full one-shot; note length no longer cuts it.
 - EMPTY pads are fully silent everywhere.
@@ -37,7 +40,8 @@ MIDI AND PLUG-IN
 - Fixed a crash when Logic Pro reopens a song with BreaKing in it.
 
 Please try:
-- Finger drum fast rolls and several fingers at once; listen for missed or doubled hits.
+- Finger drum fast rolls and several fingers at once; listen for missed or doubled hits, and watch the pad flashes keep up.
+- With a mouse or trackpad: scroll over Face 1 and Face 2 knobs, click pads, right-click a track name.
 - Turn each FX knob on every face, from 0% up, and check the readout matches the sound.
 - Load kits and presets fast from the folder menus in every mode, including Vintage.
 - Import a FLAC or MP3 from iCloud onto a pad.

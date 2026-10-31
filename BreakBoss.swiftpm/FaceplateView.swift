@@ -455,6 +455,52 @@ enum KnobFeel {
     }
 }
 
+extension View {
+    /// A mouse wheel or a two-finger trackpad scroll over a knob turns it (iPad with a mouse or a
+    /// Magic Keyboard): scrolling up or right turns it up, the same way and weight as a drag.
+    /// Fingers on the glass never start it, so touch keeps the knob's own drag. `turned` gets how far
+    /// the scroll has gone since it began, and true once it ends.
+    @ViewBuilder func scrollTurn(_ turned: @escaping (CGSize, Bool) -> Void) -> some View {
+        if #available(iOS 18.0, *) {
+            gesture(ScrollTurnRecognizer(turned: turned))
+        } else {
+            self
+        }
+    }
+}
+
+@available(iOS 18.0, *)
+private struct ScrollTurnRecognizer: UIGestureRecognizerRepresentable {
+    let turned: (CGSize, Bool) -> Void
+
+    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator { Coordinator() }
+
+    func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
+        let g = UIPanGestureRecognizer()
+        g.allowedScrollTypesMask = .all
+        g.maximumNumberOfTouches = 0   // scroll events only, no fingers
+        g.delegate = context.coordinator
+        return g
+    }
+
+    func handleUIGestureRecognizerAction(_ g: UIPanGestureRecognizer, context: Context) {
+        let t = g.translation(in: nil)
+        let size = CGSize(width: t.x, height: t.y)
+        switch g.state {
+        case .began, .changed: turned(size, false)
+        case .ended, .cancelled, .failed: turned(size, true)
+        default: break
+        }
+    }
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        /// Over a knob in a scrolling rack, the scroll turns the knob instead of moving the rack.
+        func gestureRecognizer(_ g: UIGestureRecognizer, shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool {
+            other.view is UIScrollView
+        }
+    }
+}
+
 struct KnobControl: View {
     @ObservedObject var controller: KnockController
     let param: KParam
@@ -514,16 +560,34 @@ struct KnobControl: View {
                         lastTap = isTap ? Date() : nil
                     }
                     start = nil
-                    hudRelease += 1
-                    let token = hudRelease
-                    DispatchQueue.main.asyncAfter(deadline: .now() + KnobHUD.linger) {
-                        if hudRelease == token { withAnimation(.easeOut(duration: 0.2)) { showHUD = false } }
-                    }
+                    releaseHUD()
                 }
         )
+        // mouse wheel / trackpad scroll turns it too, with the same weight and readout
+        .scrollTurn { t, ended in
+            if start == nil { start = v }
+            if !showHUD { showHUD = true }
+            hudRelease += 1
+            controller.set(param, (start ?? v) + KnobFeel.delta(t, travel: KnobFeel.face1))
+            if ended {
+                start = nil
+                releaseHUD()
+            }
+        }
         .position(x: knob.x * scale, y: knob.y * scale)
         .accessibilityLabel(param.name)
         .accessibilityValue(param.text(v))
+    }
+}
+
+extension KnobControl {
+    /// The readout goes a moment after the knob is let go.
+    fileprivate func releaseHUD() {
+        hudRelease += 1
+        let token = hudRelease
+        DispatchQueue.main.asyncAfter(deadline: .now() + KnobHUD.linger) {
+            if hudRelease == token { withAnimation(.easeOut(duration: 0.2)) { showHUD = false } }
+        }
     }
 }
 
@@ -581,7 +645,8 @@ struct BPMDisplay: View {
         let box = layout.bpmBox
         let color = Color(red: layout.textColor[0] / 255, green: layout.textColor[1] / 255, blue: layout.textColor[2] / 255)
         ZStack(alignment: .topLeading) {
-            TimelineView(.periodic(from: .now, by: 0.2)) { _ in
+            // redrawn when the tempo moves (controller.shownBPM), not on a clock of its own
+            Group {
                 let bpm = Int(controller.liveTempo.rounded())
                 // Right-aligned up to just before the printed "BPM".
                 let right = layout.bpmLabelX - 7
@@ -666,8 +731,9 @@ struct PlayButtonView: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            TimelineView(.periodic(from: .now, by: 0.1)) { _ in
-                if controller.isPlaying {
+            // lit the moment the transport moves (controller.playLight), with no clock of its own
+            Group {
+                if controller.playLight {
                     Image(image).resizable().place(rect, scale)
                 }
             }

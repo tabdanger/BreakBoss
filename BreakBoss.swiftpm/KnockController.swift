@@ -9,6 +9,12 @@ struct Readout: Equatable {
     var time: Date
 }
 
+/// What the screen shows for a moment after a touch, kept in its own small object: a pad hit or a
+/// knob readout redraws only the screen, not every pad, knob and button watching the controller.
+final class ScreenReadout: ObservableObject {
+    @Published var readout: Readout?
+}
+
 /// Everything the faceplate does, on the main thread. The engine does the sound; this keeps the
 /// saved state, builds kits and loops, and talks to the host (AUv3) or the app.
 final class KnockController: ObservableObject {
@@ -17,7 +23,12 @@ final class KnockController: ObservableObject {
     private(set) var meters = MeterSnapshot()
 
     @Published private(set) var state = KnockState()
-    @Published var readout: Readout?
+    /// The screen's readout (see ScreenReadout): set from anywhere as before, watched only by the screen.
+    let screen = ScreenReadout()
+    var readout: Readout? {
+        get { screen.readout }
+        set { screen.readout = newValue }
+    }
     @Published private(set) var userKits: [String] = []
     @Published private(set) var userPresets: [String] = []
     /// The 12 pad sounds as loaded (for the pad editor's waveform).
@@ -44,6 +55,14 @@ final class KnockController: ObservableObject {
     /// animates while it's true, so a silent app doesn't redraw it 60 times a second.
     @Published private(set) var scopeActive = false
     private var lastSound = Date.distantPast
+    /// True while a pad light can change (a hit in the last moment, or LOOP mode playing / queued).
+    /// The pads' light clock runs only while it's true, so idle pads cost nothing.
+    @Published private(set) var padsLit = false
+    private var lastPadLight = Date.distantPast
+    /// The PLAY light and the BPM digits as last shown: published only when they change, so those
+    /// two redraw the moment the transport or the tempo moves, with no clock of their own.
+    @Published private(set) var playLight = false
+    @Published private(set) var shownBPM = 0
 
     /// The 12 loops as the engine has them (generated, with your edits on top).
     @Published private(set) var loops: [PatternData] = []
@@ -114,13 +133,23 @@ final class KnockController: ObservableObject {
         timers.append(rec)
         let metering = Timer(timeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
             guard let self else { return }
-            self.meters = self.engine.meters.snapshot()
+            let hit = self.engine.meters.copy(into: &self.meters)
             let m = self.meters
-            if m.status[0] > 0.5 || m.scope.contains(where: { abs($0) > 0.0003 }) { self.lastSound = Date() }
+            let now = Date()
+            if m.status[0] > 0.5 || m.scopePeak > 0.0003 { self.lastSound = now }
             // Knob / pad readouts on the screen need the clock to fade out too.
-            let showingReadout = self.readout.map { Date().timeIntervalSince($0.time) < 2.0 } ?? false
-            let active = showingReadout || Date().timeIntervalSince(self.lastSound) < 1.0
+            let showingReadout = self.readout.map { now.timeIntervalSince($0.time) < 2.0 } ?? false
+            let active = showingReadout || now.timeIntervalSince(self.lastSound) < 1.0
             if active != self.scopeActive { self.scopeActive = active }
+            // pad lights: a hit flashes for 0.22 s; LOOP mode lights the playing pad and blinks the queued one
+            if hit { self.lastPadLight = now }
+            let loopLights = self.playMode == .loop && (m.status[0] > 0.5 || m.status[2] > -1.5)
+            let lit = loopLights || now.timeIntervalSince(self.lastPadLight) < 0.3
+            if lit != self.padsLit { self.padsLit = lit }
+            let playing = m.status[0] > 0.5
+            if playing != self.playLight { self.playLight = playing }
+            let bpm = Int(self.liveTempo.rounded())
+            if bpm != self.shownBPM { self.shownBPM = bpm }
         }
         RunLoop.main.add(metering, forMode: .common)
         timers.append(metering)
@@ -285,6 +314,16 @@ final class KnockController: ObservableObject {
             engine.send(KEvent(kind: held ? .padHold : .pad, a: Int32(pad), value: Double(velocity)))
             readout = Readout(title: "PAD \(pad + 1)", value: padName(pad).uppercased(), time: Date())
         }
+    }
+
+    /// A finger just landed on a pad: its light starts now, not at the next meter tick.
+    /// False when the hit can't sound (power off, LOOP mode, muted or another pad soloed).
+    func lightPadOnTouch(_ pad: Int) -> Bool {
+        guard powerOn, playMode != .loop, pad >= 0, pad < Pad.count,
+              KnockController.padMask(muted: mutedPads, solo: soloPads) & (1 << UInt16(pad)) != 0 else { return false }
+        lastPadLight = Date()
+        if !padsLit { padsLit = true }
+        return true
     }
 
     // MARK: Drum roll

@@ -105,6 +105,8 @@ struct KEvent {
 final class EventQueue {
     private let lock: UnsafeMutablePointer<os_unfair_lock>
     private let buffer: UnsafeMutablePointer<KEvent>
+    /// Audio thread only: the events taken out in one go, so the lock is held just for the copy.
+    private let taken: UnsafeMutablePointer<KEvent>
     private let capacity: Int
     private var head = 0
     private var tail = 0
@@ -116,12 +118,15 @@ final class EventQueue {
         lock.initialize(to: os_unfair_lock())
         buffer = .allocate(capacity: capacity)
         buffer.initialize(repeating: KEvent(kind: .allOff), count: capacity)
+        taken = .allocate(capacity: capacity)
+        taken.initialize(repeating: KEvent(kind: .allOff), count: capacity)
     }
 
     deinit {
         lock.deinitialize(count: 1)
         lock.deallocate()
         buffer.deallocate()
+        taken.deallocate()
     }
 
     func push(_ e: KEvent) {
@@ -135,20 +140,25 @@ final class EventQueue {
     }
 
     /// Audio thread: calls `handle` for every waiting event (skipped this block if busy).
+    /// The events are copied out and the lock let go before any is handled, so a pad tap or a
+    /// MIDI note being pushed never waits while the engine works through the others.
     @inline(__always)
     func drain(_ handle: (KEvent) -> Void) {
         guard os_unfair_lock_trylock(lock) else { return }
+        let lost = overflowed
         if overflowed {
             head = tail
             overflowed = false
-            handle(KEvent(kind: .allOff))
         }
+        var count = 0
         while head != tail {
-            let e = buffer[head]
+            taken[count] = buffer[head]
             head = (head + 1) % capacity
-            handle(e)
+            count += 1
         }
         os_unfair_lock_unlock(lock)
+        if lost { handle(KEvent(kind: .allOff)) }
+        for i in 0..<count { handle(taken[i]) }
     }
 }
 
@@ -252,10 +262,10 @@ final class SharedPlayheads {
 }
 
 struct MeterSnapshot {
-    var status = [Double](repeating: 0, count: 8)
+    var status = [Double](repeating: 0, count: SharedMeters.statusCount)
     var padHits = [UInt32](repeating: 0, count: Pad.count)
-    var scope = [Float](repeating: 0, count: MasterBus.scopeSize)
-    var scopeWrite = 0
+    /// The loudest point of the master waveform ring (only "is anything sounding" is asked of it).
+    var scopePeak: Float = 0
 }
 
 /// The screen's copy of the master waveform (see MasterBus): the line, its low and high edge,
@@ -344,10 +354,27 @@ final class SharedMeters {
     }
 
     func snapshot() -> MeterSnapshot {
+        var m = MeterSnapshot()
+        _ = copy(into: &m)
+        return m
+    }
+
+    /// Main thread, every meter tick: the status, hit counts and waveform peak copied into the
+    /// screen's own snapshot in place (no new arrays each tick). True when any pad was hit since.
+    @discardableResult
+    func copy(into m: inout MeterSnapshot) -> Bool {
+        if m.status.count != SharedMeters.statusCount { m.status = [Double](repeating: 0, count: SharedMeters.statusCount) }
+        if m.padHits.count != Pad.count { m.padHits = [UInt32](repeating: 0, count: Pad.count) }
         os_unfair_lock_lock(lock)
         defer { os_unfair_lock_unlock(lock) }
-        return MeterSnapshot(status: Array(UnsafeBufferPointer(start: status, count: SharedMeters.statusCount)),
-                             padHits: Array(UnsafeBufferPointer(start: hits, count: Pad.count)),
-                             scope: Array(UnsafeBufferPointer(start: scope, count: MasterBus.scopeSize)), scopeWrite: scopeWrite)
+        m.status.withUnsafeMutableBufferPointer { $0.baseAddress!.update(from: status, count: SharedMeters.statusCount) }
+        var hit = false
+        m.padHits.withUnsafeMutableBufferPointer { b in
+            for i in 0..<Pad.count where b[i] != hits[i] { b[i] = hits[i]; hit = true }
+        }
+        var peak: Float = 0
+        for i in 0..<MasterBus.scopeSize { peak = max(peak, abs(scope[i])) }
+        m.scopePeak = peak
+        return hit
     }
 }
