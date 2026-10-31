@@ -1,6 +1,44 @@
-New in this build:
-- Untouched sounds stay untouched: opening the sampler or switching an envelope on no longer changes a sound until you turn a knob, and multisampled acoustic drums keep their velocity layers.
-- Volume knobs are bigger and run from -12 dB (50%) at the bottom, through 0 dB at 12 o'clock, to +12 dB (200%) at the top.
-- Sound library: every stock sound sits in the section of its original folder (kicks with kicks, 808s with 808s). Imported kits sort themselves into those sections. CLOSED HAT is now HI HATS in the track menu.
-- Modern Black faceplate is smooth black metal again.
-Please try: open a track's sample editor on an acoustic kit and play it, then turn one envelope knob and listen for only that change. Turn a volume knob from bottom to top.
+New since the last What to Test notes:
+
+LOOK AND FEEL
+- New matte Face 1 faceplates on all four faces (Modern, Platinum, Vintage, Texture). The screen stays black when nothing plays; power button and slider are the plate's own.
+- Knobs show a lit value readout while you turn them, FX knobs glide smoothly (0-100%), and knobs and buttons are easier to grab.
+- New app icon. MENU and SAMPLER popups share one hardware look. Hold MODERN to pick Default or Platinum.
+- KITS and PATTERNS menus open in folders per genre with counts; the loaded item's folder opens itself.
+
+PADS AND SEQUENCER
+- Pads fire the moment a finger lands; every finger is its own hit.
+- Hold a pad for its SOUND / SAMPLES / PAD window, with per-pad NOTE REPEAT.
+- Every sound plays as a full one-shot; note length no longer cuts it.
+- EMPTY pads are fully silent everywhere.
+- Step rows: swipe to fill, swipe from a lit step to clear, hover lift with a mouse. Piano roll plays the note you place or move. STEPS fills moved to the note right-click menu.
+- Loop mode: holding a pad opens the Drum Sequencer on that pad's track.
+
+SOUNDS AND KITS
+- Every stock sound has a Break King name (BK NO n KIND); your own sounds show as BK MY n KIND.
+- Every 808 is tuned to C.
+- Channel rack loads in this order: 808, kick, clap, snare, hi hats, open hat, rim, low tom, high tom, perc 1, perc 2, crash.
+- Vintage plays live-drummer styles only: acoustic kits and 13 live styles. Drum machine era kits have their own DRUM MACHINE ERA folder in the other modes.
+- Rock and Live Soul kits use only acoustic drums.
+- Import takes every audio file type (WAV, AIFF, MP3, M4A, FLAC, OGG and more) and works from iCloud and the Samples folder.
+
+PATTERNS
+- Every PATTERNS genre has 50 presets. New genre groups added; Bay Area has 50 presets and 50 matching kits.
+- HUMANIZE plays each genre's own drummer feel.
+
+FX
+- Every FX knob and CLIP DRIVE loads at 0%; every mode is dry at 0%.
+- Vintage: DRIVE leads the FX row and its tape rides on DRIVE.
+- Texture: effects come only from its knobs; REVERB is a bright drum plate.
+
+MIDI AND PLUG-IN
+- Plug-in defaults to MIDI OUT ONE TRACK (whole kit on channel 1, notes 36-47).
+- Akai MPK Mini is named on the default pad map (pads 1-12 = notes 36-47).
+- Fixed a crash when Logic Pro reopens a song with BreaKing in it.
+
+Please try:
+- Finger drum fast rolls and several fingers at once; listen for missed or doubled hits.
+- Turn each FX knob on every face, from 0% up, and check the readout matches the sound.
+- Load kits and presets fast from the folder menus in every mode, including Vintage.
+- Import a FLAC or MP3 from iCloud onto a pad.
+- In Logic, reopen a saved song with BreaKing and record its MIDI out.
