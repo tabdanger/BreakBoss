@@ -1,6 +1,7 @@
 // Copyright © 2026 Tyrone Dangerfield. All rights reserved.
 import Foundation
 import AVFoundation
+import UIKit
 
 // MARK: - Self-test
 //
@@ -2716,11 +2717,27 @@ enum KnockSelfTest {
         check(e.lastNoteOn.pointee & 0x7F == 60 && e.lastNoteOn.pointee >> 8 > 0, "MIDI learn sees the last note played")
         checkMPKMiniPads()
         checkLowLatencyPaths()
+        checkTiltShadows()
     }
 
     /// The touch-to-sound path (Tyrone, Oct 31): the event queue hands every hit over in order with
     /// its lock let go first, an overflow still clears to ALL OFF, and the screen's meter copy tells
     /// a new hit from none without making new arrays.
+    /// Shadow tilt (Oct 31): nothing extra at the usual playing angle, so Face 1 matches its picture;
+    /// tilting throws the shadows to the low side; leaning back only pulls them in a little.
+    static func checkTiltShadows() {
+        let rest = TiltShadowMath.lean(gravityX: 0, gravityY: TiltShadowMath.restingDown)
+        check(TiltShadowMath.strength(rest) == 0, "shadow tilt: no extra shadow at the usual angle")
+        let right = TiltShadowMath.lean(gravityX: 0.5, gravityY: TiltShadowMath.restingDown)
+        check(right.dx > 0.6 && TiltShadowMath.strength(right) == 1, "shadow tilt: tip right, shadows go right at full depth")
+        let upright = TiltShadowMath.lean(gravityX: 0, gravityY: 1)
+        check(upright.dy > 0.99, "shadow tilt: screen upright throws the longest shadows down")
+        let flat = TiltShadowMath.lean(gravityX: 0, gravityY: 0)
+        check(flat.dy < 0 && flat.dy >= -0.3, "shadow tilt: lying flat only pulls them in a little")
+        let (x, y) = TiltShadowMath.screen(0.2, -0.4, .landscapeRight)
+        check(abs(x - 0.4) < 1e-9 && abs(y + 0.2) < 1e-9, "shadow tilt: landscape axes")
+    }
+
     static func checkLowLatencyPaths() {
         let q = EventQueue(capacity: 8)
         for p in 0..<3 { q.push(KEvent(kind: .pad, a: Int32(p), value: 0.9)) }

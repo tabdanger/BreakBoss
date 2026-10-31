@@ -130,6 +130,14 @@ struct FaceplateView: View {
                 .resizable()
                 .interpolation(.high)
                 .frame(width: L.width * s, height: L.height * s)
+            // Shadow tilt (Tyrone, Oct 31, from MS26): the knob and pad shadows follow the iPad's tilt,
+            // on the plate under the pointers and pad lights; empty at the usual angle (TiltShadows.swift)
+            if !FaceplateView.snapshotMode {
+                TiltShadows(layout: L, scale: s, active: patternEditor == nil)
+                    .frame(width: L.width * s, height: L.height * s)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
             // The BreaKing logo is in the picture; this only names it for VoiceOver and the UI tests.
             Color.white.opacity(0.001)
                 .allowsHitTesting(false)
