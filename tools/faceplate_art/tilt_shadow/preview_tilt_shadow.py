@@ -14,12 +14,15 @@ RES = os.path.join(ROOT, "BreakBoss.swiftpm", "Resources")
 OUT = os.path.join(HERE, "preview")
 
 REST_DOWN, HINGE = 0.55, 0.45
-KNOB_BODY, KNOB_REACH, PAD_REACH, PAD_CORNER = 1.32, 1.25, 16, 6
+KNOB_BODY, KNOB_REACH, PAD_REACH, PAD_CORNER = 1.32, 2.0, 26, 6
 SS = 2  # supersample
+# (along, blur, wide, opacity) = TiltShadowMath.knobTiers / padTiers
+KNOB_TIERS = [(0.45, 0.10, 1.00, 0.45), (0.80, 0.22, 1.04, 0.34), (1.15, 0.45, 1.12, 0.28)]
+PAD_TIERS = [(0.5, 2, 1, 0.55), (1.0, 6, 1, 0.42), (1.4, 12, 1, 0.30)]
 
 
 def lean(gx, gy):
-    x = max(-1, min(1, gx * 1.4))
+    x = max(-1, min(1, gx * 2.0))
     y = max(-1, min(1, (gy - REST_DOWN) / HINGE))
     return x, (y if y > 0 else y * 0.3)
 
@@ -50,7 +53,7 @@ def capsule(d, c, r, length, ang, wide=1.0, long=1.0):
 def shadow_alpha(L, lx, ly):
     W, H = L["size"]
     size = (int(W), int(H))
-    S = min(1, math.hypot(lx, ly) * 2)
+    S = min(1, math.hypot(lx, ly) * 3)
     n = math.hypot(lx, ly)
     ang = math.atan2(ly, lx)
     dx, dy = (lx / n, ly / n) if n > 1e-4 else (0, 0)
@@ -60,16 +63,17 @@ def shadow_alpha(L, lx, ly):
     for k in L["knobs"].values():
         c, b = (k["x"], k["y"]), k["r"] * KNOB_BODY
         t = n * b * KNOB_REACH
-        layers.append((blurred(size, lambda d: capsule(d, c, b, t * 1.35, ang, 1.08 + 0.10 * S), b * 0.42), 0.34 * S))
-        layers.append((blurred(size, lambda d: capsule(d, c, b, t, ang), b * 0.14), 0.62 * S))
-        cc = (c[0] + dx * t * 0.08, c[1] + dy * t * 0.08)
-        layers.append((blurred(size, lambda d: capsule(d, cc, b, 0, ang, 1.07, 1.07), b * 0.10), 0.5 * S))
+        for along, blur, wide, op in KNOB_TIERS:
+            w = 1 + (wide - 1) * (0.5 + 0.5 * S)
+            layers.append((blurred(size, lambda d: capsule(d, c, b, t * along, ang, w), b * blur), op * S))
+        cc = (c[0] + dx * t * 0.06, c[1] + dy * t * 0.06)
+        layers.append((blurred(size, lambda d: capsule(d, cc, b, 0, ang, 1.07, 1.07), b * 0.10), 0.55 * S))
     for p in L["pads"]:
-        for mul, blur, op in ((1.4, 9, 0.38), (1.0, 3, 0.66)):
-            vx, vy = lx * PAD_REACH * mul, ly * PAD_REACH * mul
+        for along, blur, _, op in PAD_TIERS:
+            vx, vy = lx * PAD_REACH * along, ly * PAD_REACH * along
             x0, y0 = min(p[0], p[0] + vx), min(p[1], p[1] + vy)
             x1, y1 = max(p[2], p[2] + vx), max(p[3], p[3] + vy)
-            layers.append((blurred(size, lambda d: d.rounded_rectangle([x0 * SS, y0 * SS, x1 * SS, y1 * SS], PAD_CORNER * SS, fill=255), blur), op))
+            layers.append((blurred(size, lambda d: d.rounded_rectangle([x0 * SS, y0 * SS, x1 * SS, y1 * SS], PAD_CORNER * SS, fill=255), blur), op * S))
     # cut-out: knob bodies and pad tops
     cd = ImageDraw.Draw(keep)
     for k in L["knobs"].values():
