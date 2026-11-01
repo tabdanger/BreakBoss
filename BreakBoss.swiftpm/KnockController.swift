@@ -418,14 +418,16 @@ final class KnockController: ObservableObject {
     /// so the whole kit records onto one DAW track and a note drawn on a row plays that row's pad.
     static let oneTrackMIDIOutChannels = Array(repeating: 0, count: Pad.count)
     /// On by default in the plug-in, so a DAW's armed MIDI track records the pads and pattern.
-    var midiOutOn: Bool { state.midiOut ?? isPlugin }
+    /// The app never sends MIDI out (Tyrone, Nov 1): its notes stay inside BreaKing and never play
+    /// other apps. MIDI out only goes through the plug-in's output, to the host (Logic) that loaded it.
+    var midiOutOn: Bool { isPlugin && (state.midiOut ?? true) }
     /// The plug-in starts on ONE TRACK (Tyrone, Oct 26: record everything onto the one Logic track);
     /// the app keeps multi-out on its MIDI port.
     private var midiOutDefaultChannels: [Int] { isPlugin ? KnockController.oneTrackMIDIOutChannels : KnockController.defaultMIDIOutChannels }
     var midiOutChannels: [Int] { (state.midiOutChannels ?? midiOutDefaultChannels).count == Pad.count ? state.midiOutChannels ?? midiOutDefaultChannels : midiOutDefaultChannels }
     var midiOutNotes: [Int] { (state.midiOutNotes ?? KnockController.defaultMIDIOutNotes).count == Pad.count ? state.midiOutNotes ?? KnockController.defaultMIDIOutNotes : KnockController.defaultMIDIOutNotes }
 
-    func setMIDIOut(_ on: Bool) { state.midiOut = on; pushMIDIOut(); scheduleSave() }
+    func setMIDIOut(_ on: Bool) { guard isPlugin else { return }; state.midiOut = on; pushMIDIOut(); scheduleSave() }
     func setMIDIOutChannel(pad: Int, _ channel: Int) {
         var ch = midiOutChannels; guard ch.indices.contains(pad) else { return }
         ch[pad] = max(-1, min(15, channel)); state.midiOutChannels = ch; pushMIDIOut(); scheduleSave()
