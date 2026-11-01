@@ -306,6 +306,8 @@ extension SequencerView {
     }
 
     func midiOutItems() -> [BBMenuItem] {
+        // The app keeps its MIDI inside BreaKing; MIDI out is the plug-in's, sent to its host.
+        guard controller.isPlugin else { return [BBMenuItem.item("MIDI out works in the plug-in (Logic)", icon: "power", enabled: false) {}] }
         var items: [BBMenuItem] = [
             BBMenuItem.item(controller.midiOutOn ? "MIDI out is ON" : "Turn MIDI out on", icon: "power", checked: controller.midiOutOn) {
                 controller.setMIDIOut(!controller.midiOutOn)
@@ -323,6 +325,7 @@ extension SequencerView {
     }
 
     func midiOutChannelItems(_ pad: Int) -> [BBMenuItem] {
+        guard controller.isPlugin else { return [BBMenuItem.item("MIDI out works in the plug-in (Logic)", enabled: false) {}] }
         var items: [BBMenuItem] = [BBMenuItem.item("Don't send this channel", checked: controller.midiOutChannels[pad] < 0) { controller.setMIDIOutChannel(pad: pad, -1) }]
         items += (0..<16).map { ch in
             BBMenuItem.item("MIDI channel \(ch + 1)", checked: controller.midiOutChannels[pad] == ch) {
