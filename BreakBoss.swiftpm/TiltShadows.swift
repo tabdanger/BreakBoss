@@ -31,13 +31,13 @@ enum TiltShadowMath {
     /// Where the shadows lean, -1...1 each way (x right, y down), from gravity on the screen's axes.
     /// Leaning the screen back only pulls them in a little: a ceiling light can't throw a shadow up the plate.
     static func lean(gravityX gx: Double, gravityY gy: Double) -> CGVector {
-        let x = min(max(gx * 1.4, -1), 1)
+        let x = min(max(gx * 2.0, -1), 1)   // Nov 1: more tilt, reacts to a smaller tip
         let y = min(max((gy - restingDown) / hingeRange, -1), 1)
         return CGVector(dx: x, dy: y > 0 ? y : y * 0.3)
     }
 
     /// How strongly the extra shadow shows: none at rest, full a little way into a tilt.
-    static func strength(_ lean: CGVector) -> CGFloat { min(1, hypot(lean.dx, lean.dy) * 2) }
+    static func strength(_ lean: CGVector) -> CGFloat { min(1, hypot(lean.dx, lean.dy) * 3) }
 
     /// Gravity in device axes (portrait: x right edge, y top edge) turned to the screen's axes.
     static func screen(_ x: Double, _ y: Double, _ o: UIInterfaceOrientation) -> (Double, Double) {
@@ -53,10 +53,26 @@ enum TiltShadowMath {
     /// A Face 1 knob's round body (black skirt) is about 1.32x the layout's cap radius (measured on the plates).
     static let knobBody: CGFloat = 1.32
     /// Full tilt throws a knob's shadow about this many body radii past its foot (MS26: half a radius).
-    static let knobReach: CGFloat = 1.25
+    static let knobReach: CGFloat = 2.0    // Nov 1 (Tyrone: more shadow tilt), was 1.25
     /// Full tilt throws a pad's shadow this far across the well (the pads stand lower than the knobs).
-    static let padReach: CGFloat = 16
+    static let padReach: CGFloat = 26      // Nov 1, was 16
     static let padCorner: CGFloat = 6
+
+    /// Hyper realism (Tyrone, Nov 1): a lamp is a light with a size, not a point, so a shadow is
+    /// darkest where it leaves the foot and fades and blurs the further it falls. Each shadow is
+    /// three layers stacked from the foot: short and sharp, middle, long and soft (wider too).
+    /// `along` = share of the full throw, `blur` = soft edge (knobs: in body radii; pads: plate px),
+    /// `wide` = spread across the throw, `opacity` at full tilt. Where all three overlap, near the
+    /// foot, the shadow is about 74% dark; at its tip about 28%, and very soft.
+    struct Tier { let along: CGFloat; let blur: CGFloat; let wide: CGFloat; let opacity: CGFloat }
+    static let knobTiers = [Tier(along: 0.45, blur: 0.10, wide: 1.00, opacity: 0.45),
+                            Tier(along: 0.80, blur: 0.22, wide: 1.04, opacity: 0.34),
+                            Tier(along: 1.15, blur: 0.45, wide: 1.12, opacity: 0.28)]
+    static let padTiers = [Tier(along: 0.5, blur: 2, wide: 1, opacity: 0.55),
+                           Tier(along: 1.0, blur: 6, wide: 1, opacity: 0.42),
+                           Tier(along: 1.4, blur: 12, wide: 1, opacity: 0.30)]
+    /// Contact shadow: where the knob meets the plate, light can't get in from any side.
+    static let contactBlur: CGFloat = 0.10, contactSpread: CGFloat = 1.07, contactOpacity: CGFloat = 0.55
 }
 
 /// The one motion reader for Face 1's shadows.
@@ -213,9 +229,9 @@ final class TiltShadowUIView: UIView {
     private var scale: CGFloat = 1
     private var active = true
     private var attached = false
-    /// Per knob: core, soft edge, contact. Per pad: core, soft edge.
-    private var knobLayers: [(core: CALayer, soft: CALayer, contact: CALayer)] = []
-    private var padLayers: [(core: CALayer, soft: CALayer)] = []
+    /// Per knob: one layer per tier (TiltShadowMath.knobTiers) and the contact. Per pad: one per tier.
+    private var knobLayers: [(tiers: [CALayer], contact: CALayer)] = []
+    private var padLayers: [[CALayer]] = []
 
     var wantsMotion: Bool { window != nil && active && !knobs.isEmpty }
 
@@ -283,23 +299,22 @@ final class TiltShadowUIView: UIView {
         cutout.path = path
 
         let body = (knobs.map(\.r).max() ?? 34) * TiltShadowMath.knobBody
-        let core = TiltShadowSprites.disc(radius: body, blur: body * 0.14)
-        let soft = TiltShadowSprites.disc(radius: body, blur: body * 0.42)
-        let contact = TiltShadowSprites.disc(radius: body, blur: body * 0.10)
-        for _ in knobs {
-            let set = (core: stretchLayer(core), soft: stretchLayer(soft), contact: stretchLayer(contact))
-            content.addSublayer(set.soft)
-            content.addSublayer(set.core)
-            content.addSublayer(set.contact)
-            knobLayers.append(set)
+        let knobSprites = TiltShadowMath.knobTiers.map { TiltShadowSprites.disc(radius: body, blur: body * $0.blur) }
+        let contact = TiltShadowSprites.disc(radius: body, blur: body * TiltShadowMath.contactBlur)
+        // long soft layers underneath, short sharp ones on top, contacts last
+        let knobTierLayers: [[CALayer]] = knobs.map { _ in knobSprites.map { stretchLayer($0) } }
+        for t in stride(from: knobSprites.count - 1, through: 0, by: -1) {
+            for i in knobTierLayers.indices { content.addSublayer(knobTierLayers[i][t]) }
         }
-        let padCore = TiltShadowSprites.roundRect(corner: TiltShadowMath.padCorner, blur: 3)
-        let padSoft = TiltShadowSprites.roundRect(corner: TiltShadowMath.padCorner, blur: 9)
-        for _ in pads {
-            let set = (core: sliceLayer(padCore), soft: sliceLayer(padSoft))
-            content.addSublayer(set.soft)
-            content.addSublayer(set.core)
-            padLayers.append(set)
+        for i in knobTierLayers.indices {
+            let c = stretchLayer(contact)
+            content.addSublayer(c)
+            knobLayers.append((tiers: knobTierLayers[i], contact: c))
+        }
+        let padSprites = TiltShadowMath.padTiers.map { TiltShadowSprites.roundRect(corner: TiltShadowMath.padCorner, blur: $0.blur) }
+        padLayers = pads.map { _ in padSprites.map { sliceLayer($0) } }
+        for t in stride(from: padSprites.count - 1, through: 0, by: -1) {
+            for i in padLayers.indices { content.addSublayer(padLayers[i][t]) }
         }
     }
 
@@ -346,24 +361,24 @@ final class TiltShadowUIView: UIView {
             let body = k.r * TiltShadowMath.knobBody
             let throwLen = length * body * TiltShadowMath.knobReach
             let set = knobLayers[i]
-            // the core: the knob's foot swept along the light, darkest close in
-            place(set.core, at: k.center, angle: angle, length: throwLen)
-            set.core.opacity = Float(0.62 * strength)
-            // the soft edge: falls further and spreads wider (a real shadow blurs with distance)
-            place(set.soft, at: k.center, angle: angle, length: throwLen * 1.35, wide: 1.08 + 0.10 * strength)
-            set.soft.opacity = Float(0.34 * strength)
+            // the knob's foot swept along the light: dark and sharp close in, fading and blurring further out
+            for (t, tier) in TiltShadowMath.knobTiers.enumerated() where t < set.tiers.count {
+                place(set.tiers[t], at: k.center, angle: angle, length: throwLen * tier.along,
+                      wide: 1 + (tier.wide - 1) * (0.5 + 0.5 * strength))
+                set.tiers[t].opacity = Float(tier.opacity * strength)
+            }
             // contact shadow: hugs the base, barely moves
-            place(set.contact, at: CGPoint(x: k.center.x + dir.dx * throwLen * 0.08, y: k.center.y + dir.dy * throwLen * 0.08),
-                  angle: angle, length: 0, wide: 1.07, long: 1.07)
-            set.contact.opacity = Float(0.5 * strength)
+            let spread = TiltShadowMath.contactSpread
+            place(set.contact, at: CGPoint(x: k.center.x + dir.dx * throwLen * 0.06, y: k.center.y + dir.dy * throwLen * 0.06),
+                  angle: angle, length: 0, wide: spread, long: spread)
+            set.contact.opacity = Float(TiltShadowMath.contactOpacity * strength)
         }
-        let padThrow = CGVector(dx: lean.dx * TiltShadowMath.padReach, dy: lean.dy * TiltShadowMath.padReach)
         for (i, p) in pads.enumerated() where i < padLayers.count {
-            let set = padLayers[i]
-            slide(set.core, pad: p, by: padThrow)
-            set.core.opacity = Float(0.66 * strength)
-            slide(set.soft, pad: p, by: CGVector(dx: padThrow.dx * 1.4, dy: padThrow.dy * 1.4))
-            set.soft.opacity = Float(0.38 * strength)
+            for (t, tier) in TiltShadowMath.padTiers.enumerated() where t < padLayers[i].count {
+                let reach = TiltShadowMath.padReach * tier.along
+                slide(padLayers[i][t], pad: p, by: CGVector(dx: lean.dx * reach, dy: lean.dy * reach))
+                padLayers[i][t].opacity = Float(tier.opacity * strength)
+            }
         }
         CATransaction.commit()
     }
