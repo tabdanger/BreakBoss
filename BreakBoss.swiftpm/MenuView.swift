@@ -8,7 +8,7 @@ import UniformTypeIdentifiers
 // The BreaKing CONTROL PANEL (Tyrone's "both popup windows" kit, Oct 26): a hardware window drawn
 // over the faceplate or the sequencer (never a sheet, so the instrument keeps playing underneath),
 // six section keys down the left (GENERAL, RECORD, MIDI / SYNC, KITS / FILES, PERFORMANCE, HELP),
-// ENGINE CONTROLS, COMPLETE PRESET and BUG REPORT opening inside it with a BACK key, and ALL NOTES
+// ENGINE CONTROLS, COMPLETE PRESET, BUG REPORT and SELF-TEST opening inside it with a BACK key, and ALL NOTES
 // & LOOPS OFF always in the bottom rail. The look is BKHardware.swift's, shared with the SAMPLER.
 
 struct MenuView: View {
@@ -40,7 +40,7 @@ struct MenuView: View {
         }
     }
 
-    private enum Subpage { case engine, transfer, report, materials }
+    private enum Subpage { case engine, transfer, report, materials, selfTest }
     private enum ImportKind { case sample(Int), preset }
     private struct PadID: Identifiable { let id: Int }
     private struct SharedFile: Identifiable { let id = UUID(); let url: URL }
@@ -67,6 +67,9 @@ struct MenuView: View {
     @State private var what = ""
     @State private var preview = ""
     @State private var copied = false
+    // SELF-TEST (the run itself lives in SelfTestRunner, so it carries on with the menu closed)
+    @ObservedObject private var selfTest = SelfTestRunner.shared
+    @State private var selfTestCopied = false
     private let learnTicker = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     private var finish: String { controller.faceKey }
@@ -204,6 +207,7 @@ struct MenuView: View {
         case .some(.transfer): return "COMPLETE PRESET"
         case .some(.report): return "BUG REPORT"
         case .some(.materials): return "MATERIAL TEST"
+        case .some(.selfTest): return "SELF-TEST"
         case .none: return section.title
         }
     }
@@ -248,6 +252,7 @@ struct MenuView: View {
             case .transfer: return transferPage.erased()
             case .report: return reportPage.erased()
             case .materials: return MaterialTestView(controller: controller, palette: palette).erased()
+            case .selfTest: return selfTestPage.erased()
             }
         }
         switch section {
@@ -718,6 +723,11 @@ struct MenuView: View {
                 // realistic materials, stage 1 (Tyrone, Oct 27): one knob and one pad to try before Face 1 gets them
                 action("MATERIAL TEST", subtitle: "The new realistic knob and pad: turn, drum, tilt the iPad, and read how smoothly the screen runs.",
                        symbol: "cube.transparent") { subpage = .materials }
+                // Tyrone, Nov 1: the self-test on the iPad itself, in every build (the standalone app only)
+                if selfTest.available {
+                    action("SELF-TEST", subtitle: "Checks the sound engine on this iPad (kits, grooves, tempo sync, clipper, MIDI, files) on its own copies. What's playing and your files are left alone. Copy the result and paste it to Claude.",
+                           symbol: "checkmark.seal", id: "menuSelfTest") { subpage = .selfTest }
+                }
             }
             group("VERSION") {
                 HStack {
@@ -805,6 +815,110 @@ struct MenuView: View {
         let lines = BugLog.shared.report(whatHappened: what).split(separator: "\n", omittingEmptySubsequences: false)
         let shown: [Substring] = lines.count > 300 ? ["…"] + lines.suffix(300) : Array(lines)
         preview = shown.joined(separator: "\n")
+    }
+
+    // MARK: SELF-TEST (inside the window)
+
+    private var selfTestPage: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            switch selfTest.status {
+            case .idle:
+                caption("Runs BreaKing's own test suite on this iPad: every kit, the grooves, tempo sync, the clipper, MIDI, files, the sampler and more. It works on its own copies of the engine in the background, so the beat keeps playing and your kit, pattern, presets and saved files stay as they are. It can take a minute or two.")
+                action("RUN THE SELF-TEST", symbol: "play.fill", id: "menuSelfTestRun") {
+                    selfTestCopied = false
+                    selfTest.start()
+                }
+            case .running(let index, let total, let phase):
+                group("RUNNING") {
+                    ProgressView(value: Double(max(0, index - 1)), total: Double(max(1, total)))
+                        .tint(palette.accent)
+                    Text(verbatim: total > 0 ? "\(index) OF \(total): \(SelfTestReport.title(phase).uppercased())" : "STARTING…")
+                        .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                        .foregroundColor(palette.text)
+                        .accessibilityIdentifier("menuSelfTestProgress")
+                }
+                caption("You can close the menu and keep playing: the test carries on, and the result is here when you come back.")
+            case .finished(let report, let copyText):
+                selfTestResult(report, copyText: copyText)
+            }
+        }
+    }
+
+    private func selfTestResult(_ report: SelfTestReport, copyText: String) -> some View {
+        let checks = NumberFormatter.localizedString(from: NSNumber(value: report.checks), number: .decimal)
+        let skipped = report.phases.filter { $0.skipped != nil }
+        let failed = report.phases.filter { !$0.passed }
+        return VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(verbatim: report.passed ? "PASSED" : "FAILED")
+                    .font(.system(size: 52, weight: .heavy, design: .monospaced))
+                    .foregroundColor(report.passed ? Color(red: 0.36, green: 0.86, blue: 0.46) : Color(red: 1, green: 0.27, blue: 0.23))
+                    .accessibilityIdentifier("menuSelfTestVerdict")
+                caption(report.passed
+                        ? "All \(checks) checks in \(report.ranPhases) phases passed (\(String(format: "%.1f", report.seconds)) s)."
+                        : "\(report.failureCount) of \(checks) checks failed, in \(failed.count) of \(report.ranPhases) phases (\(String(format: "%.1f", report.seconds)) s).")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14).background(BKMenuWell())
+            action(selfTestCopied ? "COPIED: PASTE IT TO CLAUDE" : "COPY RESULTS", symbol: selfTestCopied ? "checkmark" : "doc.on.doc",
+                   id: "menuSelfTestCopy") {
+                UIPasteboard.general.string = copyText
+                selfTestCopied = true
+            }
+            action("RUN AGAIN", symbol: "arrow.clockwise") {
+                selfTestCopied = false
+                selfTest.start()
+            }
+            if !failed.isEmpty {
+                group("WHAT FAILED") {
+                    ForEach(failed) { p in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(verbatim: p.title.uppercased())
+                                .font(.system(.caption, design: .monospaced).weight(.bold))
+                                .foregroundColor(palette.text)
+                            Text(p.failures.prefix(40).map { "• " + $0 }.joined(separator: "\n")
+                                 + (p.failures.count > 40 ? "\n… and \(p.failures.count - 40) more (all in COPY RESULTS, up to 200)" : ""))
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(BKMenuPalette.wellText)
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(12).background(BKMenuWell())
+                    }
+                }
+            }
+            if !skipped.isEmpty {
+                group("LEFT OUT ON THE IPAD") {
+                    ForEach(skipped) { p in
+                        caption("\(p.title): \(p.skipped ?? "")")
+                    }
+                    caption("The build machine's self-test still runs these on every build.")
+                }
+            }
+            group("PHASES") {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(report.phases) { p in
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Text(verbatim: p.skippedWhole ? "SKIP" : (p.passed ? "PASS" : "FAIL"))
+                                .font(.system(size: 12, design: .monospaced).weight(.bold))
+                                .foregroundColor(p.skippedWhole ? palette.secondary
+                                                 : (p.passed ? Color(red: 0.36, green: 0.86, blue: 0.46) : Color(red: 1, green: 0.27, blue: 0.23)))
+                                .frame(width: 40, alignment: .leading)
+                            Text(verbatim: p.title)
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(BKMenuPalette.wellText)
+                            Spacer(minLength: 8)
+                            Text(verbatim: p.skippedWhole ? "" : "\(p.checks)" + (p.passed ? "" : " · \(p.failures.count) FAILED"))
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(palette.secondary)
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12).background(BKMenuWell())
+            }
+        }
     }
 
     // MARK: Parts

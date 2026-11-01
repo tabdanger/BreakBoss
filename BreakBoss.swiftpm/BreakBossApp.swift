@@ -6,6 +6,8 @@ import UIKit
 struct BreakBossApp: App {
     init() {
         BugCatcher.install()
+        // MENU › HELP › SELF-TEST (every build): the suite on its own queue, leaving the user's files alone.
+        SelfTestRunner.suite = { progress in KnockSelfTest.run(inApp: true, progress: progress) }
         if ProcessInfo.processInfo.environment["BREAKBOSS_SELFTEST"] == "1" {
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1) { KnockSelfTest.run() }
         }

@@ -5,78 +5,135 @@ import UIKit
 
 // MARK: - Self-test
 //
-// Optional test suite (BREAKBOSS_SELFTEST=1), never in normal use. No CI target is bundled.
+// Optional test suite: BREAKBOSS_SELFTEST=1 on the build machine, or MENU › HELP › SELF-TEST on the
+// iPad (SelfTestRunner; that run leaves out what would change the user's files). No CI target is bundled.
 // It checks the sound, not the screen: every kit renders, every style makes grooves, loops stay
 // in time at different tempos and with the host's transport, the clipper holds its ceiling in
 // all three modes, idle stays silent, and files round-trip.
 
 enum KnockSelfTest {
+    // One run at a time (runLock), so the env-var run at launch and the menu's SELF-TEST can't
+    // share these; every run starts them empty and empties them again when it ends.
     private static var failures: [String] = []
     private static var lines: [String] = []
+    private static var results: [SelfTestReport.Phase] = []
+    /// The menu's run (MENU › HELP › SELF-TEST) on the iPad: leaves the user's files alone.
+    private static var inApp = false
+    /// What the running phase left out in the menu's run (skipNote).
+    private static var partSkipped: String?
+    private static let runLock = NSLock()
 
+    /// Phases that change the user's files, left out of the menu's run (Tyrone, Nov 1: the button must
+    /// not touch anything he has). The BREAKBOSS_SELFTEST=1 run on the build machine still runs them.
+    private static let skippedInApp: [String: String] = [
+        "checkSoundSwap": "it writes a test file into your Samples folder (MY SOUNDS) and copies stock sounds there through a test controller",
+    ]
+
+    /// BREAKBOSS_SELFTEST=1 (build machine): everything, as before.
     @discardableResult
     static func run() -> Bool {
+        run(inApp: false, progress: nil).passed
+    }
+
+    /// `inApp`: the menu's SELF-TEST, on a background queue while BreaKing plays. Only its own
+    /// engines, controllers and temporary files; phases that would change the user's files are
+    /// left out and named in the report.
+    static func run(inApp app: Bool, progress: SelfTestRunner.Progress?) -> SelfTestReport {
+        runLock.lock()
+        defer { runLock.unlock() }
         failures = []
         lines = []
+        results = []
+        inApp = app
+        defer {
+            failures = []
+            lines = []
+            results = []
+            inApp = false
+            partSkipped = nil
+        }
         let started = Date()
-        phase("checkKits", checkKits)
-        phase("checkStockSamples", checkStockSamples)
-        phase("checkSoundSwap", checkSoundSwap)
-        phase("checkFreshSounds", checkFreshSounds)
-        phase("checkGrooves", checkGrooves)
-        phase("checkSmallBuffersAndVoiceStealing", checkSmallBuffersAndVoiceStealing)
-        phase("checkHostMIDIAndAutomation", checkHostMIDIAndAutomation)
-        phase("checkOneShotMIDIAndPadFilters", checkOneShotMIDIAndPadFilters)
-        phase("checkVelocityLayers", checkVelocityLayers)
-        phase("checkModesAndClipper", checkModesAndClipper)
-        phase("checkTempoSync", checkTempoSync)
-        phase("checkHostTransport", checkHostTransport)
-        phase("checkSilence", checkSilence)
-        phase("checkFiles", checkFiles)
-        phase("checkHeldLoops", checkHeldLoops)
-        phase("checkMigration", checkMigration)
-        phase("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence)
-        phase("checkEveryPatternAudible", checkEveryPatternAudible)
-        phase("checkTextureControls", checkTextureControls)
-        phase("checkTexturePlate", checkTexturePlate)
-        phase("checkFXSections", checkFXSections)
-        phase("checkLevelPanGlide", checkLevelPanGlide)
-        phase("checkPatternEditor", checkPatternEditor)
-        phase("checkMIDIPadMap", checkMIDIPadMap)
-        phase("checkRecordingTrim", checkRecordingTrim)
-        phase("checkAudioFormats", checkAudioFormats)
-        phase("checkDrumRoll", checkDrumRoll)
-        phase("checkPlayheadGlide", checkPlayheadGlide)
-        phase("checkPianoRollOctaves", checkPianoRollOctaves)
-        phase("checkWorkspaceChannels", checkWorkspaceChannels)
-        phase("checkSampler", checkSampler)
-        phase("checkUntouchedEnvelopes", checkUntouchedEnvelopes)
-        phase("checkNoteLengthOneShots", checkNoteLengthOneShots)
-        phase("checkSamplerPlayhead", checkSamplerPlayhead)
-        phase("checkScope", checkScope)
-        phase("checkTrackFX", checkTrackFX)
-        phase("checkPrecomputedEffects", checkPrecomputedEffects)
-        phase("checkAudioCPU", checkAudioCPU)
-        phase("checkSampleEdits", checkSampleEdits)
-        phase("checkNoteRepeat", checkNoteRepeat)
+        let phases: [(String, () -> Void)] = [
+            ("checkKits", checkKits),
+            ("checkStockSamples", checkStockSamples),
+            ("checkSoundSwap", checkSoundSwap),
+            ("checkFreshSounds", checkFreshSounds),
+            ("checkGrooves", checkGrooves),
+            ("checkSmallBuffersAndVoiceStealing", checkSmallBuffersAndVoiceStealing),
+            ("checkHostMIDIAndAutomation", checkHostMIDIAndAutomation),
+            ("checkOneShotMIDIAndPadFilters", checkOneShotMIDIAndPadFilters),
+            ("checkVelocityLayers", checkVelocityLayers),
+            ("checkModesAndClipper", checkModesAndClipper),
+            ("checkTempoSync", checkTempoSync),
+            ("checkHostTransport", checkHostTransport),
+            ("checkSilence", checkSilence),
+            ("checkFiles", checkFiles),
+            ("checkHeldLoops", checkHeldLoops),
+            ("checkMigration", checkMigration),
+            ("checkFactoryPresetsAndKitIndependence", checkFactoryPresetsAndKitIndependence),
+            ("checkEveryPatternAudible", checkEveryPatternAudible),
+            ("checkTextureControls", checkTextureControls),
+            ("checkTexturePlate", checkTexturePlate),
+            ("checkFXSections", checkFXSections),
+            ("checkLevelPanGlide", checkLevelPanGlide),
+            ("checkPatternEditor", checkPatternEditor),
+            ("checkMIDIPadMap", checkMIDIPadMap),
+            ("checkRecordingTrim", checkRecordingTrim),
+            ("checkAudioFormats", checkAudioFormats),
+            ("checkDrumRoll", checkDrumRoll),
+            ("checkPlayheadGlide", checkPlayheadGlide),
+            ("checkPianoRollOctaves", checkPianoRollOctaves),
+            ("checkWorkspaceChannels", checkWorkspaceChannels),
+            ("checkSampler", checkSampler),
+            ("checkUntouchedEnvelopes", checkUntouchedEnvelopes),
+            ("checkNoteLengthOneShots", checkNoteLengthOneShots),
+            ("checkSamplerPlayhead", checkSamplerPlayhead),
+            ("checkScope", checkScope),
+            ("checkTrackFX", checkTrackFX),
+            ("checkPrecomputedEffects", checkPrecomputedEffects),
+            ("checkAudioCPU", checkAudioCPU),
+            ("checkSampleEdits", checkSampleEdits),
+            ("checkNoteRepeat", checkNoteRepeat),
+        ]
+        for (i, (name, work)) in phases.enumerated() {
+            progress?(i + 1, phases.count, name)
+            if app, let reason = skippedInApp[name] {
+                log("BreakBoss self-test phase SKIPPED in the app: \(name) (\(reason))")
+                results.append(SelfTestReport.Phase(name: name, checks: 0, failures: [], seconds: 0, skipped: reason, skippedWhole: true))
+                continue
+            }
+            phase(name, work)
+        }
         let seconds = Date().timeIntervalSince(started)
         if failures.isEmpty {
             log("BreakBoss self-test passed (\(lines.count) checks, \(String(format: "%.1f", seconds)) s)")
         } else {
             for f in failures { log("BreakBoss SELF-TEST FAILED: \(f)") }
         }
-        return failures.isEmpty
+        return SelfTestReport(phases: results, seconds: seconds)
     }
 
     /// Persist progress before entering each phase so simulator timeouts distinguish a slow
-    /// stage from a crash. The normal app never calls this optional self-test entry point.
+    /// stage from a crash.
     private static func phase(_ name: String, _ work: () -> Void) {
         log("BreakBoss self-test phase START: \(name)")
         let started = Date()
         let previousChecks = lines.count
+        let previousFailures = failures.count
+        partSkipped = nil
         work()
         let seconds = Date().timeIntervalSince(started)
         log("BreakBoss self-test phase END: \(name) (\(lines.count - previousChecks) checks, \(String(format: "%.2f", seconds)) s)")
+        results.append(SelfTestReport.Phase(name: name, checks: lines.count - previousChecks,
+                                            failures: Array(failures[previousFailures...]), seconds: seconds,
+                                            skipped: partSkipped, skippedWhole: false))
+        partSkipped = nil
+    }
+
+    /// A phase that stops early in the menu's run says what it left out.
+    private static func skipNote(_ what: String) {
+        partSkipped = what
+        log("BreakBoss self-test: left out in the app: \(what)")
     }
 
     private static func check(_ ok: Bool, _ what: String) {
@@ -611,6 +668,12 @@ enum KnockSelfTest {
         check(!seen.isEmpty && leaning.isEmpty, "fresh sounds: every kit's kick and 808 files play centered (\(seen.count) files; leaning: \(leaning.prefix(5)))")
         let hat = SampleBuffer(left: [0.5, -0.5, 0.25], right: [0.1, -0.1, 0.05], sampleRate: 48_000)
         check(KnockController.centered(hat, pad: Pad.hat.rawValue) === hat, "fresh sounds: pads other than the kick and 808 are left exactly as they are")
+        // From here on a test controller saves a kit into Kits and copies a library sound into Samples:
+        // the menu's run leaves the user's folders alone (Tyrone, Nov 1).
+        if inApp {
+            skipNote("the kit-change, library-pick, dice and saved-kit checks (they save a test kit in Kits and copy a sound into Samples)")
+            return
+        }
 
         let engine = KnockEngine()
         engine.prepare(sampleRate: 48_000, maxFrames: 512)
