@@ -1,0 +1,13 @@
+{
+  "images": [
+    {
+      "filename": "power_cap_vintage.png",
+      "idiom": "universal",
+      "scale": "1x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

@@ -152,6 +152,8 @@ struct FaceplateView: View {
             ZStack(alignment: .topLeading) { transport(L, sfx: sfx, s: s) }.erased()
             ZStack(alignment: .topLeading) { windows(L, s: s) }.erased()
             ZStack(alignment: .topLeading) { pads(L, s: s) }.erased()
+            // the slider and power button on top of every other part, so nothing can sit over them
+            ZStack(alignment: .topLeading) { faceKeys(L, sfx: sfx, s: s) }.erased()
             // the tutorial's lit part and card, over the face's own art (Tyrone, Oct 20)
             TutorialOverlay(surface: .face1, art: CGSize(width: L.width, height: L.height), scale: s, finish: sfx) { $0.face1(L) }
         }
@@ -216,47 +218,34 @@ struct FaceplateView: View {
             hit(r, s) { openFace2() }
         }
         hit(L.menuRect, s) { showMenu = true }
-        // Face 2's key on Face 1 too (Tyrone, Oct 20): the round spun-silver button with the pads'
-        // squares in its slot, on the plate's bottom strip under pad 1; slide it (or tap its right
-        // end) to open Face 2, like the piano-roll button
+        // RECORD (left of the piano-roll button): a 1- or 2-bar count-in, then the pads record
+        if let r = L.recordRect {
+            RecordButtonView(controller: controller, face: sfx, scale: s).place(r, s)
+        }
+    }
+
+    /// Face 2's key on Face 1 (Tyrone, Oct 20) and the power button beside it (Oct 21), bottom left.
+    /// Nov 2 (Tyrone: "the slider needs to slide back LIKE IT WAS BEFORE", and power must work):
+    /// where the plate prints them, they are the plate's own knob and cap cut from his picture
+    /// (tools/faceplate_art/face1/slider_parts.py). At rest nothing is drawn over the plate; under a
+    /// finger the knob slides along its slot and springs home, and the power cap presses in.
+    @ViewBuilder
+    private func faceKeys(_ L: FaceplateLayout, sfx: String, s: CGFloat) -> some View {
         if !FaceplateView.snapshotMode {
-            // the plate draws the slider and the power button itself (Tyrone, Oct 28: Face 1 must look
-            // exactly like his pictures), so both work here as clear touch areas over that art.
-            // Nov 1 (Tyrone: "the slider at the bottom left stopped working, and the power button"):
-            // they were the old controls faded to 1% so the art showed through, and a view that faint
-            // stopped taking touches on his iPad. Now they are real touch areas that draw nothing at
-            // rest (the same kind as every other plate button), so the plate stays exactly as drawn.
-            if let r = L.sliderRect {
-                PlateSliderArea(id: "faceSlider1", label: "Slide right to open Face 2") { openFace2() }
-                    .place([r[0] - 3, r[1] - 3, r[2] + 3, r[3] + 3], s)
+            if L.sliderRect != nil {
+                PlateFaceSlider(face: sfx, scale: s, glow: FaceLight.of(sfx).glow) { openFace2() }
             } else {
                 FaceSlider(scale: s, color: FaceLight.of(sfx).glow, id: "faceSlider1", label: "Slide right to open Face 2") { openFace2() }
                     .environment(\.seqFinish, sfx)
                     .place([125, 1004, 235, 1040], s)
             }
-            // Face 2's power button on Face 1 too (Tyrone, Oct 21): right beside the slider, set flush
-            // into the plate, the same job (the sequencer and pads all the way on or off), in this
-            // face's metal and light
-            if let r = L.powerRect {
-                // the plate's button is lit; off, its light goes out
-                if !controller.powerOn {
-                    Circle().fill(Color.black.opacity(0.62)).allowsHitTesting(false).place(r, s)
-                }
-                PressableArea { controller.togglePower() }
-                    .accessibilityElement()
-                    .accessibilityIdentifier("powerButton1")
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityLabel(controller.powerOn ? "Power on: tap to turn the sequencer and pads off" : "Power off: tap to turn the sequencer and pads on")
-                    .place([r[0] - 3, r[1] - 3, r[2] + 3, r[3] + 3], s)
+            if L.powerRect != nil {
+                PlatePowerButton(face: sfx, scale: s, on: controller.powerOn) { controller.togglePower() }
             } else {
                 PowerButton(on: controller.powerOn, scale: s, color: FaceLight.of(sfx).glow, id: "powerButton1", flush: true) { controller.togglePower() }
                     .environment(\.seqFinish, sfx)
                     .place([245, 1004, 281, 1040], s)
             }
-        }
-        // RECORD (left of the piano-roll button): a 1- or 2-bar count-in, then the pads record
-        if let r = L.recordRect {
-            RecordButtonView(controller: controller, face: sfx, scale: s).place(r, s)
         }
     }
 
@@ -430,49 +419,137 @@ struct FaceLight {
     }
 }
 
-/// Face 1's slider where the plate prints it (Nov 1): a clear touch area over the printed slot that
-/// works like FaceSlider (slide right past halfway, or tap the right half, to open Face 2) and draws
-/// nothing at rest, so the plate looks exactly like its picture. While a finger slides it, the slot
-/// shades a little behind the finger, so the slide is felt.
-struct PlateSliderArea: View {
-    let id: String
-    let label: String
+/// Face 1's slider where the plate prints it (Nov 2): the plate's own knob (cut from his picture)
+/// slides along the slot under the finger, the slot lighting up in the face's colour as it goes;
+/// past halfway (or a tap on the slot's right half) it runs to the end and Face 2 opens, otherwise
+/// it springs home. At rest nothing is drawn, so the plate is exactly his picture.
+/// Art px (Plate_*.png, 1450 x 1085): see slider_parts.py.
+struct PlateFaceSlider: View {
+    let face: String
+    let scale: CGFloat
+    let glow: Color
     let open: () -> Void
-    @State private var travel: CGFloat = 0
+    @State private var travel: CGFloat = 0          // art px the knob has moved right
     @State private var leaving = false
+    /// The knob is drawn over the plate only while it's away from home (moving or springing back).
+    @State private var shown = false
+    @State private var homeToken = 0
+
+    static let touch: [Double] = [183, 950, 361, 1017]     // the slot, +3 px all round
+    static let slot: [Double] = [186, 953, 358, 1011]
+    static let slotPatch: [Double] = [184, 950, 248, 1016]
+    static let knob: [Double] = [188, 956, 241, 1009]
+    static let maxTravel: CGFloat = 112                     // knob centre 214.5 -> 326.5, the slot's right end
 
     var body: some View {
-        GeometryReader { geo in
-            let w = max(1, geo.size.width)
-            Capsule()
-                .fill(Color.white.opacity(0.001))
-                .overlay(Capsule().fill(Color.black.opacity(0.22)).frame(width: travel).frame(maxWidth: .infinity, alignment: .leading))
+        let t = travel / Self.maxTravel
+        ZStack(alignment: .topLeading) {
+            ZStack(alignment: .topLeading) {
+                if shown {
+                    Image("slider_slot_\(face)").resizable().interpolation(.high).place(Self.slotPatch, scale)
+                    // the slot lights in the face's colour behind the knob as it travels
+                    Capsule().fill(glow.opacity(0.28 * Double(t)))
+                        .place([Self.slot[0] + 3, Self.slot[1] + 3, Self.slot[2] - 3, Self.slot[3] - 3], scale)
+                    Image("slider_knob_\(face)").resizable().interpolation(.high)
+                        .shadow(color: .black.opacity(0.55), radius: 3 * scale, x: 1.5 * scale, y: 2 * scale)
+                        .place(Self.knob, scale)
+                        .offset(x: travel * scale)
+                }
+            }
+            .allowsHitTesting(false)
+            Color.white.opacity(0.001)
                 .contentShape(Rectangle())
-                .gesture(DragGesture(minimumDistance: 0)
+                .highPriorityGesture(DragGesture(minimumDistance: 0)
                     .onChanged { g in
                         guard !leaving else { return }
-                        travel = min(w, max(0, g.translation.width))
+                        if !shown { shown = true }
+                        homeToken += 1
+                        // the knob follows the finger 1:1 (in art px)
+                        travel = min(Self.maxTravel, max(0, g.translation.width / scale))
                     }
                     .onEnded { g in
                         guard !leaving else { return }
-                        let tapRight = abs(g.translation.width) < 4 && g.location.x > w / 2
-                        if travel > w * 0.4 || tapRight {
+                        let w = (Self.touch[2] - Self.touch[0]) * Double(scale)
+                        let tapRight = abs(g.translation.width) < 4 && Double(g.location.x) > w / 2
+                        if travel > Self.maxTravel * 0.5 || tapRight {
                             leaving = true
-                            withAnimation(.easeOut(duration: 0.12)) { travel = w }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
+                            withAnimation(.easeOut(duration: 0.15)) { travel = Self.maxTravel }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.17) {
                                 open()
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { leaving = false; travel = 0 }
+                                // Face 1 stays under Face 2: the knob is home when it's seen again
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                    var tx = Transaction(); tx.disablesAnimations = true
+                                    withTransaction(tx) { travel = 0; shown = false; leaving = false }
+                                }
                             }
                         } else {
-                            withAnimation(.easeOut(duration: 0.15)) { travel = 0 }
+                            // springs home with a little bounce (damped enough not to pass its stop)
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) { travel = 0 }
+                            // the plate's own knob takes over once the spring has settled
+                            let token = homeToken
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                if homeToken == token && travel == 0 { shown = false }
+                            }
                         }
                     })
+                .accessibilityElement()
+                .accessibilityIdentifier("faceSlider1")
+                .accessibilityLabel("Slide right to open Face 2")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { open() }
+                .place(Self.touch, scale)
         }
-        .accessibilityElement()
-        .accessibilityIdentifier(id)
-        .accessibilityLabel(label)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction { open() }
+    }
+}
+
+/// Face 1's power button where the plate prints it (Nov 2): the plate's own cap (cut from his
+/// picture) presses in under the finger and springs back; off, its light goes out. Toggles on
+/// touch-up inside, like a real button.
+struct PlatePowerButton: View {
+    let face: String
+    let scale: CGFloat
+    let on: Bool
+    let toggle: () -> Void
+    @State private var down = false
+
+    static let touch: [Double] = [107, 946, 178, 1017]     // the cap, +3 px all round
+    static let cap: [Double] = [110, 949, 175, 1014]
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            ZStack(alignment: .topLeading) {
+            if down {
+                // the cut round the cap shows as it goes in
+                Circle().fill(Color.black.opacity(0.85)).place(Self.cap, scale)
+                Image("power_cap_\(face)").resizable().interpolation(.high)
+                    .brightness(-0.08)
+                    .scaleEffect(0.93)
+                    .place(Self.cap, scale)
+            }
+            // off: the plate's lit button goes dark
+            Circle().fill(Color.black.opacity(on ? 0 : 0.62))
+                .place([Self.cap[0] + 2, Self.cap[1] + 2, Self.cap[2] - 2, Self.cap[3] - 2], scale)
+            }
+            .animation(.easeOut(duration: 0.08), value: down)
+            .animation(.easeOut(duration: 0.18), value: on)
+            .allowsHitTesting(false)
+            Color.white.opacity(0.001)
+                .contentShape(Circle())
+                .highPriorityGesture(DragGesture(minimumDistance: 0)
+                    .onChanged { _ in if !down { down = true } }
+                    .onEnded { g in
+                        down = false
+                        let size = (Self.touch[2] - Self.touch[0]) * Double(scale)
+                        let inside = g.location.x >= 0 && g.location.y >= 0 && Double(g.location.x) <= size && Double(g.location.y) <= size
+                        if inside { toggle() }
+                    })
+                .accessibilityElement()
+                .accessibilityIdentifier("powerButton1")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel(on ? "Power on: tap to turn the sequencer and pads off" : "Power off: tap to turn the sequencer and pads on")
+                .accessibilityAction { toggle() }
+                .place(Self.touch, scale)
+        }
     }
 }
 
