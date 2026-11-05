@@ -13,7 +13,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "BreakBoss.swiftpm"
 BUILD = ROOT / "xcode" / "build"
-APP_ONLY = {"BreakBossApp.swift", "AppAudioHost.swift", "KnockSelfTest.swift"}
+APP_ONLY = {"BreakBossApp.swift", "AppAudioHost.swift", "BugCatcher.swift",
+            "KnockSelfTest.swift", "KnockSelfTestSounds.swift", "KnockSelfTestTiming.swift", "KnockSelfTestSampler.swift",
+            "KnockSelfTestTransport.swift", "KnockSelfTestWorkspace.swift", "KnockSelfTestPresets.swift"}
 ACCENT = "Assets.xcassets/__PresetAccentColor.colorset/Contents.json"
 
 
