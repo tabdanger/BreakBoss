@@ -1820,9 +1820,6 @@ struct SamplerWindow: View {
 
     private static func percent(_ v: Float) -> String { "\(Int((v * 100).rounded()))%" }
     private static func bipolarPercent(_ v: Float) -> String { "\(Int(((v * 2 - 1) * 100).rounded()))%" }
-    private static func cutoffText(_ v: Float) -> String {
-        let hz = 20 * pow(1000, Double(v)); return hz < 1000 ? "\(Int(hz)) Hz" : String(format: "%.1f kHz", hz / 1000)
-    }
     private static func bipolar(_ v: Float) -> Float { abs(v * 2 - 1) < 0.02 ? 0 : v * 2 - 1 }
 
     /// Levels adjustment (FL's MISC offsets): PAN, VOL, MOD X and MOD Y on top of the main ones, on every note.

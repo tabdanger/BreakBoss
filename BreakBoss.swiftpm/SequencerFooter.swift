@@ -205,11 +205,6 @@ extension SequencerView {
 
     var divider: some View { Rectangle().fill(S.border).frame(width: 1, height: 30) }
 
-    func iconBox(_ name: String) -> some View {
-        Image(systemName: name).font(.system(size: 16, weight: .medium)).foregroundColor(S.text)
-            .frame(width: 40, height: 40).background(box(lit: false))
-    }
-
     func chip(_ text: String, width: CGFloat) -> some View {
         HStack {
             Text(text).font(.system(size: 13, weight: .medium, design: .monospaced)).foregroundColor(S.text).lineLimit(1)

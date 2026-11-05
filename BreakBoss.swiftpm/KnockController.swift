@@ -1149,15 +1149,6 @@ final class KnockController: ObservableObject {
         scheduleSave()
     }
 
-    func renameRackChannel(_ id: UUID, _ name: String) {
-        guard var row = rackChannels.first(where: { $0.id == id }) else { return }
-        row.name = name.uppercased()
-        var rows = (state.workspaceChannels ?? []).filter { $0.pad != row.pad }
-        rows.append(row)
-        state.workspaceChannels = rows
-        scheduleSave()
-    }
-
     /// Delete a channel: its steps go from every pattern and the pad goes back to the kit's sound
     /// (the row stays: the rack always shows all 12 pads).
     func removeRackChannel(_ id: UUID) {

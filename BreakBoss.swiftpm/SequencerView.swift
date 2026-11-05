@@ -33,24 +33,11 @@ enum DrumRollStyle {
     static let text = Color(red: 222 / 255, green: 224 / 255, blue: 222 / 255)
     static let dim = Color(red: 150 / 255, green: 153 / 255, blue: 155 / 255)
     static let green = Color(red: 181 / 255, green: 232 / 255, blue: 124 / 255)
-    static let greenDark = Color(red: 34 / 255, green: 53 / 255, blue: 31 / 255)
     static let orange = Color(red: 255 / 255, green: 178 / 255, blue: 46 / 255)
     static let red = Color(red: 232 / 255, green: 44 / 255, blue: 38 / 255)
-    static let barLine = Color(red: 186 / 255, green: 189 / 255, blue: 187 / 255)
     static let beatLine = Color(red: 70 / 255, green: 80 / 255, blue: 82 / 255)
     static let stepLine = Color(red: 48 / 255, green: 52 / 255, blue: 54 / 255)
     static let cell = Color(red: 58 / 255, green: 60 / 255, blue: 63 / 255)
-    static let cellBeat = Color(red: 70 / 255, green: 72 / 255, blue: 75 / 255)
-}
-
-/// The approved design: a brushed-silver slab (the Platinum plate's material) with dark inset panels,
-/// the same in every mode. Dark ink prints on the silver, light ink inside the panels.
-struct DrumRollTheme {
-    let plate = "DrumRollPlate_platinum"
-    let ink = Color(white: 0.13)
-    let inkDim = Color(white: 0.36)
-    let light = true
-    static func forFace(_ key: String) -> DrumRollTheme { DrumRollTheme() }
 }
 
 extension Pad {
@@ -357,7 +344,6 @@ struct SequencerView: View {
         return "\(snap) TICKS"
     }
     var placeTicks: Int32 { snapTicks > 0 ? snapTicks : 6 }
-    var theme: DrumRollTheme { DrumRollTheme.forFace(controller.faceKey) }
     var noteColor: Color { PadView.lightColor(controller.mode) }
     /// Face 2 wears the same finish as Face 1: platinum / black (MODERN), cream (VINTAGE), blue (TEXTURE).
     var finish: String { controller.faceKey }

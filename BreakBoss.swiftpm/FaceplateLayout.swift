@@ -59,7 +59,6 @@ struct FaceplateLayout: Decodable {
 
     var width: Double { size[0] }
     var height: Double { size[1] }
-    var isPhone: Bool { device == .phone }
 
     func plateImageName(for mode: SoundMode) -> String {
         "Plate_\(mode.assetSuffix)"
