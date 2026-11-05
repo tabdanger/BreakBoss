@@ -1,5 +1,4 @@
-import SwiftUI
-import UniformTypeIdentifiers
+import Foundation
 
 
 // MARK: - Every sound in BreakBoss, by type
