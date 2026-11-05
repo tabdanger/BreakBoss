@@ -359,40 +359,8 @@ enum KnockSelfTest {
         #endif
     }
 
-    // The acoustic layers' loudness (tools/build_acoustic_sounds.py; the pack sounds are their original files).
-    static let stockLoudnessTarget = -10.0
-    static let stockLoudnessTolerance = 1.0
+    // The acoustic layers' peak ceiling (tools/build_acoustic_sounds.py; the pack sounds are their original files).
     static let stockLoudnessCeiling: Float = 0.944  // -0.5 dBFS
-
-    /// LUFS of the loudest 100 ms (BS.1770 K-weighting at 48 kHz), the same measure as the levelling tool.
-    static func stockLoudness(_ buffer: SampleBuffer) -> Double {
-        func kWeighted(_ x: UnsafeMutablePointer<Float>) -> [Double] {
-            let stages: [([Double], [Double])] = [
-                ([1.53512485958697, -2.69169618940638, 1.19839281085285], [-1.69065929318241, 0.73248077421585]),
-                ([1.0, -2.0, 1.0], [-1.99004745483398, 0.99007225036621]),
-            ]
-            var y = (0..<buffer.length).map { Double(x[$0]) }
-            for (b, a) in stages {
-                var x1 = 0.0, x2 = 0.0, y1 = 0.0, y2 = 0.0
-                for i in 0..<y.count {
-                    let v = y[i]
-                    let o = b[0] * v + b[1] * x1 + b[2] * x2 - a[0] * y1 - a[1] * y2
-                    x2 = x1; x1 = v; y2 = y1; y1 = o
-                    y[i] = o
-                }
-            }
-            return y
-        }
-        let l = kWeighted(buffer.left), r = kWeighted(buffer.right)
-        let window = 4_800
-        var sum = 0.0, loudest = 0.0
-        for i in 0..<buffer.length {
-            sum += l[i] * l[i] + r[i] * r[i]
-            if i >= window { sum -= l[i - window] * l[i - window] + r[i - window] * r[i - window] }
-            loudest = max(loudest, sum)
-        }
-        return -0.691 + 10 * log10(max(loudest / Double(window), 1e-12))
-    }
 
     /// Tyrone, Oct 18: a track switched from a kick to a hat or clap (and back) must play the new
     /// sound, from the sound library, the rack, the notes and the Face 1 pads alike, and pattern and
