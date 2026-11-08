@@ -725,22 +725,31 @@ extension KnockSelfTest {
         let vintageKits: [KitDefinition] = KitLibrary.browserOrder(for: .vintage)
         let noVintageTrapOrWest: Bool = KitLibrary.browserOrder.allSatisfy { !($0.preferredMode == .vintage && ["TRAP", "WEST COAST"].contains($0.family)) }
         let vintageOwnBank: Bool = vintageKits.allSatisfy { $0.preferredMode == .vintage } && vintageKits.count == KitLibrary.kits(for: .vintage).count
-        let othersEveryBank: Bool = KitLibrary.browserOrder(for: .modern).count == KitLibrary.browserOrder.count &&
-            KitLibrary.browserOrder(for: .texture).count == KitLibrary.browserOrder.count
+        // Modern (Nov 8): no Vintage bank kit and no live-drummer genre kit; Texture still browses every bank
+        let modernKits: [KitDefinition] = KitLibrary.browserOrder(for: .modern)
+        let modernNoAcoustic: Bool = modernKits.allSatisfy { (k: KitDefinition) -> Bool in
+            k.preferredMode != .vintage && !KitLibrary.liveDrummerGenres.contains(k.genre) } &&
+            KitLibrary.kits(for: .modern).contains { KitLibrary.liveDrummerGenres.contains($0.genre) } &&
+            modernKits.count == KitLibrary.kits(for: .modern).filter { !KitLibrary.liveDrummerGenres.contains($0.genre) }.count
+                + KitLibrary.kits(for: .texture).count + KitLibrary.machineEraKits.count
+        let othersEveryBank: Bool = modernNoAcoustic && KitLibrary.browserOrder(for: .texture).count == KitLibrary.browserOrder.count
         let machineEra: [KitDefinition] = KitLibrary.machineEraKits
         let machineEraOut: Bool = machineEra.count == 8 && !vintageKits.contains { KitLibrary.machineEraGenres.contains($0.genre) } &&
             machineEra.allSatisfy { k in KitLibrary.browserOrder(for: .modern).contains { $0.id == k.id } && KitLibrary.browserOrder(for: .texture).contains { $0.id == k.id } }
         check(machineEraOut, "New Jack Swing, Digital Dancehall, Kwaito, 2000s R&B and 80s Pop kits: out of Vintage, in their own DRUM MACHINE ERA folder in the other modes")
         check(noVintageTrapOrWest && vintageOwnBank && othersEveryBank,
-              "Vintage hides its trap and West Coast kits and browses only its acoustic bank; Modern and Texture browse every bank")
+              "Vintage hides its trap and West Coast kits and browses only its acoustic bank; Modern browses no acoustic kit; Texture every bank")
         let vintageStyles: [String] = PatternBank.styles(for: .vintage)
         let vintageWalk: [PatternPreset] = PatternBank.browserOrder(for: .vintage)
         let onlyLive: Bool = Set(vintageStyles) == PatternBank.vintageStyles && vintageWalk.allSatisfy { PatternBank.vintageStyles.contains($0.style) } &&
             vintageWalk.count == 50 * PatternBank.vintageStyles.count
         let noElectronic: Bool = !vintageStyles.contains { $0.contains("Trap") || $0.contains("Drill") || $0 == "West Coast" || $0 == "Bay Area" || $0 == "Phonk" || $0 == "80s Pop" }
-        let othersEveryStyle: Bool = PatternBank.browserOrder(for: .modern).count == PatternBank.browserOrder.count && PatternBank.styles(for: .texture) == PatternBank.styles
+        let modernWalk: [PatternPreset] = PatternBank.browserOrder(for: .modern)
+        let othersEveryStyle: Bool = modernWalk.count + vintageWalk.count == PatternBank.browserOrder.count &&
+            modernWalk.allSatisfy { !PatternBank.vintageStyles.contains($0.style) } &&
+            Set(PatternBank.styles(for: .modern)).isDisjoint(with: PatternBank.vintageStyles) && PatternBank.styles(for: .texture) == PatternBank.styles
         check(onlyLive && noElectronic && othersEveryStyle,
-              "Vintage PATTERNS: only the 13 live-drummer styles (no trap, drill, West Coast or Bay Area); Modern and Texture keep every style")
+              "Vintage PATTERNS: only the 13 live-drummer styles (no trap, drill, West Coast or Bay Area); Modern every other style (Nov 8); Texture every style")
         check(KitLibrary.kit(id: "trap-a").preferredMode == .modern && KitLibrary.kit(id: "neo-soul-a").preferredMode == .vintage &&
               KitLibrary.kit(id: "amapiano-a").preferredMode == .texture, "the A/B kits stay in their mode banks")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")

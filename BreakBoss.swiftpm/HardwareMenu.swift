@@ -449,13 +449,13 @@ struct KitBrowserPanel: View {
     @Environment(\.seqFinish) private var finish
 
     /// Every factory kit, in browser order, under "GENRE · MODE" (built once a mode: the catalog is fixed).
-    /// Vintage lists only its own acoustic kits (KitLibrary.browsedModes).
-    static let factoryEntries: [SoundMode: [BBBrowserEntry]] = Dictionary(uniqueKeysWithValues: SoundMode.allCases.map { ($0, KitBrowserPanel.build(KitLibrary.browsedModes($0))) })
+    /// Vintage lists only its own acoustic kits, Modern no acoustic ones (KitLibrary.browsedModes).
+    static let factoryEntries: [SoundMode: [BBBrowserEntry]] = Dictionary(uniqueKeysWithValues: SoundMode.allCases.map { ($0, KitBrowserPanel.build(KitLibrary.browsedModes($0), in: $0)) })
 
-    private static func build(_ modes: [SoundMode]) -> [BBBrowserEntry] {
+    private static func build(_ modes: [SoundMode], in playing: SoundMode) -> [BBBrowserEntry] {
         var out: [BBBrowserEntry] = []
         for mode in modes {
-            for g in KitLibrary.genreGroups(for: mode) {
+            for g in KitLibrary.genreGroups(for: mode, in: playing) {
                 let heading = "\(g.genre) · \(mode.title)"
                 out.append(BBBrowserEntry(id: "h:" + heading, kind: .heading, title: heading))
                 for def in g.kits {
@@ -566,7 +566,7 @@ struct PatternBrowserPanel: View {
     @Environment(\.bbPanelBody) private var bodyH
     @Environment(\.seqFinish) private var finish
 
-    /// Built once a mode: Vintage lists only the acoustic styles (PatternBank.vintageStyles).
+    /// Built once a mode: Vintage lists only the acoustic styles (PatternBank.vintageStyles), Modern none of them.
     static let factoryEntries: [SoundMode: [BBBrowserEntry]] = Dictionary(uniqueKeysWithValues: SoundMode.allCases.map { ($0, PatternBrowserPanel.build(PatternBank.styles(for: $0))) })
 
     private static func build(_ styles: [String]) -> [BBBrowserEntry] {

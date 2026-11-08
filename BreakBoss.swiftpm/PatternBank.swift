@@ -194,10 +194,22 @@ enum PatternBank {
     static let vintageStyles: Set<String> = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock",
                                              "Vintage R&B", "Live Soul", "East Coast", "Lo-fi", "Live Pop", "World & Latin"]
 
-    static func styles(for mode: SoundMode) -> [String] { mode == .vintage ? styles.filter { vintageStyles.contains($0) } : styles }
+    /// Modern leaves those styles to Vintage (Tyrone, Nov 8: "acoustic kits are only for vintage kits and patterns");
+    /// Texture keeps every style.
+    static func styles(for mode: SoundMode) -> [String] {
+        switch mode {
+        case .vintage: return styles.filter { vintageStyles.contains($0) }
+        case .modern: return styles.filter { !vintageStyles.contains($0) }
+        case .texture: return styles
+        }
+    }
 
     static func browserOrder(for mode: SoundMode) -> [PatternPreset] {
-        mode == .vintage ? browserOrder.filter { vintageStyles.contains($0.style) } : browserOrder
+        switch mode {
+        case .vintage: return browserOrder.filter { vintageStyles.contains($0.style) }
+        case .modern: return browserOrder.filter { !vintageStyles.contains($0.style) }
+        case .texture: return browserOrder
+        }
     }
 
     static func presets(in style: String) -> [PatternPreset] { all.filter { $0.style == style } }
