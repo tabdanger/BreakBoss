@@ -22,7 +22,7 @@ ny-drill-a|NY DRILL A|modernTrap|trapMemphis|144|609|32.7|modern|TRAP|NY DRILL
 ny-drill-b|NY DRILL B|modernTrap|trapMemphis|144|610|32.7|modern|TRAP|NY DRILL
 detroit-2026-a|DETROIT 2026 A|modernTrap|trapAtlanta|96|611|32.7|modern|TRAP|DETROIT 2026
 detroit-2026-b|DETROIT 2026 B|modernTrap|trapAtlanta|96|612|32.7|modern|TRAP|DETROIT 2026
-bay-area-2026-a|BAY AREA 2026 A|baySlap|baySlap|100|613|65.41|modern|WEST COAST|BAY AREA 2026
+bay-area-2026-a|BAY AREA 2026 A|baySlap|baySlap|100|613|32.7|modern|WEST COAST|BAY AREA 2026
 bay-area-2026-b|BAY AREA 2026 B|baySlap|baySlap|100|614|65.41|modern|WEST COAST|BAY AREA 2026
 rnb-a|RNB A|westBounce|rnb|76|615|32.7|modern|SOUL & R&B|RNB
 rnb-b|RNB B|westBounce|rnb|76|616|32.7|modern|SOUL & R&B|RNB
@@ -63,21 +63,21 @@ houston-candy|HOUSTON CANDY|modernTrap|trapAtlanta|72|1008|32.7|modern|TRAP|HOUS
 crenshaw-clap|CRENSHAW CLAP|westBounce|westBounce|98|1009|65.41|modern|WEST COAST|RATCHET
 slauson-slide|SLAUSON SLIDE|westBounce|westBounce|98|1010|65.41|modern|WEST COAST|RATCHET
 inglewood-heat|INGLEWOOD HEAT|westBounce|westBounce|98|1011|65.41|modern|WEST COAST|RATCHET
-carson-hops|CARSON HOPS|westBounce|westBounce|98|1012|32.7|modern|WEST COAST|RATCHET
+carson-hops|CARSON HOPS|westBounce|westBounce|98|1012|65.41|modern|WEST COAST|RATCHET
 sideshow|SIDESHOW|baySlap|baySlap|100|1013|65.41|modern|WEST COAST|HYPHY
 ghost-ride|GHOST RIDE|baySlap|baySlap|100|1014|65.41|modern|WEST COAST|HYPHY
 yay-area-slap|YAY AREA SLAP|baySlap|baySlap|100|1015|32.7|modern|WEST COAST|HYPHY
-vallejo-knock|VALLEJO KNOCK|baySlap|baySlap|100|1016|65.41|modern|WEST COAST|HYPHY
+vallejo-knock|VALLEJO KNOCK|baySlap|baySlap|100|1016|32.7|modern|WEST COAST|HYPHY
 jerk-circle|JERK CIRCLE|westBounce|westBounce|100|1017|65.41|modern|WEST COAST|LA JERK
-pop-lock|POP LOCK|westBounce|westBounce|100|1018|32.7|modern|WEST COAST|LA JERK
+pop-lock|POP LOCK|westBounce|westBounce|100|1018|65.41|modern|WEST COAST|LA JERK
 dougie-step|DOUGIE STEP|westBounce|westBounce|100|1019|32.7|modern|WEST COAST|LA JERK
 palmdale-nights|PALMDALE NIGHTS|modernTrap|trapAtlanta|96|1020|32.7|modern|WEST COAST|WEST TRAP
-818-valley|818 VALLEY|modernTrap|trapAtlanta|96|1021|65.41|modern|WEST COAST|WEST TRAP
+818-valley|818 VALLEY|modernTrap|trapAtlanta|96|1021|32.7|modern|WEST COAST|WEST TRAP
 pomona-dust|POMONA DUST|modernTrap|trapAtlanta|96|1022|65.41|modern|WEST COAST|WEST TRAP
 pch-cruise|PCH CRUISE|west90s|westBounce|94|1023|32.7|modern|WEST COAST|NEW G-FUNK
 sunset-hydraulics|SUNSET HYDRAULICS|west90s|westBounce|94|1024|65.41|modern|WEST COAST|NEW G-FUNK
 chrome-spokes|CHROME SPOKES|west90s|westBounce|94|1025|65.41|modern|WEST COAST|NEW G-FUNK
-lowrider-lawn|LOWRIDER LAWN|west90s|westBounce|94|1026|65.41|modern|WEST COAST|NEW G-FUNK
+lowrider-lawn|LOWRIDER LAWN|west90s|westBounce|94|1026|32.7|modern|WEST COAST|NEW G-FUNK
 velvet-hours|VELVET HOURS|westBounce|rnb|70|1027|32.7|modern|SOUL & R&B|ALT R&B
 after-party|AFTER PARTY|westBounce|rnb|70|1028|32.7|modern|SOUL & R&B|ALT R&B
 night-drive|NIGHT DRIVE|westBounce|rnb|70|1029|32.7|modern|SOUL & R&B|ALT R&B
@@ -128,7 +128,7 @@ laser-glow|LASER GLOW|west90s|pop80s|118|1073|32.7|modern|POP|ELECTROPOP
 diamond-hook|DIAMOND HOOK|modernTrap|trap|140|1074|32.7|modern|POP|POP TRAP
 viral-bounce|VIRAL BOUNCE|modernTrap|trap|140|1075|32.7|modern|POP|POP TRAP
 arena-anthem|ARENA ANTHEM|heavyBreak|heavyBreak|120|1076|32.7|modern|POP|POP ROCK
-tailgate|TAILGATE|heavyBreak|heavyBreak|120|1077|32.7|modern|POP|POP ROCK
+tailgate|TAILGATE|heavyBreak|heavyBreak|120|1077|65.41|modern|POP|POP ROCK
 idol-stage|IDOL STAGE|modernTrap|pop|120|1078|65.41|modern|POP|K-POP
 comeback-show|COMEBACK SHOW|modernTrap|pop|120|1079|65.41|modern|POP|K-POP
 mirror-disco|MIRROR DISCO|west90s|pop|116|1080|32.7|modern|POP|DISCO POP
@@ -279,7 +279,7 @@ witch-house|WITCH HOUSE|looseBreak|experimental|70|1224|32.7|texture|TRAP|WITCH 
 occult-tape|OCCULT TAPE|looseBreak|experimental|70|1225|32.7|texture|TRAP|WITCH HOUSE
 tape-warp-trap|TAPE WARP TRAP|modernTrap|trap|140|1226|32.7|texture|TRAP|LO-FI TRAP
 vhs-lowrider|VHS LOWRIDER|west90s|west90s|90|1227|65.41|texture|WEST COAST|LO-FI G-FUNK
-faded-sunset|FADED SUNSET|west90s|west90s|90|1228|65.41|texture|WEST COAST|LO-FI G-FUNK
+faded-sunset|FADED SUNSET|west90s|west90s|90|1228|32.7|texture|WEST COAST|LO-FI G-FUNK
 smog-check|SMOG CHECK|west90s|west90s|90|1229|32.7|texture|WEST COAST|LO-FI G-FUNK
 beat-scene-la|BEAT SCENE LA|looseBreak|experimental|88|1230|65.41|texture|WEST COAST|LA BEAT SCENE
 echo-park|ECHO PARK|looseBreak|experimental|88|1231|32.7|texture|WEST COAST|LA BEAT SCENE
@@ -290,12 +290,12 @@ treasure-island|TREASURE ISLAND|baySlap|baySlap|85|1235|65.41|texture|WEST COAST
 mojave-mirage|MOJAVE MIRAGE|westBounce|westBounce|84|1236|65.41|texture|WEST COAST|DESERT WEST
 joshua-tree|JOSHUA TREE|westBounce|westBounce|84|1237|65.41|texture|WEST COAST|DESERT WEST
 salton-sea|SALTON SEA|westBounce|westBounce|84|1238|65.41|texture|WEST COAST|DESERT WEST
-santa-ana-winds|SANTA ANA WINDS|westBounce|westBounce|84|1239|65.41|texture|WEST COAST|DESERT WEST
+santa-ana-winds|SANTA ANA WINDS|westBounce|westBounce|84|1239|32.7|texture|WEST COAST|DESERT WEST
 slow-cruise|SLOW CRUISE|west90s|westBounce|75|1240|32.7|texture|WEST COAST|SLOW CRUISE
-midnight-405|MIDNIGHT 405|west90s|westBounce|75|1241|65.41|texture|WEST COAST|SLOW CRUISE
+midnight-405|MIDNIGHT 405|west90s|westBounce|75|1241|32.7|texture|WEST COAST|SLOW CRUISE
 palm-shadows|PALM SHADOWS|west90s|westBounce|75|1242|32.7|texture|WEST COAST|SLOW CRUISE
 broken-hydraulics|BROKEN HYDRAULICS|looseBreak|experimental|100|1243|65.41|texture|WEST COAST|WEST GLITCH
-static-signal|STATIC SIGNAL|looseBreak|experimental|100|1244|32.7|texture|WEST COAST|WEST GLITCH
+static-signal|STATIC SIGNAL|looseBreak|experimental|100|1244|65.41|texture|WEST COAST|WEST GLITCH
 tape-mob|TAPE MOB|baySlap|baySlap|92|1245|65.41|texture|WEST COAST|LO-FI MOB
 oakland-overcast|OAKLAND OVERCAST|baySlap|baySlap|92|1246|65.41|texture|WEST COAST|LO-FI MOB
 rainy-window|RAINY WINDOW|neoSoul|loFi|82|1247|32.7|texture|SOUL & R&B|LO-FI SOUL
@@ -551,4 +551,8 @@ san-mateo|SAN MATEO|westBounce|westBounce|102|1396|32.7|modern|WEST COAST|BAY AR
         "west-end": "bay-area-2026-a",
         "world-latin": "afrobeats-a"
     ]
+
+    /// The stock sounds from Tyrone's @prod.by.iiinfinite folders: the only ones a WEST COAST kit outside Vintage plays (Nov 8).
+    static let iiinfiniteFiles: Set<String> = Set(iiinfiniteList.split(separator: " ").map(String.init))
+    private static let iiinfiniteList = "bb_808_a1_01.wav bb_808_d1_01.wav bb_808_d1_02.wav bb_808_d1_03.wav bb_808_d1_04.wav bb_808_d1_06.wav bb_808_d1_long_01.wav bb_808_d1_long_03.wav bb_808_d1_long_04.wav bb_808_d1_short_01.wav bb_808_d1_short_02.wav bb_808_e1_01.wav bb_808_e1_03.wav bb_808_e1_04.wav bb_808_e1_05.wav bb_808_e1_06.wav bb_808_e1_07.wav bb_808_e1_long_02.wav bb_808_e1_long_04.wav bb_808_e1_long_05.wav bb_808_e1_short_01.wav bb_808_e1_short_02.wav bb_808_e1_short_05.wav bb_808_f1_01.wav bb_808_f1_02.wav bb_808_f1_05.wav bb_808_f1_06.wav bb_808_f1_07.wav bb_808_f1_08.wav bb_808_f1_long_02.wav bb_808_f1_long_03.wav bb_808_f1_long_05.wav bb_808_fs1_01.wav bb_808_fs1_02.wav bb_808_fs1_short_01.wav bb_808_fs1_short_02.wav bb_808_g1_02.wav bb_808_g1_03.wav bb_808_g1_04.wav bb_808_g1_05.wav bb_808_g1_06.wav bb_808_g1_long_01.wav bb_808_g1_short_03.wav bb_clap_room_02.wav bb_clap_room_03.wav bb_clap_tight_02.wav bb_clap_tight_04.wav bb_clap_tight_05.wav bb_clap_tight_06.wav bb_clap_tight_11.wav bb_clap_tight_12.wav bb_clap_tight_13.wav bb_clap_tight_14.wav bb_clap_tight_18.wav bb_clap_wide_11.wav bb_clap_wide_12.wav bb_clap_wide_14.wav bb_clap_wide_15.wav bb_cymbal_crash_01.wav bb_cymbal_crash_02.wav bb_cymbal_crash_04.wav bb_cymbal_crash_06.wav bb_cymbal_crash_07.wav bb_cymbal_short_01.wav bb_cymbal_short_02.wav bb_cymbal_short_03.wav bb_cymbal_short_04.wav bb_cymbal_short_05.wav bb_fx_atmos_03.wav bb_fx_atmos_04.wav bb_fx_reverse_04.wav bb_hat_crisp_03.wav bb_hat_crisp_04.wav bb_hat_crisp_11.wav bb_hat_crisp_12.wav bb_hat_crisp_13.wav bb_hat_crisp_14.wav bb_hat_crisp_15.wav bb_hat_crisp_16.wav bb_hat_crisp_17.wav bb_hat_crisp_19.wav bb_hat_crisp_25.wav bb_hat_crisp_28.wav bb_hat_crisp_31.wav bb_hat_crisp_32.wav bb_hat_crisp_33.wav bb_hat_crisp_35.wav bb_hat_dark_20.wav bb_hat_dark_24.wav bb_hat_dark_28.wav bb_hat_dark_32.wav bb_kick_knock_08.wav bb_kick_knock_09.wav bb_kick_knock_10.wav bb_kick_knock_11.wav bb_kick_knock_12.wav bb_kick_knock_13.wav bb_kick_knock_14.wav bb_kick_knock_15.wav bb_kick_knock_16.wav bb_kick_knock_17.wav bb_kick_knock_18.wav bb_kick_knock_21.wav bb_kick_thump_12.wav bb_open_hat_long_07.wav bb_open_hat_long_11.wav bb_open_hat_long_15.wav bb_open_hat_long_19.wav bb_open_hat_long_25.wav bb_open_hat_long_26.wav bb_open_hat_short_05.wav bb_open_hat_short_06.wav bb_open_hat_short_07.wav bb_open_hat_short_08.wav bb_open_hat_short_09.wav bb_open_hat_short_10.wav bb_open_hat_short_12.wav bb_open_hat_short_15.wav bb_open_hat_short_19.wav bb_open_hat_short_20.wav bb_open_hat_short_21.wav bb_open_hat_short_23.wav bb_open_hat_short_24.wav bb_perc_hit_01.wav bb_perc_hit_04.wav bb_perc_hit_05.wav bb_perc_hit_07.wav bb_perc_hit_09.wav bb_perc_hit_10.wav bb_perc_hit_11.wav bb_perc_hit_13.wav bb_perc_hit_14.wav bb_perc_hit_15.wav bb_perc_hit_17.wav bb_perc_hit_18.wav bb_perc_wood_05.wav bb_perc_wood_06.wav bb_perc_wood_07.wav bb_perc_wood_08.wav bb_perc_wood_09.wav bb_perc_wood_10.wav bb_perc_wood_11.wav bb_perc_wood_12.wav bb_perc_wood_13.wav bb_perc_wood_14.wav bb_perc_wood_16.wav bb_perc_wood_17.wav bb_perc_wood_18.wav bb_perc_wood_19.wav bb_perc_wood_21.wav bb_perc_wood_23.wav bb_perc_wood_24.wav bb_perc_wood_25.wav bb_rim_03.wav bb_rim_04.wav bb_rim_06.wav bb_rim_07.wav bb_rim_08.wav bb_rim_09.wav bb_rim_10.wav bb_rim_12.wav bb_rim_13.wav bb_rim_14.wav bb_rim_15.wav bb_rim_19.wav bb_rim_20.wav bb_rim_22.wav bb_rim_24.wav bb_rim_25.wav bb_rim_26.wav bb_rim_27.wav bb_rim_28.wav bb_shaker_01.wav bb_shaker_02.wav bb_shaker_03.wav bb_shaker_04.wav bb_shaker_05.wav bb_shaker_06.wav bb_shaker_07.wav bb_shaker_11.wav bb_shaker_13.wav bb_shaker_14.wav bb_snare_crack_03.wav bb_snare_crack_04.wav bb_snare_crack_05.wav bb_snare_crack_24.wav bb_snare_crack_28.wav bb_snare_crack_31.wav bb_snare_crack_36.wav bb_snare_crack_37.wav bb_snare_fat_19.wav bb_snare_room_06.wav bb_snare_room_07.wav bb_snare_room_08.wav bb_snare_room_09.wav bb_snare_room_10.wav bb_snare_room_13.wav bb_tom_high_01.wav bb_tom_high_02.wav bb_tom_high_03.wav bb_tom_high_04.wav bb_tom_high_05.wav bb_tom_high_06.wav bb_tom_high_07.wav bb_tom_high_08.wav bb_tom_high_09.wav bb_tom_high_10.wav bb_tom_high_11.wav bb_tom_low_04.wav bb_tom_low_05.wav bb_tom_low_07.wav bb_tom_low_08.wav bb_tom_low_09.wav bb_tom_low_10.wav bb_tom_low_11.wav bb_tom_low_12.wav bb_tom_low_13.wav bb_tom_low_14.wav bb_tom_low_15.wav bb_tom_low_16.wav bb_tom_low_17.wav bb_tom_low_18.wav bb_tom_low_19.wav bb_tom_low_20.wav"
 }

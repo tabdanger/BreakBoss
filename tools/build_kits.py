@@ -235,6 +235,57 @@ def vintage_picks(genre, likes, taken, uses):
     return files
 
 
+# Tyrone's acoustic drums: Virtuosity (ac_) and his own acoustic pack (va_). Tyrone, Nov 8: no Modern kit plays them.
+ACOUSTIC_PREFIXES = ("ac_", "va_")
+# Tyrone, Nov 8: "bay area and west coast kits should only include samples from the folders marked @prod.by.iiinfinite".
+SOURCES = json.load(open(os.path.join(ROOT, "tools", "stock_sources.json")))
+IIINFINITE = {s["file"] for s in SOUNDS if "iiinfinite" in (SOURCES.get(s["file"], {}).get("path") or "").lower()}
+
+
+def west_coast_iiinfinite(kits, assignments, by_file):
+    """Every WEST COAST kit outside Vintage (Bay Area, West Coast, Hyphy... in Modern and Texture) plays only sounds from
+    the @prod.by.iiinfinite folders (Tyrone, Nov 8). A pad holding any other sound takes the iiinfinite sound of the pad's
+    kind nearest it in character that no other kit of its genre plays (Bay Area kits may share, as before), never one
+    already in the kit; EMPTY pads stay EMPTY. The Go2Spinz 808 stays on every Bay Area kit's 808 pad (Tyrone, Oct 27)."""
+    wc = {k[0]: k for k in kits if k[8] == "WEST COAST" and k[7] != "vintage"}
+    of_kit = collections.defaultdict(dict)
+    for a in assignments:
+        if a["kitID"] in wc: of_kit[a["kitID"]][a["pad"]] = a
+    in_genre = collections.defaultdict(set)
+    for kid, pads in of_kit.items():
+        for a in pads.values(): in_genre[wc[kid][9]].add(a["file"])
+    used = collections.Counter()
+    go2spinz = next(s["file"] for s in SOUNDS if s["name"] == BAY_AREA_808)
+
+    def kinds(pad):     # the perc pads take a perc or an FX hit, as in every other kit
+        cat = PADS[pad][0]
+        return ("PERC", "FX") if cat == "PERC" else (cat,)
+
+    def apart(f, g):      # how far apart two stock sounds are in character
+        if f not in Z or g not in Z: return 0.0
+        return sum((Z[f][k] - Z[g][k]) ** 2 for k in Z[f]) ** 0.5
+
+    for kid in sorted(of_kit, key=lambda k: [x[0] for x in kits].index(k)):
+        genre, pads = wc[kid][9], of_kit[kid]
+        for pad in sorted(pads):
+            a = pads[pad]
+            if a["file"] in IIINFINITE or (genre == "BAY AREA" and pad == 6 and a["file"] == go2spinz): continue
+            mine = {x["file"] for x in pads.values()}
+            fits = [s for s in SOUNDS if s["file"] in IIINFINITE and s["category"] in kinds(pad) and s["file"] not in mine]
+            free = [s for s in fits if s["file"] not in in_genre[genre]]
+            cands = fits if genre == "BAY AREA" else (free or fits)
+            assert cands, (kid, pad)
+            best = min(cands, key=lambda s: (apart(a["file"], s["file"]) + 0.8 * used[s["file"]], s["file"]))
+            a["file"], a["displayName"] = best["file"], best["name"]
+            in_genre[genre].add(best["file"]); used[best["file"]] += 1
+    out = []
+    for k in kits:      # the 808 lane follows a changed 808 pad
+        if k[0] in wc and 6 in of_kit[k[0]] and of_kit[k[0]][6]["file"] in by_file:
+            k = k[:6] + (root_hz(by_file[of_kit[k[0]][6]["file"]]),) + k[7:]
+        out.append(k)
+    return out
+
+
 def build():
     uses = collections.Counter()
     kits, assignments, empty = [], [], []
@@ -287,7 +338,7 @@ def build():
                 assert frozenset(files) not in seen_sets, name
                 seen_sets.add(frozenset(files))
                 kid = slug(name)
-                if mode == "vintage" or genre in kit_catalog.ACOUSTIC_GENRES:
+                if mode == "vintage" or (genre in kit_catalog.ACOUSTIC_GENRES and mode != "modern"):
                     # The picks above still count, so every kit after this one keeps its sounds; the kit plays these.
                     files = (vintage_picks(genre, dict(leans, tags=tags), ac_taken, ac_uses) if mode == "vintage"
                              else vintage_picks(genre, dict(leans, tags=tags), ac_taken2, ac_uses2))
@@ -313,7 +364,7 @@ def build():
             if pad in picks and picks[pad] is None:    # EMPTY: the loop has no such sound, so the pad plays nothing
                 files.append(None); names.append(None)
                 continue
-            if pad in picks:
+            if pad in picks and not (mode == "modern" and acoustic[picks[pad]]["file"].startswith(ACOUSTIC_PREFIXES)):
                 a = acoustic[picks[pad]]
                 assert a["category"] == PADS[pad][0] or (pad == 3 and a["category"] == "SNARE"), (name, pad)
                 files.append(a["file"]); names.append(a["name"])
@@ -321,8 +372,11 @@ def build():
             cands = [s for s in pool(pad, leans) if s["file"] not in taken[genre] and s["file"] not in files]
             cands = cands or [s for s in pool(pad, leans) if s["file"] not in files]    # 20 West Coast kits outnumber the toms
             best = max(cands, key=lambda s: (score(s, pad, tags, leans) - 1.2 * uses[s["file"]], s["file"]))
+            if pad in picks:    # a Modern kit's acoustic pick (Nov 8): its stock stand-in, leaving every later kit's sounds as they were
+                taken[genre].add(best["file"]); files.append(best["file"]); names.append(best["name"])
+                continue
             uses[best["file"]] += 1; taken[genre].add(best["file"])
-            if mode == "vintage" or genre in kit_catalog.ACOUSTIC_GENRES:    # acoustic only (Oct 26, 27): the pick still counts, so later kits keep theirs
+            if mode == "vintage" or (genre in kit_catalog.ACOUSTIC_GENRES and mode != "modern"):    # acoustic only (Oct 26, 27): the pick still counts, so later kits keep theirs
                 files.append(None); names.append(None)
                 continue
             files.append(best["file"]); names.append(best["name"])
@@ -334,6 +388,7 @@ def build():
         root = root_hz(by_file[files[6]]) if files[6] in by_file else C1_HZ   # no 808 of its own: the 808 lane's default C1
         kits.append((kid, name, voice, style, tempo, seed, root, mode, family, genre))
         seed += 1
+    kits = west_coast_iiinfinite(kits, assignments, by_file)
     return kits, assignments, uses, empty
 
 
@@ -374,7 +429,11 @@ def main():
               "    static let retired: [String: String] = ["]
     lines += [f'        "{o}": "{n}",' for o, n in sorted(retired.items())]
     lines[-1] = lines[-1].rstrip(",")
-    lines += ["    ]", "}", ""]
+    lines += ["    ]", "",
+              "    /// The stock sounds from Tyrone's @prod.by.iiinfinite folders: the only ones a WEST COAST kit outside Vintage plays (Nov 8).",
+              "    static let iiinfiniteFiles: Set<String> = Set(iiinfiniteList.split(separator: \" \").map(String.init))",
+              '    private static let iiinfiniteList = "' + " ".join(sorted(IIINFINITE)) + '"',
+              "}", ""]
     open(SWIFT, "w").write("\n".join(lines))
     used = len(uses); print(len(kits), "kits,", len(assignments), "pads,", used, "of", len(SOUNDS), "sounds used")
     by = collections.Counter(s["category"] for s in SOUNDS if s["file"] in uses)
