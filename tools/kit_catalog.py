@@ -256,6 +256,8 @@ VINTAGE_PAD_OF = {"K": 0, "S": 1, "C": 2, "R": 3, "H": 4, "O": 5, "P": 7, "Q": 8
 
 # Tyrone, Oct 27: "ALL Rock and Live soul kits need to use ALL acoustic sounds". These genres play only the
 # acoustic drums in every mode bank, like Vintage: the clap, 808 and perc pads EMPTY (no acoustic ones yet).
+# Except Modern (Tyrone, Nov 8: "none of the modern kits should have acoustic samples"): its rock kits
+# (STUDIO A, ARENA ANTHEM, TAILGATE) play stock sounds on every pad like any Modern kit (tools/build_kits.py).
 ACOUSTIC_GENRES = {"ROCK", "POP ROCK", "LIVE ROCK", "SOFT ROCK", "ARENA ROCK", "LIVE SOUL"}
 
 # Live acoustic kits (Oct 18): Virtuosity Drums, multisampled with velocity layers and round robins
