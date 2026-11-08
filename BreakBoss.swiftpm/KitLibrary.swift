@@ -176,11 +176,32 @@ enum KitLibrary {
     static var browserOrder: [KitDefinition] { SoundMode.allCases.flatMap { kits(for: $0) } + machineEraKits }
 
     /// The modes whose kits the KITS menu and kit arrows show while playing in `mode`: Vintage shows only its
-    /// own acoustic kits (Tyrone, Oct 29), the other modes every bank as before.
-    static func browsedModes(_ mode: SoundMode) -> [SoundMode] { mode == .vintage ? [.vintage] : SoundMode.allCases }
+    /// own acoustic kits (Tyrone, Oct 29); Modern every bank but Vintage's (Tyrone, Nov 8: "acoustic kits are only
+    /// for vintage kits and patterns"); Texture every bank as before.
+    static func browsedModes(_ mode: SoundMode) -> [SoundMode] {
+        switch mode {
+        case .vintage: return [.vintage]
+        case .modern: return [.modern, .texture]
+        case .texture: return SoundMode.allCases
+        }
+    }
+
+    /// The live-drummer (acoustic) genres: Modern's menus leave them out (Tyrone, Nov 8); their kits stay in the
+    /// table so old saves still open (tools/kit_catalog.py ACOUSTIC_GENRES).
+    static let liveDrummerGenres: Set<String> = ["ROCK", "POP ROCK", "LIVE ROCK", "SOFT ROCK", "ARENA ROCK", "LIVE SOUL"]
+
+    /// The bank's kits the menus show while playing in `mode`.
+    static func kits(for bank: SoundMode, in mode: SoundMode) -> [KitDefinition] {
+        mode == .modern ? kits(for: bank).filter { !liveDrummerGenres.contains($0.genre) } : kits(for: bank)
+    }
+
+    /// The bank's kits under their genre tabs, as the KITS menu shows them while playing in `mode`.
+    static func genreGroups(for bank: SoundMode, in mode: SoundMode) -> [(genre: String, kits: [KitDefinition])] {
+        groups(kits(for: bank, in: mode), by: \.family)
+    }
 
     static func browserOrder(for mode: SoundMode) -> [KitDefinition] {
-        browsedModes(mode).flatMap { kits(for: $0) } + (mode == .vintage ? [] : machineEraKits)
+        browsedModes(mode).flatMap { kits(for: $0, in: mode) } + (mode == .vintage ? [] : machineEraKits)
     }
 
     private static func groups(_ kits: [KitDefinition], by key: KeyPath<KitDefinition, String>) -> [(genre: String, kits: [KitDefinition])] {
