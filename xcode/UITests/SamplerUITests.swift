@@ -371,9 +371,9 @@ final class SamplerUITests: XCTestCase {
         let grabUp = title.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         grabUp.press(forDuration: 0.3, thenDragTo: grabUp.withOffset(CGVector(dx: 0, dy: -moveBy)))
         sleep(1)
-        // the keyboard: C3 to C7, as in the render
-        XCTAssertTrue(any("samplerKey36").exists && any("samplerKey84").exists, "the keyboard runs from C3 to C7")
-        XCTAssertFalse(any("samplerKey86").exists, "the keyboard stops at C7")
+        // the keyboard: C3 to C7, as in the render; C3 is MIDI 60, the root every sample loads on
+        XCTAssertTrue(any("samplerKey60").exists && any("samplerKey108").exists, "the keyboard runs from C3 to C7")
+        XCTAssertFalse(any("samplerKey59").exists || any("samplerKey110").exists, "the keyboard runs C3 to C7 only")
         snap("misc-turned")
         XCTAssertEqual(app.state, .runningForeground, "the app is still running")
     }
