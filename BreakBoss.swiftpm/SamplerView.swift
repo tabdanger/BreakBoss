@@ -222,7 +222,7 @@ struct SamplerWindow: View {
     @State private var page = 0                  // 0 SAMPLE, 1 ENVELOPE, 2 MISC
     @State private var trackingTab = 1           // MISC's tracking: 0 Vol (velocity), 1 Key
     @State private var target: SamplerTarget = .volume
-    @State private var keyboardStart = 36        // the keyboard's first key (C3)
+    @State private var keyboardStart = 60        // the keyboard's first key: C3, the root every sample loads on
     @State private var zoom: CGFloat = 1
     @State private var scrollPos: CGFloat = 0
     @State private var pinchFrom: CGFloat?
@@ -2017,7 +2017,12 @@ struct SamplerWindow: View {
     }
 
     /// FL names notes with C5 = MIDI 60.
-    static func noteName(_ n: Int) -> String { "\(MusicScale.noteNames[((n % 12) + 12) % 12])\(n / 12)" }
+    /// Note names as Logic shows them: MIDI 60 = C3, the root note every sample loads on, so a
+    /// sample plays at its own pitch on C3 (Tyrone, Nov 10). Before this, 60 read "C5" and the
+    /// key labelled C3 (MIDI 36) played two octaves down.
+    static func noteName(_ n: Int) -> String {
+        "\(MusicScale.noteNames[((n % 12) + 12) % 12])\(Int((Double(n) / 12).rounded(.down)) - 2)"
+    }
 
     private func rootBar(_ s: CGFloat) -> some View {
         panel(nil, s) {
