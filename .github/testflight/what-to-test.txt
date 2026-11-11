@@ -38,6 +38,7 @@ MIDI AND PLUG-IN
 - Plug-in defaults to MIDI OUT ONE TRACK (whole kit on channel 1, notes 36-47).
 - Akai MPK Mini is named on the default pad map (pads 1-12 = notes 36-47).
 - Fixed a crash when Logic Pro reopens a song with BreaKing in it.
+- Plug-in window takes any size the host offers and can be resized live; an open menu closes when the window changes width.
 
 Please try:
 - Finger drum fast rolls and several fingers at once; listen for missed or doubled hits, and watch the pad flashes keep up.
@@ -46,3 +47,4 @@ Please try:
 - Load kits and presets fast from the folder menus in every mode, including Vintage.
 - Import a FLAC or MP3 from iCloud onto a pad.
 - In Logic, reopen a saved song with BreaKing and record its MIDI out.
+- Resize: Split View, Slide Over and Stage Manager in the app; drag the plug-in window bigger and smaller in Logic and AUM.
