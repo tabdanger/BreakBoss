@@ -477,6 +477,12 @@ private struct BBMenuHost: ViewModifier {
                 }
             )
             .coordinateSpace(name: bbSpace)
+            // the window was resized (Split View, Stage Manager, a host's plug-in window): an open menu
+            // still points at where its button used to be, so it closes; the next tap opens it in place.
+            // Width only: the on-screen keyboard (a menu's search field) changes the height, not the width.
+            .background(GeometryReader { geo in
+                Color.clear.onChange(of: geo.size.width) { _ in if center.open != nil { center.close() } }
+            })
     }
 
     private func panelLeft(_ spec: BBMenuSpec, _ geo: GeometryProxy) -> CGFloat {

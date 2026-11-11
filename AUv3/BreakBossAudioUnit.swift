@@ -107,6 +107,16 @@ public final class BreakBossAudioUnit: AUAudioUnit {
 
     public override var factoryPresets: [AUAudioUnitPreset]? { factory }
 
+    /// Window sizes (Tyrone, Nov 11): the faceplate scales itself to any size the host offers, small
+    /// strip, half screen or full screen, so every view configuration the host asks about is taken.
+    /// Hosts that resize the plug-in window live (Logic, AUM, Cubasis) can then grow or shrink it freely.
+    public override func supportedViewConfigurations(_ availableViewConfigurations: [AUAudioUnitViewConfiguration]) -> IndexSet {
+        IndexSet(integersIn: 0..<availableViewConfigurations.count)
+    }
+
+    /// Nothing to switch: the same faceplate fills whatever window the host picked.
+    public override func select(_ viewConfiguration: AUAudioUnitViewConfiguration) {}
+
     public override var supportsUserPresets: Bool { true }
 
     public override var currentPreset: AUAudioUnitPreset? {
