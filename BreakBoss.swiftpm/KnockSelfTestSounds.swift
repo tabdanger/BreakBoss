@@ -45,6 +45,30 @@ extension KnockSelfTest {
         guard library.failure == nil else { return }
 
         let urls = Set(library.allSounds.map(\.url))
+        // Nov 12: the stock sounds ship as Apple Lossless (.caf) under their old "<name>.wav" names, and decode to
+        // exactly the samples the WAVs held: each one's length and a hash of its 16-bit samples
+        // (tools/compress_stock_sounds.py, stock_pcm.json).
+        struct PCM: Decodable { let frames: Int; let channels: Int; let fnv: String }
+        struct PCMTable: Decodable { let version: Int; let sounds: [String: PCM] }
+        let pcm = knockResourceURL("stock_pcm", "json").flatMap { try? Data(contentsOf: $0) }
+            .flatMap { try? JSONDecoder().decode(PCMTable.self, from: $0) }?.sounds ?? [:]
+        check(pcm.count >= urls.count, "stock_pcm.json lists every stock sound (\(pcm.count))")
+        check(urls.allSatisfy { $0.pathExtension == "wav" && SampleLoader.stockFile($0).pathExtension == "caf" },
+              "every stock sound keeps its .wav name and is read from its Apple Lossless .caf")
+        func exact(_ url: URL, _ buffer: SampleBuffer) -> Bool {
+            guard let want = pcm[url.lastPathComponent], want.frames == buffer.length,
+                  (want.channels == 2) == buffer.stereo, buffer.bitDepth == 16 else { return false }
+            var h: UInt64 = 0xcbf2_9ce4_8422_2325
+            func add(_ x: Float) {
+                let v = UInt16(bitPattern: Int16(clamping: Int((x * 32_768).rounded())))
+                h = (h ^ UInt64(v)) &* 0x0000_0100_0000_01b3
+            }
+            for frame in 0..<buffer.length {
+                add(buffer.left[frame])
+                if buffer.stereo { add(buffer.right[frame]) }
+            }
+            return String(format: "%016llx", h) == want.fnv
+        }
         // crashes ring out: Tyrone's own (Oct 20) run up to 12.8 s of audible tail
         let cymbals = Set(library.allSounds.filter { SoundType.forStockName($0.displayName) == .cymbal }.map(\.url))
         let names = library.allSounds.map(\.displayName)
@@ -199,6 +223,7 @@ extension KnockSelfTest {
                     check(abs(buffer.sampleRate - 48_000) < 1 && buffer.length > 0 && buffer.seconds <= 4 && peak.isFinite
                           && peak > 0.000_1 && peak <= stockLoudnessCeiling * 1.002,
                           "\(url.lastPathComponent): acoustic layer at 48 kHz, bounded and audible")
+                    check(exact(url, buffer), "\(url.lastPathComponent): acoustic layer decodes to its exact 16-bit samples")
                 }
             }
         }
@@ -217,6 +242,7 @@ extension KnockSelfTest {
                     }
                     check(finite, "\(url.lastPathComponent): decoded stereo audio is finite")
                     check(peak > 0.005 && peak <= 1.000_01, "\(url.lastPathComponent): decoded stock audio is audible and bounded")
+                    check(exact(url, buffer), "\(url.lastPathComponent): decodes to its exact 16-bit samples (length and hash)")
                 } catch {
                     check(false, "\(url.lastPathComponent): stock audio decodes (\(error.localizedDescription))")
                 }
@@ -241,8 +267,9 @@ extension KnockSelfTest {
         }
         // A MY SOUNDS copy of a stock sound that was levelled (same name and size, other audio) goes back
         // to the original; a different file of yours with that name stays.
-        if let original = try? Data(contentsOf: hat.url), original.count > 100 {
-            let copy = KnockFolders.samples.appendingPathComponent(hat.url.lastPathComponent)
+        let hatFile = SampleLoader.stockFile(hat.url)
+        if let original = try? Data(contentsOf: hatFile), original.count > 100 {
+            let copy = KnockFolders.samples.appendingPathComponent(hatFile.lastPathComponent)
             var levelled = original; levelled[levelled.count - 2] ^= 0x5A; levelled[levelled.count - 40] ^= 0x33
             try? levelled.write(to: copy)
             let n = SampleLoader.restoreStockCopies([hat.url])
@@ -329,6 +356,8 @@ extension KnockSelfTest {
             check(now == sound.name, "sound swap: the track plays \(sound.name) once it's picked (heard \(now))")
             check(onMain({ rc.rackChannels.first { $0.pad == 0 }!.name }) == sound.name, "sound swap: the rack names \(sound.name)")
         }
+        check(onMain({ rc.state.pads[0].sampleFile })?.hasSuffix(".caf") == true && onMain({ rc.padName(0) }) == hat.name,
+              "sound swap: a picked stock sound is copied as its Apple Lossless file and keeps its stock name")
         // Playing, kick track soloed, sounds picked while the pattern runs (Tyrone's video).
         if let preset = PatternBank.all.first(where: { $0.name.uppercased().contains("HYPHY") }) ?? PatternBank.all.first {
             onMain { rc.loadPatternPreset(preset); if !rc.soloPads[0] { rc.toggleSolo(0) } }

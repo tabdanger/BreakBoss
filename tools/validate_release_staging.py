@@ -63,7 +63,8 @@ def main():
         for item in assignments:
             require(0 <= item["pad"] < 12, f"{target}: invalid stock pad")
             require(Path(item["file"]).name == item["file"], f"{target}: non-flat stock filename")
-            require(manifest_path.with_name(item["file"]).is_file(), f"{target}: missing stock WAV {item['file']}")
+            stored = manifest_path.with_name(item["file"])
+            require(stored.is_file() or stored.with_suffix(".caf").is_file(), f"{target}: missing stock sound {item['file']}")
 
         report["targets"][target] = {
             "swiftFiles": len(staged_sources),

@@ -36,7 +36,7 @@ enum PortablePreset {
         let kitID = KitLibrary.kit(id: exportState.kitID).id
         for pad in exportState.pads.indices where exportState.pads[pad].sampleFile == nil {
             guard let stock = stockLibrary.sample(kitID: kitID, pad: pad) else { continue }
-            let source = stock.url.resolvingSymlinksInPath().standardizedFileURL
+            let source = SampleLoader.stockFile(stock.url).resolvingSymlinksInPath().standardizedFileURL
             let key: String
             if let existing = stockKeys[source] {
                 key = existing

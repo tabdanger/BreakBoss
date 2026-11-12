@@ -1,0 +1,4970 @@
+{
+"sounds": {
+"ac_crash_l1_r1.wav": {
+"channels": 2,
+"fnv": "ff7d1b44ed63b6a8",
+"frames": 153600
+},
+"ac_crash_l1_r2.wav": {
+"channels": 2,
+"fnv": "39ea31ea7bdb2637",
+"frames": 153600
+},
+"ac_crash_l2_r1.wav": {
+"channels": 2,
+"fnv": "c94f6ed5e81eb761",
+"frames": 153600
+},
+"ac_crash_l2_r2.wav": {
+"channels": 2,
+"fnv": "4977868adf93a181",
+"frames": 153600
+},
+"ac_crash_l3_r1.wav": {
+"channels": 2,
+"fnv": "b63a89d9b62ae772",
+"frames": 153600
+},
+"ac_crash_l3_r2.wav": {
+"channels": 2,
+"fnv": "f415cf4719c15a07",
+"frames": 153600
+},
+"ac_halfhat_l1_r1.wav": {
+"channels": 2,
+"fnv": "8ff0e97f501d7254",
+"frames": 48000
+},
+"ac_halfhat_l1_r2.wav": {
+"channels": 2,
+"fnv": "f3815e9977ab3af3",
+"frames": 48000
+},
+"ac_halfhat_l2_r1.wav": {
+"channels": 2,
+"fnv": "4f5ff50551378f89",
+"frames": 48000
+},
+"ac_halfhat_l2_r2.wav": {
+"channels": 2,
+"fnv": "fe76e26c916aa2d4",
+"frames": 48000
+},
+"ac_halfhat_l3_r1.wav": {
+"channels": 2,
+"fnv": "f2986e593b5825db",
+"frames": 48000
+},
+"ac_halfhat_l3_r2.wav": {
+"channels": 2,
+"fnv": "68fdee0bba30008d",
+"frames": 48000
+},
+"ac_halfhat_l4_r1.wav": {
+"channels": 2,
+"fnv": "9e98a566196401c8",
+"frames": 48000
+},
+"ac_halfhat_l4_r2.wav": {
+"channels": 2,
+"fnv": "1664dfddb79d696e",
+"frames": 48000
+},
+"ac_hat_l1_r1.wav": {
+"channels": 2,
+"fnv": "b9f8b604665deca4",
+"frames": 21600
+},
+"ac_hat_l1_r2.wav": {
+"channels": 2,
+"fnv": "527e85962dd6097e",
+"frames": 21600
+},
+"ac_hat_l1_r3.wav": {
+"channels": 2,
+"fnv": "937dcefd840d976e",
+"frames": 21600
+},
+"ac_hat_l2_r1.wav": {
+"channels": 2,
+"fnv": "eae419b3426799a5",
+"frames": 21600
+},
+"ac_hat_l2_r2.wav": {
+"channels": 2,
+"fnv": "4bcc07a51682bf44",
+"frames": 21600
+},
+"ac_hat_l2_r3.wav": {
+"channels": 2,
+"fnv": "ab6968aa2cf36c5b",
+"frames": 21600
+},
+"ac_hat_l3_r1.wav": {
+"channels": 2,
+"fnv": "ce915bd1d66dee6d",
+"frames": 21600
+},
+"ac_hat_l3_r2.wav": {
+"channels": 2,
+"fnv": "f1cdff7c4eeb5e3f",
+"frames": 21600
+},
+"ac_hat_l3_r3.wav": {
+"channels": 2,
+"fnv": "6dacd013f3ded9de",
+"frames": 21600
+},
+"ac_hat_l4_r1.wav": {
+"channels": 2,
+"fnv": "3d9a9216d830d8a3",
+"frames": 21600
+},
+"ac_hat_l4_r2.wav": {
+"channels": 2,
+"fnv": "8c1dc2f55a8076eb",
+"frames": 21600
+},
+"ac_hat_l4_r3.wav": {
+"channels": 2,
+"fnv": "c43ddbb5ea5161ac",
+"frames": 21600
+},
+"ac_hitom_l1_r1.wav": {
+"channels": 2,
+"fnv": "a42e3d31d9964fe7",
+"frames": 48000
+},
+"ac_hitom_l1_r2.wav": {
+"channels": 2,
+"fnv": "3f7455d6944586bd",
+"frames": 48000
+},
+"ac_hitom_l2_r1.wav": {
+"channels": 2,
+"fnv": "54e3570bc5c2b7fa",
+"frames": 48000
+},
+"ac_hitom_l2_r2.wav": {
+"channels": 2,
+"fnv": "f5dc7d8fb1ba337e",
+"frames": 48000
+},
+"ac_hitom_l3_r1.wav": {
+"channels": 2,
+"fnv": "9c8e5d4dd3734b0d",
+"frames": 48000
+},
+"ac_hitom_l3_r2.wav": {
+"channels": 2,
+"fnv": "0126d793a8dadeeb",
+"frames": 48000
+},
+"ac_hitom_l4_r1.wav": {
+"channels": 2,
+"fnv": "05cad44da31ef39c",
+"frames": 48000
+},
+"ac_hitom_l4_r2.wav": {
+"channels": 2,
+"fnv": "b398e147d3f204dc",
+"frames": 48000
+},
+"ac_kick_l1_r1.wav": {
+"channels": 2,
+"fnv": "0c7570271daa0c14",
+"frames": 48000
+},
+"ac_kick_l1_r2.wav": {
+"channels": 2,
+"fnv": "8bcc6f04a3a0708a",
+"frames": 48000
+},
+"ac_kick_l2_r1.wav": {
+"channels": 2,
+"fnv": "b6cdeb358e5a401c",
+"frames": 48000
+},
+"ac_kick_l2_r2.wav": {
+"channels": 2,
+"fnv": "e757e16232bb98d9",
+"frames": 48000
+},
+"ac_kick_l3_r1.wav": {
+"channels": 2,
+"fnv": "3ce99fa1b1451317",
+"frames": 48000
+},
+"ac_kick_l3_r2.wav": {
+"channels": 2,
+"fnv": "3856502bb2738d6b",
+"frames": 48000
+},
+"ac_kick_l4_r1.wav": {
+"channels": 2,
+"fnv": "1edaf0185f3d7df8",
+"frames": 48000
+},
+"ac_kick_l4_r2.wav": {
+"channels": 2,
+"fnv": "a0d589d00c332959",
+"frames": 48000
+},
+"ac_lotom_l1_r1.wav": {
+"channels": 2,
+"fnv": "6e99f4ba47f2a0b1",
+"frames": 57600
+},
+"ac_lotom_l1_r2.wav": {
+"channels": 2,
+"fnv": "6d97d3cd494acb4e",
+"frames": 57600
+},
+"ac_lotom_l2_r1.wav": {
+"channels": 2,
+"fnv": "01086c975b64e13b",
+"frames": 57600
+},
+"ac_lotom_l2_r2.wav": {
+"channels": 2,
+"fnv": "a655dd43d562a8f6",
+"frames": 57600
+},
+"ac_lotom_l3_r1.wav": {
+"channels": 2,
+"fnv": "9ae30db5809fe281",
+"frames": 57600
+},
+"ac_lotom_l3_r2.wav": {
+"channels": 2,
+"fnv": "6f91925a1d436582",
+"frames": 57600
+},
+"ac_lotom_l4_r1.wav": {
+"channels": 2,
+"fnv": "e5cfd5147332f62e",
+"frames": 57600
+},
+"ac_lotom_l4_r2.wav": {
+"channels": 2,
+"fnv": "0db14cf471d51a01",
+"frames": 57600
+},
+"ac_offctr_l1_r1.wav": {
+"channels": 2,
+"fnv": "a995aec6b0e85384",
+"frames": 38400
+},
+"ac_offctr_l1_r2.wav": {
+"channels": 2,
+"fnv": "401a0aeb9bc2d98d",
+"frames": 38400
+},
+"ac_offctr_l2_r1.wav": {
+"channels": 2,
+"fnv": "33602d4e27c7b42e",
+"frames": 38400
+},
+"ac_offctr_l2_r2.wav": {
+"channels": 2,
+"fnv": "e82ffce575cd5d55",
+"frames": 38400
+},
+"ac_offctr_l3_r1.wav": {
+"channels": 2,
+"fnv": "145bfd921cb79bc4",
+"frames": 38400
+},
+"ac_offctr_l3_r2.wav": {
+"channels": 2,
+"fnv": "cf6dbdc23437bb32",
+"frames": 38400
+},
+"ac_offctr_l4_r1.wav": {
+"channels": 2,
+"fnv": "425b74153932871d",
+"frames": 38400
+},
+"ac_offctr_l4_r2.wav": {
+"channels": 2,
+"fnv": "1786ce62f32b510c",
+"frames": 38400
+},
+"ac_offctr_l5_r1.wav": {
+"channels": 2,
+"fnv": "2389f06085a2b898",
+"frames": 38400
+},
+"ac_offctr_l5_r2.wav": {
+"channels": 2,
+"fnv": "735e4f1d7b3baacb",
+"frames": 38400
+},
+"ac_offctr_l6_r1.wav": {
+"channels": 2,
+"fnv": "9d3b5ce755db0844",
+"frames": 38400
+},
+"ac_offctr_l6_r2.wav": {
+"channels": 2,
+"fnv": "cb34aa61f1b303ab",
+"frames": 38400
+},
+"ac_openhat_l1_r1.wav": {
+"channels": 2,
+"fnv": "9fa53e2049fda90f",
+"frames": 86400
+},
+"ac_openhat_l1_r2.wav": {
+"channels": 2,
+"fnv": "c039db2ae9565e2c",
+"frames": 86400
+},
+"ac_openhat_l2_r1.wav": {
+"channels": 2,
+"fnv": "ae7b33538ce4e155",
+"frames": 86400
+},
+"ac_openhat_l2_r2.wav": {
+"channels": 2,
+"fnv": "9f501bb813ca9e93",
+"frames": 86400
+},
+"ac_openhat_l3_r1.wav": {
+"channels": 2,
+"fnv": "d001f8442148227d",
+"frames": 86400
+},
+"ac_openhat_l3_r2.wav": {
+"channels": 2,
+"fnv": "a5b51d4bb505aced",
+"frames": 86400
+},
+"ac_openhat_l4_r1.wav": {
+"channels": 2,
+"fnv": "876b724501bd9b2b",
+"frames": 86400
+},
+"ac_openhat_l4_r2.wav": {
+"channels": 2,
+"fnv": "4a50be2a2f6764c9",
+"frames": 86400
+},
+"ac_ride_l1_r1.wav": {
+"channels": 2,
+"fnv": "c139062a36da398c",
+"frames": 120000
+},
+"ac_ride_l1_r2.wav": {
+"channels": 2,
+"fnv": "4cf4128f6fb3f831",
+"frames": 120000
+},
+"ac_ride_l2_r1.wav": {
+"channels": 2,
+"fnv": "7c907c3b0663d88d",
+"frames": 120000
+},
+"ac_ride_l2_r2.wav": {
+"channels": 2,
+"fnv": "e952ca7b78216b4f",
+"frames": 120000
+},
+"ac_ride_l3_r1.wav": {
+"channels": 2,
+"fnv": "d4642bf162859500",
+"frames": 120000
+},
+"ac_ride_l3_r2.wav": {
+"channels": 2,
+"fnv": "d7a2f9acfe6607c2",
+"frames": 120000
+},
+"ac_rimshot_l1_r1.wav": {
+"channels": 2,
+"fnv": "5acf62575d09e31b",
+"frames": 43200
+},
+"ac_rimshot_l1_r2.wav": {
+"channels": 2,
+"fnv": "1d5268f58c28e54b",
+"frames": 43200
+},
+"ac_rimshot_l2_r1.wav": {
+"channels": 2,
+"fnv": "59d2b72381329b1a",
+"frames": 43200
+},
+"ac_rimshot_l2_r2.wav": {
+"channels": 2,
+"fnv": "7fc4838138f44129",
+"frames": 43200
+},
+"ac_rimshot_l3_r1.wav": {
+"channels": 2,
+"fnv": "d6498ac802ab2de2",
+"frames": 43200
+},
+"ac_rimshot_l3_r2.wav": {
+"channels": 2,
+"fnv": "b3d8bbb4102f27b7",
+"frames": 43200
+},
+"ac_rimshot_l4_r1.wav": {
+"channels": 2,
+"fnv": "7d8f68b183f58c00",
+"frames": 43200
+},
+"ac_rimshot_l4_r2.wav": {
+"channels": 2,
+"fnv": "06132748b7fff761",
+"frames": 43200
+},
+"ac_rimshot_l5_r1.wav": {
+"channels": 2,
+"fnv": "439aee45b343225b",
+"frames": 43200
+},
+"ac_rimshot_l5_r2.wav": {
+"channels": 2,
+"fnv": "e6c7ba7bc6b395f0",
+"frames": 43200
+},
+"ac_rimshot_l6_r1.wav": {
+"channels": 2,
+"fnv": "3085b468eeaabbef",
+"frames": 43200
+},
+"ac_rimshot_l6_r2.wav": {
+"channels": 2,
+"fnv": "de285959753fa86f",
+"frames": 43200
+},
+"ac_snare_l1_r1.wav": {
+"channels": 2,
+"fnv": "3e3ab940c6b0989f",
+"frames": 38400
+},
+"ac_snare_l1_r2.wav": {
+"channels": 2,
+"fnv": "4eef19101e312b94",
+"frames": 38400
+},
+"ac_snare_l2_r1.wav": {
+"channels": 2,
+"fnv": "654803b98c0d9353",
+"frames": 38400
+},
+"ac_snare_l2_r2.wav": {
+"channels": 2,
+"fnv": "fc0fad5907b38f83",
+"frames": 38400
+},
+"ac_snare_l3_r1.wav": {
+"channels": 2,
+"fnv": "3e0e720c7c4bc641",
+"frames": 38400
+},
+"ac_snare_l3_r2.wav": {
+"channels": 2,
+"fnv": "694ff5c4f587b961",
+"frames": 38400
+},
+"ac_snare_l4_r1.wav": {
+"channels": 2,
+"fnv": "742dfb1c3762729b",
+"frames": 38400
+},
+"ac_snare_l4_r2.wav": {
+"channels": 2,
+"fnv": "5b05be5c5bdec284",
+"frames": 38400
+},
+"ac_snare_l5_r1.wav": {
+"channels": 2,
+"fnv": "ec12d6fcde60cdc9",
+"frames": 38400
+},
+"ac_snare_l5_r2.wav": {
+"channels": 2,
+"fnv": "c61d4765da5a220e",
+"frames": 38400
+},
+"ac_snare_l6_r1.wav": {
+"channels": 2,
+"fnv": "3dbcdf2bb09f7002",
+"frames": 38400
+},
+"ac_snare_l6_r2.wav": {
+"channels": 2,
+"fnv": "d94f204ab6d2bd37",
+"frames": 38400
+},
+"ac_snare_l7_r1.wav": {
+"channels": 2,
+"fnv": "fb71a3b7cbf21867",
+"frames": 38400
+},
+"ac_snare_l7_r2.wav": {
+"channels": 2,
+"fnv": "eacb804560d4654c",
+"frames": 38400
+},
+"ac_snare_l8_r1.wav": {
+"channels": 2,
+"fnv": "0bba2cc61c05ed7d",
+"frames": 38400
+},
+"ac_snare_l8_r2.wav": {
+"channels": 2,
+"fnv": "50c4ec5f1f659b70",
+"frames": 38400
+},
+"ac_xstick_l1_r1.wav": {
+"channels": 2,
+"fnv": "14a7e9753599658c",
+"frames": 19200
+},
+"ac_xstick_l1_r2.wav": {
+"channels": 2,
+"fnv": "1eb068ba996f751a",
+"frames": 19200
+},
+"ac_xstick_l2_r1.wav": {
+"channels": 2,
+"fnv": "ef8e45e40e896392",
+"frames": 19200
+},
+"ac_xstick_l2_r2.wav": {
+"channels": 2,
+"fnv": "b46a4fff3ebe4adc",
+"frames": 19200
+},
+"ac_xstick_l3_r1.wav": {
+"channels": 2,
+"fnv": "6048d6bbb6669d77",
+"frames": 19200
+},
+"ac_xstick_l3_r2.wav": {
+"channels": 2,
+"fnv": "7b7d79ca212047b2",
+"frames": 19200
+},
+"ac_xstick_l4_r1.wav": {
+"channels": 2,
+"fnv": "5171437c6013c59d",
+"frames": 19200
+},
+"ac_xstick_l4_r2.wav": {
+"channels": 2,
+"fnv": "34580c4428750fc9",
+"frames": 19200
+},
+"ac_xstick_l5_r1.wav": {
+"channels": 2,
+"fnv": "b131689cd747287b",
+"frames": 19200
+},
+"ac_xstick_l5_r2.wav": {
+"channels": 2,
+"fnv": "50d3a4d346f37269",
+"frames": 19200
+},
+"ac_xstick_l6_r1.wav": {
+"channels": 2,
+"fnv": "451fde3b3569209a",
+"frames": 19200
+},
+"ac_xstick_l6_r2.wav": {
+"channels": 2,
+"fnv": "6b7f13336698108d",
+"frames": 19200
+},
+"bb_808_a1_01.wav": {
+"channels": 2,
+"fnv": "b41e000f79653c27",
+"frames": 40363
+},
+"bb_808_a1_long_01.wav": {
+"channels": 2,
+"fnv": "f935b8e59a6cc641",
+"frames": 104944
+},
+"bb_808_a1_short_01.wav": {
+"channels": 2,
+"fnv": "a9e18327497fe59e",
+"frames": 24198
+},
+"bb_808_d1_01.wav": {
+"channels": 2,
+"fnv": "c7b98070220b97ad",
+"frames": 72744
+},
+"bb_808_d1_02.wav": {
+"channels": 2,
+"fnv": "1d39f6db3d317773",
+"frames": 53885
+},
+"bb_808_d1_03.wav": {
+"channels": 2,
+"fnv": "1217ad664a97a0bf",
+"frames": 53851
+},
+"bb_808_d1_04.wav": {
+"channels": 2,
+"fnv": "02925c459b44593c",
+"frames": 74181
+},
+"bb_808_d1_05.wav": {
+"channels": 2,
+"fnv": "4e3df92450680400",
+"frames": 67221
+},
+"bb_808_d1_06.wav": {
+"channels": 2,
+"fnv": "9cbe2ecb9e76c05c",
+"frames": 53851
+},
+"bb_808_d1_07.wav": {
+"channels": 2,
+"fnv": "eef473041c3f391c",
+"frames": 72023
+},
+"bb_808_d1_08.wav": {
+"channels": 2,
+"fnv": "a922e52eeb1be6e6",
+"frames": 54542
+},
+"bb_808_d1_09.wav": {
+"channels": 2,
+"fnv": "3cdc1bedc4d0abcd",
+"frames": 56355
+},
+"bb_808_d1_long_01.wav": {
+"channels": 2,
+"fnv": "d25ad00dc1e23a09",
+"frames": 84138
+},
+"bb_808_d1_long_02.wav": {
+"channels": 2,
+"fnv": "a4abeedc6415f41f",
+"frames": 85736
+},
+"bb_808_d1_long_03.wav": {
+"channels": 2,
+"fnv": "59496581f9c13a3b",
+"frames": 86215
+},
+"bb_808_d1_long_04.wav": {
+"channels": 2,
+"fnv": "08e86ac61495c339",
+"frames": 140452
+},
+"bb_808_d1_long_05.wav": {
+"channels": 2,
+"fnv": "b714400351029f1b",
+"frames": 94921
+},
+"bb_808_d1_short_01.wav": {
+"channels": 2,
+"fnv": "3f4c1542e695146b",
+"frames": 26942
+},
+"bb_808_d1_short_02.wav": {
+"channels": 2,
+"fnv": "c3be66ba81d7bb51",
+"frames": 26942
+},
+"bb_808_d1_short_03.wav": {
+"channels": 2,
+"fnv": "3c4469ff01232817",
+"frames": 89178
+},
+"bb_808_ds1_long_01.wav": {
+"channels": 2,
+"fnv": "5e8cb84db978b71e",
+"frames": 148525
+},
+"bb_808_e1_01.wav": {
+"channels": 2,
+"fnv": "ee2b12133e534d39",
+"frames": 93289
+},
+"bb_808_e1_02.wav": {
+"channels": 2,
+"fnv": "8e18d5e7baaac50e",
+"frames": 85728
+},
+"bb_808_e1_03.wav": {
+"channels": 2,
+"fnv": "61c3ada3b86436fb",
+"frames": 74173
+},
+"bb_808_e1_04.wav": {
+"channels": 2,
+"fnv": "4b64ad67e3ddeda7",
+"frames": 84129
+},
+"bb_808_e1_05.wav": {
+"channels": 2,
+"fnv": "3be3525d39224d19",
+"frames": 81634
+},
+"bb_808_e1_06.wav": {
+"channels": 2,
+"fnv": "9c9efcf75f97927f",
+"frames": 60469
+},
+"bb_808_e1_07.wav": {
+"channels": 2,
+"fnv": "d2d666a0ff75b160",
+"frames": 60469
+},
+"bb_808_e1_08.wav": {
+"channels": 2,
+"fnv": "5d24fc4473ed42f5",
+"frames": 87178
+},
+"bb_808_e1_09.wav": {
+"channels": 2,
+"fnv": "8d122355ada2288f",
+"frames": 72097
+},
+"bb_808_e1_10.wav": {
+"channels": 2,
+"fnv": "d38a428e45dd0601",
+"frames": 56323
+},
+"bb_808_e1_long_01.wav": {
+"channels": 2,
+"fnv": "f2fc363dae7cb58e",
+"frames": 94920
+},
+"bb_808_e1_long_02.wav": {
+"channels": 2,
+"fnv": "679ea7be5914bde1",
+"frames": 157047
+},
+"bb_808_e1_long_03.wav": {
+"channels": 2,
+"fnv": "5a06eaf3651d3c63",
+"frames": 157220
+},
+"bb_808_e1_long_04.wav": {
+"channels": 2,
+"fnv": "4324bea1021a0594",
+"frames": 138650
+},
+"bb_808_e1_long_05.wav": {
+"channels": 2,
+"fnv": "ab4f572bc5b34df1",
+"frames": 158355
+},
+"bb_808_e1_short_01.wav": {
+"channels": 2,
+"fnv": "7adef3db3dd89e86",
+"frames": 20560
+},
+"bb_808_e1_short_02.wav": {
+"channels": 2,
+"fnv": "b47e67f8a99b8cc0",
+"frames": 36282
+},
+"bb_808_e1_short_03.wav": {
+"channels": 2,
+"fnv": "14a635c1b597ba00",
+"frames": 50894
+},
+"bb_808_e1_short_04.wav": {
+"channels": 2,
+"fnv": "f60ce600440267b8",
+"frames": 48665
+},
+"bb_808_e1_short_05.wav": {
+"channels": 2,
+"fnv": "451f2cb953d459e2",
+"frames": 36383
+},
+"bb_808_f1_01.wav": {
+"channels": 2,
+"fnv": "339a17ebf776fc9e",
+"frames": 64064
+},
+"bb_808_f1_02.wav": {
+"channels": 2,
+"fnv": "8753880fe71a1136",
+"frames": 86486
+},
+"bb_808_f1_03.wav": {
+"channels": 2,
+"fnv": "7065caf922943b0b",
+"frames": 72949
+},
+"bb_808_f1_04.wav": {
+"channels": 2,
+"fnv": "72ba614b2e77c97c",
+"frames": 67224
+},
+"bb_808_f1_05.wav": {
+"channels": 2,
+"fnv": "4a4a0cac1b4f48d6",
+"frames": 57658
+},
+"bb_808_f1_06.wav": {
+"channels": 2,
+"fnv": "a71702511ae0db7d",
+"frames": 86486
+},
+"bb_808_f1_07.wav": {
+"channels": 2,
+"fnv": "abca867b2e425a54",
+"frames": 93287
+},
+"bb_808_f1_08.wav": {
+"channels": 2,
+"fnv": "c4bcb6584a387165",
+"frames": 84127
+},
+"bb_808_f1_09.wav": {
+"channels": 2,
+"fnv": "78be993d0d693f17",
+"frames": 54529
+},
+"bb_808_f1_10.wav": {
+"channels": 2,
+"fnv": "567045b008686169",
+"frames": 56783
+},
+"bb_808_f1_long_01.wav": {
+"channels": 2,
+"fnv": "869dcca78745f929",
+"frames": 148132
+},
+"bb_808_f1_long_02.wav": {
+"channels": 2,
+"fnv": "c9c8f6e0870c19e8",
+"frames": 167003
+},
+"bb_808_f1_long_03.wav": {
+"channels": 2,
+"fnv": "f084cbfac1961e51",
+"frames": 138648
+},
+"bb_808_f1_long_04.wav": {
+"channels": 2,
+"fnv": "34d3e50fc2d0e5b1",
+"frames": 166567
+},
+"bb_808_f1_long_05.wav": {
+"channels": 2,
+"fnv": "0f7a898e532497e2",
+"frames": 165885
+},
+"bb_808_f1_short_01.wav": {
+"channels": 2,
+"fnv": "80eec1d005f8c61a",
+"frames": 48594
+},
+"bb_808_fs1_01.wav": {
+"channels": 2,
+"fnv": "1c7416c434948240",
+"frames": 33947
+},
+"bb_808_fs1_02.wav": {
+"channels": 2,
+"fnv": "fa37d425f12dce74",
+"frames": 45828
+},
+"bb_808_fs1_short_01.wav": {
+"channels": 2,
+"fnv": "2bb93056f646edaa",
+"frames": 18634
+},
+"bb_808_fs1_short_02.wav": {
+"channels": 2,
+"fnv": "8f686d0a384b2e29",
+"frames": 18671
+},
+"bb_808_g1_01.wav": {
+"channels": 2,
+"fnv": "d1ef3ff39dca24e5",
+"frames": 36479
+},
+"bb_808_g1_02.wav": {
+"channels": 2,
+"fnv": "5285a71afba1c093",
+"frames": 35962
+},
+"bb_808_g1_03.wav": {
+"channels": 2,
+"fnv": "b692910de11f2d9b",
+"frames": 59070
+},
+"bb_808_g1_04.wav": {
+"channels": 2,
+"fnv": "73a129a8af94b4d2",
+"frames": 35962
+},
+"bb_808_g1_05.wav": {
+"channels": 2,
+"fnv": "df508688f2070db3",
+"frames": 35962
+},
+"bb_808_g1_06.wav": {
+"channels": 2,
+"fnv": "12d780b8d4440310",
+"frames": 48549
+},
+"bb_808_g1_long_01.wav": {
+"channels": 2,
+"fnv": "12b90ade67b38658",
+"frames": 82925
+},
+"bb_808_g1_short_01.wav": {
+"channels": 2,
+"fnv": "c074d003ea4b7ed4",
+"frames": 24277
+},
+"bb_808_g1_short_02.wav": {
+"channels": 2,
+"fnv": "8600b60bd306e24b",
+"frames": 25174
+},
+"bb_808_g1_short_03.wav": {
+"channels": 2,
+"fnv": "51a22fc19568f102",
+"frames": 25174
+},
+"bb_808_g1_short_04.wav": {
+"channels": 2,
+"fnv": "07a3774b42fe1ecc",
+"frames": 27253
+},
+"bb_808_g1_short_05.wav": {
+"channels": 2,
+"fnv": "8f817ac9c9dc6e39",
+"frames": 44505
+},
+"bb_808_gs1_01.wav": {
+"channels": 2,
+"fnv": "804346fedd5d6874",
+"frames": 43942
+},
+"bb_808_gs1_02.wav": {
+"channels": 2,
+"fnv": "ef5778ffd3c1d901",
+"frames": 47711
+},
+"bb_beads_01.wav": {
+"channels": 2,
+"fnv": "dc8d0d3aeaf54a71",
+"frames": 22910
+},
+"bb_beads_02.wav": {
+"channels": 2,
+"fnv": "409b25d86dd8f66d",
+"frames": 26182
+},
+"bb_clap_dusty_01.wav": {
+"channels": 2,
+"fnv": "298b9435787d2b01",
+"frames": 12000
+},
+"bb_clap_room_01.wav": {
+"channels": 2,
+"fnv": "adc17add663d18a1",
+"frames": 42000
+},
+"bb_clap_room_02.wav": {
+"channels": 2,
+"fnv": "76e72070bafcc8c7",
+"frames": 23281
+},
+"bb_clap_room_03.wav": {
+"channels": 2,
+"fnv": "c73b1644e01ad5cf",
+"frames": 6544
+},
+"bb_clap_room_04.wav": {
+"channels": 2,
+"fnv": "c41dc62a67f2740e",
+"frames": 5365
+},
+"bb_clap_room_05.wav": {
+"channels": 2,
+"fnv": "da9af76f79b73336",
+"frames": 8036
+},
+"bb_clap_room_06.wav": {
+"channels": 2,
+"fnv": "5b70a8e9ba787222",
+"frames": 5063
+},
+"bb_clap_tight_01.wav": {
+"channels": 2,
+"fnv": "e0eb0b25a22e9e75",
+"frames": 24000
+},
+"bb_clap_tight_02.wav": {
+"channels": 2,
+"fnv": "7d2612e40bee6e6b",
+"frames": 4986
+},
+"bb_clap_tight_03.wav": {
+"channels": 2,
+"fnv": "9714942e4dafd992",
+"frames": 28775
+},
+"bb_clap_tight_04.wav": {
+"channels": 2,
+"fnv": "523bb34049697bb7",
+"frames": 4986
+},
+"bb_clap_tight_05.wav": {
+"channels": 2,
+"fnv": "7bb3c3ea419624d3",
+"frames": 4986
+},
+"bb_clap_tight_06.wav": {
+"channels": 2,
+"fnv": "53136f2b7a32aa79",
+"frames": 4986
+},
+"bb_clap_tight_07.wav": {
+"channels": 2,
+"fnv": "d07a4870e788a577",
+"frames": 27161
+},
+"bb_clap_tight_08.wav": {
+"channels": 2,
+"fnv": "4fe0d61966885027",
+"frames": 12000
+},
+"bb_clap_tight_09.wav": {
+"channels": 2,
+"fnv": "7f461f6bb4885477",
+"frames": 7722
+},
+"bb_clap_tight_10.wav": {
+"channels": 2,
+"fnv": "663866498633e533",
+"frames": 10415
+},
+"bb_clap_tight_11.wav": {
+"channels": 2,
+"fnv": "5e6bfcf2efd32069",
+"frames": 3945
+},
+"bb_clap_tight_12.wav": {
+"channels": 2,
+"fnv": "6657629226fa5087",
+"frames": 3841
+},
+"bb_clap_tight_13.wav": {
+"channels": 2,
+"fnv": "ae44be0b945d3937",
+"frames": 3945
+},
+"bb_clap_tight_14.wav": {
+"channels": 2,
+"fnv": "32ad4e5d5dc51c59",
+"frames": 3841
+},
+"bb_clap_tight_15.wav": {
+"channels": 2,
+"fnv": "2e1f84563ee3d04e",
+"frames": 5652
+},
+"bb_clap_tight_16.wav": {
+"channels": 2,
+"fnv": "17b29f62f4e20d85",
+"frames": 4309
+},
+"bb_clap_tight_17.wav": {
+"channels": 2,
+"fnv": "b60f09157ed11d57",
+"frames": 4260
+},
+"bb_clap_tight_18.wav": {
+"channels": 2,
+"fnv": "fb84c4f249a8249e",
+"frames": 3958
+},
+"bb_clap_tight_19.wav": {
+"channels": 2,
+"fnv": "3068e20d0ec8dc2f",
+"frames": 4500
+},
+"bb_clap_tight_20.wav": {
+"channels": 2,
+"fnv": "f0673ced62e93004",
+"frames": 5464
+},
+"bb_clap_tight_21.wav": {
+"channels": 2,
+"fnv": "00278849137a9a8e",
+"frames": 4055
+},
+"bb_clap_tight_22.wav": {
+"channels": 2,
+"fnv": "403b6a9b514933cc",
+"frames": 6109
+},
+"bb_clap_tight_23.wav": {
+"channels": 2,
+"fnv": "7886ba67b14f45e9",
+"frames": 5158
+},
+"bb_clap_tight_24.wav": {
+"channels": 2,
+"fnv": "882851628ab81d55",
+"frames": 5902
+},
+"bb_clap_tight_25.wav": {
+"channels": 2,
+"fnv": "4d48025ef566b686",
+"frames": 8056
+},
+"bb_clap_tight_26.wav": {
+"channels": 2,
+"fnv": "7cc5ceaf07fea2d3",
+"frames": 8439
+},
+"bb_clap_tight_27.wav": {
+"channels": 2,
+"fnv": "57b4badf5792db0e",
+"frames": 4581
+},
+"bb_clap_tight_28.wav": {
+"channels": 2,
+"fnv": "83a8c12464e552de",
+"frames": 29584
+},
+"bb_clap_tight_29.wav": {
+"channels": 2,
+"fnv": "d11d0a5fb3e11d6e",
+"frames": 7965
+},
+"bb_clap_tight_30.wav": {
+"channels": 2,
+"fnv": "306f340451063b21",
+"frames": 4323
+},
+"bb_clap_tight_31.wav": {
+"channels": 2,
+"fnv": "9daf15e5759b0529",
+"frames": 5948
+},
+"bb_clap_tight_32.wav": {
+"channels": 2,
+"fnv": "3462b5dd4540c7c5",
+"frames": 3014
+},
+"bb_clap_tight_33.wav": {
+"channels": 2,
+"fnv": "49cb560d7d195a86",
+"frames": 3098
+},
+"bb_clap_wide_01.wav": {
+"channels": 2,
+"fnv": "2a2dc356e764b6a0",
+"frames": 43364
+},
+"bb_clap_wide_02.wav": {
+"channels": 2,
+"fnv": "3f43b55d71382c05",
+"frames": 43364
+},
+"bb_clap_wide_03.wav": {
+"channels": 2,
+"fnv": "6840ce531fcafb70",
+"frames": 26182
+},
+"bb_clap_wide_04.wav": {
+"channels": 2,
+"fnv": "28fd8f1c083f7793",
+"frames": 72000
+},
+"bb_clap_wide_05.wav": {
+"channels": 2,
+"fnv": "9a26b0c296e8de9c",
+"frames": 24000
+},
+"bb_clap_wide_06.wav": {
+"channels": 2,
+"fnv": "4ae849781a14d021",
+"frames": 24000
+},
+"bb_clap_wide_07.wav": {
+"channels": 2,
+"fnv": "2e959959df21f50f",
+"frames": 24000
+},
+"bb_clap_wide_08.wav": {
+"channels": 2,
+"fnv": "ef5a7ad038d80e3d",
+"frames": 108000
+},
+"bb_clap_wide_09.wav": {
+"channels": 2,
+"fnv": "4445aac60de0ff3d",
+"frames": 67200
+},
+"bb_clap_wide_10.wav": {
+"channels": 2,
+"fnv": "b20728434c8d421e",
+"frames": 26182
+},
+"bb_clap_wide_11.wav": {
+"channels": 2,
+"fnv": "0063dd74666dee6c",
+"frames": 6251
+},
+"bb_clap_wide_12.wav": {
+"channels": 2,
+"fnv": "1c2c24041135cac8",
+"frames": 6251
+},
+"bb_clap_wide_13.wav": {
+"channels": 2,
+"fnv": "62fcd791ba64775c",
+"frames": 11520
+},
+"bb_clap_wide_14.wav": {
+"channels": 2,
+"fnv": "3deb39901f5d370f",
+"frames": 6251
+},
+"bb_clap_wide_15.wav": {
+"channels": 2,
+"fnv": "3f67d019ef627e08",
+"frames": 6251
+},
+"bb_clap_wide_16.wav": {
+"channels": 2,
+"fnv": "7129d686e2b326aa",
+"frames": 34832
+},
+"bb_clave_01.wav": {
+"channels": 2,
+"fnv": "a0623841a9ebf8fc",
+"frames": 11815
+},
+"bb_cymbal_crash_01.wav": {
+"channels": 2,
+"fnv": "3d2d23c04d0f5d73",
+"frames": 144000
+},
+"bb_cymbal_crash_02.wav": {
+"channels": 2,
+"fnv": "be19b79a97ec2e63",
+"frames": 98694
+},
+"bb_cymbal_crash_03.wav": {
+"channels": 2,
+"fnv": "f1ec56920416c529",
+"frames": 114442
+},
+"bb_cymbal_crash_04.wav": {
+"channels": 2,
+"fnv": "e2af0a7ef3e2005b",
+"frames": 109356
+},
+"bb_cymbal_crash_05.wav": {
+"channels": 2,
+"fnv": "afce81c6429f9672",
+"frames": 74538
+},
+"bb_cymbal_crash_06.wav": {
+"channels": 2,
+"fnv": "b3af98b723226183",
+"frames": 115092
+},
+"bb_cymbal_crash_07.wav": {
+"channels": 2,
+"fnv": "d65eb122a7934f70",
+"frames": 88334
+},
+"bb_cymbal_crash_08.wav": {
+"channels": 2,
+"fnv": "cacc90d036aa9c82",
+"frames": 128125
+},
+"bb_cymbal_crash_09.wav": {
+"channels": 2,
+"fnv": "c62bd89d73971b76",
+"frames": 135457
+},
+"bb_cymbal_ride_01.wav": {
+"channels": 2,
+"fnv": "d9cfdd47d28b58a4",
+"frames": 144000
+},
+"bb_cymbal_ride_02.wav": {
+"channels": 2,
+"fnv": "1b50b10a117bc4d9",
+"frames": 144000
+},
+"bb_cymbal_ride_03.wav": {
+"channels": 2,
+"fnv": "9a7cd7d903377f49",
+"frames": 144000
+},
+"bb_cymbal_ride_04.wav": {
+"channels": 2,
+"fnv": "8bfdc53884f21879",
+"frames": 144000
+},
+"bb_cymbal_ride_05.wav": {
+"channels": 2,
+"fnv": "080dee9ebec68961",
+"frames": 143840
+},
+"bb_cymbal_ride_06.wav": {
+"channels": 2,
+"fnv": "6e47fb5b7773b80a",
+"frames": 143840
+},
+"bb_cymbal_ride_07.wav": {
+"channels": 2,
+"fnv": "55fd4f8cc3eb8826",
+"frames": 143840
+},
+"bb_cymbal_ride_08.wav": {
+"channels": 2,
+"fnv": "f511915678e8a7a4",
+"frames": 143840
+},
+"bb_cymbal_short_01.wav": {
+"channels": 2,
+"fnv": "cc449c603b3a7d7d",
+"frames": 24960
+},
+"bb_cymbal_short_02.wav": {
+"channels": 2,
+"fnv": "8f7688b8c3e3394b",
+"frames": 67014
+},
+"bb_cymbal_short_03.wav": {
+"channels": 2,
+"fnv": "a13d5a628526b6ab",
+"frames": 24960
+},
+"bb_cymbal_short_04.wav": {
+"channels": 2,
+"fnv": "a2db1f7af4e5b027",
+"frames": 24960
+},
+"bb_cymbal_short_05.wav": {
+"channels": 2,
+"fnv": "712aa4911cae991c",
+"frames": 115357
+},
+"bb_fx_atmos_01.wav": {
+"channels": 2,
+"fnv": "a15a7dd1f7e455d3",
+"frames": 168000
+},
+"bb_fx_atmos_02.wav": {
+"channels": 2,
+"fnv": "f5cc17667fb39193",
+"frames": 168000
+},
+"bb_fx_atmos_03.wav": {
+"channels": 2,
+"fnv": "e14763b44cb19287",
+"frames": 144000
+},
+"bb_fx_atmos_04.wav": {
+"channels": 2,
+"fnv": "09cbac39dadc2619",
+"frames": 144000
+},
+"bb_fx_atmos_05.wav": {
+"channels": 2,
+"fnv": "acde4f093c6dae67",
+"frames": 130449
+},
+"bb_fx_hit_01.wav": {
+"channels": 2,
+"fnv": "6e8c8274f89aab67",
+"frames": 57600
+},
+"bb_fx_hit_02.wav": {
+"channels": 2,
+"fnv": "577d4da324407fc1",
+"frames": 68827
+},
+"bb_fx_hit_03.wav": {
+"channels": 2,
+"fnv": "f4738cd407e3c368",
+"frames": 17255
+},
+"bb_fx_hit_04.wav": {
+"channels": 2,
+"fnv": "f01ba420fcaec018",
+"frames": 12250
+},
+"bb_fx_hit_05.wav": {
+"channels": 1,
+"fnv": "610b79f2214d8a4d",
+"frames": 13070
+},
+"bb_fx_hit_06.wav": {
+"channels": 2,
+"fnv": "46d99d68450227bf",
+"frames": 62609
+},
+"bb_fx_hit_07.wav": {
+"channels": 2,
+"fnv": "a9e9245a4fe76cb9",
+"frames": 48615
+},
+"bb_fx_reverse_01.wav": {
+"channels": 2,
+"fnv": "37cfbb6171c639f6",
+"frames": 50087
+},
+"bb_fx_reverse_02.wav": {
+"channels": 2,
+"fnv": "3cf22e20b6b2464e",
+"frames": 4228
+},
+"bb_fx_reverse_03.wav": {
+"channels": 2,
+"fnv": "0854fbb1dc23e4bf",
+"frames": 6692
+},
+"bb_fx_reverse_04.wav": {
+"channels": 2,
+"fnv": "1a7c0b86a210eec8",
+"frames": 144000
+},
+"bb_fx_reverse_05.wav": {
+"channels": 2,
+"fnv": "eb953ace7f6c8cc3",
+"frames": 4228
+},
+"bb_fx_reverse_06.wav": {
+"channels": 2,
+"fnv": "76164b1e238eab1f",
+"frames": 6149
+},
+"bb_hat_crisp_01.wav": {
+"channels": 2,
+"fnv": "83f6914569ebe721",
+"frames": 3005
+},
+"bb_hat_crisp_02.wav": {
+"channels": 2,
+"fnv": "4f2763dc2f70e589",
+"frames": 2867
+},
+"bb_hat_crisp_03.wav": {
+"channels": 2,
+"fnv": "d710759d0f1047e1",
+"frames": 1376
+},
+"bb_hat_crisp_04.wav": {
+"channels": 2,
+"fnv": "5d9f5a6b352b2509",
+"frames": 1376
+},
+"bb_hat_crisp_05.wav": {
+"channels": 2,
+"fnv": "f528c3116d6015c7",
+"frames": 3526
+},
+"bb_hat_crisp_06.wav": {
+"channels": 2,
+"fnv": "9a7a2550d4d3ff1e",
+"frames": 4129
+},
+"bb_hat_crisp_07.wav": {
+"channels": 2,
+"fnv": "a70c0d954ee02527",
+"frames": 7977
+},
+"bb_hat_crisp_08.wav": {
+"channels": 2,
+"fnv": "eb19d02a02881f32",
+"frames": 2496
+},
+"bb_hat_crisp_09.wav": {
+"channels": 2,
+"fnv": "73e1e6e55d1e1b12",
+"frames": 16800
+},
+"bb_hat_crisp_10.wav": {
+"channels": 2,
+"fnv": "b9a9305684e6e112",
+"frames": 19200
+},
+"bb_hat_crisp_11.wav": {
+"channels": 2,
+"fnv": "a45a8d80e5272389",
+"frames": 2595
+},
+"bb_hat_crisp_12.wav": {
+"channels": 2,
+"fnv": "7fd1c3e261d04126",
+"frames": 2544
+},
+"bb_hat_crisp_13.wav": {
+"channels": 2,
+"fnv": "44f71101f2f3a60f",
+"frames": 2595
+},
+"bb_hat_crisp_14.wav": {
+"channels": 2,
+"fnv": "362e508ea13f7fc7",
+"frames": 2595
+},
+"bb_hat_crisp_15.wav": {
+"channels": 2,
+"fnv": "cb8188af6dfdd9c1",
+"frames": 2595
+},
+"bb_hat_crisp_16.wav": {
+"channels": 2,
+"fnv": "28d30980e4f99813",
+"frames": 2814
+},
+"bb_hat_crisp_17.wav": {
+"channels": 2,
+"fnv": "6be15120e2f2d4b8",
+"frames": 2814
+},
+"bb_hat_crisp_18.wav": {
+"channels": 2,
+"fnv": "dbe1de63d67e07eb",
+"frames": 2528
+},
+"bb_hat_crisp_19.wav": {
+"channels": 2,
+"fnv": "1aad3f22a04dca33",
+"frames": 3817
+},
+"bb_hat_crisp_20.wav": {
+"channels": 2,
+"fnv": "b1a388665f7c8a63",
+"frames": 10501
+},
+"bb_hat_crisp_21.wav": {
+"channels": 2,
+"fnv": "8129ca3d7f5abff3",
+"frames": 12000
+},
+"bb_hat_crisp_22.wav": {
+"channels": 2,
+"fnv": "bd904e3481897be6",
+"frames": 9525
+},
+"bb_hat_crisp_23.wav": {
+"channels": 2,
+"fnv": "55231c3c0ad75549",
+"frames": 2528
+},
+"bb_hat_crisp_24.wav": {
+"channels": 2,
+"fnv": "126598a4b973cba0",
+"frames": 9525
+},
+"bb_hat_crisp_25.wav": {
+"channels": 2,
+"fnv": "510ac8e96bd817d6",
+"frames": 2354
+},
+"bb_hat_crisp_26.wav": {
+"channels": 2,
+"fnv": "8e78e44372f823dd",
+"frames": 2482
+},
+"bb_hat_crisp_27.wav": {
+"channels": 2,
+"fnv": "471b560f9ffe3e69",
+"frames": 10501
+},
+"bb_hat_crisp_28.wav": {
+"channels": 2,
+"fnv": "927d748dc232e01d",
+"frames": 2898
+},
+"bb_hat_crisp_29.wav": {
+"channels": 2,
+"fnv": "16500b5a9b65b1f3",
+"frames": 14323
+},
+"bb_hat_crisp_30.wav": {
+"channels": 2,
+"fnv": "65e13e7345a64a25",
+"frames": 3275
+},
+"bb_hat_crisp_31.wav": {
+"channels": 2,
+"fnv": "49361819191aa63d",
+"frames": 2898
+},
+"bb_hat_crisp_32.wav": {
+"channels": 2,
+"fnv": "048db120661ebbad",
+"frames": 2898
+},
+"bb_hat_crisp_33.wav": {
+"channels": 2,
+"fnv": "6d475a35cdc00549",
+"frames": 2898
+},
+"bb_hat_crisp_34.wav": {
+"channels": 2,
+"fnv": "d544cfc54fe776c5",
+"frames": 14323
+},
+"bb_hat_crisp_35.wav": {
+"channels": 2,
+"fnv": "d047071d52ad4272",
+"frames": 3080
+},
+"bb_hat_dark_01.wav": {
+"channels": 2,
+"fnv": "5b908d09d1e5b271",
+"frames": 14455
+},
+"bb_hat_dark_02.wav": {
+"channels": 2,
+"fnv": "16844fa71b564e28",
+"frames": 14455
+},
+"bb_hat_dark_03.wav": {
+"channels": 2,
+"fnv": "68494a25a0d2a084",
+"frames": 4647
+},
+"bb_hat_dark_04.wav": {
+"channels": 2,
+"fnv": "b3a466a2d3681f56",
+"frames": 4647
+},
+"bb_hat_dark_05.wav": {
+"channels": 2,
+"fnv": "46633ebe6b5e3e16",
+"frames": 19200
+},
+"bb_hat_dark_06.wav": {
+"channels": 2,
+"fnv": "3d5d0c22f66c7393",
+"frames": 22603
+},
+"bb_hat_dark_07.wav": {
+"channels": 2,
+"fnv": "bd427aeb9ef5d871",
+"frames": 19200
+},
+"bb_hat_dark_08.wav": {
+"channels": 2,
+"fnv": "7e5a9c1dfae2545f",
+"frames": 19200
+},
+"bb_hat_dark_09.wav": {
+"channels": 2,
+"fnv": "96fe650e97db105d",
+"frames": 4647
+},
+"bb_hat_dark_10.wav": {
+"channels": 2,
+"fnv": "9b1e79da983c720a",
+"frames": 19200
+},
+"bb_hat_dark_11.wav": {
+"channels": 2,
+"fnv": "190c46deccd54cea",
+"frames": 26182
+},
+"bb_hat_dark_12.wav": {
+"channels": 2,
+"fnv": "c31b4e4527857a59",
+"frames": 4568
+},
+"bb_hat_dark_13.wav": {
+"channels": 2,
+"fnv": "287d9d19e4c3b01c",
+"frames": 2273
+},
+"bb_hat_dark_14.wav": {
+"channels": 2,
+"fnv": "b22f0dd6271d7f03",
+"frames": 4568
+},
+"bb_hat_dark_15.wav": {
+"channels": 2,
+"fnv": "90d7d21be78d8416",
+"frames": 15422
+},
+"bb_hat_dark_16.wav": {
+"channels": 2,
+"fnv": "a3ece36501be1345",
+"frames": 5951
+},
+"bb_hat_dark_17.wav": {
+"channels": 2,
+"fnv": "5d3fa6198603fb52",
+"frames": 5951
+},
+"bb_hat_dark_18.wav": {
+"channels": 2,
+"fnv": "9e129868ccf829f4",
+"frames": 5951
+},
+"bb_hat_dark_19.wav": {
+"channels": 2,
+"fnv": "0fda04b3e92548bb",
+"frames": 8927
+},
+"bb_hat_dark_20.wav": {
+"channels": 2,
+"fnv": "d9e90486feb0b1b7",
+"frames": 5538
+},
+"bb_hat_dark_21.wav": {
+"channels": 2,
+"fnv": "8804fb5c87778ab5",
+"frames": 6051
+},
+"bb_hat_dark_22.wav": {
+"channels": 2,
+"fnv": "045d9ae44a59dc6a",
+"frames": 19200
+},
+"bb_hat_dark_23.wav": {
+"channels": 2,
+"fnv": "424e2f6b62986300",
+"frames": 19200
+},
+"bb_hat_dark_24.wav": {
+"channels": 2,
+"fnv": "c2f0efdf140fa94e",
+"frames": 5538
+},
+"bb_hat_dark_25.wav": {
+"channels": 2,
+"fnv": "087ebae590b0f09e",
+"frames": 19200
+},
+"bb_hat_dark_26.wav": {
+"channels": 2,
+"fnv": "94e202da83bf269e",
+"frames": 16800
+},
+"bb_hat_dark_27.wav": {
+"channels": 2,
+"fnv": "dab295970b64dba7",
+"frames": 9197
+},
+"bb_hat_dark_28.wav": {
+"channels": 2,
+"fnv": "72ba910d094c7106",
+"frames": 1755
+},
+"bb_hat_dark_29.wav": {
+"channels": 2,
+"fnv": "329b5c23ed95f402",
+"frames": 2853
+},
+"bb_hat_dark_30.wav": {
+"channels": 2,
+"fnv": "66410b66833ebcb3",
+"frames": 3530
+},
+"bb_hat_dark_31.wav": {
+"channels": 2,
+"fnv": "031d5f3b7e0ea8e2",
+"frames": 4061
+},
+"bb_hat_dark_32.wav": {
+"channels": 2,
+"fnv": "46e9d000efc0920e",
+"frames": 1755
+},
+"bb_hat_dusty_01.wav": {
+"channels": 2,
+"fnv": "1f8383598d5ab03c",
+"frames": 16800
+},
+"bb_hat_dusty_02.wav": {
+"channels": 2,
+"fnv": "3fbc2dfe3c9dd986",
+"frames": 16800
+},
+"bb_kick_boom_01.wav": {
+"channels": 2,
+"fnv": "fb09bb19c22df2ea",
+"frames": 26305
+},
+"bb_kick_boom_02.wav": {
+"channels": 2,
+"fnv": "547acc96b953f614",
+"frames": 15001
+},
+"bb_kick_boom_03.wav": {
+"channels": 2,
+"fnv": "b42ec92175a86f55",
+"frames": 20213
+},
+"bb_kick_boom_04.wav": {
+"channels": 2,
+"fnv": "d6bcd0a3e2894cbb",
+"frames": 50152
+},
+"bb_kick_boom_05.wav": {
+"channels": 2,
+"fnv": "34a2259c5dbc7523",
+"frames": 50152
+},
+"bb_kick_boom_06.wav": {
+"channels": 2,
+"fnv": "1277eb4e0f2d6712",
+"frames": 24000
+},
+"bb_kick_boom_07.wav": {
+"channels": 2,
+"fnv": "6e14c3aaec5f5a94",
+"frames": 35737
+},
+"bb_kick_boom_08.wav": {
+"channels": 2,
+"fnv": "6f1fe35992b9f4f6",
+"frames": 24000
+},
+"bb_kick_boom_09.wav": {
+"channels": 2,
+"fnv": "2979a7b5a460e2dd",
+"frames": 50152
+},
+"bb_kick_boom_10.wav": {
+"channels": 2,
+"fnv": "3afc13cca4a3356b",
+"frames": 24000
+},
+"bb_kick_boom_11.wav": {
+"channels": 2,
+"fnv": "9b3c3aaea8bac8a5",
+"frames": 16501
+},
+"bb_kick_boom_12.wav": {
+"channels": 2,
+"fnv": "21c93d2009a5f02e",
+"frames": 24000
+},
+"bb_kick_boom_13.wav": {
+"channels": 2,
+"fnv": "272cb5e75451f9fe",
+"frames": 26489
+},
+"bb_kick_boom_14.wav": {
+"channels": 2,
+"fnv": "afb5a1be5e245c7b",
+"frames": 16501
+},
+"bb_kick_boom_15.wav": {
+"channels": 2,
+"fnv": "7962ce4b31f02ba8",
+"frames": 18001
+},
+"bb_kick_boom_16.wav": {
+"channels": 2,
+"fnv": "7741721e7772a78c",
+"frames": 27000
+},
+"bb_kick_boom_17.wav": {
+"channels": 2,
+"fnv": "b76f24a61ad9cb4f",
+"frames": 24000
+},
+"bb_kick_boom_18.wav": {
+"channels": 2,
+"fnv": "e5a3f451a058be20",
+"frames": 24000
+},
+"bb_kick_boom_19.wav": {
+"channels": 2,
+"fnv": "cb22c29ea51e2ce3",
+"frames": 27740
+},
+"bb_kick_boom_20.wav": {
+"channels": 2,
+"fnv": "5347632da83f5fd5",
+"frames": 24312
+},
+"bb_kick_boom_21.wav": {
+"channels": 2,
+"fnv": "3cb828851df15303",
+"frames": 26183
+},
+"bb_kick_boom_22.wav": {
+"channels": 2,
+"fnv": "3f08c50504c6514f",
+"frames": 14100
+},
+"bb_kick_boom_23.wav": {
+"channels": 2,
+"fnv": "b54d04f0ab570213",
+"frames": 15007
+},
+"bb_kick_boom_24.wav": {
+"channels": 2,
+"fnv": "67f793bbe8ad41e7",
+"frames": 16715
+},
+"bb_kick_boom_25.wav": {
+"channels": 2,
+"fnv": "ee4dd47642605549",
+"frames": 16715
+},
+"bb_kick_knock_01.wav": {
+"channels": 2,
+"fnv": "a00bf508f89b3ee6",
+"frames": 8592
+},
+"bb_kick_knock_02.wav": {
+"channels": 2,
+"fnv": "2c2d1d9cf2a7a134",
+"frames": 26182
+},
+"bb_kick_knock_03.wav": {
+"channels": 2,
+"fnv": "a0f221a7c7d6a175",
+"frames": 10371
+},
+"bb_kick_knock_04.wav": {
+"channels": 2,
+"fnv": "d7fd880dcd2e41f9",
+"frames": 10371
+},
+"bb_kick_knock_05.wav": {
+"channels": 2,
+"fnv": "3b8adcaa94c47395",
+"frames": 6133
+},
+"bb_kick_knock_06.wav": {
+"channels": 2,
+"fnv": "83512b9169ad5ab6",
+"frames": 8886
+},
+"bb_kick_knock_07.wav": {
+"channels": 2,
+"fnv": "a6782c9c49a90dd3",
+"frames": 6133
+},
+"bb_kick_knock_08.wav": {
+"channels": 2,
+"fnv": "211448c9cc80cd9e",
+"frames": 7099
+},
+"bb_kick_knock_09.wav": {
+"channels": 1,
+"fnv": "a568bb2f546d7576",
+"frames": 6939
+},
+"bb_kick_knock_10.wav": {
+"channels": 1,
+"fnv": "f731880e5d021b36",
+"frames": 6939
+},
+"bb_kick_knock_11.wav": {
+"channels": 2,
+"fnv": "1180ea2f38421ba5",
+"frames": 6098
+},
+"bb_kick_knock_12.wav": {
+"channels": 1,
+"fnv": "7b633ddfac4f5d3a",
+"frames": 6699
+},
+"bb_kick_knock_13.wav": {
+"channels": 1,
+"fnv": "7454d8828c6d6261",
+"frames": 6699
+},
+"bb_kick_knock_14.wav": {
+"channels": 1,
+"fnv": "51a05e24762078c7",
+"frames": 6939
+},
+"bb_kick_knock_15.wav": {
+"channels": 2,
+"fnv": "065af59d04db963d",
+"frames": 6098
+},
+"bb_kick_knock_16.wav": {
+"channels": 2,
+"fnv": "c33462855e04c956",
+"frames": 9300
+},
+"bb_kick_knock_17.wav": {
+"channels": 2,
+"fnv": "d102e343f69c094f",
+"frames": 9300
+},
+"bb_kick_knock_18.wav": {
+"channels": 2,
+"fnv": "e1667008a81e4d8d",
+"frames": 6098
+},
+"bb_kick_knock_19.wav": {
+"channels": 2,
+"fnv": "b5e8f87cab419c2c",
+"frames": 6965
+},
+"bb_kick_knock_20.wav": {
+"channels": 2,
+"fnv": "479702f71fd4b699",
+"frames": 11901
+},
+"bb_kick_knock_21.wav": {
+"channels": 2,
+"fnv": "3e5d1446aa71a5bb",
+"frames": 7078
+},
+"bb_kick_knock_22.wav": {
+"channels": 2,
+"fnv": "bd4ebb910f7822d9",
+"frames": 43520
+},
+"bb_kick_knock_23.wav": {
+"channels": 2,
+"fnv": "f096a63871c11c11",
+"frames": 44539
+},
+"bb_kick_knock_24.wav": {
+"channels": 2,
+"fnv": "1ae9a0b5dfe2e541",
+"frames": 5740
+},
+"bb_kick_knock_25.wav": {
+"channels": 2,
+"fnv": "78a68c913dfb2dad",
+"frames": 44539
+},
+"bb_kick_knock_26.wav": {
+"channels": 2,
+"fnv": "6389b655463aceea",
+"frames": 26182
+},
+"bb_kick_punch_01.wav": {
+"channels": 2,
+"fnv": "d8d244e0ffa47e2c",
+"frames": 25264
+},
+"bb_kick_punch_02.wav": {
+"channels": 2,
+"fnv": "11dddd5d1610e990",
+"frames": 25264
+},
+"bb_kick_punch_03.wav": {
+"channels": 2,
+"fnv": "084a314318183588",
+"frames": 41357
+},
+"bb_kick_punch_04.wav": {
+"channels": 2,
+"fnv": "f86271ca62d9b522",
+"frames": 12274
+},
+"bb_kick_punch_05.wav": {
+"channels": 2,
+"fnv": "59564ab7dfac3821",
+"frames": 26183
+},
+"bb_kick_punch_06.wav": {
+"channels": 2,
+"fnv": "6fcfc28d7ba18b27",
+"frames": 6086
+},
+"bb_kick_punch_07.wav": {
+"channels": 2,
+"fnv": "301dc582ee80ed69",
+"frames": 6086
+},
+"bb_kick_punch_08.wav": {
+"channels": 2,
+"fnv": "f407b9c246b3a430",
+"frames": 44539
+},
+"bb_kick_punch_09.wav": {
+"channels": 2,
+"fnv": "f9067eacbdfaf283",
+"frames": 6086
+},
+"bb_kick_thump_01.wav": {
+"channels": 2,
+"fnv": "47d0804f69bf69fa",
+"frames": 15513
+},
+"bb_kick_thump_02.wav": {
+"channels": 2,
+"fnv": "8c1e3c52af007c09",
+"frames": 12000
+},
+"bb_kick_thump_03.wav": {
+"channels": 2,
+"fnv": "6c0f5d33c42f8579",
+"frames": 11455
+},
+"bb_kick_thump_04.wav": {
+"channels": 2,
+"fnv": "7b93069e629c853c",
+"frames": 26182
+},
+"bb_kick_thump_05.wav": {
+"channels": 2,
+"fnv": "d6c82a9f794f2fb2",
+"frames": 10168
+},
+"bb_kick_thump_06.wav": {
+"channels": 2,
+"fnv": "93c4126613830fc6",
+"frames": 26182
+},
+"bb_kick_thump_07.wav": {
+"channels": 2,
+"fnv": "86020973547bb6af",
+"frames": 8744
+},
+"bb_kick_thump_08.wav": {
+"channels": 2,
+"fnv": "a9586a0f85ee631e",
+"frames": 8744
+},
+"bb_kick_thump_09.wav": {
+"channels": 2,
+"fnv": "1163bf9440abf2a4",
+"frames": 25044
+},
+"bb_kick_thump_10.wav": {
+"channels": 2,
+"fnv": "2e23a8f2602e8c9d",
+"frames": 7318
+},
+"bb_kick_thump_11.wav": {
+"channels": 2,
+"fnv": "863377a9da71a1b0",
+"frames": 7913
+},
+"bb_kick_thump_12.wav": {
+"channels": 2,
+"fnv": "97a2d203e6b16e39",
+"frames": 11265
+},
+"bb_open_hat_long_01.wav": {
+"channels": 2,
+"fnv": "ba93648150d3aec0",
+"frames": 57600
+},
+"bb_open_hat_long_02.wav": {
+"channels": 2,
+"fnv": "f561ec6a88bdc237",
+"frames": 72000
+},
+"bb_open_hat_long_03.wav": {
+"channels": 2,
+"fnv": "71688018d6c9cf60",
+"frames": 57600
+},
+"bb_open_hat_long_04.wav": {
+"channels": 2,
+"fnv": "bad0e2f814f78052",
+"frames": 39529
+},
+"bb_open_hat_long_05.wav": {
+"channels": 2,
+"fnv": "9161b6c90a02ee09",
+"frames": 41555
+},
+"bb_open_hat_long_06.wav": {
+"channels": 2,
+"fnv": "4865239890632e17",
+"frames": 36141
+},
+"bb_open_hat_long_07.wav": {
+"channels": 2,
+"fnv": "0ca07f1163fa6293",
+"frames": 28800
+},
+"bb_open_hat_long_08.wav": {
+"channels": 2,
+"fnv": "e97e26a5e9056d85",
+"frames": 47726
+},
+"bb_open_hat_long_09.wav": {
+"channels": 2,
+"fnv": "c51d44e7eef2103c",
+"frames": 47726
+},
+"bb_open_hat_long_10.wav": {
+"channels": 2,
+"fnv": "260b6ef0f0b6f593",
+"frames": 40273
+},
+"bb_open_hat_long_11.wav": {
+"channels": 2,
+"fnv": "fa4d5d44e566c371",
+"frames": 18240
+},
+"bb_open_hat_long_12.wav": {
+"channels": 2,
+"fnv": "4fb03c6a583c0feb",
+"frames": 27923
+},
+"bb_open_hat_long_13.wav": {
+"channels": 2,
+"fnv": "16a5e445934558d6",
+"frames": 20594
+},
+"bb_open_hat_long_14.wav": {
+"channels": 2,
+"fnv": "db7d721bac7349b9",
+"frames": 57600
+},
+"bb_open_hat_long_15.wav": {
+"channels": 2,
+"fnv": "96661ccf0accb257",
+"frames": 43179
+},
+"bb_open_hat_long_16.wav": {
+"channels": 2,
+"fnv": "f104e7adf715e539",
+"frames": 22155
+},
+"bb_open_hat_long_17.wav": {
+"channels": 2,
+"fnv": "a8441954c9c1e449",
+"frames": 57600
+},
+"bb_open_hat_long_18.wav": {
+"channels": 2,
+"fnv": "af50dc9bb7b7e3b6",
+"frames": 34385
+},
+"bb_open_hat_long_19.wav": {
+"channels": 2,
+"fnv": "557cd19d24ddc765",
+"frames": 45322
+},
+"bb_open_hat_long_20.wav": {
+"channels": 2,
+"fnv": "3887c03f7eb7e7f9",
+"frames": 34385
+},
+"bb_open_hat_long_21.wav": {
+"channels": 2,
+"fnv": "132e049658d47482",
+"frames": 28866
+},
+"bb_open_hat_long_22.wav": {
+"channels": 2,
+"fnv": "964d931bee5c8bef",
+"frames": 57600
+},
+"bb_open_hat_long_23.wav": {
+"channels": 2,
+"fnv": "c5b89be38632dbbf",
+"frames": 42504
+},
+"bb_open_hat_long_24.wav": {
+"channels": 2,
+"fnv": "977e2130a9fd6328",
+"frames": 38124
+},
+"bb_open_hat_long_25.wav": {
+"channels": 2,
+"fnv": "44e405f1e75721fb",
+"frames": 47415
+},
+"bb_open_hat_long_26.wav": {
+"channels": 2,
+"fnv": "d3f2dfaf4bd1b296",
+"frames": 57600
+},
+"bb_open_hat_short_01.wav": {
+"channels": 2,
+"fnv": "88b6e606c0474d5a",
+"frames": 29787
+},
+"bb_open_hat_short_02.wav": {
+"channels": 2,
+"fnv": "327ee47b4ddfd49d",
+"frames": 18968
+},
+"bb_open_hat_short_03.wav": {
+"channels": 2,
+"fnv": "c0fb77986741d6b8",
+"frames": 11901
+},
+"bb_open_hat_short_04.wav": {
+"channels": 2,
+"fnv": "eb2111092a986c5e",
+"frames": 14062
+},
+"bb_open_hat_short_05.wav": {
+"channels": 2,
+"fnv": "41410bd3a210396d",
+"frames": 18240
+},
+"bb_open_hat_short_06.wav": {
+"channels": 2,
+"fnv": "33959a3b21fab6cf",
+"frames": 18240
+},
+"bb_open_hat_short_07.wav": {
+"channels": 2,
+"fnv": "8ae090917f151fe1",
+"frames": 18240
+},
+"bb_open_hat_short_08.wav": {
+"channels": 2,
+"fnv": "3b7f436351825b17",
+"frames": 38403
+},
+"bb_open_hat_short_09.wav": {
+"channels": 2,
+"fnv": "41a190bdbbaa2bf5",
+"frames": 9485
+},
+"bb_open_hat_short_10.wav": {
+"channels": 2,
+"fnv": "a3976dadff603b55",
+"frames": 9485
+},
+"bb_open_hat_short_11.wav": {
+"channels": 2,
+"fnv": "9a48a4c5bdf74a6d",
+"frames": 14109
+},
+"bb_open_hat_short_12.wav": {
+"channels": 2,
+"fnv": "c81c522f051ba4dc",
+"frames": 9485
+},
+"bb_open_hat_short_13.wav": {
+"channels": 2,
+"fnv": "5f60eaa9d2c77acd",
+"frames": 24927
+},
+"bb_open_hat_short_14.wav": {
+"channels": 2,
+"fnv": "a219b738c302ce0b",
+"frames": 11357
+},
+"bb_open_hat_short_15.wav": {
+"channels": 2,
+"fnv": "10c608148e945ee7",
+"frames": 9485
+},
+"bb_open_hat_short_16.wav": {
+"channels": 2,
+"fnv": "cc639900056b7fc9",
+"frames": 35160
+},
+"bb_open_hat_short_17.wav": {
+"channels": 2,
+"fnv": "15cb136a4e46efda",
+"frames": 9373
+},
+"bb_open_hat_short_18.wav": {
+"channels": 2,
+"fnv": "d50b9ecd9a15915b",
+"frames": 24927
+},
+"bb_open_hat_short_19.wav": {
+"channels": 2,
+"fnv": "0fdcba30798911c8",
+"frames": 7475
+},
+"bb_open_hat_short_20.wav": {
+"channels": 2,
+"fnv": "c8344cd039fb57c5",
+"frames": 7475
+},
+"bb_open_hat_short_21.wav": {
+"channels": 2,
+"fnv": "2804eeb74ff01f39",
+"frames": 7475
+},
+"bb_open_hat_short_22.wav": {
+"channels": 2,
+"fnv": "d840fecd410a0309",
+"frames": 18197
+},
+"bb_open_hat_short_23.wav": {
+"channels": 2,
+"fnv": "abdab8700514e62d",
+"frames": 15350
+},
+"bb_open_hat_short_24.wav": {
+"channels": 2,
+"fnv": "686c7d5b57a042e8",
+"frames": 15350
+},
+"bb_open_hat_short_25.wav": {
+"channels": 2,
+"fnv": "23c3c77fddc9ea6a",
+"frames": 18103
+},
+"bb_perc_click_01.wav": {
+"channels": 2,
+"fnv": "df28485a23db510e",
+"frames": 3265
+},
+"bb_perc_click_02.wav": {
+"channels": 2,
+"fnv": "0d31107f64c7f752",
+"frames": 3175
+},
+"bb_perc_hit_01.wav": {
+"channels": 2,
+"fnv": "22d8313cf60a711d",
+"frames": 6321
+},
+"bb_perc_hit_02.wav": {
+"channels": 2,
+"fnv": "9d94260d1dd926c3",
+"frames": 47997
+},
+"bb_perc_hit_03.wav": {
+"channels": 2,
+"fnv": "ced03e397e58e24e",
+"frames": 6163
+},
+"bb_perc_hit_04.wav": {
+"channels": 2,
+"fnv": "627a9dde6cc65c57",
+"frames": 8019
+},
+"bb_perc_hit_05.wav": {
+"channels": 1,
+"fnv": "29dc80dcdfe75e3f",
+"frames": 3587
+},
+"bb_perc_hit_06.wav": {
+"channels": 2,
+"fnv": "c472495737f6a220",
+"frames": 41518
+},
+"bb_perc_hit_07.wav": {
+"channels": 2,
+"fnv": "a0dbf96ba2b713d4",
+"frames": 34551
+},
+"bb_perc_hit_08.wav": {
+"channels": 2,
+"fnv": "fd0710ada5f21fde",
+"frames": 4507
+},
+"bb_perc_hit_09.wav": {
+"channels": 2,
+"fnv": "168b1e75fcee3c38",
+"frames": 47774
+},
+"bb_perc_hit_10.wav": {
+"channels": 2,
+"fnv": "bcca18027e21b07b",
+"frames": 22853
+},
+"bb_perc_hit_11.wav": {
+"channels": 1,
+"fnv": "5db4bad08d33864a",
+"frames": 3627
+},
+"bb_perc_hit_12.wav": {
+"channels": 2,
+"fnv": "0b604cfdbdc3a32a",
+"frames": 9695
+},
+"bb_perc_hit_13.wav": {
+"channels": 1,
+"fnv": "bfcddf7103bab106",
+"frames": 3627
+},
+"bb_perc_hit_14.wav": {
+"channels": 1,
+"fnv": "221a5cce02d3bf27",
+"frames": 3627
+},
+"bb_perc_hit_15.wav": {
+"channels": 2,
+"fnv": "0bfc1ee168151cd6",
+"frames": 12000
+},
+"bb_perc_hit_16.wav": {
+"channels": 2,
+"fnv": "1e73590588435043",
+"frames": 30441
+},
+"bb_perc_hit_17.wav": {
+"channels": 2,
+"fnv": "05a3f266785f9b87",
+"frames": 12000
+},
+"bb_perc_hit_18.wav": {
+"channels": 2,
+"fnv": "ff85a4e139d6cbb0",
+"frames": 12000
+},
+"bb_perc_hit_19.wav": {
+"channels": 2,
+"fnv": "d6bce2d6194d9e75",
+"frames": 9754
+},
+"bb_perc_hit_20.wav": {
+"channels": 2,
+"fnv": "00f2b16f92d8c04e",
+"frames": 40355
+},
+"bb_perc_hit_21.wav": {
+"channels": 2,
+"fnv": "c6450b15e8df2e29",
+"frames": 7501
+},
+"bb_perc_metal_01.wav": {
+"channels": 2,
+"fnv": "36a72be3bbd01099",
+"frames": 27048
+},
+"bb_perc_metal_02.wav": {
+"channels": 2,
+"fnv": "7e49b884a752cc2c",
+"frames": 9898
+},
+"bb_perc_metal_03.wav": {
+"channels": 2,
+"fnv": "0f6af1db6da306f2",
+"frames": 8709
+},
+"bb_perc_wood_01.wav": {
+"channels": 2,
+"fnv": "0b15d47494692700",
+"frames": 14591
+},
+"bb_perc_wood_02.wav": {
+"channels": 2,
+"fnv": "e769051dfddbc428",
+"frames": 17393
+},
+"bb_perc_wood_03.wav": {
+"channels": 2,
+"fnv": "a00e89556a39c1b0",
+"frames": 11990
+},
+"bb_perc_wood_04.wav": {
+"channels": 2,
+"fnv": "ae8c768fa91b7e5d",
+"frames": 7895
+},
+"bb_perc_wood_05.wav": {
+"channels": 2,
+"fnv": "ad9c1eaaa14f01c7",
+"frames": 4982
+},
+"bb_perc_wood_06.wav": {
+"channels": 2,
+"fnv": "6efeae8c733cebb9",
+"frames": 4982
+},
+"bb_perc_wood_07.wav": {
+"channels": 2,
+"fnv": "763135cfae6ff83b",
+"frames": 4982
+},
+"bb_perc_wood_08.wav": {
+"channels": 2,
+"fnv": "11acb452e8037329",
+"frames": 4840
+},
+"bb_perc_wood_09.wav": {
+"channels": 2,
+"fnv": "79feaef0e85b9b67",
+"frames": 4840
+},
+"bb_perc_wood_10.wav": {
+"channels": 2,
+"fnv": "9304687528bc6613",
+"frames": 4840
+},
+"bb_perc_wood_11.wav": {
+"channels": 2,
+"fnv": "4e983c99fdcb4d4f",
+"frames": 4702
+},
+"bb_perc_wood_12.wav": {
+"channels": 2,
+"fnv": "fa5346254bac24d9",
+"frames": 4568
+},
+"bb_perc_wood_13.wav": {
+"channels": 2,
+"fnv": "15a2836690e32f23",
+"frames": 4568
+},
+"bb_perc_wood_14.wav": {
+"channels": 2,
+"fnv": "acaf9a68a1ee535e",
+"frames": 38574
+},
+"bb_perc_wood_15.wav": {
+"channels": 2,
+"fnv": "5acf976feb2fb736",
+"frames": 5574
+},
+"bb_perc_wood_16.wav": {
+"channels": 2,
+"fnv": "49cc084388d0941f",
+"frames": 4156
+},
+"bb_perc_wood_17.wav": {
+"channels": 2,
+"fnv": "ac15232a1784eb3c",
+"frames": 4156
+},
+"bb_perc_wood_18.wav": {
+"channels": 2,
+"fnv": "6e1897b740dc21d4",
+"frames": 8640
+},
+"bb_perc_wood_19.wav": {
+"channels": 2,
+"fnv": "5cfbf649f9532b30",
+"frames": 8640
+},
+"bb_perc_wood_20.wav": {
+"channels": 2,
+"fnv": "0a0db10644a5cac2",
+"frames": 6363
+},
+"bb_perc_wood_21.wav": {
+"channels": 2,
+"fnv": "f8bc48db88c2b775",
+"frames": 8640
+},
+"bb_perc_wood_22.wav": {
+"channels": 2,
+"fnv": "fecdbf498a607d7f",
+"frames": 9383
+},
+"bb_perc_wood_23.wav": {
+"channels": 2,
+"fnv": "eccff8293d4e2e57",
+"frames": 2396
+},
+"bb_perc_wood_24.wav": {
+"channels": 2,
+"fnv": "79ff303b7df524ef",
+"frames": 2396
+},
+"bb_perc_wood_25.wav": {
+"channels": 2,
+"fnv": "964aca9afa7c952f",
+"frames": 2396
+},
+"bb_perc_wood_26.wav": {
+"channels": 2,
+"fnv": "719e314828d220c5",
+"frames": 19135
+},
+"bb_rim_01.wav": {
+"channels": 2,
+"fnv": "7daf65df9f7e4580",
+"frames": 5902
+},
+"bb_rim_02.wav": {
+"channels": 2,
+"fnv": "694f1e5cf1e50565",
+"frames": 2506
+},
+"bb_rim_03.wav": {
+"channels": 2,
+"fnv": "cc0cfd1ae7780aad",
+"frames": 4037
+},
+"bb_rim_04.wav": {
+"channels": 2,
+"fnv": "0d20e020cb2b9051",
+"frames": 4037
+},
+"bb_rim_05.wav": {
+"channels": 2,
+"fnv": "911573a19705cfad",
+"frames": 10501
+},
+"bb_rim_06.wav": {
+"channels": 2,
+"fnv": "2a1c0f2eb01dadea",
+"frames": 12664
+},
+"bb_rim_07.wav": {
+"channels": 2,
+"fnv": "5a6590d660f0487b",
+"frames": 2789
+},
+"bb_rim_08.wav": {
+"channels": 2,
+"fnv": "fb4cfaaf268c767f",
+"frames": 2328
+},
+"bb_rim_09.wav": {
+"channels": 2,
+"fnv": "6baf98e9992b5265",
+"frames": 4807
+},
+"bb_rim_10.wav": {
+"channels": 2,
+"fnv": "c025081e1435078a",
+"frames": 14366
+},
+"bb_rim_11.wav": {
+"channels": 2,
+"fnv": "1dc61780e4d63213",
+"frames": 4367
+},
+"bb_rim_12.wav": {
+"channels": 1,
+"fnv": "985ea7f0f65760ae",
+"frames": 3911
+},
+"bb_rim_13.wav": {
+"channels": 1,
+"fnv": "67a8c04c90d95678",
+"frames": 3911
+},
+"bb_rim_14.wav": {
+"channels": 1,
+"fnv": "b0949a2e3fd14637",
+"frames": 3911
+},
+"bb_rim_15.wav": {
+"channels": 2,
+"fnv": "4ae09d2cfd4c196a",
+"frames": 6722
+},
+"bb_rim_16.wav": {
+"channels": 2,
+"fnv": "e7a9326bbd037748",
+"frames": 5974
+},
+"bb_rim_17.wav": {
+"channels": 2,
+"fnv": "933bf786382af705",
+"frames": 6626
+},
+"bb_rim_18.wav": {
+"channels": 2,
+"fnv": "2a5685e4859e5fc1",
+"frames": 32932
+},
+"bb_rim_19.wav": {
+"channels": 2,
+"fnv": "e230b9e400a2d14e",
+"frames": 39068
+},
+"bb_rim_20.wav": {
+"channels": 2,
+"fnv": "94ab802adad2a155",
+"frames": 4167
+},
+"bb_rim_21.wav": {
+"channels": 2,
+"fnv": "4129c89e1e1d7a9d",
+"frames": 6000
+},
+"bb_rim_22.wav": {
+"channels": 2,
+"fnv": "033edc95d4ded8ce",
+"frames": 2522
+},
+"bb_rim_23.wav": {
+"channels": 2,
+"fnv": "71eed8fa7412a93b",
+"frames": 9201
+},
+"bb_rim_24.wav": {
+"channels": 2,
+"fnv": "af6a950e2a69669f",
+"frames": 3612
+},
+"bb_rim_25.wav": {
+"channels": 1,
+"fnv": "db8112920ed3576c",
+"frames": 3524
+},
+"bb_rim_26.wav": {
+"channels": 1,
+"fnv": "2207fc1e5c187a4b",
+"frames": 3524
+},
+"bb_rim_27.wav": {
+"channels": 1,
+"fnv": "52742671bd1e3112",
+"frames": 3524
+},
+"bb_rim_28.wav": {
+"channels": 2,
+"fnv": "d8cde83fa4bdcbaf",
+"frames": 4741
+},
+"bb_rim_29.wav": {
+"channels": 2,
+"fnv": "f39a6aefdf092aed",
+"frames": 5902
+},
+"bb_shaker_01.wav": {
+"channels": 2,
+"fnv": "1cafa25699c96c05",
+"frames": 11265
+},
+"bb_shaker_02.wav": {
+"channels": 2,
+"fnv": "5af6b854912799b3",
+"frames": 5758
+},
+"bb_shaker_03.wav": {
+"channels": 2,
+"fnv": "1a690bd048fb7086",
+"frames": 26400
+},
+"bb_shaker_04.wav": {
+"channels": 2,
+"fnv": "8d6ac2199136de11",
+"frames": 4702
+},
+"bb_shaker_05.wav": {
+"channels": 2,
+"fnv": "9825b6c4c681f270",
+"frames": 8640
+},
+"bb_shaker_06.wav": {
+"channels": 2,
+"fnv": "a8d936db2cc316f5",
+"frames": 2328
+},
+"bb_shaker_07.wav": {
+"channels": 2,
+"fnv": "05cd869d87d1a35f",
+"frames": 3841
+},
+"bb_shaker_08.wav": {
+"channels": 2,
+"fnv": "ae56718b8826d6a8",
+"frames": 82500
+},
+"bb_shaker_09.wav": {
+"channels": 2,
+"fnv": "479e0e6f1032dee1",
+"frames": 82500
+},
+"bb_shaker_10.wav": {
+"channels": 2,
+"fnv": "59c4746e79d069ad",
+"frames": 82500
+},
+"bb_shaker_11.wav": {
+"channels": 2,
+"fnv": "dad99b775b52c488",
+"frames": 3081
+},
+"bb_shaker_12.wav": {
+"channels": 1,
+"fnv": "5a2478a8132461ab",
+"frames": 23476
+},
+"bb_shaker_13.wav": {
+"channels": 2,
+"fnv": "080e44aca0669e45",
+"frames": 24960
+},
+"bb_shaker_14.wav": {
+"channels": 2,
+"fnv": "2903ee0b8a29d181",
+"frames": 1755
+},
+"bb_shaker_15.wav": {
+"channels": 2,
+"fnv": "4f2bea805e076f1a",
+"frames": 82500
+},
+"bb_shaker_16.wav": {
+"channels": 2,
+"fnv": "a60018c42f99cab1",
+"frames": 82500
+},
+"bb_snare_crack_01.wav": {
+"channels": 2,
+"fnv": "160a7b4579c3fc57",
+"frames": 18562
+},
+"bb_snare_crack_02.wav": {
+"channels": 2,
+"fnv": "a2b91b666038be6a",
+"frames": 8608
+},
+"bb_snare_crack_03.wav": {
+"channels": 2,
+"fnv": "e54a05b2403badfe",
+"frames": 5360
+},
+"bb_snare_crack_04.wav": {
+"channels": 2,
+"fnv": "ede5314f67d314f7",
+"frames": 5360
+},
+"bb_snare_crack_05.wav": {
+"channels": 2,
+"fnv": "968e2bc58eb8baab",
+"frames": 5360
+},
+"bb_snare_crack_06.wav": {
+"channels": 2,
+"fnv": "9af6e012a3d85e09",
+"frames": 17520
+},
+"bb_snare_crack_07.wav": {
+"channels": 2,
+"fnv": "7c2d6968653c21a1",
+"frames": 11308
+},
+"bb_snare_crack_08.wav": {
+"channels": 2,
+"fnv": "54335528462203d4",
+"frames": 8608
+},
+"bb_snare_crack_09.wav": {
+"channels": 2,
+"fnv": "d8dd5db3efa4fa85",
+"frames": 16536
+},
+"bb_snare_crack_10.wav": {
+"channels": 2,
+"fnv": "8a121d4e053fffef",
+"frames": 23940
+},
+"bb_snare_crack_11.wav": {
+"channels": 2,
+"fnv": "b8f16de221c0fdf2",
+"frames": 28186
+},
+"bb_snare_crack_12.wav": {
+"channels": 2,
+"fnv": "299c45ae36770ea1",
+"frames": 52364
+},
+"bb_snare_crack_13.wav": {
+"channels": 2,
+"fnv": "130da3ecaac1d4a8",
+"frames": 26182
+},
+"bb_snare_crack_14.wav": {
+"channels": 2,
+"fnv": "cd2aef7ee987130a",
+"frames": 17206
+},
+"bb_snare_crack_15.wav": {
+"channels": 2,
+"fnv": "ea2016bf13419c4f",
+"frames": 111685
+},
+"bb_snare_crack_16.wav": {
+"channels": 2,
+"fnv": "9da7b3dd71b43ded",
+"frames": 9594
+},
+"bb_snare_crack_17.wav": {
+"channels": 2,
+"fnv": "ff98a3e88e2976ae",
+"frames": 8723
+},
+"bb_snare_crack_18.wav": {
+"channels": 2,
+"fnv": "e78c1e5d9e594439",
+"frames": 24000
+},
+"bb_snare_crack_19.wav": {
+"channels": 2,
+"fnv": "8f6f7c3d40d5d522",
+"frames": 10501
+},
+"bb_snare_crack_20.wav": {
+"channels": 2,
+"fnv": "fec3718fbf0a9779",
+"frames": 10576
+},
+"bb_snare_crack_21.wav": {
+"channels": 2,
+"fnv": "14e01cb255dc8ab7",
+"frames": 6001
+},
+"bb_snare_crack_22.wav": {
+"channels": 2,
+"fnv": "6a05ce5451866efc",
+"frames": 4629
+},
+"bb_snare_crack_23.wav": {
+"channels": 2,
+"fnv": "faaefff52a4f0047",
+"frames": 11901
+},
+"bb_snare_crack_24.wav": {
+"channels": 1,
+"fnv": "5cda4c3a8f591cbc",
+"frames": 4368
+},
+"bb_snare_crack_25.wav": {
+"channels": 2,
+"fnv": "8396134c9824501f",
+"frames": 5553
+},
+"bb_snare_crack_26.wav": {
+"channels": 2,
+"fnv": "4a65378e689a00a4",
+"frames": 4725
+},
+"bb_snare_crack_27.wav": {
+"channels": 2,
+"fnv": "883a28c95af5f421",
+"frames": 13976
+},
+"bb_snare_crack_28.wav": {
+"channels": 1,
+"fnv": "70b63b88552ef23a",
+"frames": 4368
+},
+"bb_snare_crack_29.wav": {
+"channels": 2,
+"fnv": "bbd6846528ca4108",
+"frames": 8527
+},
+"bb_snare_crack_30.wav": {
+"channels": 2,
+"fnv": "afce6c514f7192d0",
+"frames": 24250
+},
+"bb_snare_crack_31.wav": {
+"channels": 2,
+"fnv": "5329126b518d8340",
+"frames": 2274
+},
+"bb_snare_crack_32.wav": {
+"channels": 2,
+"fnv": "a257c4a5ac0a487c",
+"frames": 25044
+},
+"bb_snare_crack_33.wav": {
+"channels": 2,
+"fnv": "4a41de033adc253a",
+"frames": 3352
+},
+"bb_snare_crack_34.wav": {
+"channels": 2,
+"fnv": "7c02698afcc56655",
+"frames": 5587
+},
+"bb_snare_crack_35.wav": {
+"channels": 2,
+"fnv": "1caf8aa9bdce19a2",
+"frames": 26182
+},
+"bb_snare_crack_36.wav": {
+"channels": 2,
+"fnv": "195dc799d29e5418",
+"frames": 3081
+},
+"bb_snare_crack_37.wav": {
+"channels": 2,
+"fnv": "5c87b166a7b94816",
+"frames": 3081
+},
+"bb_snare_dusty_01.wav": {
+"channels": 2,
+"fnv": "f5922305e8579bba",
+"frames": 118971
+},
+"bb_snare_fat_01.wav": {
+"channels": 2,
+"fnv": "996203840aaf3b73",
+"frames": 38141
+},
+"bb_snare_fat_02.wav": {
+"channels": 2,
+"fnv": "57393be6d8647047",
+"frames": 36000
+},
+"bb_snare_fat_03.wav": {
+"channels": 2,
+"fnv": "97b58df2170a0017",
+"frames": 11455
+},
+"bb_snare_fat_04.wav": {
+"channels": 2,
+"fnv": "632eb03ee1d5e3c7",
+"frames": 24000
+},
+"bb_snare_fat_05.wav": {
+"channels": 2,
+"fnv": "75a38480561852e1",
+"frames": 15187
+},
+"bb_snare_fat_06.wav": {
+"channels": 2,
+"fnv": "0c3b7855ed48ee00",
+"frames": 11864
+},
+"bb_snare_fat_07.wav": {
+"channels": 2,
+"fnv": "74af8fa640d46915",
+"frames": 15187
+},
+"bb_snare_fat_08.wav": {
+"channels": 2,
+"fnv": "d8bc7fdac63fbcce",
+"frames": 3377
+},
+"bb_snare_fat_09.wav": {
+"channels": 2,
+"fnv": "fcc5d36d17f3ebc7",
+"frames": 26183
+},
+"bb_snare_fat_10.wav": {
+"channels": 2,
+"fnv": "43e3f4c2de1a095e",
+"frames": 24522
+},
+"bb_snare_fat_11.wav": {
+"channels": 2,
+"fnv": "6d5c9b4bf6b512ff",
+"frames": 7348
+},
+"bb_snare_fat_12.wav": {
+"channels": 2,
+"fnv": "cbb185a96220304b",
+"frames": 26182
+},
+"bb_snare_fat_13.wav": {
+"channels": 2,
+"fnv": "ddc924547f1c63e5",
+"frames": 26183
+},
+"bb_snare_fat_14.wav": {
+"channels": 2,
+"fnv": "894bfb00f063fe14",
+"frames": 11413
+},
+"bb_snare_fat_15.wav": {
+"channels": 2,
+"fnv": "4d3fe1fb23e4ca0f",
+"frames": 20462
+},
+"bb_snare_fat_16.wav": {
+"channels": 2,
+"fnv": "3129c08a65433748",
+"frames": 11413
+},
+"bb_snare_fat_17.wav": {
+"channels": 2,
+"fnv": "a7d4199deeab3666",
+"frames": 4416
+},
+"bb_snare_fat_18.wav": {
+"channels": 2,
+"fnv": "a2bfeb10f57f7e1f",
+"frames": 6546
+},
+"bb_snare_fat_19.wav": {
+"channels": 2,
+"fnv": "8dfc20bfc4d56ba9",
+"frames": 5360
+},
+"bb_snare_fat_20.wav": {
+"channels": 2,
+"fnv": "c862702366492686",
+"frames": 37637
+},
+"bb_snare_fat_21.wav": {
+"channels": 2,
+"fnv": "3097e9d99f5750f7",
+"frames": 6546
+},
+"bb_snare_fat_22.wav": {
+"channels": 2,
+"fnv": "9686b737391a59eb",
+"frames": 9001
+},
+"bb_snare_fat_23.wav": {
+"channels": 2,
+"fnv": "7ec8f34003de315b",
+"frames": 4703
+},
+"bb_snare_fat_24.wav": {
+"channels": 2,
+"fnv": "47290fe9b9417b45",
+"frames": 5013
+},
+"bb_snare_room_01.wav": {
+"channels": 2,
+"fnv": "6212cef73c50614b",
+"frames": 26182
+},
+"bb_snare_room_02.wav": {
+"channels": 2,
+"fnv": "7c3fa5e141924374",
+"frames": 26182
+},
+"bb_snare_room_03.wav": {
+"channels": 2,
+"fnv": "8d7af396b1e2a949",
+"frames": 26182
+},
+"bb_snare_room_04.wav": {
+"channels": 2,
+"fnv": "98b49bf4b3f39f25",
+"frames": 27739
+},
+"bb_snare_room_05.wav": {
+"channels": 2,
+"fnv": "2573721b6101e875",
+"frames": 26182
+},
+"bb_snare_room_06.wav": {
+"channels": 2,
+"fnv": "0033b4edc7a4bd34",
+"frames": 8366
+},
+"bb_snare_room_07.wav": {
+"channels": 2,
+"fnv": "4d86d99c3dafe7c7",
+"frames": 8366
+},
+"bb_snare_room_08.wav": {
+"channels": 2,
+"fnv": "94bd330138fc25eb",
+"frames": 8366
+},
+"bb_snare_room_09.wav": {
+"channels": 2,
+"fnv": "b5f5c8a8708455d2",
+"frames": 8366
+},
+"bb_snare_room_10.wav": {
+"channels": 2,
+"fnv": "432b158fab12a843",
+"frames": 8686
+},
+"bb_snare_room_11.wav": {
+"channels": 2,
+"fnv": "ccf187c14338fec5",
+"frames": 60000
+},
+"bb_snare_room_12.wav": {
+"channels": 2,
+"fnv": "67669fd090ae2bc2",
+"frames": 60000
+},
+"bb_snare_room_13.wav": {
+"channels": 2,
+"fnv": "a59fb9bf9f2ae97c",
+"frames": 14098
+},
+"bb_snare_room_14.wav": {
+"channels": 2,
+"fnv": "21cc22d9e7509276",
+"frames": 13404
+},
+"bb_snare_room_15.wav": {
+"channels": 2,
+"fnv": "cc28cc6e9faa9484",
+"frames": 21565
+},
+"bb_tamb_01.wav": {
+"channels": 2,
+"fnv": "55ab5d3a56a35c31",
+"frames": 31305
+},
+"bb_tamb_02.wav": {
+"channels": 2,
+"fnv": "44cf4d6c9c2233ff",
+"frames": 31305
+},
+"bb_tamb_03.wav": {
+"channels": 2,
+"fnv": "8df01808efc8dace",
+"frames": 45819
+},
+"bb_tamb_04.wav": {
+"channels": 2,
+"fnv": "6e3f1c9aa6c97e4d",
+"frames": 41728
+},
+"bb_tamb_05.wav": {
+"channels": 2,
+"fnv": "d91f9a3f3bf4367a",
+"frames": 62210
+},
+"bb_tom_high_01.wav": {
+"channels": 2,
+"fnv": "06bc0c4a652475f9",
+"frames": 11520
+},
+"bb_tom_high_02.wav": {
+"channels": 2,
+"fnv": "6d93295fecd3449b",
+"frames": 11520
+},
+"bb_tom_high_03.wav": {
+"channels": 2,
+"fnv": "370ebcf4f38a5a88",
+"frames": 11520
+},
+"bb_tom_high_04.wav": {
+"channels": 2,
+"fnv": "29a17d91085529ea",
+"frames": 11520
+},
+"bb_tom_high_05.wav": {
+"channels": 2,
+"fnv": "487416a4b5bae5b8",
+"frames": 11520
+},
+"bb_tom_high_06.wav": {
+"channels": 2,
+"fnv": "2ac2302849c27525",
+"frames": 6100
+},
+"bb_tom_high_07.wav": {
+"channels": 2,
+"fnv": "1285828da67a3d56",
+"frames": 6100
+},
+"bb_tom_high_08.wav": {
+"channels": 2,
+"fnv": "bcf97d89f0d71208",
+"frames": 6100
+},
+"bb_tom_high_09.wav": {
+"channels": 2,
+"fnv": "b55080718d707f89",
+"frames": 6100
+},
+"bb_tom_high_10.wav": {
+"channels": 2,
+"fnv": "99e8c9e25201ef1b",
+"frames": 5758
+},
+"bb_tom_high_11.wav": {
+"channels": 2,
+"fnv": "5ad811e09df92969",
+"frames": 5758
+},
+"bb_tom_low_01.wav": {
+"channels": 2,
+"fnv": "ac6be3e742287455",
+"frames": 30670
+},
+"bb_tom_low_02.wav": {
+"channels": 2,
+"fnv": "6c63fe337bb96577",
+"frames": 23924
+},
+"bb_tom_low_03.wav": {
+"channels": 2,
+"fnv": "a07945c82d0622c6",
+"frames": 22446
+},
+"bb_tom_low_04.wav": {
+"channels": 2,
+"fnv": "9bd9dfef73f08cce",
+"frames": 9300
+},
+"bb_tom_low_05.wav": {
+"channels": 2,
+"fnv": "d20de1fefeb8cb5a",
+"frames": 18900
+},
+"bb_tom_low_06.wav": {
+"channels": 2,
+"fnv": "80efa280124eacc1",
+"frames": 11805
+},
+"bb_tom_low_07.wav": {
+"channels": 2,
+"fnv": "84f975acb25ab744",
+"frames": 26400
+},
+"bb_tom_low_08.wav": {
+"channels": 2,
+"fnv": "0cef3a5569c10e13",
+"frames": 26400
+},
+"bb_tom_low_09.wav": {
+"channels": 2,
+"fnv": "85469ae79975745e",
+"frames": 26400
+},
+"bb_tom_low_10.wav": {
+"channels": 2,
+"fnv": "9b3bfb471eccad49",
+"frames": 26400
+},
+"bb_tom_low_11.wav": {
+"channels": 2,
+"fnv": "93b4bfc2aba8dc0c",
+"frames": 26400
+},
+"bb_tom_low_12.wav": {
+"channels": 2,
+"fnv": "01b35d19990886e4",
+"frames": 26400
+},
+"bb_tom_low_13.wav": {
+"channels": 2,
+"fnv": "d2227263dd810d6d",
+"frames": 26400
+},
+"bb_tom_low_14.wav": {
+"channels": 2,
+"fnv": "d79346b6f9ba668c",
+"frames": 26400
+},
+"bb_tom_low_15.wav": {
+"channels": 2,
+"fnv": "965f0e08fb739217",
+"frames": 26400
+},
+"bb_tom_low_16.wav": {
+"channels": 2,
+"fnv": "a7533eb680002a08",
+"frames": 26400
+},
+"bb_tom_low_17.wav": {
+"channels": 2,
+"fnv": "133807f92b5f045e",
+"frames": 26400
+},
+"bb_tom_low_18.wav": {
+"channels": 2,
+"fnv": "34d0c596e104b940",
+"frames": 26400
+},
+"bb_tom_low_19.wav": {
+"channels": 2,
+"fnv": "0b97376ef1db0540",
+"frames": 26400
+},
+"bb_tom_low_20.wav": {
+"channels": 2,
+"fnv": "f28579590f33248f",
+"frames": 26400
+},
+"bb_triangle_01.wav": {
+"channels": 2,
+"fnv": "a2edd295fe8f1916",
+"frames": 17826
+},
+"bk_clap_01.wav": {
+"channels": 2,
+"fnv": "aaf0577dbcac3356",
+"frames": 7286
+},
+"bk_clap_02.wav": {
+"channels": 2,
+"fnv": "d41756f9f2a60b05",
+"frames": 5999
+},
+"bk_clap_03.wav": {
+"channels": 2,
+"fnv": "2f35a6f320316ebc",
+"frames": 7500
+},
+"bk_clap_04.wav": {
+"channels": 2,
+"fnv": "64da3310c40f9383",
+"frames": 5999
+},
+"bk_clap_05.wav": {
+"channels": 2,
+"fnv": "5c0f8b667fab3d4f",
+"frames": 4736
+},
+"bk_clap_06.wav": {
+"channels": 2,
+"fnv": "46325e4d88892a5b",
+"frames": 3000
+},
+"bk_clap_07.wav": {
+"channels": 2,
+"fnv": "d8508805c5782a44",
+"frames": 7928
+},
+"bk_crash_01.wav": {
+"channels": 2,
+"fnv": "04c9d3c307e78aaa",
+"frames": 279013
+},
+"bk_crash_02.wav": {
+"channels": 2,
+"fnv": "103dbc039c81fe36",
+"frames": 614785
+},
+"bk_crash_03.wav": {
+"channels": 2,
+"fnv": "807cdbd25d3f774f",
+"frames": 259072
+},
+"bk_crash_04.wav": {
+"channels": 2,
+"fnv": "1efdb7955f74389f",
+"frames": 182358
+},
+"bk_crash_05.wav": {
+"channels": 2,
+"fnv": "7916ec98d9669152",
+"frames": 231429
+},
+"bk_crash_06.wav": {
+"channels": 2,
+"fnv": "2dd73a86c9d9ca2a",
+"frames": 119357
+},
+"bk_crash_07.wav": {
+"channels": 2,
+"fnv": "7321095e3d6c91cb",
+"frames": 131569
+},
+"bk_crash_08.wav": {
+"channels": 2,
+"fnv": "b75b16d786020d6d",
+"frames": 72057
+},
+"bk_crash_09.wav": {
+"channels": 2,
+"fnv": "00efdfd4ee878f7f",
+"frames": 325071
+},
+"bk_crash_10.wav": {
+"channels": 2,
+"fnv": "e6bcd3e5efb2e8fa",
+"frames": 109826
+},
+"bk_crash_11.wav": {
+"channels": 2,
+"fnv": "316208f3c7155f15",
+"frames": 143018
+},
+"bk_crash_12.wav": {
+"channels": 2,
+"fnv": "3eecb55ce8732f50",
+"frames": 98785
+},
+"bk_crash_13.wav": {
+"channels": 2,
+"fnv": "ab0ec769bcbde71a",
+"frames": 145278
+},
+"bk_crash_14.wav": {
+"channels": 2,
+"fnv": "0018ad2298d78dd3",
+"frames": 135398
+},
+"bk_crash_15.wav": {
+"channels": 2,
+"fnv": "0a01600dbef322a1",
+"frames": 102214
+},
+"bk_crash_16.wav": {
+"channels": 2,
+"fnv": "086cbf34bee39630",
+"frames": 355072
+},
+"bk_crash_17.wav": {
+"channels": 2,
+"fnv": "9808a3ac7081cdf4",
+"frames": 386358
+},
+"bk_crash_18.wav": {
+"channels": 2,
+"fnv": "ea9ca331129f2845",
+"frames": 269167
+},
+"bk_crash_19.wav": {
+"channels": 2,
+"fnv": "f69984566de1fec7",
+"frames": 252300
+},
+"bk_crash_20.wav": {
+"channels": 2,
+"fnv": "590085a305c45d53",
+"frames": 381000
+},
+"bk_cymbal_01.wav": {
+"channels": 2,
+"fnv": "e395fab0c728b7f4",
+"frames": 94224
+},
+"bk_cymbal_02.wav": {
+"channels": 2,
+"fnv": "6f77887b97a53c66",
+"frames": 180000
+},
+"bk_cymbal_03.wav": {
+"channels": 2,
+"fnv": "6ebda551213be14f",
+"frames": 157500
+},
+"bk_cymbal_04.wav": {
+"channels": 2,
+"fnv": "8c3bd3c9da14afb3",
+"frames": 112500
+},
+"bk_hihat_01.wav": {
+"channels": 2,
+"fnv": "ed6eb775b42e99dd",
+"frames": 8571
+},
+"bk_hihat_02.wav": {
+"channels": 2,
+"fnv": "78338ec8d81ccf69",
+"frames": 7072
+},
+"bk_hihat_03.wav": {
+"channels": 2,
+"fnv": "b2188896cd1806ef",
+"frames": 36000
+},
+"bk_hihat_04.wav": {
+"channels": 2,
+"fnv": "a551538ba07cf92f",
+"frames": 5625
+},
+"bk_hihat_05.wav": {
+"channels": 2,
+"fnv": "5d99e16ff8049bb5",
+"frames": 15214
+},
+"bk_hihat_06.wav": {
+"channels": 2,
+"fnv": "09629fc0b5bb8a9a",
+"frames": 5625
+},
+"bk_hihat_07.wav": {
+"channels": 2,
+"fnv": "92c5bdb0151deb6c",
+"frames": 12214
+},
+"bk_hihat_08.wav": {
+"channels": 2,
+"fnv": "e6c895545e2fec2b",
+"frames": 4727
+},
+"bk_hihat_09.wav": {
+"channels": 2,
+"fnv": "1d821c0ebc73c54f",
+"frames": 3747
+},
+"bk_hihat_10.wav": {
+"channels": 2,
+"fnv": "0040e4d865cb2a29",
+"frames": 3400
+},
+"bk_hihat_11.wav": {
+"channels": 2,
+"fnv": "02a2214e2125c4fa",
+"frames": 5315
+},
+"bk_hihat_12.wav": {
+"channels": 2,
+"fnv": "695a0fbb0de52c2a",
+"frames": 11862
+},
+"bk_hihat_13.wav": {
+"channels": 2,
+"fnv": "3d508b4f750f9665",
+"frames": 42147
+},
+"bk_hihat_14.wav": {
+"channels": 2,
+"fnv": "fc6e7b018853d99a",
+"frames": 35677
+},
+"bk_hihat_15.wav": {
+"channels": 2,
+"fnv": "bb55ec351030c4a3",
+"frames": 32384
+},
+"bk_hihat_16.wav": {
+"channels": 2,
+"fnv": "44abf4e6a3c5449f",
+"frames": 26276
+},
+"bk_hihat_17.wav": {
+"channels": 2,
+"fnv": "b28d6cb9484c2daa",
+"frames": 29999
+},
+"bk_hihat_18.wav": {
+"channels": 2,
+"fnv": "7d4c363064d96cce",
+"frames": 10818
+},
+"bk_hihat_19.wav": {
+"channels": 2,
+"fnv": "96131cfea63ef925",
+"frames": 50017
+},
+"bk_hihat_20.wav": {
+"channels": 2,
+"fnv": "6ded51697a58ea7f",
+"frames": 16687
+},
+"bk_hihat_21.wav": {
+"channels": 2,
+"fnv": "196aadf384dc5a56",
+"frames": 5187
+},
+"bk_hihat_22.wav": {
+"channels": 2,
+"fnv": "44ce26d47138e6a1",
+"frames": 3643
+},
+"bk_hihat_23.wav": {
+"channels": 2,
+"fnv": "24b799be8e414bd8",
+"frames": 4564
+},
+"bk_hihat_24.wav": {
+"channels": 2,
+"fnv": "ad9206e973344210",
+"frames": 2394
+},
+"bk_hihat_25.wav": {
+"channels": 2,
+"fnv": "8a1b0d2fa9da7efd",
+"frames": 4072
+},
+"bk_hihat_26.wav": {
+"channels": 2,
+"fnv": "dc5e77d5a15c8f32",
+"frames": 4928
+},
+"bk_kick_01.wav": {
+"channels": 2,
+"fnv": "0d1bb3ffc7bf17ba",
+"frames": 9939
+},
+"bk_kick_02.wav": {
+"channels": 2,
+"fnv": "3f13743e6b400882",
+"frames": 6428
+},
+"bk_kick_03.wav": {
+"channels": 2,
+"fnv": "082ae763f82534d2",
+"frames": 5999
+},
+"bk_kick_04.wav": {
+"channels": 2,
+"fnv": "8a0b6ce6e02914cc",
+"frames": 9428
+},
+"bk_kick_05.wav": {
+"channels": 2,
+"fnv": "399e45c860411397",
+"frames": 11357
+},
+"bk_kick_06.wav": {
+"channels": 2,
+"fnv": "5dc9676f1df96988",
+"frames": 17357
+},
+"bk_kick_07.wav": {
+"channels": 2,
+"fnv": "1224e62032668c47",
+"frames": 9863
+},
+"bk_openhat_01.wav": {
+"channels": 2,
+"fnv": "a3b6a989df7a11e5",
+"frames": 35655
+},
+"bk_openhat_02.wav": {
+"channels": 2,
+"fnv": "69284df32955bb60",
+"frames": 17357
+},
+"bk_openhat_03.wav": {
+"channels": 2,
+"fnv": "428ecd6400d5cfe6",
+"frames": 29821
+},
+"bk_openhat_04.wav": {
+"channels": 2,
+"fnv": "ed15acf38000742f",
+"frames": 18643
+},
+"bk_openhat_05.wav": {
+"channels": 2,
+"fnv": "be95e505c0adef1b",
+"frames": 13929
+},
+"bk_openhat_06.wav": {
+"channels": 2,
+"fnv": "cf37099638ae0ab7",
+"frames": 21493
+},
+"bk_openhat_07.wav": {
+"channels": 2,
+"fnv": "ed0cb3716887b804",
+"frames": 20501
+},
+"bk_openhat_08.wav": {
+"channels": 2,
+"fnv": "d37d9d02c4ad4ddb",
+"frames": 12461
+},
+"bk_openhat_09.wav": {
+"channels": 2,
+"fnv": "9b752662449f6d94",
+"frames": 32806
+},
+"bk_openhat_10.wav": {
+"channels": 2,
+"fnv": "b6aec500409599a5",
+"frames": 53999
+},
+"bk_openhat_11.wav": {
+"channels": 2,
+"fnv": "21c0f58a03db2134",
+"frames": 33857
+},
+"bk_openhat_12.wav": {
+"channels": 2,
+"fnv": "80c0b1f110aafdae",
+"frames": 19286
+},
+"bk_openhat_13.wav": {
+"channels": 2,
+"fnv": "4182b64c3c3aa3ef",
+"frames": 12214
+},
+"bk_openhat_14.wav": {
+"channels": 2,
+"fnv": "232acb07e005ede2",
+"frames": 20143
+},
+"bk_openhat_15.wav": {
+"channels": 2,
+"fnv": "1972ea377ccad86e",
+"frames": 50358
+},
+"bk_openhat_16.wav": {
+"channels": 2,
+"fnv": "d5a565f6fd99c395",
+"frames": 41116
+},
+"bk_openhat_17.wav": {
+"channels": 2,
+"fnv": "880cc8d52ffc7302",
+"frames": 41710
+},
+"bk_openhat_18.wav": {
+"channels": 2,
+"fnv": "5ebf362a39a47433",
+"frames": 91286
+},
+"bk_openhat_19.wav": {
+"channels": 2,
+"fnv": "b0036a120c86b1db",
+"frames": 32428
+},
+"bk_openhat_20.wav": {
+"channels": 2,
+"fnv": "04313498b5161378",
+"frames": 41813
+},
+"bk_openhat_21.wav": {
+"channels": 2,
+"fnv": "047848e7947aad27",
+"frames": 30991
+},
+"bk_openhat_22.wav": {
+"channels": 2,
+"fnv": "6d5b988664a43a2a",
+"frames": 30201
+},
+"bk_openhat_23.wav": {
+"channels": 2,
+"fnv": "285b4ec50f148471",
+"frames": 13929
+},
+"bk_openhat_24.wav": {
+"channels": 2,
+"fnv": "63555348bee28beb",
+"frames": 21110
+},
+"bk_openhat_25.wav": {
+"channels": 2,
+"fnv": "86ade5cac36bdba6",
+"frames": 31072
+},
+"bk_perc_01.wav": {
+"channels": 2,
+"fnv": "204cceff08be3f62",
+"frames": 5357
+},
+"bk_perc_02.wav": {
+"channels": 2,
+"fnv": "5d77fb1c36cba6d6",
+"frames": 14572
+},
+"bk_perc_03.wav": {
+"channels": 2,
+"fnv": "c0bb3ff765d5ad2f",
+"frames": 16285
+},
+"bk_perc_04.wav": {
+"channels": 2,
+"fnv": "ff68b632bbff8569",
+"frames": 12000
+},
+"bk_perc_05.wav": {
+"channels": 2,
+"fnv": "03a7a3c7a2379cb5",
+"frames": 36000
+},
+"bk_perc_06.wav": {
+"channels": 2,
+"fnv": "68dc72528ad59af7",
+"frames": 10286
+},
+"bk_rim_01.wav": {
+"channels": 2,
+"fnv": "6b01c1c6cf7bafb6",
+"frames": 4736
+},
+"bk_rim_02.wav": {
+"channels": 2,
+"fnv": "835f990abf774fbf",
+"frames": 10071
+},
+"bk_rim_03.wav": {
+"channels": 2,
+"fnv": "3ddae41fd9ba6a13",
+"frames": 8571
+},
+"bk_rim_04.wav": {
+"channels": 2,
+"fnv": "cbcd3716c55a030c",
+"frames": 2571
+},
+"bk_rim_05.wav": {
+"channels": 2,
+"fnv": "474251bb0823c39c",
+"frames": 12000
+},
+"bk_rim_06.wav": {
+"channels": 2,
+"fnv": "cb6d8af516b6f1cc",
+"frames": 4736
+},
+"bk_rim_07.wav": {
+"channels": 2,
+"fnv": "5de294090837b7f7",
+"frames": 10286
+},
+"bk_rim_08.wav": {
+"channels": 2,
+"fnv": "5de82f5c4810de16",
+"frames": 8914
+},
+"bk_rim_09.wav": {
+"channels": 2,
+"fnv": "b5949705bc91a6f1",
+"frames": 1030
+},
+"bk_rim_10.wav": {
+"channels": 2,
+"fnv": "791b688eb07fc987",
+"frames": 6397
+},
+"bk_rim_11.wav": {
+"channels": 2,
+"fnv": "52fd048808f1ebcc",
+"frames": 1353
+},
+"bk_rim_12.wav": {
+"channels": 2,
+"fnv": "4cc2fe727afe6036",
+"frames": 5327
+},
+"bk_rim_13.wav": {
+"channels": 2,
+"fnv": "fb8d65e0ba62690e",
+"frames": 4448
+},
+"bk_rim_14.wav": {
+"channels": 2,
+"fnv": "f500f55e874eaaaa",
+"frames": 3782
+},
+"bk_rim_15.wav": {
+"channels": 2,
+"fnv": "0e5d0787a0cdee8a",
+"frames": 11666
+},
+"bk_rim_16.wav": {
+"channels": 2,
+"fnv": "5f857e18a5a7b4ba",
+"frames": 3267
+},
+"bk_rim_17.wav": {
+"channels": 2,
+"fnv": "3506322bab069d67",
+"frames": 6937
+},
+"bk_snare_01.wav": {
+"channels": 2,
+"fnv": "b3dec4c675647a13",
+"frames": 5786
+},
+"bk_snare_02.wav": {
+"channels": 2,
+"fnv": "64312b5cf3021182",
+"frames": 16500
+},
+"bk_snare_03.wav": {
+"channels": 2,
+"fnv": "a8051344eacbc671",
+"frames": 10500
+},
+"bk_snare_04.wav": {
+"channels": 2,
+"fnv": "c1f65caf7227f89c",
+"frames": 10511
+},
+"bk_snare_05.wav": {
+"channels": 2,
+"fnv": "81899ce04121f550",
+"frames": 16714
+},
+"bk_snare_06.wav": {
+"channels": 2,
+"fnv": "cddd35f90c4f7547",
+"frames": 4714
+},
+"bk_snare_07.wav": {
+"channels": 2,
+"fnv": "7d80190cf8ae4c7a",
+"frames": 2571
+},
+"bk_snare_08.wav": {
+"channels": 2,
+"fnv": "b47d194e6c55bc21",
+"frames": 9215
+},
+"bk_snare_09.wav": {
+"channels": 2,
+"fnv": "e0ce0871a4ade783",
+"frames": 9215
+},
+"bk_snare_10.wav": {
+"channels": 2,
+"fnv": "e7ab9a2bcc001286",
+"frames": 68571
+},
+"bk_snare_11.wav": {
+"channels": 2,
+"fnv": "2dc4ef3cdc4d78c2",
+"frames": 14238
+},
+"bk_snare_12.wav": {
+"channels": 2,
+"fnv": "245b38bab538dbd3",
+"frames": 6392
+},
+"bk_snare_13.wav": {
+"channels": 2,
+"fnv": "7ac8739b2ace40c2",
+"frames": 9413
+},
+"bk_snare_14.wav": {
+"channels": 2,
+"fnv": "03d77b2bb43d3c2c",
+"frames": 36643
+},
+"bk_snare_15.wav": {
+"channels": 2,
+"fnv": "b7914c15ddf59c95",
+"frames": 17675
+},
+"bk_snare_16.wav": {
+"channels": 2,
+"fnv": "410ac729ca398500",
+"frames": 16080
+},
+"bk_snare_17.wav": {
+"channels": 2,
+"fnv": "7bdcfd5f34e9142a",
+"frames": 44117
+},
+"bk_snare_18.wav": {
+"channels": 2,
+"fnv": "0cb7333a8831af7d",
+"frames": 10610
+},
+"bk_snare_19.wav": {
+"channels": 2,
+"fnv": "045b35cdccecad86",
+"frames": 12249
+},
+"bk_snare_20.wav": {
+"channels": 2,
+"fnv": "557876fdf743c8b9",
+"frames": 11366
+},
+"bk_snare_21.wav": {
+"channels": 2,
+"fnv": "6fc354b9b88c7e26",
+"frames": 15195
+},
+"bk_snare_22.wav": {
+"channels": 2,
+"fnv": "61685174d0a0d6a3",
+"frames": 8044
+},
+"bk_snare_23.wav": {
+"channels": 2,
+"fnv": "652fb28b2aef73da",
+"frames": 10822
+},
+"bk_snare_24.wav": {
+"channels": 2,
+"fnv": "1cdcfce62dc04d48",
+"frames": 11670
+},
+"bk_snare_25.wav": {
+"channels": 2,
+"fnv": "2e4b9fcec62c2d3d",
+"frames": 10552
+},
+"bk_snare_26.wav": {
+"channels": 2,
+"fnv": "58ddcaf3abd083b7",
+"frames": 10848
+},
+"bk_snare_27.wav": {
+"channels": 2,
+"fnv": "854481a64a155d2e",
+"frames": 23168
+},
+"bk_tom_01.wav": {
+"channels": 2,
+"fnv": "84723de19f7fc0a4",
+"frames": 21000
+},
+"va_choke18_l1_r1.wav": {
+"channels": 2,
+"fnv": "9f43f79125e97996",
+"frames": 86400
+},
+"va_choke18_l2_r1.wav": {
+"channels": 2,
+"fnv": "b152aa2c796142d6",
+"frames": 86400
+},
+"va_choke18_l3_r1.wav": {
+"channels": 2,
+"fnv": "62224b23cd1748ba",
+"frames": 80072
+},
+"va_choke18_l4_r1.wav": {
+"channels": 2,
+"fnv": "bfc8b28b402ca040",
+"frames": 78464
+},
+"va_choke18_l5_r1.wav": {
+"channels": 2,
+"fnv": "880c1db3ba53b9b4",
+"frames": 86400
+},
+"va_crash14_l1_r1.wav": {
+"channels": 2,
+"fnv": "ece1f0824cf9e242",
+"frames": 153600
+},
+"va_crash14_l2_r1.wav": {
+"channels": 2,
+"fnv": "082e66166ffe7a1a",
+"frames": 153600
+},
+"va_crash14_l3_r1.wav": {
+"channels": 2,
+"fnv": "15949cdf5d8905f0",
+"frames": 153600
+},
+"va_crash14_l4_r1.wav": {
+"channels": 2,
+"fnv": "2f4ad21548cbafdb",
+"frames": 153600
+},
+"va_crash14_l5_r1.wav": {
+"channels": 2,
+"fnv": "e5ac15dce6ab262f",
+"frames": 153600
+},
+"va_crash18_l1_r1.wav": {
+"channels": 2,
+"fnv": "9dbe88d5ccd6cd5c",
+"frames": 172800
+},
+"va_crash18_l2_r1.wav": {
+"channels": 2,
+"fnv": "940343a4b5834103",
+"frames": 172800
+},
+"va_crash18_l3_r1.wav": {
+"channels": 2,
+"fnv": "9646ce7f9c176ba4",
+"frames": 172800
+},
+"va_crash18_l4_r1.wav": {
+"channels": 2,
+"fnv": "efd8c9704ddd03a7",
+"frames": 172800
+},
+"va_crash18_l5_r1.wav": {
+"channels": 2,
+"fnv": "dace553b361e9e6b",
+"frames": 172800
+},
+"va_crashbell14_l1_r1.wav": {
+"channels": 2,
+"fnv": "68c7eb759eab8cbb",
+"frames": 120000
+},
+"va_crashbell14_l2_r1.wav": {
+"channels": 2,
+"fnv": "a2cac9bafaaa4e98",
+"frames": 120000
+},
+"va_crashbell14_l3_r1.wav": {
+"channels": 2,
+"fnv": "97083401218e8dff",
+"frames": 120000
+},
+"va_crashbell18_l1_r1.wav": {
+"channels": 2,
+"fnv": "bc9b74216ee20edf",
+"frames": 120000
+},
+"va_crashbell18_l2_r1.wav": {
+"channels": 2,
+"fnv": "eccf8bbe6fc8e14a",
+"frames": 120000
+},
+"va_crashbell18_l3_r1.wav": {
+"channels": 2,
+"fnv": "35c3d45c5efaeb35",
+"frames": 120000
+},
+"va_drag_l1_r1.wav": {
+"channels": 2,
+"fnv": "b79c50d956e44d5b",
+"frames": 48000
+},
+"va_drag_l2_r1.wav": {
+"channels": 2,
+"fnv": "f2219a171bdad4d5",
+"frames": 48000
+},
+"va_drag_l3_r1.wav": {
+"channels": 2,
+"fnv": "53985457d30b8839",
+"frames": 48000
+},
+"va_flam_l1_r1.wav": {
+"channels": 2,
+"fnv": "2e3626a440236825",
+"frames": 48000
+},
+"va_flam_l2_r1.wav": {
+"channels": 2,
+"fnv": "e3d7dab2567d647d",
+"frames": 48000
+},
+"va_flam_l3_r1.wav": {
+"channels": 2,
+"fnv": "0dea828543d83808",
+"frames": 48000
+},
+"va_flameq_l1_r1.wav": {
+"channels": 2,
+"fnv": "0d67b772eab232e1",
+"frames": 48000
+},
+"va_flameq_l2_r1.wav": {
+"channels": 2,
+"fnv": "9611c33d513c4b98",
+"frames": 48000
+},
+"va_flameq_l3_r1.wav": {
+"channels": 2,
+"fnv": "108479250fe469d1",
+"frames": 48000
+},
+"va_hat_l1_r1.wav": {
+"channels": 2,
+"fnv": "1bd3df273f503ec9",
+"frames": 21600
+},
+"va_hat_l2_r1.wav": {
+"channels": 2,
+"fnv": "63985384dd748103",
+"frames": 21600
+},
+"va_hat_l3_r1.wav": {
+"channels": 2,
+"fnv": "2e7e6cf60f40ee98",
+"frames": 21600
+},
+"va_hat_l4_r1.wav": {
+"channels": 2,
+"fnv": "da067ab034d6f04a",
+"frames": 21600
+},
+"va_hat_l5_r1.wav": {
+"channels": 2,
+"fnv": "086591295e0e2670",
+"frames": 21600
+},
+"va_hatbell_l1_r1.wav": {
+"channels": 2,
+"fnv": "061b53c8bdd4fb29",
+"frames": 38400
+},
+"va_hatbell_l2_r1.wav": {
+"channels": 2,
+"fnv": "47f2325f804d908e",
+"frames": 38400
+},
+"va_hatbell_l3_r1.wav": {
+"channels": 2,
+"fnv": "4015827ac44e9b16",
+"frames": 38400
+},
+"va_hatcld_l1_r1.wav": {
+"channels": 2,
+"fnv": "db706bb45b9b17a6",
+"frames": 21600
+},
+"va_hatcld_l2_r1.wav": {
+"channels": 2,
+"fnv": "3c88f254c3434c61",
+"frames": 21600
+},
+"va_hatcld_l3_r1.wav": {
+"channels": 2,
+"fnv": "9c1a22d2565bc090",
+"frames": 21600
+},
+"va_hatcld_l4_r1.wav": {
+"channels": 2,
+"fnv": "e6cc1126a546f8d9",
+"frames": 21600
+},
+"va_hatcld_l5_r1.wav": {
+"channels": 2,
+"fnv": "7e922be771f0434c",
+"frames": 21600
+},
+"va_hatcrash_l1_r1.wav": {
+"channels": 2,
+"fnv": "a3877ef056c63faf",
+"frames": 120000
+},
+"va_hatcrash_l2_r1.wav": {
+"channels": 2,
+"fnv": "747beb90243dd782",
+"frames": 120000
+},
+"va_hatcrash_l3_r1.wav": {
+"channels": 2,
+"fnv": "418b0ae1c8898fef",
+"frames": 120000
+},
+"va_hatpedal2_l1_r1.wav": {
+"channels": 2,
+"fnv": "4205cdcdd7963900",
+"frames": 19200
+},
+"va_hatpedal2_l2_r1.wav": {
+"channels": 2,
+"fnv": "08e8b708e6f16b90",
+"frames": 19200
+},
+"va_hatpedal2_l3_r1.wav": {
+"channels": 2,
+"fnv": "9b829b0f800c47c3",
+"frames": 19200
+},
+"va_hatpedal_l1_r1.wav": {
+"channels": 2,
+"fnv": "76205a83fae31eac",
+"frames": 19200
+},
+"va_hatpedal_l2_r1.wav": {
+"channels": 2,
+"fnv": "556681761d0c319e",
+"frames": 19200
+},
+"va_hatpedal_l3_r1.wav": {
+"channels": 2,
+"fnv": "e0a3311056356726",
+"frames": 19200
+},
+"va_hatshake_l1_r1.wav": {
+"channels": 2,
+"fnv": "2b294b81a4c029fa",
+"frames": 24000
+},
+"va_hatshake_l2_r1.wav": {
+"channels": 2,
+"fnv": "1b76f3ff0c948ee8",
+"frames": 24000
+},
+"va_hatshake_l3_r1.wav": {
+"channels": 2,
+"fnv": "b39c28935bb2a93c",
+"frames": 24000
+},
+"va_hatshake_l4_r1.wav": {
+"channels": 2,
+"fnv": "48f911b658d83ecd",
+"frames": 24000
+},
+"va_hatshake_l5_r1.wav": {
+"channels": 2,
+"fnv": "3aab8c31de3216c3",
+"frames": 24000
+},
+"va_kick16_l1_r1.wav": {
+"channels": 2,
+"fnv": "b5cb3bd52dd8de0b",
+"frames": 48000
+},
+"va_kick16_l2_r1.wav": {
+"channels": 2,
+"fnv": "74abd9e75f3cec46",
+"frames": 48000
+},
+"va_kick16_l3_r1.wav": {
+"channels": 2,
+"fnv": "9c7f89be9248c4ec",
+"frames": 48000
+},
+"va_kick16_l4_r1.wav": {
+"channels": 2,
+"fnv": "f97ed633057fbf67",
+"frames": 48000
+},
+"va_kick16_l5_r1.wav": {
+"channels": 2,
+"fnv": "5c6513c0fcd56ff7",
+"frames": 48000
+},
+"va_kickeq_l1_r1.wav": {
+"channels": 2,
+"fnv": "4a4b34c200673417",
+"frames": 48000
+},
+"va_kickeq_l2_r1.wav": {
+"channels": 2,
+"fnv": "155d23982e062a66",
+"frames": 48000
+},
+"va_kickeq_l3_r1.wav": {
+"channels": 2,
+"fnv": "53755dd0c36092a4",
+"frames": 48000
+},
+"va_kickeq_l4_r1.wav": {
+"channels": 2,
+"fnv": "66b0c73a2decb3a6",
+"frames": 48000
+},
+"va_kickeq_l5_r1.wav": {
+"channels": 2,
+"fnv": "1a5df3571e187634",
+"frames": 48000
+},
+"va_openhat2_l1_r1.wav": {
+"channels": 2,
+"fnv": "f5244582963eb4bf",
+"frames": 86400
+},
+"va_openhat2_l2_r1.wav": {
+"channels": 2,
+"fnv": "156e717f28b6ced0",
+"frames": 86400
+},
+"va_openhat2_l3_r1.wav": {
+"channels": 2,
+"fnv": "b19b896dc189404d",
+"frames": 86400
+},
+"va_openhat2_l4_r1.wav": {
+"channels": 2,
+"fnv": "b47d84add92b2e9e",
+"frames": 86400
+},
+"va_openhat2_l5_r1.wav": {
+"channels": 2,
+"fnv": "e68edee8dd9939ce",
+"frames": 86400
+},
+"va_openhat_l1_r1.wav": {
+"channels": 2,
+"fnv": "c3f948f1dbeff042",
+"frames": 46378
+},
+"va_openhat_l2_r1.wav": {
+"channels": 2,
+"fnv": "94a077ffae545d51",
+"frames": 59648
+},
+"va_openhat_l3_r1.wav": {
+"channels": 2,
+"fnv": "c482c4b64f3b59ee",
+"frames": 54656
+},
+"va_openhat_l4_r1.wav": {
+"channels": 2,
+"fnv": "6baf01f844ab65c6",
+"frames": 86400
+},
+"va_openhat_l5_r1.wav": {
+"channels": 2,
+"fnv": "795c8ad495b092f3",
+"frames": 86400
+},
+"va_ride_l1_r1.wav": {
+"channels": 2,
+"fnv": "d855de96f6eb6d90",
+"frames": 134400
+},
+"va_ride_l2_r1.wav": {
+"channels": 2,
+"fnv": "8bf761336d120312",
+"frames": 134400
+},
+"va_ride_l3_r1.wav": {
+"channels": 2,
+"fnv": "06ab0f9152479fe1",
+"frames": 134400
+},
+"va_ride_l4_r1.wav": {
+"channels": 2,
+"fnv": "3d45141bb306abd6",
+"frames": 134400
+},
+"va_ride_l5_r1.wav": {
+"channels": 2,
+"fnv": "a37bfa25f8d37b59",
+"frames": 134400
+},
+"va_ridebell_l1_r1.wav": {
+"channels": 2,
+"fnv": "181e37c632dc7a46",
+"frames": 134400
+},
+"va_ridebell_l2_r1.wav": {
+"channels": 2,
+"fnv": "82a28a3bf8ec0a20",
+"frames": 134400
+},
+"va_ridebell_l3_r1.wav": {
+"channels": 2,
+"fnv": "bdb1c69c19e7a64d",
+"frames": 134400
+},
+"va_ridebell_l4_r1.wav": {
+"channels": 2,
+"fnv": "55c0ed19cbaee295",
+"frames": 134400
+},
+"va_ridebell_l5_r1.wav": {
+"channels": 2,
+"fnv": "0c5b459c7946f563",
+"frames": 134400
+},
+"va_riff1_l1_r1.wav": {
+"channels": 2,
+"fnv": "2c17db5dfa457101",
+"frames": 74790
+},
+"va_riff2_l1_r1.wav": {
+"channels": 2,
+"fnv": "e0f86b0d6f2865cb",
+"frames": 81075
+},
+"va_riff3_l1_r1.wav": {
+"channels": 2,
+"fnv": "75805bff838dfd23",
+"frames": 69504
+},
+"va_rimshot_l1_r1.wav": {
+"channels": 2,
+"fnv": "24a2d703d73cc04e",
+"frames": 48000
+},
+"va_rimshot_l2_r1.wav": {
+"channels": 2,
+"fnv": "fe19857e9ab7b7da",
+"frames": 48000
+},
+"va_rimshot_l3_r1.wav": {
+"channels": 2,
+"fnv": "e7ddab9bc048e44b",
+"frames": 48000
+},
+"va_rimshot_l4_r1.wav": {
+"channels": 2,
+"fnv": "24ce79563b2373f6",
+"frames": 48000
+},
+"va_rimshot_l5_r1.wav": {
+"channels": 2,
+"fnv": "9531d2a095ab00aa",
+"frames": 48000
+},
+"va_rimshoteq_l1_r1.wav": {
+"channels": 2,
+"fnv": "abc37c098154bcf2",
+"frames": 48000
+},
+"va_rimshoteq_l2_r1.wav": {
+"channels": 2,
+"fnv": "4d8cc8eea854f7ae",
+"frames": 48000
+},
+"va_rimshoteq_l3_r1.wav": {
+"channels": 2,
+"fnv": "a79856639972d80e",
+"frames": 48000
+},
+"va_rimshoteq_l4_r1.wav": {
+"channels": 2,
+"fnv": "3cfcca8d1049aae8",
+"frames": 48000
+},
+"va_rimshoteq_l5_r1.wav": {
+"channels": 2,
+"fnv": "e262e227c2f6c486",
+"frames": 48000
+},
+"va_roll1_l1_r1.wav": {
+"channels": 2,
+"fnv": "408450ce927719d2",
+"frames": 187200
+},
+"va_roll2_l1_r1.wav": {
+"channels": 2,
+"fnv": "43f0f949c44f9c91",
+"frames": 172800
+},
+"va_roll3_l1_r1.wav": {
+"channels": 2,
+"fnv": "b19bec4d04877a1b",
+"frames": 185772
+},
+"va_snare_l1_r1.wav": {
+"channels": 2,
+"fnv": "474be82154fdbf06",
+"frames": 43200
+},
+"va_snare_l2_r1.wav": {
+"channels": 2,
+"fnv": "a9e8743ba6de50bb",
+"frames": 43200
+},
+"va_snare_l3_r1.wav": {
+"channels": 2,
+"fnv": "bc3224a733f4c432",
+"frames": 43200
+},
+"va_snare_l4_r1.wav": {
+"channels": 2,
+"fnv": "43a090047f9d1b70",
+"frames": 43200
+},
+"va_snare_l5_r1.wav": {
+"channels": 2,
+"fnv": "de7424ea5c216c05",
+"frames": 43200
+},
+"va_snareeq_l1_r1.wav": {
+"channels": 2,
+"fnv": "4be71c48ddeb1c1d",
+"frames": 43200
+},
+"va_snareeq_l2_r1.wav": {
+"channels": 2,
+"fnv": "c7a31bcdf02140b2",
+"frames": 43200
+},
+"va_snareeq_l3_r1.wav": {
+"channels": 2,
+"fnv": "2ca9faf777ed1167",
+"frames": 43200
+},
+"va_snareeq_l4_r1.wav": {
+"channels": 2,
+"fnv": "27b839f275734aa3",
+"frames": 43200
+},
+"va_snareeq_l5_r1.wav": {
+"channels": 2,
+"fnv": "09f22442f746c2eb",
+"frames": 43200
+},
+"va_snareoff_l1_r1.wav": {
+"channels": 2,
+"fnv": "56518cf488eb8e84",
+"frames": 43200
+},
+"va_snareoff_l2_r1.wav": {
+"channels": 2,
+"fnv": "20dbdd8417af5a53",
+"frames": 43200
+},
+"va_snareoff_l3_r1.wav": {
+"channels": 2,
+"fnv": "3bfaf4544c54ca16",
+"frames": 43200
+},
+"va_snareoff_l4_r1.wav": {
+"channels": 2,
+"fnv": "d8688e8d24f40cf1",
+"frames": 43200
+},
+"va_snareoff_l5_r1.wav": {
+"channels": 2,
+"fnv": "4b1d4d09c97b5f0a",
+"frames": 43200
+},
+"va_splash_l1_r1.wav": {
+"channels": 2,
+"fnv": "4ebe9d0479269a97",
+"frames": 120000
+},
+"va_splash_l2_r1.wav": {
+"channels": 2,
+"fnv": "4cee0dd2d58945bd",
+"frames": 120000
+},
+"va_splash_l3_r1.wav": {
+"channels": 2,
+"fnv": "86f17e482b7ca35e",
+"frames": 120000
+},
+"va_splash_l4_r1.wav": {
+"channels": 2,
+"fnv": "de3eb081b2692be3",
+"frames": 120000
+},
+"va_splash_l5_r1.wav": {
+"channels": 2,
+"fnv": "01bb5f34e873e236",
+"frames": 120000
+},
+"va_splashchoke_l1_r1.wav": {
+"channels": 2,
+"fnv": "eba4bc30f65d31f4",
+"frames": 48000
+},
+"va_splashchoke_l2_r1.wav": {
+"channels": 2,
+"fnv": "e1e7b13855a690e5",
+"frames": 43280
+},
+"va_splashchoke_l3_r1.wav": {
+"channels": 2,
+"fnv": "a1644f7d2b71a2f4",
+"frames": 48000
+},
+"va_sstick_l1_r1.wav": {
+"channels": 2,
+"fnv": "b4a8b874c716aacc",
+"frames": 24000
+},
+"va_sstick_l2_r1.wav": {
+"channels": 2,
+"fnv": "a20d28d0ad1d8dfa",
+"frames": 24000
+},
+"va_sstick_l3_r1.wav": {
+"channels": 2,
+"fnv": "b97cb84d8434a5a9",
+"frames": 24000
+},
+"va_sstick_l4_r1.wav": {
+"channels": 2,
+"fnv": "feb8718b93f2993c",
+"frames": 24000
+},
+"va_sstick_l5_r1.wav": {
+"channels": 2,
+"fnv": "326099c9b862fa4d",
+"frames": 24000
+},
+"va_sstickeq_l1_r1.wav": {
+"channels": 2,
+"fnv": "6110304a179e8fd7",
+"frames": 24000
+},
+"va_sstickeq_l2_r1.wav": {
+"channels": 2,
+"fnv": "04b93ecab6ab5177",
+"frames": 24000
+},
+"va_sstickeq_l3_r1.wav": {
+"channels": 2,
+"fnv": "12c07ac21f11714f",
+"frames": 24000
+},
+"va_sstickeq_l4_r1.wav": {
+"channels": 2,
+"fnv": "4c29c2de3519f3ec",
+"frames": 24000
+},
+"va_sstickeq_l5_r1.wav": {
+"channels": 2,
+"fnv": "dfa482dfadcf28c6",
+"frames": 24000
+},
+"va_tom10_l1_r1.wav": {
+"channels": 2,
+"fnv": "c62547e4bed29285",
+"frames": 66885
+},
+"va_tom10_l2_r1.wav": {
+"channels": 2,
+"fnv": "c8c87d5a36f62c49",
+"frames": 67200
+},
+"va_tom10_l3_r1.wav": {
+"channels": 2,
+"fnv": "02d4d7a5c5d6038d",
+"frames": 67200
+},
+"va_tom10_l4_r1.wav": {
+"channels": 2,
+"fnv": "24d3321022785e32",
+"frames": 67200
+},
+"va_tom10_l5_r1.wav": {
+"channels": 2,
+"fnv": "d8a6e142f1b1cebc",
+"frames": 67200
+},
+"va_tom12_l1_r1.wav": {
+"channels": 2,
+"fnv": "1f768b6c74e69f3d",
+"frames": 67200
+},
+"va_tom12_l2_r1.wav": {
+"channels": 2,
+"fnv": "7e8f7d5af5ba1f48",
+"frames": 67200
+},
+"va_tom12_l3_r1.wav": {
+"channels": 2,
+"fnv": "f9fabcadaf556bf1",
+"frames": 67200
+},
+"va_tom12_l4_r1.wav": {
+"channels": 2,
+"fnv": "5d74e112314be51b",
+"frames": 67200
+},
+"va_tom12_l5_r1.wav": {
+"channels": 2,
+"fnv": "d27124f7e46de44e",
+"frames": 67200
+},
+"va_tom13_l1_r1.wav": {
+"channels": 2,
+"fnv": "3a65e3235244ef19",
+"frames": 76800
+},
+"va_tom13_l2_r1.wav": {
+"channels": 2,
+"fnv": "d9cb57cd3a1358de",
+"frames": 76800
+},
+"va_tom13_l3_r1.wav": {
+"channels": 2,
+"fnv": "4f63a29b95a79fbe",
+"frames": 76800
+},
+"va_tom13_l4_r1.wav": {
+"channels": 2,
+"fnv": "d4078e65d17fed00",
+"frames": 76800
+},
+"va_tom13_l5_r1.wav": {
+"channels": 2,
+"fnv": "317c571cd38acd9b",
+"frames": 76800
+},
+"va_tomflam10_l1_r1.wav": {
+"channels": 2,
+"fnv": "4a02a7477560a41f",
+"frames": 67200
+},
+"va_tomflam10_l2_r1.wav": {
+"channels": 2,
+"fnv": "7c237c05efb51e5a",
+"frames": 67200
+},
+"va_tomflam10_l3_r1.wav": {
+"channels": 2,
+"fnv": "a03b1e350b1bbacd",
+"frames": 67200
+},
+"va_tomflam12_l1_r1.wav": {
+"channels": 2,
+"fnv": "aece792a7eeb749c",
+"frames": 67200
+},
+"va_tomflam12_l2_r1.wav": {
+"channels": 2,
+"fnv": "cac14b2ccbbdd485",
+"frames": 67200
+},
+"va_tomflam12_l3_r1.wav": {
+"channels": 2,
+"fnv": "e3cebe036eab1211",
+"frames": 67200
+},
+"va_tomflam13_l1_r1.wav": {
+"channels": 2,
+"fnv": "f5f2e0597cdfe866",
+"frames": 76800
+},
+"va_tomflam13_l2_r1.wav": {
+"channels": 2,
+"fnv": "88f10b07179517e5",
+"frames": 76800
+},
+"va_tomflam13_l3_r1.wav": {
+"channels": 2,
+"fnv": "ca8b12ac69022144",
+"frames": 76800
+}
+},
+"version": 1
+}

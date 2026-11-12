@@ -23,6 +23,7 @@ SOUNDS AND KITS
 - Channel rack loads in this order: 808, kick, clap, snare, hi hats, open hat, rim, low tom, high tom, perc 1, perc 2, crash.
 - Vintage plays live-drummer styles only: acoustic kits and 13 live styles. Drum machine era kits have their own DRUM MACHINE ERA folder in the other modes.
 - Rock and Live Soul kits use only acoustic drums.
+- Smaller download: the stock sounds are stored as Apple Lossless, the same audio in about a third of the space.
 - Import takes every audio file type (WAV, AIFF, MP3, M4A, FLAC, OGG and more) and works from iCloud and the Samples folder.
 
 PATTERNS
