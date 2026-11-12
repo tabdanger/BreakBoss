@@ -65,6 +65,7 @@ enum SampleLoader {
     /// gets two more tries: BreaKing's own WAV reader (WAVs with broken or odd headers) and the iPad's
     /// media reader (audio inside MP4 / 3GP, a file whose extension says the wrong kind), decoded at 48 kHz.
     static func load(_ url: URL) throws -> SampleBuffer {
+        let url = stockFile(url)
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
         var decoded = try decodeFile(url)
@@ -84,6 +85,21 @@ enum SampleLoader {
         return sample
     }
 
+    /// The stock sounds ship as Apple Lossless (Nov 12, tools/compress_stock_sounds.py: the same audio in about
+    /// a third of the space). The manifest, kits, saved songs and sound ids still name each one "<name>.wav":
+    /// a stock "<name>.wav" that isn't there is read from the "<name>.caf" beside it. Any other file is itself.
+    static func stockFile(_ url: URL) -> URL {
+        guard url.isFileURL, url.pathExtension.lowercased() == "wav", let folder = stockFolder,
+              url.deletingLastPathComponent().standardizedFileURL.path == folder.path,
+              !FileManager.default.fileExists(atPath: url.path) else { return url }
+        let caf = url.deletingPathExtension().appendingPathExtension("caf")
+        return FileManager.default.fileExists(atPath: caf.path) ? caf : url
+    }
+
+    /// The bundled stock sounds' folder (beside the manifest), as StockSampleLibrary.load resolves it.
+    static let stockFolder: URL? = knockResourceURL("manifest", "json")?
+        .deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL
+
     /// The iPad's audio file reader (AVAudioFile). nil when it can't open or read the file.
     private static func decodeFile(_ url: URL) throws -> Decoded? {
         guard let file = try? AVAudioFile(forReading: url) else { return nil }
@@ -102,7 +118,10 @@ enum SampleLoader {
         let left = Array(UnsafeBufferPointer(start: data[0], count: n))
         let right = channels > 1 ? Array(UnsafeBufferPointer(start: data[1], count: n)) : left
         // MP3, AAC and 24-bit sources are converted to 32 bit on loading (as in FL's sampler readout)
-        let bits = file.fileFormat.settings[AVLinearPCMBitDepthKey] as? Int ?? 0
+        var bits = file.fileFormat.settings[AVLinearPCMBitDepthKey] as? Int ?? 0
+        // Apple Lossless (the stock sounds) keeps its source's bit depth in the format flags (1 = 16-bit).
+        let stream = file.fileFormat.streamDescription.pointee
+        if stream.mFormatID == kAudioFormatAppleLossless && stream.mFormatFlags == 1 { bits = 16 }
         let isFloat = file.fileFormat.commonFormat == .pcmFormatFloat32 || file.fileFormat.commonFormat == .pcmFormatFloat64
         return Decoded(left: left, right: right, sampleRate: format.sampleRate,
                        bitDepth: bits == 16 && !isFloat ? 16 : 32, stereo: channels > 1)
@@ -272,6 +291,8 @@ enum SampleLoader {
 
     /// Copies a file into the Samples folder (if it isn't there already) and returns its name.
     static func copyIntoSamples(_ url: URL) throws -> String {
+        // A stock sound is copied as the file it is on disk ("<name>.caf"); it keeps its stock name (SampleNames).
+        let url = stockFile(url)
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
         let folder = KnockFolders.samples
@@ -314,7 +335,7 @@ enum SampleLoader {
     static func restoreStockCopies(_ stock: [URL]) -> Int {
         let fm = FileManager.default
         var n = 0
-        for url in stock {
+        for url in stock.map(stockFile) {
             let dest = KnockFolders.samples.appendingPathComponent(url.lastPathComponent)
             guard fm.fileExists(atPath: dest.path) else { continue }
             let size = { (u: URL) in (try? u.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? -1 }

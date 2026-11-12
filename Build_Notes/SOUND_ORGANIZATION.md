@@ -42,6 +42,9 @@ Live Pop, World & Latin (`PatternBank.vintageStyles`).
 - `tools/kit_catalog.py`: genres, ACOUSTIC_GENRES, Bay Area/West Coast kit lists.
 - `tools/build_kits.py`: builds the kits. `west_coast_iiinfinite` applies rule 3, and Modern acoustic picks are
   swapped out there. It writes `Resources/StockSamples/manifest.json` and `FactoryKits.swift`.
+- Stock sounds are stored as Apple Lossless (`<name>.caf`, bit-identical to the 16-bit 48 kHz WAVs, about a third
+  of the size) but every list still names them `<name>.wav`; `tools/compress_stock_sounds.py` converts
+  (`--expand` turns them back into WAVs for the older sound tools). `stock_pcm.json` holds each sound's length and hash.
 - `KitLibrary.swift`: `browsedModes`, `kits(for:in:)`, `liveDrummerGenres`, `rackOrder`.
 - `PatternBank.swift`: `vintageStyles`, `styles(for:)`, `browserOrder(for:)`.
 - PRs: #146 (kits), #147 (menus).

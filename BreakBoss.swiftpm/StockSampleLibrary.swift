@@ -133,8 +133,15 @@ struct StockSampleLibrary {
                   !name.isEmpty, name.count <= 80,
                   !displayName.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) })
             else { throw ManifestError.invalidAssignment }
-            let url = folder.appendingPathComponent(file).resolvingSymlinksInPath().standardizedFileURL
-            guard url.deletingLastPathComponent() == folder else { throw ManifestError.invalidAssignment }
+            // A sound stored as Apple Lossless keeps its manifest name ("<name>.wav", Nov 12): the check runs
+            // on the file that is there, the URL keeps the name (SampleLoader.stockFile reads the .caf).
+            let named = folder.appendingPathComponent(file)
+            let caf = named.deletingPathExtension().appendingPathExtension("caf")
+            let stored = (named.pathExtension.lowercased() == "wav" && !FileManager.default.fileExists(atPath: named.path)
+                          && FileManager.default.fileExists(atPath: caf.path)) ? caf : named
+            let resolved = stored.resolvingSymlinksInPath().standardizedFileURL
+            guard resolved.deletingLastPathComponent() == folder else { throw ManifestError.invalidAssignment }
+            let url = stored == named ? resolved : folder.appendingPathComponent(file)
             return Sample(url: url, displayName: name)
         }
         var samples: [String: [Int: Sample]] = [:]

@@ -107,9 +107,11 @@ def validate(path: Path, package_prefix: str, version: str, build: str, pad_coun
             filename = assignment["file"]
             if not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}\.wav", filename):
                 raise ValueError(f"Unsafe stock filename: {filename}")
-            wavs.add(stock_prefix + filename)
-        actual_wavs = {name for name in names if name.startswith(stock_prefix) and name.endswith(".wav")}
-        if actual_wavs != wavs:
+            # Stored as Apple Lossless under the manifest's .wav name (tools/compress_stock_sounds.py).
+            caf = stock_prefix + filename[:-4] + ".caf"
+            wavs.add(caf if caf in names else stock_prefix + filename)
+        actual_wavs = {name for name in names if name.startswith(stock_prefix) and name.endswith((".wav", ".caf"))}
+        if not wavs.issubset(actual_wavs):
             raise ValueError("Manifest paths and packaged stock WAVs differ")
         if not wavs.issubset(set(names)):
             raise ValueError("A stock sample is missing from the archive")
