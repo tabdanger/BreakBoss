@@ -4,8 +4,19 @@ Tyrone, 2026-11-12: "EVERY loop/drum fill in the icloud folder ... should be stu
 sequencer", "ALSO STUDY THE MIDI", and "push patterns and kits to Dawbreaker". This note is what DAW Breaker needs to
 carry the same patterns. Sound organization rules stay as in `Build_Notes/SOUND_ORGANIZATION.md`.
 
+## Update, later on 2026-11-12: the old trap styles are gone
+Tyrone: "remove all the old Trap patterns, they suck, use what we just created" / "no remove them completely" (all 4
+Trap folders). **Trap, Alt Trap, Dark Trap and ATL Trap (200 presets) are deleted from the bank. BK Editions Vol 5 Trap
+is the trap bank now.** DAW Breaker should delete those four styles too.
+- PatternBank.json now holds 2063 presets. Each one carries `"number"`, its AUv3 factory preset number from before the
+  removal, so no other preset's number moved (the removed numbers are simply missing).
+- `"retired"` lists the 200 removed presets: `number`, `name` and `replacement` (the Vol 5 Trap preset nearest its
+  tempo). A saved song that used one still opens with its own notes, since the song stores the notes. Its dice roll from
+  Vol 5 Trap, and a host that recalls the old factory number gets the replacement.
+- Trapsoul, Phonk, Memphis, Drill, UK Drill, NY Drill and Detroit 2026 stay.
+
 ## What was added
-459 presets in four new PATTERNS styles, appended after every older preset (presets 1805-2263), so no older AUv3
+459 presets in four new PATTERNS styles, appended after every older preset (AUv3 numbers 1804-2262), so no older
 factory preset number moves:
 
 | Style | Presets | Shown in |
