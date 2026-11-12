@@ -19,6 +19,7 @@ import Foundation
 // loops (tools/learn_west_coast.py --out tools/learned_bayarea.json), four bars each. Nov 12, after every older preset:
 // BK Editions Vol 5 Trap, Vol 6 RnB, Vol 7 Experimental and Vol 8 Vintage, one preset for every drum loop, break, perc
 // loop, fill and drum MIDI file in Tyrone's "mastery drums" folder (tools/learn_mastery.py); Vol 8 is Vintage-only.
+// Later on Nov 12 the old Trap, Alt Trap, Dark Trap and ATL Trap styles were removed (Tyrone); Vol 5 Trap replaces them.
 
 struct PatternPreset: Decodable, Equatable {
     let style: String
@@ -33,6 +34,8 @@ struct PatternPreset: Decodable, Equatable {
     var swingLanes: [String: Float]? = nil
     var shift: [String: Float]? = nil
     var ghostChance: [String: Float]? = nil
+    /// Its AUv3 factory preset number (its place in the bank before the Nov 12 trap removal), so no number moves.
+    var number: Int? = nil
 
     static let laneToPad: [String: Pad] = ["k": .kick, "s": .snare, "c": .clap, "r": .rim, "h": .hat, "o": .openHat,
                                            "b": .bass808, "p1": .perc1, "p2": .perc2, "lt": .tomLow, "ht": .tomHigh, "cr": .cymbal]
@@ -176,13 +179,18 @@ struct PatternPreset: Decodable, Equatable {
 }
 
 enum PatternBank {
-    private struct File: Decodable { let version: Int; let patterns: [PatternPreset] }
+    /// A preset taken out of the bank (Nov 12, Tyrone: the old Trap, Alt Trap, Dark Trap and ATL Trap patterns, "remove
+    /// them completely"): its name, its AUv3 number, and the BK Editions Vol 5 Trap preset that stands in for it.
+    struct Retired: Decodable { let number: Int; let name: String; let replacement: String }
+    private struct File: Decodable { let version: Int; let patterns: [PatternPreset]; var retired: [Retired]? = nil }
 
-    static let all: [PatternPreset] = {
-        guard let url = knockResourceURL("PatternBank", "json"), let data = try? Data(contentsOf: url),
-              let file = try? JSONDecoder().decode(File.self, from: data) else { return [] }
-        return file.patterns
+    private static let file: File? = {
+        guard let url = knockResourceURL("PatternBank", "json"), let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(File.self, from: data)
     }()
+
+    static let all: [PatternPreset] = file?.patterns ?? []
+    static let retired: [Retired] = file?.retired ?? []
 
     /// Style names in browser order (the genre guide's order).
     static let styles: [String] = {
@@ -221,7 +229,17 @@ enum PatternBank {
     }
 
     static func presets(in style: String) -> [PatternPreset] { all.filter { $0.style == style } }
-    static func preset(named name: String) -> PatternPreset? { all.first { $0.name == name } }
+    /// A removed preset's name finds its Vol 5 Trap stand-in (an old song's dice roll Vol 5 Trap).
+    static func preset(named name: String) -> PatternPreset? {
+        all.first { $0.name == name } ?? retired.first { $0.name == name }.flatMap { r in all.first { $0.name == r.replacement } }
+    }
+
+    /// The preset a host recalls by its AUv3 factory number (a removed one's number gives its stand-in).
+    static func preset(number: Int) -> PatternPreset? {
+        if let p = all.first(where: { $0.number == number }) { return p }
+        if let r = retired.first(where: { $0.number == number }) { return all.first { $0.name == r.replacement } }
+        return all.indices.contains(number) && all[number].number == nil ? all[number] : nil
+    }
 }
 
 // MARK: - Randomize (whole pattern, or one channel)

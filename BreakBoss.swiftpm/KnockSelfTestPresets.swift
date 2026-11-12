@@ -9,7 +9,7 @@ extension KnockSelfTest {
     static func checkFactoryPresetsAndKitIndependence() {
         let presets = PatternBank.all
         check(presets.count >= 150 && Set(presets.map { $0.name }).count == presets.count, "pattern bank loads with unique names (\(presets.count))")
-        let wanted = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock", "Trap", "Alt Trap",
+        let wanted = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock",
                       "Drill", "UK Drill", "NY Drill", "Detroit 2026", "West Coast", "RnB", "90s RnB", "UK RnB"]
         let learnedStyles = ["BK Editions Vol 1", "BK Editions Vol 2", "BK Editions Vol 3", "BK Editions Vol 4"]
         // Nov 12: Tyrone's mastery drums suites, one bank each, after every older preset (AUv3 preset numbers)
@@ -17,10 +17,21 @@ extension KnockSelfTest {
         let mastery = presets.filter { masteryStyles.contains($0.style) }
         let core = Array(presets.dropLast(mastery.count))
         // Oct 24: Tyrone's genre list, after the BK Editions so older presets keep their AUv3 preset numbers
-        let added = ["Trapsoul", "Dark Trap", "Phonk", "ATL Trap", "Memphis", "Toronto R&B", "Vintage R&B", "2000s R&B", "Live Soul",
+        // Nov 12 (Tyrone: "remove all the old Trap patterns", "no remove them completely"): Trap, Alt Trap, Dark Trap and ATL
+        // Trap are gone; BK Editions Vol 5 Trap is the trap bank. Every preset keeps its AUv3 number.
+        let removed = ["Trap", "Alt Trap", "Dark Trap", "ATL Trap"]
+        let added = ["Trapsoul", "Phonk", "Memphis", "Toronto R&B", "Vintage R&B", "2000s R&B", "Live Soul",
                      "East Coast", "Lo-fi", "Afrobeats", "Bouncy", "80s Pop", "Live Pop", "Dark Experimental", "World & Latin"]
-        check(PatternBank.styles == wanted + learnedStyles + added + ["Bay Area"] + masteryStyles && core.filter { !learnedStyles.contains($0.style) }.count == 1750,
-              "1750 presets: the 17 research styles in the genre guide's order, BK Editions Vol 1 to 4, Tyrone's 17 Oct 24 genres, then Bay Area")
+        check(PatternBank.styles == wanted + learnedStyles + added + ["Bay Area"] + masteryStyles && core.filter { !learnedStyles.contains($0.style) }.count == 1550,
+              "1550 presets: the 15 research styles left in the genre guide's order, BK Editions Vol 1 to 4, Tyrone's 15 Oct 24 genres left, then Bay Area")
+        let numbers = presets.compactMap(\.number)
+        check(numbers.count == presets.count && numbers == numbers.sorted() && Set(numbers).count == numbers.count &&
+              PatternBank.retired.count == 200 && Set(PatternBank.retired.map(\.number)).isDisjoint(with: numbers) &&
+              PatternBank.retired.allSatisfy { r in PatternBank.preset(number: r.number)?.style == "BK Editions Vol 5 Trap" &&
+                                               PatternBank.preset(named: r.name)?.name == r.replacement } &&
+              removed.allSatisfy { PatternBank.presets(in: $0).isEmpty } && PatternRandomizer.style(for: "TRAP 1 ATL BOUNCE") == "BK Editions Vol 5 Trap" &&
+              presets.allSatisfy { PatternBank.preset(number: $0.number ?? -1)?.name == $0.name },
+              "old Trap, Alt Trap, Dark Trap and ATL Trap removed (200): every other preset keeps its AUv3 number; a removed one's name and number load its Vol 5 Trap stand-in")
         check(mastery.count >= 400 && presets.suffix(mastery.count).allSatisfy { masteryStyles.contains($0.style) } &&
               masteryStyles.allSatisfy { st in PatternBank.presets(in: st).count >= 50 } &&
               mastery.allSatisfy { [1, 2, 4, 8].contains($0.pattern.bars) && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } } &&
@@ -31,10 +42,10 @@ extension KnockSelfTest {
         // every genre come after every older preset, Bay Area included, so no AUv3 factory preset number moves
         // Later on Oct 28 ("lets total each pattern category to 50 patterns per category"): presets 21 to 50 after those
         func number(_ p: PatternPreset) -> Int { p.name.split(separator: " ").compactMap { Int($0) }.first { $0 < 100 } ?? 0 }   // DETROIT 2026 11: the 11
-        let newer = core.dropLast(1020).suffix(330), newest = core.suffix(1020)
+        let newer = core.dropLast(900).suffix(290), newest = core.suffix(900)
         check(newer.allSatisfy { (11...20).contains(number($0)) && $0.style != "Bay Area" && !learnedStyles.contains($0.style) } &&
               newest.allSatisfy { (21...50).contains(number($0)) && $0.style != "Bay Area" && !learnedStyles.contains($0.style) } &&
-              core.dropLast(1350).suffix(50).allSatisfy { $0.style == "Bay Area" },
+              core.dropLast(1190).suffix(50).allSatisfy { $0.style == "Bay Area" },
               "every genre's presets 11 to 20, then 21 to 50, come after Bay Area, so older presets keep their AUv3 numbers")
         let walk: [PatternPreset] = PatternBank.browserOrder
         let walkStyles: [String] = walk.map(\.style)
@@ -46,7 +57,7 @@ extension KnockSelfTest {
         // Bay Area (Oct 25): 50 grooves learned from Tyrone's Bay Area loops, last so older presets keep their AUv3 numbers
         let bay = PatternBank.presets(in: "Bay Area")
         check(bay.count == 50 && bay.allSatisfy { $0.pattern.bars == 4 && $0.grooveStyle == .westBounce && $0.pattern.events.contains { Int($0.pad) == Pad.kick.rawValue } } &&
-              core.dropLast(1350).suffix(50).allSatisfy { $0.style == "Bay Area" },
+              core.dropLast(1190).suffix(50).allSatisfy { $0.style == "Bay Area" },
               "Bay Area: 50 presets learned from Tyrone's Bay Area loops, 4 bars, each with its kick, after every older preset")
         for style in added + wanted { check(PatternBank.presets(in: style).count == 50, "\(style): 50 presets") }
         // West Coast (Oct 20): 20 grooves from Tyrone's West Coast loops in place of the 10 Bay Area 2026 presets;
@@ -99,7 +110,7 @@ extension KnockSelfTest {
         } else {
             check(false, "UK DRILL 1 TEMPLATE is present")
         }
-        if let trap = PatternBank.preset(named: "TRAP 2 TRIPLET HATS") {
+        if let trap = PatternBank.preset(named: "PHONK 13 TRIPLET SMOKE") {
             let hats = trap.pattern.events.filter { Int($0.pad) == Pad.hat.rawValue }.map { $0.tick }
             check(hats.contains(4 * 24) && hats.contains(4 * 24 + 16) && hats.contains(4 * 24 + 32), "triplet hats decode at 1/3-step spacing")
             check(trap.pattern.events.contains { Int($0.pad) == Pad.bass808.rawValue && $0.length > 24 }, "808 lines decode with their length")
@@ -171,8 +182,8 @@ extension KnockSelfTest {
         let r1 = PatternRandomizer.randomPattern(style: "Boom Bap", length: PatternData.ppq * 8, seed: 5)
         let r2 = PatternRandomizer.randomPattern(style: "Boom Bap", length: PatternData.ppq * 8, seed: 5)
         check(r1 == r2 && r1.events.contains { Int($0.pad) == Pad.kick.rawValue }, "randomize: same seed, same pattern, still has a kick")
-        if let base = PatternBank.preset(named: "TRAP 1 ATL BOUNCE")?.pattern {
-            let changed = PatternRandomizer.randomChannel(base, pad: Pad.hat.rawValue, style: "Trap", seed: 9)
+        if let base = PatternBank.preset(named: "DRILL 1 CHOP HOUSE")?.pattern {
+            let changed = PatternRandomizer.randomChannel(base, pad: Pad.hat.rawValue, style: "Drill", seed: 9)
             check(changed.events.filter { Int($0.pad) != Pad.hat.rawValue } == base.events.filter { Int($0.pad) != Pad.hat.rawValue },
                   "channel dice changes only that channel")
         }

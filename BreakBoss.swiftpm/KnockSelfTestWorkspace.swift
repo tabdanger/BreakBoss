@@ -417,7 +417,7 @@ extension KnockSelfTest {
                   GenreFeel.of(group) == nil && PatternBank.presets(in: group).allSatisfy { $0.pattern.humanize == nil && $0.pattern.genre == group } },
               "genre feel: the grooves learned from Tyrone's loops load as they were")
         check(PatternBank.presets(in: "Neo Soul").allSatisfy { $0.pattern.humanize == GenreFeel.neoSoul.amount }
-              && PatternBank.presets(in: "Trap").allSatisfy { $0.pattern.humanize == GenreFeel.machine.amount },
+              && PatternBank.presets(in: "Drill").allSatisfy { $0.pattern.humanize == GenreFeel.machine.amount },
               "genre feel: a preset loads with its genre's HUMANIZE on the knob")
         check(PatternBank.styles.allSatisfy { GenreFeel.of($0) != nil || $0.hasPrefix("BK Editions") || $0 == "West Coast" || $0 == "Bay Area" },
               "genre feel: every PATTERNS genre has its drummer")
@@ -742,14 +742,14 @@ extension KnockSelfTest {
         let vintageStyles: [String] = PatternBank.styles(for: .vintage)
         let vintageWalk: [PatternPreset] = PatternBank.browserOrder(for: .vintage)
         let onlyLive: Bool = Set(vintageStyles) == PatternBank.vintageStyles && vintageWalk.allSatisfy { PatternBank.vintageStyles.contains($0.style) } &&
-            vintageWalk.count == 50 * PatternBank.vintageStyles.count
+            vintageWalk.count == 50 * (PatternBank.vintageStyles.count - 1) + PatternBank.presets(in: "BK Editions Vol 8 Vintage").count
         let noElectronic: Bool = !vintageStyles.contains { $0.contains("Trap") || $0.contains("Drill") || $0 == "West Coast" || $0 == "Bay Area" || $0 == "Phonk" || $0 == "80s Pop" }
         let modernWalk: [PatternPreset] = PatternBank.browserOrder(for: .modern)
         let othersEveryStyle: Bool = modernWalk.count + vintageWalk.count == PatternBank.browserOrder.count &&
             modernWalk.allSatisfy { !PatternBank.vintageStyles.contains($0.style) } &&
             Set(PatternBank.styles(for: .modern)).isDisjoint(with: PatternBank.vintageStyles) && PatternBank.styles(for: .texture) == PatternBank.styles
         check(onlyLive && noElectronic && othersEveryStyle,
-              "Vintage PATTERNS: only the 13 live-drummer styles (no trap, drill, West Coast or Bay Area); Modern every other style (Nov 8); Texture every style")
+              "Vintage PATTERNS: only the 13 live-drummer styles and BK Editions Vol 8 Vintage (no trap, drill, West Coast or Bay Area); Modern every other style (Nov 8); Texture every style")
         check(KitLibrary.kit(id: "trap-a").preferredMode == .modern && KitLibrary.kit(id: "neo-soul-a").preferredMode == .vintage &&
               KitLibrary.kit(id: "amapiano-a").preferredMode == .texture, "the A/B kits stay in their mode banks")
         check(Set(KitLibrary.factory.map { $0.id }).count == KitLibrary.factory.count, "factory kit identifiers unique")

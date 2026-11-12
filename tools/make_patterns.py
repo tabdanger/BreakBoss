@@ -1963,6 +1963,24 @@ for p in P:
         for i in range(n):
             hands = [l for l in HANDS if l in p["lanes"] and p["lanes"][l][i] != "." and not (ride and l == "h")]
             assert len(hands) <= 2, (p["name"], i, hands)
+# ================= Nov 12, Tyrone: "remove all the old Trap patterns, they suck, use what we just created" / "no remove
+# them completely" (and on the card: all 4 Trap folders). Trap, Alt Trap, Dark Trap and ATL Trap leave the bank; BK
+# Editions Vol 5 Trap is the trap bank. Every preset keeps the AUv3 number it had ("number": its place in the full
+# list), so no other preset's number moves. A removed preset's name and number are listed under "retired" with the
+# Vol 5 Trap preset nearest its tempo: a song saved with one loads its own notes as before (the state carries them),
+# its dice roll Vol 5 Trap, and a host that recalls its factory number gets that Vol 5 Trap preset. =================
+RETIRED_STYLES = {"Trap", "Alt Trap", "Dark Trap", "ATL Trap"}
+REPLACE_WITH = "BK Editions Vol 5 Trap"
+for i, p in enumerate(P): p["number"] = i
+trap5 = [p for p in P if p["style"] == REPLACE_WITH]
+RETIRED = []
+if trap5:
+    for p in P:
+        if p["style"] in RETIRED_STYLES:
+            r = min(trap5, key=lambda q: (abs(q["bpm"] - p["bpm"]), q["number"]))
+            RETIRED.append({"number": p["number"], "name": p["name"], "replacement": r["name"]})
+    P = [p for p in P if p["style"] not in RETIRED_STYLES]
+    cnt = Counter(p["style"] for p in P)
 out = os.path.join(os.path.dirname(__file__), "..", "BreakBoss.swiftpm", "Resources", "PatternBank.json")
-json.dump({"version": 1, "patterns": P}, open(out, "w"), indent=1)
+json.dump({"version": 1, "patterns": P, "retired": RETIRED}, open(out, "w"), indent=1)
 print(len(P), "patterns;", dict(cnt))

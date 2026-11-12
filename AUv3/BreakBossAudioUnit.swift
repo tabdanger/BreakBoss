@@ -62,7 +62,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
         }
         factory = PatternBank.all.enumerated().map { index, preset in
             let item = AUAudioUnitPreset()
-            item.number = index
+            item.number = preset.number ?? index          // its own number: removing the old trap presets moved no other
             item.name = preset.name
             return item
         }
@@ -127,8 +127,8 @@ public final class BreakBossAudioUnit: AUAudioUnit {
             let controller = self.controller
             if preset.number >= 0 {
                 Self.onMain {
-                    guard PatternBank.all.indices.contains(preset.number) else { return }
-                    controller.loadPatternPreset(PatternBank.all[preset.number])
+                    guard let factoryPreset = PatternBank.preset(number: preset.number) else { return }
+                    controller.loadPatternPreset(factoryPreset)
                 }
             } else if let state = try? presetState(for: preset), let data = state[Self.stateKey] as? Data {
                 Self.onMain { controller.restore(data) }
