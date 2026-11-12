@@ -16,7 +16,9 @@ import Foundation
 // Oct 24, Tyrone's genre list (10 presets each, after the BK Editions so older presets keep their AUv3 numbers): Trapsoul, Dark Trap, Phonk,
 // ATL Trap, Memphis, Toronto R&B, Vintage R&B, 2000s R&B, Live Soul, East Coast, Lo-fi, Afrobeats, Bouncy, 80s Pop,
 // Live Pop, Dark Experimental and World & Latin. Oct 25, after them: Bay Area, 50 grooves learned from Tyrone's Bay Area
-// loops (tools/learn_west_coast.py --out tools/learned_bayarea.json), four bars each.
+// loops (tools/learn_west_coast.py --out tools/learned_bayarea.json), four bars each. Nov 12, after every older preset:
+// BK Editions Vol 5 Trap, Vol 6 RnB, Vol 7 Experimental and Vol 8 Vintage, one preset for every drum loop, break, perc
+// loop, fill and drum MIDI file in Tyrone's "mastery drums" folder (tools/learn_mastery.py); Vol 8 is Vintage-only.
 
 struct PatternPreset: Decodable, Equatable {
     let style: String
@@ -68,6 +70,11 @@ struct PatternPreset: Decodable, Equatable {
         case "BK Editions Vol 1", "BK Editions Vol 3": return bpm >= 120 ? .trapAtlanta : .boomBap
         case "BK Editions Vol 2": return .rnb
         case "BK Editions Vol 4": return .westBounce
+        // Nov 12: Tyrone's mastery drums suites (tools/learn_mastery.py)
+        case "BK Editions Vol 5 Trap": return bpm < 100 ? .trapSoul : .trapAtlanta
+        case "BK Editions Vol 6 RnB": return bpm >= 120 ? .trapSoul : .rnb
+        case "BK Editions Vol 7 Experimental": return .experimental
+        case "BK Editions Vol 8 Vintage": return name.contains("BREAK") ? .funkBreak : .boomBap
         default:
             if name.contains("AFRO") { return .afrobeats }
             if name.contains("BREAK") { return .funkBreak }
@@ -192,7 +199,8 @@ enum PatternBank {
     /// styles a live drummer plays (or the dusty acoustic breaks boom bap is built on). Trap, drill, West Coast,
     /// Bay Area, 80s Pop and the 808 R&B styles stay in the other modes; nothing is removed, so preset numbers never move.
     static let vintageStyles: Set<String> = ["Neo Soul", "Dilla Time", "Boom Bap", "90s Rap", "70s Soul", "80s Breaks", "Rock",
-                                             "Vintage R&B", "Live Soul", "East Coast", "Lo-fi", "Live Pop", "World & Latin"]
+                                             "Vintage R&B", "Live Soul", "East Coast", "Lo-fi", "Live Pop", "World & Latin",
+                                             "BK Editions Vol 8 Vintage"]   // Nov 12: live breaks, boom bap loops and acoustic fills
 
     /// Modern leaves those styles to Vintage (Tyrone, Nov 8: "acoustic kits are only for vintage kits and patterns");
     /// Texture keeps every style.

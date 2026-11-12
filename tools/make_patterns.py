@@ -1817,6 +1817,121 @@ def grow(style):
 for style in STYLES:
     if style != BA and style not in LEARNED_STYLES: grow(style)
 
+# ================= Nov 12: BK Editions Vol 5-8, Tyrone's "mastery drums" folder (Tyrone: "EVERY loop/drum fill in the
+# icloud folder ... should be studied and turned into a pattern", "ALSO STUDY THE MIDI"). tools/learn_mastery.py heard
+# every drum loop (from its stems when it has them), live break, percussion / hat loop and fill, and read every drum
+# MIDI file, into tools/learned_mastery.json (the audio and MIDI never ship, nor their names). One bank per suite, after
+# every older preset so no AUv3 factory preset number moves. Each file is one preset at its own tempo:
+#   loop, break   as heard. A loop with no kick (a tops loop) plays its kick with its 808's notes, or, with no 808,
+#                 takes the kick of the suite's loop nearest its tempo (the BK Editions Vol 3 rule).
+#   perc, MIDI    the part it plays over the rest of the suite's loop nearest its tempo (a hat MIDI file's hats in
+#                 place of that loop's hats, an 808 file's notes in place of its 808, a perc loop on the perc pads).
+#   fill          the suite's nearest loop for 4 bars, the fill in place of the end of bar 4 so it lands on the
+#                 next downbeat (a snare roll plays over the groove's other parts; a drum fill stops them).
+# A file over 180 BPM is written at half the tempo (its 16ths become 32nds, its 8ths 16ths).
+MASTERY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "learned_mastery.json")
+MASTERY = [("Trap", "BK Editions Vol 5 Trap", "BK V5"), ("RnB", "BK Editions Vol 6 RnB", "BK V6"),
+           ("Experimental", "BK Editions Vol 7 Experimental", "BK V7"), ("Vintage", "BK Editions Vol 8 Vintage", "BK V8")]
+MASTERY_KINDS = ["loop", "break", "perc", "fill", "midi"]
+MIDI_WORD = {"k": "KICK", "s": "SNARE", "h": "HAT", "o": "OPEN HAT", "b": "808"}
+def m_tile(lanes, n): return {k: tile(v, n) if len(v) <= n else v[:n] for k, v in lanes.items()}
+def m_half(e):            # over 180 BPM: half the tempo, two steps in one
+    if e["bpm"] <= 180: return e
+    def two(s, bass):
+        out = []
+        for j in range(0, len(s), 2):
+            a, b = s[j], s[j + 1]
+            if bass: out.append(a if a != "." else b if b not in ".-" else b)
+            else: out.append("r" if a not in "." and b not in "." else a if a != "." else b)
+        return "".join(out)
+    lanes = {k: two(v, k == "b") for k, v in e["lanes"].items()}
+    n = max(16, max(len(v) for v in lanes.values()))
+    return dict(e, bpm=round(e["bpm"] / 2, 2), lanes={k: tile(v, n) for k, v in lanes.items()}, bars=n // 16)
+def m_base(g, n):        # the groove from its first bar with a kick (a loop whose kick comes in at bar 5), n steps
+    k = g["lanes"]["k"]
+    start = next(j for j in range(0, len(k), 16) if k[j:j + 16].strip("."))
+    return m_tile({l: v[start:] + v[:start] for l, v in g["lanes"].items()}, n)
+def m_kick_from_808(lanes):
+    b = lanes["b"]
+    return "".join("x" if c not in ".-" else "." for c in b)
+def m_name(label, i, e, lanes):
+    if e["kind"] == "fill": what = e["what"]
+    elif e["kind"] == "perc":
+        what = "CRASH LOOP" if "cr" in e["lanes"] else "HAT LOOP" if "h" in e["lanes"] or "o" in e["lanes"] else "PERC LOOP"
+    elif e["kind"] == "midi": what = " ".join(MIDI_WORD[k] for k in ("k", "s", "h", "o", "b") if k in e["lanes"]) + " MIDI"
+    else:
+        what = learned_name(i, {"lanes": lanes, "bpm": e["bpm"]}, label).split(" ", 4)[4]
+        if e["kind"] == "break": what = "BREAK" if what == "BOUNCE" else what + " BREAK"
+    return f"{label} {i} {e['bpm']:g} {what}"
+def mastery():
+    if not os.path.exists(MASTERY_FILE): return []
+    learned = [m_half(e) for e in json.load(open(MASTERY_FILE))["learned"]]
+    made = []
+    for suite, style, label in MASTERY:
+        mine = [e for e in learned if e["suite"] == suite and e["lanes"]]
+        if not mine: continue
+        grooves = [e for e in mine if e["kind"] in ("loop", "break") and "k" in e["lanes"] and any(l in e["lanes"] for l in "scr")]
+        def nearest(e, pool=grooves):
+            return min((g for g in pool if g is not e), key=lambda g: (abs(g["bpm"] - e["bpm"]), g["kind"] != "loop", g["title"]))
+        mine.sort(key=lambda e: (MASTERY_KINDS.index(e["kind"]), e["bpm"], e["title"], json.dumps(e["lanes"], sort_keys=True)))
+        for i, e in enumerate(mine, 1):
+            lanes, feel = dict(e["lanes"]), {k: dict(e.get(k, {})) for k in ("shift", "swingLanes")}
+            n = max(len(v) for v in lanes.values())
+            if e["kind"] in ("loop", "break"):
+                if "k" not in lanes:
+                    if "b" in lanes: lanes["k"] = m_kick_from_808(lanes)
+                    else:
+                        lanes = with_kick({"bpm": e["bpm"], "lanes": lanes}, [dict(g, lanes=m_tile(g["lanes"], n)) for g in grooves])
+                if not any(l in lanes for l in "scr"):
+                    g = nearest(e)
+                    lanes["s"] = m_tile({"s": g["lanes"].get("s") or g["lanes"].get("c") or g["lanes"]["r"]}, n)["s"]
+            elif e["kind"] in ("perc", "midi"):
+                g = nearest(e)
+                n = max(n, 16)
+                base = m_base(g, n)
+                own = m_tile(lanes, n)
+                if e["kind"] == "perc":            # a perc / hat loop plays its pads all the way through
+                    if "p1" in lanes or "p2" in lanes: base = {k: v for k, v in base.items() if k not in ("p1", "p2")}
+                    if "h" in lanes or "o" in lanes: base.pop("h", None); base.pop("o", None)
+                    lanes = {**base, **own}
+                else:                              # a MIDI part plays its bars; a bar it leaves empty (a snare MIDI
+                    lanes = dict(base)             # that is a roll in bar 8) keeps the groove's own bar
+                    for k, v in own.items():
+                        b = base.get(k, "." * n)
+                        lanes[k] = "".join(v[j:j + 16] if v[j:j + 16].strip(".-") or k == "b" and v[j:j + 16].strip(".") else b[j:j + 16]
+                                           for j in range(0, n, 16))
+                for key in feel:
+                    for lane, v in g.get(key, {}).items():
+                        if lane in base and lane not in e["lanes"]: feel[key][lane] = v
+            else:                                  # fill: 4 bars of the nearest loop, the fill at the end of bar 4
+                g = nearest(e)
+                n = 64
+                fill = e["lanes"]
+                fl = max(len(v) for v in fill.values())
+                start = n - fl + min(min((j for j, c in enumerate(v) if c != "."), default=fl) for v in fill.values())
+                base = m_base(g, n)
+                stop_all = e["what"] != "SNARE ROLL"
+                for k in list(base):
+                    if (stop_all and k != "cr") or k in fill: base[k] = base[k][:start] + "." * (n - start)
+                for k, v in fill.items():
+                    base[k] = base.get(k, "." * n)[:start] + v[start - (n - fl):]
+                lanes = base
+                for key in feel:
+                    feel[key] = {lane: v for lane, v in g.get(key, {}).items() if lane in lanes and lane not in fill}
+            lanes = {k: lanes[k] for k in LANES if k in lanes and lanes[k].strip(".-")}
+            n = max(len(v) for v in lanes.values())
+            assert n in (16, 32, 64, 128) and all(len(v) == n for v in lanes.values()), (style, i, e["title"], {k: len(v) for k, v in lanes.items()})
+            p = {"style": style, "name": m_name(label, i, e, lanes), "bpm": e["bpm"], "swing": 50, "glide": False, "lanes": lanes, "added": 3}
+            for key, by_lane in feel.items():
+                used = {lane: v for lane, v in by_lane.items() if lane in lanes}
+                if used: p[key] = used
+            made.append(p)
+        STYLES.append(style)
+    return made
+MASTERED = mastery()
+P.extend(MASTERED)
+LEARNED_STYLES += tuple(style for _, style, _ in MASTERY if style in STYLES)
+
 # ---------------- checks and output ----------------
 cnt = Counter(p["style"] for p in P)
 assert list(cnt) and set(cnt) == set(STYLES), set(cnt) ^ set(STYLES)

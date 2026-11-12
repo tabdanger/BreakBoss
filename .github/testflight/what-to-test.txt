@@ -28,6 +28,7 @@ SOUNDS AND KITS
 PATTERNS
 - Every PATTERNS genre has 50 presets. New genre groups added; Bay Area has 50 presets and 50 matching kits.
 - HUMANIZE plays each genre's own drummer feel.
+- 459 new presets from your mastery drums folder: BK Editions Vol 5 Trap, Vol 6 RnB, Vol 7 Experimental (Modern, Platinum, Texture) and Vol 8 Vintage (Vintage, Texture). One per drum loop, live break, perc/hat loop, fill and drum MIDI file.
 
 FX
 - Every FX knob and CLIP DRIVE loads at 0%; every mode is dry at 0%.
