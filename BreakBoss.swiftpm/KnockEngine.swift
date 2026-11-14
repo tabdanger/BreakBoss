@@ -1419,8 +1419,8 @@ final class KnockEngine {
         }
         if rt.active { velGain *= rt.preGain * rt.levelGain * level }
         velGain *= gain
-        let globalSemis = Float(Int(((params[KParam.pitch.rawValue] - 0.5) * 24).rounded()))
-        let cents = (params[KParam.tune.rawValue] - 0.5) * 200
+        let globalSemis = Float(KnockMath.pitchSemitones(params[KParam.pitch.rawValue]))
+        let cents = KnockMath.tuneCents(params[KParam.tune.rawValue])
         // the sampler's "Enable main pitch" off: this track ignores the faceplate's PITCH and TUNE
         let mainSemis = rt.active && !rt.mainPitch ? 0 : globalSemis + cents / 100
         let totalSemis = mainSemis + ps.tune + semis + rt.semis
@@ -1526,9 +1526,8 @@ final class KnockEngine {
         let own = kit.insert(pad, mode)?.tighten ?? 0
         let mainTighten = mode == .texture ? 0 : params[KParam.tighten.rawValue]     // Texture's section has no TIGHTEN
         let tighten = (1 - (1 - mainTighten) * (1 - own)) * (pad == Pad.bass808.rawValue ? 0.5 : 1)
-        var tau: Double = .infinity
-        if tighten > 0.001 { tau = 0.045 + (1 - Double(tighten)) * (1 - Double(tighten)) * 1.5 }
-        if ps.decay < 0.999 { tau = min(tau, 0.03 + Double(ps.decay) * Double(ps.decay) * 2.5) }
+        var tau: Double = KnockMath.tightenTau(tighten)
+        tau = min(tau, KnockMath.padDecayTau(ps.decay))
         let coef: Float = tau.isFinite ? Float(exp(-1 / (tau * sampleRate))) : 1
 
         voiceAge &+= 1
@@ -1758,10 +1757,13 @@ final class KnockEngine {
         return nil
     }
 
+    /// How long a track's VOLUME / PAN takes to glide all the way (0 to full gain).
+    static let mixGlideSeconds = 0.005
+
     private func renderVoices(from start: Int, to end: Int) {
         guard end > start else { return }
-        // Level / pan glide: at most 0 -> full gain in 10 ms, the same at any buffer size.
-        let step = Float(1 / (0.01 * sampleRate))
+        // Level / pan glide: at most 0 -> full gain in 5 ms (10 ms until Nov 14), the same at any buffer size.
+        let step = Float(1 / (KnockEngine.mixGlideSeconds * sampleRate))
         let release = Int(sampleRate * 0.03)
         for v in 0..<KnockEngine.maxVoices where voices[v].active {
             let (tl, tr) = mixTarget(voices[v])

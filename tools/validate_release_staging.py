@@ -15,7 +15,8 @@ PACKAGE = ROOT / "BreakBoss.swiftpm"
 BUILD = ROOT / "xcode" / "build"
 APP_ONLY = {"BreakBossApp.swift", "AppAudioHost.swift", "BugCatcher.swift",
             "KnockSelfTest.swift", "KnockSelfTestSounds.swift", "KnockSelfTestTiming.swift", "KnockSelfTestSampler.swift",
-            "KnockSelfTestTransport.swift", "KnockSelfTestWorkspace.swift", "KnockSelfTestPresets.swift"}
+            "KnockSelfTestTransport.swift", "KnockSelfTestWorkspace.swift", "KnockSelfTestPresets.swift",
+            "KnockSelfTestKnobs.swift"}
 ACCENT = "Assets.xcassets/__PresetAccentColor.colorset/Contents.json"
 
 

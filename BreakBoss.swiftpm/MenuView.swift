@@ -602,10 +602,10 @@ struct MenuView: View {
             group(controller.mode.title) {
                 ForEach(engineControls, id: \.rawValue) { parameter in
                     BKMenuFader(title: parameter == .bounce ? "Swing" : parameter.name,
-                                value: controller.value(parameter),
-                                text: parameter.text(controller.value(parameter)),
+                                value: controller.knob(parameter),
+                                text: controller.text(parameter, controller.value(parameter)),
                                 accent: palette.accent,
-                                reset: parameter.defaultValue) { controller.set(parameter, $0) }
+                                reset: KnobTaper.knob(parameter, value: parameter.defaultValue, KnobContext(controller.mode))) { controller.setKnob(parameter, $0) }
                         .foregroundColor(palette.text)
                 }
             }

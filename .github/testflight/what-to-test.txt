@@ -35,6 +35,8 @@ FX
 - Every FX knob and CLIP DRIVE loads at 0%; every mode is dry at 0%.
 - Vintage: DRIVE leads the FX row and its tape rides on DRIVE.
 - Texture: effects come only from its knobs; REVERB is a bright drum plate.
+- FX knobs turn evenly: 23% is 23% of the full effect, no dead zone. Old presets sound the same.
+- Readouts match the sound (SWING tops at 67%, not 72%). Knobs answer within 5 ms.
 
 MIDI AND PLUG-IN
 - Plug-in defaults to MIDI OUT ONE TRACK (whole kit on channel 1, notes 36-47).
@@ -45,7 +47,7 @@ MIDI AND PLUG-IN
 Please try:
 - Finger drum fast rolls and several fingers at once; listen for missed or doubled hits, and watch the pad flashes keep up.
 - With a mouse or trackpad: scroll over Face 1 and Face 2 knobs, click pads, right-click a track name.
-- Turn each FX knob on every face, from 0% up, and check the readout matches the sound.
+- Turn each FX knob slowly from 0% to 100%: the effect should grow evenly, already there at 10%.
 - Load kits and presets fast from the folder menus in every mode, including Vintage.
 - Import a FLAC or MP3 from iCloud onto a pad.
 - In Logic, reopen a saved song with BreaKing and record its MIDI out.

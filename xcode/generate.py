@@ -21,7 +21,8 @@ OUT = os.path.join(ROOT, "xcode", "build")
 # Files only the standalone app uses (its entry point, audio / MIDI hardware, the self-test, crash catching).
 APP_ONLY = {"BreakBossApp.swift", "AppAudioHost.swift", "BugCatcher.swift",
             "KnockSelfTest.swift", "KnockSelfTestSounds.swift", "KnockSelfTestTiming.swift", "KnockSelfTestSampler.swift",
-            "KnockSelfTestTransport.swift", "KnockSelfTestWorkspace.swift", "KnockSelfTestPresets.swift"}
+            "KnockSelfTestTransport.swift", "KnockSelfTestWorkspace.swift", "KnockSelfTestPresets.swift",
+            "KnockSelfTestKnobs.swift"}
 
 
 def package_value(name):

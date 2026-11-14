@@ -182,7 +182,7 @@ final class KnockController: ObservableObject {
         if p == .soundMode { state.mode = mode }
         if p == .playMode { state.playMode = playMode; engine.send(KEvent(kind: .allOff)) }
         if !fromHost { onParameterChanged?(p, v) }
-        if show && p.isKnob { readout = Readout(title: p.name.uppercased(), value: p.text(v), time: Date()) }
+        if show && p.isKnob { readout = Readout(title: p.name.uppercased(), value: text(p, v), time: Date()) }
         scheduleSave()
     }
 
@@ -199,10 +199,34 @@ final class KnockController: ObservableObject {
 
     func toggle(_ p: KParam) {
         set(p, value(p) > 0.5 ? 0 : 1, show: false)
-        readout = Readout(title: p.name.uppercased(), value: p.text(value(p)), time: Date())
+        readout = Readout(title: p.name.uppercased(), value: text(p, value(p)), time: Date())
     }
 
     func resetKnob(_ p: KParam) { set(p, p.defaultValue) }
+
+    // Knob positions (Tyrone, Nov 14): an FX knob's position is its share of the full effect
+    // (KnobTaper); the stored value under it is what the engine, presets and host automation hold.
+
+    /// The main chain's knob position for a control, in the current mode.
+    func knob(_ p: KParam) -> Float { KnobTaper.knob(p, value: value(p), KnobContext(mode)) }
+
+    /// Turns a main-chain knob to a position.
+    func setKnob(_ p: KParam, _ position: Float) { set(p, KnobTaper.value(p, knob: position, KnobContext(mode))) }
+
+    /// What a main-chain control's readout shows for a stored value, in the current mode.
+    func text(_ p: KParam, _ v: Float) -> String { p.text(v, KnobContext(mode)) }
+
+    /// A track's own FX knob position on Face 2 (its insert, in the current mode).
+    func trackFXKnob(_ pad: Int, _ p: KParam) -> Float {
+        KnobTaper.knob(p, value: trackFX(pad, p), KnobContext(mode, insert: true))
+    }
+
+    func setTrackFXKnob(_ pad: Int, _ p: KParam, _ position: Float) {
+        setTrackFX(pad, p, KnobTaper.value(p, knob: position, KnobContext(mode, insert: true)))
+    }
+
+    /// What a track's FX readout shows for its stored value.
+    func trackFXText(_ pad: Int, _ p: KParam) -> String { p.text(trackFX(pad, p), KnobContext(mode, insert: true)) }
 
     /// Tyrone, Oct 31: "output volume should always be max at 10 for every preset". Every preset,
     /// kit, mode change and launch puts OUTPUT back at the top (0 dB), knob and sound together.

@@ -54,7 +54,9 @@ extension SequencerView {
         let params = Self.fxParams(controller.mode)
         // the selected track's own knobs; none selected: the main chain's, as on Face 1
         let track = selected
-        let value: (KParam) -> Float = { p in track.map { controller.trackFX($0.pad, p) } ?? controller.value(p) }
+        // knob positions: each FX knob's share of its full effect (KnobTaper), and the readout of it
+        let value: (KParam) -> Float = { p in track.map { controller.trackFXKnob($0.pad, p) } ?? controller.knob(p) }
+        let readout: (KParam) -> String = { p in track.map { controller.trackFXText($0.pad, p) } ?? controller.text(p, controller.value(p)) }
         let slot = (A.fxX1 - A.fxX0) / 8
         let x0 = A.fxX0 + Double(8 - params.count) * slot / 2          // seven knobs sit centred in the eight places
         ForEach(Array(params.enumerated()), id: \.element.rawValue) { i, p in
@@ -67,7 +69,7 @@ extension SequencerView {
                     Circle().fill(synced ? accent : Color(white: 0.3)).frame(width: 6 * s, height: 6 * s)
                         .shadow(color: synced ? accent : .clear, radius: 2 * s)
                 }
-                Text(turning ? p.text(value(p)) : Self.fxLabel(p))
+                Text(turning ? readout(p) : Self.fxLabel(p))
                     .font(.system(size: 12 * s, weight: .semibold)).foregroundColor(turning ? accent : inkColor)
                     .lineLimit(1).minimumScaleFactor(0.55)
             }
@@ -77,14 +79,14 @@ extension SequencerView {
             let h = A.fxKnobY1 - A.fxKnobY0
             ArtKnob(value: value(p), grip: 8 * s,
                     doubleTap: p == .textureDelay ? toggleDelaySync : nil,
-                    hud: KnobHUD(title: track.map { "\($0.name) · \(Self.fxLabel(p))" } ?? "MAIN · \(Self.fxLabel(p))", value: p.text(value(p)))) { v, ended in
+                    hud: KnobHUD(title: track.map { "\($0.name) · \(Self.fxLabel(p))" } ?? "MAIN · \(Self.fxLabel(p))", value: readout(p))) { v, ended in
                 fxTurning = ended ? nil : p
-                if let track { controller.setTrackFX(track.pad, p, v) } else { controller.set(p, v) }
+                if let track { controller.setTrackFXKnob(track.pad, p, v) } else { controller.setKnob(p, v) }
             }
             .place([cx - h / 2 - 8, A.fxKnobY0 - 8, cx + h / 2 + 8, A.fxKnobY1 + 8], s)
             .accessibilityElement()
             .accessibilityLabel(Self.fxLabel(p))
-            .accessibilityValue(p.text(value(p)))
+            .accessibilityValue(readout(p))
             .accessibilityIdentifier("fx_\(p.id)")
         }
     }

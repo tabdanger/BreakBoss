@@ -660,7 +660,9 @@ struct KnobControl: View {
 
     var body: some View {
         let r = knob.r * scale
-        let v = controller.value(param)
+        // the knob's position: an FX knob's share of its full effect (KnobTaper); the others their value
+        let v = controller.knob(param)
+        let readout = controller.text(param, controller.value(param))
         let width = knob.pointerWidth ?? 0.13
         ZStack {
             Circle().fill(Color.white.opacity(0.001))
@@ -675,7 +677,7 @@ struct KnobControl: View {
         // same as Face 2's; it goes a moment after the finger lifts, leaving the plate as drawn
         .anchorPreference(key: KnobHUDKey.self, value: .bounds) { a in
             guard showHUD else { return [] }
-            return [KnobHUDEntry(hud: KnobHUD(title: SequencerView.fxLabel(param), value: param.text(v)), anchor: a)]
+            return [KnobHUDEntry(hud: KnobHUD(title: SequencerView.fxLabel(param), value: readout), anchor: a)]
         }
         // a fingertip-sized grip round the cap (it reaches most of the way to the next knob)
         .frame(width: r * 3.2, height: r * 3.2)
@@ -690,7 +692,7 @@ struct KnobControl: View {
                     hudRelease += 1
                     // Up or right turns it up, with a real pot's weight (KnobFeel)
                     let delta = KnobFeel.delta(g.translation, travel: KnobFeel.face1)
-                    controller.set(param, (start ?? v) + delta)
+                    controller.setKnob(param, (start ?? v) + delta)
                 }
                 .onEnded { g in
                     let isTap = abs(g.translation.width) < 6 && abs(g.translation.height) < 6
@@ -709,7 +711,7 @@ struct KnobControl: View {
             if start == nil { start = v }
             if !showHUD { showHUD = true }
             hudRelease += 1
-            controller.set(param, (start ?? v) + KnobFeel.delta(t, travel: KnobFeel.face1))
+            controller.setKnob(param, (start ?? v) + KnobFeel.delta(t, travel: KnobFeel.face1))
             if ended {
                 start = nil
                 releaseHUD()
@@ -717,7 +719,7 @@ struct KnobControl: View {
         }
         .position(x: knob.x * scale, y: knob.y * scale)
         .accessibilityLabel(param.name)
-        .accessibilityValue(param.text(v))
+        .accessibilityValue(readout)
     }
 }
 
