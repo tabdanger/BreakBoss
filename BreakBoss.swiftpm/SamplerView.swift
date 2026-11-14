@@ -1865,7 +1865,7 @@ struct SamplerWindow: View {
                  }) { v, final in setFeel?(nil, ((v * 2 - 1) * PatternData.maxShift).rounded(), final) }
             knob("SWING", max(0, swing), x: 265, y: 110, d: 62, s, labelY: 156, reset: 0, id: "SWING",
                  menu: { [BBMenuItem.item("Follow the SWING knob", checked: swing < 0) { setFeel?(-1, nil, true) }] },
-                 display: { v in swing < 0 && v == 0 ? "SWING knob" : "\(Int((50 + v * 22).rounded()))%" }) { v, final in setFeel?(v, nil, final) }
+                 display: { v in swing < 0 && v == 0 ? "SWING knob" : "\(Int(KnockMath.swingPercent(v).rounded()))%" }) { v, final in setFeel?(v, nil, final) }
             smallToggle("Full porta", sm.fullPorta, x: 300, y: 214, s, id: "samplerFullPorta") { edit { $0.fullPorta.toggle() } }
         }
     }

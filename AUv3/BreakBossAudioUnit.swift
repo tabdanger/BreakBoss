@@ -58,7 +58,8 @@ public final class BreakBossAudioUnit: AUAudioUnit {
         }
         tree.implementorStringFromValueCallback = { parameter, valuePointer in
             guard let p = KParam(rawValue: Int(parameter.address)) else { return "" }
-            return p.text(valuePointer?.pointee ?? parameter.value)
+            let mode = SoundMode(rawValue: Int(engine.param(.soundMode).rounded())) ?? .modern
+            return p.text(valuePointer?.pointee ?? parameter.value, KnobContext(mode))
         }
         factory = PatternBank.all.enumerated().map { index, preset in
             let item = AUAudioUnitPreset()
@@ -250,7 +251,7 @@ public final class BreakBossAudioUnit: AUAudioUnit {
         let parameters: [AUParameter] = KParam.allCases.map { p in
             let address = AUParameterAddress(p.rawValue)
             if let steps = p.steps {
-                let strings = (0..<steps).map { p.text(Float($0)) }
+                let strings = (0..<steps).map { p.text(Float($0), KnobContext(.modern)) }
                 return AUParameterTree.createParameter(
                     withIdentifier: p.id, name: p.name, address: address,
                     min: 0, max: AUValue(steps - 1), unit: .indexed, unitName: nil,

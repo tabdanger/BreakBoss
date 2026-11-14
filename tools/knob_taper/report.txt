@@ -1,0 +1,42 @@
+MODERN Boost: full change -3.2 dB; stored at 10% 0.116, 25% 0.280, 50% 0.539, 75% 0.778
+MODERN Punch: full change -10.1 dB; stored at 10% 0.098, 25% 0.237, 50% 0.445, 75% 0.702
+MODERN Analog EQ: full change -14.1 dB; stored at 10% 0.090, 25% 0.241, 50% 0.491, 75% 0.738
+MODERN Tighten: full change -3.7 dB; stored at 10% 0.083, 25% 0.422, 50% 0.662, 75% 0.801
+MODERN Grit: full change 2.3 dB; stored at 10% 0.113, 25% 0.264, 50% 0.391, 75% 0.583
+MODERN Shine: full change -8.9 dB; stored at 10% 0.100, 25% 0.250, 50% 0.499, 75% 0.749
+MODERN Noise: full change -9.4 dB; stored at 10% 0.396, 25% 0.535, 50% 0.707, 75% 0.858
+MODERN track Boost: full change -3.2 dB; stored at 10% 0.116, 25% 0.280, 50% 0.539, 75% 0.778
+MODERN track Punch: full change -10.1 dB; stored at 10% 0.098, 25% 0.237, 50% 0.445, 75% 0.702
+MODERN track Analog EQ: full change -14.1 dB; stored at 10% 0.090, 25% 0.241, 50% 0.491, 75% 0.738
+MODERN track Tighten: full change -3.7 dB; stored at 10% 0.083, 25% 0.422, 50% 0.662, 75% 0.801
+MODERN track Grit: full change 2.3 dB; stored at 10% 0.113, 25% 0.264, 50% 0.391, 75% 0.583
+MODERN track Shine: full change -8.9 dB; stored at 10% 0.100, 25% 0.250, 50% 0.499, 75% 0.749
+MODERN track Noise: full change -9.4 dB; stored at 10% 0.396, 25% 0.535, 50% 0.707, 75% 0.858
+VINTAGE Drive: full change 5.9 dB; stored at 10% 0.101, 25% 0.213, 50% 0.339, 75% 0.555
+VINTAGE Punch: full change -10.1 dB; stored at 10% 0.098, 25% 0.237, 50% 0.445, 75% 0.702
+VINTAGE Analog EQ: full change -14.1 dB; stored at 10% 0.090, 25% 0.241, 50% 0.491, 75% 0.738
+VINTAGE Grit: full change 2.2 dB; stored at 10% 0.113, 25% 0.265, 50% 0.392, 75% 0.585
+VINTAGE Shine: full change -8.9 dB; stored at 10% 0.100, 25% 0.250, 50% 0.499, 75% 0.749
+VINTAGE Tighten: full change -3.7 dB; stored at 10% 0.083, 25% 0.422, 50% 0.662, 75% 0.801
+VINTAGE Noise: full change -9.6 dB; stored at 10% 0.392, 25% 0.535, 50% 0.708, 75% 0.860
+VINTAGE track Drive: full change 4.5 dB; stored at 10% 0.135, 25% 0.284, 50% 0.448, 75% 0.617
+VINTAGE track Punch: full change -10.1 dB; stored at 10% 0.098, 25% 0.237, 50% 0.445, 75% 0.702
+VINTAGE track Analog EQ: full change -14.1 dB; stored at 10% 0.090, 25% 0.241, 50% 0.491, 75% 0.738
+VINTAGE track Grit: full change 2.2 dB; stored at 10% 0.113, 25% 0.265, 50% 0.392, 75% 0.585
+VINTAGE track Shine: full change -8.9 dB; stored at 10% 0.100, 25% 0.250, 50% 0.499, 75% 0.749
+VINTAGE track Tighten: full change -3.7 dB; stored at 10% 0.083, 25% 0.422, 50% 0.662, 75% 0.801
+VINTAGE track Noise: full change -9.6 dB; stored at 10% 0.392, 25% 0.535, 50% 0.708, 75% 0.860
+TEXTURE Drive: full change 4.6 dB; stored at 10% 0.134, 25% 0.283, 50% 0.447, 75% 0.615
+TEXTURE Resample: full change -11.2 dB; stored at 10% 0.012, 25% 0.030, 50% 0.400, 75% 0.648
+TEXTURE Instability: full change -5.1 dB; stored at 10% 0.008, 25% 0.132, 50% 0.307, 75% 0.521
+TEXTURE Delay: full change -7.2 dB; stored at 10% 0.060, 25% 0.172, 50% 0.409, 75% 0.690
+TEXTURE Shine: full change -8.9 dB; stored at 10% 0.100, 25% 0.250, 50% 0.499, 75% 0.749
+TEXTURE Reverb: full change -12.9 dB; stored at 10% 0.094, 25% 0.242, 50% 0.488, 75% 0.738
+TEXTURE Noise: full change -9.6 dB; stored at 10% 0.392, 25% 0.535, 50% 0.708, 75% 0.859
+TEXTURE track Drive: full change 4.6 dB; stored at 10% 0.134, 25% 0.283, 50% 0.447, 75% 0.615
+TEXTURE track Resample: full change -11.2 dB; stored at 10% 0.012, 25% 0.030, 50% 0.400, 75% 0.648
+TEXTURE track Instability: full change -5.1 dB; stored at 10% 0.008, 25% 0.132, 50% 0.307, 75% 0.521
+TEXTURE track Delay: full change -7.2 dB; stored at 10% 0.060, 25% 0.172, 50% 0.409, 75% 0.690
+TEXTURE track Shine: full change -8.9 dB; stored at 10% 0.100, 25% 0.250, 50% 0.499, 75% 0.749
+TEXTURE track Reverb: full change -12.9 dB; stored at 10% 0.094, 25% 0.242, 50% 0.488, 75% 0.738
+TEXTURE track Noise: full change -9.6 dB; stored at 10% 0.393, 25% 0.535, 50% 0.709, 75% 0.860

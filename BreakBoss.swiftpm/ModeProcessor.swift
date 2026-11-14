@@ -183,8 +183,9 @@ final class BusProcessor {
         stutterMix.configure(ms: 3, sr: sr)
         for c in 0..<2 { warpFilter[c].set(1_200, q: 0.8, sr: sr) }
         lastBoost = -1; lastEQ = -1; lastShine = -1; lastResample = -1; lastMode = -1
-        // an 8 ms time constant: 95% of a turn is heard within ~25 ms, with no steps on the way
-        glideCoef = 1 - expf(-Float(BusProcessor.glideChunk) / (0.008 * sr))
+        // a 1.5 ms time constant (Tyrone, Nov 14: "responds within about 5 ms"): 95% of a turn is
+        // heard within ~4.5 ms, still in 16-sample steps small enough not to click
+        glideCoef = 1 - expf(-Float(BusProcessor.glideChunk) / (BusProcessor.glideSeconds * sr))
         reset()
     }
 
@@ -259,8 +260,9 @@ final class BusProcessor {
     // smoothly instead of stepping once per audio block (Tyrone, Oct 29: "stepped, not smooth").
     private var glided = Settings()
     private var glideStarted = false
-    /// Samples per glide step, and how far each step closes the gap (most of the way in ~25 ms).
-    private static let glideChunk = 32
+    /// Samples per glide step, and how far each step closes the gap (95% of the way in ~4.5 ms).
+    static let glideChunk = 16
+    static let glideSeconds: Float = 0.0015
     private var glideCoef: Float = 0.05
 
     /// Processes `count` stereo samples in place, in short pieces while a knob is still gliding.
@@ -347,7 +349,9 @@ final class BusProcessor {
         let wowDepth: Float = sr * 0.0022 * s.instability, flutterDepth: Float = sr * 0.00024 * s.instability
         // The wow's read head sits only as far back as its widest swing (plus 2 samples) instead of a
         // fixed 4 ms: the same wobble, but a Texture pad hit reaches the output ~3 ms sooner (Oct 26).
-        let wowCenter = wowDepth + flutterDepth + 2
+        // (on a whole sample, Nov 14: a fractional centre dulled the top the moment INSTABILITY left 0%,
+        // a step at the bottom of the knob; from a sample of swing up the head sweeps through it anyway)
+        let wowCenter = (wowDepth + flutterDepth).rounded(.up) + 2
         let quantization = powf(2, 15 - s.resample * 8)
         // WARP: wider swings and more resonance; GLITCH: more stutters.
         let warp = texture ? s.warp.clamped(0, 1) : 0
@@ -418,7 +422,8 @@ final class BusProcessor {
                     holdPhase -= 1
                     held = ((dl * quantization).rounded() / quantization, (dr * quantization).rounded() / quantization)
                 }
-                if s.resample > 0.001 { l = held.0; r = held.1 }
+                // the first 2% fades the lo-fi in (Nov 14: at 0.1% it switched on all at once, a step)
+                if s.resample > 0.001 { let w = min(1, s.resample * 50); l += (held.0 - l) * w; r += (held.1 - r) * w }
                 // Instability: wow and flutter on a short delay.
                 wowPhase += 0.55 / sr; if wowPhase > 1 { wowPhase -= 1 }
                 flutterPhase += 6.8 / sr; if flutterPhase > 1 { flutterPhase -= 1 }
@@ -452,14 +457,16 @@ final class BusProcessor {
                         sceneSteps -= 1
                         if sceneSteps <= 0 { rollScene(warp) }
                     }
-                    stutterOn = glitch > 0.001 && glitchRNG.unit() < stutterChance
+                    // the same three rolls every 1/16 whatever the knob says (Nov 14), so turning it up
+                    // only lets more of the same stutters through: the amount grows evenly, not in jumps
+                    let roll = glitchRNG.unit(), pick = glitchRNG.int(4), backwards = glitchRNG.chance(0.3)
+                    stutterOn = glitch > 0.001 && roll < stutterChance
                     if stutterOn {
-                        let pick = glitchRNG.int(4)
                         let fraction = pick < 2 ? 0.125 : (pick == 2 ? 1.0 / 12 : 0.0625)   // of a beat
                         stutterLength = Int(fraction / beatsPerSample).clamped(256, stutterSize / 4)
                         stutterStart = stutterIndex
                         stutterPos = 0
-                        stutterReverse = glitchRNG.chance(0.3)
+                        stutterReverse = backwards
                     }
                 }
                 stutterMix.set(stutterOn && stutterPos >= stutterLength ? 1 : 0)
@@ -521,7 +528,8 @@ final class BusProcessor {
         sceneSemis = amount * glitchRNG.range(2, 12)
         sceneShape = glitchRNG.int(3)
         sceneBand = glitchRNG.range(0, 0.7) * amount
-        warpMix.set(glitchRNG.chance(0.25) ? 0 : min(0.85, amount * glitchRNG.range(0.6, 1.6)))
+        let silent = glitchRNG.chance(0.25), level = glitchRNG.range(0.6, 1.6)     // both rolled every time
+        warpMix.set(silent ? 0 : min(0.85, amount * level))
     }
 
     /// One sample of WARP's wet signal: pitch shifted by the wobble, through the swept filter.
@@ -822,9 +830,11 @@ final class MasterBus {
 
     func prepare(sampleRate: Double) {
         sr = Float(sampleRate)
-        cutoff.configure(ms: 30, sr: sr)
-        drive.configure(ms: 20, sr: sr)
-        output.configure(ms: 20, sr: sr)
+        // FILTER, CLIP DRIVE and OUTPUT reach their new setting within 4 ms of a turn (Tyrone, Nov 14:
+        // "within about 5 ms"; they took 20 to 30 ms), a straight ramp, so they still never click
+        cutoff.configure(ms: MasterBus.rampMs, sr: sr)
+        drive.configure(ms: MasterBus.rampMs, sr: sr)
+        output.configure(ms: MasterBus.rampMs, sr: sr)
         scopeDecimate = max(1, Int(sampleRate / 6_000))
         bassCoef = 1 - exp(-2 * .pi * 150 / sr)
         topCoef = 1 - exp(-2 * .pi * 2_500 / sr)
@@ -838,6 +848,9 @@ final class MasterBus {
         var output: Float = 0.75
         var clipperOn = true
     }
+
+    /// How long FILTER, CLIP DRIVE and OUTPUT take to reach a new setting.
+    static let rampMs: Float = 4
 
     /// The clipper's ceiling: -0.3 dBFS.
     static let ceiling: Float = 0.966

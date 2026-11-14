@@ -169,18 +169,22 @@ enum KParam: Int, CaseIterable {
         }
     }
 
-    /// What the value means, for the readout on the screen and the host.
-    func text(_ value: Float) -> String {
+    /// What the value means, for the readout on the screen and the host: exactly what the DSP
+    /// plays (Tyrone, Nov 14). FX knobs show their position, which is that share of the knob's full
+    /// effect (KnobTaper); the others their real unit. `c`: the mode (and main chain or a track's
+    /// insert) the value plays in, since an FX knob's taper can differ between them.
+    func text(_ value: Float, _ c: KnobContext) -> String {
         switch self {
         case .pitch:
-            let st = Int((value - 0.5) * 24).clamped(-12, 12)
+            // the engine rounds to the nearest semitone (KnockEngine: globalSemis)
+            let st = KnockMath.pitchSemitones(value)
             return st == 0 ? "0 st" : String(format: "%+d st", st)
         case .tune:
-            return String(format: "%+d ct", Int(((value - 0.5) * 200).rounded()))
+            return String(format: "%+d ct", Int(KnockMath.tuneCents(value).rounded()))
         case .bounce:
-            return value < 0.01 ? "STRAIGHT" : String(format: "%d%% SWING", Int(50 + value * 22))
+            return value < 0.01 ? "STRAIGHT" : String(format: "%d%% SWING", Int(KnockMath.swingPercent(value).rounded()))
         case .velocity:
-            return value < 0.01 ? "FIXED" : String(format: "%d%%", Int(value * 100))
+            return value < 0.01 ? "FIXED" : String(format: "%d%%", Int((value * 100).rounded()))
         case .filter:
             if value > 0.995 { return "OPEN" }
             return String(format: "%.0f Hz", KnockMath.filterCutoff(value))
@@ -202,8 +206,8 @@ enum KParam: Int, CaseIterable {
         case .playMode:
             return value > 0.5 ? "LOOP" : "ONE-SHOT"
         default:
-            // in percent, 0% to 100%, like the FX knobs load (a 0 to 10 scale jumped in 11 steps)
-            return "\(Int((value * 100).rounded()))%"
+            // in percent of the knob's full effect, 0% to 100%
+            return "\(Int((KnobTaper.knob(self, value: value, c) * 100).rounded()))%"
         }
     }
 }
@@ -211,6 +215,15 @@ enum KParam: Int, CaseIterable {
 // MARK: - Shared maths
 
 enum KnockMath {
+    /// PITCH in whole semitones, -12...+12, rounded as the engine plays it.
+    static func pitchSemitones(_ v: Float) -> Int { Int(((v - 0.5) * 24).rounded()).clamped(-12, 12) }
+    /// TUNE in cents, -100...+100.
+    static func tuneCents(_ v: Float) -> Float { (v - 0.5) * 200 }
+    /// SWING as the classic percentage: where the off-beat 1/16 lands between two 1/8s (50% = straight).
+    /// The engine moves it up to 8 ticks of the 48 between them (PatternData.swingTicks), so the
+    /// top is 66.7%.
+    static func swingPercent(_ bounce: Float) -> Float { 50 + bounce.clamped(0, 1) * 8 / 48 * 100 }
+    static func bounce(swingPercent p: Float) -> Float { ((p - 50) / (8 / 48 * 100)).clamped(0, 1) }
     /// Low-pass cutoff of the FILTER knob: 120 Hz at 0, fully open at 1.
     static func filterCutoff(_ v: Float) -> Float { 120 * powf(20_000 / 120, v) }
     /// CLIP DRIVE: 0 to +18 dB into the clipper.
@@ -223,6 +236,26 @@ enum KnockMath {
         return (1 + min(db, 0) / 12).clamped(0, 1)
     }
     static func dbToGain(_ db: Float) -> Float { powf(10, db / 20) }
+    /// A track's own DECAY (Face 2's channel strip): the time constant its hits fade with (FULL = none).
+    static func padDecayTau(_ d: Float) -> Double {
+        d >= 0.999 ? .infinity : 0.03 + Double(d) * Double(d) * 2.5
+    }
+    /// What that DECAY readout shows: how long a hit rings before it's 60 dB down (12 ms hold + 6.9 time constants).
+    static func padDecayText(_ d: Float) -> String {
+        let tau = padDecayTau(d)
+        guard tau.isFinite else { return "FULL" }
+        let t = 0.012 + tau * log(1_000)
+        return t < 1 ? "\(Int((t * 1_000).rounded())) ms" : String(format: "%.2f s", t)
+    }
+    /// TIGHTEN's tail (seconds, the time constant every hit decays with after its first 12 ms):
+    /// none at 0, 1.26 s at 10%, 45 ms at the top. Below 10% the decay comes in from nothing (Nov 14:
+    /// it used to jump straight to a 1.5 s tail at 0.1%, so the knob's first 10% all sounded the same).
+    static func tightenTau(_ t: Float) -> Double {
+        guard t > 0.000_01 else { return .infinity }
+        let t = Double(t.clamped(0, 1))
+        func tau(_ x: Double) -> Double { let r = 1 - x; return 0.045 + r * r * 1.5 }
+        return t >= 0.1 ? tau(t) : tau(0.1) * 0.1 / t
+    }
 }
 
 extension Comparable {

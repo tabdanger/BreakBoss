@@ -108,8 +108,9 @@ extension SequencerView {
             .place(A.snapScale, s)
         SeqChip(sprite: "SeqChipSwing", text: swingLabel, size: 16, leading: 89, trailing: 52, scale: s).place(A.swing, s).allowsHitTesting(false)
         PressGlow().bbPanelPlaced([A.swing[0], A.swing[1], A.swingKnob[0] - 4, A.swing[3]], s, title: "Swing", width: 320) {
-                BBSlider(value: Double(50 + controller.value(.bounce) * 22), range: 50...72, step: 1, label: { $0 <= 50 ? "OFF" : "\(Int($0))%" }) {
-                    controller.set(.bounce, Float(($0 - 50) / 22))
+                // the real swing the engine plays: 50% (straight) to 66.7% (Nov 14; it read 72% at the top)
+                BBSlider(value: Double(KnockMath.swingPercent(controller.value(.bounce))), range: 50...67, step: 1, label: { $0 <= 50 ? "OFF" : "\(Int($0.rounded()))%" }) {
+                    controller.set(.bounce, KnockMath.bounce(swingPercent: Float($0)))
                 }
             }
         artKnob(A.swingKnob, s, value: controller.value(.bounce), hud: KnobHUD(title: "SWING", value: swingLabel)) { v, ended in
@@ -126,9 +127,9 @@ extension SequencerView {
                     controller.setLoop(loop, p)
                 }
             }
-        artText((pattern.humanize ?? 0) < 0.01 ? "" : "\(Int((pattern.humanize ?? 0) * 100))%", [A.humanizeKnob[0] - 22, A.humanize[1], A.humanizeKnob[0] - 2, A.humanize[3]], s, size: 10, color: accent, align: .trailing)
+        artText((pattern.humanize ?? 0) < 0.01 ? "" : "\(Int(((pattern.humanize ?? 0) * 100).rounded()))%", [A.humanizeKnob[0] - 22, A.humanize[1], A.humanizeKnob[0] - 2, A.humanize[3]], s, size: 10, color: accent, align: .trailing)
         artKnob(A.humanizeKnob, s, value: pattern.humanize ?? 0,
-                hud: KnobHUD(title: "HUMANIZE", value: (pattern.humanize ?? 0) < 0.01 ? "OFF" : "\(Int((pattern.humanize ?? 0) * 100))%")) { v, ended in
+                hud: KnobHUD(title: "HUMANIZE", value: (pattern.humanize ?? 0) < 0.01 ? "OFF" : "\(Int(((pattern.humanize ?? 0) * 100).rounded()))%")) { v, ended in
             if humanizeStart == nil { humanizeStart = pattern.humanize ?? 0; undoStack.append(step(pattern)); redoStack = [] }
             var p = pattern
             p.humanize = v < 0.01 ? nil : v
@@ -179,7 +180,7 @@ extension SequencerView {
         ]
     }
 
-    var swingLabel: String { controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(50 + controller.value(.bounce) * 22))%" }
+    var swingLabel: String { controller.value(.bounce) < 0.01 ? "OFF" : "\(Int(KnockMath.swingPercent(controller.value(.bounce)).rounded()))%" }
 
     var pageLabel: String {
         let bar = Int(pageStart / PatternEdit.barTicks) + 1

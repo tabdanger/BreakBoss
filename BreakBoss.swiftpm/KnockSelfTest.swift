@@ -75,6 +75,7 @@ enum KnockSelfTest {
             ("checkTextureControls", checkTextureControls),
             ("checkTexturePlate", checkTexturePlate),
             ("checkFXSections", checkFXSections),
+            ("checkKnobTapers", checkKnobTapers),
             ("checkLevelPanGlide", checkLevelPanGlide),
             ("checkPatternEditor", checkPatternEditor),
             ("checkMIDIPadMap", checkMIDIPadMap),
